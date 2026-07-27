@@ -13,6 +13,7 @@
     --muted:#71768a;
     --line:#e4e7f0;
     --paul:#4f46e5;     /* Indigo – passt zu Pauls Lernwelt */
+    --helena:#e0457b;   /* Rosé – Helena, Sprachen/Englisch */
     --leon:#10b981;     /* Grün – Leon, der Fußball-Fan */
     --radius:26px;
     --shadow:0 1px 2px rgba(20,22,40,.04), 0 10px 30px rgba(20,22,40,.07);
@@ -42,7 +43,7 @@
   @keyframes drift2{50%{transform:translate(-56px,54px) scale(1.05);}}
   @keyframes drift3{50%{transform:translate(46px,-46px) scale(1.1);}}
 
-  .wrap{max-width:880px;margin:0 auto;padding:64px 22px 40px;width:100%;flex:1;
+  .wrap{max-width:940px;margin:0 auto;padding:64px 22px 40px;width:100%;flex:1;
     display:flex;flex-direction:column;justify-content:center;}
 
   .hero{text-align:center;margin-bottom:40px;}
@@ -52,7 +53,7 @@
   .hero h1{font-family:var(--round);font-weight:800;font-size:42px;margin:0;letter-spacing:-.03em;line-height:1.05;}
   .hero p{color:var(--muted);font-size:16.5px;margin:12px 0 0;}
 
-  .doors{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;}
 
   .door{
     position:relative;display:flex;flex-direction:column;gap:6px;
@@ -91,7 +92,6 @@
   @media(max-width:620px){
     .wrap{padding:46px 18px 30px;}
     .hero h1{font-size:33px;}
-    .doors{grid-template-columns:1fr;}
     .door{min-height:auto;}
   }
   @media (prefers-reduced-motion: reduce){
@@ -114,6 +114,13 @@
       <div class="ic">🚀</div>
       <div class="t">Pauls Lernwelt</div>
       <div class="s">Deutsch, HSU, Musik & mehr – spielen und lernen.</div>
+      <span class="go">Reingehen <span class="arr">›</span></span>
+    </a>
+
+    <a class="door live" href="helena/" style="--c:var(--helena)">
+      <div class="ic">📚</div>
+      <div class="t">Helenas Lernwelt</div>
+      <div class="s">Englisch-Vokabeln üben, wiederholen und merken.</div>
       <span class="go">Reingehen <span class="arr">›</span></span>
     </a>
 
