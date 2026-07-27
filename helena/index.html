@@ -143,6 +143,34 @@
   .stats a.chip{text-decoration:none;}
   .stats a.chip:hover{border-color:var(--brand);}
 
+  .adderbody{margin-top:10px;}
+  .howto{margin:0 0 12px; padding-left:18px; color:var(--muted); font-size:12.5px; line-height:1.55;}
+  .howto b{color:var(--ink);}
+  #detectBtn{border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-family:var(--round);
+    color:#150f2e; background:var(--brand); cursor:pointer;}
+  #preview{margin-top:14px;}
+  .pvhead{font-size:13px; color:var(--muted); margin-bottom:10px; display:flex; align-items:center;
+    justify-content:space-between; gap:8px; flex-wrap:wrap;}
+  .pvhead b{color:var(--ink);}
+  .pvrow{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .pvrow input{flex:1; min-width:0; font-size:14px; color:var(--ink); background:var(--surface);
+    border:1px solid var(--line); border-radius:10px; padding:9px 10px; outline:none;}
+  .pvrow input:focus{border-color:var(--brand);}
+  .pvarr{color:var(--muted); flex:none;}
+  .pvx{flex:none; border:none; background:transparent; color:var(--no); font-size:16px; cursor:pointer; padding:4px 6px;}
+  .mini{border:1px solid var(--line); background:var(--surface); color:var(--muted); border-radius:999px;
+    padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font);}
+  .mini:hover{border-color:var(--brand); color:var(--ink);}
+  .pvsave{display:flex; gap:10px; margin-top:12px;}
+  #saveUnit{border:none; border-radius:12px; padding:11px 18px; font-weight:800; font-family:var(--round);
+    color:#150f2e; background:var(--ok); cursor:pointer;}
+  .ghost{border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:12px;
+    padding:11px 16px; font-weight:700; cursor:pointer; font-family:var(--font);}
+  #myUnits{margin-top:16px;}
+  #myUnits .muhead{font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;}
+  .myunit{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 0; border-top:1px solid var(--line); font-size:13.5px;}
+  .myunit .del{border:none; background:transparent; color:var(--no); cursor:pointer; font-size:12.5px; font-weight:700;}
+
   canvas#cf{position:fixed; inset:0; pointer-events:none; z-index:60;}
   @media(max-width:480px){ .prompt{font-size:28px;} .clozesent{font-size:20px;} .choices{grid-template-columns:1fr;} }
   @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
@@ -249,12 +277,21 @@
     <button class="start" id="startBtn">Los geht's</button>
 
     <details class="adder">
-      <summary>＋ Eigene Wörter hinzufügen (z. B. Buch-Einheit)</summary>
-      <div class="row"><input type="text" id="unitName" placeholder="Name der Einheit (z. B. Unit 1 · S. 12–15)"></div>
-      <textarea id="pasteBox" placeholder="Ein Paar pro Zeile, so:&#10;house = das Haus&#10;to learn = lernen&#10;weekend = das Wochenende"></textarea>
-      <div class="row">
-        <button id="saveList">Einheit speichern</button>
-        <span class="tiny" id="addMsg">Trennzeichen: „=", „;" oder Tab</span>
+      <summary>＋ Neue Einheit aus Foto (Handy-Scan)</summary>
+      <div class="adderbody">
+        <ol class="howto">
+          <li><b>Wortliste scannen:</b> iPhone „Text scannen"/Live Text, Android „Google Lens" → Text markieren und <b>kopieren</b>.</li>
+          <li>Unten ins Feld <b>einfügen</b> und auf <b>Erkennen</b> tippen.</li>
+          <li>Die Paare kurz <b>prüfen</b>, bei Bedarf verbessern, dann <b>Speichern</b>.</li>
+        </ol>
+        <input type="text" id="unitName" placeholder="Name der Einheit (z. B. Station 1)">
+        <textarea id="pasteBox" placeholder="Hier die gescannte Wortliste einfügen …"></textarea>
+        <div class="row">
+          <button id="detectBtn" type="button">Erkennen ›</button>
+          <span class="tiny" id="addMsg"></span>
+        </div>
+        <div id="preview" style="display:none"></div>
+        <div id="myUnits"></div>
       </div>
     </details>
   </section>
@@ -1869,28 +1906,112 @@
   }
   $("#backBtn").addEventListener("click", endToSetup);
 
-  /* ---------- Eigene Wörter ---------- */
-  $("#saveList").addEventListener("click",function(){
-    var name=($("#unitName").value||"").trim() || "Eigene Einheit";
-    var lines=($("#pasteBox").value||"").split("\n");
+  /* ---------- Neue Einheit aus gescanntem Text ---------- */
+  function attrEsc(s){ return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+  function cleanTok(s){
+    return (s||"")
+      .replace(/^[\s•·\-\*\u2013\u2014\d\.\)\(]+/,"")   /* führende Bullets/Nummern/Striche */
+      .replace(/\/[^\/]*\//g,"")                          /* /Lautschrift/ */
+      .replace(/\[[^\]]*\]/g,"")                          /* [Lautschrift] */
+      .replace(/\s+/g," ").trim();
+  }
+  function parseVocab(text){
+    var lines=(text||"").split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+    var sepRe=/\s*(?:=|→|\u2192|::|:|\t|\u2013|\u2014| {2,}| - )\s*/;
+    var withSep=0; lines.forEach(function(l){ if(sepRe.test(l)) withSep++; });
     var pairs=[];
-    lines.forEach(function(l){
-      var m=l.split(/=|;|\t/);
-      if(m.length>=2){
-        var en=m[0].trim(), de=m.slice(1).join(" ").trim();
+    if(lines.length && withSep >= Math.max(2, Math.floor(lines.length*0.5))){
+      lines.forEach(function(l){
+        var idx=l.search(sepRe); if(idx<0) return;
+        var m=l.split(sepRe);
+        var en=cleanTok(m[0]); var de=cleanTok(m.slice(1).join(" "));
         if(en && de) pairs.push({en:en, de:de});
+      });
+    } else {
+      for(var i=0;i+1<lines.length;i+=2){
+        var en2=cleanTok(lines[i]), de2=cleanTok(lines[i+1]);
+        if(en2 && de2) pairs.push({en:en2, de:de2});
       }
+    }
+    return pairs;
+  }
+
+  function renderPreview(pairs){
+    var box=$("#preview"); box.style.display="block";
+    box.innerHTML=
+      '<div class="pvhead"><span><b>'+pairs.length+' Paare erkannt</b> – bitte prüfen</span>'+
+      '<button class="mini" id="swapBtn" type="button">↔ Spalten tauschen</button></div>'+
+      '<div id="pvrows"></div>'+
+      '<button class="mini" id="addRow" type="button">＋ Zeile</button>'+
+      '<div class="pvsave"><button id="saveUnit" type="button">Einheit speichern</button>'+
+      '<button class="ghost" id="cancelUnit" type="button">Abbrechen</button></div>';
+    var rows=$("#pvrows");
+    function addRowEl(en,de){
+      var r=document.createElement("div"); r.className="pvrow";
+      r.innerHTML='<input class="pven" placeholder="englisch" value="'+attrEsc(en)+'">'+
+        '<span class="pvarr">→</span>'+
+        '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
+        '<button class="pvx" type="button" title="Zeile entfernen">✕</button>';
+      r.querySelector(".pvx").addEventListener("click",function(){ r.parentNode.removeChild(r); });
+      rows.appendChild(r);
+    }
+    pairs.forEach(function(p){ addRowEl(p.en,p.de); });
+    $("#addRow").addEventListener("click",function(){ addRowEl("",""); });
+    $("#swapBtn").addEventListener("click",function(){
+      [].forEach.call(rows.querySelectorAll(".pvrow"),function(r){
+        var a=r.querySelector(".pven"), b=r.querySelector(".pvde"); var t=a.value; a.value=b.value; b.value=t;
+      });
+    });
+    $("#cancelUnit").addEventListener("click",function(){ box.style.display="none"; box.innerHTML=""; });
+    $("#saveUnit").addEventListener("click",saveFromPreview);
+  }
+
+  function saveFromPreview(){
+    var name=($("#unitName").value||"").trim() || "Neue Einheit";
+    var pairs=[];
+    [].forEach.call($("#pvrows").children,function(r){
+      var en=r.querySelector(".pven").value.trim(), de=r.querySelector(".pvde").value.trim();
+      if(en && de) pairs.push({en:en, de:de});
     });
     var msg=$("#addMsg");
-    if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare eingeben."; msg.style.color="var(--no)"; return; }
+    if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare."; msg.style.color="var(--no)"; return; }
     var units=customUnits(); var id="u"+Date.now();
     units.push({id:id, name:name, pairs:pairs});
     set("helena-vok-custom-units",JSON.stringify(units));
-    fillUnits(id);
+    fillUnits(id); renderMyUnits();
     $("#unitName").value=""; $("#pasteBox").value="";
-    msg.textContent="Gespeichert: "+pairs.length+" Vokabeln ✓"; msg.style.color="var(--ok)";
+    var box=$("#preview"); box.style.display="none"; box.innerHTML="";
+    msg.textContent="Gespeichert: „"+name+"\u201c ("+pairs.length+" Vokabeln) ✓"; msg.style.color="var(--ok)";
     blip();
+  }
+
+  $("#detectBtn").addEventListener("click",function(){
+    var pairs=parseVocab($("#pasteBox").value);
+    var msg=$("#addMsg");
+    if(!pairs.length){ msg.textContent="Nichts erkannt – bitte Text einfügen und erneut auf Erkennen tippen."; msg.style.color="var(--no)"; return; }
+    msg.textContent=""; renderPreview(pairs);
   });
+
+  /* ---------- Eigene Einheiten verwalten (löschen) ---------- */
+  function renderMyUnits(){
+    var box=$("#myUnits"); var mine=customUnits();
+    if(!mine.length){ box.innerHTML=""; return; }
+    var html='<div class="muhead">Meine Einheiten</div>';
+    mine.forEach(function(u){
+      html+='<div class="myunit"><span>'+attrEsc(u.name)+' ('+u.pairs.length+')</span>'+
+        '<button class="del" type="button" data-id="'+u.id+'">löschen</button></div>';
+    });
+    box.innerHTML=html;
+    [].forEach.call(box.querySelectorAll(".del"),function(btn){
+      btn.addEventListener("click",function(){
+        var id=btn.getAttribute("data-id");
+        var left=customUnits().filter(function(u){return u.id!==id;});
+        set("helena-vok-custom-units",JSON.stringify(left));
+        fillUnits(); renderMyUnits(); blip();
+      });
+    });
+  }
+  renderMyUnits();
 
   /* ---------- Konfetti ---------- */
   function confetti(){
