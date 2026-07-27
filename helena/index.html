@@ -136,6 +136,13 @@
   .adder .tiny{color:var(--muted); font-size:11.5px; margin-top:8px;}
 
   .foot{text-align:center; color:var(--muted); font-size:11.5px; margin-top:26px; line-height:1.6;}
+  .backbtn{display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line);
+    color:var(--muted); border-radius:999px; padding:9px 15px; font-family:var(--font); font-size:13.5px; font-weight:700;
+    cursor:pointer; margin-bottom:14px; transition:.14s;}
+  .backbtn:hover{border-color:var(--brand); color:var(--ink);}
+  .stats a.chip{text-decoration:none;}
+  .stats a.chip:hover{border-color:var(--brand);}
+
   canvas#cf{position:fixed; inset:0; pointer-events:none; z-index:60;}
   @media(max-width:480px){ .prompt{font-size:28px;} .clozesent{font-size:20px;} .choices{grid-template-columns:1fr;} }
   @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
@@ -211,6 +218,7 @@
       </div>
     </div>
     <div class="stats">
+      <a class="chip" href="../" title="Zur Lernwelt-Startseite">🏠</a>
       <div class="chip">🔥 <span id="streak">0</span><small>Tage</small></div>
       <div class="chip">✦ <span id="xp">0</span><small>XP</small></div>
     </div>
@@ -252,6 +260,7 @@
   </section>
 
   <section id="play" style="display:none">
+    <button class="backbtn" id="backBtn" type="button">‹ Zurück zur Übersicht</button>
     <div class="bar"><i id="prog"></i></div>
     <div class="card" id="card"></div>
   </section>
@@ -1852,6 +1861,13 @@
   }
 
   $("#startBtn").addEventListener("click",startSession);
+
+  function endToSetup(){
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    $("#play").style.display="none"; $("#end").style.display="none"; $("#setup").style.display="block";
+    blip();
+  }
+  $("#backBtn").addEventListener("click", endToSetup);
 
   /* ---------- Eigene Wörter ---------- */
   $("#saveList").addEventListener("click",function(){
