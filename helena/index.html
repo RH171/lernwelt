@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vokabel-Trainer · Englisch</title>
+<style>
+  :root{
+    --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740;
+    --line:#2a3350; --ink:#eef2fb; --muted:#8a92a8;
+    --brand:#a78bfa; --brand-ink:#c9b8ff;
+    --ok:#49d6bd; --no:#ff7a6b; --gold:#ffce5c;
+    --radius:20px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font); color:var(--ink); min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(167,139,250,.16), transparent 60%),
+      radial-gradient(800px 460px at -10% 0%, rgba(73,214,189,.10), transparent 55%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .wrap{width:100%; max-width:640px; padding:22px 18px 48px;}
+  header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;}
+  .logo{display:flex; align-items:center; gap:12px;}
+  .mark{width:46px; height:46px; border-radius:14px; flex:none; display:grid; place-items:center;
+    background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 8px 22px rgba(124,92,255,.45); font-size:24px;}
+  .logo h1{font-family:var(--round); font-weight:800; font-size:20px; margin:0; letter-spacing:-.01em;}
+  .logo p{margin:1px 0 0; color:var(--muted); font-size:12.5px;}
+  .stats{display:flex; gap:8px;}
+  .chip{display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line);
+    border-radius:999px; padding:7px 12px; font-family:var(--round); font-weight:800; font-size:13.5px;}
+  .chip small{color:var(--muted); font-weight:600; font-size:11px;}
+
+  .setup{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px; box-shadow:var(--shadow); margin-bottom:16px;}
+  .setup h2{font-family:var(--round); font-weight:800; font-size:16px; margin:0 0 14px;}
+  .field{margin-bottom:14px;}
+  .field > label{display:block; font-size:12px; color:var(--muted); font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; margin-bottom:7px;}
+  select{width:100%; font-family:var(--font); font-size:15px; color:var(--ink); background:var(--surface2);
+    border:1px solid var(--line); border-radius:12px; padding:12px 12px; outline:none; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a92a8' stroke-width='2.4' stroke-linecap='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 12px center;}
+  .seg{display:flex; gap:8px; flex-wrap:wrap;}
+  .seg button{flex:1 1 auto; min-width:96px; font-family:var(--font); font-size:13.5px; font-weight:700;
+    color:var(--ink); background:var(--surface2); border:1px solid var(--line); border-radius:12px;
+    padding:11px 10px; cursor:pointer; transition:.14s;}
+  .seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 22%,var(--surface2));
+    border-color:var(--brand); color:#fff;}
+  .seg button:hover{border-color:var(--brand);}
+  .start{width:100%; margin-top:4px; border:none; border-radius:14px; padding:15px; cursor:pointer;
+    font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
+    background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 10px 26px rgba(124,92,255,.4);
+    transition:transform .12s, box-shadow .12s;}
+  .start:hover{transform:translateY(-1px); box-shadow:0 14px 32px rgba(124,92,255,.5);}
+  .start:active{transform:translateY(0);}
+
+  .bar{height:8px; background:var(--surface2); border-radius:999px; overflow:hidden; margin-bottom:16px; border:1px solid var(--line);}
+  .bar i{display:block; height:100%; width:0%; border-radius:999px;
+    background:linear-gradient(90deg,var(--brand),var(--ok)); transition:width .35s ease;}
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:24px; padding:26px 22px;
+    box-shadow:var(--shadow); animation:rise .28s ease;}
+  @keyframes rise{from{opacity:0; transform:translateY(10px);}to{opacity:1; transform:none;}}
+  .card .kicker{font-size:11.5px; color:var(--muted); font-weight:800; text-transform:uppercase;
+    letter-spacing:.1em; text-align:center;}
+  .prompt{font-family:var(--round); font-weight:800; font-size:34px; text-align:center; letter-spacing:-.02em;
+    margin:12px 0 6px; line-height:1.15;}
+  .prompt .say{vertical-align:middle; margin-left:10px; cursor:pointer; background:var(--surface2);
+    color:var(--brand-ink); width:40px; height:40px; border-radius:12px; font-size:19px; border:1px solid var(--line);}
+  .prompt .say:hover{border-color:var(--brand);}
+  .hint{text-align:center; color:var(--muted); font-size:13.5px; min-height:18px; margin-bottom:20px;}
+  .masked{letter-spacing:.18em; font-family:var(--round); font-weight:800; color:var(--ink);}
+
+  .clozemean{text-align:center; color:var(--muted); font-size:14px; margin:14px 0 4px;}
+  .clozemean b{color:var(--ink);}
+  .clozesent{font-family:var(--round); font-weight:700; font-size:23px; text-align:center; line-height:1.45;
+    margin:6px 4px 20px; letter-spacing:-.01em;}
+  .gap{display:inline-block; min-width:96px; border-bottom:3px solid var(--brand); color:var(--brand-ink);
+    margin:0 4px; text-align:center;}
+
+  .choices{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .choice{font-family:var(--font); font-size:16px; font-weight:600; color:var(--ink); text-align:left;
+    background:var(--surface2); border:1px solid var(--line); border-radius:14px; padding:15px 14px;
+    cursor:pointer; transition:.12s;}
+  .choice:hover{border-color:var(--brand); transform:translateY(-1px);}
+  .choice.ok{background:color-mix(in srgb,var(--ok) 20%,var(--surface2)); border-color:var(--ok); color:#eafff9;}
+  .choice.no{background:color-mix(in srgb,var(--no) 18%,var(--surface2)); border-color:var(--no); color:#fff0ee;}
+  .choice:disabled{cursor:default;}
+
+  .answer{display:flex; gap:10px;}
+  .answer input{flex:1; font-family:var(--font); font-size:18px; color:var(--ink); background:var(--surface2);
+    border:1.5px solid var(--line); border-radius:14px; padding:14px 15px; outline:none;}
+  .answer input:focus{border-color:var(--brand);}
+  .answer input.ok{border-color:var(--ok);} .answer input.no{border-color:var(--no);}
+  .answer button{border:none; border-radius:14px; padding:0 20px; font-family:var(--round); font-weight:800;
+    font-size:15px; color:#150f2e; background:var(--brand); cursor:pointer;}
+
+  .verdict{text-align:center; font-weight:700; font-size:15px; margin-top:18px; min-height:22px;}
+  .verdict.ok{color:var(--ok);} .verdict.no{color:var(--no);}
+  .exs{text-align:center; color:var(--muted); font-size:13.5px; font-style:italic; margin-top:8px; line-height:1.4;}
+  .next{display:block; margin:14px auto 0; border:none; border-radius:13px; padding:12px 26px; cursor:pointer;
+    font-family:var(--round); font-weight:800; font-size:15px; color:var(--ink);
+    background:var(--surface2); border:1px solid var(--line);}
+  .next:hover{border-color:var(--brand);}
+
+  .done{background:var(--surface); border:1px solid var(--line); border-radius:24px; padding:30px 22px;
+    text-align:center; box-shadow:var(--shadow);}
+  .done .big{font-size:52px;}
+  .done h2{font-family:var(--round); font-weight:800; font-size:24px; margin:8px 0 4px;}
+  .done p{color:var(--muted); margin:0 0 6px; font-size:14.5px;}
+  .review{text-align:left; background:var(--surface2); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; margin:16px 0; font-size:14px;}
+  .review b{color:var(--gold);}
+  .review div{padding:5px 0; border-bottom:1px solid var(--line);}
+  .review div:last-child{border-bottom:none;}
+
+  .adder{margin-top:16px;}
+  .adder summary{cursor:pointer; color:var(--muted); font-size:13px; font-weight:700; list-style:none;}
+  .adder summary::-webkit-details-marker{display:none;}
+  .adder textarea{width:100%; margin-top:10px; min-height:110px; font-family:ui-monospace,Menlo,monospace;
+    font-size:13.5px; color:var(--ink); background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:12px; outline:none; resize:vertical;}
+  .adder .row{display:flex; gap:10px; margin-top:10px; align-items:center;}
+  .adder input[type=text]{flex:1; font-family:var(--font); font-size:14px; color:var(--ink);
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px;}
+  .adder button{border:none; border-radius:10px; padding:10px 16px; font-weight:800; font-family:var(--round);
+    color:#150f2e; background:var(--ok); cursor:pointer;}
+  .adder .tiny{color:var(--muted); font-size:11.5px; margin-top:8px;}
+
+  .foot{text-align:center; color:var(--muted); font-size:11.5px; margin-top:26px; line-height:1.6;}
+  canvas#cf{position:fixed; inset:0; pointer-events:none; z-index:60;}
+  @media(max-width:480px){ .prompt{font-size:28px;} .clozesent{font-size:20px;} .choices{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="mark">🇬🇧</div>
+      <div>
+        <h1>Vokabel-Trainer</h1>
+        <p id="sub">Englisch · 6. Klasse</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="chip">🔥 <span id="streak">0</span><small>Tage</small></div>
+      <div class="chip">✦ <span id="xp">0</span><small>XP</small></div>
+    </div>
+  </header>
+
+  <section class="setup" id="setup">
+    <h2>Bereit zum Üben?</h2>
+    <div class="field">
+      <label for="unit">Einheit</label>
+      <select id="unit"></select>
+    </div>
+    <div class="field">
+      <label>Richtung</label>
+      <div class="seg" id="dir">
+        <button data-v="de2en" aria-pressed="true">Deutsch → Englisch</button>
+        <button data-v="en2de" aria-pressed="false">Englisch → Deutsch</button>
+        <button data-v="mix" aria-pressed="false">Gemischt</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Übung</label>
+      <div class="seg" id="mode">
+        <button data-v="mc" aria-pressed="true">Multiple-Choice</button>
+        <button data-v="type" aria-pressed="false">Eintippen</button>
+        <button data-v="cloze" aria-pressed="false">Lückentext</button>
+      </div>
+    </div>
+    <button class="start" id="startBtn">Los geht's</button>
+
+    <details class="adder">
+      <summary>＋ Eigene Wörter hinzufügen (z. B. Buch-Einheit)</summary>
+      <div class="row"><input type="text" id="unitName" placeholder="Name der Einheit (z. B. Unit 1 · S. 12–15)"></div>
+      <textarea id="pasteBox" placeholder="Ein Paar pro Zeile, so:&#10;house = das Haus&#10;to learn = lernen&#10;weekend = das Wochenende"></textarea>
+      <div class="row">
+        <button id="saveList">Einheit speichern</button>
+        <span class="tiny" id="addMsg">Trennzeichen: „=", „;" oder Tab</span>
+      </div>
+    </details>
+  </section>
+
+  <section id="play" style="display:none">
+    <div class="bar"><i id="prog"></i></div>
+    <div class="card" id="card"></div>
+  </section>
+
+  <section id="end" style="display:none"></section>
+
+  <p class="foot">15 Themen · 244 Vokabeln fürs 6.-Klasse-Jahr. Eigene Buch-Vokabeln über „＋ Eigene Wörter" jederzeit ergänzbar.</p>
+</div>
+<canvas id="cf"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s);};
+  var get=function(k,d){try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}};
+  var set=function(k,v){try{localStorage.setItem(k,v);}catch(e){}};
+
+  /* ---------- Themen-Einheiten (eigene Listen, kein Buch-Inhalt) ---------- */
+  var UNITS=[
+    {
+      "id": "town",
+      "name": "Stadt & Wege",
+      "pairs": [
+        {
+          "en": "town",
+          "de": "die Stadt",
+          "ex": "I live in a small town."
+        },
+        {
+          "en": "city",
+          "de": "die Großstadt",
+          "ex": "London is a very big city."
+        },
+        {
+          "en": "street",
+          "de": "die Straße",
+          "ex": "Our street is very quiet."
+        },
+        {
+          "en": "shop",
+          "de": "der Laden / das Geschäft",
+          "ex": "There is a new shop near the station."
+        },
+        {
+          "en": "market",
+          "de": "der Markt",
+          "ex": "We buy fruit at the market."
+        },
+        {
+          "en": "station",
+          "de": "der Bahnhof",
+          "ex": "The train leaves from the station."
+        },
+        {
+          "en": "bank",
+          "de": "die Bank",
+          "ex": "My mum works at a bank."
+        },
+        {
+          "en": "church",
+          "de": "die Kirche",
+          "ex": "The old church is in the centre."
+        },
+        {
+          "en": "bridge",
+          "de": "die Brücke",
+          "ex": "We walked over the bridge."
+        },
+        {
+          "en": "square",
+          "de": "der Platz",
+          "ex": "The market square is full of people."
+        },
+        {
+          "en": "corner",
+          "de": "die Ecke",
+          "ex": "The shop is on the corner."
+        },
+        {
+          "en": "to turn",
+          "de": "abbiegen",
+          "ex": "Turn left at the traffic lights."
+        },
+        {
+          "en": "left",
+          "de": "links",
+          "ex": "The bakery is on the left."
+        },
+        {
+          "en": "right",
+          "de": "rechts",
+          "ex": "Go right after the bank."
+        },
+        {
+          "en": "straight on",
+          "de": "geradeaus",
+          "ex": "Go straight on for two minutes."
+        },
+        {
+          "en": "between",
+          "de": "zwischen",
+          "ex": "The café is between the bank and the shop."
+        },
+        {
+          "en": "opposite",
+          "de": "gegenüber",
+          "ex": "The park is opposite the school."
+        }
+      ]
+    },
+    {
+      "id": "school",
+      "name": "Schule & Fächer",
+      "pairs": [
+        {
+          "en": "school",
+          "de": "die Schule",
+          "ex": "Our school starts at eight o'clock."
+        },
+        {
+          "en": "teacher",
+          "de": "der Lehrer / die Lehrerin",
+          "ex": "Our English teacher is very funny."
+        },
+        {
+          "en": "classroom",
+          "de": "das Klassenzimmer",
+          "ex": "The classroom is on the first floor."
+        },
+        {
+          "en": "lesson",
+          "de": "die Stunde / der Unterricht",
+          "ex": "The maths lesson was hard today."
+        },
+        {
+          "en": "homework",
+          "de": "die Hausaufgaben",
+          "ex": "I always do my homework after dinner."
+        },
+        {
+          "en": "subject",
+          "de": "das (Schul-)Fach",
+          "ex": "My favourite subject is history."
+        },
+        {
+          "en": "break",
+          "de": "die Pause",
+          "ex": "We play football during the break."
+        },
+        {
+          "en": "timetable",
+          "de": "der Stundenplan",
+          "ex": "Look at the timetable for tomorrow."
+        },
+        {
+          "en": "exercise book",
+          "de": "das Heft",
+          "ex": "Write the new words in your exercise book."
+        },
+        {
+          "en": "pencil case",
+          "de": "das Federmäppchen",
+          "ex": "My pencil case is full of pens."
+        },
+        {
+          "en": "to learn",
+          "de": "lernen",
+          "ex": "We learn English and French at school."
+        },
+        {
+          "en": "to explain",
+          "de": "erklären",
+          "ex": "Can you explain this exercise to me?"
+        },
+        {
+          "en": "difficult",
+          "de": "schwierig",
+          "ex": "The last test was really difficult."
+        },
+        {
+          "en": "maths",
+          "de": "Mathe",
+          "ex": "I am quite good at maths."
+        },
+        {
+          "en": "mark",
+          "de": "die Note",
+          "ex": "She got a very good mark in the test."
+        },
+        {
+          "en": "to pass",
+          "de": "bestehen",
+          "ex": "I hope I pass the exam."
+        }
+      ]
+    },
+    {
+      "id": "family",
+      "name": "Familie & Freunde",
+      "pairs": [
+        {
+          "en": "family",
+          "de": "die Familie",
+          "ex": "My family is quite big."
+        },
+        {
+          "en": "parents",
+          "de": "die Eltern",
+          "ex": "My parents work in the city."
+        },
+        {
+          "en": "brother",
+          "de": "der Bruder",
+          "ex": "My brother is older than me."
+        },
+        {
+          "en": "sister",
+          "de": "die Schwester",
+          "ex": "I have one little sister."
+        },
+        {
+          "en": "grandparents",
+          "de": "die Großeltern",
+          "ex": "We visit our grandparents on Sundays."
+        },
+        {
+          "en": "aunt",
+          "de": "die Tante",
+          "ex": "My aunt lives in Scotland."
+        },
+        {
+          "en": "uncle",
+          "de": "der Onkel",
+          "ex": "My uncle has a big dog."
+        },
+        {
+          "en": "cousin",
+          "de": "der Cousin / die Cousine",
+          "ex": "My cousin is the same age as me."
+        },
+        {
+          "en": "friend",
+          "de": "der Freund / die Freundin",
+          "ex": "She is my best friend."
+        },
+        {
+          "en": "neighbour",
+          "de": "der Nachbar / die Nachbarin",
+          "ex": "Our neighbour is very nice."
+        },
+        {
+          "en": "born",
+          "de": "geboren",
+          "ex": "I was born in 2013."
+        },
+        {
+          "en": "friendly",
+          "de": "freundlich",
+          "ex": "The new boy is very friendly."
+        },
+        {
+          "en": "funny",
+          "de": "lustig",
+          "ex": "My uncle tells funny jokes."
+        },
+        {
+          "en": "tall",
+          "de": "groß (Person)",
+          "ex": "My brother is very tall."
+        },
+        {
+          "en": "curly",
+          "de": "lockig",
+          "ex": "She has curly brown hair."
+        },
+        {
+          "en": "to look like",
+          "de": "aussehen wie",
+          "ex": "I look like my mother."
+        }
+      ]
+    },
+    {
+      "id": "routine",
+      "name": "Tagesablauf & Uhrzeit",
+      "pairs": [
+        {
+          "en": "to get up",
+          "de": "aufstehen",
+          "ex": "I get up at half past six."
+        },
+        {
+          "en": "to wake up",
+          "de": "aufwachen",
+          "ex": "I wake up before my alarm rings."
+        },
+        {
+          "en": "breakfast",
+          "de": "das Frühstück",
+          "ex": "I have breakfast with my family."
+        },
+        {
+          "en": "to brush",
+          "de": "putzen",
+          "ex": "I brush my teeth twice a day."
+        },
+        {
+          "en": "morning",
+          "de": "der Morgen",
+          "ex": "In the morning I ride my bike to school."
+        },
+        {
+          "en": "afternoon",
+          "de": "der Nachmittag",
+          "ex": "We meet in the afternoon."
+        },
+        {
+          "en": "evening",
+          "de": "der Abend",
+          "ex": "In the evening I read a book."
+        },
+        {
+          "en": "o'clock",
+          "de": "Uhr (volle Stunde)",
+          "ex": "It is seven o'clock."
+        },
+        {
+          "en": "half past",
+          "de": "halb (nach)",
+          "ex": "It is half past eight now."
+        },
+        {
+          "en": "quarter past",
+          "de": "Viertel nach",
+          "ex": "The film starts at quarter past nine."
+        },
+        {
+          "en": "quarter to",
+          "de": "Viertel vor",
+          "ex": "It is quarter to ten."
+        },
+        {
+          "en": "to have lunch",
+          "de": "zu Mittag essen",
+          "ex": "We have lunch at school."
+        },
+        {
+          "en": "to go to bed",
+          "de": "ins Bett gehen",
+          "ex": "I go to bed at nine o'clock."
+        },
+        {
+          "en": "early",
+          "de": "früh",
+          "ex": "She always gets up early."
+        },
+        {
+          "en": "late",
+          "de": "spät",
+          "ex": "Sorry, I am late!"
+        },
+        {
+          "en": "every day",
+          "de": "jeden Tag",
+          "ex": "I practise the piano every day."
+        }
+      ]
+    },
+    {
+      "id": "food",
+      "name": "Essen & Trinken",
+      "pairs": [
+        {
+          "en": "bread",
+          "de": "das Brot",
+          "ex": "I like bread with butter and jam."
+        },
+        {
+          "en": "apple",
+          "de": "der Apfel",
+          "ex": "An apple a day is healthy."
+        },
+        {
+          "en": "milk",
+          "de": "die Milch",
+          "ex": "She drinks a glass of milk."
+        },
+        {
+          "en": "water",
+          "de": "das Wasser",
+          "ex": "Can I have some water, please?"
+        },
+        {
+          "en": "cheese",
+          "de": "der Käse",
+          "ex": "This pizza has a lot of cheese."
+        },
+        {
+          "en": "egg",
+          "de": "das Ei",
+          "ex": "I eat an egg for breakfast."
+        },
+        {
+          "en": "chicken",
+          "de": "das Hähnchen",
+          "ex": "We had chicken and rice for dinner."
+        },
+        {
+          "en": "vegetables",
+          "de": "das Gemüse",
+          "ex": "You should eat more vegetables."
+        },
+        {
+          "en": "fruit",
+          "de": "das Obst",
+          "ex": "Fruit is good for you."
+        },
+        {
+          "en": "juice",
+          "de": "der Saft",
+          "ex": "I would like an orange juice."
+        },
+        {
+          "en": "dinner",
+          "de": "das Abendessen",
+          "ex": "We have dinner at seven."
+        },
+        {
+          "en": "hungry",
+          "de": "hungrig",
+          "ex": "I am really hungry now."
+        },
+        {
+          "en": "thirsty",
+          "de": "durstig",
+          "ex": "After sport I am always thirsty."
+        },
+        {
+          "en": "to taste",
+          "de": "schmecken / kosten",
+          "ex": "Can you taste the salt in the soup?"
+        },
+        {
+          "en": "delicious",
+          "de": "lecker / köstlich",
+          "ex": "This soup is really delicious!"
+        },
+        {
+          "en": "to cook",
+          "de": "kochen",
+          "ex": "My dad can cook very well."
+        },
+        {
+          "en": "knife",
+          "de": "das Messer",
+          "ex": "Cut the bread with a knife."
+        },
+        {
+          "en": "fork",
+          "de": "die Gabel",
+          "ex": "Eat your salad with a fork."
+        }
+      ]
+    },
+    {
+      "id": "hobbies",
+      "name": "Hobbys & Sport",
+      "pairs": [
+        {
+          "en": "hobby",
+          "de": "das Hobby",
+          "ex": "My favourite hobby is painting."
+        },
+        {
+          "en": "football",
+          "de": "der Fußball",
+          "ex": "We play football every Saturday."
+        },
+        {
+          "en": "to swim",
+          "de": "schwimmen",
+          "ex": "I can swim very fast."
+        },
+        {
+          "en": "to dance",
+          "de": "tanzen",
+          "ex": "She loves to dance."
+        },
+        {
+          "en": "to paint",
+          "de": "malen",
+          "ex": "I like to paint pictures."
+        },
+        {
+          "en": "to ride",
+          "de": "reiten / fahren",
+          "ex": "I ride my bike to school."
+        },
+        {
+          "en": "team",
+          "de": "die Mannschaft",
+          "ex": "Our team won the game."
+        },
+        {
+          "en": "to win",
+          "de": "gewinnen",
+          "ex": "We hope to win the match."
+        },
+        {
+          "en": "to lose",
+          "de": "verlieren",
+          "ex": "Nobody likes to lose."
+        },
+        {
+          "en": "to practise",
+          "de": "üben",
+          "ex": "I practise the guitar every day."
+        },
+        {
+          "en": "club",
+          "de": "der Verein / Klub",
+          "ex": "I am in a chess club."
+        },
+        {
+          "en": "gym",
+          "de": "die Turnhalle",
+          "ex": "We do sport in the gym."
+        },
+        {
+          "en": "bike",
+          "de": "das Fahrrad",
+          "ex": "My new bike is red."
+        },
+        {
+          "en": "to collect",
+          "de": "sammeln",
+          "ex": "I collect old coins."
+        },
+        {
+          "en": "to watch",
+          "de": "anschauen",
+          "ex": "We watch films at the weekend."
+        },
+        {
+          "en": "free time",
+          "de": "die Freizeit",
+          "ex": "In my free time I read comics."
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "name": "Zuhause & Möbel",
+      "pairs": [
+        {
+          "en": "house",
+          "de": "das Haus",
+          "ex": "We live in a big house."
+        },
+        {
+          "en": "flat",
+          "de": "die Wohnung",
+          "ex": "They live in a small flat."
+        },
+        {
+          "en": "room",
+          "de": "das Zimmer",
+          "ex": "My room is on the first floor."
+        },
+        {
+          "en": "kitchen",
+          "de": "die Küche",
+          "ex": "We cook dinner in the kitchen."
+        },
+        {
+          "en": "bedroom",
+          "de": "das Schlafzimmer",
+          "ex": "My bedroom is very tidy."
+        },
+        {
+          "en": "bathroom",
+          "de": "das Badezimmer",
+          "ex": "The bathroom is next to my room."
+        },
+        {
+          "en": "garden",
+          "de": "der Garten",
+          "ex": "We play in the garden."
+        },
+        {
+          "en": "table",
+          "de": "der Tisch",
+          "ex": "Put the plates on the table."
+        },
+        {
+          "en": "chair",
+          "de": "der Stuhl",
+          "ex": "There is a chair by the window."
+        },
+        {
+          "en": "bed",
+          "de": "das Bett",
+          "ex": "I make my bed every morning."
+        },
+        {
+          "en": "door",
+          "de": "die Tür",
+          "ex": "Please close the door."
+        },
+        {
+          "en": "window",
+          "de": "das Fenster",
+          "ex": "Open the window, it is hot."
+        },
+        {
+          "en": "wall",
+          "de": "die Wand / die Mauer",
+          "ex": "There is a poster on the wall."
+        },
+        {
+          "en": "floor",
+          "de": "der Boden / das Stockwerk",
+          "ex": "My books are on the floor."
+        },
+        {
+          "en": "cupboard",
+          "de": "der Schrank",
+          "ex": "The cups are in the cupboard."
+        },
+        {
+          "en": "lamp",
+          "de": "die Lampe",
+          "ex": "Turn on the lamp, please."
+        }
+      ]
+    },
+    {
+      "id": "clothes",
+      "name": "Kleidung & Einkaufen",
+      "pairs": [
+        {
+          "en": "clothes",
+          "de": "die Kleidung",
+          "ex": "I buy new clothes in autumn."
+        },
+        {
+          "en": "trousers",
+          "de": "die Hose",
+          "ex": "These trousers are too long."
+        },
+        {
+          "en": "shirt",
+          "de": "das Hemd",
+          "ex": "He wears a white shirt."
+        },
+        {
+          "en": "dress",
+          "de": "das Kleid",
+          "ex": "She has a beautiful dress."
+        },
+        {
+          "en": "jumper",
+          "de": "der Pullover",
+          "ex": "It is cold, put on a jumper."
+        },
+        {
+          "en": "shoes",
+          "de": "die Schuhe",
+          "ex": "My new shoes are black."
+        },
+        {
+          "en": "jacket",
+          "de": "die Jacke",
+          "ex": "Take your jacket, it is raining."
+        },
+        {
+          "en": "hat",
+          "de": "der Hut / die Mütze",
+          "ex": "He always wears a funny hat."
+        },
+        {
+          "en": "to wear",
+          "de": "tragen (Kleidung)",
+          "ex": "I wear a uniform at school."
+        },
+        {
+          "en": "to buy",
+          "de": "kaufen",
+          "ex": "I want to buy a present."
+        },
+        {
+          "en": "to pay",
+          "de": "bezahlen",
+          "ex": "You can pay at the till."
+        },
+        {
+          "en": "money",
+          "de": "das Geld",
+          "ex": "I do not have much money."
+        },
+        {
+          "en": "expensive",
+          "de": "teuer",
+          "ex": "This jacket is too expensive."
+        },
+        {
+          "en": "cheap",
+          "de": "billig / günstig",
+          "ex": "The shoes were really cheap."
+        },
+        {
+          "en": "size",
+          "de": "die Größe",
+          "ex": "What size are you?"
+        },
+        {
+          "en": "shop assistant",
+          "de": "der Verkäufer / die Verkäuferin",
+          "ex": "The shop assistant was very helpful."
+        }
+      ]
+    },
+    {
+      "id": "travel",
+      "name": "Ferien & Reisen",
+      "pairs": [
+        {
+          "en": "holiday",
+          "de": "die Ferien / der Urlaub",
+          "ex": "We go on holiday in summer."
+        },
+        {
+          "en": "trip",
+          "de": "der Ausflug",
+          "ex": "We had a school trip to York."
+        },
+        {
+          "en": "beach",
+          "de": "der Strand",
+          "ex": "We played on the beach all day."
+        },
+        {
+          "en": "sea",
+          "de": "das Meer",
+          "ex": "The sea was warm and blue."
+        },
+        {
+          "en": "mountain",
+          "de": "der Berg",
+          "ex": "We climbed a high mountain."
+        },
+        {
+          "en": "plane",
+          "de": "das Flugzeug",
+          "ex": "Our plane leaves at ten."
+        },
+        {
+          "en": "airport",
+          "de": "der Flughafen",
+          "ex": "We waited at the airport."
+        },
+        {
+          "en": "suitcase",
+          "de": "der Koffer",
+          "ex": "My suitcase is very heavy."
+        },
+        {
+          "en": "ticket",
+          "de": "das Ticket / die Fahrkarte",
+          "ex": "I bought a ticket for the train."
+        },
+        {
+          "en": "hotel",
+          "de": "das Hotel",
+          "ex": "Our hotel was near the beach."
+        },
+        {
+          "en": "map",
+          "de": "die Landkarte / der Stadtplan",
+          "ex": "Look at the map to find the way."
+        },
+        {
+          "en": "to travel",
+          "de": "reisen",
+          "ex": "I love to travel by train."
+        },
+        {
+          "en": "abroad",
+          "de": "im Ausland",
+          "ex": "This year we went abroad."
+        },
+        {
+          "en": "journey",
+          "de": "die Reise / die Fahrt",
+          "ex": "The journey took five hours."
+        },
+        {
+          "en": "to pack",
+          "de": "packen",
+          "ex": "Do not forget to pack your toothbrush."
+        },
+        {
+          "en": "camera",
+          "de": "die Kamera",
+          "ex": "I took lots of photos with my camera."
+        }
+      ]
+    },
+    {
+      "id": "animals",
+      "name": "Tiere & Natur",
+      "pairs": [
+        {
+          "en": "animal",
+          "de": "das Tier",
+          "ex": "The lion is a wild animal."
+        },
+        {
+          "en": "dog",
+          "de": "der Hund",
+          "ex": "Our dog likes long walks."
+        },
+        {
+          "en": "cat",
+          "de": "die Katze",
+          "ex": "The cat is sleeping on the sofa."
+        },
+        {
+          "en": "horse",
+          "de": "das Pferd",
+          "ex": "She rides a brown horse."
+        },
+        {
+          "en": "bird",
+          "de": "der Vogel",
+          "ex": "A little bird sat on the tree."
+        },
+        {
+          "en": "fish",
+          "de": "der Fisch",
+          "ex": "There is a big fish in the pond."
+        },
+        {
+          "en": "tree",
+          "de": "der Baum",
+          "ex": "The tree in our garden is very old."
+        },
+        {
+          "en": "flower",
+          "de": "die Blume",
+          "ex": "She picked a yellow flower."
+        },
+        {
+          "en": "forest",
+          "de": "der Wald",
+          "ex": "We went for a walk in the forest."
+        },
+        {
+          "en": "river",
+          "de": "der Fluss",
+          "ex": "The river is cold and deep."
+        },
+        {
+          "en": "field",
+          "de": "das Feld / die Wiese",
+          "ex": "The cows are in the field."
+        },
+        {
+          "en": "mouse",
+          "de": "die Maus",
+          "ex": "The cat is chasing a mouse."
+        },
+        {
+          "en": "rabbit",
+          "de": "das Kaninchen",
+          "ex": "My rabbit has soft grey fur."
+        },
+        {
+          "en": "wild",
+          "de": "wild",
+          "ex": "Foxes are wild animals."
+        },
+        {
+          "en": "to feed",
+          "de": "füttern",
+          "ex": "I feed my rabbit every morning."
+        },
+        {
+          "en": "leaf",
+          "de": "das Blatt",
+          "ex": "A red leaf fell from the tree."
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "name": "Wetter & Jahreszeiten",
+      "pairs": [
+        {
+          "en": "weather",
+          "de": "das Wetter",
+          "ex": "The weather is nice today."
+        },
+        {
+          "en": "sun",
+          "de": "die Sonne",
+          "ex": "The sun is shining."
+        },
+        {
+          "en": "rain",
+          "de": "der Regen",
+          "ex": "I do not like the rain."
+        },
+        {
+          "en": "snow",
+          "de": "der Schnee",
+          "ex": "The children play in the snow."
+        },
+        {
+          "en": "wind",
+          "de": "der Wind",
+          "ex": "The wind is very strong today."
+        },
+        {
+          "en": "cloud",
+          "de": "die Wolke",
+          "ex": "There is one white cloud in the sky."
+        },
+        {
+          "en": "warm",
+          "de": "warm",
+          "ex": "It is warm and sunny."
+        },
+        {
+          "en": "cold",
+          "de": "kalt",
+          "ex": "It is very cold in winter."
+        },
+        {
+          "en": "sunny",
+          "de": "sonnig",
+          "ex": "Tomorrow will be sunny."
+        },
+        {
+          "en": "rainy",
+          "de": "regnerisch",
+          "ex": "It was a grey, rainy day."
+        },
+        {
+          "en": "spring",
+          "de": "der Frühling",
+          "ex": "The flowers grow in spring."
+        },
+        {
+          "en": "summer",
+          "de": "der Sommer",
+          "ex": "We swim in the sea in summer."
+        },
+        {
+          "en": "autumn",
+          "de": "der Herbst",
+          "ex": "The leaves fall in autumn."
+        },
+        {
+          "en": "winter",
+          "de": "der Winter",
+          "ex": "It often snows in winter."
+        },
+        {
+          "en": "season",
+          "de": "die Jahreszeit",
+          "ex": "My favourite season is spring."
+        },
+        {
+          "en": "degree",
+          "de": "der Grad",
+          "ex": "It is only one degree outside today."
+        }
+      ]
+    },
+    {
+      "id": "feelings",
+      "name": "Gefühle & Adjektive",
+      "pairs": [
+        {
+          "en": "happy",
+          "de": "glücklich / froh",
+          "ex": "I am very happy today."
+        },
+        {
+          "en": "sad",
+          "de": "traurig",
+          "ex": "She felt sad after the film."
+        },
+        {
+          "en": "angry",
+          "de": "wütend / böse",
+          "ex": "Dad was angry about the mess."
+        },
+        {
+          "en": "tired",
+          "de": "müde",
+          "ex": "I am tired after school."
+        },
+        {
+          "en": "afraid",
+          "de": "ängstlich / Angst haben",
+          "ex": "I am afraid of spiders."
+        },
+        {
+          "en": "bored",
+          "de": "gelangweilt",
+          "ex": "The children were bored in the rain."
+        },
+        {
+          "en": "excited",
+          "de": "aufgeregt / gespannt",
+          "ex": "We are excited about the trip."
+        },
+        {
+          "en": "surprised",
+          "de": "überrascht",
+          "ex": "She was surprised by the present."
+        },
+        {
+          "en": "proud",
+          "de": "stolz",
+          "ex": "My parents are proud of me."
+        },
+        {
+          "en": "nervous",
+          "de": "nervös",
+          "ex": "I am nervous before a test."
+        },
+        {
+          "en": "glad",
+          "de": "froh",
+          "ex": "I am glad you are here."
+        },
+        {
+          "en": "lucky",
+          "de": "glücklich (Glück haben)",
+          "ex": "You are so lucky!"
+        },
+        {
+          "en": "nice",
+          "de": "nett / schön",
+          "ex": "That was a nice surprise."
+        },
+        {
+          "en": "boring",
+          "de": "langweilig",
+          "ex": "The film was really boring."
+        },
+        {
+          "en": "great",
+          "de": "toll / großartig",
+          "ex": "We had a great time."
+        },
+        {
+          "en": "terrible",
+          "de": "schrecklich",
+          "ex": "The weather was terrible."
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "name": "Körper & Gesundheit",
+      "pairs": [
+        {
+          "en": "body",
+          "de": "der Körper",
+          "ex": "Sport is good for your body."
+        },
+        {
+          "en": "head",
+          "de": "der Kopf",
+          "ex": "My head hurts a little."
+        },
+        {
+          "en": "hand",
+          "de": "die Hand",
+          "ex": "Give me your hand."
+        },
+        {
+          "en": "arm",
+          "de": "der Arm",
+          "ex": "He broke his arm last week."
+        },
+        {
+          "en": "leg",
+          "de": "das Bein",
+          "ex": "The dog hurt its leg."
+        },
+        {
+          "en": "foot",
+          "de": "der Fuß",
+          "ex": "I have a stone in my foot."
+        },
+        {
+          "en": "eye",
+          "de": "das Auge",
+          "ex": "She has one blue eye and one green eye."
+        },
+        {
+          "en": "ear",
+          "de": "das Ohr",
+          "ex": "I cannot hear well with this ear."
+        },
+        {
+          "en": "tooth",
+          "de": "der Zahn",
+          "ex": "The dentist checked every tooth."
+        },
+        {
+          "en": "hair",
+          "de": "die Haare",
+          "ex": "She has long dark hair."
+        },
+        {
+          "en": "ill",
+          "de": "krank",
+          "ex": "I was ill last week."
+        },
+        {
+          "en": "to hurt",
+          "de": "wehtun / verletzen",
+          "ex": "Does your tooth hurt?"
+        },
+        {
+          "en": "doctor",
+          "de": "der Arzt / die Ärztin",
+          "ex": "The doctor gave me some medicine."
+        },
+        {
+          "en": "medicine",
+          "de": "die Medizin",
+          "ex": "Take this medicine twice a day."
+        },
+        {
+          "en": "healthy",
+          "de": "gesund",
+          "ex": "Fruit and vegetables are healthy."
+        },
+        {
+          "en": "to feel",
+          "de": "sich fühlen",
+          "ex": "I feel much better today."
+        }
+      ]
+    },
+    {
+      "id": "irregular",
+      "name": "Unregelmäßige Verben",
+      "pairs": [
+        {
+          "en": "go",
+          "de": "gehen (went, gone)",
+          "ex": "We go to the park on Sundays."
+        },
+        {
+          "en": "have",
+          "de": "haben (had, had)",
+          "ex": "We have lunch at one."
+        },
+        {
+          "en": "do",
+          "de": "tun / machen (did, done)",
+          "ex": "I do my homework after school."
+        },
+        {
+          "en": "make",
+          "de": "machen (made, made)",
+          "ex": "I make my bed every morning."
+        },
+        {
+          "en": "see",
+          "de": "sehen (saw, seen)",
+          "ex": "I can see the sea from here."
+        },
+        {
+          "en": "eat",
+          "de": "essen (ate, eaten)",
+          "ex": "We eat dinner together."
+        },
+        {
+          "en": "drink",
+          "de": "trinken (drank, drunk)",
+          "ex": "I drink water after sport."
+        },
+        {
+          "en": "give",
+          "de": "geben (gave, given)",
+          "ex": "Please give me the book."
+        },
+        {
+          "en": "take",
+          "de": "nehmen (took, taken)",
+          "ex": "I take the bus to town."
+        },
+        {
+          "en": "come",
+          "de": "kommen (came, come)",
+          "ex": "Come to my house later."
+        },
+        {
+          "en": "buy",
+          "de": "kaufen (bought, bought)",
+          "ex": "I want to buy new shoes."
+        },
+        {
+          "en": "find",
+          "de": "finden (found, found)",
+          "ex": "I cannot find my keys."
+        },
+        {
+          "en": "write",
+          "de": "schreiben (wrote, written)",
+          "ex": "I write to my pen friend."
+        },
+        {
+          "en": "read",
+          "de": "lesen (read, read)",
+          "ex": "I read comics in bed."
+        },
+        {
+          "en": "speak",
+          "de": "sprechen (spoke, spoken)",
+          "ex": "We speak English in class."
+        },
+        {
+          "en": "run",
+          "de": "rennen / laufen (ran, run)",
+          "ex": "I run in the park every day."
+        }
+      ]
+    },
+    {
+      "id": "question",
+      "name": "Frage- & Verbindungswörter",
+      "pairs": [
+        {
+          "en": "what",
+          "de": "was",
+          "ex": "What is your name?"
+        },
+        {
+          "en": "who",
+          "de": "wer",
+          "ex": "Who is that boy?"
+        },
+        {
+          "en": "where",
+          "de": "wo / wohin",
+          "ex": "Where do you live?"
+        },
+        {
+          "en": "when",
+          "de": "wann",
+          "ex": "When does the film start?"
+        },
+        {
+          "en": "why",
+          "de": "warum",
+          "ex": "Why are you so late?"
+        },
+        {
+          "en": "how",
+          "de": "wie",
+          "ex": "How are you today?"
+        },
+        {
+          "en": "which",
+          "de": "welche(r/s)",
+          "ex": "Which book is yours?"
+        },
+        {
+          "en": "whose",
+          "de": "wessen",
+          "ex": "Whose bag is this?"
+        },
+        {
+          "en": "because",
+          "de": "weil",
+          "ex": "I stayed home because I was ill."
+        },
+        {
+          "en": "but",
+          "de": "aber",
+          "ex": "I like tea but not coffee."
+        },
+        {
+          "en": "and",
+          "de": "und",
+          "ex": "I have a dog and a cat."
+        },
+        {
+          "en": "or",
+          "de": "oder",
+          "ex": "Do you want tea or juice?"
+        },
+        {
+          "en": "so",
+          "de": "also / deshalb",
+          "ex": "It was raining, so we stayed inside."
+        },
+        {
+          "en": "then",
+          "de": "dann",
+          "ex": "First we ate, then we played."
+        },
+        {
+          "en": "before",
+          "de": "bevor / vor",
+          "ex": "Wash your hands before dinner."
+        },
+        {
+          "en": "after",
+          "de": "nach / nachdem",
+          "ex": "We went home after the game."
+        },
+        {
+          "en": "also",
+          "de": "auch",
+          "ex": "She sings and also plays the piano."
+        }
+      ]
+    }
+  ];
+
+  function customUnits(){ try{var a=JSON.parse(get("helena-vok-custom-units","[]"));return Array.isArray(a)?a:[];}catch(e){return [];} }
+  function allUnits(){ return UNITS.concat(customUnits()); }
+
+  var unitSel=$("#unit");
+  function fillUnits(sel){
+    unitSel.innerHTML="";
+    allUnits().forEach(function(u){
+      var o=document.createElement("option"); o.value=u.id; o.textContent=u.name+" ("+u.pairs.length+")";
+      unitSel.appendChild(o);
+    });
+    if(sel) unitSel.value=sel;
+  }
+  fillUnits();
+
+  /* ---------- XP & Streak ---------- */
+  var xp=parseInt(get("helena-vok-xp","0"),10)||0;
+  var streak=parseInt(get("helena-vok-streak","0"),10)||0;
+  (function(){
+    var today=new Date(); today.setHours(0,0,0,0);
+    var iso=today.toISOString().slice(0,10);
+    var last=get("helena-vok-last",null);
+    if(last!==iso){
+      var y=new Date(today); y.setDate(y.getDate()-1);
+      streak=(last===y.toISOString().slice(0,10))?streak+1:1;
+      set("helena-vok-streak",String(streak)); set("helena-vok-last",iso);
+    }
+    if(streak<1){streak=1; set("helena-vok-streak","1");}
+  })();
+  function paintStats(){ $("#xp").textContent=xp; $("#streak").textContent=streak; }
+  paintStats();
+
+  function writeProgress(best,uebung){
+    try{ set("lw-progress:helena-englisch-vokabeltrainer.html",
+      JSON.stringify({xp:xp,best:best||0,uebung:uebung||0})); }catch(e){}
+  }
+
+  /* ---------- Einstellungen ---------- */
+  var dir="de2en", mode="mc";
+  function seg(id,cb){
+    var g=$(id);
+    g.addEventListener("click",function(e){
+      var b=e.target.closest("button"); if(!b) return;
+      [].forEach.call(g.children,function(x){x.setAttribute("aria-pressed","false");});
+      b.setAttribute("aria-pressed","true"); cb(b.getAttribute("data-v")); blip();
+    });
+  }
+  seg("#dir",function(v){dir=v;});
+  seg("#mode",function(v){mode=v;});
+
+  /* ---------- Sound ---------- */
+  var actx=null;
+  function tone(f,d,delay,type){
+    try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      var o=actx.createOscillator(),g=actx.createGain(); o.type=type||"sine"; o.frequency.value=f;
+      var t=actx.currentTime+(delay||0); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.16,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(actx.destination);
+      o.start(t); o.stop(t+d+.02);
+    }catch(e){}
+  }
+  function blip(){tone(620,.1,0,"triangle");}
+  function good(){tone(660,.12,0);tone(880,.16,.1);}
+  function bad(){tone(300,.18,0,"sawtooth");}
+  function fanfare(){tone(523,.15,0);tone(659,.15,.12);tone(784,.28,.24);}
+
+  /* ---------- Vorlesen (Englisch) ---------- */
+  function say(text){
+    try{ var u=new SpeechSynthesisUtterance(text); u.lang="en-GB"; u.rate=.9;
+      var vs=speechSynthesis.getVoices(); var en=vs.filter(function(v){return /en(-|_)?(GB|US)/i.test(v.lang);});
+      if(en[0]) u.voice=en[0]; speechSynthesis.cancel(); speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  /* ---------- Helfer ---------- */
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+  function normalize(s){
+    return (s||"").toLowerCase().trim()
+      .replace(/^(to|der|die|das|the|a|an)\s+/,"")
+      .replace(/[.,!?;:'’]/g,"").replace(/\s+/g," ");
+  }
+  function clozeTarget(en){ return en.replace(/^to\s+/,"").trim(); }
+  function esc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+  function makeCloze(sentence, target){
+    if(!sentence) return null;
+    var pat=new RegExp("\\b"+esc(target).replace(/\s+/g,"\\s+")+"\\b","i");
+    if(!pat.test(sentence)) return null;
+    var blank='<span class="gap">'+Array(Math.max(4,target.replace(/\s/g,"").length)+1).join("_")+'</span>';
+    return sentence.replace(pat, blank);
+  }
+  function maskWord(w){
+    return w.split("").map(function(ch,i){
+      if(!/[a-zA-ZäöüÄÖÜß]/.test(ch)) return ch;
+      if(i===0 || i===w.length-1) return ch;
+      return Math.random()<.55 ? "_" : ch;
+    }).join("");
+  }
+
+  /* ---------- Übungslogik ---------- */
+  var queue=[], curUnit=null, roundDir="de2en", total=0, mastered=0, wrongWords=[], answered=false;
+
+  function startSession(){
+    curUnit=allUnits().filter(function(u){return u.id===unitSel.value;})[0]||UNITS[0];
+    roundDir=dir;
+    queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0};}));
+    total=queue.length; mastered=0; wrongWords=[];
+    $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
+    nextCard();
+  }
+  function pickDir(){ return roundDir==="mix" ? (Math.random()<.5?"de2en":"en2de") : roundDir; }
+
+  function nextCard(){
+    answered=false;
+    $("#prog").style.width=(total? Math.round(mastered/total*100):0)+"%";
+    if(!queue.length){ finish(); return; }
+    var item=queue[0], p=item.p;
+    var c=$("#card");
+
+    if(mode==="cloze"){
+      var tgt=clozeTarget(p.en);
+      var sentHtml=makeCloze(p.ex, tgt);
+      item._sol=p.en; item._solLang="en"; item._prompt=p.en;
+      if(sentHtml){
+        c.innerHTML='<div class="kicker">Lückentext · Englisch</div>'+
+          '<div class="clozemean">bedeutet: <b>'+p.de+'</b></div>'+
+          '<div class="clozesent">'+sentHtml+'</div>'+
+          '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="fehlendes Wort"><button id="chk">Prüfen</button></div>'+
+          '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+      } else {
+        c.innerHTML='<div class="kicker">Lückentext · Englisch</div>'+
+          '<div class="prompt">'+p.de+'</div>'+
+          '<div class="hint">Ergänze das englische Wort: <span class="masked">'+maskWord(p.en)+'</span></div>'+
+          '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ganzes Wort"><button id="chk">Prüfen</button></div>'+
+          '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+      }
+      var ipc=$("#ipt"); ipc.focus();
+      var goc=function(){ if(!answered) judgeText(ipc.value,item); };
+      $("#chk").addEventListener("click",goc);
+      ipc.addEventListener("keydown",function(e){ if(e.key==="Enter") goc(); });
+      return;
+    }
+
+    var d=pickDir();
+    var promptWord = d==="de2en" ? p.de : p.en;
+    var solution   = d==="de2en" ? p.en : p.de;
+    item._d=d; item._sol=solution; item._solLang=(d==="de2en"?"en":"de"); item._prompt=promptWord;
+
+    var sayBtn = (d==="en2de")
+      ? '<button class="say" title="Aussprache" data-say="'+p.en.replace(/"/g,'')+'">🔊</button>' : '';
+    var head='<div class="kicker">'+(d==="de2en"?"Deutsch → Englisch":"Englisch → Deutsch")+'</div>'+
+             '<div class="prompt">'+promptWord+sayBtn+'</div>';
+
+    if(mode==="mc"){
+      var opts=[solution];
+      var pool=shuffle(curUnit.pairs.map(function(x){return d==="de2en"?x.en:x.de;})
+                 .filter(function(w){return w!==solution;}));
+      while(opts.length<4 && pool.length) opts.push(pool.pop());
+      opts=shuffle(opts);
+      c.innerHTML=head+'<div class="hint">Wähle die richtige Übersetzung</div><div class="choices" id="ch"></div>'+
+        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+      var ch=$("#ch");
+      opts.forEach(function(o){
+        var b=document.createElement("button"); b.className="choice"; b.textContent=o;
+        b.addEventListener("click",function(){ if(answered) return; judgeChoice(b,o,solution,item); });
+        ch.appendChild(b);
+      });
+    } else { /* type */
+      c.innerHTML=head+'<div class="hint">Tippe die Übersetzung ein</div>'+
+        '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="…"><button id="chk">Prüfen</button></div>'+
+        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+      var ipt=$("#ipt"); ipt.focus();
+      var go=function(){ if(!answered) judgeText(ipt.value,item); };
+      $("#chk").addEventListener("click",go);
+      ipt.addEventListener("keydown",function(e){ if(e.key==="Enter") go(); });
+    }
+
+    var sb=c.querySelector("[data-say]");
+    if(sb) sb.addEventListener("click",function(){ say(sb.getAttribute("data-say")); });
+    if(d==="en2de") say(p.en);
+  }
+
+  function award(item,correct){
+    answered=true;
+    if(correct){ mastered++; xp+=10; queue.shift(); }
+    else{
+      item.tries++; if(wrongWords.indexOf(item.p)<0) wrongWords.push(item.p);
+      queue.shift(); queue.splice(Math.min(3,queue.length),0,item);
+      total=mastered+queue.length;
+    }
+    xp=Math.max(0,xp); set("helena-vok-xp",String(xp)); paintStats();
+    writeProgress(mastered, wrongWords.length);
+  }
+
+  function afterAnswer(correct,solution,item){
+    var vd=$("#vd");
+    if(correct){ vd.className="verdict ok"; vd.textContent="Richtig! ✦ +10 XP"; good(); }
+    else{ vd.className="verdict no"; vd.textContent="Richtig wäre: "+solution; bad(); }
+    if(item && item.p && item.p.ex){ var e=$("#exs"); if(e) e.textContent="„"+item.p.ex+"\u201c"; }
+    var b=document.createElement("button"); b.className="next"; b.textContent="Weiter ›";
+    b.addEventListener("click",nextCard);
+    $("#card").appendChild(b); b.focus();
+  }
+
+  function judgeChoice(btn,chosen,solution,item){
+    var correct=(chosen===solution);
+    award(item,correct);
+    [].forEach.call($("#ch").children,function(x){
+      x.disabled=true;
+      if(x.textContent===solution) x.classList.add("ok");
+      else if(x===btn && !correct) x.classList.add("no");
+    });
+    if(item.p && item.p.en) say(item.p.en);
+    afterAnswer(correct,solution,item);
+  }
+
+  function judgeText(val,item){
+    var correct = normalize(val)===normalize(item._sol);
+    var ipt=$("#ipt"); ipt.classList.add(correct?"ok":"no"); ipt.disabled=true;
+    var chk=$("#chk"); if(chk) chk.disabled=true;
+    award(item,correct);
+    if(item.p && item.p.en) say(item.p.en);
+    afterAnswer(correct,item._sol,item);
+  }
+
+  function finish(){
+    $("#play").style.display="none";
+    var e=$("#end"); e.style.display="block";
+    var reviewHtml="";
+    if(wrongWords.length){
+      reviewHtml='<div class="review"><b>Nochmal anschauen:</b>'+
+        wrongWords.map(function(p){return '<div>'+p.en+' — '+p.de+'</div>';}).join("")+'</div>';
+    }
+    var perfect=!wrongWords.length;
+    e.innerHTML='<div class="done">'+
+      '<div class="big">'+(perfect?"🏆":"💪")+'</div>'+
+      '<h2>'+(perfect?"Perfekt gemeistert!":"Gut drangeblieben!")+'</h2>'+
+      '<p>'+curUnit.name+' · '+curUnit.pairs.length+' Vokabeln</p>'+
+      '<p>Gesamt-XP: <b style="color:var(--gold)">'+xp+'</b></p>'+
+      reviewHtml+
+      '<button class="start" id="again">Neue Runde</button></div>';
+    $("#again").addEventListener("click",function(){ $("#end").style.display="none"; $("#setup").style.display="block"; });
+    writeProgress(mastered, wrongWords.length);
+    if(perfect){ confetti(); fanfare(); } else { good(); }
+  }
+
+  $("#startBtn").addEventListener("click",startSession);
+
+  /* ---------- Eigene Wörter ---------- */
+  $("#saveList").addEventListener("click",function(){
+    var name=($("#unitName").value||"").trim() || "Eigene Einheit";
+    var lines=($("#pasteBox").value||"").split("\n");
+    var pairs=[];
+    lines.forEach(function(l){
+      var m=l.split(/=|;|\t/);
+      if(m.length>=2){
+        var en=m[0].trim(), de=m.slice(1).join(" ").trim();
+        if(en && de) pairs.push({en:en, de:de});
+      }
+    });
+    var msg=$("#addMsg");
+    if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare eingeben."; msg.style.color="var(--no)"; return; }
+    var units=customUnits(); var id="u"+Date.now();
+    units.push({id:id, name:name, pairs:pairs});
+    set("helena-vok-custom-units",JSON.stringify(units));
+    fillUnits(id);
+    $("#unitName").value=""; $("#pasteBox").value="";
+    msg.textContent="Gespeichert: "+pairs.length+" Vokabeln ✓"; msg.style.color="var(--ok)";
+    blip();
+  });
+
+  /* ---------- Konfetti ---------- */
+  function confetti(){
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var c=$("#cf"); if(!c.getContext) return; var x=c.getContext("2d");
+    c.width=innerWidth; c.height=innerHeight;
+    var cols=["#a78bfa","#7c5cff","#49d6bd","#ffce5c","#ff7a6b"], P=[];
+    for(var i=0;i<120;i++)P.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.4,
+      r:5+Math.random()*6,vy:2+Math.random()*3.5,vx:-1.5+Math.random()*3,
+      rot:Math.random()*6.28,vr:-.2+Math.random()*.4,col:cols[i%cols.length]});
+    var f=0;(function loop(){ x.clearRect(0,0,c.width,c.height); f++;
+      P.forEach(function(p){ p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.vy+=.05;
+        x.save();x.translate(p.x,p.y);x.rotate(p.rot);x.fillStyle=p.col;
+        x.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);x.restore(); });
+      if(f<200)requestAnimationFrame(loop); else x.clearRect(0,0,c.width,c.height);
+    })();
+  }
+
+  try{ if(window.speechSynthesis) speechSynthesis.onvoiceschanged=function(){}; }catch(e){}
+})();
+</script>
+</body>
+</html>
