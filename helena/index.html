@@ -176,11 +176,18 @@
 (function(){
   var PIN="1234"; /* <-- hier kann der Code später geändert werden */
   var gate=document.getElementById("gate");
-  try{ if(localStorage.getItem("helena-unlocked")==="1"){ gate.parentNode.removeChild(gate); return; } }catch(e){}
+  function unlocked(){ return /(?:^|;\s*)helena_ok=1(?:;|$)/.test(document.cookie); }
+  function remember(){
+    var d=new Date(); d.setTime(d.getTime()+30*24*60*60*1000); /* 30 Tage */
+    document.cookie="helena_ok=1; path=/helena/; expires="+d.toUTCString()+"; SameSite=Lax";
+  }
+  /* Alt-Markierung aus localStorage entfernen – die wurde über Pauls Sync verteilt */
+  try{ localStorage.removeItem("helena-unlocked"); }catch(e){}
+  if(unlocked()){ if(gate&&gate.parentNode) gate.parentNode.removeChild(gate); return; }
   var inp=document.getElementById("gatePin"), err=document.getElementById("gateErr");
   function tryOpen(){
     if(inp.value===PIN){
-      try{ localStorage.setItem("helena-unlocked","1"); }catch(e){}
+      remember();
       gate.style.opacity="0";
       setTimeout(function(){ if(gate.parentNode) gate.parentNode.removeChild(gate); }, 200);
     } else {
