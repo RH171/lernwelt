@@ -1640,11 +1640,36 @@
   function bad(){tone(300,.18,0,"sawtooth");}
   function fanfare(){tone(523,.15,0);tone(659,.15,.12);tone(784,.28,.24);}
 
-  /* ---------- Vorlesen (Englisch) ---------- */
+  /* ---------- Vorlesen (Englisch) – beste verfügbare Stimme ---------- */
+  var bestVoice=null;
+  function chooseVoice(){
+    try{
+      var vs=speechSynthesis.getVoices()||[]; if(!vs.length) return;
+      function score(v){
+        var n=(v.name||"").toLowerCase(), l=(v.lang||"").toLowerCase().replace("_","-"), s=0;
+        if(l.indexOf("en")!==0) return -1;                 // nur Englisch
+        if(l.indexOf("en-gb")===0) s+=3; else s+=1;         // britisch bevorzugt (Green Line)
+        if(n.indexOf("google")>=0) s+=6;                    // Chrome-Google-Stimmen: sehr gut
+        if(v.localService===false) s+=3;                    // Netz-Stimmen meist besser
+        if(/(daniel|kate|serena|arthur|martha|libby|sonia|aria|natasha|jenny|ryan|neural|enhanced|premium|siri)/.test(n)) s+=4;
+        if(/compact|kompakt|eloquence|fred|albert/.test(n)) s-=4;   // blecherne Altstimmen meiden
+        return s;
+      }
+      var ranked=vs.map(function(v){return {v:v,s:score(v)};})
+                   .filter(function(x){return x.s>=0;})
+                   .sort(function(a,b){return b.s-a.s;});
+      if(ranked.length) bestVoice=ranked[0].v;
+    }catch(e){}
+  }
+  chooseVoice();
+  try{ speechSynthesis.onvoiceschanged=chooseVoice; }catch(e){}
+
   function say(text){
-    try{ var u=new SpeechSynthesisUtterance(text); u.lang="en-GB"; u.rate=.9;
-      var vs=speechSynthesis.getVoices(); var en=vs.filter(function(v){return /en(-|_)?(GB|US)/i.test(v.lang);});
-      if(en[0]) u.voice=en[0]; speechSynthesis.cancel(); speechSynthesis.speak(u);
+    try{
+      var u=new SpeechSynthesisUtterance(text);
+      if(bestVoice){ u.voice=bestVoice; u.lang=bestVoice.lang; } else { u.lang="en-GB"; }
+      u.rate=.88;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
     }catch(e){}
   }
 
@@ -1861,7 +1886,6 @@
     })();
   }
 
-  try{ if(window.speechSynthesis) speechSynthesis.onvoiceschanged=function(){}; }catch(e){}
 })();
 </script>
 </body>
