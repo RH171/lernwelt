@@ -148,6 +148,13 @@
   .howto b{color:var(--ink);}
   #detectBtn{border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-family:var(--round);
     color:#150f2e; background:var(--brand); cursor:pointer;}
+  .photobtn{width:100%; border:none; border-radius:14px; padding:15px; cursor:pointer; margin-top:2px;
+    font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
+    background:linear-gradient(150deg,var(--brand),#7c5cff);}
+  .photobtn:active{transform:translateY(1px);}
+  .ocrstatus{margin-top:12px; padding:12px 14px; border-radius:12px; background:var(--surface2);
+    border:1px solid var(--line); color:var(--brand-ink); font-size:13.5px; font-weight:700; text-align:center;}
+  .orline{margin:16px 0 8px; color:var(--muted); font-size:12.5px; text-align:center;}
   #preview{margin-top:14px;}
   .pvhead{font-size:13px; color:var(--muted); margin-bottom:10px; display:flex; align-items:center;
     justify-content:space-between; gap:8px; flex-wrap:wrap;}
@@ -277,15 +284,14 @@
     <button class="start" id="startBtn">Los geht's</button>
 
     <details class="adder">
-      <summary>＋ Neue Einheit aus Foto (Handy-Scan)</summary>
+      <summary>＋ Neue Einheit aus Foto</summary>
       <div class="adderbody">
-        <ol class="howto">
-          <li><b>Wortliste scannen:</b> iPhone „Text scannen"/Live Text, Android „Google Lens" → Text markieren und <b>kopieren</b>.</li>
-          <li>Unten ins Feld <b>einfügen</b> und auf <b>Erkennen</b> tippen.</li>
-          <li>Die Paare kurz <b>prüfen</b>, bei Bedarf verbessern, dann <b>Speichern</b>.</li>
-        </ol>
         <input type="text" id="unitName" placeholder="Name der Einheit (z. B. Station 1)">
-        <textarea id="pasteBox" placeholder="Hier die gescannte Wortliste einfügen …"></textarea>
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+        <button id="photoBtn" class="photobtn" type="button">📷 Wortliste fotografieren</button>
+        <div id="ocrStatus" class="ocrstatus" style="display:none"></div>
+        <div class="orline">oder Liste als Text einfügen:</div>
+        <textarea id="pasteBox" placeholder="… hier einfügen und auf Erkennen tippen"></textarea>
         <div class="row">
           <button id="detectBtn" type="button">Erkennen ›</button>
           <span class="tiny" id="addMsg"></span>
@@ -1915,25 +1921,51 @@
       .replace(/\[[^\]]*\]/g,"")                          /* [Lautschrift] */
       .replace(/\s+/g," ").trim();
   }
+  function smartSplitLine(l){
+    var toks=(l||"").split(/\s+/).filter(Boolean);
+    if(toks.length<2) return null;
+    var artRe=/^(der|die|das|dem|den|des|ein|eine|einen|einem|sich)$/i;
+    for(var i=1;i<toks.length;i++){ if(artRe.test(toks[i])) return [toks.slice(0,i).join(" "), toks.slice(i).join(" ")]; }
+    for(var j=1;j<toks.length;j++){ if(/[äöüßÄÖÜ]/.test(toks[j])) return [toks.slice(0,j).join(" "), toks.slice(j).join(" ")]; }
+    return [toks.slice(0,toks.length-1).join(" "), toks[toks.length-1]];
+  }
   function parseVocab(text){
     var lines=(text||"").split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+    if(!lines.length) return [];
     var sepRe=/\s*(?:=|→|\u2192|::|:|\t|\u2013|\u2014| {2,}| - )\s*/;
-    var withSep=0; lines.forEach(function(l){ if(sepRe.test(l)) withSep++; });
+    var withSep=0, singleTok=0;
+    lines.forEach(function(l){ if(sepRe.test(l)) withSep++; if(l.split(/\s+/).filter(Boolean).length<2) singleTok++; });
+    var half=Math.max(2, Math.floor(lines.length*0.5));
     var pairs=[];
-    if(lines.length && withSep >= Math.max(2, Math.floor(lines.length*0.5))){
-      lines.forEach(function(l){
-        var idx=l.search(sepRe); if(idx<0) return;
-        var m=l.split(sepRe);
-        var en=cleanTok(m[0]); var de=cleanTok(m.slice(1).join(" "));
-        if(en && de) pairs.push({en:en, de:de});
-      });
+    if(withSep>=half){
+      lines.forEach(function(l){ if(l.search(sepRe)<0) return; var m=l.split(sepRe);
+        var en=cleanTok(m[0]), de=cleanTok(m.slice(1).join(" ")); if(en&&de) pairs.push({en:en,de:de}); });
+    } else if(singleTok >= Math.ceil(lines.length*0.4)){
+      for(var i=0;i+1<lines.length;i+=2){ var en2=cleanTok(lines[i]), de2=cleanTok(lines[i+1]); if(en2&&de2) pairs.push({en:en2,de:de2}); }
     } else {
-      for(var i=0;i+1<lines.length;i+=2){
-        var en2=cleanTok(lines[i]), de2=cleanTok(lines[i+1]);
-        if(en2 && de2) pairs.push({en:en2, de:de2});
-      }
+      lines.forEach(function(l){ var s=smartSplitLine(cleanTok(l)); if(s){ var en=cleanTok(s[0]), de=cleanTok(s[1]); if(en&&de) pairs.push({en:en,de:de}); } });
     }
     return pairs;
+  }
+
+  /* Spalten über die größte horizontale Lücke je Zeile trennen (aus Foto-Positionen) */
+  function splitByGap(words){
+    var ws=(words||[]).filter(function(w){return w.text && w.text.trim() && w.bbox;}).sort(function(a,b){return a.bbox.x0-b.bbox.x0;});
+    if(ws.length<2) return null;
+    var maxGap=-1, idx=-1;
+    for(var i=0;i<ws.length-1;i++){ var g=ws[i+1].bbox.x0 - ws[i].bbox.x1; if(g>maxGap){ maxGap=g; idx=i; } }
+    var avgH=ws.reduce(function(s,w){return s+(w.bbox.y1-w.bbox.y0);},0)/ws.length;
+    if(maxGap < avgH*0.8) return null;
+    var en=ws.slice(0,idx+1).map(function(w){return w.text;}).join(" ").replace(/\s+/g," ").trim();
+    var de=ws.slice(idx+1).map(function(w){return w.text;}).join(" ").replace(/\s+/g," ").trim();
+    return (en&&de)?{en:en,de:de}:null;
+  }
+  function pairsFromOCR(data){
+    if(!data) return [];
+    var lines=data.lines||[]; var pairs=[];
+    lines.forEach(function(l){ var p=splitByGap(l.words||[]); if(p) pairs.push(p); });
+    if(pairs.length>=2) return pairs;
+    return parseVocab(data.text||"");   /* Fallback, falls kein klares Spaltenbild */
   }
 
   function renderPreview(pairs){
@@ -1990,6 +2022,44 @@
     var msg=$("#addMsg");
     if(!pairs.length){ msg.textContent="Nichts erkannt – bitte Text einfügen und erneut auf Erkennen tippen."; msg.style.color="var(--no)"; return; }
     msg.textContent=""; renderPreview(pairs);
+  });
+
+  /* ---------- Foto aufnehmen -> Texterkennung im Browser ---------- */
+  function setOcr(txt){ var s=$("#ocrStatus"); if(!txt){ s.style.display="none"; s.textContent=""; return; } s.style.display="block"; s.textContent=txt; }
+  function loadTesseract(cb){
+    if(window.Tesseract){ cb(true); return; }
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.onload=function(){ cb(!!window.Tesseract); };
+    s.onerror=function(){ cb(false); };
+    document.head.appendChild(s);
+  }
+  function handleImage(file){
+    if(!file) return;
+    var msg=$("#addMsg"); msg.textContent="";
+    setOcr("Texterkennung wird geladen … (beim ersten Mal etwas Geduld)");
+    loadTesseract(function(ok){
+      if(!ok){ setOcr(""); msg.textContent="Texterkennung ließ sich nicht laden – Internet prüfen oder Liste als Text einfügen."; msg.style.color="var(--no)"; return; }
+      setOcr("Lese Wortliste … 0 %");
+      var worker;
+      window.Tesseract.createWorker("eng+deu",1,{ logger:function(m){
+          if(m && m.status==="recognizing text"){ setOcr("Lese Wortliste … "+Math.round((m.progress||0)*100)+" %"); }
+          else if(m && m.status){ setOcr("Bereite Texterkennung vor …"); }
+        }})
+        .then(function(w){ worker=w; return w.recognize(file, {}, { blocks:true }); })
+        .then(function(res){
+          try{ if(worker) worker.terminate(); }catch(e){}
+          setOcr("");
+          var pairs=pairsFromOCR(res && res.data);
+          if(!pairs.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
+          msg.textContent=""; renderPreview(pairs);
+        })
+        .catch(function(){ try{ if(worker) worker.terminate(); }catch(e){} setOcr(""); msg.textContent="Bei der Erkennung ging etwas schief – bitte nochmal versuchen."; msg.style.color="var(--no)"; });
+    });
+  }
+  $("#photoBtn").addEventListener("click",function(){ $("#photoInput").click(); });
+  $("#photoInput").addEventListener("change",function(e){
+    var f=e.target.files && e.target.files[0]; handleImage(f); e.target.value="";
   });
 
   /* ---------- Eigene Einheiten verwalten (löschen) ---------- */
