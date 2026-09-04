@@ -5,7 +5,7 @@
     "abgerufen": "2026-09-04",
     "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
     "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
-    "offen": "Englisch fehlt - die Seite liefert derzeit nur die Startseite aus. Fuer Helenas Vokabeltrainer ist das unkritisch, der arbeitet mit ihren Buchseiten."
+    "offen": "Englisch fehlt noch. Ursache gefunden: Es gibt zwei Auspraegungen, 1. und 2. Fremdsprache. Richtige Adresse: /fachlehrplan/gymnasium/7/englisch/1-fremdsprache (bzw. 2-fremdsprache). Der ISB-Server war beim Abruf am 04.09.2026 mit 503 nicht erreichbar. Vor dem Nachholen klaeren, ob Helena Englisch als 1. oder 2. Fremdsprache hat."
   },
   "faecher": [
     {

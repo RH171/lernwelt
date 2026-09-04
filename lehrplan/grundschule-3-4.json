@@ -8,8 +8,8 @@
     "schueler": "Paul, Jahrgangsstufe 4 (Schuljahr 2026/27)",
     "uebertritt": "In Jgst. 4 zaehlen fuer das Uebertrittszeugnis die Faecher Deutsch, Mathematik und HSU. Diese drei sind mit uebertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
     "urheberrecht": "Lehrplaene sind amtliche Werke. Verlinkte Hilfsmaterialien Dritter duerfen NUR als Orientierung gelesen, niemals uebernommen werden. Aufgaben immer selbst erfinden.",
-    "offen": "Musik und Englisch fehlen noch: Der Lehrplan-Server war am 04.09.2026 in Wartung. Beide Faecher wurden 2024/25 flexibilisiert - beim Nachziehen gegen den aktuellen ISB-Stand pruefen.",
-    "bekenntnis_offen": "Es sind beide Religions-Lehrplaene hinterlegt. Welchen Unterricht Paul besucht, ist noch nicht geklaert - vor der Nutzung bei Denny nachfragen."
+    "bekenntnis_offen": "Es sind beide Religions-Lehrplaene hinterlegt. Welchen Unterricht Paul besucht, ist noch nicht geklaert - vor der Nutzung bei Denny nachfragen.",
+    "auspraegungen": "Musik und Englisch gibt es seit 2024/25 ein- und zweistuendig. Hinterlegt ist jeweils die zweistuendige Fassung. URL-Muster: /fachlehrplan/grundschule/4/<fach>/zweistuendig"
   },
   "faecher": [
     {
@@ -986,6 +986,225 @@
           "nr": 9,
           "thema": "Judentum und Islam begegnen",
           "lernbereich": "ER3/4 7"
+        }
+      ]
+    },
+    {
+      "kuerzel": "musik",
+      "name": "Musik",
+      "uebertrittsfach": false,
+      "auspraegung": "zweistuendig",
+      "hinweis": "Seit der Flexibilisierung 2024/25 gibt es Musik 3/4 einstuendig UND zweistuendig. Hier ist die zweistuendige, umfangreichere Fassung hinterlegt. Falls Pauls Schule einstuendig unterrichtet, ist ein Teil davon nicht dran.",
+      "lernbereiche": [
+        {
+          "id": "Mu3/4 1",
+          "titel": "Sprechen - Singen - Musizieren",
+          "kompetenzen": [
+            "Lieder auswendig oder mit Texthilfe singen",
+            "deutlich artikuliert und mit langem Atembogen singen",
+            "Sprech- und Singstimme rhythmisch und tonal sicher",
+            "Bodypercussion mit Sprechrhythmen",
+            "erweiterte Spieltechniken auf Orff-Instrumenten",
+            "Lieder mit Ausdrucksmitteln begleiten",
+            "improvisieren",
+            "digitale Medien zur Begleitung nutzen"
+          ]
+        },
+        {
+          "id": "Mu3/4 2",
+          "titel": "Musik - Mensch - Zeit",
+          "kompetenzen": [
+            "Werkausschnitte anhoeren und beschreiben",
+            "Werke wiedererkennen und Komponisten benennen",
+            "charakteristische Elemente in anderen Kontexten erkennen",
+            "lokale Ensembles und Musiker erleben",
+            "Musikrichtungen vergleichen"
+          ]
+        },
+        {
+          "id": "Mu3/4 3",
+          "titel": "Bewegung - Tanz - Szene",
+          "kompetenzen": [
+            "Bewegungsablaeufe imitieren und variieren",
+            "Kompositionsprinzipien in Bewegung uebertragen",
+            "eigene Choreographien gestalten",
+            "Taenze verschiedener Kulturen",
+            "musikalische Spielszenen",
+            "Tanzauffuehrungen erleben"
+          ]
+        },
+        {
+          "id": "Mu3/4 4",
+          "titel": "Musik und ihre Grundlagen",
+          "kompetenzen": [
+            "Notenwerte, Pausenwerte, Taktarten unterscheiden",
+            "grafische und traditionelle Notation",
+            "Instrumente aus vier Familien unterscheiden",
+            "Vokal- und Instrumentalklangfarben",
+            "Wiederholung, Rondo, Kanon erkennen",
+            "Fachvokabular anwenden"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Singen und Stimme",
+          "lernbereich": "Mu3/4 1"
+        },
+        {
+          "nr": 2,
+          "thema": "Rhythmus und Bodypercussion",
+          "lernbereich": "Mu3/4 1"
+        },
+        {
+          "nr": 3,
+          "thema": "Notenwerte und Taktarten",
+          "lernbereich": "Mu3/4 4"
+        },
+        {
+          "nr": 4,
+          "thema": "Instrumentenfamilien",
+          "lernbereich": "Mu3/4 4"
+        },
+        {
+          "nr": 5,
+          "thema": "Komponisten und Werke hoeren",
+          "lernbereich": "Mu3/4 2"
+        },
+        {
+          "nr": 6,
+          "thema": "Formen: Kanon und Rondo",
+          "lernbereich": "Mu3/4 4"
+        },
+        {
+          "nr": 7,
+          "thema": "Tanz und Bewegung",
+          "lernbereich": "Mu3/4 3"
+        }
+      ]
+    },
+    {
+      "kuerzel": "englisch",
+      "name": "Englisch",
+      "uebertrittsfach": false,
+      "auspraegung": "zweistuendig",
+      "hinweis": "Seit 2024/25 flexibilisiert: Englisch 3/4 gibt es einstuendig und zweistuendig. Hier die zweistuendige Fassung. Die Themengebiete im Lernbereich 4 geben die Reihenfolge faktisch vor.",
+      "lernbereiche": [
+        {
+          "id": "E3/4 1.1",
+          "titel": "Kommunikative Fertigkeiten",
+          "kompetenzen": [
+            "Hoerverstehen: einfache Handlungsanweisungen und altersgerechte Inhalte",
+            "Einzelheiten aus Hoertexten erfassen",
+            "Leseverstehen: bekannte Woerter, bildgestuetzte Anweisungen, kurze Texte",
+            "Sprechen: lautrichtige Aussprache, persoenliche Informationen, Beobachtungen beschreiben, Fragen stellen und beantworten",
+            "Schreiben: fehlerfrei abschreiben, einfache Texte ergaenzen und veraendern",
+            "Sprachmittlung: einfache Aussagen ins Deutsche uebertragen"
+          ]
+        },
+        {
+          "id": "E3/4 1.2",
+          "titel": "Verfuegen ueber sprachliche Mittel",
+          "kompetenzen": [
+            "typische Lautverbindungen und Intonation imitieren",
+            "Buchstabe-Laut-Zuordnung: Unterschiede erkennen",
+            "elementarer Wortschatz und Grundstrukturen",
+            "Unterschiede zwischen Englisch und Deutsch"
+          ]
+        },
+        {
+          "id": "E3/4 2",
+          "titel": "Interkulturelle Kompetenzen",
+          "kompetenzen": [
+            "Alltagswelten von Kindern in englischsprachigen Laendern",
+            "eigene Kultur vergleichen",
+            "Gruss- und Hoeflichkeitsformen",
+            "Feste wie Weihnachten und Halloween, Braeuche, Geschichten, Lieder und Reime aus GB und USA"
+          ]
+        },
+        {
+          "id": "E3/4 3",
+          "titel": "Methodische Kompetenzen",
+          "kompetenzen": [
+            "aufmerksam zuhoeren",
+            "Schluesselwoerter markieren",
+            "Gestik, Mimik und Kontext nutzen",
+            "Medien zur Wortschatzarbeit",
+            "Read, Look up and Write down",
+            "Texte mit Vorlage ueberarbeiten",
+            "Lernfortschritt selbst einschaetzen"
+          ]
+        },
+        {
+          "id": "E3/4 4.1",
+          "titel": "Themengebiet: Familie und Freunde",
+          "kompetenzen": [
+            "Angaben zur Person",
+            "Gespraeche ueber Tiere und Haustiere"
+          ]
+        },
+        {
+          "id": "E3/4 4.2",
+          "titel": "Themengebiet: Schule",
+          "kompetenzen": [
+            "Begruessen und Vorstellen",
+            "Befinden ausdruecken",
+            "Schulsachen",
+            "Uhrzeiten",
+            "Danken und Entschuldigen"
+          ]
+        },
+        {
+          "id": "E3/4 4.3",
+          "titel": "Themengebiet: Freizeit und Feste",
+          "kompetenzen": [
+            "Einladen",
+            "Angaben zu Festen",
+            "Gratulieren",
+            "Freizeitbeschaeftigungen"
+          ]
+        },
+        {
+          "id": "E3/4 4.4",
+          "titel": "Themengebiet: Einkaufen",
+          "kompetenzen": [
+            "Einkaufssituationen",
+            "Mengenangaben",
+            "Gefallen und Missfallen aeussern"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Family and friends",
+          "lernbereich": "E3/4 4.1"
+        },
+        {
+          "nr": 2,
+          "thema": "At school",
+          "lernbereich": "E3/4 4.2"
+        },
+        {
+          "nr": 3,
+          "thema": "Telling the time",
+          "lernbereich": "E3/4 4.2"
+        },
+        {
+          "nr": 4,
+          "thema": "Free time and festivals",
+          "lernbereich": "E3/4 4.3"
+        },
+        {
+          "nr": 5,
+          "thema": "Halloween und Christmas",
+          "lernbereich": "E3/4 2"
+        },
+        {
+          "nr": 6,
+          "thema": "Shopping",
+          "lernbereich": "E3/4 4.4"
         }
       ]
     }
