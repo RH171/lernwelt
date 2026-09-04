@@ -8,8 +8,8 @@
     "schueler": "Paul, Jahrgangsstufe 4 (Schuljahr 2026/27)",
     "uebertritt": "In Jgst. 4 zaehlen fuer das Uebertrittszeugnis die Faecher Deutsch, Mathematik und HSU. Diese drei sind mit uebertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
     "urheberrecht": "Lehrplaene sind amtliche Werke. Verlinkte Hilfsmaterialien Dritter duerfen NUR als Orientierung gelesen, niemals uebernommen werden. Aufgaben immer selbst erfinden.",
-    "bekenntnis_offen": "Es sind beide Religions-Lehrplaene hinterlegt. Welchen Unterricht Paul besucht, ist noch nicht geklaert - vor der Nutzung bei Denny nachfragen.",
-    "auspraegungen": "Musik und Englisch gibt es seit 2024/25 ein- und zweistuendig. Hinterlegt ist jeweils die zweistuendige Fassung. URL-Muster: /fachlehrplan/grundschule/4/<fach>/zweistuendig"
+    "auspraegungen": "Musik und Englisch gibt es seit 2024/25 ein- und zweistuendig. Hinterlegt ist jeweils die zweistuendige Fassung. URL-Muster: /fachlehrplan/grundschule/4/<fach>/zweistuendig",
+    "bekenntnis": "roemisch-katholisch"
   },
   "faecher": [
     {
@@ -659,7 +659,6 @@
       "name": "Katholische Religionslehre",
       "uebertrittsfach": false,
       "bekenntnis": "katholisch",
-      "hinweis": "Nur nutzen, wenn Paul katholischen Religionsunterricht besucht. Bekenntnis noch nicht bestaetigt.",
       "lernbereiche": [
         {
           "id": "KR3/4 1",
@@ -829,172 +828,15 @@
           "thema": "Andere Religionen: Juden und Muslime",
           "lernbereich": "KR3/4 12"
         }
-      ]
-    },
-    {
-      "kuerzel": "religion-ev",
-      "name": "Evangelische Religionslehre",
-      "uebertrittsfach": false,
-      "bekenntnis": "evangelisch",
-      "hinweis": "Nur nutzen, wenn Paul evangelischen Religionsunterricht besucht. Bekenntnis noch nicht bestaetigt.",
-      "lernbereiche": [
-        {
-          "id": "ER3/4 1",
-          "titel": "Nach Gott fragen - Gott ist groesser",
-          "kompetenzen": [
-            "biblische Geschichten, Psalmworte, Kunstwerke",
-            "auf einen Gott vertrauen, der Mensch geworden ist",
-            "Grenzen des Begreifens"
-          ]
-        },
-        {
-          "id": "ER3/4 2",
-          "titel": "Jesus Christus - Gott zeigt sich",
-          "kompetenzen": [
-            "Bedeutung von Jesu Geburt",
-            "Gottes Naehe in Jesu Reden und Handeln",
-            "Erfahrungen der Juenger",
-            "Ostergeschehen",
-            "Kreuz als zentrales Symbol"
-          ]
-        },
-        {
-          "id": "ER3/4 3",
-          "titel": "Kirche - Gemeinschaft der Christen",
-          "kompetenzen": [
-            "Pfingstgeschehen",
-            "Taufe als sichtbares Zeichen",
-            "Gemeindeleben",
-            "Partnerkirche"
-          ]
-        },
-        {
-          "id": "ER3/4 4",
-          "titel": "Gemeinsam das Kirchenjahr gestalten",
-          "kompetenzen": [
-            "Bedeutung von Festen und Feiertagen",
-            "christliche Feste und Festzeiten",
-            "Andachten gestalten",
-            "Traditionen anderer Kulturen"
-          ]
-        },
-        {
-          "id": "ER3/4 5",
-          "titel": "Beten - tragfaehige Worte in der Bibel finden",
-          "kompetenzen": [
-            "Vaterunser",
-            "Psalm 23",
-            "Gebete als Begleitung",
-            "eigene Gebetsformen",
-            "Andacht mitgestalten"
-          ]
-        },
-        {
-          "id": "ER3/4 6",
-          "titel": "Kirchenraeume - Orte der Gemeinschaft",
-          "kompetenzen": [
-            "Zeichen und Symbole im Kirchenraum",
-            "Atmosphaere des Raums",
-            "Kirche als Versammlungsort",
-            "evangelische Kirchenraumelemente"
-          ]
-        },
-        {
-          "id": "ER3/4 7",
-          "titel": "Mit Menschen anderer Religionen im Dialog sein",
-          "kompetenzen": [
-            "eigene Glaubensinhalte",
-            "Judentum und Islam: Raeume, Schriften, Gebete",
-            "ein Fest einer anderen Religion",
-            "respektvoller Umgang"
-          ]
-        },
-        {
-          "id": "ER3/4 8",
-          "titel": "Das Evangelium der Bibel als befreiende Botschaft",
-          "kompetenzen": [
-            "Martin Luthers Leben",
-            "befreiende Botschaft der Gottesliebe",
-            "der Begriff Gnade",
-            "evangelisch und katholisch",
-            "Bibel als gemeinsame Grundlage"
-          ]
-        },
-        {
-          "id": "ER3/4 9",
-          "titel": "Existenzielle Fragen stellen",
-          "kompetenzen": [
-            "Lebenssinn, Gerechtigkeit, Leid, Tod",
-            "Verlusterfahrungen",
-            "Hoffnungsbilder und Symbole",
-            "Erfolg, Leistung, Versagen"
-          ]
-        },
-        {
-          "id": "ER3/4 10",
-          "titel": "Sich Herausforderungen im Zusammenleben stellen",
-          "kompetenzen": [
-            "christliche Wegweisungen",
-            "Schuld und Versoehnung",
-            "biblische Texte zu Vergebung",
-            "Visionen fuer eine bessere Welt"
-          ]
-        }
       ],
-      "lernpfad_annahme": [
-        {
-          "nr": 1,
-          "thema": "Nach Gott fragen",
-          "lernbereich": "ER3/4 1"
-        },
-        {
-          "nr": 2,
-          "thema": "Kirchenjahr und Feste",
-          "lernbereich": "ER3/4 4"
-        },
-        {
-          "nr": 3,
-          "thema": "Advent und Weihnachten",
-          "lernbereich": "ER3/4 2"
-        },
-        {
-          "nr": 4,
-          "thema": "Beten: Vaterunser und Psalm 23",
-          "lernbereich": "ER3/4 5"
-        },
-        {
-          "nr": 5,
-          "thema": "Passion und Ostern",
-          "lernbereich": "ER3/4 2"
-        },
-        {
-          "nr": 6,
-          "thema": "Pfingsten, Taufe, Gemeinde",
-          "lernbereich": "ER3/4 3"
-        },
-        {
-          "nr": 7,
-          "thema": "Martin Luther und die Reformation",
-          "lernbereich": "ER3/4 8"
-        },
-        {
-          "nr": 8,
-          "thema": "Kirchenraum erkunden",
-          "lernbereich": "ER3/4 6"
-        },
-        {
-          "nr": 9,
-          "thema": "Judentum und Islam begegnen",
-          "lernbereich": "ER3/4 7"
-        }
-      ]
+      "bestaetigt": "Paul besucht katholischen Religionsunterricht (roemisch-katholisch), bestaetigt am 04.09.2026."
     },
     {
       "kuerzel": "musik",
       "name": "Musik",
       "uebertrittsfach": false,
       "auspraegung": "zweistuendig",
-      "hinweis": "Seit der Flexibilisierung 2024/25 gibt es Musik 3/4 einstuendig UND zweistuendig. Hier ist die zweistuendige, umfangreichere Fassung hinterlegt. Falls Pauls Schule einstuendig unterrichtet, ist ein Teil davon nicht dran.",
+      "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
       "lernbereiche": [
         {
           "id": "Mu3/4 1",
@@ -1089,7 +931,7 @@
       "name": "Englisch",
       "uebertrittsfach": false,
       "auspraegung": "zweistuendig",
-      "hinweis": "Seit 2024/25 flexibilisiert: Englisch 3/4 gibt es einstuendig und zweistuendig. Hier die zweistuendige Fassung. Die Themengebiete im Lernbereich 4 geben die Reihenfolge faktisch vor.",
+      "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
       "lernbereiche": [
         {
           "id": "E3/4 1.1",

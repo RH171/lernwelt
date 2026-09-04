@@ -5,7 +5,7 @@
     "abgerufen": "2026-09-04",
     "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
     "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
-    "offen": "Englisch fehlt noch. Ursache gefunden: Es gibt zwei Auspraegungen, 1. und 2. Fremdsprache. Richtige Adresse: /fachlehrplan/gymnasium/7/englisch/1-fremdsprache (bzw. 2-fremdsprache). Der ISB-Server war beim Abruf am 04.09.2026 mit 503 nicht erreichbar. Vor dem Nachholen klaeren, ob Helena Englisch als 1. oder 2. Fremdsprache hat."
+    "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestaetigt am 04.09.2026)."
   },
   "faecher": [
     {
@@ -300,6 +300,126 @@
           "nr": 7,
           "thema": "Ganzschrift / Jugendbuch",
           "lernbereich": "D7 2.2"
+        }
+      ]
+    },
+    {
+      "kuerzel": "englisch",
+      "name": "Englisch",
+      "uebertrittsfach": false,
+      "auspraegung": "1. Fremdsprache",
+      "lernbereiche": [
+        {
+          "id": "E7 1.1",
+          "titel": "Kommunikative Fertigkeiten",
+          "kompetenzen": [
+            "Hoerverstehen: laengere Sprachaeusserungen, Global- und Detailinformationen, Gefuehlslagen erkennen",
+            "Leseverstehen: laengere authentische Texte, Lesetechniken, fluessig vorlesen",
+            "Sprechen: Personen, Orte, Ereignisse beschreiben; Alltagssituationen; Praesentationen",
+            "Schreiben: laengere Texte, orthographische Korrektheit und klare Gedankenfuehrung",
+            "Sprachmittlung: muendlich und schriftlich uebertragen, Kompensationsstrategien"
+          ]
+        },
+        {
+          "id": "E7 1.2",
+          "titel": "Verfuegen ueber sprachliche Mittel",
+          "kompetenzen": [
+            "Wortschatz zu Geographie, Geschichte und Alltag",
+            "idiomatische Wendungen und phrasal verbs",
+            "Grammatik: Adverbien - Bildung, Steigerung, Vergleich",
+            "Grammatik: Reflexivpronomen und reciprocal pronouns",
+            "Grammatik: present perfect simple und progressive",
+            "Grammatik: past perfect simple",
+            "Grammatik: Konditionalsaetze II und III",
+            "Aussprache: fluessiges Sprechen, Lautschrift selbststaendig nutzen"
+          ]
+        },
+        {
+          "id": "E7 2",
+          "titel": "Interkulturelle Kompetenzen",
+          "kompetenzen": [
+            "geographische und historische Grundkenntnisse zu UK und USA",
+            "Verstaendnis fuer verschiedene Lebensweisen",
+            "kulturell angemessenes Verhalten in Alltagssituationen"
+          ]
+        },
+        {
+          "id": "E7 3",
+          "titel": "Text- und Medienkompetenzen",
+          "kompetenzen": [
+            "Sachtexte und erzaehlende Texte erfassen",
+            "Merkmale der Textgestaltung erkennen",
+            "verschiedene Textarten verfassen",
+            "kreatives Schreiben",
+            "kritischer Umgang mit Medien"
+          ]
+        },
+        {
+          "id": "E7 4",
+          "titel": "Methodische Kompetenzen",
+          "kompetenzen": [
+            "Lernprozess selbststaendig gestalten",
+            "Lese- und Hoerverstehensstrategien",
+            "Nachschlagewerke und digitale Medien nutzen"
+          ]
+        },
+        {
+          "id": "E7 5",
+          "titel": "Themengebiete",
+          "kompetenzen": [
+            "Lebenswelt Jugendlicher in Nordamerika: Essgewohnheiten, Braeuche, Feste (Thanksgiving, Independence Day), Schulalltag, Sport",
+            "Mediennutzung Jugendlicher: Moeglichkeiten und Gefahren",
+            "Wales und Desert South-West",
+            "Geschichte: 1066 Normans and Saxons, Henry VIII, Elizabeth I, Kolonialisierung Nordamerikas",
+            "Sprachreflexion: Deutsch-Englisch im Vergleich, Lehnwoerter, Sprachwandel"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Adverbien: Bildung, Steigerung, Vergleich",
+          "lernbereich": "E7 1.2"
+        },
+        {
+          "nr": 2,
+          "thema": "present perfect simple und progressive",
+          "lernbereich": "E7 1.2"
+        },
+        {
+          "nr": 3,
+          "thema": "past perfect simple",
+          "lernbereich": "E7 1.2"
+        },
+        {
+          "nr": 4,
+          "thema": "Reflexivpronomen",
+          "lernbereich": "E7 1.2"
+        },
+        {
+          "nr": 5,
+          "thema": "Conditional II",
+          "lernbereich": "E7 1.2"
+        },
+        {
+          "nr": 6,
+          "thema": "Conditional III",
+          "lernbereich": "E7 1.2"
+        },
+        {
+          "nr": 7,
+          "thema": "USA: Lebenswelt und Feste",
+          "lernbereich": "E7 5"
+        },
+        {
+          "nr": 8,
+          "thema": "Wales und Desert South-West",
+          "lernbereich": "E7 5"
+        },
+        {
+          "nr": 9,
+          "thema": "Englische und amerikanische Geschichte",
+          "lernbereich": "E7 5"
         }
       ]
     }
