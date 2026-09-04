@@ -6,8 +6,8 @@
     "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
     "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
     "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestaetigt am 04.09.2026).",
-    "offen": "Wahlfaecher noch offen: 2. Fremdsprache (Latein oder Franzoesisch?) und Religion/Ethik - bei Denny erfragt. Kunst, Musik und Sport bewusst weggelassen: fuer Bildschirm-Lernspiele wenig ergiebig.",
-    "url_muster": "Natur und Technik hat den Slug 'nt_gym', nicht 'natur-und-technik': /fachlehrplan/gymnasium/7/nt_gym"
+    "url_muster": "Natur und Technik hat den Slug 'nt_gym', nicht 'natur-und-technik': /fachlehrplan/gymnasium/7/nt_gym",
+    "wahlfaecher": "Franzoesisch als 2. Fremdsprache, Ethik statt Religion - beides von Denny bestaetigt am 04.09.2026. Kunst, Musik und Sport bewusst weggelassen: fuer Bildschirm-Lernspiele wenig ergiebig."
   },
   "faecher": [
     {
@@ -770,6 +770,201 @@
           "nr": 7,
           "thema": "Projekt",
           "lernbereich": "NT7 2.4"
+        }
+      ]
+    },
+    {
+      "kuerzel": "franzoesisch",
+      "name": "Franzoesisch",
+      "uebertrittsfach": false,
+      "auspraegung": "2. Fremdsprache (bestaetigt 04.09.2026)",
+      "lernbereiche": [
+        {
+          "id": "F7 1.1",
+          "titel": "Kommunikative Fertigkeiten",
+          "kompetenzen": [
+            "Hoerverstehen: kurze einfache Audiotexte, vertraute Themen",
+            "Leseverstehen: kurze bildgestuetzte Texte",
+            "Sprechen: Gegenstaende, Orte, Personen beschreiben; Vergangenes erzaehlen; Vorlieben und Abneigungen; Anweisungen mit Hoeflichkeitsformen",
+            "Schreiben: Phonem-Graphem-Beziehungen, diakritische Zeichen, Dialoge, E-Mails, Nachrichten",
+            "Sprachmittlung: dolmetschen in Routinesituationen"
+          ]
+        },
+        {
+          "id": "F7 1.2",
+          "titel": "Verfuegen ueber sprachliche Mittel",
+          "kompetenzen": [
+            "Wortschatz fuer Alltagssituationen",
+            "Kardinal- und Ordinalzahlen bis eine Million",
+            "Funktionswortschatz zur Bildbeschreibung",
+            "Grammatik: Relativpronomen qui, que, ou",
+            "Grammatik: Teilungsartikel und Mengenausdruecke",
+            "Grammatik: Komparativ und Superlativ",
+            "Grammatik: Verben auf -ir (dormir, finir)",
+            "Grammatik: unregelmaessige Verben (devoir, savoir, boire, connaitre, mettre, ouvrir, venir, vivre, voir)",
+            "Grammatik: reflexive Verben in Praesens, futur proche, Imperativ",
+            "Grammatik: passe compose mit avoir und etre",
+            "Grammatik: imparfait und passe compose im Gegensatz",
+            "Grammatik: Imperativ mit Pronomen",
+            "Grammatik: indirekte Rede und Fragen im Praesens",
+            "Aussprache und Betonung"
+          ]
+        },
+        {
+          "id": "F7 2",
+          "titel": "Interkulturelle Kompetenzen",
+          "kompetenzen": [
+            "Region Bretagne und franzoesische Geographie",
+            "Alltag deutscher und franzoesischer Jugendlicher vergleichen",
+            "situationsgerechte Kommunikation"
+          ]
+        },
+        {
+          "id": "F7 3",
+          "titel": "Text- und Medienkompetenzen",
+          "kompetenzen": [
+            "Entschluesselungshilfen nutzen",
+            "Sinneinheiten ueber Ueberschriften und Schluesselwoerter",
+            "Personen in fiktionalen Texten charakterisieren",
+            "Handlungsablaeufe mit Konnektoren nacherzaehlen",
+            "kurze illustrierte Texte gestalten"
+          ]
+        },
+        {
+          "id": "F7 4",
+          "titel": "Methodische Kompetenzen",
+          "kompetenzen": [
+            "Sprachlerntechniken, digitale Aufnahmen, Wortschatzarbeit",
+            "Fehlervermeidung und Selbstkorrektur",
+            "Apps, Woerterbuecher, Lernsoftware",
+            "Vergleich mit Deutsch und Englisch",
+            "Strategien fuer Hoer- und Leseverstehen"
+          ]
+        },
+        {
+          "id": "F7 5",
+          "titel": "Themengebiete",
+          "kompetenzen": [
+            "Feste: Ostern, la rentree, crepes, galette des rois",
+            "Alltag: Familienleben, Tagesablauf, Hobbys, Schule, Wetter",
+            "Geographie: Paris, Lyon, Nantes, Bretagne, Stadt und Land",
+            "Reisen: Reiseplanung, Austausch, Frankreich als Urlaubsland",
+            "Geschichte: Gallier und Roemer (Asterix)",
+            "Kultur: bandes dessinees"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Relativpronomen qui, que, ou",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 2,
+          "thema": "Teilungsartikel und Mengenangaben",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 3,
+          "thema": "Verben auf -ir und unregelmaessige Verben",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 4,
+          "thema": "passe compose mit avoir und etre",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 5,
+          "thema": "imparfait und passe compose unterscheiden",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 6,
+          "thema": "reflexive Verben",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 7,
+          "thema": "Komparativ und Superlativ",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 8,
+          "thema": "Imperativ mit Pronomen",
+          "lernbereich": "F7 1.2"
+        },
+        {
+          "nr": 9,
+          "thema": "indirekte Rede und Fragen",
+          "lernbereich": "F7 1.2"
+        }
+      ]
+    },
+    {
+      "kuerzel": "ethik",
+      "name": "Ethik",
+      "uebertrittsfach": false,
+      "hinweis": "Helena besucht Ethik, nicht Religion (bestaetigt 04.09.2026).",
+      "lernbereiche": [
+        {
+          "id": "Eth7 1",
+          "titel": "Islam",
+          "stunden": 12,
+          "kompetenzen": [
+            "islamische Glaubensgrundlagen mit Respekt verstehen",
+            "heilige Texte aus muslimischer Sicht",
+            "gemeinsame ethische Fundamente von Judentum, Christentum und Islam",
+            "Vorstellung vom Gerechten und Guten im Islam",
+            "Muslime und Islamisten unterscheiden",
+            "Alltag von Muslimen in Deutschland"
+          ]
+        },
+        {
+          "id": "Eth7 2",
+          "titel": "Konflikte und ihre Regelung",
+          "stunden": 26,
+          "kompetenzen": [
+            "Konflikte als Chance annehmen",
+            "Konfliktursachen erkennen: Motive und Interessen",
+            "offene Kommunikation statt Scheinloesungen",
+            "gewaltfreie Loesung durch Kompromiss",
+            "Perspektivwechsel und Empathie",
+            "Spiegeln, aktives Zuhoeren, Ich-Botschaften",
+            "argumentieren mit rationalen Grundprinzipien",
+            "emotionale Selbstkontrolle",
+            "Mobbingopfer unterstuetzen"
+          ]
+        },
+        {
+          "id": "Eth7 3",
+          "titel": "Erwachsen werden",
+          "stunden": 18,
+          "kompetenzen": [
+            "koerperliche, psychische und soziale Veraenderungen in der Pubertaet",
+            "fremde Perspektiven zur Identitaetsfindung",
+            "Selbstwahrnehmung von aussen",
+            "Gruppendruck und Selbstbestimmung",
+            "wachsende Verantwortung im Jugendalter"
+          ]
+        }
+      ],
+      "lernpfad": [
+        {
+          "nr": 1,
+          "thema": "Konflikte und Konfliktloesung",
+          "lernbereich": "Eth7 2"
+        },
+        {
+          "nr": 2,
+          "thema": "Erwachsen werden",
+          "lernbereich": "Eth7 3"
+        },
+        {
+          "nr": 3,
+          "thema": "Islam",
+          "lernbereich": "Eth7 1"
         }
       ]
     }
