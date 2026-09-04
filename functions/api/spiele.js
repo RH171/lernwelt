@@ -28,6 +28,35 @@ export async function onRequestGet(context) {
   return json(200, { ok: true, spiele: await listeHolen(env) });
 }
 
+// POST /api/spiele  { id, richtig, gesamt }
+// Hält fest, wann ein Spiel zuletzt gespielt wurde und wie es lief.
+// Grundlage fürs verteilte Wiederholen: was länger her ist und schlechter
+// lief, wird zuerst wieder vorgeschlagen.
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  const wache = await wacheOk(request, env);
+  if (wache) return wache;
+
+  let daten = {};
+  try { daten = await request.json(); } catch (e) {}
+  const id = String(daten.id || "");
+  if (!id) return json(400, { ok: false, fehler: "Welches Spiel denn?" });
+
+  const richtig = Number(daten.richtig) || 0;
+  const gesamt = Number(daten.gesamt) || 0;
+
+  const liste = await listeHolen(env);
+  const eintrag = liste.find((e) => e.id === id);
+  if (!eintrag) return json(404, { ok: false, fehler: "Das Spiel gibt es nicht mehr." });
+
+  eintrag.zuletztGespielt = new Date().toISOString();
+  eintrag.malGespielt = (eintrag.malGespielt || 0) + 1;
+  if (gesamt > 0) eintrag.letzteQuote = Math.round((richtig / gesamt) * 100);
+
+  await env.PAUL_KV.put(LISTE, JSON.stringify(liste));
+  return json(200, { ok: true, spiele: liste });
+}
+
 export async function onRequestDelete(context) {
   const { request, env } = context;
   const wache = await wacheOk(request, env);
