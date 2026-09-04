@@ -133,6 +133,18 @@
   .eintrag .loeschen{flex:none;border:none;background:none;color:var(--muted);
                      font-size:19px;cursor:pointer;padding:6px 4px;border-radius:8px}
   .eintrag .loeschen:hover{color:var(--schlecht);background:#fff1f0}
+  .wiederholen{
+    background:linear-gradient(135deg,#eef1ff,#f6f1ff);
+    border:1px solid #ddd9fb;border-radius:20px;padding:20px 22px;margin-bottom:16px;
+  }
+  .wiederholen .kopf{font-family:var(--rund);font-size:18px;font-weight:700;margin-bottom:4px}
+  .wiederholen .grund{color:var(--muted);font-size:14.5px;line-height:1.5}
+  .wiederholen .knopf{
+    margin-top:15px;width:100%;border:none;border-radius:15px;padding:15px;
+    background:var(--paul);color:#fff;font-family:var(--rund);font-size:16px;font-weight:700;
+    cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
+  }
+  .wiederholen .knopf:active{transform:scale(.99)}
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
@@ -179,6 +191,12 @@
       <div id="meldung"></div>
 
       <button class="los" id="los" disabled>Spiel bauen</button>
+    </div>
+
+    <div class="wiederholen verborgen" id="wiederholen">
+      <div class="kopf" id="wh-kopf"></div>
+      <div class="grund" id="wh-grund"></div>
+      <button class="knopf" id="wh-los">Nochmal spielen</button>
     </div>
 
     <div class="karte sammlung verborgen" id="sammlung">
@@ -307,9 +325,45 @@
       .catch(function(){});
   }
 
+  // Verteiltes Wiederholen: was laenger her ist und schlechter lief, kommt zuerst.
+  // Belegt der wirksamste Lerneffekt - und er kostet nichts, weil die Spiele liegen.
+  function wiederholungVorschlagen(spiele){
+    var jetzt = Date.now();
+    var kandidaten = spiele.filter(function(e){
+      var zuletzt = new Date(e.zuletztGespielt || e.erzeugt).getTime();
+      if (!zuletzt) return false;
+      return (jetzt - zuletzt) >= 2 * 86400000;   // mindestens zwei Tage her
+    });
+
+    if (!kandidaten.length){ $("wiederholen").classList.add("verborgen"); return; }
+
+    kandidaten.sort(function(a, b){
+      var qa = (typeof a.letzteQuote === "number") ? a.letzteQuote : 101;
+      var qb = (typeof b.letzteQuote === "number") ? b.letzteQuote : 101;
+      if (qa !== qb) return qa - qb;               // wo es hakte, zuerst
+      var za = new Date(a.zuletztGespielt || a.erzeugt).getTime();
+      var zb = new Date(b.zuletztGespielt || b.erzeugt).getTime();
+      return za - zb;                              // sonst das aelteste
+    });
+
+    var e = kandidaten[0];
+    var tage = Math.floor((jetzt - new Date(e.zuletztGespielt || e.erzeugt).getTime()) / 86400000);
+    var wann = tage >= 14 ? "vor " + Math.floor(tage/7) + " Wochen"
+             : tage >= 7  ? "vor einer Woche"
+             : "vor " + tage + " Tagen";
+
+    $("wh-kopf").textContent = e.titel;
+    $("wh-grund").textContent = (typeof e.letzteQuote === "number" && e.letzteQuote < 80)
+      ? "Das war " + wann + " – und da hakte es noch ein bisschen. Wiederholen bringt jetzt am meisten."
+      : "Das hast du " + wann + " gespielt. Wenn du es jetzt nochmal machst, bleibt es viel besser hängen.";
+    $("wh-los").onclick = function(){ spielHolen(e.id); };
+    $("wiederholen").classList.remove("verborgen");
+  }
+
   function malSammlung(spiele){
     var kasten = $("liste");
     $("sammlung").classList.toggle("verborgen", spiele.length === 0);
+    wiederholungVorschlagen(spiele);
     kasten.innerHTML = "";
     spiele.forEach(function(e){
       var d = document.createElement("div");
@@ -620,6 +674,15 @@
         uebung: (alt.uebung || 0) + 1
       }));
     } catch(e){}
+
+    // Dem Server sagen, wann und wie gut gespielt wurde - Grundlage fuers Wiederholen.
+    if (spiel && spiel.id){
+      fetch("/api/spiele", {
+        method:"POST", credentials:"same-origin",
+        headers:{"content-type":"application/json"},
+        body: JSON.stringify({id: spiel.id, richtig: richtig, gesamt: gesamt})
+      }).catch(function(){});
+    }
 
     zeige("ende");
     konfetti(true);
