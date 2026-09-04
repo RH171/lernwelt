@@ -250,7 +250,9 @@
   .step .txt b{font-weight:700;}
   .modal .close{margin-top:8px;width:100%;border:none;border-radius:15px;padding:13px;
     font-family:var(--round);font-weight:800;font-size:15px;color:#fff;cursor:pointer;
-    background:linear-gradient(150deg,#5b8cff,#7c5cff);}
+    background:linear-gradient(150deg,#5b8cff,#7c5cff);
+    display:block;box-sizing:border-box;text-align:center;text-decoration:none;}
+  .modal .close.werkstatt{background:linear-gradient(150deg,#f59e0b,#e0457b);}
 
   canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60;}
 
@@ -452,11 +454,12 @@
   <div class="modal">
     <h3>Neues Arbeitsblatt? 📸</h3>
     <p class="lead">So machst du aus deinem Blatt ein Spiel:</p>
-    <div class="step"><div class="n">1</div><div class="txt">Mach ein <b>Foto</b> vom Arbeitsblatt.</div></div>
-    <div class="step"><div class="n">2</div><div class="txt">Öffne deinen <b>Lern-Chat</b> und lade das Foto hoch.</div></div>
-    <div class="step"><div class="n">3</div><div class="txt">Wähle das <b>Fach</b> (Deutsch, HSU, Musik, Mathe oder Englisch).</div></div>
-    <div class="step"><div class="n">4</div><div class="txt">Sag, ob du <b>lernen</b> oder <b>spielen</b> willst – und schon bauen wir dein Spiel!</div></div>
-    <button class="close" id="closeModal">Alles klar!</button>
+    <div class="step"><div class="n">1</div><div class="txt">Mach ein <b>Foto</b> von deinem Arbeitsblatt oder Hefteintrag.</div></div>
+    <div class="step"><div class="n">2</div><div class="txt">Geh unten in die <b>Werkstatt</b> – da kannst du auch eine Datei oder ein PDF nehmen.</div></div>
+    <div class="step"><div class="n">3</div><div class="txt">Lade dein Foto hoch. <b>Mehrere Seiten</b> gehen auch, daraus wird ein Spiel.</div></div>
+    <div class="step"><div class="n">4</div><div class="txt">Ich schau mir an, worum es geht – und baue dir dein Spiel. Dann kannst du <b>sofort loslegen</b>.</div></div>
+    <a class="close werkstatt" href="werkstatt.html">Los zur Werkstatt</a>
+    <button class="close" id="closeModal" style="background:#f2f3fa;color:#5b6070;margin-top:9px">Später</button>
   </div>
 </div>
 
