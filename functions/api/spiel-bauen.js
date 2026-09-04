@@ -26,8 +26,57 @@ const MAX_SEITEN = 20;                // Werkstatt-Grenze; Bücher kommen späte
 // Die Bauformen, die die Werkstatt darstellen kann.
 const SPIELARTEN = ["quiz", "zuordnen", "luecken", "karteikarten", "sammeln"];
 
+
+// ---------------------------------------------------------------------------
+// Riegel: Nur wer Pauls Code kennt, darf bauen lassen.
+// Der Code liegt als Cloudflare-Secret PAUL_CODE und steht nirgends im Code.
+// Gegen Durchprobieren: pro Stunde und Absender hoechstens 8 Fehlversuche.
+// ---------------------------------------------------------------------------
+
+// Vergleich mit fester Laufzeit - verraet ueber die Dauer nichts ueber den Code.
+function gleich(a, b) {
+  const x = String(a || ""), y = String(b || "");
+  if (x.length !== y.length) return false;
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x.charCodeAt(i) ^ y.charCodeAt(i);
+  return diff === 0;
+}
+
+async function riegelPruefen(request, env) {
+  if (!env.PAUL_CODE) {
+    return { ok: false, status: 500, text: "Auf dem Server fehlt der Zugangscode. Denny muss ihn bei Cloudflare als PAUL_CODE hinterlegen." };
+  }
+
+  const code = request.headers.get("x-lernwelt-code") || "";
+  const wer = request.headers.get("cf-connecting-ip") || "unbekannt";
+  const schluessel = "fehlversuche:" + wer;
+
+  let versuche = 0;
+  try {
+    if (env.PAUL_KV) versuche = parseInt((await env.PAUL_KV.get(schluessel)) || "0", 10) || 0;
+  } catch (e) {}
+
+  if (versuche >= 8) {
+    return { ok: false, status: 429, text: "Zu viele falsche Codes. Bitte in einer Stunde nochmal - oder frag Denny." };
+  }
+
+  if (!gleich(code, env.PAUL_CODE)) {
+    try {
+      if (env.PAUL_KV) await env.PAUL_KV.put(schluessel, String(versuche + 1), { expirationTtl: 3600 });
+    } catch (e) {}
+    return { ok: false, status: 401, text: code ? "Der Code stimmt nicht." : "Hier darf nur Paul bauen. Bitte den Code eingeben." };
+  }
+
+  // Richtig: Fehlversuche zuruecksetzen.
+  try { if (env.PAUL_KV) await env.PAUL_KV.delete(schluessel); } catch (e) {}
+  return { ok: true };
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
+
+  const riegel = await riegelPruefen(request, env);
+  if (!riegel.ok) return fehler(riegel.status, riegel.text);
 
   if (!env.ANTHROPIC_API_KEY) {
     return fehler(500, "Der Schlüssel fehlt auf dem Server. Denny muss ihn bei Cloudflare als ANTHROPIC_API_KEY hinterlegen.");
