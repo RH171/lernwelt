@@ -174,6 +174,9 @@ DEINE REGELN
    - "teilschritte": eine Kette kleiner Fragen, die zusammen den Rechenweg gehen. Fuelle "teilschritte", "antworten" bleibt leer, "richtig" ist das Endergebnis.
    Mische etwa so: die Haelfte "wahl", ein Drittel "eingabe", der Rest "teilschritte". Beginne mit einer leichten "wahl"-Aufgabe zum Aufwaermen.
 
+   WANN "teilschritte" - und wann NICHT:
+   Zerlege nur, wenn die Aufgabe fuer das Kind ZU GROSS ist, um sie am Stueck zu rechnen. Bei 217 · 8 ja. Bei 9 · 8 NEIN - das gehoert zum kleinen Einmaleins und ist auswendig da; ein Umweg macht es dann schwerer statt leichter. Faustregel Jahrgangsstufe 4: alles innerhalb des kleinen Einmaleins (bis 10 · 10) wird NICHT zerlegt.
+
    ZU "teilschritte" - das ist das Wichtigste fuer Kinder, die eine grosse Rechnung noch nicht am Stueck koennen:
    Zerlege so, dass JEDER Teilschritt in dem liegt, was das Kind schon sicher kann. Beispiel fuer 217 · 8 in Jahrgangsstufe 4, wo oft nur das kleine Einmaleins sitzt:
      Schritt 1: "Wie viel ist 8 · 7?"        -> 56
@@ -189,7 +192,10 @@ DEINE REGELN
      - halbieren und verdoppeln: 16 · 50 = 8 · 100
      - Nachbaraufgabe:       8 · 7 = 8·8 minus 8
      - Tauschen:             4 · 25 ist leichter als 25 · 4 zu denken
-   Wenn ein Weg besonders geschickt ist, sag es in der Erklaerung: "Hier geht es schneller ueber die glatte Zahl."
+   SAG DEN WEG VORHER AN. Das Feld "weg" steht ueber den Teilschritten und erklaert in EINEM Satz, was jetzt kommt. Ohne das steht ploetzlich "Wie viel ist 10 · 8?" da, obwohl die Aufgabe 9 · 8 lautet - das verwirrt ein Kind, statt ihm zu helfen.
+     Gut:    "Wir gehen ueber die 10er-Aufgabe, die ist leichter - und ziehen danach wieder ab."
+     Gut:    "Wir zerlegen 217 in 200, 10 und 7 und rechnen die Stuecke einzeln."
+     Falsch: gar nichts sagen und einfach mit einer fremd wirkenden Zahl anfangen.
 
 6. DIE ERKLÄRUNG WIRD GEGLIEDERT, NICHT AM STÜCK GESCHRIEBEN. Ein Kind, das sich schwertut, steigt bei einer Textwurst aus. Deshalb:
    - Schreibe den Rechenweg in EINZELNE SCHRITTE, jeder in einer eigenen Zeile, getrennt durch \n. Ein Schritt pro Zeile, kurz.
@@ -240,6 +246,7 @@ const WERKZEUG = {
             art: { type: "string", enum: ["wahl", "eingabe", "teilschritte"], description: "Welche Aufgabenart - siehe Regel 5. Abwechseln!" },
             frage: { type: "string" },
             antworten: { type: "array", items: { type: "string" }, description: "NUR bei art=wahl: die vier Auswahlmoeglichkeiten, die richtige MUSS dabei sein. Sonst leeres Array." },
+            weg: { type: "string", description: "NUR bei art=teilschritte: EIN Satz, der vorher ansagt, welchen Rechenweg wir gehen. Sonst leerer String." },
             teilschritte: {
               type: "array",
               description: "NUR bei art=teilschritte: zwei bis fuenf kleine Rechenschritte, die zusammen zum Ergebnis fuehren. Sonst leeres Array.",
@@ -257,7 +264,7 @@ const WERKZEUG = {
             erklaerung: { type: "string", description: "Der Weg zur Loesung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, hoechstens fuenf Zeilen. Kein Fliesstext. Ohne Merkhilfe - die kommt ins Feld merke." },
             merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 7). Leer lassen, wenn nichts wirklich passt." },
           },
-          required: ["art", "frage", "antworten", "teilschritte", "richtig", "erklaerung", "merke"],
+          required: ["art", "frage", "antworten", "weg", "teilschritte", "richtig", "erklaerung", "merke"],
           additionalProperties: false,
         },
       },
