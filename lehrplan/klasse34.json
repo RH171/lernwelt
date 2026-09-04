@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "titel": "LehrplanPLUS Bayern, Grundschule, Jahrgangsstufe 3/4",
+    "quelle": "Staatsinstitut fuer Schul- und Qualitaetsentwicklung (ISB), lehrplanplus.bayern.de",
+    "abgerufen": "2026-09-04",
+    "hinweis": "LehrplanPLUS fasst Jgst. 3 und 4 zusammen. Die Kompetenzen beschreiben das Ergebnis eines ZWEIJAEHRIGEN Lernprozesses. Der Lehrplan legt NICHT fest, wann ein Thema im Schuljahr drankommt.",
+    "schule": "Grundschule Seeackerstrasse, Fuerth",
+    "schueler": "Paul, Jahrgangsstufe 4 (Schuljahr 2026/27)",
+    "uebertritt": "In Jgst. 4 zaehlen fuer das Uebertrittszeugnis die Faecher Deutsch, Mathematik und HSU. Diese drei sind mit uebertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
+    "urheberrecht": "Lehrplaene sind amtliche Werke. Verlinkte Hilfsmaterialien Dritter duerfen NUR als Orientierung gelesen, niemals uebernommen werden. Aufgaben immer selbst erfinden."
+  },
+
+  "faecher": [
+    {
+      "kuerzel": "mathe",
+      "name": "Mathematik",
+      "uebertrittsfach": true,
+      "lernbereiche": [
+        { "id": "M3/4 1.1", "titel": "Zahlen strukturiert darstellen und Zahlbeziehungen formulieren",
+          "kompetenzen": ["Orientierung im Zahlenraum bis zur Million", "Struktur des Zehnersystems: Buendelung, Stellenwert", "Anzahlen schaetzen und bestimmen", "Zahlen bis zur Million zerlegen"] },
+        { "id": "M3/4 1.2", "titel": "Im Zahlenraum bis zur Million rechnen und Strukturen nutzen",
+          "kompetenzen": ["kleines Einmaleins automatisiert", "Uebertragung in groessere Zahlenraeume", "alle vier Grundrechenarten", "Rechenstrategien nutzen und erklaeren", "schriftliche Verfahren automatisiert", "Plausibilitaet von Ergebnissen pruefen", "arithmetische Muster beschreiben"] },
+        { "id": "M3/4 1.3", "titel": "Sachsituationen und Mathematik in Beziehung setzen",
+          "kompetenzen": ["relevante Informationen entnehmen", "mehrschrittige Sachaufgaben", "Darstellungsformen entwickeln", "Problemloesestrategien", "Kombinationsmoeglichkeiten systematisch bestimmen"] },
+        { "id": "M3/4 2.1", "titel": "Sich im Raum orientieren",
+          "kompetenzen": ["Skizzen und Lageplaene", "Laengen in Realitaet und Darstellung", "zwei- und dreidimensionale Darstellungen verknuepfen"] },
+        { "id": "M3/4 2.2", "titel": "Geometrische Figuren benennen und darstellen",
+          "kompetenzen": ["rechter Winkel", "Wuerfel und Quader vergleichen", "Wuerfel- und Quadernetze", "Strecken und Flaechenformen zeichnen"] },
+        { "id": "M3/4 2.3", "titel": "Geometrische Abbildungen beschreiben und darstellen",
+          "kompetenzen": ["Verkleinern und Vergroessern, Massstab", "Achsensymmetrie mit Fachbegriffen", "Spiegelbilder erzeugen"] },
+        { "id": "M3/4 2.4", "titel": "Geometrische Muster untersuchen und erstellen",
+          "kompetenzen": ["Parkettierungen", "Bandornamente und ihre Gesetzmaessigkeiten"] },
+        { "id": "M3/4 2.5", "titel": "Rauminhalte bestimmen und vergleichen",
+          "kompetenzen": ["Rauminhalte durch Bauen und Auszaehlen von Einheitswuerfeln vergleichen"] },
+        { "id": "M3/4 3.1", "titel": "Messhandlungen durchfuehren",
+          "kompetenzen": ["mit standardisierten Einheiten messen", "Abkuerzungen der Einheiten", "Einheiten zerlegen und umwandeln", "Zeitspannen, Anfangs- und Endzeitpunkte berechnen"] },
+        { "id": "M3/4 3.2", "titel": "Groessen strukturieren und Groessenvorstellungen nutzen",
+          "kompetenzen": ["Groessen mit Bezugsgroessen schaetzen", "Laengen, Zeitspannen, Massen, Hohlmasse vergleichen und ordnen", "einfache Bruchzahlen bei Groessen"] },
+        { "id": "M3/4 3.3", "titel": "Mit Groessen in Sachsituationen umgehen",
+          "kompetenzen": ["Groesseninformationen entnehmen", "Sachsituationen mit Groessen loesen", "exaktes Ergebnis oder Ueberschlag begruenden", "funktionale Beziehungen erkennen"] },
+        { "id": "M3/4 4.1", "titel": "Daten erfassen und strukturiert darstellen",
+          "kompetenzen": ["Daten sammeln und vergleichen", "Tabellen und Diagramme", "Fragen zu Diagrammen formulieren", "nicht ablesbare Daten erschliessen", "zwischen Darstellungsformen uebertragen"] },
+        { "id": "M3/4 4.2", "titel": "Zufallsexperimente durchfuehren und Wahrscheinlichkeiten vergleichen",
+          "kompetenzen": ["Gewinnchancen schaetzen", "Bedingungen systematisch variieren", "Ergebnisse vergleichen und bewerten"] }
+      ],
+      "lernpfad_annahme": [
+        { "nr": 1,  "thema": "Zahlenraum bis 1 Million", "lernbereich": "M3/4 1.1" },
+        { "nr": 2,  "thema": "Schriftliche Addition und Subtraktion", "lernbereich": "M3/4 1.2" },
+        { "nr": 3,  "thema": "Schriftliche Multiplikation", "lernbereich": "M3/4 1.2" },
+        { "nr": 4,  "thema": "Schriftliche Division", "lernbereich": "M3/4 1.2" },
+        { "nr": 5,  "thema": "Groessen: Laengen und Massen", "lernbereich": "M3/4 3.1" },
+        { "nr": 6,  "thema": "Groessen: Zeit und Geld", "lernbereich": "M3/4 3.1" },
+        { "nr": 7,  "thema": "Sachaufgaben mehrschrittig", "lernbereich": "M3/4 1.3" },
+        { "nr": 8,  "thema": "Flaechen und Umfang", "lernbereich": "M3/4 2.2" },
+        { "nr": 9,  "thema": "Koerper, Netze, Rauminhalt", "lernbereich": "M3/4 2.2" },
+        { "nr": 10, "thema": "Symmetrie und Massstab", "lernbereich": "M3/4 2.3" },
+        { "nr": 11, "thema": "Daten, Diagramme, Zufall", "lernbereich": "M3/4 4.1" }
+      ]
+    },
+
+    {
+      "kuerzel": "deutsch",
+      "name": "Deutsch",
+      "uebertrittsfach": true,
+      "lernbereiche": [
+        { "id": "D3/4 1.1", "titel": "Verstehend zuhoeren", "kompetenzen": ["Aufmerksamkeit auf Gehoertes richten", "wesentliche Informationen entnehmen", "Verstaendnis durch Zusammenfassung zeigen", "Wirkung von Stimme und Gestik"] },
+        { "id": "D3/4 1.2", "titel": "Zu anderen sprechen", "kompetenzen": ["Beitraege logisch aufbauen", "Lautstaerke, Tempo, Satzmelodie", "gezielt vorbereiten", "angemessener Wortschatz"] },
+        { "id": "D3/4 1.3", "titel": "Gespraeche fuehren", "kompetenzen": ["Standardsituationen gestalten", "Gespraechsregeln einhalten", "zuhoererbezogen beteiligen"] },
+        { "id": "D3/4 1.4", "titel": "Ueber Lernen sprechen", "kompetenzen": ["Lernschritte beschreiben", "Lernstrategien besprechen", "eigene Ergebnisse bewerten", "Lernziele setzen"] },
+        { "id": "D3/4 1.5", "titel": "Szenisch spielen", "kompetenzen": ["in Rollen versetzen", "Stimme, Haltung, Gestik, Mimik", "Wirkung beschreiben"] },
+        { "id": "D3/4 2.1", "titel": "Ueber Leseerfahrungen verfuegen", "kompetenzen": ["Kinderliteratur", "Lesevorlieben begruenden", "Textarten unterscheiden", "Medien bewusst auswaehlen"] },
+        { "id": "D3/4 2.2", "titel": "Ueber Lesefertigkeiten verfuegen", "kompetenzen": ["fluessig, genau, angemessenes Tempo", "Betonung variieren", "Sichtwortschatz", "Leseflüssigkeit trainieren"] },
+        { "id": "D3/4 2.3", "titel": "Ueber Lesefaehigkeiten verfuegen", "kompetenzen": ["sinnerschliessend lesen, Lesestrategien", "zentrale Informationen markieren", "unbekannte Woerter klaeren", "Gelesenes wiedergeben", "Sach- und Gebrauchstexte verstehen", "Recherchestrategien"] },
+        { "id": "D3/4 2.4", "titel": "Texte erschliessen", "kompetenzen": ["Abfolgen und Zusammenhaenge", "Figuren beschreiben", "Bedeutung von Orten", "Redewendungen und bildhafte Ausdruecke", "Kindergedichte"] },
+        { "id": "D3/4 2.5", "titel": "Texte praesentieren", "kompetenzen": ["Themen waehlen", "mit Vortragshilfen vortragen"] },
+        { "id": "D3/4 3.1", "titel": "Ueber Schreibfertigkeiten verfuegen", "kompetenzen": ["lesbare, gleichmaessige Handschrift", "Schrift dem Zweck anpassen", "Texte uebersichtlich gestalten"] },
+        { "id": "D3/4 3.2", "titel": "Texte planen und schreiben", "kompetenzen": ["Ideen sammeln", "erzaehlende Texte aufbauen", "lebendig und anschaulich gestalten", "informierende und beschreibende Texte", "berichtende Texte", "argumentierende Texte", "Rechtschreibbewusstsein"] },
+        { "id": "D3/4 3.3", "titel": "Texte ueberarbeiten", "kompetenzen": ["Anregungen geben und aufnehmen", "rechtschriftlich und sprachlich ueberarbeiten"] },
+        { "id": "D3/4 4.1", "titel": "Sprachliche Verstaendigung untersuchen", "kompetenzen": ["sprachliche Mittel und ihre Wirkung", "gelingende Verstaendigung"] },
+        { "id": "D3/4 4.2", "titel": "Gemeinsamkeiten und Unterschiede von Sprachen entdecken", "kompetenzen": ["Muendlichkeit und Schriftlichkeit", "Sprachen und Schriftsysteme vergleichen"] },
+        { "id": "D3/4 4.3", "titel": "Sprachliche Strukturen untersuchen", "kompetenzen": ["zusammengesetzte Woerter, Wortbausteine", "Wortfamilien", "Zeitformen der Verben", "Wortarten bestimmen", "Wortfelder", "woertliche Rede", "Satzarten", "Saetze mit Bindewoertern verknuepfen", "Satzglieder und ihre Abhaengigkeit vom Praedikat", "die vier Faelle bei Artikel, Nomen, Adjektiv"] },
+        { "id": "D3/4 4.4", "titel": "Richtig schreiben", "kompetenzen": ["Grundwortschatz", "Silbentrennung und Vokallaenge", "Wortstamm auf verwandte Woerter uebertragen", "Grossschreibung ueber den Nominalkern", "Adjektive erkennen", "Wortzusammensetzungen mit Fugenelement", "Woerterbuch nutzen"] }
+      ],
+      "lernpfad_annahme": [
+        { "nr": 1,  "thema": "Wortarten wiederholen und sichern", "lernbereich": "D3/4 4.3" },
+        { "nr": 2,  "thema": "Satzglieder: Subjekt und Praedikat", "lernbereich": "D3/4 4.3" },
+        { "nr": 3,  "thema": "Satzglieder erweitern, Umstellprobe", "lernbereich": "D3/4 4.3" },
+        { "nr": 4,  "thema": "Die vier Faelle", "lernbereich": "D3/4 4.3" },
+        { "nr": 5,  "thema": "Zeitformen der Verben", "lernbereich": "D3/4 4.3" },
+        { "nr": 6,  "thema": "Woertliche Rede", "lernbereich": "D3/4 4.3" },
+        { "nr": 7,  "thema": "Rechtschreibung: Wortstamm und Ableitung", "lernbereich": "D3/4 4.4" },
+        { "nr": 8,  "thema": "Rechtschreibung: Grossschreibung", "lernbereich": "D3/4 4.4" },
+        { "nr": 9,  "thema": "Erzaehlende Texte schreiben", "lernbereich": "D3/4 3.2" },
+        { "nr": 10, "thema": "Berichten und Beschreiben", "lernbereich": "D3/4 3.2" },
+        { "nr": 11, "thema": "Lesen: Texte erschliessen", "lernbereich": "D3/4 2.3" }
+      ]
+    },
+
+    {
+      "kuerzel": "hsu",
+      "name": "Heimat- und Sachunterricht",
+      "uebertrittsfach": true,
+      "lernbereiche": [
+        { "id": "HSU3/4 1.1", "titel": "Zusammenleben in Familie, Schule und Gemeinschaft", "kompetenzen": ["Konflikte loesen", "Rechte und Pflichten", "demokratische Prinzipien", "Aufgaben der Kommune", "Kinderrechte", "Rollenklischees hinterfragen"] },
+        { "id": "HSU3/4 1.2", "titel": "Leben in einer Medien- und Konsumgesellschaft", "kompetenzen": ["Medien nach Funktion unterscheiden", "Medienangebote bewerten", "Beeinflussung des Kaufverhaltens", "Nachhaltigkeit"] },
+        { "id": "HSU3/4 2.1", "titel": "Koerper und Entwicklung", "kompetenzen": ["koerperliche Grenzen achten", "Aufbau und Schutz des Auges", "Pubertaet", "Entwicklung von Zeugung bis Geburt", "Erste Hilfe"] },
+        { "id": "HSU3/4 2.2", "titel": "Gefuehle und Wohlbefinden", "kompetenzen": ["Achtsamkeit gegenueber Gefuehlen", "koerperliche Selbstbestimmung", "Schoenheitsideale hinterfragen", "aktive Freizeitgestaltung"] },
+        { "id": "HSU3/4 3.1", "titel": "Tiere, Pflanzen, Lebensraeume", "kompetenzen": ["Arten beobachten und dokumentieren", "Angepasstheit an Lebensraeume", "Abhaengigkeiten zwischen Lebewesen", "Entwicklung von Tierarten", "Herkunft von Lebensmitteln", "Regionalitaet"] },
+        { "id": "HSU3/4 3.2", "titel": "Stoffe und Energie", "kompetenzen": ["elektrische Leitfaehigkeit", "einfache Stromkreise bauen und skizzieren", "Wirkungen elektrischer Energie", "Gefahren und Sicherheitsregeln", "Stromerzeugung bewerten", "Verbrennung und Loeschen"] },
+        { "id": "HSU3/4 3.3", "titel": "Luft, Wasser, Wetter", "kompetenzen": ["Forschungsfragen zum Wasser", "Wasserkreislauf", "Wasser als Lebensgrundlage", "Gefaehrdung und Schutz"] },
+        { "id": "HSU3/4 4.1", "titel": "Zeitbewusstsein und Orientierung in der Zeit", "kompetenzen": ["Begriffe fuer Zeitraeume", "Ereignisse auf Zeitleiste"] },
+        { "id": "HSU3/4 4.2", "titel": "Dauer und Wandel", "kompetenzen": ["Wert von Quellen", "Museen und Archive", "Geschichte des Heimatortes", "Entwicklung technischer Gegenstaende"] },
+        { "id": "HSU3/4 4.3", "titel": "Fakten und Fiktion", "kompetenzen": ["Realitaet und Fiktion unterscheiden", "historische Erinnerung"] },
+        { "id": "HSU3/4 5.1", "titel": "Raeume wahrnehmen und sich orientieren", "kompetenzen": ["Hilfsmittel zur Orientierung", "Karten lesen", "Wirklichkeit und Kartendarstellung", "Heimatort einordnen"] },
+        { "id": "HSU3/4 5.2", "titel": "Raeume nutzen und schuetzen", "kompetenzen": ["Lebenssituationen vergleichen", "Raumgestaltung und Interessen", "Raumschutz"] },
+        { "id": "HSU3/4 5.3", "titel": "Mobilitaet im Raum", "kompetenzen": ["Gruende fuer Mobilitaet", "frueher und heute", "Gefahren im Verkehr", "verkehrssichere Ausruestung", "Verkehrszeichen", "Fortbewegungsarten bewerten"] },
+        { "id": "HSU3/4 6.1", "titel": "Arbeit, technische und kulturelle Entwicklung", "kompetenzen": ["einfache technische Erfindungen", "vom Werkzeug zur Maschine", "Handwerk und Industrie", "Nachhaltigkeit der Warenherstellung"] },
+        { "id": "HSU3/4 6.2", "titel": "Bauen und Konstruieren", "kompetenzen": ["Bruecken bauen und Stabilitaet pruefen", "Zeichnungen und Anleitungen", "Bauweisen der Umgebung", "Balancegeraete", "Modelle bewerten"] }
+      ],
+      "lernpfad_annahme": [
+        { "nr": 1, "thema": "Strom und Stromkreise", "lernbereich": "HSU3/4 3.2" },
+        { "nr": 2, "thema": "Wasser und Wasserkreislauf", "lernbereich": "HSU3/4 3.3" },
+        { "nr": 3, "thema": "Karten und Orientierung, Bayern", "lernbereich": "HSU3/4 5.1" },
+        { "nr": 4, "thema": "Verkehrserziehung und Radfahrpruefung", "lernbereich": "HSU3/4 5.3" },
+        { "nr": 5, "thema": "Tiere und Pflanzen im Lebensraum", "lernbereich": "HSU3/4 3.1" },
+        { "nr": 6, "thema": "Koerper, Auge, Erste Hilfe", "lernbereich": "HSU3/4 2.1" },
+        { "nr": 7, "thema": "Heimatgeschichte und Zeitleiste", "lernbereich": "HSU3/4 4.2" },
+        { "nr": 8, "thema": "Technik, Bauen und Konstruieren", "lernbereich": "HSU3/4 6.2" },
+        { "nr": 9, "thema": "Demokratie, Gemeinde, Kinderrechte", "lernbereich": "HSU3/4 1.1" },
+        { "nr": 10, "thema": "Medien und Konsum", "lernbereich": "HSU3/4 1.2" }
+      ]
+    }
+  ],
+
+  "regeln_fuer_spiele": {
+    "einordnung": "Jedes Foto wird einem Lernbereich zugeordnet. Passt nichts, wird 'unbekannt' gesetzt statt geraten.",
+    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema aus lernpfad_annahme darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die Paul loesen muss, um weiterzukommen.",
+    "lernpfad_ist_annahme": "lernpfad_annahme ist KEINE amtliche Vorgabe, sondern die uebliche Reihenfolge in Bayern. Was Paul tatsaechlich fotografiert, hat immer Vorrang und korrigiert die Annahme.",
+    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
+    "uebertritt": "Bei Zeitknappheit haben Deutsch, Mathematik und HSU Vorrang, weil sie in Jgst. 4 fuer das Uebertrittszeugnis zaehlen. Das darf Paul gegenueber nie als Druck formuliert werden."
+  }
+}
