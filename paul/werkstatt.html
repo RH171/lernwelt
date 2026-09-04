@@ -112,6 +112,27 @@
   }
   .codefeld:focus{outline:none;border-color:var(--paul)}
   .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
+  .sammlung{margin-top:16px}
+  .sammlung h3{font-family:var(--rund);font-size:19px;margin:0 0 4px}
+  .liste{display:grid;gap:10px;margin-top:14px}
+  .eintrag{
+    display:flex;align-items:center;gap:13px;text-align:left;width:100%;
+    border:1px solid var(--line);background:#fbfcff;border-radius:16px;
+    padding:14px 15px;cursor:pointer;font-family:var(--font);color:var(--ink);
+    transition:border-color .12s,transform .1s;
+  }
+  .eintrag:hover{border-color:var(--paul)}
+  .eintrag:active{transform:scale(.99)}
+  .eintrag .em{font-size:24px;flex:none;width:44px;height:44px;border-radius:13px;
+               display:grid;place-items:center;background:#f1f2fa}
+  .eintrag .txt{flex:1;min-width:0}
+  .eintrag .tt{font-family:var(--rund);font-weight:600;font-size:16px;
+               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .eintrag .ts{font-size:13.5px;color:var(--muted);margin-top:2px;
+               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .eintrag .loeschen{flex:none;border:none;background:none;color:var(--muted);
+                     font-size:19px;cursor:pointer;padding:6px 4px;border-radius:8px}
+  .eintrag .loeschen:hover{color:var(--schlecht);background:#fff1f0}
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
@@ -158,6 +179,12 @@
       <div id="meldung"></div>
 
       <button class="los" id="los" disabled>Spiel bauen</button>
+    </div>
+
+    <div class="karte sammlung verborgen" id="sammlung">
+      <h3>Deine Spiele</h3>
+      <p class="unter">Alles, was du gebaut hast – zum Nochmalspielen.</p>
+      <div class="liste" id="liste"></div>
     </div>
   </section>
 
@@ -223,7 +250,10 @@
   function pruefeAnmeldung(){
     fetch("/api/code-pruefen", {credentials:"same-origin"})
       .then(function(r){ return r.json(); })
-      .then(function(a){ zeige(a && a.ok ? "aufnahme" : "anmelden"); if(!a||!a.ok){ $("code").focus(); } })
+      .then(function(a){
+        zeige(a && a.ok ? "aufnahme" : "anmelden");
+        if (a && a.ok) sammlungLaden(); else $("code").focus();
+      })
       .catch(function(){ zeige("anmelden"); });
   }
 
@@ -240,7 +270,7 @@
     .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
     .then(function(a){
       $("anmelden").disabled = false;
-      if (a.j && a.j.ok){ $("code").value=""; zeige("aufnahme"); return; }
+      if (a.j && a.j.ok){ $("code").value=""; zeige("aufnahme"); sammlungLaden(); return; }
       $("code").value = ""; $("code").focus();
       $("codefehler").textContent = (a.j && a.j.fehler) ? a.j.fehler : "Das hat nicht geklappt.";
     })
@@ -263,6 +293,68 @@
 
   function melde(text, art){
     $("meldung").innerHTML = text ? '<div class="hinweis '+(art||"warn")+'">'+text+'</div>' : "";
+  }
+
+  /* ---------- Gebaute Spiele ---------- */
+
+  var FACH_ZEICHEN = {mathe:"\u{1F522}", deutsch:"\u{1F4D6}", hsu:"\u{1F30D}",
+                      musik:"\u{1F3B5}", englisch:"\u{1F1EC}\u{1F1E7}", religion:"\u{1F54A}"};
+
+  function sammlungLaden(){
+    fetch("/api/spiele", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(a){ if (a && a.ok) malSammlung(a.spiele || []); })
+      .catch(function(){});
+  }
+
+  function malSammlung(spiele){
+    var kasten = $("liste");
+    $("sammlung").classList.toggle("verborgen", spiele.length === 0);
+    kasten.innerHTML = "";
+    spiele.forEach(function(e){
+      var d = document.createElement("div");
+      d.className = "eintrag";
+      var wann = "";
+      try {
+        var t = new Date(e.erzeugt);
+        var heute = new Date();
+        var gleich = t.toDateString() === heute.toDateString();
+        wann = gleich ? "heute" : t.toLocaleDateString("de-DE", {day:"numeric", month:"long"});
+      } catch(err){}
+      d.innerHTML =
+        '<div class="em">' + (FACH_ZEICHEN[e.fach] || "\u{1F3AE}") + '</div>' +
+        '<div class="txt"><div class="tt"></div><div class="ts"></div></div>' +
+        '<button class="loeschen" title="Wegwerfen">\u00D7</button>';
+      d.querySelector(".tt").textContent = e.titel || "Spiel";
+      d.querySelector(".ts").textContent = (e.thema || "") + " \u00B7 " + e.aufgaben + " Aufgaben \u00B7 " + wann;
+      d.addEventListener("click", function(ev){
+        if (ev.target.classList.contains("loeschen")) return;
+        spielHolen(e.id);
+      });
+      d.querySelector(".loeschen").addEventListener("click", function(ev){
+        ev.stopPropagation();
+        spielWegwerfen(e.id, e.titel);
+      });
+      kasten.appendChild(d);
+    });
+  }
+
+  function spielHolen(id){
+    fetch("/api/spiele?id=" + encodeURIComponent(id), {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(a){
+        if (a && a.ok && a.spiel){ spiel = a.spiel; starteSpiel(); }
+        else melde("Das Spiel konnte ich nicht laden.", "fehler");
+      })
+      .catch(function(){ melde("Das Spiel konnte ich nicht laden.", "fehler"); });
+  }
+
+  function spielWegwerfen(id, titel){
+    if (!window.confirm('"' + (titel || "Dieses Spiel") + '" wirklich wegwerfen?')) return;
+    fetch("/api/spiele?id=" + encodeURIComponent(id), {method:"DELETE", credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(a){ if (a && a.ok) malSammlung(a.spiele || []); })
+      .catch(function(){});
   }
 
   /* ---------- Material aufnehmen ---------- */
@@ -425,6 +517,7 @@
         return;
       }
       spiel = a.j.spiel;
+      sammlungLaden();
       starteSpiel();
     })
     .catch(function(){
@@ -533,7 +626,7 @@
   }
 
   $("nochmal").addEventListener("click", function(){
-    seiten = []; spiel = null; malSeiten(); melde(""); zeige("aufnahme");
+    seiten = []; spiel = null; malSeiten(); melde(""); zeige("aufnahme"); sammlungLaden();
   });
   $("ende-zurueck").addEventListener("click", function(){
     window.location.href = $("zurueck").getAttribute("href");

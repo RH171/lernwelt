@@ -11,6 +11,7 @@
 // erfundenes Spiel - das entscheidet die Werkstatt, nicht der Server.
 
 import { ausweisGueltig } from "./_riegel.js";
+import { spielSichern } from "./spiele.js";
 
 const MODELL = "claude-opus-5";
 
@@ -125,6 +126,14 @@ export async function onRequestPost(context) {
   const spiel = block.input;
   spiel.erzeugt = new Date().toISOString();
   spiel.kind = kind;
+
+  // Aufheben, damit Paul es wiederfindet und daraus weitere Spiele ableiten kann.
+  // Ein Fehler beim Speichern darf das fertige Spiel nicht kosten.
+  try {
+    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten);
+  } catch (e) {
+    spiel.nichtGespeichert = true;
+  }
 
   return new Response(JSON.stringify({ ok: true, spiel, verbrauch: daten.usage || null }), {
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
