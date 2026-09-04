@@ -197,7 +197,19 @@ DEINE REGELN
      Gut:    "Wir zerlegen 217 in 200, 10 und 7 und rechnen die Stuecke einzeln."
      Falsch: gar nichts sagen und einfach mit einer fremd wirkenden Zahl anfangen.
 
-6. DIE ERKLÄRUNG WIRD GEGLIEDERT, NICHT AM STÜCK GESCHRIEBEN. Ein Kind, das sich schwertut, steigt bei einer Textwurst aus. Deshalb:
+6. SAG, WAS SCHIEFGELAUFEN IST. Falsche Antworten sind keine Zufallszahlen, sondern typische Denkfehler - und jeder verraet, wo es hakt. Fuelle deshalb "diagnosen": zu jeder falschen Antwort EIN Satz, der benennt, was das Kind vermutlich gedacht hat.
+   Beispiel fuer 134 · 6 = 804:
+     704 -> "Du hast den Uebertrag vergessen: 6 · 3 = 18, plus die 2 aus dem Uebertrag sind 20."
+     824 -> "Den Uebertrag nur einmal dazuzaehlen - hier ist er doppelt drin."
+      84 -> "Da fehlt eine Stelle: die Hunderter sind unter den Tisch gefallen."
+   Regeln dafuer:
+   - Sprich das Kind an ("Du hast..."), nie ueber es. Nie tadeln, nie "leider".
+   - Benenne den Fehler, gib nicht die Loesung - die kommt sowieso in der Erklaerung.
+   - Bei art=wahl: fuer JEDE falsche Antwort eine Diagnose.
+   - Bei art=eingabe: die zwei bis drei WAHRSCHEINLICHSTEN Fehleingaben vorhersagen und diagnostizieren.
+   - Bei art=teilschritte: leer lassen, dort hilft schon der einzelne Schritt.
+
+7. DIE ERKLÄRUNG WIRD GEGLIEDERT, NICHT AM STÜCK GESCHRIEBEN. Ein Kind, das sich schwertut, steigt bei einer Textwurst aus. Deshalb:
    - Schreibe den Rechenweg in EINZELNE SCHRITTE, jeder in einer eigenen Zeile, getrennt durch \n. Ein Schritt pro Zeile, kurz.
    - Richtig ist zum Beispiel:
      6 · 4 = 24  →  4 hin, 2 im Übertrag\n6 · 3 = 18 + 2 = 20  →  0 hin, 2 im Übertrag\n6 · 1 = 6 + 2 = 8\nErgebnis: 804
@@ -205,16 +217,16 @@ DEINE REGELN
    - Bei Aufgaben ohne Rechenweg (Sprache, Sachfragen) gliedere trotzdem: erst die Antwort, dann in neuer Zeile die Begründung.
    - Höchstens fünf Zeilen. Keine Aufzählungszeichen, keine Nummerierung - die Zeile allein reicht.
 
-7. DIE MERKHILFE KOMMT INS EIGENE FELD "merke". Sie steht NICHT in der Erklärung. Nimm, WO ES PASST, genau eines von beidem:
+8. DIE MERKHILFE KOMMT INS EIGENE FELD "merke". Sie steht NICHT in der Erklärung. Nimm, WO ES PASST, genau eines von beidem:
    - ein RECHENTRICK für den Fall, dass das Auswendige gerade weg ist: "8 · 7 vergessen? 8 · 8 = 64, davon eine 8 weg macht 56." Auch: mal 9 ist mal 10 minus die Zahl selbst; mal 5 ist die Hälfte von mal 10; mal 2 ist verdoppeln.
    - das SIGNALWORT der Aufgabe, wenn eines drinsteckt: "Das Wort 'je' ist dein Signal: hier wird malgenommen." Ebenso "pro" und "jeder" fürs Malnehmen, "insgesamt" und "zusammen" fürs Zusammenzählen, "übrig" und "Rest" fürs Abziehen oder Teilen. In anderen Fächern die Merkfrage: "Wer oder was?" fragt nach dem Subjekt.
    Das Signalwort ist mehr wert als der Trick, weil es bei JEDER solchen Aufgabe hilft. Passt weder das eine noch das andere, lass "merke" leer - lieber nichts als eine Floskel.
    EIN Satz, höchstens zwei. Nie beides zugleich.
 
-8. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
-9. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
-10. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
-11. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
+9. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
+10. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
+11. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
+12. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
 
 DIE WELT
 Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals echte Marken oder geschützte Spielfiguren.
@@ -246,6 +258,19 @@ const WERKZEUG = {
             art: { type: "string", enum: ["wahl", "eingabe", "teilschritte"], description: "Welche Aufgabenart - siehe Regel 5. Abwechseln!" },
             frage: { type: "string" },
             antworten: { type: "array", items: { type: "string" }, description: "NUR bei art=wahl: die vier Auswahlmoeglichkeiten, die richtige MUSS dabei sein. Sonst leeres Array." },
+            diagnosen: {
+              type: "array",
+              description: "Zu jeder falschen Antwort ein Satz, was das Kind vermutlich gedacht hat (siehe Regel 6). Bei art=teilschritte leeres Array.",
+              items: {
+                type: "object",
+                properties: {
+                  antwort: { type: "string", description: "Die falsche Antwort, um die es geht." },
+                  hinweis: { type: "string", description: "Ein Satz: was ist hier passiert? Das Kind ansprechen, nicht tadeln." },
+                },
+                required: ["antwort", "hinweis"],
+                additionalProperties: false,
+              },
+            },
             weg: { type: "string", description: "NUR bei art=teilschritte: EIN Satz, der vorher ansagt, welchen Rechenweg wir gehen. Sonst leerer String." },
             teilschritte: {
               type: "array",
@@ -262,9 +287,9 @@ const WERKZEUG = {
             },
             richtig: { type: "string", description: "Die richtige Antwort. Bei art=teilschritte das Endergebnis." },
             erklaerung: { type: "string", description: "Der Weg zur Loesung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, hoechstens fuenf Zeilen. Kein Fliesstext. Ohne Merkhilfe - die kommt ins Feld merke." },
-            merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 7). Leer lassen, wenn nichts wirklich passt." },
+            merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 8). Leer lassen, wenn nichts wirklich passt." },
           },
-          required: ["art", "frage", "antworten", "weg", "teilschritte", "richtig", "erklaerung", "merke"],
+          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke"],
           additionalProperties: false,
         },
       },
