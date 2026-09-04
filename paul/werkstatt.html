@@ -101,6 +101,17 @@
 
   .marke{display:inline-block;background:#f2f3fa;color:var(--muted);border-radius:999px;
          padding:5px 12px;font-size:12.5px;margin:0 6px 6px 0}
+  .anmeldung{text-align:center;padding:34px 22px}
+  .anmeldung .schloss{font-size:46px}
+  .anmeldung h2{font-family:var(--rund);font-size:23px;margin:14px 0 6px}
+  .codefeld{
+    width:190px;margin:20px auto 0;display:block;text-align:center;
+    font-family:var(--rund);font-size:32px;letter-spacing:.24em;
+    padding:15px 12px;border:2px solid var(--line);border-radius:16px;
+    background:#fbfcff;color:var(--ink);
+  }
+  .codefeld:focus{outline:none;border-color:var(--paul)}
+  .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
@@ -112,6 +123,19 @@
     <a class="zurueck" id="zurueck" href="index.html">‹ Lernwelt</a>
     <h1>Werkstatt</h1>
   </header>
+
+  <!-- 0. Anmelden -->
+  <section id="sicht-anmelden" class="verborgen">
+    <div class="karte anmeldung">
+      <div class="schloss">🔐</div>
+      <h2>Hallo Paul!</h2>
+      <p class="unter">Hier baust nur du Spiele. Gib deinen Code ein.</p>
+      <input class="codefeld" id="code" type="password" inputmode="numeric"
+             autocomplete="off" maxlength="12" aria-label="Dein Code">
+      <div class="codefehler" id="codefehler"></div>
+      <button class="los" id="anmelden">Los geht's</button>
+    </div>
+  </section>
 
   <!-- 1. Material sammeln -->
   <section id="sicht-aufnahme">
@@ -191,12 +215,51 @@
     if (hub) $("zurueck").setAttribute("href", hub);
   } catch(e){}
 
+  /* ---------- Anmelden ---------- */
+  // Der Code selbst wird NICHT im Browser gespeichert. Der Server setzt nach
+  // richtiger Eingabe ein signiertes HttpOnly-Cookie. Ein Wert im localStorage
+  // wuerde von paul-sync.js eingesammelt und an alle Geraete verteilt werden.
+
+  function pruefeAnmeldung(){
+    fetch("/api/code-pruefen", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(a){ zeige(a && a.ok ? "aufnahme" : "anmelden"); if(!a||!a.ok){ $("code").focus(); } })
+      .catch(function(){ zeige("anmelden"); });
+  }
+
+  function anmelden(){
+    var code = $("code").value.trim();
+    if (!code){ $("codefehler").textContent = "Bitte gib deinen Code ein."; return; }
+    $("anmelden").disabled = true;
+    $("codefehler").textContent = "";
+    fetch("/api/code-pruefen", {
+      method:"POST", credentials:"same-origin",
+      headers:{"content-type":"application/json"},
+      body: JSON.stringify({code: code})
+    })
+    .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
+    .then(function(a){
+      $("anmelden").disabled = false;
+      if (a.j && a.j.ok){ $("code").value=""; zeige("aufnahme"); return; }
+      $("code").value = ""; $("code").focus();
+      $("codefehler").textContent = (a.j && a.j.fehler) ? a.j.fehler : "Das hat nicht geklappt.";
+    })
+    .catch(function(){
+      $("anmelden").disabled = false;
+      $("codefehler").textContent = "Ich konnte den Server nicht erreichen.";
+    });
+  }
+
   function zeige(welche){
-    ["aufnahme","laden","spiel","ende"].forEach(function(s){
+    ["anmelden","aufnahme","laden","spiel","ende"].forEach(function(s){
       $("sicht-"+s).classList.toggle("verborgen", s !== welche);
     });
     window.scrollTo(0,0);
   }
+
+  $("anmelden").addEventListener("click", anmelden);
+  $("code").addEventListener("keydown", function(e){ if (e.key === "Enter") anmelden(); });
+  pruefeAnmeldung();
 
   function melde(text, art){
     $("meldung").innerHTML = text ? '<div class="hinweis '+(art||"warn")+'">'+text+'</div>' : "";
@@ -340,15 +403,22 @@
 
     fetch("/api/spiel-bauen", {
       method: "POST",
+      credentials: "same-origin",
       headers: {"content-type":"application/json"},
       body: JSON.stringify({
         kind: "paul",
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
     })
-    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
     .then(function(a){
       clearInterval(takt);
+      if (a.status === 401){
+        zeige("anmelden");
+        $("codefehler").textContent = "Bitte melde dich nochmal an.";
+        $("code").focus();
+        return;
+      }
       if (!a.ok || !a.j.ok || !a.j.spiel){
         zeige("aufnahme");
         melde(a.j && a.j.fehler ? a.j.fehler : "Da ist etwas schiefgegangen. Bitte nochmal versuchen.", "fehler");
