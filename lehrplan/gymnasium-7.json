@@ -5,7 +5,8 @@
     "abgerufen": "2026-09-04",
     "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
     "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
-    "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestaetigt am 04.09.2026)."
+    "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestaetigt am 04.09.2026).",
+    "offen": "Fehlen noch: Natur und Technik (Schwerpunkt Physik und Schwerpunkt Informatik) - Adress-Slug noch unbekannt. Dazu die Wahlfaecher: 2. Fremdsprache (Latein oder Franzoesisch) und Religion/Ethik - bei Denny erfragt. Kunst, Musik und Sport bewusst weggelassen, fuer Bildschirm-Lernspiele wenig ergiebig."
   },
   "faecher": [
     {
@@ -420,6 +421,236 @@
           "nr": 9,
           "thema": "Englische und amerikanische Geschichte",
           "lernbereich": "E7 5"
+        }
+      ]
+    },
+    {
+      "kuerzel": "geographie",
+      "name": "Geographie",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "Geo7 1",
+          "titel": "Geographische Arbeitstechniken",
+          "kompetenzen": [
+            "physische und thematische Karten auswerten, Kartenskizzen anfertigen",
+            "Bilder und Satellitenbilder vergleichen",
+            "Klimadiagramme analysieren und zeichnen",
+            "Statistiken interpretieren",
+            "Daten aus Presse und Reiseliteratur erschliessen",
+            "geographische Darstellungen kritisch pruefen",
+            "digitale Geomedien nutzen"
+          ]
+        },
+        {
+          "id": "Geo7 2",
+          "titel": "Einheit und Vielfalt in Europa",
+          "kompetenzen": [
+            "europaeische Staaten und Regionen ordnen",
+            "die europaeische Idee darstellen",
+            "europaeische Zusammenarbeit erlaeutern",
+            "Kultur und Lebensweisen analysieren"
+          ]
+        },
+        {
+          "id": "Geo7 3",
+          "titel": "Naturgeographie Europas im Ueberblick",
+          "kompetenzen": [
+            "naturraeumliche Gliederung Europas",
+            "Klimadaten in Diagramme umwandeln",
+            "Klima und Vegetation darstellen",
+            "Vulkanismus und Erdbeben erlaeutern"
+          ]
+        },
+        {
+          "id": "Geo7 4",
+          "titel": "Laendliche Raeume Europas",
+          "kompetenzen": [
+            "Naturfaktoren und laendliche Nutzung",
+            "raum-zeitliche Entwicklungen",
+            "landwirtschaftliches Potenzial bewerten",
+            "Folgewirkungen der Nutzung",
+            "regionale und importierte Produkte vergleichen"
+          ]
+        },
+        {
+          "id": "Geo7 5",
+          "titel": "Metropolen und Verdichtungsraeume in Europa",
+          "kompetenzen": [
+            "Merkmale und Herausforderungen von Metropolen",
+            "Standortfaktoren",
+            "grenzuebergreifende Infrastrukturprojekte bewerten",
+            "aktuelle Entwicklungen diskutieren"
+          ]
+        },
+        {
+          "id": "Geo7 6",
+          "titel": "Meere und Kuesten Europas",
+          "kompetenzen": [
+            "europaeische Meere charakterisieren",
+            "Kuestenformung",
+            "wirtschaftliche Bedeutung und Nutzungskonflikte",
+            "Schutz der Meere"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Arbeit mit Karten und Klimadiagrammen",
+          "lernbereich": "Geo7 1"
+        },
+        {
+          "nr": 2,
+          "thema": "Europa: Staaten und die europaeische Idee",
+          "lernbereich": "Geo7 2"
+        },
+        {
+          "nr": 3,
+          "thema": "Naturraum Europa, Vulkanismus und Erdbeben",
+          "lernbereich": "Geo7 3"
+        },
+        {
+          "nr": 4,
+          "thema": "Laendliche Raeume und Landwirtschaft",
+          "lernbereich": "Geo7 4"
+        },
+        {
+          "nr": 5,
+          "thema": "Metropolen und Verdichtungsraeume",
+          "lernbereich": "Geo7 5"
+        },
+        {
+          "nr": 6,
+          "thema": "Meere und Kuesten",
+          "lernbereich": "Geo7 6"
+        }
+      ]
+    },
+    {
+      "kuerzel": "geschichte",
+      "name": "Geschichte",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "G7 1",
+          "titel": "Koenig und Reich: Herrschaft im Mittelalter",
+          "stunden": 7,
+          "kompetenzen": [
+            "Herrschaftsstrukturen des Mittelalters",
+            "Entstehung des Ottonischen Reichs",
+            "Reichskirchensystem und Investiturstreit",
+            "Geschichtskarten nutzen",
+            "Kaiserkroenung 962, Adel, Lehnswesen, Kurfuersten"
+          ]
+        },
+        {
+          "id": "G7 2",
+          "titel": "Leben und Kultur im Mittelalter",
+          "stunden": 10,
+          "kompetenzen": [
+            "Lebensmerkmale und kulturelle Leistungen",
+            "Quellen zu Lebensformen",
+            "Architektur und hoefische Kultur",
+            "historische Strukturen in Altstaedten",
+            "Umgang mit Seuchen"
+          ]
+        },
+        {
+          "id": "G7 3",
+          "titel": "Neue raeumliche und geistige Horizonte",
+          "stunden": 11,
+          "kompetenzen": [
+            "Kulturkontakt: Konflikte und Chancen",
+            "Quellen zu den Kreuzzuegen",
+            "Eroberung Konstantinopels 1453",
+            "Menschenbild der Renaissance",
+            "Entdeckungsfahrten und Kolonialisierung"
+          ]
+        },
+        {
+          "id": "G7 4",
+          "titel": "Wirtschaft und Handel gestern und heute",
+          "stunden": 6,
+          "kompetenzen": [
+            "Wirtschaft, Politik und Gesellschaft",
+            "Handel am Obergermanisch-Raetischen Limes",
+            "Europa und China im Mittelalter",
+            "Hanse und Fugger",
+            "Geschichtskarten zu Handelsraeumen"
+          ]
+        },
+        {
+          "id": "G7 5",
+          "titel": "Das konfessionelle Zeitalter",
+          "stunden": 8,
+          "kompetenzen": [
+            "religioese und politische Konflikte",
+            "Reformation und Luther beurteilen",
+            "Politik und Religion",
+            "Dreissigjaehriger Krieg und Westfaelischer Friede",
+            "Flugblaetter als Quelle"
+          ]
+        },
+        {
+          "id": "G7 6",
+          "titel": "Absolutismus und Barock",
+          "stunden": 8,
+          "kompetenzen": [
+            "franzoesischer Absolutismus",
+            "absolutistisches Herrschaftsverstaendnis",
+            "Versailles",
+            "regionale Rezeption",
+            "balance of power"
+          ]
+        },
+        {
+          "id": "G7 7",
+          "titel": "Bauwerke als Ausdruck politischen Denkens",
+          "stunden": 6,
+          "kompetenzen": [
+            "Bauwerke als historische Quellen",
+            "Herrschaftsverstaendnis in Baudenkmaelern",
+            "Bauwerke Epochen zuordnen",
+            "Architektur und Herrschaftsform"
+          ]
+        }
+      ],
+      "lernpfad": [
+        {
+          "nr": 1,
+          "thema": "Herrschaft im Mittelalter",
+          "lernbereich": "G7 1"
+        },
+        {
+          "nr": 2,
+          "thema": "Leben und Kultur im Mittelalter",
+          "lernbereich": "G7 2"
+        },
+        {
+          "nr": 3,
+          "thema": "Kreuzzuege, Renaissance, Entdeckungen",
+          "lernbereich": "G7 3"
+        },
+        {
+          "nr": 4,
+          "thema": "Handel: Hanse und Fugger",
+          "lernbereich": "G7 4"
+        },
+        {
+          "nr": 5,
+          "thema": "Reformation und Dreissigjaehriger Krieg",
+          "lernbereich": "G7 5"
+        },
+        {
+          "nr": 6,
+          "thema": "Absolutismus und Barock",
+          "lernbereich": "G7 6"
+        },
+        {
+          "nr": 7,
+          "thema": "Bauwerke als Quellen",
+          "lernbereich": "G7 7"
         }
       ]
     }
