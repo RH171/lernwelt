@@ -598,6 +598,17 @@
     malAufgabe();
   }
 
+  // Rechenweg als Zeilen, Merkhilfe abgesetzt darunter.
+  // Kinder steigen bei Fliesstext aus - besonders die, die es noetig haetten.
+  function rueckmeldung(a){
+    var html = '<div class="schritte">' + escape2(a.erklaerung || "") + '</div>';
+    if (a.merke && String(a.merke).trim()){
+      html += '<div class="merke"><span class="gluehbirne">\u{1F4A1}</span>' +
+              '<span><b>Merke:</b> ' + escape2(a.merke) + '</span></div>';
+    }
+    return html;
+  }
+
   function escape2(t){
     return String(t).replace(/[<>&"]/g, function(c){
       return {"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c];
@@ -635,7 +646,7 @@
       knopf.classList.add("gut");
       richtig++;
       $("rueck").className = "rueck gut zeigen";
-      $("rueck").innerHTML = "<b>Richtig!</b>" + escape2(a.erklaerung || "");
+      $("rueck").innerHTML = "<b>Richtig!</b>" + rueckmeldung(a);
       konfetti();
     } else {
       knopf.classList.add("schlecht");
@@ -643,7 +654,7 @@
         if (b.textContent === a.richtig) b.classList.add("gut");
       });
       $("rueck").className = "rueck schlecht zeigen";
-      $("rueck").innerHTML = "<b>Fast!</b>" + escape2(a.erklaerung || "") ;
+      $("rueck").innerHTML = "<b>Fast!</b>" + rueckmeldung(a);
     }
     $("weiter").classList.remove("verborgen");
     $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
