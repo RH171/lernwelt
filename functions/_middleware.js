@@ -3,6 +3,8 @@
 // und so in jede HTML-Seite schreiben, dass die Spiele ihn beim Start schon kennen –
 // ganz OHNE die Spiel-Dateien selbst zu verändern.
 
+import { ausweisGueltig, anmeldeSeite } from "./api/_riegel.js";
+
 export async function onRequest(context) {
   const { request, next, env } = context;
   const url = new URL(request.url);
@@ -10,6 +12,20 @@ export async function onRequest(context) {
   // API-Aufrufe (z. B. /api/progress) nicht anfassen – die machen ihr eigenes Ding.
   if (url.pathname.startsWith("/api/")) {
     return next();
+  }
+
+  // Pauls Bereich ist nur mit seinem Code zu erreichen. Der Link ist inzwischen
+  // anderen Kindern bekannt. Muss hier oben stehen: Eine Middleware in einem
+  // Unterordner greift bei Cloudflare NICHT für statische Dateien, nur für
+  // Functions – deshalb ist dies die einzige Stelle, an der es wirkt.
+  // Fehlt das Secret, wird niemand ausgesperrt.
+  if (url.pathname.startsWith("/paul/") || url.pathname === "/paul") {
+    if (env.PAUL_CODE && !(await ausweisGueltig(request, env.PAUL_CODE))) {
+      return new Response(anmeldeSeite(), {
+        status: 401,
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+      });
+    }
   }
 
   // Die eigentliche Seite/Datei holen.
