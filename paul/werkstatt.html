@@ -137,6 +137,11 @@
     line-height:1.75;font-size:16px;
     font-variant-numeric:tabular-nums;  /* Ziffern stehen untereinander */
   }
+  .diagnose{
+    margin:0 0 12px;padding:12px 15px;border-radius:13px;
+    background:rgba(255,255,255,.7);border:1px solid rgba(20,22,40,.07);
+    font-size:16px;line-height:1.5;color:var(--ink);
+  }
   .merke{
     display:flex;gap:10px;align-items:flex-start;
     margin-top:14px;padding:13px 15px;border-radius:13px;
@@ -648,10 +653,53 @@
     malAufgabe();
   }
 
+  // Was ist vermutlich passiert? Zuerst schauen, ob Claude den Fehler
+  // vorhergesehen hat. Sonst ein paar Faustregeln, die die haeufigsten
+  // Rechenfehler von Kindern erkennen.
+  function diagnose(a, gegeben){
+    var sauber = function(s){ return String(s).replace(/[\s.'\u00A0]/g, ""); };
+    var g = sauber(gegeben), r = sauber(a.richtig);
+
+    // 1. Hat Claude diesen Fehler vorhergesehen?
+    if (a.diagnosen && a.diagnosen.length){
+      for (var i = 0; i < a.diagnosen.length; i++){
+        if (sauber(a.diagnosen[i].antwort) === g) return a.diagnosen[i].hinweis;
+      }
+    }
+
+    // 2. Faustregeln - nur bei reinen Zahlen
+    if (!/^\d+$/.test(g) || !/^\d+$/.test(r)) return "";
+    var zg = parseInt(g, 10), zr = parseInt(r, 10);
+    if (!zg || !zr) return "";
+
+    if (zg * 10 === zr)  return "Da fehlt eine Stelle \u2013 dein Ergebnis ist zehnmal zu klein.";
+    if (zg === zr * 10)  return "Eine Stelle zu viel \u2013 dein Ergebnis ist zehnmal zu gro\u00DF.";
+    if (zg * 100 === zr) return "Da fehlen zwei Stellen \u2013 schau nochmal, wie gro\u00DF das Ergebnis sein muss.";
+
+    var sortiert = function(s){ return s.split("").sort().join(""); };
+    if (g.length === r.length && g !== r && sortiert(g) === sortiert(r))
+      return "Die richtigen Ziffern \u2013 nur in der falschen Reihenfolge.";
+
+    if (g !== r && g.length === r.length && g.slice(0, -1) === r.slice(0, -1))
+      return "Fast! Nur die letzte Ziffer stimmt nicht \u2013 schau nochmal auf die Einer.";
+
+    if (Math.abs(zg - zr) <= 2)
+      return "Ganz knapp daneben \u2013 da hat sich beim Zusammenz\u00E4hlen eine Kleinigkeit verschoben.";
+
+    if (zg < zr / 2)  return "Dein Ergebnis ist deutlich zu klein \u2013 \u00fcberschlag mal grob, wie viel es ungef\u00E4hr sein m\u00FCsste.";
+    if (zg > zr * 2)  return "Dein Ergebnis ist deutlich zu gro\u00DF \u2013 \u00fcberschlag mal grob, wie viel es ungef\u00E4hr sein m\u00FCsste.";
+    return "";
+  }
+
   // Rechenweg als Zeilen, Merkhilfe abgesetzt darunter.
   // Kinder steigen bei Fliesstext aus - besonders die, die es noetig haetten.
-  function rueckmeldung(a){
-    var html = '<div class="schritte">' + escape2(a.erklaerung || "") + '</div>';
+  function rueckmeldung(a, gegeben){
+    var html = "";
+    if (gegeben){
+      var d = diagnose(a, gegeben);
+      if (d) html += '<div class="diagnose">' + escape2(d) + '</div>';
+    }
+    html += '<div class="schritte">' + escape2(a.erklaerung || "") + '</div>';
     if (a.merke && String(a.merke).trim()){
       html += '<div class="merke"><span class="gluehbirne">\u{1F4A1}</span>' +
               '<span><b>Merke:</b> ' + escape2(a.merke) + '</span></div>';
@@ -727,7 +775,7 @@
           setTimeout(function(){ feld.classList.remove("schlecht"); feld.value = ""; feld.focus(); }, 700);
         } else {
           feld.classList.add("schlecht"); feld.disabled = true; knopf.disabled = true;
-          loesungZeigen(false, a);
+          loesungZeigen(false, a, eingabe);
         }
       }
     }
@@ -815,10 +863,10 @@
     return sauber(a) === sauber(b);
   }
 
-  function loesungZeigen(stimmt, a){
+  function loesungZeigen(stimmt, a, gegeben){
     if (stimmt){ richtig++; konfetti(); }
     $("rueck").className = "rueck " + (stimmt ? "gut" : "schlecht") + " zeigen";
-    $("rueck").innerHTML = (stimmt ? "<b>Richtig!</b>" : "<b>Fast!</b>") + rueckmeldung(a);
+    $("rueck").innerHTML = (stimmt ? "<b>Richtig!</b>" : "<b>Fast!</b>") + rueckmeldung(a, stimmt ? "" : gegeben);
     $("weiter").classList.remove("verborgen");
     $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
   }
@@ -836,7 +884,7 @@
         if (b.textContent === a.richtig) b.classList.add("gut");
       });
     }
-    loesungZeigen(stimmt, a);
+    loesungZeigen(stimmt, a, gewaehlt);
   }
 
   $("weiter").addEventListener("click", function(){
