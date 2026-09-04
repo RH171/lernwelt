@@ -1,0 +1,568 @@
+{
+  "meta": {
+    "titel": "LehrplanPLUS Bayern, Grundschule, Jahrgangsstufe 1/2",
+    "quelle": "ISB, lehrplanplus.bayern.de",
+    "abgerufen": "2026-09-04",
+    "hinweis": "LehrplanPLUS fasst Jgst. 1 und 2 zusammen. Kompetenzen = Ergebnis eines zweijaehrigen Lernprozesses. Der Lehrplan legt NICHT fest, wann ein Thema drankommt.",
+    "kind": "Leon, kommt Mitte September 2026 in die 2. Klasse",
+    "offen": "Musik, Englisch, Kunst und Werken fehlen. Diese Faecher wurden 2024/25 flexibilisiert; ihre Seiten liefern derzeit nur die Startseite aus."
+  },
+  "faecher": [
+    {
+      "kuerzel": "mathe",
+      "name": "Mathematik",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "M1/2 1",
+          "titel": "Zahlen und Operationen",
+          "kompetenzen": [
+            "Zahlbedeutungen aus der Umwelt unterscheiden",
+            "Orientierung im Zahlenraum bis Hundert",
+            "5er- und 10er-Struktur nutzen",
+            "Zehnersystem und Zahldarstellungen",
+            "Anzahlen schaetzen und bestimmen",
+            "Zahlen additiv zerlegen",
+            "Ziffern klar schreiben"
+          ]
+        },
+        {
+          "id": "M1/2 2",
+          "titel": "Raum und Form",
+          "kompetenzen": [
+            "Lagebegriffe",
+            "Wegverlaeufe beschreiben",
+            "Perspektiven einnehmen",
+            "Flaechen- und Koerperformen vergleichen und sortieren",
+            "Dreieck, Kreis, Viereck, Quadrat, Rechteck benennen",
+            "Zylinder, Prisma, Quader, Wuerfel, Kegel, Pyramide, Kugel benennen",
+            "ebene Figuren zeichnen",
+            "Achsensymmetrie",
+            "geometrische Muster",
+            "Flaecheninhalt und Umfang vergleichen"
+          ]
+        },
+        {
+          "id": "M1/2 3",
+          "titel": "Groessen und Messen",
+          "kompetenzen": [
+            "mit selbst gewaehlten und mit standardisierten Einheiten messen",
+            "Muenzen und Geldscheine unterscheiden",
+            "Abkuerzungen der Masseinheiten",
+            "Uhrzeiten ablesen, Zeitspannen bestimmen",
+            "Groessen schaetzen",
+            "Geldbetraege wechseln",
+            "Sachprobleme mit Groessen loesen",
+            "Plausibilitaet pruefen"
+          ]
+        },
+        {
+          "id": "M1/2 4",
+          "titel": "Daten und Zufall",
+          "kompetenzen": [
+            "Daten sammeln und vergleichen",
+            "Strichlisten, Schaubilder, Tabellen",
+            "Fragen zu Tabellen formulieren",
+            "einfache Zufallsexperimente",
+            "sicher, moeglich, unmoeglich, wahrscheinlich, unwahrscheinlich"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Zahlenraum bis 20 wiederholen",
+          "lernbereich": "M1/2 1"
+        },
+        {
+          "nr": 2,
+          "thema": "Zahlenraum bis 100",
+          "lernbereich": "M1/2 1"
+        },
+        {
+          "nr": 3,
+          "thema": "Addition und Subtraktion bis 100",
+          "lernbereich": "M1/2 1"
+        },
+        {
+          "nr": 4,
+          "thema": "Einmaleins aufbauen",
+          "lernbereich": "M1/2 1"
+        },
+        {
+          "nr": 5,
+          "thema": "Geld und Einkaufen",
+          "lernbereich": "M1/2 3"
+        },
+        {
+          "nr": 6,
+          "thema": "Uhrzeit und Zeitspannen",
+          "lernbereich": "M1/2 3"
+        },
+        {
+          "nr": 7,
+          "thema": "Laengen messen",
+          "lernbereich": "M1/2 3"
+        },
+        {
+          "nr": 8,
+          "thema": "Formen und Koerper",
+          "lernbereich": "M1/2 2"
+        },
+        {
+          "nr": 9,
+          "thema": "Symmetrie und Muster",
+          "lernbereich": "M1/2 2"
+        },
+        {
+          "nr": 10,
+          "thema": "Daten, Tabellen, Zufall",
+          "lernbereich": "M1/2 4"
+        }
+      ]
+    },
+    {
+      "kuerzel": "deutsch",
+      "name": "Deutsch",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "D1/2 1.1",
+          "titel": "Verstehend zuhoeren",
+          "kompetenzen": [
+            "Aufmerksamkeit richten",
+            "wesentliche Informationen entnehmen",
+            "Verstaendnis bekunden",
+            "Nicht-Verstehen hoeflich aeussern"
+          ]
+        },
+        {
+          "id": "D1/2 1.2",
+          "titel": "Zu anderen sprechen",
+          "kompetenzen": [
+            "Erlebnisse erzaehlen",
+            "Lernergebnisse praesentieren",
+            "verstaendlich und deutlich sprechen",
+            "Vortraege vorbereiten"
+          ]
+        },
+        {
+          "id": "D1/2 1.3",
+          "titel": "Gespraeche fuehren",
+          "kompetenzen": [
+            "Standardsituationen gestalten",
+            "Gespraechsregeln beachten",
+            "sich beteiligen"
+          ]
+        },
+        {
+          "id": "D1/2 1.4",
+          "titel": "Ueber Lernen sprechen",
+          "kompetenzen": [
+            "Beobachtungen und Vermutungen aeussern",
+            "Lernergebnisse vergleichen",
+            "Lernstand einschaetzen",
+            "Lernziele setzen"
+          ]
+        },
+        {
+          "id": "D1/2 1.5",
+          "titel": "Szenisch spielen",
+          "kompetenzen": [
+            "Figuren benennen und verkoerpern",
+            "Szenen gestisch und mimisch darstellen"
+          ]
+        },
+        {
+          "id": "D1/2 2.1",
+          "titel": "Ueber Leseerfahrungen verfuegen",
+          "kompetenzen": [
+            "Leseerfahrungen schildern",
+            "Textarten unterscheiden",
+            "freie Lesezeiten nutzen",
+            "Medien finden"
+          ]
+        },
+        {
+          "id": "D1/2 2.2",
+          "titel": "Ueber Lesefertigkeiten verfuegen",
+          "kompetenzen": [
+            "richtig und in angemessenem Tempo lesen",
+            "Buchstabenverbindungen erfassen",
+            "sinnunterstuetzende Pausen",
+            "Leseflüssigkeit ueben"
+          ]
+        },
+        {
+          "id": "D1/2 2.3",
+          "titel": "Ueber Lesefaehigkeiten verfuegen",
+          "kompetenzen": [
+            "Lesestrategien anwenden",
+            "Vorwissen aktivieren",
+            "unbekannte Woerter klaeren",
+            "Sach- und literarische Texte verstehen",
+            "Maerchen, Fabeln, Gedichte, Anleitungen, Rezepte",
+            "recherchieren"
+          ]
+        },
+        {
+          "id": "D1/2 2.4",
+          "titel": "Texte erschliessen",
+          "kompetenzen": [
+            "Abfolgen visualisieren",
+            "Vermutungen zum Handlungsverlauf",
+            "Figuren beschreiben",
+            "Orte beschreiben",
+            "rhythmisch und lautmalerisch lesen"
+          ]
+        },
+        {
+          "id": "D1/2 2.5",
+          "titel": "Texte praesentieren",
+          "kompetenzen": [
+            "lebendig vortragen",
+            "am literarischen Leben teilnehmen",
+            "kurze Vortraege halten"
+          ]
+        },
+        {
+          "id": "D1/2 3.1",
+          "titel": "Ueber Schreibfertigkeiten verfuegen",
+          "kompetenzen": [
+            "deutlich und sicher schreiben",
+            "unverbundene Schrift geläufig",
+            "verbundene Schrift fluessig",
+            "Koerper- und Stifthaltung",
+            "Schreibwerkzeuge waehlen"
+          ]
+        },
+        {
+          "id": "D1/2 3.2",
+          "titel": "Texte planen und schreiben",
+          "kompetenzen": [
+            "Texte zu bedeutsamen Themen",
+            "kreative Texte",
+            "kurze erzaehlende Texte",
+            "informierende und beschreibende Texte",
+            "Rechtschreibbewusstsein"
+          ]
+        },
+        {
+          "id": "D1/2 3.3",
+          "titel": "Texte ueberarbeiten",
+          "kompetenzen": [
+            "Gelungenes benennen",
+            "Ueberarbeitungshinweise geben und umsetzen",
+            "Texte korrekt ueberarbeiten"
+          ]
+        },
+        {
+          "id": "D1/2 4.1",
+          "titel": "Sprachliche Verstaendigung untersuchen",
+          "kompetenzen": [
+            "Absichten sprachlicher Beitraege",
+            "Formen gelingender Verstaendigung"
+          ]
+        },
+        {
+          "id": "D1/2 4.2",
+          "titel": "Gemeinsamkeiten und Unterschiede von Sprachen entdecken",
+          "kompetenzen": [
+            "Alltags- und Bildungssprache",
+            "andere Sprachen und Schriftsysteme"
+          ]
+        },
+        {
+          "id": "D1/2 4.3",
+          "titel": "Sprachliche Strukturen untersuchen und verwenden",
+          "kompetenzen": [
+            "Vokale und Konsonanten",
+            "Wortbausteine",
+            "Wortstamm und Wortfamilie",
+            "Zusammensetzungen",
+            "Verben in Personalform",
+            "Adjektive",
+            "Nomen, Verben, Artikel bestimmen",
+            "Satz als Sinneinheit, Satzschlusszeichen"
+          ]
+        },
+        {
+          "id": "D1/2 4.4",
+          "titel": "Richtig schreiben",
+          "kompetenzen": [
+            "Grundwortschatz",
+            "fehlerfrei abschreiben",
+            "Alphabet und Nachschlagen",
+            "silbisches Mitsprechen",
+            "Vokal als Silbenkern",
+            "unbetonte Endsilben",
+            "Woerter mit ie",
+            "Doppelkonsonanten",
+            "gleiche Wortstaemme, Umlaute und Verhaertungen",
+            "Nomen und Verben erkennen",
+            "Grossschreibung am Satzanfang"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Buchstaben und Laute sichern",
+          "lernbereich": "D1/2 4.4"
+        },
+        {
+          "nr": 2,
+          "thema": "Silben und Silbenkern",
+          "lernbereich": "D1/2 4.4"
+        },
+        {
+          "nr": 3,
+          "thema": "Nomen, Verben, Artikel",
+          "lernbereich": "D1/2 4.3"
+        },
+        {
+          "nr": 4,
+          "thema": "Grossschreibung von Nomen",
+          "lernbereich": "D1/2 4.4"
+        },
+        {
+          "nr": 5,
+          "thema": "Woerter mit ie und Doppelkonsonanten",
+          "lernbereich": "D1/2 4.4"
+        },
+        {
+          "nr": 6,
+          "thema": "Wortfamilien und Wortstamm",
+          "lernbereich": "D1/2 4.3"
+        },
+        {
+          "nr": 7,
+          "thema": "Satz und Satzschlusszeichen",
+          "lernbereich": "D1/2 4.3"
+        },
+        {
+          "nr": 8,
+          "thema": "Schreibschrift ueben",
+          "lernbereich": "D1/2 3.1"
+        },
+        {
+          "nr": 9,
+          "thema": "Kurze Geschichten schreiben",
+          "lernbereich": "D1/2 3.2"
+        },
+        {
+          "nr": 10,
+          "thema": "Lesen: Maerchen und Fabeln",
+          "lernbereich": "D1/2 2.3"
+        }
+      ]
+    },
+    {
+      "kuerzel": "hsu",
+      "name": "Heimat- und Sachunterricht",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "HSU1/2 1.1",
+          "titel": "Zusammenleben in Familie, Schule und Gemeinschaft",
+          "kompetenzen": [
+            "Kompromisse zur Konfliktloesung",
+            "fremde Rollen und Perspektiven",
+            "Aufgaben und Regeln",
+            "eigene Interessen benennen",
+            "Vielfalt von Familienformen achten"
+          ]
+        },
+        {
+          "id": "HSU1/2 1.2",
+          "titel": "Leben in einer Medien- und Konsumgesellschaft",
+          "kompetenzen": [
+            "Medientypen unterscheiden",
+            "Beduerfnisse und Wuensche",
+            "Kaufvorgaenge verstehen"
+          ]
+        },
+        {
+          "id": "HSU1/2 2.1",
+          "titel": "Koerper und gesunde Ernaehrung",
+          "kompetenzen": [
+            "positive Beziehung zum Koerper",
+            "Bedeutung der Sinne",
+            "Koerperpflege",
+            "Nahrungsmittel bewerten",
+            "eigene Ernaehrung beurteilen"
+          ]
+        },
+        {
+          "id": "HSU1/2 2.2",
+          "titel": "Gefuehle und Wohlbefinden",
+          "kompetenzen": [
+            "Gefuehle ausdruecken",
+            "Strategien gegen negative Gefuehle",
+            "Ernaehrung, Bewegung, Gesundheit",
+            "Freizeit gestalten"
+          ]
+        },
+        {
+          "id": "HSU1/2 3.1",
+          "titel": "Tiere, Pflanzen, Lebensraeume",
+          "kompetenzen": [
+            "heimische Arten bestimmen",
+            "Anpassung an Lebensraeume",
+            "einfache Nahrungsbeziehungen",
+            "jahreszeitliche Veraenderungen",
+            "Obst und Gemuese nach Reifezeit",
+            "Haustiere",
+            "giftige Pflanzen"
+          ]
+        },
+        {
+          "id": "HSU1/2 3.2",
+          "titel": "Stoffe und Energie",
+          "kompetenzen": [
+            "Stoffeigenschaften untersuchen",
+            "Abfall sortieren und vermeiden",
+            "Brandschutz und Umgang mit Feuer"
+          ]
+        },
+        {
+          "id": "HSU1/2 3.3",
+          "titel": "Luft, Wasser, Wetter",
+          "kompetenzen": [
+            "naturwissenschaftliche Arbeitsweisen am Beispiel Luft",
+            "Luft als Lebensgrundlage",
+            "Wetter messen",
+            "Verhalten bei Wetterereignissen"
+          ]
+        },
+        {
+          "id": "HSU1/2 4.1",
+          "titel": "Zeitbewusstsein und Orientierung in der Zeit",
+          "kompetenzen": [
+            "zeitliche Begriffe",
+            "Zeitspannen und Naturbeobachtung",
+            "Feste im Jahreslauf"
+          ]
+        },
+        {
+          "id": "HSU1/2 4.2",
+          "titel": "Dauer und Wandel",
+          "kompetenzen": [
+            "eigene Lebensgeschichte anhand von Quellen",
+            "Bedeutung von Quellen",
+            "Veraenderungen der Lebenswelt"
+          ]
+        },
+        {
+          "id": "HSU1/2 4.3",
+          "titel": "Fakten und Fiktion",
+          "kompetenzen": [
+            "historisch und erfunden unterscheiden",
+            "geschichtlichen Gehalt hinterfragen"
+          ]
+        },
+        {
+          "id": "HSU1/2 5.1",
+          "titel": "Raeume wahrnehmen und sich orientieren",
+          "kompetenzen": [
+            "Raumeindruecke beschreiben",
+            "raeumliche Situationen vergleichen",
+            "Orientierungsstrategien",
+            "einfache Plaene lesen",
+            "Plaene und Modelle anfertigen"
+          ]
+        },
+        {
+          "id": "HSU1/2 5.2",
+          "titel": "Raeume nutzen und schuetzen",
+          "kompetenzen": [
+            "Raumnutzung durch Menschen",
+            "achtsamer Umgang mit Raeumen"
+          ]
+        },
+        {
+          "id": "HSU1/2 5.3",
+          "titel": "Mobilitaet im Raum",
+          "kompetenzen": [
+            "Mobilitaetsformen",
+            "sicherer Schulweg",
+            "Verkehrsregeln",
+            "Aufmerksamkeit und Reaktion im Schonraum"
+          ]
+        },
+        {
+          "id": "HSU1/2 6.1",
+          "titel": "Arbeit, technische und kulturelle Entwicklung",
+          "kompetenzen": [
+            "Werkzeuge sicher anwenden",
+            "Werkzeugfunktionen erklaeren",
+            "Berufe beschreiben"
+          ]
+        },
+        {
+          "id": "HSU1/2 6.2",
+          "titel": "Bauen und Konstruieren",
+          "kompetenzen": [
+            "Standfestigkeit pruefen",
+            "rollende Objekte",
+            "Anleitungen und Modellzeichnungen",
+            "regionale Bauwerke"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Ich und meine Klasse, Regeln",
+          "lernbereich": "HSU1/2 1.1"
+        },
+        {
+          "nr": 2,
+          "thema": "Sicherer Schulweg und Verkehr",
+          "lernbereich": "HSU1/2 5.3"
+        },
+        {
+          "nr": 3,
+          "thema": "Jahreszeiten und Feste",
+          "lernbereich": "HSU1/2 4.1"
+        },
+        {
+          "nr": 4,
+          "thema": "Koerper, Sinne, gesunde Ernaehrung",
+          "lernbereich": "HSU1/2 2.1"
+        },
+        {
+          "nr": 5,
+          "thema": "Tiere und Pflanzen im Jahreslauf",
+          "lernbereich": "HSU1/2 3.1"
+        },
+        {
+          "nr": 6,
+          "thema": "Wetter und Luft",
+          "lernbereich": "HSU1/2 3.3"
+        },
+        {
+          "nr": 7,
+          "thema": "Meine Lebensgeschichte",
+          "lernbereich": "HSU1/2 4.2"
+        },
+        {
+          "nr": 8,
+          "thema": "Plaene und Orientierung",
+          "lernbereich": "HSU1/2 5.1"
+        },
+        {
+          "nr": 9,
+          "thema": "Werkzeuge, Bauen, Konstruieren",
+          "lernbereich": "HSU1/2 6.2"
+        }
+      ]
+    }
+  ],
+  "regeln_fuer_spiele": {
+    "einordnung": "Jedes Foto wird einem Lernbereich zugeordnet. Passt nichts, wird 'unbekannt' gesetzt statt geraten.",
+    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die geloest werden muss, um weiterzukommen.",
+    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
+    "alter": "Leon ist 2. Klasse. Sprache sehr einfach, kurze Saetze, viel Bild und Ton, wenig Text. Er liest noch nicht sicher - Aufgaben muessen vorlesbar sein."
+  }
+}

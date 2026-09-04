@@ -1,0 +1,314 @@
+{
+  "meta": {
+    "titel": "LehrplanPLUS Bayern, Gymnasium, Jahrgangsstufe 7",
+    "quelle": "ISB, lehrplanplus.bayern.de",
+    "abgerufen": "2026-09-04",
+    "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
+    "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
+    "offen": "Englisch fehlt - die Seite liefert derzeit nur die Startseite aus. Fuer Helenas Vokabeltrainer ist das unkritisch, der arbeitet mit ihren Buchseiten."
+  },
+  "faecher": [
+    {
+      "kuerzel": "mathe",
+      "name": "Mathematik",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "M7 1.1",
+          "titel": "Aufstellen und Interpretieren von Termen",
+          "stunden": 13,
+          "kompetenzen": [
+            "Variablen als Werkzeug",
+            "Termwerte berechnen, Potenzen mit ganzzahligen Exponenten",
+            "Tabellenkalkulation nutzen",
+            "Struktur von Termen analysieren"
+          ]
+        },
+        {
+          "id": "M7 1.2",
+          "titel": "Umformen von Termen",
+          "stunden": 24,
+          "kompetenzen": [
+            "Potenzen zusammenfassen",
+            "Terme umformen: Zusammenfassen, Ausmultiplizieren",
+            "Distributivgesetz und Faktorisierung",
+            "binomische Formeln begruenden und anwenden"
+          ]
+        },
+        {
+          "id": "M7 2.1",
+          "titel": "Achsen- und punktsymmetrische Figuren",
+          "stunden": 12,
+          "kompetenzen": [
+            "symmetrische Figuren konstruieren",
+            "Mittelsenkrechte, Lote, Winkelhalbierende",
+            "symmetrische Vierecke ordnen"
+          ]
+        },
+        {
+          "id": "M7 2.2",
+          "titel": "Winkelbetrachtungen an Figuren",
+          "stunden": 9,
+          "kompetenzen": [
+            "Winkel an Geradenkreuzungen",
+            "Innenwinkelsumme im Dreieck beweisen",
+            "Innenwinkelsumme im Vieleck",
+            "Parallelitaet ueberpruefen"
+          ]
+        },
+        {
+          "id": "M7 3",
+          "titel": "Lineare Gleichungen und Vertiefung der Prozentrechnung",
+          "stunden": 17,
+          "kompetenzen": [
+            "Gleichungen aufstellen",
+            "Aequivalenzumformungen",
+            "Loesungen im Sachzusammenhang deuten",
+            "komplexe Prozentaufgaben"
+          ]
+        },
+        {
+          "id": "M7 4",
+          "titel": "Kenngroessen von Daten",
+          "stunden": 8,
+          "kompetenzen": [
+            "Median als Mittelwert",
+            "Spannweite, Quartile, Boxplots",
+            "Datensaetze vergleichen"
+          ]
+        },
+        {
+          "id": "M7 5",
+          "titel": "Kongruenz, besondere Dreiecke und Dreieckskonstruktionen",
+          "stunden": 29,
+          "kompetenzen": [
+            "Kongruenzbegriff",
+            "Kongruenzsaetze",
+            "gleichschenklige und gleichseitige Dreiecke",
+            "Voraussetzung und Behauptung",
+            "dynamische Geometriesoftware",
+            "Satz des Thales",
+            "Tangentenkonstruktion",
+            "Anwendungsaufgaben modellieren"
+          ]
+        }
+      ],
+      "lernpfad": [
+        {
+          "nr": 1,
+          "thema": "Terme aufstellen und deuten",
+          "lernbereich": "M7 1.1"
+        },
+        {
+          "nr": 2,
+          "thema": "Terme umformen, binomische Formeln",
+          "lernbereich": "M7 1.2"
+        },
+        {
+          "nr": 3,
+          "thema": "Symmetrie und Grundkonstruktionen",
+          "lernbereich": "M7 2.1"
+        },
+        {
+          "nr": 4,
+          "thema": "Winkel und Winkelsummen",
+          "lernbereich": "M7 2.2"
+        },
+        {
+          "nr": 5,
+          "thema": "Lineare Gleichungen, Prozentrechnung",
+          "lernbereich": "M7 3"
+        },
+        {
+          "nr": 6,
+          "thema": "Median, Quartile, Boxplot",
+          "lernbereich": "M7 4"
+        },
+        {
+          "nr": 7,
+          "thema": "Kongruenz und Dreieckskonstruktion",
+          "lernbereich": "M7 5"
+        }
+      ]
+    },
+    {
+      "kuerzel": "deutsch",
+      "name": "Deutsch",
+      "uebertrittsfach": false,
+      "lernbereiche": [
+        {
+          "id": "D7 1.1",
+          "titel": "Verstehend zuhoeren",
+          "kompetenzen": [
+            "Aussage und Intention erfassen",
+            "gesprochene Texte verstehen"
+          ]
+        },
+        {
+          "id": "D7 1.2",
+          "titel": "Zu und vor anderen sprechen",
+          "kompetenzen": [
+            "sinnbetont vorlesen",
+            "frei und strukturiert sprechen",
+            "Referate mit Visualisierung",
+            "rhetorische Mittel"
+          ]
+        },
+        {
+          "id": "D7 1.3",
+          "titel": "Mit anderen sprechen",
+          "kompetenzen": [
+            "Gespraechssituationen bewaeltigen",
+            "demokratische Gespraechskultur",
+            "eigene Meinung mit Argumenten vertreten"
+          ]
+        },
+        {
+          "id": "D7 1.4",
+          "titel": "Szenisch spielen",
+          "kompetenzen": [
+            "Szenen und Rollen gestalten",
+            "szenisches Spiel als Zugang zum Text"
+          ]
+        },
+        {
+          "id": "D7 2.1",
+          "titel": "Lesetechniken und -strategien anwenden",
+          "kompetenzen": [
+            "Lesetechniken je nach Lesezweck",
+            "schulische und aussersschulische Lektuere"
+          ]
+        },
+        {
+          "id": "D7 2.2",
+          "titel": "Literarische Texte verstehen und nutzen",
+          "kompetenzen": [
+            "Jugendbuecher, Gedichte, Balladen",
+            "typische Themen und Motive",
+            "handlungs- und produktionsorientierte Methoden",
+            "mindestens eine Ganzschrift"
+          ]
+        },
+        {
+          "id": "D7 2.3",
+          "titel": "Pragmatische Texte verstehen und nutzen",
+          "kompetenzen": [
+            "mediale Formen",
+            "Informationen entnehmen",
+            "Qualitaet von Informationen und Argumenten pruefen"
+          ]
+        },
+        {
+          "id": "D7 2.4",
+          "titel": "Weitere Medien verstehen und nutzen",
+          "kompetenzen": [
+            "Internetrecherche beurteilen",
+            "Mediennutzung reflektieren",
+            "Hoertexte und Filme untersuchen"
+          ]
+        },
+        {
+          "id": "D7 3.1",
+          "titel": "Ueber Schreibfertigkeiten verfuegen",
+          "kompetenzen": [
+            "Erzaehlen, Informieren, Argumentieren",
+            "sprachliche Mittel gezielt einsetzen",
+            "Paraphrase und indirekte Rede",
+            "Textverarbeitung nutzen"
+          ]
+        },
+        {
+          "id": "D7 3.2",
+          "titel": "Texte planen und schreiben",
+          "kompetenzen": [
+            "adressatengerecht konzipieren",
+            "wirkungsvoll erzaehlen",
+            "informierende Texte",
+            "begruendete Stellungnahme",
+            "Argumente linear anordnen"
+          ]
+        },
+        {
+          "id": "D7 3.3",
+          "titel": "Texte ueberarbeiten",
+          "kompetenzen": [
+            "Texte nach Kriterien beurteilen",
+            "gezielt ueberarbeiten"
+          ]
+        },
+        {
+          "id": "D7 4.1",
+          "titel": "Sprachliche Verstaendigung untersuchen",
+          "kompetenzen": [
+            "Wortschatzentwicklung und Bedeutungswandel",
+            "sprachliche Gestaltung und Wirkung"
+          ]
+        },
+        {
+          "id": "D7 4.2",
+          "titel": "Sprachliche Strukturen untersuchen",
+          "kompetenzen": [
+            "Sprache als System",
+            "Verbmodi unterscheiden",
+            "Satzglieder analysieren",
+            "einfache und komplexe Saetze",
+            "Wortschatz erweitern"
+          ]
+        },
+        {
+          "id": "D7 4.3",
+          "titel": "Richtig schreiben",
+          "kompetenzen": [
+            "Orthografie und Grammatik",
+            "Zeichensetzung",
+            "Rechtschreibstrategien"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Verbmodi: Konjunktiv",
+          "lernbereich": "D7 4.2"
+        },
+        {
+          "nr": 2,
+          "thema": "Satzglieder und Satzgefuege",
+          "lernbereich": "D7 4.2"
+        },
+        {
+          "nr": 3,
+          "thema": "Zeichensetzung bei Satzgefuegen",
+          "lernbereich": "D7 4.3"
+        },
+        {
+          "nr": 4,
+          "thema": "Balladen",
+          "lernbereich": "D7 2.2"
+        },
+        {
+          "nr": 5,
+          "thema": "Argumentieren und Stellungnahme",
+          "lernbereich": "D7 3.2"
+        },
+        {
+          "nr": 6,
+          "thema": "Indirekte Rede und Paraphrase",
+          "lernbereich": "D7 3.1"
+        },
+        {
+          "nr": 7,
+          "thema": "Ganzschrift / Jugendbuch",
+          "lernbereich": "D7 2.2"
+        }
+      ]
+    }
+  ],
+  "regeln_fuer_spiele": {
+    "einordnung": "Jedes Foto wird einem Lernbereich zugeordnet. Passt nichts, wird 'unbekannt' gesetzt statt geraten.",
+    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die geloest werden muss, um weiterzukommen.",
+    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
+    "alter": "Helena ist 12/13 Jahre und geht aufs Gymnasium. KEINE Grundschul-Optik, keine Kindersprache, kein Konfetti-Kindergarten. Sachlicher, jugendlicher Ton.",
+    "reihenfolge": "Der Gymnasiallehrplan gibt Stundenzahlen und damit eine Reihenfolge vor. lernpfad bei Mathematik ist deshalb belastbar, nicht nur geschaetzt."
+  }
+}
