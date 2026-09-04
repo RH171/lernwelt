@@ -90,6 +90,38 @@
   .wahl button.schlecht{border-color:var(--schlecht);background:#fef2f1}
   .wahl button:disabled{cursor:default}
 
+  /* Zahleneingabe */
+  .eingabe{display:flex;flex-direction:column;gap:12px;align-items:center;margin-top:4px}
+  .eingabe input{
+    width:100%;max-width:260px;text-align:center;
+    font-family:var(--rund);font-size:34px;font-weight:700;
+    padding:16px 14px;border:2px solid var(--line);border-radius:18px;
+    background:#fbfcff;color:var(--ink);font-variant-numeric:tabular-nums;
+  }
+  .eingabe input:focus{outline:none;border-color:var(--paul)}
+  .eingabe input.gut{border-color:var(--gut);background:#eafaf1}
+  .eingabe input.schlecht{border-color:var(--schlecht);background:#fef2f1}
+  .eingabe .pruefen{
+    width:100%;border:none;border-radius:16px;padding:16px;
+    background:var(--paul);color:#fff;font-family:var(--rund);font-size:17px;font-weight:700;cursor:pointer;
+  }
+  .eingabe .pruefen:disabled{opacity:.45;cursor:default}
+
+  /* Teilschritte */
+  .kette{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .glied{
+    display:flex;align-items:center;gap:12px;
+    padding:13px 15px;border-radius:14px;border:1px solid var(--line);background:#fbfcff;
+  }
+  .glied.erledigt{border-color:var(--gut);background:#eafaf1}
+  .glied.dran{border-color:var(--paul);background:#fff}
+  .glied .txt{flex:1;font-size:16px}
+  .glied .zahl{
+    font-family:var(--rund);font-weight:700;font-size:19px;
+    font-variant-numeric:tabular-nums;color:var(--gut);
+  }
+  .glied .haken{color:var(--gut);font-size:17px;flex:none}
+
   .rueck{margin-top:18px;padding:16px 18px;border-radius:16px;font-size:16px;line-height:1.5;display:none}
   .rueck.zeigen{display:block}
   .rueck.gut{background:#eafaf1;color:#08663c}
@@ -628,6 +660,8 @@
     });
   }
 
+  var teilNr = 0, versuch = 0;
+
   function malAufgabe(){
     var a = spiel.aufgaben[nr];
     $("balken").style.width = Math.round(nr / spiel.aufgaben.length * 100) + "%";
@@ -635,42 +669,162 @@
     $("frage").textContent = a.frage;
     $("rueck").className = "rueck";
     $("weiter").classList.add("verborgen");
+    $("wahl").innerHTML = "";
+    teilNr = 0; versuch = 0;
 
+    var art = a.art || "wahl";
+    if (art === "eingabe" && a.richtig) malEingabe(a);
+    else if (art === "teilschritte" && a.teilschritte && a.teilschritte.length) malKette(a);
+    else malWahl(a);
+  }
+
+  /* ---- Vier Antworten zum Antippen ---- */
+  function malWahl(a){
     var moeglich = (a.antworten && a.antworten.length) ? a.antworten.slice() : [a.richtig];
     if (moeglich.indexOf(a.richtig) === -1) moeglich.push(a.richtig);
     mische(moeglich);
-
     var kasten = $("wahl");
-    kasten.innerHTML = "";
     moeglich.forEach(function(text){
       var b = document.createElement("button");
       b.textContent = text;
-      b.addEventListener("click", function(){ pruefe(b, text, a); });
+      b.addEventListener("click", function(){ pruefeWahl(b, text, a); });
       kasten.appendChild(b);
     });
   }
 
-  function pruefe(knopf, gewaehlt, a){
+  /* ---- Zahl selbst eintippen ---- */
+  function malEingabe(a){
+    var kasten = $("wahl");
+    var huelle = document.createElement("div");
+    huelle.className = "eingabe";
+    huelle.innerHTML =
+      '<input type="text" inputmode="numeric" autocomplete="off" ' +
+      'aria-label="Deine Antwort" placeholder="?">' +
+      '<button class="pruefen">Prüfen</button>';
+    kasten.appendChild(huelle);
+
+    var feld = huelle.querySelector("input");
+    var knopf = huelle.querySelector(".pruefen");
+    feld.focus();
+
+    function ab(){
+      var eingabe = feld.value.trim();
+      if (!eingabe) return;
+      if (zahlGleich(eingabe, a.richtig)){
+        feld.classList.add("gut"); feld.disabled = true; knopf.disabled = true;
+        loesungZeigen(true, a);
+      } else {
+        versuch++;
+        if (versuch === 1){
+          feld.classList.add("schlecht");
+          $("rueck").className = "rueck schlecht zeigen";
+          $("rueck").innerHTML = "<b>Noch nicht.</b><div class=\"schritte\">Schau nochmal genau hin – du hast einen Versuch.</div>";
+          setTimeout(function(){ feld.classList.remove("schlecht"); feld.value = ""; feld.focus(); }, 700);
+        } else {
+          feld.classList.add("schlecht"); feld.disabled = true; knopf.disabled = true;
+          loesungZeigen(false, a);
+        }
+      }
+    }
+    knopf.addEventListener("click", ab);
+    feld.addEventListener("keydown", function(e){ if (e.key === "Enter") ab(); });
+  }
+
+  /* ---- Kette kleiner Rechenschritte ---- */
+  function malKette(a){
+    var kasten = $("wahl");
+    var kette = document.createElement("div");
+    kette.className = "kette";
+    kasten.appendChild(kette);
+    naechstesGlied(a, kette);
+  }
+
+  function naechstesGlied(a, kette){
+    // Erledigte Schritte stehen bleiben lassen
+    var schritt = a.teilschritte[teilNr];
+    if (!schritt){                       // alle Teilschritte geschafft
+      loesungZeigen(true, a);
+      return;
+    }
+    var glied = document.createElement("div");
+    glied.className = "glied dran";
+    glied.innerHTML = '<span class="txt"></span>';
+    glied.querySelector(".txt").textContent = schritt.frage;
+
+    var huelle = document.createElement("div");
+    huelle.className = "eingabe";
+    huelle.innerHTML =
+      '<input type="text" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort" placeholder="?">' +
+      '<button class="pruefen">Prüfen</button>';
+
+    kette.appendChild(glied);
+    kette.appendChild(huelle);
+
+    var feld = huelle.querySelector("input");
+    var knopf = huelle.querySelector(".pruefen");
+    feld.focus();
+    var fehlversuche = 0;
+
+    function ab(){
+      var eingabe = feld.value.trim();
+      if (!eingabe) return;
+      if (zahlGleich(eingabe, schritt.richtig)){
+        glied.className = "glied erledigt";
+        glied.innerHTML = '<span class="haken">\u2713</span><span class="txt"></span><span class="zahl"></span>';
+        glied.querySelector(".txt").textContent = schritt.frage;
+        glied.querySelector(".zahl").textContent = schritt.richtig;
+        huelle.remove();
+        teilNr++;
+        naechstesGlied(a, kette);
+      } else {
+        fehlversuche++;
+        feld.classList.add("schlecht");
+        if (fehlversuche >= 2){
+          glied.className = "glied erledigt";
+          glied.innerHTML = '<span class="haken">\u2192</span><span class="txt"></span><span class="zahl"></span>';
+          glied.querySelector(".txt").textContent = schritt.frage;
+          glied.querySelector(".zahl").textContent = schritt.richtig;
+          huelle.remove();
+          versuch++;                     // zaehlt als Fehler fuer die Gesamtwertung
+          teilNr++;
+          naechstesGlied(a, kette);
+        } else {
+          setTimeout(function(){ feld.classList.remove("schlecht"); feld.value = ""; feld.focus(); }, 600);
+        }
+      }
+    }
+    knopf.addEventListener("click", ab);
+    feld.addEventListener("keydown", function(e){ if (e.key === "Enter") ab(); });
+  }
+
+  // "1736", " 1736 " und "1.736" gelten als dasselbe
+  function zahlGleich(a, b){
+    var sauber = function(s){ return String(s).replace(/[\s.'\u00A0]/g, "").toLowerCase(); };
+    return sauber(a) === sauber(b);
+  }
+
+  function loesungZeigen(stimmt, a){
+    if (stimmt){ richtig++; konfetti(); }
+    $("rueck").className = "rueck " + (stimmt ? "gut" : "schlecht") + " zeigen";
+    $("rueck").innerHTML = (stimmt ? "<b>Richtig!</b>" : "<b>Fast!</b>") + rueckmeldung(a);
+    $("weiter").classList.remove("verborgen");
+    $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
+  }
+
+  function pruefeWahl(knopf, gewaehlt, a){
     var alle = $("wahl").querySelectorAll("button");
     Array.prototype.forEach.call(alle, function(b){ b.disabled = true; });
     var stimmt = (gewaehlt === a.richtig);
 
     if (stimmt){
       knopf.classList.add("gut");
-      richtig++;
-      $("rueck").className = "rueck gut zeigen";
-      $("rueck").innerHTML = "<b>Richtig!</b>" + rueckmeldung(a);
-      konfetti();
     } else {
       knopf.classList.add("schlecht");
       Array.prototype.forEach.call(alle, function(b){
         if (b.textContent === a.richtig) b.classList.add("gut");
       });
-      $("rueck").className = "rueck schlecht zeigen";
-      $("rueck").innerHTML = "<b>Fast!</b>" + rueckmeldung(a);
     }
-    $("weiter").classList.remove("verborgen");
-    $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
+    loesungZeigen(stimmt, a);
   }
 
   $("weiter").addEventListener("click", function(){
