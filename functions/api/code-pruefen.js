@@ -6,7 +6,7 @@ export async function onRequestGet(context) {
   // Fragt nur: bin ich hier schon angemeldet?
   const { request, env } = context;
   if (!env.PAUL_CODE) return json(500, { ok: false, fehler: "Auf dem Server fehlt der Zugangscode." });
-  return json(200, { ok: await ausweisGueltig(request, env.PAUL_CODE) });
+  return json(200, { ok: await ausweisGueltig(request, env.PAUL_CODE, env) });
 }
 
 export async function onRequestPost(context) {

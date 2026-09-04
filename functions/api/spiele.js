@@ -81,7 +81,7 @@ async function listeHolen(env) {
 async function wacheOk(request, env) {
   if (!env.PAUL_CODE) return json(500, { ok: false, fehler: "Auf dem Server fehlt der Zugangscode." });
   if (!env.PAUL_KV)   return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
-  if (!(await ausweisGueltig(request, env.PAUL_CODE)))
+  if (!(await ausweisGueltig(request, env.PAUL_CODE, env)))
     return json(401, { ok: false, fehler: "Bitte melde dich mit deinem Code an." });
   return null;
 }

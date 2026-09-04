@@ -32,14 +32,37 @@ export async function ausweisBauen(geheim) {
   return `${bis}.${await signieren(String(bis), geheim)}`;
 }
 
-export async function ausweisGueltig(request, geheim) {
+// env ist optional - ohne env wird der Stichtag nicht geprüft.
+export async function ausweisGueltig(request, geheim, env) {
   const roh = request.headers.get("cookie") || "";
   const treffer = roh.match(new RegExp("(?:^|;\\s*)" + COOKIE + "=([^;]+)"));
   if (!treffer) return false;
   const [bis, sig] = decodeURIComponent(treffer[1]).split(".");
   if (!bis || !sig) return false;
   if (Number(bis) < Date.now()) return false;
-  return gleich(sig, await signieren(String(Number(bis)), geheim));
+  if (!gleich(sig, await signieren(String(Number(bis)), geheim))) return false;
+
+  // "Alle abmelden": Wurde dieser Ausweis vor dem Stichtag ausgestellt,
+  // gilt er nicht mehr - auf allen Geräten gleichzeitig.
+  if (env && env.PAUL_KV) {
+    try {
+      const stichtag = Number(await env.PAUL_KV.get(STICHTAG)) || 0;
+      if (stichtag) {
+        const ausgestellt = Number(bis) - TAGE * 86400000;
+        if (ausgestellt < stichtag) return false;
+      }
+    } catch (e) {}
+  }
+  return true;
+}
+
+export const STICHTAG = "werkstatt:abmelde-stichtag";
+
+// Setzt den Stichtag auf jetzt - danach muss sich jedes Gerät neu anmelden.
+export async function alleAbmelden(env) {
+  if (!env.PAUL_KV) return false;
+  await env.PAUL_KV.put(STICHTAG, String(Date.now()));
+  return true;
 }
 
 export function ausweisKopfzeile(ausweis) {

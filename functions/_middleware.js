@@ -20,7 +20,7 @@ export async function onRequest(context) {
   // Functions – deshalb ist dies die einzige Stelle, an der es wirkt.
   // Fehlt das Secret, wird niemand ausgesperrt.
   if (url.pathname.startsWith("/paul/") || url.pathname === "/paul") {
-    if (env.PAUL_CODE && !(await ausweisGueltig(request, env.PAUL_CODE))) {
+    if (env.PAUL_CODE && !(await ausweisGueltig(request, env.PAUL_CODE, env))) {
       return new Response(anmeldeSeite(), {
         status: 401,
         headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

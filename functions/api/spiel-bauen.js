@@ -36,7 +36,7 @@ export async function onRequestPost(context) {
   if (!env.PAUL_CODE) {
     return fehler(500, "Auf dem Server fehlt der Zugangscode. Denny muss ihn bei Cloudflare als PAUL_CODE hinterlegen.");
   }
-  if (!(await ausweisGueltig(request, env.PAUL_CODE))) {
+  if (!(await ausweisGueltig(request, env.PAUL_CODE, env))) {
     return fehler(401, "Hier darf nur Paul bauen. Bitte melde dich mit deinem Code an.");
   }
 
