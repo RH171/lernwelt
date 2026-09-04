@@ -168,7 +168,30 @@ DEINE REGELN
 2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen.
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
 4. PASSENDE HÜRDE. Lösbar, aber nicht geschenkt. Bei Fehlern hilft die Erklärung weiter, statt nur "falsch" zu sagen.
-5. DIE ERKLÄRUNG WIRD GEGLIEDERT, NICHT AM STÜCK GESCHRIEBEN. Ein Kind, das sich schwertut, steigt bei einer Textwurst aus. Deshalb:
+5. WECHSLE DIE AUFGABENART. Nicht zwölfmal dasselbe. Jede Aufgabe hat ein Feld "art":
+   - "wahl": vier Antworten zum Antippen. Gut für Verstehensfragen, Fehlersuche, Begriffe. Fuelle "antworten" und "richtig", "teilschritte" bleibt leer.
+   - "eingabe": das Kind tippt die Zahl selbst. Kein Raten moeglich. Fuelle nur "richtig", "antworten" und "teilschritte" bleiben leer.
+   - "teilschritte": eine Kette kleiner Fragen, die zusammen den Rechenweg gehen. Fuelle "teilschritte", "antworten" bleibt leer, "richtig" ist das Endergebnis.
+   Mische etwa so: die Haelfte "wahl", ein Drittel "eingabe", der Rest "teilschritte". Beginne mit einer leichten "wahl"-Aufgabe zum Aufwaermen.
+
+   ZU "teilschritte" - das ist das Wichtigste fuer Kinder, die eine grosse Rechnung noch nicht am Stueck koennen:
+   Zerlege so, dass JEDER Teilschritt in dem liegt, was das Kind schon sicher kann. Beispiel fuer 217 · 8 in Jahrgangsstufe 4, wo oft nur das kleine Einmaleins sitzt:
+     Schritt 1: "Wie viel ist 8 · 7?"        -> 56
+     Schritt 2: "Und 8 · 10?"                 -> 80
+     Schritt 3: "Und 8 · 200?"                -> 1600
+     Schritt 4: "Zaehl alles zusammen: 1600 + 80 + 56" -> 1736
+   So rechnet das Kind wirklich selbst, ohne an einer zu grossen Zahl zu scheitern.
+   Zwei bis fuenf Teilschritte. Jeder Schritt eine kurze Frage und eine Zahl als Antwort.
+
+   WECHSLE AUCH DEN WEG. Zum selben Ergebnis fuehren mehrere Wege, und das Kind soll merken, dass es waehlen darf - genau das meint der Lehrplan mit "Rechenstrategien nutzen und erklaeren". Nimm nicht immer dieselbe Zerlegung:
+     - nach Stellenwerten:   8 · 217 = 8·200 + 8·10 + 8·7
+     - ueber eine glatte Zahl: 8 · 197 = 8·200 minus 8·3
+     - halbieren und verdoppeln: 16 · 50 = 8 · 100
+     - Nachbaraufgabe:       8 · 7 = 8·8 minus 8
+     - Tauschen:             4 · 25 ist leichter als 25 · 4 zu denken
+   Wenn ein Weg besonders geschickt ist, sag es in der Erklaerung: "Hier geht es schneller ueber die glatte Zahl."
+
+6. DIE ERKLÄRUNG WIRD GEGLIEDERT, NICHT AM STÜCK GESCHRIEBEN. Ein Kind, das sich schwertut, steigt bei einer Textwurst aus. Deshalb:
    - Schreibe den Rechenweg in EINZELNE SCHRITTE, jeder in einer eigenen Zeile, getrennt durch \n. Ein Schritt pro Zeile, kurz.
    - Richtig ist zum Beispiel:
      6 · 4 = 24  →  4 hin, 2 im Übertrag\n6 · 3 = 18 + 2 = 20  →  0 hin, 2 im Übertrag\n6 · 1 = 6 + 2 = 8\nErgebnis: 804
@@ -176,16 +199,16 @@ DEINE REGELN
    - Bei Aufgaben ohne Rechenweg (Sprache, Sachfragen) gliedere trotzdem: erst die Antwort, dann in neuer Zeile die Begründung.
    - Höchstens fünf Zeilen. Keine Aufzählungszeichen, keine Nummerierung - die Zeile allein reicht.
 
-6. DIE MERKHILFE KOMMT INS EIGENE FELD "merke". Sie steht NICHT in der Erklärung. Nimm, WO ES PASST, genau eines von beidem:
+7. DIE MERKHILFE KOMMT INS EIGENE FELD "merke". Sie steht NICHT in der Erklärung. Nimm, WO ES PASST, genau eines von beidem:
    - ein RECHENTRICK für den Fall, dass das Auswendige gerade weg ist: "8 · 7 vergessen? 8 · 8 = 64, davon eine 8 weg macht 56." Auch: mal 9 ist mal 10 minus die Zahl selbst; mal 5 ist die Hälfte von mal 10; mal 2 ist verdoppeln.
    - das SIGNALWORT der Aufgabe, wenn eines drinsteckt: "Das Wort 'je' ist dein Signal: hier wird malgenommen." Ebenso "pro" und "jeder" fürs Malnehmen, "insgesamt" und "zusammen" fürs Zusammenzählen, "übrig" und "Rest" fürs Abziehen oder Teilen. In anderen Fächern die Merkfrage: "Wer oder was?" fragt nach dem Subjekt.
    Das Signalwort ist mehr wert als der Trick, weil es bei JEDER solchen Aufgabe hilft. Passt weder das eine noch das andere, lass "merke" leer - lieber nichts als eine Floskel.
    EIN Satz, höchstens zwei. Nie beides zugleich.
 
-7. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
-8. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
-9. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
-10. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
+8. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
+9. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
+10. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
+11. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
 
 DIE WELT
 Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals echte Marken oder geschützte Spielfiguren.
@@ -210,17 +233,31 @@ const WERKZEUG = {
       begruessung: { type: "string", description: "Ein Satz zum Start, der Lust macht." },
       aufgaben: {
         type: "array",
-        description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben. Durchgängig korrektes Deutsch mit Umlauten.",
+        description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben. In der ART ABWECHSELN (siehe Regel 5). Durchgängig korrektes Deutsch mit Umlauten.",
         items: {
           type: "object",
           properties: {
+            art: { type: "string", enum: ["wahl", "eingabe", "teilschritte"], description: "Welche Aufgabenart - siehe Regel 5. Abwechseln!" },
             frage: { type: "string" },
-            antworten: { type: "array", items: { type: "string" }, description: "Bei quiz/zuordnen die Auswahl. Die richtige Antwort MUSS enthalten sein." },
-            richtig: { type: "string", description: "Die richtige Antwort als Text." },
+            antworten: { type: "array", items: { type: "string" }, description: "NUR bei art=wahl: die vier Auswahlmoeglichkeiten, die richtige MUSS dabei sein. Sonst leeres Array." },
+            teilschritte: {
+              type: "array",
+              description: "NUR bei art=teilschritte: zwei bis fuenf kleine Rechenschritte, die zusammen zum Ergebnis fuehren. Sonst leeres Array.",
+              items: {
+                type: "object",
+                properties: {
+                  frage: { type: "string", description: "Kurze Frage, z. B. 'Wie viel ist 8 · 7?'" },
+                  richtig: { type: "string", description: "Die Antwort als Zahl." },
+                },
+                required: ["frage", "richtig"],
+                additionalProperties: false,
+              },
+            },
+            richtig: { type: "string", description: "Die richtige Antwort. Bei art=teilschritte das Endergebnis." },
             erklaerung: { type: "string", description: "Der Weg zur Loesung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, hoechstens fuenf Zeilen. Kein Fliesstext. Ohne Merkhilfe - die kommt ins Feld merke." },
-            merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 6). Leer lassen, wenn nichts wirklich passt." },
+            merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 7). Leer lassen, wenn nichts wirklich passt." },
           },
-          required: ["frage", "antworten", "richtig", "erklaerung", "merke"],
+          required: ["art", "frage", "antworten", "teilschritte", "richtig", "erklaerung", "merke"],
           additionalProperties: false,
         },
       },
