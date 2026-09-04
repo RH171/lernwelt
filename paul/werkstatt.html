@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pauls Werkstatt</title>
+<style>
+  :root{
+    --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
+    --paul:#4f46e5; --gut:#12b76a; --schlecht:#f04438;
+    --radius:24px; --schatten:0 1px 2px rgba(20,22,40,.05), 0 12px 34px rgba(20,22,40,.09);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font); color:var(--ink); min-height:100vh;
+    background:radial-gradient(1100px 560px at 82% -12%,#f3efff 0,rgba(243,239,255,0) 55%),
+               radial-gradient(900px 460px at -8% 2%,#e9f3ff 0,rgba(233,243,255,0) 52%), var(--bg);
+    padding:16px; padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  .huelle{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;margin:6px 0 20px}
+  .zurueck{
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:11px 18px;font-weight:600;font-size:15px;box-shadow:var(--schatten);
+  }
+  .zurueck:active{transform:scale(.97)}
+  h1{font-family:var(--rund);font-size:27px;margin:0;letter-spacing:-.02em}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+         box-shadow:var(--schatten);padding:26px;margin-bottom:16px}
+  .unter{color:var(--muted);font-size:15px;line-height:1.55;margin:8px 0 0}
+
+  .knoepfe{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px}
+  .knopf{
+    display:flex;flex-direction:column;align-items:center;gap:9px;justify-content:center;
+    border:2px dashed var(--line);background:#fbfcff;border-radius:20px;padding:22px 14px;
+    font-family:var(--rund);font-size:16px;font-weight:600;color:var(--ink);cursor:pointer;
+    transition:border-color .15s,background .15s,transform .1s;min-height:112px;
+  }
+  .knopf:active{transform:scale(.98)}
+  .knopf:hover{border-color:var(--paul);background:#f7f7ff}
+  .knopf .zeichen{font-size:30px;line-height:1}
+  .ablage.drueber{border-color:var(--paul);background:#f2f2ff}
+
+  .seiten{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px;margin-top:18px}
+  .seite{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#f7f8fc;aspect-ratio:3/4}
+  .seite img{width:100%;height:100%;object-fit:cover;display:block}
+  .seite .pdf{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:6px;font-size:13px;color:var(--muted);padding:8px;text-align:center}
+  .seite .pdf .zeichen{font-size:28px}
+  .weg{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:999px;border:none;
+       background:rgba(20,22,40,.62);color:#fff;font-size:17px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
+  .nr{position:absolute;bottom:6px;left:6px;background:rgba(20,22,40,.62);color:#fff;
+      font-size:12px;padding:3px 8px;border-radius:999px;backdrop-filter:blur(6px)}
+
+  .los{
+    width:100%;margin-top:20px;border:none;border-radius:18px;padding:19px;
+    background:var(--paul);color:#fff;font-family:var(--rund);font-size:19px;font-weight:700;
+    cursor:pointer;box-shadow:0 8px 22px rgba(79,70,229,.32);transition:transform .1s,opacity .15s;
+  }
+  .los:active{transform:scale(.985)}
+  .los:disabled{opacity:.4;cursor:default;box-shadow:none}
+
+  .hinweis{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:14.5px;line-height:1.5}
+  .hinweis.warn{background:#fff6ea;color:#8a5a12;border:1px solid #ffe2bd}
+  .hinweis.fehler{background:#fff1f0;color:#a3251c;border:1px solid #ffd5d1}
+
+  .laden{text-align:center;padding:44px 22px}
+  .kreis{width:54px;height:54px;margin:0 auto 20px;border-radius:50%;
+         border:4px solid #e7e9f5;border-top-color:var(--paul);animation:dreh 1s linear infinite}
+  @keyframes dreh{to{transform:rotate(360deg)}}
+  .schritt{font-family:var(--rund);font-size:18px;font-weight:600}
+
+  .fortschritt{height:8px;background:#eceffa;border-radius:999px;overflow:hidden;margin:18px 0 4px}
+  .fortschritt i{display:block;height:100%;background:var(--paul);border-radius:999px;transition:width .3s}
+  .zaehler{font-size:13.5px;color:var(--muted);text-align:right}
+
+  .frage{font-family:var(--rund);font-size:22px;line-height:1.35;margin:14px 0 20px}
+  .wahl{display:grid;gap:11px}
+  .wahl button{
+    text-align:left;border:2px solid var(--line);background:#fbfcff;border-radius:16px;
+    padding:17px 18px;font-size:17px;font-family:var(--font);color:var(--ink);cursor:pointer;
+    transition:border-color .12s,background .12s,transform .1s;
+  }
+  .wahl button:active{transform:scale(.99)}
+  .wahl button:hover:not(:disabled){border-color:var(--paul)}
+  .wahl button.gut{border-color:var(--gut);background:#eafaf1}
+  .wahl button.schlecht{border-color:var(--schlecht);background:#fef2f1}
+  .wahl button:disabled{cursor:default}
+
+  .rueck{margin-top:18px;padding:16px 18px;border-radius:16px;font-size:16px;line-height:1.5;display:none}
+  .rueck.zeigen{display:block}
+  .rueck.gut{background:#eafaf1;color:#08663c}
+  .rueck.schlecht{background:#fff7ed;color:#8a5a12}
+  .rueck b{display:block;margin-bottom:5px;font-family:var(--rund)}
+
+  .weiter{margin-top:16px;width:100%;border:none;border-radius:16px;padding:16px;
+          background:var(--ink);color:#fff;font-family:var(--rund);font-size:17px;font-weight:600;cursor:pointer}
+
+  .marke{display:inline-block;background:#f2f3fa;color:var(--muted);border-radius:999px;
+         padding:5px 12px;font-size:12.5px;margin:0 6px 6px 0}
+  .verborgen{display:none !important}
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+</style>
+</head>
+<body>
+<div class="huelle">
+
+  <header>
+    <a class="zurueck" id="zurueck" href="index.html">‹ Lernwelt</a>
+    <h1>Werkstatt</h1>
+  </header>
+
+  <!-- 1. Material sammeln -->
+  <section id="sicht-aufnahme">
+    <div class="karte">
+      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was hast du heute gelernt?</div>
+      <p class="unter">Fotografier deinen Hefteintrag oder dein Arbeitsblatt – ich bau dir ein Spiel daraus.
+      Du kannst auch mehrere Seiten nehmen, dann wird <b>ein</b> Spiel daraus.</p>
+
+      <div class="knoepfe">
+        <div class="knopf" id="k-kamera"><span class="zeichen">📸</span>Fotografieren</div>
+        <div class="knopf" id="k-bild"><span class="zeichen">🖼️</span>Bild auswählen</div>
+        <div class="knopf ablage" id="k-datei"><span class="zeichen">📄</span>Datei oder PDF</div>
+      </div>
+
+      <input type="file" id="e-kamera" accept="image/*" capture="environment" class="verborgen">
+      <input type="file" id="e-bild"   accept="image/*" multiple class="verborgen">
+      <input type="file" id="e-datei"  accept="image/*,application/pdf" multiple class="verborgen">
+
+      <div class="seiten" id="seiten"></div>
+      <div id="meldung"></div>
+
+      <button class="los" id="los" disabled>Spiel bauen</button>
+    </div>
+  </section>
+
+  <!-- 2. Es wird gebaut -->
+  <section id="sicht-laden" class="verborgen">
+    <div class="karte laden">
+      <div class="kreis"></div>
+      <div class="schritt" id="schritt">Ich schaue mir deine Seite an …</div>
+      <p class="unter" id="schritt-unter">Das dauert einen kleinen Moment.</p>
+    </div>
+  </section>
+
+  <!-- 3. Spielen -->
+  <section id="sicht-spiel" class="verborgen">
+    <div class="karte">
+      <div id="marken"></div>
+      <div class="fortschritt"><i id="balken" style="width:0%"></i></div>
+      <div class="zaehler" id="zaehler"></div>
+      <div class="frage" id="frage"></div>
+      <div class="wahl" id="wahl"></div>
+      <div class="rueck" id="rueck"></div>
+      <button class="weiter verborgen" id="weiter">Weiter</button>
+    </div>
+  </section>
+
+  <!-- 4. Geschafft -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <div style="font-size:52px">🎉</div>
+      <div style="font-family:var(--rund);font-size:26px;font-weight:700;margin-top:8px" id="ende-titel"></div>
+      <p class="unter" id="ende-text"></p>
+      <button class="los" id="nochmal">Noch ein Spiel bauen</button>
+      <button class="weiter" id="ende-zurueck" style="background:#f2f3fa;color:var(--ink);margin-top:10px">Zurück in die Lernwelt</button>
+    </div>
+  </section>
+
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATEI = "werkstatt.html";
+  var MAX_SEITEN = 20;
+  var MAX_KANTE = 1600;      // Fotos werden vorher verkleinert
+  var seiten = [];           // {media_type, data, vorschau, name}
+  var spiel = null, nr = 0, richtig = 0;
+
+  function $(id){ return document.getElementById(id); }
+
+  // Zurück-Knopf: gespeicherte Hub-Adresse, sonst index.html
+  try {
+    var hub = localStorage.getItem("hub-url");
+    if (hub) $("zurueck").setAttribute("href", hub);
+  } catch(e){}
+
+  function zeige(welche){
+    ["aufnahme","laden","spiel","ende"].forEach(function(s){
+      $("sicht-"+s).classList.toggle("verborgen", s !== welche);
+    });
+    window.scrollTo(0,0);
+  }
+
+  function melde(text, art){
+    $("meldung").innerHTML = text ? '<div class="hinweis '+(art||"warn")+'">'+text+'</div>' : "";
+  }
+
+  /* ---------- Material aufnehmen ---------- */
+
+  $("k-kamera").addEventListener("click", function(){ $("e-kamera").click(); });
+  $("k-bild").addEventListener("click",   function(){ $("e-bild").click(); });
+  $("k-datei").addEventListener("click",  function(){ $("e-datei").click(); });
+
+  ["e-kamera","e-bild","e-datei"].forEach(function(id){
+    $(id).addEventListener("change", function(ev){
+      nimmDateien(ev.target.files);
+      ev.target.value = "";
+    });
+  });
+
+  // Ziehen und Ablegen (am Mac)
+  var ablage = $("k-datei");
+  ["dragenter","dragover"].forEach(function(t){
+    ablage.addEventListener(t, function(e){ e.preventDefault(); ablage.classList.add("drueber"); });
+  });
+  ["dragleave","drop"].forEach(function(t){
+    ablage.addEventListener(t, function(e){ e.preventDefault(); ablage.classList.remove("drueber"); });
+  });
+  ablage.addEventListener("drop", function(e){
+    if (e.dataTransfer && e.dataTransfer.files) nimmDateien(e.dataTransfer.files);
+  });
+
+  function nimmDateien(liste){
+    melde("");
+    var dateien = Array.prototype.slice.call(liste || []);
+    if (!dateien.length) return;
+
+    if (seiten.length + dateien.length > MAX_SEITEN){
+      melde("Das sind zu viele auf einmal. Höchstens " + MAX_SEITEN + " Seiten gehen zusammen.");
+      dateien = dateien.slice(0, Math.max(0, MAX_SEITEN - seiten.length));
+    }
+
+    dateien.forEach(function(datei){
+      if (datei.type === "application/pdf"){
+        lesePdf(datei);
+      } else if (/^image\//.test(datei.type)){
+        verkleinereBild(datei);
+      } else {
+        melde("„" + datei.name + "“ kann ich nicht lesen. Es geht nur Bild oder PDF.");
+      }
+    });
+  }
+
+  function lesePdf(datei){
+    if (datei.size > 20 * 1024 * 1024){
+      melde("„" + datei.name + "“ ist mit " + (datei.size/1048576).toFixed(1) + " MB zu groß. Bis 20 MB gehen.");
+      return;
+    }
+    var leser = new FileReader();
+    leser.onload = function(){
+      seiten.push({
+        media_type: "application/pdf",
+        data: String(leser.result).split(",")[1],
+        vorschau: null,
+        name: datei.name
+      });
+      malSeiten();
+    };
+    leser.readAsDataURL(datei);
+  }
+
+  function verkleinereBild(datei){
+    var leser = new FileReader();
+    leser.onload = function(){
+      var bild = new Image();
+      bild.onload = function(){
+        var b = bild.width, h = bild.height;
+        var faktor = Math.min(1, MAX_KANTE / Math.max(b, h));
+        var flaeche = document.createElement("canvas");
+        flaeche.width  = Math.round(b * faktor);
+        flaeche.height = Math.round(h * faktor);
+        flaeche.getContext("2d").drawImage(bild, 0, 0, flaeche.width, flaeche.height);
+        var url = flaeche.toDataURL("image/jpeg", 0.82);
+        seiten.push({
+          media_type: "image/jpeg",
+          data: url.split(",")[1],
+          vorschau: url,
+          name: datei.name || "Foto"
+        });
+        malSeiten();
+      };
+      bild.onerror = function(){ melde("Das Bild konnte ich nicht öffnen."); };
+      bild.src = String(leser.result);
+    };
+    leser.readAsDataURL(datei);
+  }
+
+  function malSeiten(){
+    var kasten = $("seiten");
+    kasten.innerHTML = "";
+    seiten.forEach(function(s, i){
+      var d = document.createElement("div");
+      d.className = "seite";
+      d.innerHTML = (s.vorschau
+          ? '<img alt="Seite ' + (i+1) + '" src="' + s.vorschau + '">'
+          : '<div class="pdf"><span class="zeichen">📄</span>' + s.name.slice(0,26) + '</div>')
+        + '<button class="weg" data-i="' + i + '" title="Weg damit">×</button>'
+        + '<span class="nr">' + (i+1) + '</span>';
+      kasten.appendChild(d);
+    });
+    Array.prototype.forEach.call(kasten.querySelectorAll(".weg"), function(b){
+      b.addEventListener("click", function(){
+        seiten.splice(parseInt(b.getAttribute("data-i"),10), 1);
+        malSeiten();
+      });
+    });
+    $("los").disabled = seiten.length === 0;
+    $("los").textContent = seiten.length > 1
+      ? "Spiel aus " + seiten.length + " Seiten bauen"
+      : "Spiel bauen";
+  }
+
+  /* ---------- Bauen lassen ---------- */
+
+  var SCHRITTE = [
+    ["Ich schaue mir deine Seite an …", "Ich suche das Thema."],
+    ["Ich ordne es dem Lehrplan zu …", "Damit es zu deinem Unterricht passt."],
+    ["Ich denke mir Aufgaben aus …", "Eigene – nicht die vom Blatt."],
+    ["Ich baue die Spielwelt …", "Gleich kannst du los."]
+  ];
+
+  $("los").addEventListener("click", function(){
+    if (!seiten.length) return;
+    zeige("laden");
+    var i = 0;
+    $("schritt").textContent = SCHRITTE[0][0];
+    $("schritt-unter").textContent = SCHRITTE[0][1];
+    var takt = setInterval(function(){
+      i = Math.min(i+1, SCHRITTE.length-1);
+      $("schritt").textContent = SCHRITTE[i][0];
+      $("schritt-unter").textContent = SCHRITTE[i][1];
+    }, 6000);
+
+    fetch("/api/spiel-bauen", {
+      method: "POST",
+      headers: {"content-type":"application/json"},
+      body: JSON.stringify({
+        kind: "paul",
+        seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
+      })
+    })
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+    .then(function(a){
+      clearInterval(takt);
+      if (!a.ok || !a.j.ok || !a.j.spiel){
+        zeige("aufnahme");
+        melde(a.j && a.j.fehler ? a.j.fehler : "Da ist etwas schiefgegangen. Bitte nochmal versuchen.", "fehler");
+        return;
+      }
+      spiel = a.j.spiel;
+      starteSpiel();
+    })
+    .catch(function(){
+      clearInterval(takt);
+      zeige("aufnahme");
+      melde("Ich konnte den Server nicht erreichen. Bist du im Internet?", "fehler");
+    });
+  });
+
+  /* ---------- Spielen ---------- */
+
+  function starteSpiel(){
+    if (!spiel.aufgaben || !spiel.aufgaben.length){
+      zeige("aufnahme");
+      melde("Es kamen keine Aufgaben zurück. Bitte nochmal versuchen.", "fehler");
+      return;
+    }
+    nr = 0; richtig = 0;
+    $("marken").innerHTML =
+      '<span class="marke">' + escape2(spiel.titel || "Spiel") + '</span>' +
+      (spiel.thema ? '<span class="marke">' + escape2(spiel.thema) + '</span>' : "") +
+      (spiel.welt  ? '<span class="marke">' + escape2(spiel.welt)  + '</span>' : "");
+    zeige("spiel");
+    malAufgabe();
+  }
+
+  function escape2(t){
+    return String(t).replace(/[<>&"]/g, function(c){
+      return {"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c];
+    });
+  }
+
+  function malAufgabe(){
+    var a = spiel.aufgaben[nr];
+    $("balken").style.width = Math.round(nr / spiel.aufgaben.length * 100) + "%";
+    $("zaehler").textContent = "Aufgabe " + (nr+1) + " von " + spiel.aufgaben.length;
+    $("frage").textContent = a.frage;
+    $("rueck").className = "rueck";
+    $("weiter").classList.add("verborgen");
+
+    var moeglich = (a.antworten && a.antworten.length) ? a.antworten.slice() : [a.richtig];
+    if (moeglich.indexOf(a.richtig) === -1) moeglich.push(a.richtig);
+    mische(moeglich);
+
+    var kasten = $("wahl");
+    kasten.innerHTML = "";
+    moeglich.forEach(function(text){
+      var b = document.createElement("button");
+      b.textContent = text;
+      b.addEventListener("click", function(){ pruefe(b, text, a); });
+      kasten.appendChild(b);
+    });
+  }
+
+  function pruefe(knopf, gewaehlt, a){
+    var alle = $("wahl").querySelectorAll("button");
+    Array.prototype.forEach.call(alle, function(b){ b.disabled = true; });
+    var stimmt = (gewaehlt === a.richtig);
+
+    if (stimmt){
+      knopf.classList.add("gut");
+      richtig++;
+      $("rueck").className = "rueck gut zeigen";
+      $("rueck").innerHTML = "<b>Richtig!</b>" + escape2(a.erklaerung || "");
+      konfetti();
+    } else {
+      knopf.classList.add("schlecht");
+      Array.prototype.forEach.call(alle, function(b){
+        if (b.textContent === a.richtig) b.classList.add("gut");
+      });
+      $("rueck").className = "rueck schlecht zeigen";
+      $("rueck").innerHTML = "<b>Fast!</b>" + escape2(a.erklaerung || "") ;
+    }
+    $("weiter").classList.remove("verborgen");
+    $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
+  }
+
+  $("weiter").addEventListener("click", function(){
+    nr++;
+    if (nr >= spiel.aufgaben.length) ende(); else malAufgabe();
+  });
+
+  function ende(){
+    var gesamt = spiel.aufgaben.length;
+    var xp = richtig * 10;
+    $("ende-titel").textContent = richtig + " von " + gesamt + " richtig";
+    $("ende-text").textContent = richtig === gesamt
+      ? "Alles richtig – und das bei selbst gebauten Aufgaben. Stark drangeblieben!"
+      : richtig >= gesamt * 0.6
+        ? "Gut gemacht. Die Fehler sind das Interessante – da lernst du am meisten."
+        : "Das war knifflig. Bau dir ruhig nochmal ein Spiel zum selben Thema, dann sitzt es.";
+
+    // Standard-Fortschritt für den Eltern-Bericht (bestehende Schlüssel bleiben unberührt)
+    try {
+      var key = "lw-progress:" + DATEI;
+      var alt = JSON.parse(localStorage.getItem(key) || "{}");
+      localStorage.setItem(key, JSON.stringify({
+        xp: (alt.xp || 0) + xp,
+        best: Math.max(alt.best || 0, richtig),
+        uebung: (alt.uebung || 0) + 1
+      }));
+    } catch(e){}
+
+    zeige("ende");
+    konfetti(true);
+  }
+
+  $("nochmal").addEventListener("click", function(){
+    seiten = []; spiel = null; malSeiten(); melde(""); zeige("aufnahme");
+  });
+  $("ende-zurueck").addEventListener("click", function(){
+    window.location.href = $("zurueck").getAttribute("href");
+  });
+
+  function mische(feld){
+    for (var i = feld.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = feld[i]; feld[i] = feld[j]; feld[j] = t;
+    }
+  }
+
+  /* ---------- Konfetti ---------- */
+  var flaeche = $("konfetti"), stift = flaeche.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(gross){
+    flaeche.width = window.innerWidth; flaeche.height = window.innerHeight;
+    var anzahl = gross ? 130 : 45;
+    for (var i = 0; i < anzahl; i++){
+      stuecke.push({
+        x: Math.random()*flaeche.width, y: -20 - Math.random()*120,
+        b: 6+Math.random()*7, h: 9+Math.random()*9,
+        v: 2.2+Math.random()*3.4, dreh: Math.random()*6.28, tempo:(Math.random()-.5)*.28,
+        farbe: ["#4f46e5","#12b76a","#f79009","#f04438","#06aed4"][Math.floor(Math.random()*5)]
+      });
+    }
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    stift.clearRect(0,0,flaeche.width,flaeche.height);
+    stuecke = stuecke.filter(function(s){ return s.y < flaeche.height + 40; });
+    stuecke.forEach(function(s){
+      s.y += s.v; s.dreh += s.tempo;
+      stift.save(); stift.translate(s.x, s.y); stift.rotate(s.dreh);
+      stift.fillStyle = s.farbe; stift.fillRect(-s.b/2, -s.h/2, s.b, s.h); stift.restore();
+    });
+    if (stuecke.length){ requestAnimationFrame(male); } else { laeuft = false; stift.clearRect(0,0,flaeche.width,flaeche.height); }
+  }
+})();
+</script>
+</body>
+</html>
