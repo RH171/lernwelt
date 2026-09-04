@@ -94,7 +94,20 @@
   .rueck.zeigen{display:block}
   .rueck.gut{background:#eafaf1;color:#08663c}
   .rueck.schlecht{background:#fff7ed;color:#8a5a12}
-  .rueck b{display:block;margin-bottom:5px;font-family:var(--rund)}
+  .rueck b{display:block;margin-bottom:7px;font-family:var(--rund);font-size:17px}
+  .schritte{
+    white-space:pre-line;               /* jede Zeile bleibt eine Zeile */
+    line-height:1.75;font-size:16px;
+    font-variant-numeric:tabular-nums;  /* Ziffern stehen untereinander */
+  }
+  .merke{
+    display:flex;gap:10px;align-items:flex-start;
+    margin-top:14px;padding:13px 15px;border-radius:13px;
+    background:rgba(255,255,255,.72);border:1px solid rgba(20,22,40,.07);
+    font-size:15.5px;line-height:1.5;color:var(--ink);
+  }
+  .merke .gluehbirne{font-size:19px;line-height:1.35;flex:none}
+  .merke b{display:inline;margin:0;font-family:var(--rund);font-size:15.5px}
 
   .weiter{margin-top:16px;width:100%;border:none;border-radius:16px;padding:16px;
           background:var(--ink);color:#fff;font-family:var(--rund);font-size:17px;font-weight:600;cursor:pointer}
