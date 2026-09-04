@@ -5,7 +5,7 @@
     "abgerufen": "2026-09-04",
     "hinweis": "LehrplanPLUS fasst Jgst. 1 und 2 zusammen. Kompetenzen = Ergebnis eines zweijaehrigen Lernprozesses. Der Lehrplan legt NICHT fest, wann ein Thema drankommt.",
     "kind": "Leon, kommt Mitte September 2026 in die 2. Klasse",
-    "offen": "Musik, Englisch, Kunst und Werken fehlen. Diese Faecher wurden 2024/25 flexibilisiert; ihre Seiten liefern derzeit nur die Startseite aus."
+    "offen": "Kunst sowie Werken und Gestalten fehlen - beides praktische Faecher, fuer Bildschirm-Lernspiele wenig geeignet. Englisch gibt es in Jgst. 1/2 in Bayern NICHT, es beginnt erst in Jgst. 3."
   },
   "faecher": [
     {
@@ -555,6 +555,88 @@
           "nr": 9,
           "thema": "Werkzeuge, Bauen, Konstruieren",
           "lernbereich": "HSU1/2 6.2"
+        }
+      ]
+    },
+    {
+      "kuerzel": "musik",
+      "name": "Musik",
+      "uebertrittsfach": false,
+      "hinweis": "In Jgst. 1/2 gibt es keine Ein-/Zweistuendigkeit - die Flexibilisierung betrifft nur 3/4.",
+      "lernbereiche": [
+        {
+          "id": "Mu1/2 1",
+          "titel": "Sprechen - Singen - Musizieren",
+          "kompetenzen": [
+            "Lieder auswendig und nach Zeichen singen",
+            "deutlich artikuliert sprechen und singen",
+            "Sprech- und Singstimme mit Bodypercussion",
+            "einfache Spieltechniken auf Orff-Instrumenten",
+            "Texte und Lieder begleiten",
+            "mit Stimme und Instrumenten experimentieren",
+            "Wiedergabemedien nutzen"
+          ]
+        },
+        {
+          "id": "Mu1/2 2",
+          "titel": "Musik - Mensch - Zeit",
+          "kompetenzen": [
+            "Werke bewusst anhoeren, Hoereindruecke nonverbal wiedergeben",
+            "Werke erkennen, Titel und Komponisten benennen",
+            "Bezuege zu Jahres- und Festkreis",
+            "Ensemble oder Musiker aus der Region erleben"
+          ]
+        },
+        {
+          "id": "Mu1/2 3",
+          "titel": "Bewegung - Tanz - Szene",
+          "kompetenzen": [
+            "freie und metrisch gebundene Bewegungen",
+            "Kompositionsprinzipien in Bewegung uebertragen",
+            "Lieder mit Bewegungen gestalten",
+            "Kindertaenze und Volkstaenze",
+            "musikalische Spielszenen",
+            "Tanzauffuehrungen erleben"
+          ]
+        },
+        {
+          "id": "Mu1/2 4",
+          "titel": "Musik und ihre Grundlagen",
+          "kompetenzen": [
+            "grafische Zeichen fuer Rhythmus und Melodie",
+            "Stabspiele und Schlaginstrumente unterscheiden",
+            "Blas- und Saiteninstrumente erkennen",
+            "vokale und instrumentale Klangfarben",
+            "gleiche und unterschiedliche Formteile",
+            "Fachvokabular anwenden"
+          ]
+        }
+      ],
+      "lernpfad_annahme": [
+        {
+          "nr": 1,
+          "thema": "Singen und Stimme",
+          "lernbereich": "Mu1/2 1"
+        },
+        {
+          "nr": 2,
+          "thema": "Rhythmus und Bodypercussion",
+          "lernbereich": "Mu1/2 1"
+        },
+        {
+          "nr": 3,
+          "thema": "Lieder im Jahreskreis",
+          "lernbereich": "Mu1/2 2"
+        },
+        {
+          "nr": 4,
+          "thema": "Instrumente kennenlernen",
+          "lernbereich": "Mu1/2 4"
+        },
+        {
+          "nr": 5,
+          "thema": "Tanzen und Bewegen",
+          "lernbereich": "Mu1/2 3"
         }
       ]
     }
