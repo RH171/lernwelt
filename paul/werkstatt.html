@@ -659,6 +659,7 @@
   function diagnose(a, gegeben){
     var sauber = function(s){ return String(s).replace(/[\s.'\u00A0]/g, ""); };
     var g = sauber(gegeben), r = sauber(a.richtig);
+    if (!g || g === r) return "";        // nichts zu diagnostizieren
 
     // 1. Hat Claude diesen Fehler vorhergesehen?
     if (a.diagnosen && a.diagnosen.length){
@@ -680,7 +681,7 @@
     if (g.length === r.length && g !== r && sortiert(g) === sortiert(r))
       return "Die richtigen Ziffern \u2013 nur in der falschen Reihenfolge.";
 
-    if (g !== r && g.length === r.length && g.slice(0, -1) === r.slice(0, -1))
+    if (g.length === r.length && g.slice(0, -1) === r.slice(0, -1))
       return "Fast! Nur die letzte Ziffer stimmt nicht \u2013 schau nochmal auf die Einer.";
 
     if (Math.abs(zg - zr) <= 2)
