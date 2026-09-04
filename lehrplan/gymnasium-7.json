@@ -6,7 +6,8 @@
     "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
     "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
     "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestaetigt am 04.09.2026).",
-    "offen": "Fehlen noch: Natur und Technik (Schwerpunkt Physik und Schwerpunkt Informatik) - Adress-Slug noch unbekannt. Dazu die Wahlfaecher: 2. Fremdsprache (Latein oder Franzoesisch) und Religion/Ethik - bei Denny erfragt. Kunst, Musik und Sport bewusst weggelassen, fuer Bildschirm-Lernspiele wenig ergiebig."
+    "offen": "Wahlfaecher noch offen: 2. Fremdsprache (Latein oder Franzoesisch?) und Religion/Ethik - bei Denny erfragt. Kunst, Musik und Sport bewusst weggelassen: fuer Bildschirm-Lernspiele wenig ergiebig.",
+    "url_muster": "Natur und Technik hat den Slug 'nt_gym', nicht 'natur-und-technik': /fachlehrplan/gymnasium/7/nt_gym"
   },
   "faecher": [
     {
@@ -651,6 +652,124 @@
           "nr": 7,
           "thema": "Bauwerke als Quellen",
           "lernbereich": "G7 7"
+        }
+      ]
+    },
+    {
+      "kuerzel": "nt",
+      "name": "Natur und Technik",
+      "uebertrittsfach": false,
+      "hinweis": "Ein Fach mit zwei Teilen: Physik (NT7 1) und Informatik (NT7 2), je ca. 28 Stunden. Kein getrennter Schwerpunkt, wie das Jahrgangsstufenprofil vermuten laesst.",
+      "lernbereiche": [
+        {
+          "id": "NT7 1.1",
+          "titel": "Ein erster Blick auf die physikalischen Spielregeln der Natur",
+          "stunden": 10,
+          "kompetenzen": [
+            "Beobachtungen an Modellversuchen dokumentieren",
+            "Magnetismus mit einfachen Modellen erlaeutern, Erdmagnetfeld zur Orientierung",
+            "Experimente zur Dichte unregelmaessiger Koerper planen",
+            "Dichte und Masse berechnen, Genauigkeit beachten",
+            "Dichte als Bewertungskriterium fuer Werkstoffe"
+          ]
+        },
+        {
+          "id": "NT7 1.2",
+          "titel": "Optische Phaenomene",
+          "stunden": 10,
+          "kompetenzen": [
+            "Farben und Schatten experimentell erkunden",
+            "Sehvorgang und Schatten mit Lichtausbreitungsmodellen erklaeren",
+            "physikalische Aspekte in Sicherheitsempfehlungen",
+            "Mondphasen und Finsternisse mit Fachsprache und Zeichnung"
+          ]
+        },
+        {
+          "id": "NT7 1.3",
+          "titel": "Elektrische Stromkreise",
+          "stunden": 8,
+          "kompetenzen": [
+            "elektrostatische Phaenomene mit Ladung und Atommodell",
+            "Strom als bewegte Ladungen",
+            "Waerme- und Leuchtwirkung",
+            "magnetische Stromwirkung experimentell",
+            "Schaltungen selbst entwickeln und aufbauen"
+          ]
+        },
+        {
+          "id": "NT7 2.1",
+          "titel": "Vernetzte Informationsstrukturen",
+          "stunden": 8,
+          "kompetenzen": [
+            "vernetzte Strukturen objektorientiert modellieren",
+            "Suchstrategien im Internet, Ergebnisse kritisch bewerten",
+            "Hypertext mit WYSIWYG-Editoren, Urheberrecht und Zitation",
+            "Uebermittlung elektronischer Dokumente"
+          ]
+        },
+        {
+          "id": "NT7 2.2",
+          "titel": "Chancen und Risiken digitaler Kommunikation",
+          "stunden": 5,
+          "kompetenzen": [
+            "digitale Kommunikation bewerten: Chancen, Risiken, Auswirkungen",
+            "Persoenlichkeitsrechte schuetzen"
+          ]
+        },
+        {
+          "id": "NT7 2.3",
+          "titel": "Beschreibung von Ablaeufen durch Algorithmen",
+          "stunden": 11,
+          "kompetenzen": [
+            "Problemstellungen analysieren, Algorithmen entwickeln und beschreiben",
+            "einfache Algorithmen mit Programmierwerkzeugen umsetzen"
+          ]
+        },
+        {
+          "id": "NT7 2.4",
+          "titel": "Projekt",
+          "stunden": 4,
+          "kompetenzen": [
+            "im Team Hypertext- oder Algorithmik-Loesungen entwickeln",
+            "Informatikkenntnisse zur Dokumentation nutzen"
+          ]
+        }
+      ],
+      "lernpfad": [
+        {
+          "nr": 1,
+          "thema": "Magnetismus und Dichte",
+          "lernbereich": "NT7 1.1"
+        },
+        {
+          "nr": 2,
+          "thema": "Licht, Schatten, Mondphasen",
+          "lernbereich": "NT7 1.2"
+        },
+        {
+          "nr": 3,
+          "thema": "Elektrische Stromkreise",
+          "lernbereich": "NT7 1.3"
+        },
+        {
+          "nr": 4,
+          "thema": "Internet und Informationsstrukturen",
+          "lernbereich": "NT7 2.1"
+        },
+        {
+          "nr": 5,
+          "thema": "Digitale Kommunikation: Chancen und Risiken",
+          "lernbereich": "NT7 2.2"
+        },
+        {
+          "nr": 6,
+          "thema": "Algorithmen und Programmieren",
+          "lernbereich": "NT7 2.3"
+        },
+        {
+          "nr": 7,
+          "thema": "Projekt",
+          "lernbereich": "NT7 2.4"
         }
       ]
     }
