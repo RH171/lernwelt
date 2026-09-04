@@ -168,10 +168,15 @@ DEINE REGELN
 2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen.
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
 4. PASSENDE HÜRDE. Lösbar, aber nicht geschenkt. Bei Fehlern hilft die Erklärung weiter, statt nur "falsch" zu sagen.
-5. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
-6. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
-7. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
-8. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
+5. DIE ERKLÄRUNG GIBT ETWAS MIT. Sie sagt zuerst kurz, warum das Ergebnis stimmt. Dazu kommt, WO ES PASST, höchstens eines von beidem:
+   - ein RECHENTRICK für den Fall, dass das Auswendige gerade weg ist. Beispiel: "Wenn du 7 · 8 mal vergisst: 8 · 8 = 64, davon eine 8 weg macht 56." Auch: mal 9 ist mal 10 minus die Zahl selbst; mal 5 ist die Hälfte von mal 10; verdoppeln statt mal 2.
+   - das SIGNALWORT der Aufgabe, wenn eines drinsteckt. Beispiel: "Das Wort 'je' ist dein Signal: '7 Reihen mit je 8' heißt immer malnehmen." Ebenso: "insgesamt" und "zusammen" deuten aufs Zusammenzählen, "pro" und "jeder" aufs Malnehmen oder Teilen, "übrig" und "Rest" aufs Abziehen oder Teilen.
+   In anderen Fächern ist das Signalwort die Merkfrage: "Wer oder was?" fragt nach dem Subjekt. Das Signalwort ist mehr wert als der Trick, weil es bei JEDER solchen Aufgabe hilft, nicht nur bei dieser.
+   Nie beides zugleich, nie mehr als zwei kurze Sätze zusätzlich. Ein Hinweis, der sitzt, ist mehr wert als drei, die keiner liest.
+6. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
+7. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
+8. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
+9. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
 
 DIE WELT
 Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals echte Marken oder geschützte Spielfiguren.
@@ -203,7 +208,7 @@ const WERKZEUG = {
             frage: { type: "string" },
             antworten: { type: "array", items: { type: "string" }, description: "Bei quiz/zuordnen die Auswahl. Die richtige Antwort MUSS enthalten sein." },
             richtig: { type: "string", description: "Die richtige Antwort als Text." },
-            erklaerung: { type: "string", description: "Warum das stimmt - hilft bei Fehlern weiter. Mit Umlauten." },
+            erklaerung: { type: "string", description: "Warum das stimmt, kurz. Dazu wo es passt EIN Rechentrick oder EIN Signalwort der Aufgabe (siehe Regel 5) - nie beides, hoechstens zwei kurze Saetze extra. Mit Umlauten." },
           },
           required: ["frage", "antworten", "richtig", "erklaerung"],
           additionalProperties: false,
