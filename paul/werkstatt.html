@@ -45,6 +45,18 @@
   .knopf .zeichen{font-size:30px;line-height:1}
   .ablage.drueber{border-color:var(--paul);background:#f2f2ff}
 
+  .wunschfeld{margin-top:18px}
+  .wunschfeld label{
+    display:block;font-family:var(--rund);font-weight:600;font-size:16px;margin-bottom:7px;
+  }
+  .wunschfeld textarea{
+    width:100%;min-height:78px;resize:vertical;
+    border:2px solid var(--line);border-radius:16px;padding:14px 15px;
+    font-family:var(--font);font-size:16px;line-height:1.5;color:var(--ink);background:#fbfcff;
+  }
+  .wunschfeld textarea:focus{outline:none;border-color:var(--paul)}
+  .wunschfeld .tipp{color:var(--muted);font-size:14px;margin-top:7px;line-height:1.5}
+
   .seiten{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px;margin-top:18px}
   .seite{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#f7f8fc;aspect-ratio:3/4}
   .seite img{width:100%;height:100%;object-fit:cover;display:block}
@@ -241,6 +253,13 @@
       <input type="file" id="e-kamera" accept="image/*" capture="environment" class="verborgen">
       <input type="file" id="e-bild"   accept="image/*" multiple class="verborgen">
       <input type="file" id="e-datei"  accept="image/*,application/pdf" multiple class="verborgen">
+
+      <div class="wunschfeld">
+        <label for="wunsch">Oder sag mir einfach, was du dir wünschst</label>
+        <textarea id="wunsch" maxlength="600"
+          placeholder="Zum Beispiel: Ein Spiel über Brüche, aber mit Fußball. Oder: Ich will das Einmaleins üben, im Weltraum."></textarea>
+        <div class="tipp">Geht auch ganz ohne Foto. Und wenn du beides nimmst, richte ich mich nach deinem Foto und baue deinen Wunsch mit ein.</div>
+      </div>
 
       <div class="seiten" id="seiten"></div>
       <div id="meldung"></div>
@@ -575,11 +594,17 @@
         malSeiten();
       });
     });
-    $("los").disabled = seiten.length === 0;
+    knopfPruefen();
+  }
+
+  function knopfPruefen(){
+    var wunsch = $("wunsch").value.trim();
+    $("los").disabled = (seiten.length === 0 && !wunsch);
     $("los").textContent = seiten.length > 1
       ? "Spiel aus " + seiten.length + " Seiten bauen"
-      : "Spiel bauen";
+      : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Spiel bauen";
   }
+  $("wunsch").addEventListener("input", knopfPruefen);
 
   /* ---------- Bauen lassen ---------- */
 
@@ -594,6 +619,11 @@
     if (!seiten.length) return;
     zeige("laden");
     var i = 0;
+    if (seiten.length === 0){
+      SCHRITTE[0] = ["Ich denke über deinen Wunsch nach …", "Mal sehen, was daraus wird."];
+    } else {
+      SCHRITTE[0] = ["Ich schaue mir deine Seite an …", "Ich suche das Thema."];
+    }
     $("schritt").textContent = SCHRITTE[0][0];
     $("schritt-unter").textContent = SCHRITTE[0][1];
     var takt = setInterval(function(){
@@ -608,6 +638,7 @@
       headers: {"content-type":"application/json"},
       body: JSON.stringify({
         kind: "paul",
+        wunsch: $("wunsch").value.trim(),
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
     })
@@ -928,7 +959,7 @@
   }
 
   $("nochmal").addEventListener("click", function(){
-    seiten = []; spiel = null; malSeiten(); melde(""); zeige("aufnahme"); sammlungLaden();
+    seiten = []; spiel = null; $("wunsch").value = ""; malSeiten(); melde(""); zeige("aufnahme"); sammlungLaden();
   });
   $("ende-zurueck").addEventListener("click", function(){
     window.location.href = $("zurueck").getAttribute("href");

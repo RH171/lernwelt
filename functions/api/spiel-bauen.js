@@ -54,7 +54,10 @@ export async function onRequestPost(context) {
   const kind = KINDER[auftrag.kind] ? auftrag.kind : "paul";
   const seiten = Array.isArray(auftrag.seiten) ? auftrag.seiten : [];
 
-  if (seiten.length === 0) return fehler(400, "Es wurde kein Bild und keine Datei mitgeschickt.");
+  const wunsch = String(auftrag.wunsch || "").trim().slice(0, 600);
+  if (seiten.length === 0 && !wunsch) {
+    return fehler(400, "Schreib mir, was du dir wünschst – oder schick ein Foto mit.");
+  }
   if (seiten.length > MAX_SEITEN) return fehler(400, `Das sind ${seiten.length} Seiten. Mehr als ${MAX_SEITEN} auf einmal kann die Werkstatt noch nicht.`);
 
   let bytes = 0;
@@ -87,9 +90,13 @@ export async function onRequestPost(context) {
         : { type: "image",    source: { type: "base64", media_type: s.media_type,      data: s.data } }
     );
   }
-  inhalt.push({ type: "text", text: auftrag.wunsch
-    ? `Das ist mein Schulstoff. Zusätzlicher Wunsch von mir: ${String(auftrag.wunsch).slice(0, 400)}`
-    : "Das ist mein Schulstoff. Bau mir ein Spiel daraus." });
+  if (seiten.length && wunsch) {
+    inhalt.push({ type: "text", text: `Das ist mein Schulstoff. Dazu mein Wunsch: ${wunsch}` });
+  } else if (seiten.length) {
+    inhalt.push({ type: "text", text: "Das ist mein Schulstoff. Bau mir ein Spiel daraus." });
+  } else {
+    inhalt.push({ type: "text", text: `Ich habe kein Bild dabei. Bau mir ein Spiel nach diesem Wunsch: ${wunsch}` });
+  }
 
   const antwort = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -164,6 +171,8 @@ DER LEHRPLAN (LehrplanPLUS Bayern)
 ${faecher}
 
 DEINE REGELN
+0. OHNE BILD. Kommt kein Foto, sondern nur ein Wunsch in Worten, dann ist der Wunsch die ganze Vorlage. Erkenne daraus Fach und Thema und suche den passenden Lernbereich im Lehrplan. Ist das Thema unklar oder zu weit ("mach was mit Mathe"), waehle das, was laut uebliches Reihenfolge gerade dran waere, und sag es im Begruessungssatz: "Ich hab mal was zum schriftlichen Malnehmen gebaut - das uebt ihr gerade." Wuenscht sich das Kind eine Welt oder ein Thema (Fussball, Weltraum, Minecraft-artige Kloetzchen), nimm genau das als Einkleidung - der Lernstoff bleibt trotzdem der aus dem Lehrplan.
+
 1. ORDNE EIN. Erkenne, um welches Fach und welchen Lernbereich es geht. Passt nichts, setze lernbereich auf "unbekannt" - rate nicht.
 2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen.
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
