@@ -133,10 +133,10 @@ function systemtext(kind, lehrplan) {
   const faecher = lehrplan.faecher.map((f) => {
     const pfad = (f.lernpfad || f.lernpfad_annahme || []).map((t) => `${t.nr}. ${t.thema}`).join(" -> ");
     const lb = f.lernbereiche.map((l) => `${l.id} ${l.titel}`).join("; ");
-    return `FACH ${f.name} (${f.kuerzel})\n  Lernbereiche: ${lb}\n  Uebliche Reihenfolge: ${pfad}`;
+    return `FACH ${f.name} (${f.kuerzel})\n  Lernbereiche: ${lb}\n  Übliche Reihenfolge: ${pfad}`;
   }).join("\n\n");
 
-  return `Du baust Lernspiele fuer ein Kind. Du bekommst ein Foto oder eine Datei aus dem Schulalltag und machst daraus ein Spiel.
+  return `Du baust Lernspiele für ein Kind. Du bekommst ein Foto oder eine Datei aus dem Schulalltag und machst daraus ein Spiel.
 
 DAS KIND
 ${kind.charAt(0).toUpperCase() + kind.slice(1)}, ${k.alter} Jahre, ${k.stufe}, Bayern.
@@ -146,16 +146,18 @@ ${faecher}
 
 DEINE REGELN
 1. ORDNE EIN. Erkenne, um welches Fach und welchen Lernbereich es geht. Passt nichts, setze lernbereich auf "unbekannt" - rate nicht.
-2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Uebernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen.
-3. VORGRIFF NUR STREIFEN. Schau in der ueblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beilaeufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die geloest werden muss. Das Kind soll es spaeter wiedererkennen, nicht daran scheitern.
-4. PASSENDE HUERDE. Loesbar, aber nicht geschenkt. Bei Fehlern hilft die Erklaerung weiter, statt nur "falsch" zu sagen.
-5. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Saetze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklaessler spricht. Freundlich, nie belehrend."}
-6. LOB DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
+2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen.
+3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
+4. PASSENDE HÜRDE. Lösbar, aber nicht geschenkt. Bei Fehlern hilft die Erklärung weiter, statt nur "falsch" zu sagen.
+5. RICHTIGES DEUTSCH - das ist wichtig. Schreibe durchgängig korrekte deutsche Rechtschreibung mit echten Umlauten (ä, ö, ü, Ä, Ö, Ü) und ß. Schreibe NIEMALS Ersatzformen wie ae, oe, ue oder ss statt ß. Also "Übertrag", nicht "Uebertrag". "Aufwärmen", nicht "Aufwaermen". "Äpfel", nicht "Aepfel". Das Kind lernt lesen - es darf nie falsch geschriebene Wörter sehen. Das gilt auch dann, wenn auf dem Foto selbst Ersatzformen stehen.
+6. SPRACHE. ${k.alter <= 8 ? "Sehr einfach, kurze Sätze, alles muss vorlesbar sein - das Kind liest noch nicht sicher." : k.alter >= 12 ? "Jugendlich und sachlich. Keine Kindersprache, kein Grundschul-Ton." : "Einfach und klar, wie man mit einem Viertklässler spricht. Freundlich, nie belehrend."}
+7. LOBE DIE ANSTRENGUNG, nicht die Begabung. Konkret statt Floskel.
+8. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
 
 DIE WELT
-Waehle eine Einkleidung, die zum Thema passt und Spass macht - Weltraum, Fussball, Klotzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals echte Marken oder geschuetzte Spielfiguren.
+Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals echte Marken oder geschützte Spielfiguren.
 
-Gib genau ein Spiel ueber das Werkzeug zurueck.`;
+Gib genau ein Spiel über das Werkzeug zurück.`;
 }
 
 const WERKZEUG = {
@@ -165,24 +167,24 @@ const WERKZEUG = {
   input_schema: {
     type: "object",
     properties: {
-      titel: { type: "string", description: "Kurzer Spieltitel, kindgerecht." },
-      fach: { type: "string", description: "Kuerzel des Fachs, z. B. mathe, deutsch, hsu, englisch." },
+      titel: { type: "string", description: "Kurzer Spieltitel, kindgerecht - mit korrekten Umlauten." },
+      fach: { type: "string", description: "Kürzel des Fachs, z. B. mathe, deutsch, hsu, englisch." },
       lernbereich: { type: "string", description: "ID des Lernbereichs aus dem Lehrplan, oder 'unbekannt'." },
       thema: { type: "string", description: "Das erkannte Thema in wenigen Worten." },
-      naechstes_thema: { type: "string", description: "Was laut Reihenfolge als Naechstes kommt, oder leer." },
-      welt: { type: "string", description: "Die gewaehlte Einkleidung, z. B. weltraum, fussball, tiefsee." },
+      naechstes_thema: { type: "string", description: "Was laut Reihenfolge als Nächstes kommt, oder leer." },
+      welt: { type: "string", description: "Die gewählte Einkleidung, z. B. weltraum, fussball, tiefsee." },
       spielart: { type: "string", enum: SPIELARTEN, description: "Welche Bauform passt." },
       begruessung: { type: "string", description: "Ein Satz zum Start, der Lust macht." },
       aufgaben: {
         type: "array",
-        description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben.",
+        description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben. Durchgängig korrektes Deutsch mit Umlauten.",
         items: {
           type: "object",
           properties: {
             frage: { type: "string" },
-            antworten: { type: "array", items: { type: "string" }, description: "Bei quiz/zuordnen die Auswahl, sonst leer." },
+            antworten: { type: "array", items: { type: "string" }, description: "Bei quiz/zuordnen die Auswahl. Die richtige Antwort MUSS enthalten sein." },
             richtig: { type: "string", description: "Die richtige Antwort als Text." },
-            erklaerung: { type: "string", description: "Warum das stimmt - hilft bei Fehlern weiter." },
+            erklaerung: { type: "string", description: "Warum das stimmt - hilft bei Fehlern weiter. Mit Umlauten." },
           },
           required: ["frage", "antworten", "richtig", "erklaerung"],
           additionalProperties: false,
