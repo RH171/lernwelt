@@ -14,9 +14,21 @@ export async function onRequest(context) {
 
   // Ohne hinterlegten Code niemanden aussperren - sonst wäre die Lernwelt
   // unerreichbar, falls das Secret einmal fehlt.
-  if (!env.PAUL_CODE) return next();
+  // Vorübergehend: Spur hinterlassen, damit sichtbar wird, ob diese
+  // Middleware überhaupt aufgerufen wird.
+  if (!env.PAUL_CODE) {
+    const r = await next();
+    const kopie = new Response(r.body, r);
+    kopie.headers.set("x-paul-riegel", "kein-code");
+    return kopie;
+  }
 
-  if (await ausweisGueltig(request, env.PAUL_CODE)) return next();
+  if (await ausweisGueltig(request, env.PAUL_CODE)) {
+    const r = await next();
+    const kopie = new Response(r.body, r);
+    kopie.headers.set("x-paul-riegel", "durchgelassen");
+    return kopie;
+  }
 
   return new Response(anmeldeSeite(), {
     status: 401,
