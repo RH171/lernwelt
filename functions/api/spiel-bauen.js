@@ -135,6 +135,15 @@ export async function onRequestPost(context) {
   if (!block || !block.input) return fehler(502, "Es kam kein brauchbares Spiel zurück. Bitte nochmal versuchen.");
 
   const spiel = block.input;
+
+  // Bevor irgendetwas gespeichert oder ausgeliefert wird: Taugt das Spiel?
+  // Am 06.09.2026 kam ein Spiel mit einer einzigen Aufgabe zurueck - fuer ein
+  // Kind ist das kein Spiel. Lieber ein ehrlicher Fehler als Murks im Regal.
+  const maengel = pruefeSpiel(spiel);
+  if (maengel.length) {
+    return fehler(502, "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen.");
+  }
+
   spiel.erzeugt = new Date().toISOString();
   spiel.kind = kind;
 
@@ -149,6 +158,31 @@ export async function onRequestPost(context) {
   return new Response(JSON.stringify({ ok: true, spiel, verbrauch: daten.usage || null }), {
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
+}
+
+// Was ein Spiel mindestens erfuellen muss, damit es ein Kind vorgesetzt bekommt.
+const MIN_AUFGABEN = 5;
+
+function pruefeSpiel(spiel) {
+  const m = [];
+  const auf = (spiel && spiel.aufgaben) || [];
+  if (auf.length < MIN_AUFGABEN) {
+    m.push(`nur ${auf.length} statt mindestens ${MIN_AUFGABEN} Aufgaben`);
+  }
+  auf.forEach((a, i) => {
+    const nr = i + 1;
+    if (!a.frage || !String(a.frage).trim()) m.push(`Aufgabe ${nr} ohne Frage`);
+    if (a.richtig === undefined || a.richtig === null || String(a.richtig).trim() === "")
+      m.push(`Aufgabe ${nr} ohne Lösung`);
+    if ((a.art || "wahl") === "wahl") {
+      const antw = a.antworten || [];
+      if (antw.length < 2) m.push(`Aufgabe ${nr} hat zu wenige Antworten`);
+      else if (antw.indexOf(a.richtig) < 0) m.push(`bei Aufgabe ${nr} fehlt die richtige Antwort in der Auswahl`);
+    }
+    if ((a.art || "") === "teilschritte" && !(a.teilschritte || []).length)
+      m.push(`Aufgabe ${nr} ist eine Schrittkette ohne Schritte`);
+  });
+  return m;
 }
 
 function fehler(status, text) {
