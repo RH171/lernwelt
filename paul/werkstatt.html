@@ -120,11 +120,14 @@
   .eingabe .pruefen:disabled{opacity:.45;cursor:default}
 
   /* Teilschritte */
-  .weg{
+  /* Eigener Name: ".weg" ist schon der Loesch-Knopf am Vorschaubild
+     (position:absolute, 30px breit). Beides gleich zu nennen hat den
+     Rechenweg in die Fensterecke geworfen. */
+  .rechenweg{
     margin:2px 0 12px;padding:12px 15px;border-radius:13px;
     background:#f1f2fa;color:var(--muted);font-size:15px;line-height:1.5;
   }
-  .weg b{color:var(--ink);font-family:var(--rund)}
+  .rechenweg b{color:var(--ink);font-family:var(--rund)}
   .kette{display:flex;flex-direction:column;gap:10px;margin-top:4px}
   .glied{
     display:flex;align-items:center;gap:12px;
@@ -839,7 +842,7 @@
     var kasten = $("wahl");
     if (a.weg && String(a.weg).trim()){
       var hinweis = document.createElement("div");
-      hinweis.className = "weg";
+      hinweis.className = "rechenweg";
       hinweis.innerHTML = "<b>So gehen wir vor:</b> ";
       hinweis.appendChild(document.createTextNode(a.weg));
       kasten.appendChild(hinweis);
