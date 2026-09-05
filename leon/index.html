@@ -221,6 +221,8 @@
     cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
   }
   .wiederholen .knopf:active{transform:scale(.99)}
+  .bild{display:flex;justify-content:center;margin:4px 0 16px}
+  .bild svg{width:100%;height:auto;display:block}
   .spielkopf{
     display:flex;align-items:center;gap:11px;margin-bottom:14px;
   }
@@ -318,6 +320,7 @@
       <div class="fortschritt"><i id="balken" style="width:0%"></i></div>
       <div class="zaehler" id="zaehler"></div>
       <div class="frage" id="frage"></div>
+      <div id="bild"></div>
       <div class="wahl" id="wahl"></div>
       <div class="rueck" id="rueck"></div>
       <button class="weiter verborgen" id="weiter">Weiter</button>
@@ -659,8 +662,10 @@
       feld.innerHTML =
         '<span class="bild">' + th.bild + '</span>' +
         '<span>' + escape2(th.titel) + '</span>' +
-        (th.jetzt ? '<span class="dran">gerade dran</span>'
-                  : (fertig ? '<span class="bereit">▶ sofort spielen</span>' : ''));
+        (fertig
+          ? '<span class="' + (th.jetzt ? 'dran' : 'bereit') + '">' +
+            weltZeichen(fertig.welt) + ' ' + (th.jetzt ? 'gerade dran' : 'sofort spielen') + '</span>'
+          : (th.jetzt ? '<span class="dran">gerade dran</span>' : ''));
       feld.addEventListener("click", function(){
         var da = fertigesSpiel(th);
         letztesThema = th;
@@ -792,6 +797,137 @@
     return "\u{1F3AE}";
   }
 
+
+  /* ---------- Bilder ----------
+     Die KI zeichnet NICHT selbst - sie sagt nur, WAS zu sehen sein soll
+     ("uhr:3:00"), gezeichnet wird hier mit festem Code. So kann kein
+     krummes Bild entstehen, und eine Uhr zeigt immer wirklich die Zeit,
+     die in der Aufgabe steht. */
+
+  function malBild(spec){
+    var t = String(spec || "").trim();
+    if (!t) return "";
+    var teile = t.split(":");
+    var art = teile[0].toLowerCase();
+    try {
+      if (art === "uhr")          return svgUhr(+teile[1], +(teile[2] || 0));
+      if (art === "strichliste")  return svgStrichliste(+teile[1]);
+      if (art === "menge")        return svgMenge(+teile[1], teile[2]);
+      if (art === "form")         return svgForm(teile[1]);
+      if (art === "zahlenstrahl") return svgZahlenstrahl(+teile[1], +teile[2], teile.slice(3));
+    } catch(e){}
+    return "";
+  }
+
+  function svgHuelle(inhalt, breite, hoehe){
+    return '<div class="bild"><svg viewBox="0 0 ' + breite + ' ' + hoehe + '" role="img" ' +
+           'style="max-width:' + Math.min(breite, 300) + 'px">' + inhalt + '</svg></div>';
+  }
+
+  // Zifferblatt mit echten Zeigerstellungen.
+  function svgUhr(stunde, minute){
+    if (isNaN(stunde)) return "";
+    minute = isNaN(minute) ? 0 : minute;
+    var M = 100, R = 88, teile = [];
+    teile.push('<circle cx="100" cy="100" r="' + R + '" fill="#fff" stroke="#1b1c22" stroke-width="5"/>');
+    for (var i = 0; i < 60; i++){
+      var w = i * 6 * Math.PI / 180;
+      var gross = (i % 5 === 0);
+      var r1 = gross ? R - 13 : R - 7;
+      teile.push('<line x1="' + (M + r1*Math.sin(w)).toFixed(1) + '" y1="' + (M - r1*Math.cos(w)).toFixed(1) +
+                 '" x2="' + (M + (R-3)*Math.sin(w)).toFixed(1) + '" y2="' + (M - (R-3)*Math.cos(w)).toFixed(1) +
+                 '" stroke="#1b1c22" stroke-width="' + (gross ? 3.5 : 1.5) + '" stroke-linecap="round"/>');
+    }
+    for (var z = 1; z <= 12; z++){
+      var wz = z * 30 * Math.PI / 180, rz = R - 27;
+      teile.push('<text x="' + (M + rz*Math.sin(wz)).toFixed(1) + '" y="' + (M - rz*Math.cos(wz) + 7).toFixed(1) +
+                 '" text-anchor="middle" font-size="20" font-weight="700" fill="#1b1c22" ' +
+                 'font-family="ui-rounded,system-ui,sans-serif">' + z + '</text>');
+    }
+    // Stundenzeiger wandert mit den Minuten weiter - sonst stimmt "halb 4" nicht.
+    var ws = ((stunde % 12) * 30 + minute * 0.5) * Math.PI / 180;
+    var wm = (minute * 6) * Math.PI / 180;
+    teile.push('<line x1="100" y1="100" x2="' + (M + 42*Math.sin(ws)).toFixed(1) + '" y2="' + (M - 42*Math.cos(ws)).toFixed(1) +
+               '" stroke="#1b1c22" stroke-width="8" stroke-linecap="round"/>');
+    teile.push('<line x1="100" y1="100" x2="' + (M + 66*Math.sin(wm)).toFixed(1) + '" y2="' + (M - 66*Math.cos(wm)).toFixed(1) +
+               '" stroke="#10b981" stroke-width="5" stroke-linecap="round"/>');
+    teile.push('<circle cx="100" cy="100" r="6" fill="#1b1c22"/>');
+    return svgHuelle(teile.join(""), 200, 200);
+  }
+
+  // Bündel zu fünf, wie im Heft.
+  function svgStrichliste(anzahl){
+    if (isNaN(anzahl) || anzahl < 0 || anzahl > 60) return "";
+    var proReihe = 4, buendel = Math.ceil(anzahl / 5) || 1;
+    var reihen = Math.ceil(buendel / proReihe);
+    var bw = 58, bh = 54, teile = [], rest = anzahl, i = 0;
+    while (rest > 0){
+      var n = Math.min(5, rest); rest -= n;
+      var sp = i % proReihe, ze = Math.floor(i / proReihe);
+      var x0 = 12 + sp * bw, y0 = 12 + ze * bh;
+      for (var k = 0; k < Math.min(n, 4); k++){
+        teile.push('<line x1="' + (x0 + k*10) + '" y1="' + y0 + '" x2="' + (x0 + k*10) + '" y2="' + (y0+36) +
+                   '" stroke="#1b1c22" stroke-width="4" stroke-linecap="round"/>');
+      }
+      if (n === 5){
+        teile.push('<line x1="' + (x0-5) + '" y1="' + (y0+30) + '" x2="' + (x0+35) + '" y2="' + (y0+6) +
+                   '" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>');
+      }
+      i++;
+    }
+    return svgHuelle(teile.join(""), 12 + proReihe*bw, 12 + reihen*bh);
+  }
+
+  var MENGE_ZEICHEN = {ball:"⚽", tor:"\u{1F945}", spieler:"\u{1F3C3}", stern:"⭐",
+                       apfel:"\u{1F34E}", punkt:"●", muenze:"\u{1FA99}", schuh:"\u{1F45F}"};
+
+  // Anzahl zum Abzählen - in Fünfergruppen, damit man nicht einzeln zählen muss.
+  function svgMenge(anzahl, was){
+    if (isNaN(anzahl) || anzahl < 1 || anzahl > 40) return "";
+    var z = MENGE_ZEICHEN[String(was || "").toLowerCase()] || "⚽";
+    var proReihe = Math.min(5, anzahl), reihen = Math.ceil(anzahl / 5), teile = [];
+    for (var i = 0; i < anzahl; i++){
+      var sp = i % 5, ze = Math.floor(i / 5);
+      teile.push('<text x="' + (30 + sp*52) + '" y="' + (42 + ze*52) + '" font-size="38" text-anchor="middle">' + z + '</text>');
+    }
+    return svgHuelle(teile.join(""), 8 + proReihe*52, 8 + reihen*52);
+  }
+
+  function svgForm(name){
+    var n = String(name || "").toLowerCase();
+    var f = 'fill="#eefbf2" stroke="#10b981" stroke-width="5" stroke-linejoin="round"';
+    if (n.indexOf("kreis") >= 0)     return svgHuelle('<circle cx="90" cy="90" r="70" ' + f + '/>', 180, 180);
+    if (n.indexOf("dreieck") >= 0)   return svgHuelle('<polygon points="90,20 165,160 15,160" ' + f + '/>', 180, 180);
+    if (n.indexOf("quadrat") >= 0)   return svgHuelle('<rect x="25" y="25" width="130" height="130" rx="6" ' + f + '/>', 180, 180);
+    if (n.indexOf("rechteck") >= 0)  return svgHuelle('<rect x="12" y="45" width="156" height="90" rx="6" ' + f + '/>', 180, 180);
+    if (n.indexOf("fünfeck") >= 0 || n.indexOf("fuenfeck") >= 0)
+      return svgHuelle('<polygon points="90,18 162,70 134,156 46,156 18,70" ' + f + '/>', 180, 180);
+    if (n.indexOf("sechseck") >= 0)  return svgHuelle('<polygon points="90,18 155,54 155,126 90,162 25,126 25,54" ' + f + '/>', 180, 180);
+    return "";
+  }
+
+  // Zahlenstrahl mit Zehnerschritten und Markierungen.
+  function svgZahlenstrahl(von, bis, marken){
+    if (isNaN(von) || isNaN(bis) || bis <= von) return "";
+    var B = 620, links = 30, rechts = B - 30, y = 60;
+    var xVon = function(w){ return links + (w - von) / (bis - von) * (rechts - links); };
+    var teile = ['<line x1="' + links + '" y1="' + y + '" x2="' + rechts + '" y2="' + y + '" stroke="#1b1c22" stroke-width="4"/>'];
+    var schritt = (bis - von) <= 20 ? 1 : (bis - von) <= 100 ? 10 : 100;
+    for (var w = von; w <= bis; w += schritt){
+      var x = xVon(w);
+      teile.push('<line x1="' + x.toFixed(1) + '" y1="' + (y-9) + '" x2="' + x.toFixed(1) + '" y2="' + (y+9) + '" stroke="#1b1c22" stroke-width="3"/>');
+      teile.push('<text x="' + x.toFixed(1) + '" y="' + (y+32) + '" text-anchor="middle" font-size="17" fill="#71768a" font-family="system-ui,sans-serif">' + w + '</text>');
+    }
+    (marken || []).forEach(function(m){
+      var wert = Number(m);
+      if (isNaN(wert) || wert < von || wert > bis) return;
+      var x = xVon(wert);
+      teile.push('<circle cx="' + x.toFixed(1) + '" cy="' + y + '" r="10" fill="#10b981"/>');
+      teile.push('<text x="' + x.toFixed(1) + '" y="' + (y-20) + '" text-anchor="middle" font-size="19" font-weight="700" fill="#0f7a45" font-family="ui-rounded,system-ui,sans-serif">' + wert + '</text>');
+    });
+    return svgHuelle(teile.join(""), B, 100);
+  }
+
   function starteSpiel(){
     if (!spiel.aufgaben || !spiel.aufgaben.length){
       zeige("aufnahme");
@@ -883,6 +1019,7 @@
       ? "Nachspielzeit \u00B7 " + (pos+1) + " von " + folge.length
       : "Aufgabe " + (pos+1) + " von " + folge.length;
     $("frage").textContent = a.frage;
+    $("bild").innerHTML = malBild(a.bild);
     $("rueck").className = "rueck";
     $("weiter").classList.add("verborgen");
     $("wahl").innerHTML = "";
