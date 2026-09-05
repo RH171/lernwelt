@@ -616,7 +616,8 @@
   ];
 
   $("los").addEventListener("click", function(){
-    if (!seiten.length) return;
+    // Ein Wunsch allein genuegt - ein Foto ist nicht noetig.
+    if (!seiten.length && !$("wunsch").value.trim()) return;
     zeige("laden");
     var i = 0;
     if (seiten.length === 0){

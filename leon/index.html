@@ -12,6 +12,27 @@
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
   }
+  /* Leons Themenwahl: grosse Felder, ein Fingertipp genuegt. */
+  .themen{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}
+  .thema{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+    background:#f6fdf8;border:2px solid #d6f0de;border-radius:20px;
+    padding:17px 10px;cursor:pointer;text-align:center;min-height:104px;
+    font-family:var(--rund);font-size:15.5px;font-weight:600;line-height:1.25;
+  }
+  .thema:active{transform:scale(.97)}
+  .thema .bild{font-size:31px;line-height:1}
+  .thema.jetzt{border-color:var(--paul);background:#eefbf2}
+  .thema .dran{
+    font-family:var(--font);font-size:11px;font-weight:700;color:var(--paul);
+    letter-spacing:.04em;text-transform:uppercase;
+  }
+  .mehr{
+    margin-top:18px;text-align:center;color:var(--muted);font-size:14.5px;
+    cursor:pointer;padding:9px;
+  }
+  @media (max-width:340px){ .themen{grid-template-columns:1fr} }
+
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{
@@ -240,11 +261,14 @@
   <!-- 1. Material sammeln -->
   <section id="sicht-aufnahme">
     <div class="karte">
-      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was hast du heute gelernt?</div>
-      <p class="unter">Fotografier deinen Hefteintrag oder dein Arbeitsblatt – ich bau dir ein Spiel daraus.
-      Du kannst auch mehrere Seiten nehmen, dann wird <b>ein</b> Spiel daraus.</p>
+      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was willst du üben?</div>
+      <p class="unter">Tipp auf ein Feld – ich baue dir daraus ein Spiel.</p>
 
-      <div class="knoepfe">
+      <div class="themen" id="themen"></div>
+
+      <div class="mehr" id="mehr-auf">Oder zeig mir dein Heft ›</div>
+
+      <div class="knoepfe verborgen" id="foto-teil">
         <div class="knopf" id="k-kamera"><span class="zeichen">📸</span>Fotografieren</div>
         <div class="knopf" id="k-bild"><span class="zeichen">🖼️</span>Bild auswählen</div>
         <div class="knopf ablage" id="k-datei"><span class="zeichen">📄</span>Datei oder PDF</div>
@@ -254,11 +278,10 @@
       <input type="file" id="e-bild"   accept="image/*" multiple class="verborgen">
       <input type="file" id="e-datei"  accept="image/*,application/pdf" multiple class="verborgen">
 
-      <div class="wunschfeld">
-        <label for="wunsch">Oder sag mir einfach, was du dir wünschst</label>
+      <div class="wunschfeld verborgen" id="wunsch-teil">
+        <label for="wunsch">Oder schreib mir, was du üben willst</label>
         <textarea id="wunsch" maxlength="600"
-          placeholder="Zum Beispiel: Ein Spiel über Brüche, aber mit Fußball. Oder: Ich will das Einmaleins üben, im Weltraum."></textarea>
-        <div class="tipp">Geht auch ganz ohne Foto. Und wenn du beides nimmst, richte ich mich nach deinem Foto und baue deinen Wunsch mit ein.</div>
+          placeholder="Zum Beispiel: Rechnen mit Dinos."></textarea>
       </div>
 
       <div class="seiten" id="seiten"></div>
@@ -612,8 +635,10 @@
     ["Ich baue die Spielwelt …", "Gleich kannst du los."]
   ];
 
-  $("los").addEventListener("click", function(){
-    if (!seiten.length) return;
+  $("los").addEventListener("click", bauen);
+
+  function bauen(){
+    if (!seiten.length && !$("wunsch").value.trim()) return;
     zeige("laden");
     var i = 0;
     if (seiten.length === 0){
@@ -662,7 +687,7 @@
       zeige("aufnahme");
       melde("Ich konnte den Server nicht erreichen. Bist du im Internet?", "fehler");
     });
-  });
+  }
 
   /* ---------- Spielen ---------- */
 
