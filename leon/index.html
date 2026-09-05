@@ -213,22 +213,27 @@
   .sammlung h3{font-family:var(--rund);font-size:19px;margin:0 0 4px}
   .liste{display:grid;gap:10px;margin-top:14px}
   .eintrag{
-    display:flex;align-items:center;gap:13px;text-align:left;width:100%;
-    border:1px solid var(--line);background:#fbfcff;border-radius:16px;
-    padding:14px 15px;cursor:pointer;font-family:var(--font);color:var(--ink);
-    transition:border-color .12s,transform .1s;
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    border:1.5px solid #e8eef0;background:#fff;border-radius:18px;
+    padding:13px 14px;cursor:pointer;font-family:var(--font);color:var(--ink);
+    transition:border-color .12s,box-shadow .12s,transform .1s;
   }
-  .eintrag:hover{border-color:var(--leon)}
+  .eintrag:hover{border-color:#bfe8cd;box-shadow:0 4px 14px rgba(16,185,129,.1)}
   .eintrag:active{transform:scale(.99)}
-  .eintrag .em{font-size:24px;flex:none;width:44px;height:44px;border-radius:13px;
-               display:grid;place-items:center;background:#f1f2fa}
+  .eintrag .em{font-size:23px;flex:none;width:46px;height:46px;border-radius:15px;
+               display:grid;place-items:center;background:#f2fcf5;border:1px solid #e2f5e9}
   .eintrag .txt{flex:1;min-width:0}
   .eintrag .tt{font-family:var(--rund);font-weight:600;font-size:16px;
                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .eintrag .ts{font-size:13.5px;color:var(--muted);margin-top:2px;
+  .eintrag .ts{font-size:13px;color:var(--muted);margin-top:3px;
                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .eintrag .loeschen{flex:none;border:none;background:none;color:var(--muted);
-                     font-size:19px;cursor:pointer;padding:6px 4px;border-radius:8px}
+  /* Zeigt, dass der ganze Eintrag ein Startknopf ist. */
+  .eintrag .los-pfeil{flex:none;color:var(--leon);font-size:13px;opacity:.55}
+  .eintrag:hover .los-pfeil{opacity:1}
+  /* Das Wegwerfen soll man finden, aber nicht aus Versehen treffen. */
+  .eintrag .loeschen{flex:none;border:none;background:none;color:#c3ccd2;
+                     font-size:17px;line-height:1;cursor:pointer;
+                     padding:7px 5px;border-radius:9px;transition:color .12s,background .12s}
   .eintrag .loeschen:hover{color:var(--schlecht);background:#fff1f0}
   .wiederholen{
     background:linear-gradient(135deg,#eef1ff,#f6f1ff);
@@ -479,12 +484,20 @@
         var gleich = t.toDateString() === heute.toDateString();
         wann = gleich ? "heute" : t.toLocaleDateString("de-DE", {day:"numeric", month:"long"});
       } catch(err){}
+      // Das Symbol des Themenfelds, aus dem das Spiel stammt - so erkennt Leon
+      // auf einen Blick, wozu es gehoert. Frueher stand hier bei allen dasselbe.
+      var th = null;
+      try { th = THEMEN.filter(function(t){ return t.schluessel === e.quelle; })[0] || null; } catch(err){}
+
       d.innerHTML =
-        '<div class="em">' + (FACH_ZEICHEN[e.fach] || "\u{1F3AE}") + '</div>' +
+        '<div class="em">' + (th ? th.bild : (FACH_ZEICHEN[e.fach] || "\u{1F3AE}")) + '</div>' +
         '<div class="txt"><div class="tt"></div><div class="ts"></div></div>' +
+        '<span class="los-pfeil">\u25B6</span>' +
         '<button class="loeschen" title="Wegwerfen">\u00D7</button>';
       d.querySelector(".tt").textContent = e.titel || "Spiel";
-      d.querySelector(".ts").textContent = (e.thema || "") + " \u00B7 " + e.aufgaben + " Aufgaben \u00B7 " + wann;
+      // Kurz halten: der volle Lehrplansatz ist fuer ein Kind unlesbar.
+      d.querySelector(".ts").textContent =
+        (th ? th.titel : (e.thema || "")) + " \u00B7 " + e.aufgaben + " Aufgaben \u00B7 " + wann;
       d.addEventListener("click", function(ev){
         if (ev.target.classList.contains("loeschen")) return;
         spielHolen(e.id);
