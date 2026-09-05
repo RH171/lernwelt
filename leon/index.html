@@ -878,13 +878,15 @@
     return svgHuelle(teile.join(""), 12 + proReihe*bw, 12 + reihen*bh);
   }
 
-  var MENGE_ZEICHEN = {ball:"⚽", tor:"\u{1F945}", spieler:"\u{1F3C3}", stern:"⭐",
-                       apfel:"\u{1F34E}", punkt:"●", muenze:"\u{1FA99}", schuh:"\u{1F45F}"};
+  // Als Escapes notiert - direkt eingefügte Emojis überleben nicht jeden
+  // Umweg durch Editoren und Kodierungen.
+  var MENGE_ZEICHEN = {ball:"\u26BD", tor:"\u{1F945}", spieler:"\u{1F3C3}", stern:"\u2B50",
+                       apfel:"\u{1F34E}", punkt:"\u25CF", muenze:"\u{1FA99}", schuh:"\u{1F45F}"};
 
   // Anzahl zum Abzählen - in Fünfergruppen, damit man nicht einzeln zählen muss.
   function svgMenge(anzahl, was){
     if (isNaN(anzahl) || anzahl < 1 || anzahl > 40) return "";
-    var z = MENGE_ZEICHEN[String(was || "").toLowerCase()] || "⚽";
+    var z = MENGE_ZEICHEN[String(was || "").toLowerCase()] || "\u26BD";
     var proReihe = Math.min(5, anzahl), reihen = Math.ceil(anzahl / 5), teile = [];
     for (var i = 0; i < anzahl; i++){
       var sp = i % 5, ze = Math.floor(i / 5);
