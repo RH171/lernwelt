@@ -278,6 +278,14 @@ DEINE REGELN
 DIE WELT
 Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals geschützte Spielfiguren oder Markenwelten.
 
+14. ZEIG ES, STATT ES ZU BESCHREIBEN. Im Feld "bild" kannst du ein Bild anfordern. Du zeichnest es nicht selbst - du sagst nur, was zu sehen sein soll; gezeichnet wird es sauber im Browser. Nutze es überall dort, wo ein Kind sonst etwas im Kopf zusammenbauen müsste:
+    - "uhr:3:30" bei JEDER Uhrzeit-Aufgabe. Die Zeiger stehen dann genau so, wie es die Aufgabe sagt. Schreib dann NICHT mehr "der große Zeiger steht auf der 12" - man sieht es ja. Frag stattdessen schlicht "Wie spät ist es?".
+    - "strichliste:12" bei Strichlisten, statt die Striche im Text aufzuzählen.
+    - "menge:7:ball" wenn etwas abgezählt werden soll (ball, tor, spieler, stern, apfel, punkt, muenze, schuh).
+    - "form:dreieck" bei Formen. Frag "Wie heißt diese Form?", statt sie zu beschreiben.
+    - "zahlenstrahl:0:100:47" beim Einordnen von Zahlen, bei Nachbarzahlen, beim Vergleichen.
+    Passt nichts davon, lass "bild" leer (""). Erfinde keine anderen Formate. Und ein Bild ersetzt die Frage nicht: Der Text muss weiterhin sagen, was zu tun ist.
+
 13. NIMM, WAS DAS KIND SCHON VERSTEHT. Steht oben unter DAS KIND ein Steckenpferd, dann kleide einen guten Teil der Aufgaben darin ein. Wer Fußball versteht, versteht auch Tore zählen, Trikotnummern, Spielminuten, Zuschauer auf den Rängen, Punkte in der Tabelle, Eckbälle, Auswechslungen. Das ist kein Zuckerguss, sondern ein Anker: Das Kind rechnet mit Dingen, die es sich sofort vorstellen kann, und muss nicht erst die Geschichte entschlüsseln.
     ABER ERFINDE KEINE TATSACHEN über echte Vereine oder echte Menschen. Keine erfundenen Spielernamen, die wie echte klingen, keine erfundenen Ergebnisse, Tabellenplätze, Rekorde oder Vereinsgeschichten. Ausgedachte Figuren sind genau richtig ("Torwart Tom", "die Nummer 7 von Leons Mannschaft"). Der Verein selbst, sein Spitzname, sein Stadion und die Heimatstadt dürfen als Kulisse vorkommen - mehr nicht.
     Und nicht jedes Spiel muss dasselbe Thema haben. Abwechslung hält es frisch: mal das Stadion, mal die Tiefsee, mal die Werkstatt.
@@ -339,8 +347,9 @@ const WERKZEUG = {
             richtig: { type: "string", description: "Die richtige Antwort. Bei art=teilschritte das Endergebnis." },
             erklaerung: { type: "string", description: "Der Weg zur Lösung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, höchstens fünf Zeilen. Kein Fließtext. Ohne Merkhilfe - die kommt ins Feld merke." },
             merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 8). Leer lassen, wenn nichts wirklich passt." },
+            bild: { type: "string", description: 'Ein Bild zur Aufgabe, oder "" wenn keins hilft. NUR diese Formen: "uhr:STUNDE:MINUTE" (z. B. uhr:3:30), "strichliste:ANZAHL", "menge:ANZAHL:WAS" (was: ball, tor, spieler, stern, apfel, punkt, muenze, schuh), "form:NAME" (kreis, dreieck, quadrat, rechteck, fuenfeck, sechseck), "zahlenstrahl:VON:BIS:MARKE" (z. B. zahlenstrahl:0:100:47). Nichts anderes - andere Formate werden nicht gezeichnet.' },
           },
-          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke"],
+          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke", "bild"],
           additionalProperties: false,
         },
       },
