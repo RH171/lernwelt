@@ -57,6 +57,14 @@ export async function onRequestPost(context) {
   const eintrag = liste.find((e) => e.id === id);
   if (!eintrag) return json(404, { ok: false, fehler: "Das Spiel gibt es nicht mehr." });
 
+  // Herkunft nachtragen. Gebraucht fuer Spiele, die vor dem Einfuehren des
+  // Feldes gebaut wurden - sonst wuerde die Themenwahl sie nie wiederfinden.
+  if (typeof daten.quelle === "string" && daten.quelle) {
+    eintrag.quelle = daten.quelle.slice(0, 40);
+    await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
+    return json(200, { ok: true, spiele: liste });
+  }
+
   eintrag.zuletztGespielt = new Date().toISOString();
   eintrag.malGespielt = (eintrag.malGespielt || 0) + 1;
   if (gesamt > 0) eintrag.letzteQuote = Math.round((richtig / gesamt) * 100);

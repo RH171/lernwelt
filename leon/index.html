@@ -671,10 +671,11 @@
   // Gehoert dieses gespeicherte Spiel zu diesem Themenfeld? Neue Spiele tragen
   // den Schluessel selbst. Aeltere erkennen wir notduerftig am Thementext -
   // sonst muesste Leon sie neu bauen lassen, obwohl sie schon da sind.
+  // Nur die echte Herkunft zaehlt. Ein Ratespiel ueber den Thementext hat
+  // "Plus und Minus bis 100" auf "Verdoppeln und Halbieren bis 100" gezogen -
+  // ein Kind haette das falsche Spiel bekommen. Lieber einmal bauen als das.
   function passt(eintrag, th){
-    if (eintrag.quelle) return eintrag.quelle === th.schluessel;
-    var text = ((eintrag.thema || "") + " " + (eintrag.titel || "")).toLowerCase();
-    return (th.stich || []).some(function(w){ return text.indexOf(w) >= 0; });
+    return !!eintrag.quelle && eintrag.quelle === th.schluessel;
   }
 
   function fertigesSpiel(th){
