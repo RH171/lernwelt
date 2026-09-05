@@ -436,6 +436,19 @@
     $("wiederholen").classList.remove("verborgen");
   }
 
+  // Ein gespeichertes Spiel holen und starten. Lag frueher zwischen den
+  // Listen-Funktionen und ist beim Entfernen der Liste mit verschwunden -
+  // sie wird von jedem Themenfeld gebraucht.
+  function spielHolen(id){
+    fetch("/api/spiele?kind=leon&id=" + encodeURIComponent(id), {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(a){
+        if (a && a.ok && a.spiel){ spiel = a.spiel; starteSpiel(); }
+        else melde("Das Spiel konnte ich nicht laden.", "fehler");
+      })
+      .catch(function(){ melde("Das Spiel konnte ich nicht laden.", "fehler"); });
+  }
+
   /* ---------- Material aufnehmen ---------- */
 
   $("k-kamera").addEventListener("click", function(){ $("e-kamera").click(); });
