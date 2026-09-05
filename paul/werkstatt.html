@@ -612,12 +612,27 @@
     ["Ich schaue mir deine Seite an …", "Ich suche das Thema."],
     ["Ich ordne es dem Lehrplan zu …", "Damit es zu deinem Unterricht passt."],
     ["Ich denke mir Aufgaben aus …", "Eigene – nicht die vom Blatt."],
-    ["Ich baue die Spielwelt …", "Gleich kannst du los."]
+    ["Ich suche die passenden Hürden …", "Fordernd, aber machbar."],
+    ["Ich baue die Spielwelt …", "Gleich kannst du los."],
+    ["Ich schreibe die Erklärungen …", "Für den Fall, dass es hakt."]
   ];
 
+  // Nach den benannten Schritten geht es hier weiter im Kreis. Wichtig: Die
+  // Anzeige darf NIE einfrieren. Ein Bau dauert 60 bis 90 Sekunden; wer davor
+  // sitzt und nichts sich bewegen sieht, denkt, es haengt oder faengt von vorn an.
+  var GEDULD = [
+    ["Ich rechne alles nach …", "Jede Aufgabe muss stimmen."],
+    ["Noch einen Moment …", "Gutes Überlegen braucht Zeit."],
+    ["Fast geschafft …", "Halt dich bereit!"]
+  ];
+
+  var baeuft = false;   // Solange gebaut wird, loest kein zweiter Klick etwas aus.
+
   $("los").addEventListener("click", function(){
+    if (baeuft) return;
     // Ein Wunsch allein genuegt - ein Foto ist nicht noetig.
     if (!seiten.length && !$("wunsch").value.trim()) return;
+    baeuft = true;
     zeige("laden");
     var i = 0;
     if (seiten.length === 0){
@@ -628,10 +643,13 @@
     $("schritt").textContent = SCHRITTE[0][0];
     $("schritt-unter").textContent = SCHRITTE[0][1];
     var takt = setInterval(function(){
-      i = Math.min(i+1, SCHRITTE.length-1);
-      $("schritt").textContent = SCHRITTE[i][0];
-      $("schritt-unter").textContent = SCHRITTE[i][1];
-    }, 6000);
+      i = i + 1;
+      var s = (i < SCHRITTE.length)
+        ? SCHRITTE[i]
+        : GEDULD[(i - SCHRITTE.length) % GEDULD.length];
+      $("schritt").textContent = s[0];
+      $("schritt-unter").textContent = s[1];
+    }, 8000);
 
     fetch("/api/spiel-bauen", {
       method: "POST",
@@ -645,7 +663,7 @@
     })
     .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
     .then(function(a){
-      clearInterval(takt);
+      clearInterval(takt); baeuft = false;
       if (a.status === 401){
         zeige("anmelden");
         $("codefehler").textContent = "Bitte melde dich nochmal an.";
@@ -662,7 +680,7 @@
       starteSpiel();
     })
     .catch(function(){
-      clearInterval(takt);
+      clearInterval(takt); baeuft = false;
       zeige("aufnahme");
       melde("Ich konnte den Server nicht erreichen. Bist du im Internet?", "fehler");
     });
