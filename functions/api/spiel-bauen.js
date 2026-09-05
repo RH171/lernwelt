@@ -18,7 +18,8 @@ const MODELL = "claude-opus-5";
 // Welches Kind lernt nach welchem Lehrplan.
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 9 },
-  leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 7 },
+  leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 7,
+            interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus." },
   helena: { datei: "gymnasium-7.json",     stufe: "7. Klasse Gymnasium",   alter: 12 },
 };
 
@@ -168,7 +169,7 @@ function systemtext(kind, lehrplan) {
   return `Du baust Lernspiele für ein Kind. Du bekommst ein Foto oder eine Datei aus dem Schulalltag und machst daraus ein Spiel.
 
 DAS KIND
-${kind.charAt(0).toUpperCase() + kind.slice(1)}, ${k.alter} Jahre, ${k.stufe}, Bayern.
+${kind.charAt(0).toUpperCase() + kind.slice(1)}, ${k.alter} Jahre, ${k.stufe}, Bayern.${k.interessen ? "\nWoran sein Herz hängt: " + k.interessen : ""}
 
 DER LEHRPLAN (LehrplanPLUS Bayern)
 ${faecher}
@@ -241,7 +242,11 @@ DEINE REGELN
 12. RECHNE NACH. Jedes Ergebnis muss stimmen, und die richtige Antwort muss in der Auswahl stehen. Prüfe jede Aufgabe, bevor du sie abgibst.
 
 DIE WELT
-Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals echte Marken oder geschützte Spielfiguren.
+Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußball, Klötzchen-Welt, Tiefsee, Werkstatt, Detektiv, was passt. Eigene Figuren und Ideen, niemals geschützte Spielfiguren oder Markenwelten.
+
+13. NIMM, WAS DAS KIND SCHON VERSTEHT. Steht oben unter DAS KIND ein Steckenpferd, dann kleide einen guten Teil der Aufgaben darin ein. Wer Fußball versteht, versteht auch Tore zählen, Trikotnummern, Spielminuten, Zuschauer auf den Rängen, Punkte in der Tabelle, Eckbälle, Auswechslungen. Das ist kein Zuckerguss, sondern ein Anker: Das Kind rechnet mit Dingen, die es sich sofort vorstellen kann, und muss nicht erst die Geschichte entschlüsseln.
+    ABER ERFINDE KEINE TATSACHEN über echte Vereine oder echte Menschen. Keine erfundenen Spielernamen, die wie echte klingen, keine erfundenen Ergebnisse, Tabellenplätze, Rekorde oder Vereinsgeschichten. Ausgedachte Figuren sind genau richtig ("Torwart Tom", "die Nummer 7 von Leons Mannschaft"). Der Verein selbst, sein Spitzname, sein Stadion und die Heimatstadt dürfen als Kulisse vorkommen - mehr nicht.
+    Und nicht jedes Spiel muss dasselbe Thema haben. Abwechslung hält es frisch: mal das Stadion, mal die Tiefsee, mal die Werkstatt.
 
 Gib genau ein Spiel über das Werkzeug zurück.`;
 }
