@@ -103,10 +103,14 @@ function json(status, daten) {
 }
 
 // Wird von spiel-bauen.js benutzt.
-export async function spielSichern(env, spiel, seiten, kind) {
+export async function spielSichern(env, spiel, seiten, kind, quelle) {
   const id = neueId();
   const eintrag = {
     id,
+    // Aus welchem Themenfeld dieses Spiel stammt. Damit weiss die Oberflaeche,
+    // dass zu diesem Thema schon etwas Fertiges bereitliegt, und baut nicht
+    // jedes Mal neu - 90 Sekunden Warten fuer nichts.
+    quelle: quelle || "",
     titel: spiel.titel,
     fach: spiel.fach,
     thema: spiel.thema,

@@ -57,6 +57,7 @@ export async function onRequestPost(context) {
   const seiten = Array.isArray(auftrag.seiten) ? auftrag.seiten : [];
 
   const wunsch = String(auftrag.wunsch || "").trim().slice(0, 600);
+  const quelle = String(auftrag.quelle || "").trim().slice(0, 40);
   if (seiten.length === 0 && !wunsch) {
     return fehler(400, "Schreib mir, was du dir wünschst – oder schick ein Foto mit.");
   }
@@ -139,7 +140,7 @@ export async function onRequestPost(context) {
   // Aufheben, damit Paul es wiederfindet und daraus weitere Spiele ableiten kann.
   // Ein Fehler beim Speichern darf das fertige Spiel nicht kosten.
   try {
-    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten, kind);
+    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten, kind, quelle);
   } catch (e) {
     spiel.nichtGespeichert = true;
   }
