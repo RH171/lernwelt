@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
-    --paul:#16a34a; --gut:#12b76a; --schlecht:#f04438;
+    --leon:#16a34a; --gut:#12b76a; --schlecht:#f04438;
     --radius:24px; --schatten:0 1px 2px rgba(20,22,40,.05), 0 12px 34px rgba(20,22,40,.09);
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
@@ -22,9 +22,9 @@
   }
   .thema:active{transform:scale(.97)}
   .thema .bild{font-size:31px;line-height:1}
-  .thema.jetzt{border-color:var(--paul);background:#eefbf2}
+  .thema.jetzt{border-color:var(--leon);background:#eefbf2}
   .thema .dran{
-    font-family:var(--font);font-size:11px;font-weight:700;color:var(--paul);
+    font-family:var(--font);font-size:11px;font-weight:700;color:var(--leon);
     letter-spacing:.04em;text-transform:uppercase;
   }
   .mehr{
@@ -62,9 +62,9 @@
     transition:border-color .15s,background .15s,transform .1s;min-height:112px;
   }
   .knopf:active{transform:scale(.98)}
-  .knopf:hover{border-color:var(--paul);background:#f7f7ff}
+  .knopf:hover{border-color:var(--leon);background:#f7f7ff}
   .knopf .zeichen{font-size:30px;line-height:1}
-  .ablage.drueber{border-color:var(--paul);background:#f2f2ff}
+  .ablage.drueber{border-color:var(--leon);background:#f2f2ff}
 
   .wunschfeld{margin-top:18px}
   .wunschfeld label{
@@ -75,7 +75,7 @@
     border:2px solid var(--line);border-radius:16px;padding:14px 15px;
     font-family:var(--font);font-size:16px;line-height:1.5;color:var(--ink);background:#fbfcff;
   }
-  .wunschfeld textarea:focus{outline:none;border-color:var(--paul)}
+  .wunschfeld textarea:focus{outline:none;border-color:var(--leon)}
   .wunschfeld .tipp{color:var(--muted);font-size:14px;margin-top:7px;line-height:1.5}
 
   .seiten{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px;margin-top:18px}
@@ -90,7 +90,7 @@
 
   .los{
     width:100%;margin-top:20px;border:none;border-radius:18px;padding:19px;
-    background:var(--paul);color:#fff;font-family:var(--rund);font-size:19px;font-weight:700;
+    background:var(--leon);color:#fff;font-family:var(--rund);font-size:19px;font-weight:700;
     cursor:pointer;box-shadow:0 8px 22px rgba(79,70,229,.32);transition:transform .1s,opacity .15s;
   }
   .los:active{transform:scale(.985)}
@@ -102,12 +102,12 @@
 
   .laden{text-align:center;padding:44px 22px}
   .kreis{width:54px;height:54px;margin:0 auto 20px;border-radius:50%;
-         border:4px solid #e7e9f5;border-top-color:var(--paul);animation:dreh 1s linear infinite}
+         border:4px solid #e7e9f5;border-top-color:var(--leon);animation:dreh 1s linear infinite}
   @keyframes dreh{to{transform:rotate(360deg)}}
   .schritt{font-family:var(--rund);font-size:18px;font-weight:600}
 
   .fortschritt{height:8px;background:#eceffa;border-radius:999px;overflow:hidden;margin:18px 0 4px}
-  .fortschritt i{display:block;height:100%;background:var(--paul);border-radius:999px;transition:width .3s}
+  .fortschritt i{display:block;height:100%;background:var(--leon);border-radius:999px;transition:width .3s}
   .zaehler{font-size:13.5px;color:var(--muted);text-align:right}
 
   .frage{font-family:var(--rund);font-size:22px;line-height:1.35;margin:14px 0 20px}
@@ -118,7 +118,7 @@
     transition:border-color .12s,background .12s,transform .1s;
   }
   .wahl button:active{transform:scale(.99)}
-  .wahl button:hover:not(:disabled){border-color:var(--paul)}
+  .wahl button:hover:not(:disabled){border-color:var(--leon)}
   .wahl button.gut{border-color:var(--gut);background:#eafaf1}
   .wahl button.schlecht{border-color:var(--schlecht);background:#fef2f1}
   .wahl button:disabled{cursor:default}
@@ -131,12 +131,12 @@
     padding:16px 14px;border:2px solid var(--line);border-radius:18px;
     background:#fbfcff;color:var(--ink);font-variant-numeric:tabular-nums;
   }
-  .eingabe input:focus{outline:none;border-color:var(--paul)}
+  .eingabe input:focus{outline:none;border-color:var(--leon)}
   .eingabe input.gut{border-color:var(--gut);background:#eafaf1}
   .eingabe input.schlecht{border-color:var(--schlecht);background:#fef2f1}
   .eingabe .pruefen{
     width:100%;border:none;border-radius:16px;padding:16px;
-    background:var(--paul);color:#fff;font-family:var(--rund);font-size:17px;font-weight:700;cursor:pointer;
+    background:var(--leon);color:#fff;font-family:var(--rund);font-size:17px;font-weight:700;cursor:pointer;
   }
   .eingabe .pruefen:disabled{opacity:.45;cursor:default}
 
@@ -152,7 +152,7 @@
     padding:13px 15px;border-radius:14px;border:1px solid var(--line);background:#fbfcff;
   }
   .glied.erledigt{border-color:var(--gut);background:#eafaf1}
-  .glied.dran{border-color:var(--paul);background:#fff}
+  .glied.dran{border-color:var(--leon);background:#fff}
   .glied .txt{flex:1;font-size:16px}
   .glied .zahl{
     font-family:var(--rund);font-weight:700;font-size:19px;
@@ -198,7 +198,7 @@
     padding:15px 12px;border:2px solid var(--line);border-radius:16px;
     background:#fbfcff;color:var(--ink);
   }
-  .codefeld:focus{outline:none;border-color:var(--paul)}
+  .codefeld:focus{outline:none;border-color:var(--leon)}
   .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
   .sammlung{margin-top:16px}
   .sammlung h3{font-family:var(--rund);font-size:19px;margin:0 0 4px}
@@ -209,7 +209,7 @@
     padding:14px 15px;cursor:pointer;font-family:var(--font);color:var(--ink);
     transition:border-color .12s,transform .1s;
   }
-  .eintrag:hover{border-color:var(--paul)}
+  .eintrag:hover{border-color:var(--leon)}
   .eintrag:active{transform:scale(.99)}
   .eintrag .em{font-size:24px;flex:none;width:44px;height:44px;border-radius:13px;
                display:grid;place-items:center;background:#f1f2fa}
@@ -229,7 +229,7 @@
   .wiederholen .grund{color:var(--muted);font-size:14.5px;line-height:1.5}
   .wiederholen .knopf{
     margin-top:15px;width:100%;border:none;border-radius:15px;padding:15px;
-    background:var(--paul);color:#fff;font-family:var(--rund);font-size:16px;font-weight:700;
+    background:var(--leon);color:#fff;font-family:var(--rund);font-size:16px;font-weight:700;
     cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
   }
   .wiederholen .knopf:active{transform:scale(.99)}
@@ -249,8 +249,8 @@
   <section id="sicht-anmelden" class="verborgen">
     <div class="karte anmeldung">
       <div class="schloss">🔐</div>
-      <h2>Hallo Paul!</h2>
-      <p class="unter">Hier baust nur du Spiele. Gib deinen Code ein.</p>
+      <h2>Hallo Leon!</h2>
+      <p class="unter">Hier lernst nur du. Gib deinen Code ein.</p>
       <input class="codefeld" id="code" type="password" inputmode="numeric"
              autocomplete="off" maxlength="12" aria-label="Dein Code">
       <div class="codefehler" id="codefehler"></div>
@@ -287,7 +287,7 @@
       <div class="seiten" id="seiten"></div>
       <div id="meldung"></div>
 
-      <button class="los" id="los" disabled>Spiel bauen</button>
+      <button class="los verborgen" id="los" disabled>Spiel bauen</button>
     </div>
 
     <div class="wiederholen verborgen" id="wiederholen">
@@ -357,7 +357,7 @@
   /* ---------- Anmelden ---------- */
   // Der Code selbst wird NICHT im Browser gespeichert. Der Server setzt nach
   // richtiger Eingabe ein signiertes HttpOnly-Cookie. Ein Wert im localStorage
-  // wuerde von paul-sync.js eingesammelt und an alle Geraete verteilt werden.
+  // wuerde vom Sync eingesammelt und an alle Geraete verteilt werden.
 
   function pruefeAnmeldung(){
     fetch("/api/code-pruefen?kind=leon", {credentials:"same-origin"})
@@ -626,13 +626,70 @@
   }
   $("wunsch").addEventListener("input", knopfPruefen);
 
+  /* ---------- Leons Themen ----------
+     Die Reihenfolge folgt dem LehrplanPLUS fuer die 1./2. Jahrgangsstufe
+     (Mathematik, Lernbereiche M1/2 1 bis M1/2 4). Was gerade im Unterricht
+     dran ist, steht oben und ist markiert - gesperrt ist nichts. Leon darf
+     jederzeit etwas anderes waehlen; die Wahl gehoert ihm. */
+
+  var THEMEN = [
+    { bild:"\u2795", titel:"Plus und Minus bis 20", jetzt:true,
+      wunsch:"Uebe Plus- und Minusaufgaben im Zahlenraum bis 20. Das ist Wiederholung aus der ersten Klasse und soll sicher sitzen." },
+    { bild:"\u{1F4AF}", titel:"Zahlen bis 100", jetzt:true,
+      wunsch:"Uebe den Zahlenraum bis 100: Zahlen ordnen und vergleichen, Nachbarzahlen, Zehner und Einer unterscheiden." },
+    { bild:"\u2796", titel:"Plus und Minus bis 100",
+      wunsch:"Uebe Plus- und Minusaufgaben im Zahlenraum bis 100, auch mit Zehneruebergang." },
+    { bild:"\u{1F91D}", titel:"Verdoppeln und Halbieren",
+      wunsch:"Uebe Verdoppeln und Halbieren im Zahlenraum bis 100." },
+    { bild:"\u2716\uFE0F", titel:"Das Einmaleins",
+      wunsch:"Baue das Einmaleins auf. Beginne mit der 2er-, 5er- und 10er-Reihe." },
+    { bild:"\u{1F4B6}", titel:"Geld und Einkaufen",
+      wunsch:"Uebe Geld: Muenzen und Scheine erkennen, Betraege legen und wechseln, einkaufen und Rueckgeld." },
+    { bild:"\u{1F551}", titel:"Die Uhr",
+      wunsch:"Uebe die Uhrzeit: volle Stunden, halbe Stunden und Viertelstunden ablesen, und einfache Zeitspannen." },
+    { bild:"\u{1F4CF}", titel:"Laengen messen",
+      wunsch:"Uebe Laengen: Zentimeter und Meter, schaetzen und messen, Laengen vergleichen." },
+    { bild:"\u{1F537}", titel:"Formen und Koerper",
+      wunsch:"Uebe Formen und Koerper: Dreieck, Kreis, Viereck, Quadrat, Rechteck sowie Wuerfel, Quader, Kugel, Zylinder, Kegel erkennen und benennen. Dazu Symmetrie und Muster." },
+    { bild:"\u{1F4CA}", titel:"Tabellen und Zufall",
+      wunsch:"Uebe Daten: Strichlisten und Tabellen lesen, und einschaetzen, ob etwas sicher, moeglich oder unmoeglich ist." }
+  ];
+
+  function malThemen(){
+    var kasten = $("themen");
+    kasten.innerHTML = "";
+    THEMEN.forEach(function(th, i){
+      var feld = document.createElement("div");
+      feld.className = "thema" + (th.jetzt ? " jetzt" : "");
+      feld.innerHTML =
+        '<span class="bild">' + th.bild + '</span>' +
+        '<span>' + escape2(th.titel) + '</span>' +
+        (th.jetzt ? '<span class="dran">gerade dran</span>' : '');
+      feld.addEventListener("click", function(){
+        $("wunsch").value = THEMEN[i].wunsch;
+        bauen();
+      });
+      kasten.appendChild(feld);
+    });
+  }
+  malThemen();
+
+  // Der Foto- und Schreibweg ist da, steht aber nicht im Vordergrund.
+  $("mehr-auf").addEventListener("click", function(){
+    $("foto-teil").classList.remove("verborgen");
+    $("wunsch-teil").classList.remove("verborgen");
+    $("los").classList.remove("verborgen");
+    $("mehr-auf").classList.add("verborgen");
+    $("wunsch").focus();
+  });
+
   /* ---------- Bauen lassen ---------- */
 
   var SCHRITTE = [
-    ["Ich schaue mir deine Seite an …", "Ich suche das Thema."],
-    ["Ich ordne es dem Lehrplan zu …", "Damit es zu deinem Unterricht passt."],
-    ["Ich denke mir Aufgaben aus …", "Eigene – nicht die vom Blatt."],
-    ["Ich baue die Spielwelt …", "Gleich kannst du los."]
+    ["Ich denke mir Aufgaben aus …", "Extra für dich."],
+    ["Ich schaue in deinen Lehrplan …", "Damit es zur Schule passt."],
+    ["Ich baue die Spielwelt …", "Gleich geht es los."],
+    ["Fast fertig …", "Halt dich bereit!"]
   ];
 
   $("los").addEventListener("click", bauen);
