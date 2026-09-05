@@ -27,6 +27,18 @@ export function gleich(a, b) {
   return diff === 0;
 }
 
+// Welches Geheimnis gilt fuer welches Kind.
+// Solange fuer ein Kind kein eigener Code hinterlegt ist, gilt PAUL_CODE -
+// so sperrt ein fehlendes Secret niemanden aus. Sobald Denny z. B. LEON_CODE
+// bei Cloudflare setzt, hat Leon seinen eigenen Zugang und seine eigene
+// Anmeldung; Pauls Ausweis gilt dann dort nicht mehr.
+const CODE_NAMEN = { paul: "PAUL_CODE", leon: "LEON_CODE", helena: "HELENA_CODE" };
+
+export function geheimFuer(env, kind) {
+  const name = CODE_NAMEN[String(kind || "").toLowerCase()];
+  return (name && env[name]) || env.PAUL_CODE;
+}
+
 export async function ausweisBauen(geheim) {
   const bis = Date.now() + TAGE * 86400000;
   return `${bis}.${await signieren(String(bis), geheim)}`;

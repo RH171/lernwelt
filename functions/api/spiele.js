@@ -7,10 +7,17 @@
 // Liegt im selben KV wie Pauls Fortschritt, aber unter eigenem Präfix
 // "werkstatt:" - der Fortschritt unter "paul-blob" wird nicht berührt.
 
-import { ausweisGueltig } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 
-const LISTE = "werkstatt:liste:paul";
+// Jedes Kind hat seine eigene Liste. Pauls Liste heisst weiterhin
+// "werkstatt:liste:paul" - seine gebauten Spiele bleiben also da, wo sie sind.
+const LISTE = (kind) => "werkstatt:liste:" + kind;
 const SPIEL = (id) => "werkstatt:spiel:" + id;
+
+function kindAus(request) {
+  const k = String(new URL(request.url).searchParams.get("kind") || "paul").toLowerCase();
+  return (k === "leon" || k === "helena") ? k : "paul";
+}
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -25,7 +32,7 @@ export async function onRequestGet(context) {
     return json(200, { ok: true, spiel: JSON.parse(roh) });
   }
 
-  return json(200, { ok: true, spiele: await listeHolen(env) });
+  return json(200, { ok: true, spiele: await listeHolen(env, kindAus(request)) });
 }
 
 // POST /api/spiele  { id, richtig, gesamt }
@@ -45,7 +52,8 @@ export async function onRequestPost(context) {
   const richtig = Number(daten.richtig) || 0;
   const gesamt = Number(daten.gesamt) || 0;
 
-  const liste = await listeHolen(env);
+  const kind = kindAus(request);
+  const liste = await listeHolen(env, kind);
   const eintrag = liste.find((e) => e.id === id);
   if (!eintrag) return json(404, { ok: false, fehler: "Das Spiel gibt es nicht mehr." });
 
@@ -53,7 +61,7 @@ export async function onRequestPost(context) {
   eintrag.malGespielt = (eintrag.malGespielt || 0) + 1;
   if (gesamt > 0) eintrag.letzteQuote = Math.round((richtig / gesamt) * 100);
 
-  await env.PAUL_KV.put(LISTE, JSON.stringify(liste));
+  await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
   return json(200, { ok: true, spiele: liste });
 }
 
@@ -65,15 +73,16 @@ export async function onRequestDelete(context) {
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return json(400, { ok: false, fehler: "Welches Spiel denn?" });
 
+  const kind = kindAus(request);
   await env.PAUL_KV.delete(SPIEL(id));
-  const liste = (await listeHolen(env)).filter((e) => e.id !== id);
-  await env.PAUL_KV.put(LISTE, JSON.stringify(liste));
+  const liste = (await listeHolen(env, kind)).filter((e) => e.id !== id);
+  await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
   return json(200, { ok: true, spiele: liste });
 }
 
-async function listeHolen(env) {
+async function listeHolen(env, kind) {
   try {
-    const roh = await env.PAUL_KV.get(LISTE);
+    const roh = await env.PAUL_KV.get(LISTE(kind || "paul"));
     return roh ? JSON.parse(roh) : [];
   } catch (e) { return []; }
 }
@@ -81,7 +90,7 @@ async function listeHolen(env) {
 async function wacheOk(request, env) {
   if (!env.PAUL_CODE) return json(500, { ok: false, fehler: "Auf dem Server fehlt der Zugangscode." });
   if (!env.PAUL_KV)   return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
-  if (!(await ausweisGueltig(request, env.PAUL_CODE, env)))
+  if (!(await ausweisGueltig(request, geheimFuer(env, kindAus(request)), env)))
     return json(401, { ok: false, fehler: "Bitte melde dich mit deinem Code an." });
   return null;
 }
@@ -94,7 +103,7 @@ function json(status, daten) {
 }
 
 // Wird von spiel-bauen.js benutzt.
-export async function spielSichern(env, spiel, seiten) {
+export async function spielSichern(env, spiel, seiten, kind) {
   const id = neueId();
   const eintrag = {
     id,
@@ -114,11 +123,11 @@ export async function spielSichern(env, spiel, seiten) {
 
   let liste = [];
   try {
-    const roh = await env.PAUL_KV.get(LISTE);
+    const roh = await env.PAUL_KV.get(LISTE(kind || "paul"));
     liste = roh ? JSON.parse(roh) : [];
   } catch (e) {}
   liste.unshift(eintrag);
-  await env.PAUL_KV.put(LISTE, JSON.stringify(liste.slice(0, 200)));
+  await env.PAUL_KV.put(LISTE(kind || "paul"), JSON.stringify(liste.slice(0, 200)));
 
   return id;
 }
