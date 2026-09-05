@@ -23,6 +23,12 @@
   .thema:active{transform:scale(.97)}
   .thema .bild{font-size:31px;line-height:1}
   .thema.jetzt{border-color:var(--leon);background:#eefbf2}
+  /* Zu diesem Thema liegt schon ein fertiges Spiel - startet ohne Warten. */
+  .thema.fertig{border-color:#bfe8cd;background:#f2fcf5}
+  .thema .bereit{
+    font-family:var(--font);font-size:11px;font-weight:700;color:#0f9d58;
+    letter-spacing:.03em;
+  }
   .thema .dran{
     font-family:var(--font);font-size:11px;font-weight:700;color:var(--leon);
     letter-spacing:.04em;text-transform:uppercase;
@@ -334,7 +340,8 @@
       <div style="font-size:52px">🎉</div>
       <div style="font-family:var(--rund);font-size:26px;font-weight:700;margin-top:8px" id="ende-titel"></div>
       <p class="unter" id="ende-text"></p>
-      <button class="los" id="nochmal">Noch ein Spiel bauen</button>
+      <button class="los" id="nochmal">Zurück zur Auswahl</button>
+      <button class="weiter" id="neues-spiel" style="margin-top:10px">Ein ganz neues Spiel dazu bauen</button>
       <button class="weiter" id="ende-zurueck" style="background:#f2f3fa;color:var(--ink);margin-top:10px">Zurück in die Lernwelt</button>
     </div>
   </section>
@@ -418,7 +425,7 @@
   function sammlungLaden(){
     fetch("/api/spiele?kind=leon", {credentials:"same-origin"})
       .then(function(r){ return r.json(); })
-      .then(function(a){ if (a && a.ok) malSammlung(a.spiele || []); })
+      .then(function(a){ if (a && a.ok){ SPIELE = a.spiele || []; malSammlung(SPIELE); malThemen(); } })
       .catch(function(){});
   }
 
@@ -504,7 +511,7 @@
     if (!window.confirm('"' + (titel || "Dieses Spiel") + '" wirklich wegwerfen?')) return;
     fetch("/api/spiele?kind=leon&id=" + encodeURIComponent(id), {method:"DELETE", credentials:"same-origin"})
       .then(function(r){ return r.json(); })
-      .then(function(a){ if (a && a.ok) malSammlung(a.spiele || []); })
+      .then(function(a){ if (a && a.ok){ SPIELE = a.spiele || []; malSammlung(SPIELE); malThemen(); } })
       .catch(function(){});
   }
 
@@ -658,23 +665,56 @@
       wunsch:"Übe Daten: Strichlisten und Tabellen lesen, und einschätzen, ob etwas sicher, möglich oder unmöglich ist." }
   ];
 
+  // Alle gebauten Spiele, damit die Themenfelder wissen, was schon bereitliegt.
+  var SPIELE = [];
+
+  // Gehoert dieses gespeicherte Spiel zu diesem Themenfeld? Neue Spiele tragen
+  // den Schluessel selbst. Aeltere erkennen wir notduerftig am Thementext -
+  // sonst muesste Leon sie neu bauen lassen, obwohl sie schon da sind.
+  function passt(eintrag, th){
+    if (eintrag.quelle) return eintrag.quelle === th.schluessel;
+    var text = ((eintrag.thema || "") + " " + (eintrag.titel || "")).toLowerCase();
+    return (th.stich || []).some(function(w){ return text.indexOf(w) >= 0; });
+  }
+
+  function fertigesSpiel(th){
+    for (var i = 0; i < SPIELE.length; i++){
+      if (passt(SPIELE[i], th)) return SPIELE[i];   // Liste ist neueste zuerst
+    }
+    return null;
+  }
+
+  // Merkt sich, woran Leon gerade arbeitet - fuer "noch eins zu diesem Thema".
+  var letztesThema = null;
+
   function malThemen(){
     var kasten = $("themen");
     kasten.innerHTML = "";
-    THEMEN.forEach(function(th, i){
+    THEMEN.forEach(function(th){
+      var fertig = fertigesSpiel(th);
       var feld = document.createElement("div");
-      feld.className = "thema" + (th.jetzt ? " jetzt" : "");
+      feld.className = "thema" + (th.jetzt ? " jetzt" : "") + (fertig ? " fertig" : "");
       feld.innerHTML =
         '<span class="bild">' + th.bild + '</span>' +
         '<span>' + escape2(th.titel) + '</span>' +
-        (th.jetzt ? '<span class="dran">gerade dran</span>' : '');
+        (fertig ? '<span class="bereit">▶ sofort spielen</span>'
+                : (th.jetzt ? '<span class="dran">gerade dran</span>' : ''));
       feld.addEventListener("click", function(){
-        $("wunsch").value = THEMEN[i].wunsch;
-        bauen();
+        var da = fertigesSpiel(th);
+        letztesThema = th;
+        if (da){ spielHolen(da.id); return; }   // kein Warten, keine Kosten
+        neuBauen(th);
       });
       kasten.appendChild(feld);
     });
   }
+
+  function neuBauen(th){
+    letztesThema = th || letztesThema;
+    if (th) $("wunsch").value = th.wunsch;
+    bauen(th ? th.schluessel : "");
+  }
+
   malThemen();
 
   // Der Foto- und Schreibweg ist da, steht aber nicht im Vordergrund.
@@ -710,7 +750,7 @@
 
   var baeuft = false;   // Solange gebaut wird, loest kein zweiter Tipp etwas aus.
 
-  function bauen(){
+  function bauen(quelle){
     if (baeuft) return;
     if (!seiten.length && !$("wunsch").value.trim()) return;
     baeuft = true;
@@ -739,6 +779,7 @@
       headers: {"content-type":"application/json"},
       body: JSON.stringify({
         kind: "leon",
+        quelle: quelle || "",
         wunsch: $("wunsch").value.trim(),
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
@@ -1062,6 +1103,14 @@
   $("nochmal").addEventListener("click", function(){
     seiten = []; spiel = null; $("wunsch").value = ""; malSeiten(); melde(""); zeige("aufnahme"); sammlungLaden();
   });
+  // Abwechslung: ein zweites, anderes Spiel zum selben Thema. Kostet wieder
+  // Wartezeit, deshalb steht es hinter dem Spielen und nicht davor.
+  $("neues-spiel").addEventListener("click", function(){
+    seiten = []; spiel = null; malSeiten(); melde("");
+    if (letztesThema) neuBauen(letztesThema);
+    else { zeige("aufnahme"); sammlungLaden(); }
+  });
+
   $("ende-zurueck").addEventListener("click", function(){
     window.location.href = $("zurueck").getAttribute("href");
   });
