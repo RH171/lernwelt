@@ -221,6 +221,16 @@
     cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
   }
   .wiederholen .knopf:active{transform:scale(.99)}
+  .spielkopf{
+    display:flex;align-items:center;gap:11px;margin-bottom:14px;
+  }
+  .spielkopf .weltbild{
+    font-size:26px;line-height:1;flex:none;width:46px;height:46px;border-radius:14px;
+    display:grid;place-items:center;background:#f2fcf5;border:1px solid #d9f0e2;
+  }
+  .spielkopf .spielname{
+    font-family:var(--rund);font-weight:700;font-size:19px;line-height:1.25;
+  }
   .nachspiel{
     background:#eefbf2;border:1px solid #bfe8cd;border-radius:13px;
     padding:9px 13px;margin:2px 0 12px;text-align:center;
@@ -763,6 +773,25 @@
 
   /* ---------- Spielen ---------- */
 
+  // Jede Spielwelt hat ihr Zeichen. Leon erkennt am Ball sofort, dass es
+  // ins Stadion geht - das liest er, ohne lesen zu müssen.
+  var WELT_ZEICHEN = {
+    fussball:"\u26BD", fußball:"\u26BD", stadion:"\u26BD",
+    tiefsee:"\u{1F41F}", meer:"\u{1F41F}", unterwasser:"\u{1F41F}",
+    werkstatt:"\u{1F527}", baustelle:"\u{1F3D7}\uFE0F",
+    tierpark:"\u{1F981}", zoo:"\u{1F981}", bauernhof:"\u{1F404}",
+    weltraum:"\u{1F680}", weltall:"\u{1F680}",
+    hafenmarkt:"\u26F5", markt:"\u{1F3EA}", hafen:"\u26F5",
+    ritter:"\u{1F3F0}", dschungel:"\u{1F334}", zirkus:"\u{1F3AA}",
+    detektiv:"\u{1F50D}", pirat:"\u{1F3F4}\u200D\u2620\uFE0F"
+  };
+  function weltZeichen(w){
+    var k = String(w || "").toLowerCase().trim();
+    if (WELT_ZEICHEN[k]) return WELT_ZEICHEN[k];
+    for (var name in WELT_ZEICHEN){ if (k.indexOf(name) >= 0) return WELT_ZEICHEN[name]; }
+    return "\u{1F3AE}";
+  }
+
   function starteSpiel(){
     if (!spiel.aufgaben || !spiel.aufgaben.length){
       zeige("aufnahme");
@@ -773,10 +802,13 @@
     folge = spiel.aufgaben.map(function(_, i){ return i; });
     pos = 0; danebenGegangen = []; nachspielzeit = false; aufgeholt = 0;
     $("nachspiel").classList.add("verborgen");
+    // Ein Schild, das ein Kind auch wirklich liest: Symbol und Name der Welt.
+    // Vorher standen hier drei blasse Schnipsel, darunter der Lehrplansatz -
+    // geschrieben für Erwachsene, überlesen von Kindern.
     $("marken").innerHTML =
-      '<span class="marke">' + escape2(spiel.titel || "Spiel") + '</span>' +
-      (spiel.thema ? '<span class="marke">' + escape2(spiel.thema) + '</span>' : "") +
-      (spiel.welt  ? '<span class="marke">' + escape2(spiel.welt)  + '</span>' : "");
+      '<div class="spielkopf"><span class="weltbild">' + weltZeichen(spiel.welt) + '</span>' +
+      '<span class="spielname"></span></div>';
+    $("marken").querySelector(".spielname").textContent = spiel.titel || "Spiel";
     zeige("spiel");
     malAufgabe();
   }
