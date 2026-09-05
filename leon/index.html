@@ -221,6 +221,11 @@
     cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
   }
   .wiederholen .knopf:active{transform:scale(.99)}
+  .nachspiel{
+    background:#eefbf2;border:1px solid #bfe8cd;border-radius:13px;
+    padding:9px 13px;margin:2px 0 12px;text-align:center;
+    font-family:var(--rund);font-weight:700;font-size:14.5px;color:#0f7a45;
+  }
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
@@ -299,6 +304,7 @@
   <section id="sicht-spiel" class="verborgen">
     <div class="karte">
       <div id="marken"></div>
+      <div class="nachspiel verborgen" id="nachspiel"></div>
       <div class="fortschritt"><i id="balken" style="width:0%"></i></div>
       <div class="zaehler" id="zaehler"></div>
       <div class="frage" id="frage"></div>
@@ -332,6 +338,11 @@
   var MAX_KANTE = 1600;      // Fotos werden vorher verkleinert
   var seiten = [];           // {media_type, data, vorschau, name}
   var spiel = null, nr = 0, richtig = 0;
+
+  // Was daneben ging, kommt am Schluss noch einmal - eine Aufgabe, die man
+  // falsch hatte und nie wieder sieht, bleibt falsch im Kopf. Genau eine
+  // zweite Runde: Ein Kind soll üben, nicht feststecken.
+  var folge = [], pos = 0, danebenGegangen = [], nachspielzeit = false, aufgeholt = 0;
 
   function $(id){ return document.getElementById(id); }
 
@@ -759,6 +770,9 @@
       return;
     }
     nr = 0; richtig = 0;
+    folge = spiel.aufgaben.map(function(_, i){ return i; });
+    pos = 0; danebenGegangen = []; nachspielzeit = false; aufgeholt = 0;
+    $("nachspiel").classList.add("verborgen");
     $("marken").innerHTML =
       '<span class="marke">' + escape2(spiel.titel || "Spiel") + '</span>' +
       (spiel.thema ? '<span class="marke">' + escape2(spiel.thema) + '</span>' : "") +
@@ -832,8 +846,10 @@
 
   function malAufgabe(){
     var a = spiel.aufgaben[nr];
-    $("balken").style.width = Math.round(nr / spiel.aufgaben.length * 100) + "%";
-    $("zaehler").textContent = "Aufgabe " + (nr+1) + " von " + spiel.aufgaben.length;
+    $("balken").style.width = Math.round(pos / folge.length * 100) + "%";
+    $("zaehler").textContent = nachspielzeit
+      ? "Nachspielzeit \u00B7 " + (pos+1) + " von " + folge.length
+      : "Aufgabe " + (pos+1) + " von " + folge.length;
     $("frage").textContent = a.frage;
     $("rueck").className = "rueck";
     $("weiter").classList.add("verborgen");
@@ -979,11 +995,22 @@
   }
 
   function loesungZeigen(stimmt, a, gegeben){
-    if (stimmt){ richtig++; konfetti(); }
+    if (stimmt){
+      if (nachspielzeit) aufgeholt++; else richtig++;
+      konfetti();
+    } else if (!nachspielzeit){
+      danebenGegangen.push(nr);          // die kommt gleich nochmal
+    }
     $("rueck").className = "rueck " + (stimmt ? "gut" : "schlecht") + " zeigen";
-    $("rueck").innerHTML = (stimmt ? "<b>Richtig!</b>" : "<b>Fast!</b>") + rueckmeldung(a, stimmt ? "" : gegeben);
+    var kopf = stimmt
+      ? (nachspielzeit ? "<b>Jetzt sitzt es!</b>" : "<b>Richtig!</b>")
+      : "<b>Fast!</b>";
+    $("rueck").innerHTML = kopf + rueckmeldung(a, stimmt ? "" : gegeben);
     $("weiter").classList.remove("verborgen");
-    $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
+    var letzte = (pos + 1 >= folge.length);
+    $("weiter").textContent = (letzte && (nachspielzeit || !danebenGegangen.length))
+      ? "Fertig"
+      : (letzte ? "Weiter zur Nachspielzeit" : "Weiter");
   }
 
   function pruefeWahl(knopf, gewaehlt, a){
@@ -1003,19 +1030,43 @@
   }
 
   $("weiter").addEventListener("click", function(){
-    nr++;
-    if (nr >= spiel.aufgaben.length) ende(); else malAufgabe();
+    pos++;
+    if (pos < folge.length){ nr = folge[pos]; malAufgabe(); return; }
+    if (!nachspielzeit && danebenGegangen.length){ starteNachspielzeit(); return; }
+    ende();
   });
+
+  // Die zweite Chance. Kein Tadel - im Fußball ist Nachspielzeit die Zeit,
+  // in der man noch etwas gutmachen kann.
+  function starteNachspielzeit(){
+    nachspielzeit = true;
+    folge = danebenGegangen.slice();
+    pos = 0; nr = folge[0];
+    $("nachspiel").textContent = folge.length === 1
+      ? "\u26BD Nachspielzeit \u00B7 eine Aufgabe noch"
+      : "\u26BD Nachspielzeit \u00B7 " + folge.length + " Aufgaben nochmal";
+    $("nachspiel").classList.remove("verborgen");
+    malAufgabe();
+  }
 
   function ende(){
     var gesamt = spiel.aufgaben.length;
-    var xp = richtig * 10;
-    $("ende-titel").textContent = richtig + " von " + gesamt + " richtig";
-    $("ende-text").textContent = richtig === gesamt
-      ? "Alles richtig – und das bei selbst gebauten Aufgaben. Stark drangeblieben!"
-      : richtig >= gesamt * 0.6
-        ? "Gut gemacht. Die Fehler sind das Interessante – da lernst du am meisten."
-        : "Das war knifflig. Bau dir ruhig nochmal ein Spiel zum selben Thema, dann sitzt es.";
+    var tore = richtig + aufgeholt;
+    // Aufgeholtes zaehlt voll: Dranbleiben ist die Leistung, nicht das
+    // Treffen auf Anhieb. Kein Abzug fuer den ersten Fehlversuch.
+    var xp = richtig * 10 + aufgeholt * 10;
+
+    $("ende-titel").textContent = tore + " von " + gesamt + " Toren";
+    $("ende-text").textContent = (tore === gesamt && !aufgeholt)
+      ? "Alle Bälle drin – und das beim ersten Versuch. Stark!"
+      : aufgeholt > 0 && tore === gesamt
+        ? "Am Ende alle drin – " + (aufgeholt === 1 ? "einen" : aufgeholt) +
+          " davon erst in der Nachspielzeit. Genau so wird man besser: dranbleiben."
+        : aufgeholt > 0
+          ? "In der Nachspielzeit hast du noch " + aufgeholt + " nachgelegt. Weiter so."
+          : tore >= gesamt * 0.6
+            ? "Gut gemacht. Die Fehler sind das Interessante – da lernst du am meisten."
+            : "Das war knifflig. Spiel es ruhig gleich nochmal, dann sitzt es.";
 
     // Standard-Fortschritt für den Eltern-Bericht (bestehende Schlüssel bleiben unberührt)
     try {
