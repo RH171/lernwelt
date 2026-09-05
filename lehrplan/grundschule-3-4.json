@@ -6,7 +6,7 @@
     "hinweis": "LehrplanPLUS fasst Jgst. 3 und 4 zusammen. Die Kompetenzen beschreiben das Ergebnis eines ZWEIJAEHRIGEN Lernprozesses. Der Lehrplan legt NICHT fest, wann ein Thema im Schuljahr drankommt.",
     "schule": "Grundschule Seeackerstrasse, Fuerth",
     "schueler": "Paul, Jahrgangsstufe 4 (Schuljahr 2026/27)",
-    "uebertritt": "In Jgst. 4 zaehlen fuer das Uebertrittszeugnis die Faecher Deutsch, Mathematik und HSU. Diese drei sind mit uebertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
+    "übertritt": "In Jgst. 4 zählen fuer das Übertrittszeugnis die Faecher Deutsch, Mathematik und HSU. Diese drei sind mit übertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
     "urheberrecht": "Lehrplaene sind amtliche Werke. Verlinkte Hilfsmaterialien Dritter duerfen NUR als Orientierung gelesen, niemals uebernommen werden. Aufgaben immer selbst erfinden.",
     "auspraegungen": "Musik und Englisch gibt es seit 2024/25 ein- und zweistuendig. Hinterlegt ist jeweils die zweistuendige Fassung. URL-Muster: /fachlehrplan/grundschule/4/<fach>/zweistuendig",
     "bekenntnis": "roemisch-katholisch"
@@ -15,7 +15,7 @@
     {
       "kuerzel": "mathe",
       "name": "Mathematik",
-      "uebertrittsfach": true,
+      "übertrittsfach": true,
       "lernbereiche": [
         {
           "id": "M3/4 1.1",
@@ -23,7 +23,7 @@
           "kompetenzen": [
             "Orientierung im Zahlenraum bis zur Million",
             "Struktur des Zehnersystems: Buendelung, Stellenwert",
-            "Anzahlen schaetzen und bestimmen",
+            "Anzahlen schätzen und bestimmen",
             "Zahlen bis zur Million zerlegen"
           ]
         },
@@ -48,7 +48,7 @@
             "mehrschrittige Sachaufgaben",
             "Darstellungsformen entwickeln",
             "Problemloesestrategien",
-            "Kombinationsmoeglichkeiten systematisch bestimmen"
+            "Kombinationsmöglichkeiten systematisch bestimmen"
           ]
         },
         {
@@ -56,7 +56,7 @@
           "titel": "Sich im Raum orientieren",
           "kompetenzen": [
             "Skizzen und Lageplaene",
-            "Laengen in Realitaet und Darstellung",
+            "Längen in Realitaet und Darstellung",
             "zwei- und dreidimensionale Darstellungen verknuepfen"
           ]
         },
@@ -65,9 +65,9 @@
           "titel": "Geometrische Figuren benennen und darstellen",
           "kompetenzen": [
             "rechter Winkel",
-            "Wuerfel und Quader vergleichen",
-            "Wuerfel- und Quadernetze",
-            "Strecken und Flaechenformen zeichnen"
+            "Würfel und Quader vergleichen",
+            "Würfel- und Quadernetze",
+            "Strecken und Flächenformen zeichnen"
           ]
         },
         {
@@ -91,7 +91,7 @@
           "id": "M3/4 2.5",
           "titel": "Rauminhalte bestimmen und vergleichen",
           "kompetenzen": [
-            "Rauminhalte durch Bauen und Auszaehlen von Einheitswuerfeln vergleichen"
+            "Rauminhalte durch Bauen und Auszählen von Einheitswuerfeln vergleichen"
           ]
         },
         {
@@ -106,19 +106,19 @@
         },
         {
           "id": "M3/4 3.2",
-          "titel": "Groessen strukturieren und Groessenvorstellungen nutzen",
+          "titel": "Größen strukturieren und Größenvorstellungen nutzen",
           "kompetenzen": [
-            "Groessen mit Bezugsgroessen schaetzen",
-            "Laengen, Zeitspannen, Massen, Hohlmasse vergleichen und ordnen",
-            "einfache Bruchzahlen bei Groessen"
+            "Größen mit Bezugsgroessen schätzen",
+            "Längen, Zeitspannen, Massen, Hohlmasse vergleichen und ordnen",
+            "einfache Bruchzahlen bei Größen"
           ]
         },
         {
           "id": "M3/4 3.3",
-          "titel": "Mit Groessen in Sachsituationen umgehen",
+          "titel": "Mit Größen in Sachsituationen umgehen",
           "kompetenzen": [
-            "Groesseninformationen entnehmen",
-            "Sachsituationen mit Groessen loesen",
+            "Größeninformationen entnehmen",
+            "Sachsituationen mit Größen lösen",
             "exaktes Ergebnis oder Ueberschlag begruenden",
             "funktionale Beziehungen erkennen"
           ]
@@ -138,7 +138,7 @@
           "id": "M3/4 4.2",
           "titel": "Zufallsexperimente durchfuehren und Wahrscheinlichkeiten vergleichen",
           "kompetenzen": [
-            "Gewinnchancen schaetzen",
+            "Gewinnchancen schätzen",
             "Bedingungen systematisch variieren",
             "Ergebnisse vergleichen und bewerten"
           ]
@@ -167,12 +167,12 @@
         },
         {
           "nr": 5,
-          "thema": "Groessen: Laengen und Massen",
+          "thema": "Größen: Längen und Massen",
           "lernbereich": "M3/4 3.1"
         },
         {
           "nr": 6,
-          "thema": "Groessen: Zeit und Geld",
+          "thema": "Größen: Zeit und Geld",
           "lernbereich": "M3/4 3.1"
         },
         {
@@ -182,12 +182,12 @@
         },
         {
           "nr": 8,
-          "thema": "Flaechen und Umfang",
+          "thema": "Flächen und Umfang",
           "lernbereich": "M3/4 2.2"
         },
         {
           "nr": 9,
-          "thema": "Koerper, Netze, Rauminhalt",
+          "thema": "Körper, Netze, Rauminhalt",
           "lernbereich": "M3/4 2.2"
         },
         {
@@ -205,7 +205,7 @@
     {
       "kuerzel": "deutsch",
       "name": "Deutsch",
-      "uebertrittsfach": true,
+      "übertrittsfach": true,
       "lernbereiche": [
         {
           "id": "D3/4 1.1",
@@ -262,7 +262,7 @@
             "Kinderliteratur",
             "Lesevorlieben begruenden",
             "Textarten unterscheiden",
-            "Medien bewusst auswaehlen"
+            "Medien bewusst auswählen"
           ]
         },
         {
@@ -302,7 +302,7 @@
           "id": "D3/4 2.5",
           "titel": "Texte praesentieren",
           "kompetenzen": [
-            "Themen waehlen",
+            "Themen wählen",
             "mit Vortragshilfen vortragen"
           ]
         },
@@ -320,7 +320,7 @@
           "titel": "Texte planen und schreiben",
           "kompetenzen": [
             "Ideen sammeln",
-            "erzaehlende Texte aufbauen",
+            "erzählende Texte aufbauen",
             "lebendig und anschaulich gestalten",
             "informierende und beschreibende Texte",
             "berichtende Texte",
@@ -425,7 +425,7 @@
         },
         {
           "nr": 9,
-          "thema": "Erzaehlende Texte schreiben",
+          "thema": "Erzählende Texte schreiben",
           "lernbereich": "D3/4 3.2"
         },
         {
@@ -443,13 +443,13 @@
     {
       "kuerzel": "hsu",
       "name": "Heimat- und Sachunterricht",
-      "uebertrittsfach": true,
+      "übertrittsfach": true,
       "lernbereiche": [
         {
           "id": "HSU3/4 1.1",
           "titel": "Zusammenleben in Familie, Schule und Gemeinschaft",
           "kompetenzen": [
-            "Konflikte loesen",
+            "Konflikte lösen",
             "Rechte und Pflichten",
             "demokratische Prinzipien",
             "Aufgaben der Kommune",
@@ -469,7 +469,7 @@
         },
         {
           "id": "HSU3/4 2.1",
-          "titel": "Koerper und Entwicklung",
+          "titel": "Körper und Entwicklung",
           "kompetenzen": [
             "koerperliche Grenzen achten",
             "Aufbau und Schutz des Auges",
@@ -629,7 +629,7 @@
         },
         {
           "nr": 6,
-          "thema": "Koerper, Auge, Erste Hilfe",
+          "thema": "Körper, Auge, Erste Hilfe",
           "lernbereich": "HSU3/4 2.1"
         },
         {
@@ -657,7 +657,7 @@
     {
       "kuerzel": "religion-kath",
       "name": "Katholische Religionslehre",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "bekenntnis": "katholisch",
       "lernbereiche": [
         {
@@ -674,7 +674,7 @@
         },
         {
           "id": "KR3/4 2",
-          "titel": "Die Groesse und Vielfalt der Welt - Schoepfung Gottes",
+          "titel": "Die Größe und Vielfalt der Welt - Schoepfung Gottes",
           "kompetenzen": [
             "Beziehung zu Welt und Natur",
             "eigene Vorstellungen und biblische Aussagen",
@@ -716,7 +716,7 @@
           "id": "KR3/4 6",
           "titel": "Mit Gott auf dem Weg - Glaubenserfahrungen des Volkes Israel",
           "kompetenzen": [
-            "Exodus-Erzaehlung",
+            "Exodus-Erzählung",
             "Dekalog als Weisung",
             "Bedeutung des Exodus fuer den juedischen Glauben"
           ]
@@ -834,7 +834,7 @@
     {
       "kuerzel": "musik",
       "name": "Musik",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "auspraegung": "zweistuendig",
       "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
       "lernbereiche": [
@@ -929,7 +929,7 @@
     {
       "kuerzel": "englisch",
       "name": "Englisch",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "auspraegung": "zweistuendig",
       "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
       "lernbereiche": [
@@ -975,7 +975,7 @@
             "Medien zur Wortschatzarbeit",
             "Read, Look up and Write down",
             "Texte mit Vorlage ueberarbeiten",
-            "Lernfortschritt selbst einschaetzen"
+            "Lernfortschritt selbst einschätzen"
           ]
         },
         {
@@ -1053,9 +1053,9 @@
   ],
   "regeln_fuer_spiele": {
     "einordnung": "Jedes Foto wird einem Lernbereich zugeordnet. Passt nichts, wird 'unbekannt' gesetzt statt geraten.",
-    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema aus lernpfad_annahme darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die Paul loesen muss, um weiterzukommen.",
+    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema aus lernpfad_annahme darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die Paul lösen muss, um weiterzukommen.",
     "lernpfad_ist_annahme": "lernpfad_annahme ist KEINE amtliche Vorgabe, sondern die uebliche Reihenfolge in Bayern. Was Paul tatsaechlich fotografiert, hat immer Vorrang und korrigiert die Annahme.",
     "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
-    "uebertritt": "Bei Zeitknappheit haben Deutsch, Mathematik und HSU Vorrang, weil sie in Jgst. 4 fuer das Uebertrittszeugnis zaehlen. Das darf Paul gegenueber nie als Druck formuliert werden."
+    "übertritt": "Bei Zeitknappheit haben Deutsch, Mathematik und HSU Vorrang, weil sie in Jgst. 4 fuer das Übertrittszeugnis zählen. Das darf Paul gegenueber nie als Druck formuliert werden."
   }
 }

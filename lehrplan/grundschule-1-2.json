@@ -11,7 +11,7 @@
     {
       "kuerzel": "mathe",
       "name": "Mathematik",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "M1/2 1",
@@ -21,7 +21,7 @@
             "Orientierung im Zahlenraum bis Hundert",
             "5er- und 10er-Struktur nutzen",
             "Zehnersystem und Zahldarstellungen",
-            "Anzahlen schaetzen und bestimmen",
+            "Anzahlen schätzen und bestimmen",
             "Zahlen additiv zerlegen",
             "Ziffern klar schreiben"
           ]
@@ -31,28 +31,28 @@
           "titel": "Raum und Form",
           "kompetenzen": [
             "Lagebegriffe",
-            "Wegverlaeufe beschreiben",
+            "Wegverläufe beschreiben",
             "Perspektiven einnehmen",
-            "Flaechen- und Koerperformen vergleichen und sortieren",
+            "Flächen- und Körperformen vergleichen und sortieren",
             "Dreieck, Kreis, Viereck, Quadrat, Rechteck benennen",
-            "Zylinder, Prisma, Quader, Wuerfel, Kegel, Pyramide, Kugel benennen",
+            "Zylinder, Prisma, Quader, Würfel, Kegel, Pyramide, Kugel benennen",
             "ebene Figuren zeichnen",
             "Achsensymmetrie",
             "geometrische Muster",
-            "Flaecheninhalt und Umfang vergleichen"
+            "Flächeninhalt und Umfang vergleichen"
           ]
         },
         {
           "id": "M1/2 3",
-          "titel": "Groessen und Messen",
+          "titel": "Größen und Messen",
           "kompetenzen": [
-            "mit selbst gewaehlten und mit standardisierten Einheiten messen",
-            "Muenzen und Geldscheine unterscheiden",
-            "Abkuerzungen der Masseinheiten",
+            "mit selbst gewählten und mit standardisierten Einheiten messen",
+            "Münzen und Geldscheine unterscheiden",
+            "Abkuerzungen der Maßeinheiten",
             "Uhrzeiten ablesen, Zeitspannen bestimmen",
-            "Groessen schaetzen",
+            "Größen schätzen",
             "Geldbetraege wechseln",
-            "Sachprobleme mit Groessen loesen",
+            "Sachprobleme mit Größen lösen",
             "Plausibilitaet pruefen"
           ]
         },
@@ -64,7 +64,7 @@
             "Strichlisten, Schaubilder, Tabellen",
             "Fragen zu Tabellen formulieren",
             "einfache Zufallsexperimente",
-            "sicher, moeglich, unmoeglich, wahrscheinlich, unwahrscheinlich"
+            "sicher, möglich, unmöglich, wahrscheinlich, unwahrscheinlich"
           ]
         }
       ],
@@ -101,12 +101,12 @@
         },
         {
           "nr": 7,
-          "thema": "Laengen messen",
+          "thema": "Längen messen",
           "lernbereich": "M1/2 3"
         },
         {
           "nr": 8,
-          "thema": "Formen und Koerper",
+          "thema": "Formen und Körper",
           "lernbereich": "M1/2 2"
         },
         {
@@ -124,7 +124,7 @@
     {
       "kuerzel": "deutsch",
       "name": "Deutsch",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "D1/2 1.1",
@@ -140,7 +140,7 @@
           "id": "D1/2 1.2",
           "titel": "Zu anderen sprechen",
           "kompetenzen": [
-            "Erlebnisse erzaehlen",
+            "Erlebnisse erzählen",
             "Lernergebnisse praesentieren",
             "verstaendlich und deutlich sprechen",
             "Vortraege vorbereiten"
@@ -161,7 +161,7 @@
           "kompetenzen": [
             "Beobachtungen und Vermutungen aeussern",
             "Lernergebnisse vergleichen",
-            "Lernstand einschaetzen",
+            "Lernstand einschätzen",
             "Lernziele setzen"
           ]
         },
@@ -232,8 +232,8 @@
             "deutlich und sicher schreiben",
             "unverbundene Schrift geläufig",
             "verbundene Schrift fluessig",
-            "Koerper- und Stifthaltung",
-            "Schreibwerkzeuge waehlen"
+            "Körper- und Stifthaltung",
+            "Schreibwerkzeuge wählen"
           ]
         },
         {
@@ -242,7 +242,7 @@
           "kompetenzen": [
             "Texte zu bedeutsamen Themen",
             "kreative Texte",
-            "kurze erzaehlende Texte",
+            "kurze erzählende Texte",
             "informierende und beschreibende Texte",
             "Rechtschreibbewusstsein"
           ]
@@ -360,7 +360,7 @@
     {
       "kuerzel": "hsu",
       "name": "Heimat- und Sachunterricht",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "HSU1/2 1.1",
@@ -384,11 +384,11 @@
         },
         {
           "id": "HSU1/2 2.1",
-          "titel": "Koerper und gesunde Ernaehrung",
+          "titel": "Körper und gesunde Ernaehrung",
           "kompetenzen": [
-            "positive Beziehung zum Koerper",
+            "positive Beziehung zum Körper",
             "Bedeutung der Sinne",
-            "Koerperpflege",
+            "Körperpflege",
             "Nahrungsmittel bewerten",
             "eigene Ernaehrung beurteilen"
           ]
@@ -528,7 +528,7 @@
         },
         {
           "nr": 4,
-          "thema": "Koerper, Sinne, gesunde Ernaehrung",
+          "thema": "Körper, Sinne, gesunde Ernaehrung",
           "lernbereich": "HSU1/2 2.1"
         },
         {
@@ -561,7 +561,7 @@
     {
       "kuerzel": "musik",
       "name": "Musik",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "hinweis": "In Jgst. 1/2 gibt es keine Ein-/Zweistuendigkeit - die Flexibilisierung betrifft nur 3/4.",
       "lernbereiche": [
         {

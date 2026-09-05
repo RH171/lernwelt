@@ -22,7 +22,7 @@
   }
   .thema:active{transform:scale(.97)}
   .thema .bild{font-size:31px;line-height:1}
-  .thema.jetzt{border-color:var(--leon);background:#eefbf2}
+  .thema.jetzt, .thema.jetzt.fertig{border-color:var(--leon);background:#eefbf2}
   /* Zu diesem Thema liegt schon ein fertiges Spiel - startet ohne Warten. */
   .thema.fertig{border-color:#bfe8cd;background:#f2fcf5}
   .thema .bereit{
@@ -698,8 +698,8 @@
       feld.innerHTML =
         '<span class="bild">' + th.bild + '</span>' +
         '<span>' + escape2(th.titel) + '</span>' +
-        (fertig ? '<span class="bereit">▶ sofort spielen</span>'
-                : (th.jetzt ? '<span class="dran">gerade dran</span>' : ''));
+        (th.jetzt ? '<span class="dran">gerade dran</span>'
+                  : (fertig ? '<span class="bereit">▶ sofort spielen</span>' : ''));
       feld.addEventListener("click", function(){
         var da = fertigesSpiel(th);
         letztesThema = th;

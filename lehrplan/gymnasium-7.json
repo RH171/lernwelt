@@ -13,7 +13,7 @@
     {
       "kuerzel": "mathe",
       "name": "Mathematik",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "M7 1.1",
@@ -65,7 +65,7 @@
           "kompetenzen": [
             "Gleichungen aufstellen",
             "Aequivalenzumformungen",
-            "Loesungen im Sachzusammenhang deuten",
+            "Lösungen im Sachzusammenhang deuten",
             "komplexe Prozentaufgaben"
           ]
         },
@@ -136,7 +136,7 @@
     {
       "kuerzel": "deutsch",
       "name": "Deutsch",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "D7 1.1",
@@ -213,7 +213,7 @@
           "id": "D7 3.1",
           "titel": "Ueber Schreibfertigkeiten verfuegen",
           "kompetenzen": [
-            "Erzaehlen, Informieren, Argumentieren",
+            "Erzählen, Informieren, Argumentieren",
             "sprachliche Mittel gezielt einsetzen",
             "Paraphrase und indirekte Rede",
             "Textverarbeitung nutzen"
@@ -224,7 +224,7 @@
           "titel": "Texte planen und schreiben",
           "kompetenzen": [
             "adressatengerecht konzipieren",
-            "wirkungsvoll erzaehlen",
+            "wirkungsvoll erzählen",
             "informierende Texte",
             "begruendete Stellungnahme",
             "Argumente linear anordnen"
@@ -308,7 +308,7 @@
     {
       "kuerzel": "englisch",
       "name": "Englisch",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "auspraegung": "1. Fremdsprache",
       "lernbereiche": [
         {
@@ -349,7 +349,7 @@
           "id": "E7 3",
           "titel": "Text- und Medienkompetenzen",
           "kompetenzen": [
-            "Sachtexte und erzaehlende Texte erfassen",
+            "Sachtexte und erzählende Texte erfassen",
             "Merkmale der Textgestaltung erkennen",
             "verschiedene Textarten verfassen",
             "kreatives Schreiben",
@@ -428,7 +428,7 @@
     {
       "kuerzel": "geographie",
       "name": "Geographie",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "Geo7 1",
@@ -531,7 +531,7 @@
     {
       "kuerzel": "geschichte",
       "name": "Geschichte",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "lernbereiche": [
         {
           "id": "G7 1",
@@ -658,7 +658,7 @@
     {
       "kuerzel": "nt",
       "name": "Natur und Technik",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "hinweis": "Ein Fach mit zwei Teilen: Physik (NT7 1) und Informatik (NT7 2), je ca. 28 Stunden. Kein getrennter Schwerpunkt, wie das Jahrgangsstufenprofil vermuten laesst.",
       "lernbereiche": [
         {
@@ -668,7 +668,7 @@
           "kompetenzen": [
             "Beobachtungen an Modellversuchen dokumentieren",
             "Magnetismus mit einfachen Modellen erlaeutern, Erdmagnetfeld zur Orientierung",
-            "Experimente zur Dichte unregelmaessiger Koerper planen",
+            "Experimente zur Dichte unregelmaessiger Körper planen",
             "Dichte und Masse berechnen, Genauigkeit beachten",
             "Dichte als Bewertungskriterium fuer Werkstoffe"
           ]
@@ -730,7 +730,7 @@
           "titel": "Projekt",
           "stunden": 4,
           "kompetenzen": [
-            "im Team Hypertext- oder Algorithmik-Loesungen entwickeln",
+            "im Team Hypertext- oder Algorithmik-Lösungen entwickeln",
             "Informatikkenntnisse zur Dokumentation nutzen"
           ]
         }
@@ -776,7 +776,7 @@
     {
       "kuerzel": "franzoesisch",
       "name": "Franzoesisch",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "auspraegung": "2. Fremdsprache (bestaetigt 04.09.2026)",
       "lernbereiche": [
         {
@@ -785,7 +785,7 @@
           "kompetenzen": [
             "Hoerverstehen: kurze einfache Audiotexte, vertraute Themen",
             "Leseverstehen: kurze bildgestuetzte Texte",
-            "Sprechen: Gegenstaende, Orte, Personen beschreiben; Vergangenes erzaehlen; Vorlieben und Abneigungen; Anweisungen mit Hoeflichkeitsformen",
+            "Sprechen: Gegenstaende, Orte, Personen beschreiben; Vergangenes erzählen; Vorlieben und Abneigungen; Anweisungen mit Hoeflichkeitsformen",
             "Schreiben: Phonem-Graphem-Beziehungen, diakritische Zeichen, Dialoge, E-Mails, Nachrichten",
             "Sprachmittlung: dolmetschen in Routinesituationen"
           ]
@@ -826,7 +826,7 @@
             "Entschluesselungshilfen nutzen",
             "Sinneinheiten ueber Ueberschriften und Schluesselwoerter",
             "Personen in fiktionalen Texten charakterisieren",
-            "Handlungsablaeufe mit Konnektoren nacherzaehlen",
+            "Handlungsablaeufe mit Konnektoren nacherzählen",
             "kurze illustrierte Texte gestalten"
           ]
         },
@@ -905,7 +905,7 @@
     {
       "kuerzel": "ethik",
       "name": "Ethik",
-      "uebertrittsfach": false,
+      "übertrittsfach": false,
       "hinweis": "Helena besucht Ethik, nicht Religion (bestaetigt 04.09.2026).",
       "lernbereiche": [
         {
@@ -929,7 +929,7 @@
             "Konflikte als Chance annehmen",
             "Konfliktursachen erkennen: Motive und Interessen",
             "offene Kommunikation statt Scheinloesungen",
-            "gewaltfreie Loesung durch Kompromiss",
+            "gewaltfreie Lösung durch Kompromiss",
             "Perspektivwechsel und Empathie",
             "Spiegeln, aktives Zuhoeren, Ich-Botschaften",
             "argumentieren mit rationalen Grundprinzipien",
@@ -974,6 +974,6 @@
     "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die geloest werden muss, um weiterzukommen.",
     "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
     "alter": "Helena ist 12/13 Jahre und geht aufs Gymnasium. KEINE Grundschul-Optik, keine Kindersprache, kein Konfetti-Kindergarten. Sachlicher, jugendlicher Ton.",
-    "reihenfolge": "Der Gymnasiallehrplan gibt Stundenzahlen und damit eine Reihenfolge vor. lernpfad bei Mathematik ist deshalb belastbar, nicht nur geschaetzt."
+    "reihenfolge": "Der Gymnasiallehrplan gibt Stundenzahlen und damit eine Reihenfolge vor. lernpfad bei Mathematik ist deshalb belastbar, nicht nur geschätzt."
   }
 }
