@@ -114,7 +114,7 @@ const BEREICHE = {
   paul: { name: "Pauls Lernwelt", satz: "Hier lernt Paul. Wenn du seinen Code kennst, kannst du rein.",
           farbe: "#4f46e5", rgb: "79,70,229" },
   leon: { name: "Leons Lernwelt", satz: "Hier lernt Leon. Wenn du seinen Code kennst, kannst du rein.",
-          farbe: "#16a34a", rgb: "22,163,74" },
+          farbe: "#10b981", rgb: "16,185,129" },
 };
 
 // Die Seite, die statt des Bereichs erscheint, solange niemand angemeldet ist.
