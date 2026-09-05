@@ -717,7 +717,8 @@
     zeige("laden");
     var i = 0;
     if (seiten.length === 0){
-      SCHRITTE[0] = ["Ich denke über deinen Wunsch nach …", "Mal sehen, was daraus wird."];
+      // Leon tippt meist nur ein Feld an - "dein Wunsch" klaenge da falsch.
+      SCHRITTE[0] = ["Ich denke mir Aufgaben aus …", "Extra für dich."];
     } else {
       SCHRITTE[0] = ["Ich schaue mir deine Seite an …", "Ich suche das Thema."];
     }
