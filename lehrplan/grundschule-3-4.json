@@ -1,15 +1,15 @@
 {
   "meta": {
     "titel": "LehrplanPLUS Bayern, Grundschule, Jahrgangsstufe 3/4",
-    "quelle": "Staatsinstitut fuer Schul- und Qualitaetsentwicklung (ISB), lehrplanplus.bayern.de",
+    "quelle": "Staatsinstitut für Schul- und Qualitätsentwicklung (ISB), lehrplanplus.bayern.de",
     "abgerufen": "2026-09-04",
     "hinweis": "LehrplanPLUS fasst Jgst. 3 und 4 zusammen. Die Kompetenzen beschreiben das Ergebnis eines ZWEIJAEHRIGEN Lernprozesses. Der Lehrplan legt NICHT fest, wann ein Thema im Schuljahr drankommt.",
-    "schule": "Grundschule Seeackerstrasse, Fuerth",
+    "schule": "Grundschule Seeackerstrasse, Fürth",
     "schueler": "Paul, Jahrgangsstufe 4 (Schuljahr 2026/27)",
-    "übertritt": "In Jgst. 4 zählen fuer das Übertrittszeugnis die Faecher Deutsch, Mathematik und HSU. Diese drei sind mit übertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
-    "urheberrecht": "Lehrplaene sind amtliche Werke. Verlinkte Hilfsmaterialien Dritter duerfen NUR als Orientierung gelesen, niemals uebernommen werden. Aufgaben immer selbst erfinden.",
-    "auspraegungen": "Musik und Englisch gibt es seit 2024/25 ein- und zweistuendig. Hinterlegt ist jeweils die zweistuendige Fassung. URL-Muster: /fachlehrplan/grundschule/4/<fach>/zweistuendig",
-    "bekenntnis": "roemisch-katholisch"
+    "übertritt": "In Jgst. 4 zählen für das Übertrittszeugnis die Fächer Deutsch, Mathematik und HSU. Diese drei sind mit übertrittsfach:true markiert und haben bei knapper Zeit Vorrang.",
+    "urheberrecht": "Lehrpläne sind amtliche Werke. Verlinkte Hilfsmaterialien Dritter dürfen NUR als Orientierung gelesen, niemals übernommen werden. Aufgaben immer selbst erfinden.",
+    "auspraegungen": "Musik und Englisch gibt es seit 2024/25 ein- und zweistündig. Hinterlegt ist jeweils die zweistündige Fassung. URL-Muster: /fachlehrplan/grundschule/4/<fach>/zweistündig",
+    "bekenntnis": "römisch-katholisch"
   },
   "faecher": [
     {
@@ -22,7 +22,7 @@
           "titel": "Zahlen strukturiert darstellen und Zahlbeziehungen formulieren",
           "kompetenzen": [
             "Orientierung im Zahlenraum bis zur Million",
-            "Struktur des Zehnersystems: Buendelung, Stellenwert",
+            "Struktur des Zehnersystems: Bündelung, Stellenwert",
             "Anzahlen schätzen und bestimmen",
             "Zahlen bis zur Million zerlegen"
           ]
@@ -32,11 +32,11 @@
           "titel": "Im Zahlenraum bis zur Million rechnen und Strukturen nutzen",
           "kompetenzen": [
             "kleines Einmaleins automatisiert",
-            "Uebertragung in groessere Zahlenraeume",
+            "Übertragung in grössere Zahlenräume",
             "alle vier Grundrechenarten",
-            "Rechenstrategien nutzen und erklaeren",
+            "Rechenstrategien nutzen und erklären",
             "schriftliche Verfahren automatisiert",
-            "Plausibilitaet von Ergebnissen pruefen",
+            "Plausibilität von Ergebnissen prüfen",
             "arithmetische Muster beschreiben"
           ]
         },
@@ -47,7 +47,7 @@
             "relevante Informationen entnehmen",
             "mehrschrittige Sachaufgaben",
             "Darstellungsformen entwickeln",
-            "Problemloesestrategien",
+            "Problemlösestrategien",
             "Kombinationsmöglichkeiten systematisch bestimmen"
           ]
         },
@@ -55,9 +55,9 @@
           "id": "M3/4 2.1",
           "titel": "Sich im Raum orientieren",
           "kompetenzen": [
-            "Skizzen und Lageplaene",
-            "Längen in Realitaet und Darstellung",
-            "zwei- und dreidimensionale Darstellungen verknuepfen"
+            "Skizzen und Lagepläne",
+            "Längen in Realität und Darstellung",
+            "zwei- und dreidimensionale Darstellungen verknüpfen"
           ]
         },
         {
@@ -74,7 +74,7 @@
           "id": "M3/4 2.3",
           "titel": "Geometrische Abbildungen beschreiben und darstellen",
           "kompetenzen": [
-            "Verkleinern und Vergroessern, Massstab",
+            "Verkleinern und Vergrössern, Massstab",
             "Achsensymmetrie mit Fachbegriffen",
             "Spiegelbilder erzeugen"
           ]
@@ -84,22 +84,22 @@
           "titel": "Geometrische Muster untersuchen und erstellen",
           "kompetenzen": [
             "Parkettierungen",
-            "Bandornamente und ihre Gesetzmaessigkeiten"
+            "Bandornamente und ihre Gesetzmässigkeiten"
           ]
         },
         {
           "id": "M3/4 2.5",
           "titel": "Rauminhalte bestimmen und vergleichen",
           "kompetenzen": [
-            "Rauminhalte durch Bauen und Auszählen von Einheitswuerfeln vergleichen"
+            "Rauminhalte durch Bauen und Auszählen von Einheitswürfeln vergleichen"
           ]
         },
         {
           "id": "M3/4 3.1",
-          "titel": "Messhandlungen durchfuehren",
+          "titel": "Messhandlungen durchführen",
           "kompetenzen": [
             "mit standardisierten Einheiten messen",
-            "Abkuerzungen der Einheiten",
+            "Abkürzungen der Einheiten",
             "Einheiten zerlegen und umwandeln",
             "Zeitspannen, Anfangs- und Endzeitpunkte berechnen"
           ]
@@ -108,7 +108,7 @@
           "id": "M3/4 3.2",
           "titel": "Größen strukturieren und Größenvorstellungen nutzen",
           "kompetenzen": [
-            "Größen mit Bezugsgroessen schätzen",
+            "Größen mit Bezugsgrössen schätzen",
             "Längen, Zeitspannen, Massen, Hohlmasse vergleichen und ordnen",
             "einfache Bruchzahlen bei Größen"
           ]
@@ -119,7 +119,7 @@
           "kompetenzen": [
             "Größeninformationen entnehmen",
             "Sachsituationen mit Größen lösen",
-            "exaktes Ergebnis oder Ueberschlag begruenden",
+            "exaktes Ergebnis oder Überschlag begründen",
             "funktionale Beziehungen erkennen"
           ]
         },
@@ -131,12 +131,12 @@
             "Tabellen und Diagramme",
             "Fragen zu Diagrammen formulieren",
             "nicht ablesbare Daten erschliessen",
-            "zwischen Darstellungsformen uebertragen"
+            "zwischen Darstellungsformen übertragen"
           ]
         },
         {
           "id": "M3/4 4.2",
-          "titel": "Zufallsexperimente durchfuehren und Wahrscheinlichkeiten vergleichen",
+          "titel": "Zufallsexperimente durchführen und Wahrscheinlichkeiten vergleichen",
           "kompetenzen": [
             "Gewinnchancen schätzen",
             "Bedingungen systematisch variieren",
@@ -209,11 +209,11 @@
       "lernbereiche": [
         {
           "id": "D3/4 1.1",
-          "titel": "Verstehend zuhoeren",
+          "titel": "Verstehend zuhören",
           "kompetenzen": [
-            "Aufmerksamkeit auf Gehoertes richten",
+            "Aufmerksamkeit auf Gehörtes richten",
             "wesentliche Informationen entnehmen",
-            "Verstaendnis durch Zusammenfassung zeigen",
+            "Verständnis durch Zusammenfassung zeigen",
             "Wirkung von Stimme und Gestik"
           ]
         },
@@ -221,24 +221,24 @@
           "id": "D3/4 1.2",
           "titel": "Zu anderen sprechen",
           "kompetenzen": [
-            "Beitraege logisch aufbauen",
-            "Lautstaerke, Tempo, Satzmelodie",
+            "Beiträge logisch aufbauen",
+            "Lautstärke, Tempo, Satzmelodie",
             "gezielt vorbereiten",
             "angemessener Wortschatz"
           ]
         },
         {
           "id": "D3/4 1.3",
-          "titel": "Gespraeche fuehren",
+          "titel": "Gespräche führen",
           "kompetenzen": [
             "Standardsituationen gestalten",
-            "Gespraechsregeln einhalten",
-            "zuhoererbezogen beteiligen"
+            "Gesprächsregeln einhalten",
+            "zuhörerbezogen beteiligen"
           ]
         },
         {
           "id": "D3/4 1.4",
-          "titel": "Ueber Lernen sprechen",
+          "titel": "Über Lernen sprechen",
           "kompetenzen": [
             "Lernschritte beschreiben",
             "Lernstrategien besprechen",
@@ -257,19 +257,19 @@
         },
         {
           "id": "D3/4 2.1",
-          "titel": "Ueber Leseerfahrungen verfuegen",
+          "titel": "Über Leseerfahrungen verfügen",
           "kompetenzen": [
             "Kinderliteratur",
-            "Lesevorlieben begruenden",
+            "Lesevorlieben begründen",
             "Textarten unterscheiden",
             "Medien bewusst auswählen"
           ]
         },
         {
           "id": "D3/4 2.2",
-          "titel": "Ueber Lesefertigkeiten verfuegen",
+          "titel": "Über Lesefertigkeiten verfügen",
           "kompetenzen": [
-            "fluessig, genau, angemessenes Tempo",
+            "flüssig, genau, angemessenes Tempo",
             "Betonung variieren",
             "Sichtwortschatz",
             "Leseflüssigkeit trainieren"
@@ -277,11 +277,11 @@
         },
         {
           "id": "D3/4 2.3",
-          "titel": "Ueber Lesefaehigkeiten verfuegen",
+          "titel": "Über Lesefähigkeiten verfügen",
           "kompetenzen": [
             "sinnerschliessend lesen, Lesestrategien",
             "zentrale Informationen markieren",
-            "unbekannte Woerter klaeren",
+            "unbekannte Wörter klären",
             "Gelesenes wiedergeben",
             "Sach- und Gebrauchstexte verstehen",
             "Recherchestrategien"
@@ -291,16 +291,16 @@
           "id": "D3/4 2.4",
           "titel": "Texte erschliessen",
           "kompetenzen": [
-            "Abfolgen und Zusammenhaenge",
+            "Abfolgen und Zusammenhänge",
             "Figuren beschreiben",
             "Bedeutung von Orten",
-            "Redewendungen und bildhafte Ausdruecke",
+            "Redewendungen und bildhafte Ausdrücke",
             "Kindergedichte"
           ]
         },
         {
           "id": "D3/4 2.5",
-          "titel": "Texte praesentieren",
+          "titel": "Texte präsentieren",
           "kompetenzen": [
             "Themen wählen",
             "mit Vortragshilfen vortragen"
@@ -308,11 +308,11 @@
         },
         {
           "id": "D3/4 3.1",
-          "titel": "Ueber Schreibfertigkeiten verfuegen",
+          "titel": "Über Schreibfertigkeiten verfügen",
           "kompetenzen": [
-            "lesbare, gleichmaessige Handschrift",
+            "lesbare, gleichmässige Handschrift",
             "Schrift dem Zweck anpassen",
-            "Texte uebersichtlich gestalten"
+            "Texte übersichtlich gestalten"
           ]
         },
         {
@@ -330,25 +330,25 @@
         },
         {
           "id": "D3/4 3.3",
-          "titel": "Texte ueberarbeiten",
+          "titel": "Texte überarbeiten",
           "kompetenzen": [
             "Anregungen geben und aufnehmen",
-            "rechtschriftlich und sprachlich ueberarbeiten"
+            "rechtschriftlich und sprachlich überarbeiten"
           ]
         },
         {
           "id": "D3/4 4.1",
-          "titel": "Sprachliche Verstaendigung untersuchen",
+          "titel": "Sprachliche Verständigung untersuchen",
           "kompetenzen": [
             "sprachliche Mittel und ihre Wirkung",
-            "gelingende Verstaendigung"
+            "gelingende Verständigung"
           ]
         },
         {
           "id": "D3/4 4.2",
           "titel": "Gemeinsamkeiten und Unterschiede von Sprachen entdecken",
           "kompetenzen": [
-            "Muendlichkeit und Schriftlichkeit",
+            "Mündlichkeit und Schriftlichkeit",
             "Sprachen und Schriftsysteme vergleichen"
           ]
         },
@@ -356,16 +356,16 @@
           "id": "D3/4 4.3",
           "titel": "Sprachliche Strukturen untersuchen",
           "kompetenzen": [
-            "zusammengesetzte Woerter, Wortbausteine",
+            "zusammengesetzte Wörter, Wortbausteine",
             "Wortfamilien",
             "Zeitformen der Verben",
             "Wortarten bestimmen",
             "Wortfelder",
-            "woertliche Rede",
+            "wörtliche Rede",
             "Satzarten",
-            "Saetze mit Bindewoertern verknuepfen",
-            "Satzglieder und ihre Abhaengigkeit vom Praedikat",
-            "die vier Faelle bei Artikel, Nomen, Adjektiv"
+            "Sätze mit Bindewörtern verknüpfen",
+            "Satzglieder und ihre Abhängigkeit vom Prädikat",
+            "die vier Fälle bei Artikel, Nomen, Adjektiv"
           ]
         },
         {
@@ -373,12 +373,12 @@
           "titel": "Richtig schreiben",
           "kompetenzen": [
             "Grundwortschatz",
-            "Silbentrennung und Vokallaenge",
-            "Wortstamm auf verwandte Woerter uebertragen",
-            "Grossschreibung ueber den Nominalkern",
+            "Silbentrennung und Vokallänge",
+            "Wortstamm auf verwandte Wörter übertragen",
+            "Grossschreibung über den Nominalkern",
             "Adjektive erkennen",
             "Wortzusammensetzungen mit Fugenelement",
-            "Woerterbuch nutzen"
+            "Wörterbuch nutzen"
           ]
         }
       ],
@@ -390,7 +390,7 @@
         },
         {
           "nr": 2,
-          "thema": "Satzglieder: Subjekt und Praedikat",
+          "thema": "Satzglieder: Subjekt und Prädikat",
           "lernbereich": "D3/4 4.3"
         },
         {
@@ -400,7 +400,7 @@
         },
         {
           "nr": 4,
-          "thema": "Die vier Faelle",
+          "thema": "Die vier Fälle",
           "lernbereich": "D3/4 4.3"
         },
         {
@@ -410,7 +410,7 @@
         },
         {
           "nr": 6,
-          "thema": "Woertliche Rede",
+          "thema": "Wörtliche Rede",
           "lernbereich": "D3/4 4.3"
         },
         {
@@ -471,45 +471,45 @@
           "id": "HSU3/4 2.1",
           "titel": "Körper und Entwicklung",
           "kompetenzen": [
-            "koerperliche Grenzen achten",
+            "körperliche Grenzen achten",
             "Aufbau und Schutz des Auges",
-            "Pubertaet",
+            "Pubertät",
             "Entwicklung von Zeugung bis Geburt",
             "Erste Hilfe"
           ]
         },
         {
           "id": "HSU3/4 2.2",
-          "titel": "Gefuehle und Wohlbefinden",
+          "titel": "Gefühle und Wohlbefinden",
           "kompetenzen": [
-            "Achtsamkeit gegenueber Gefuehlen",
-            "koerperliche Selbstbestimmung",
-            "Schoenheitsideale hinterfragen",
+            "Achtsamkeit gegenüber Gefühlen",
+            "körperliche Selbstbestimmung",
+            "Schönheitsideale hinterfragen",
             "aktive Freizeitgestaltung"
           ]
         },
         {
           "id": "HSU3/4 3.1",
-          "titel": "Tiere, Pflanzen, Lebensraeume",
+          "titel": "Tiere, Pflanzen, Lebensräume",
           "kompetenzen": [
             "Arten beobachten und dokumentieren",
-            "Angepasstheit an Lebensraeume",
-            "Abhaengigkeiten zwischen Lebewesen",
+            "Angepasstheit an Lebensräume",
+            "Abhängigkeiten zwischen Lebewesen",
             "Entwicklung von Tierarten",
             "Herkunft von Lebensmitteln",
-            "Regionalitaet"
+            "Regionalität"
           ]
         },
         {
           "id": "HSU3/4 3.2",
           "titel": "Stoffe und Energie",
           "kompetenzen": [
-            "elektrische Leitfaehigkeit",
+            "elektrische Leitfähigkeit",
             "einfache Stromkreise bauen und skizzieren",
             "Wirkungen elektrischer Energie",
             "Gefahren und Sicherheitsregeln",
             "Stromerzeugung bewerten",
-            "Verbrennung und Loeschen"
+            "Verbrennung und Löschen"
           ]
         },
         {
@@ -519,14 +519,14 @@
             "Forschungsfragen zum Wasser",
             "Wasserkreislauf",
             "Wasser als Lebensgrundlage",
-            "Gefaehrdung und Schutz"
+            "Gefährdung und Schutz"
           ]
         },
         {
           "id": "HSU3/4 4.1",
           "titel": "Zeitbewusstsein und Orientierung in der Zeit",
           "kompetenzen": [
-            "Begriffe fuer Zeitraeume",
+            "Begriffe für Zeiträume",
             "Ereignisse auf Zeitleiste"
           ]
         },
@@ -537,20 +537,20 @@
             "Wert von Quellen",
             "Museen und Archive",
             "Geschichte des Heimatortes",
-            "Entwicklung technischer Gegenstaende"
+            "Entwicklung technischer Gegenstände"
           ]
         },
         {
           "id": "HSU3/4 4.3",
           "titel": "Fakten und Fiktion",
           "kompetenzen": [
-            "Realitaet und Fiktion unterscheiden",
+            "Realität und Fiktion unterscheiden",
             "historische Erinnerung"
           ]
         },
         {
           "id": "HSU3/4 5.1",
-          "titel": "Raeume wahrnehmen und sich orientieren",
+          "titel": "Räume wahrnehmen und sich orientieren",
           "kompetenzen": [
             "Hilfsmittel zur Orientierung",
             "Karten lesen",
@@ -560,7 +560,7 @@
         },
         {
           "id": "HSU3/4 5.2",
-          "titel": "Raeume nutzen und schuetzen",
+          "titel": "Räume nutzen und schützen",
           "kompetenzen": [
             "Lebenssituationen vergleichen",
             "Raumgestaltung und Interessen",
@@ -569,12 +569,12 @@
         },
         {
           "id": "HSU3/4 5.3",
-          "titel": "Mobilitaet im Raum",
+          "titel": "Mobilität im Raum",
           "kompetenzen": [
-            "Gruende fuer Mobilitaet",
-            "frueher und heute",
+            "Gründe für Mobilität",
+            "früher und heute",
             "Gefahren im Verkehr",
-            "verkehrssichere Ausruestung",
+            "verkehrssichere Ausrüstung",
             "Verkehrszeichen",
             "Fortbewegungsarten bewerten"
           ]
@@ -593,10 +593,10 @@
           "id": "HSU3/4 6.2",
           "titel": "Bauen und Konstruieren",
           "kompetenzen": [
-            "Bruecken bauen und Stabilitaet pruefen",
+            "Brücken bauen und Stabilität prüfen",
             "Zeichnungen und Anleitungen",
             "Bauweisen der Umgebung",
-            "Balancegeraete",
+            "Balancegeräte",
             "Modelle bewerten"
           ]
         }
@@ -619,7 +619,7 @@
         },
         {
           "nr": 4,
-          "thema": "Verkehrserziehung und Radfahrpruefung",
+          "thema": "Verkehrserziehung und Radfahrprüfung",
           "lernbereich": "HSU3/4 5.3"
         },
         {
@@ -664,22 +664,22 @@
           "id": "KR3/4 1",
           "titel": "Jeder Mensch - einmalig und gemeinschaftsbezogen",
           "kompetenzen": [
-            "eigene Staerken und Schwaechen",
+            "eigene Stärken und Schwächen",
             "Auswirkungen des Handelns auf das Zusammenleben",
             "Gottes Ja zu jedem Menschen",
-            "Schuld und Suende",
-            "Sakrament der Versoehnung",
+            "Schuld und Sünde",
+            "Sakrament der Versöhnung",
             "verantwortungsvolles Zusammenleben"
           ]
         },
         {
           "id": "KR3/4 2",
-          "titel": "Die Größe und Vielfalt der Welt - Schoepfung Gottes",
+          "titel": "Die Größe und Vielfalt der Welt - Schöpfung Gottes",
           "kompetenzen": [
             "Beziehung zu Welt und Natur",
             "eigene Vorstellungen und biblische Aussagen",
             "Auswirkungen des Handelns auf Mensch und Natur",
-            "Engagement fuer Schoepfungsbewahrung"
+            "Engagement für Schöpfungsbewahrung"
           ]
         },
         {
@@ -687,7 +687,7 @@
           "titel": "Nach Gott fragen - Gottesvorstellungen und biblische Glaubenszeugnisse",
           "kompetenzen": [
             "Fragen nach Gott",
-            "Veraenderung eigener Gottesvorstellungen",
+            "Veränderung eigener Gottesvorstellungen",
             "alttestamentliche Gestalten",
             "Gottesname Jahwe"
           ]
@@ -698,7 +698,7 @@
           "kompetenzen": [
             "Bilder und Symbole",
             "bildhafte Rede von Gott",
-            "eigene Gottesvorstellungen ausdruecken",
+            "eigene Gottesvorstellungen ausdrücken",
             "Dreieinigkeit"
           ]
         },
@@ -718,7 +718,7 @@
           "kompetenzen": [
             "Exodus-Erzählung",
             "Dekalog als Weisung",
-            "Bedeutung des Exodus fuer den juedischen Glauben"
+            "Bedeutung des Exodus für den jüdischen Glauben"
           ]
         },
         {
@@ -743,10 +743,10 @@
         },
         {
           "id": "KR3/4 9",
-          "titel": "In der Gemeinde leben - zur katholischen Kirche gehoeren",
+          "titel": "In der Gemeinde leben - zur katholischen Kirche gehören",
           "kompetenzen": [
-            "Frohe Botschaft und Gemeindegruendung",
-            "fruehe Gemeinden und heutige Kirche",
+            "Frohe Botschaft und Gemeindegründung",
+            "frühe Gemeinden und heutige Kirche",
             "Feste im Jahreskreis",
             "Konfessionen vergleichen"
           ]
@@ -755,7 +755,7 @@
           "id": "KR3/4 10",
           "titel": "Den Glauben feiern - Jesus Christus begegnen",
           "kompetenzen": [
-            "Feste und Braeuche",
+            "Feste und Bräuche",
             "Sonntag als kleines Osterfest",
             "Eucharistie",
             "Grundelemente der Messfeier"
@@ -765,20 +765,20 @@
           "id": "KR3/4 11",
           "titel": "Christ sein - im Austausch mit anderen",
           "kompetenzen": [
-            "Vielfalt der Ueberzeugungen",
+            "Vielfalt der Überzeugungen",
             "Merkmale des eigenen Glaubens",
             "evangelisch und katholisch",
-            "Oekumene"
+            "Ökumene"
           ]
         },
         {
           "id": "KR3/4 12",
           "titel": "Menschen anderer Religionen begegnen - Juden und Muslime",
           "kompetenzen": [
-            "religioese Fragen aller Menschen",
-            "juedisches und muslimisches Glaubensleben",
+            "religiöse Fragen aller Menschen",
+            "jüdisches und muslimisches Glaubensleben",
             "die drei monotheistischen Religionen",
-            "Naechstenliebe"
+            "Nächstenliebe"
           ]
         }
       ],
@@ -790,7 +790,7 @@
         },
         {
           "nr": 2,
-          "thema": "Schoepfung und Verantwortung",
+          "thema": "Schöpfung und Verantwortung",
           "lernbereich": "KR3/4 2"
         },
         {
@@ -805,7 +805,7 @@
         },
         {
           "nr": 5,
-          "thema": "Mose und der Auszug aus Aegypten",
+          "thema": "Mose und der Auszug aus Ägypten",
           "lernbereich": "KR3/4 6"
         },
         {
@@ -829,14 +829,14 @@
           "lernbereich": "KR3/4 12"
         }
       ],
-      "bestaetigt": "Paul besucht katholischen Religionsunterricht (roemisch-katholisch), bestaetigt am 04.09.2026."
+      "bestaetigt": "Paul besucht katholischen Religionsunterricht (römisch-katholisch), bestätigt am 04.09.2026."
     },
     {
       "kuerzel": "musik",
       "name": "Musik",
       "uebertrittsfach": false,
-      "auspraegung": "zweistuendig",
-      "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
+      "auspraegung": "zweistündig",
+      "hinweis": "Zweistündige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestätigt.",
       "lernbereiche": [
         {
           "id": "Mu3/4 1",
@@ -856,7 +856,7 @@
           "id": "Mu3/4 2",
           "titel": "Musik - Mensch - Zeit",
           "kompetenzen": [
-            "Werkausschnitte anhoeren und beschreiben",
+            "Werkausschnitte anhören und beschreiben",
             "Werke wiedererkennen und Komponisten benennen",
             "charakteristische Elemente in anderen Kontexten erkennen",
             "lokale Ensembles und Musiker erleben",
@@ -867,12 +867,12 @@
           "id": "Mu3/4 3",
           "titel": "Bewegung - Tanz - Szene",
           "kompetenzen": [
-            "Bewegungsablaeufe imitieren und variieren",
-            "Kompositionsprinzipien in Bewegung uebertragen",
+            "Bewegungsabläufe imitieren und variieren",
+            "Kompositionsprinzipien in Bewegung übertragen",
             "eigene Choreographien gestalten",
-            "Taenze verschiedener Kulturen",
+            "Tänze verschiedener Kulturen",
             "musikalische Spielszenen",
-            "Tanzauffuehrungen erleben"
+            "Tanzaufführungen erleben"
           ]
         },
         {
@@ -911,7 +911,7 @@
         },
         {
           "nr": 5,
-          "thema": "Komponisten und Werke hoeren",
+          "thema": "Komponisten und Werke hören",
           "lernbereich": "Mu3/4 2"
         },
         {
@@ -930,24 +930,24 @@
       "kuerzel": "englisch",
       "name": "Englisch",
       "uebertrittsfach": false,
-      "auspraegung": "zweistuendig",
-      "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
+      "auspraegung": "zweistündig",
+      "hinweis": "Zweistündige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestätigt.",
       "lernbereiche": [
         {
           "id": "E3/4 1.1",
           "titel": "Kommunikative Fertigkeiten",
           "kompetenzen": [
-            "Hoerverstehen: einfache Handlungsanweisungen und altersgerechte Inhalte",
-            "Einzelheiten aus Hoertexten erfassen",
-            "Leseverstehen: bekannte Woerter, bildgestuetzte Anweisungen, kurze Texte",
-            "Sprechen: lautrichtige Aussprache, persoenliche Informationen, Beobachtungen beschreiben, Fragen stellen und beantworten",
-            "Schreiben: fehlerfrei abschreiben, einfache Texte ergaenzen und veraendern",
-            "Sprachmittlung: einfache Aussagen ins Deutsche uebertragen"
+            "Hörverstehen: einfache Handlungsanweisungen und altersgerechte Inhalte",
+            "Einzelheiten aus Hörtexten erfassen",
+            "Leseverstehen: bekannte Wörter, bildgestützte Anweisungen, kurze Texte",
+            "Sprechen: lautrichtige Aussprache, persönliche Informationen, Beobachtungen beschreiben, Fragen stellen und beantworten",
+            "Schreiben: fehlerfrei abschreiben, einfache Texte ergänzen und verändern",
+            "Sprachmittlung: einfache Aussagen ins Deutsche übertragen"
           ]
         },
         {
           "id": "E3/4 1.2",
-          "titel": "Verfuegen ueber sprachliche Mittel",
+          "titel": "Verfügen über sprachliche Mittel",
           "kompetenzen": [
             "typische Lautverbindungen und Intonation imitieren",
             "Buchstabe-Laut-Zuordnung: Unterschiede erkennen",
@@ -959,22 +959,22 @@
           "id": "E3/4 2",
           "titel": "Interkulturelle Kompetenzen",
           "kompetenzen": [
-            "Alltagswelten von Kindern in englischsprachigen Laendern",
+            "Alltagswelten von Kindern in englischsprachigen Ländern",
             "eigene Kultur vergleichen",
-            "Gruss- und Hoeflichkeitsformen",
-            "Feste wie Weihnachten und Halloween, Braeuche, Geschichten, Lieder und Reime aus GB und USA"
+            "Gruss- und Höflichkeitsformen",
+            "Feste wie Weihnachten und Halloween, Bräuche, Geschichten, Lieder und Reime aus GB und USA"
           ]
         },
         {
           "id": "E3/4 3",
           "titel": "Methodische Kompetenzen",
           "kompetenzen": [
-            "aufmerksam zuhoeren",
-            "Schluesselwoerter markieren",
+            "aufmerksam zuhören",
+            "Schlüsselwörter markieren",
             "Gestik, Mimik und Kontext nutzen",
             "Medien zur Wortschatzarbeit",
             "Read, Look up and Write down",
-            "Texte mit Vorlage ueberarbeiten",
+            "Texte mit Vorlage überarbeiten",
             "Lernfortschritt selbst einschätzen"
           ]
         },
@@ -983,15 +983,15 @@
           "titel": "Themengebiet: Familie und Freunde",
           "kompetenzen": [
             "Angaben zur Person",
-            "Gespraeche ueber Tiere und Haustiere"
+            "Gespräche über Tiere und Haustiere"
           ]
         },
         {
           "id": "E3/4 4.2",
           "titel": "Themengebiet: Schule",
           "kompetenzen": [
-            "Begruessen und Vorstellen",
-            "Befinden ausdruecken",
+            "Begrüssen und Vorstellen",
+            "Befinden ausdrücken",
             "Schulsachen",
             "Uhrzeiten",
             "Danken und Entschuldigen"
@@ -1004,7 +1004,7 @@
             "Einladen",
             "Angaben zu Festen",
             "Gratulieren",
-            "Freizeitbeschaeftigungen"
+            "Freizeitbeschäftigungen"
           ]
         },
         {
@@ -1013,7 +1013,7 @@
           "kompetenzen": [
             "Einkaufssituationen",
             "Mengenangaben",
-            "Gefallen und Missfallen aeussern"
+            "Gefallen und Missfallen äussern"
           ]
         }
       ],
@@ -1053,9 +1053,9 @@
   ],
   "regeln_fuer_spiele": {
     "einordnung": "Jedes Foto wird einem Lernbereich zugeordnet. Passt nichts, wird 'unbekannt' gesetzt statt geraten.",
-    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema aus lernpfad_annahme darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die Paul lösen muss, um weiterzukommen.",
-    "lernpfad_ist_annahme": "lernpfad_annahme ist KEINE amtliche Vorgabe, sondern die uebliche Reihenfolge in Bayern. Was Paul tatsaechlich fotografiert, hat immer Vorrang und korrigiert die Annahme.",
-    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
-    "übertritt": "Bei Zeitknappheit haben Deutsch, Mathematik und HSU Vorrang, weil sie in Jgst. 4 fuer das Übertrittszeugnis zählen. Das darf Paul gegenueber nie als Druck formuliert werden."
+    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das nächste Thema aus lernpfad_annahme darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beiläufige Erwähnung. Niemals als Aufgabe, die Paul lösen muss, um weiterzukommen.",
+    "lernpfad_ist_annahme": "lernpfad_annahme ist KEINE amtliche Vorgabe, sondern die übliche Reihenfolge in Bayern. Was Paul tatsächlich fotografiert, hat immer Vorrang und korrigiert die Annahme.",
+    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt übernommen.",
+    "übertritt": "Bei Zeitknappheit haben Deutsch, Mathematik und HSU Vorrang, weil sie in Jgst. 4 für das Übertrittszeugnis zählen. Das darf Paul gegenüber nie als Druck formuliert werden."
   }
 }

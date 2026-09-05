@@ -5,9 +5,9 @@
     "abgerufen": "2026-09-04",
     "hinweis": "Am Gymnasium sind die Lernbereiche mit Stundenzahlen versehen. Die Reihenfolge ist damit weitgehend vorgegeben - anders als in der Grundschule ist lernpfad KEINE blosse Annahme.",
     "kind": "Helena, kommt Mitte September 2026 in die 7. Klasse, Gymnasium Bayern",
-    "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestaetigt am 04.09.2026).",
+    "auspraegung": "Englisch als 1. Fremdsprache (von Denny bestätigt am 04.09.2026).",
     "url_muster": "Natur und Technik hat den Slug 'nt_gym', nicht 'natur-und-technik': /fachlehrplan/gymnasium/7/nt_gym",
-    "wahlfaecher": "Franzoesisch als 2. Fremdsprache, Ethik statt Religion - beides von Denny bestaetigt am 04.09.2026. Kunst, Musik und Sport bewusst weggelassen: fuer Bildschirm-Lernspiele wenig ergiebig."
+    "wahlfaecher": "Französisch als 2. Fremdsprache, Ethik statt Religion - beides von Denny bestätigt am 04.09.2026. Kunst, Musik und Sport bewusst weggelassen: für Bildschirm-Lernspiele wenig ergiebig."
   },
   "faecher": [
     {
@@ -34,7 +34,7 @@
             "Potenzen zusammenfassen",
             "Terme umformen: Zusammenfassen, Ausmultiplizieren",
             "Distributivgesetz und Faktorisierung",
-            "binomische Formeln begruenden und anwenden"
+            "binomische Formeln begründen und anwenden"
           ]
         },
         {
@@ -55,7 +55,7 @@
             "Winkel an Geradenkreuzungen",
             "Innenwinkelsumme im Dreieck beweisen",
             "Innenwinkelsumme im Vieleck",
-            "Parallelitaet ueberpruefen"
+            "Parallelität überprüfen"
           ]
         },
         {
@@ -64,19 +64,19 @@
           "stunden": 17,
           "kompetenzen": [
             "Gleichungen aufstellen",
-            "Aequivalenzumformungen",
+            "Äquivalenzumformungen",
             "Lösungen im Sachzusammenhang deuten",
             "komplexe Prozentaufgaben"
           ]
         },
         {
           "id": "M7 4",
-          "titel": "Kenngroessen von Daten",
+          "titel": "Kenngrössen von Daten",
           "stunden": 8,
           "kompetenzen": [
             "Median als Mittelwert",
             "Spannweite, Quartile, Boxplots",
-            "Datensaetze vergleichen"
+            "Datensätze vergleichen"
           ]
         },
         {
@@ -85,7 +85,7 @@
           "stunden": 29,
           "kompetenzen": [
             "Kongruenzbegriff",
-            "Kongruenzsaetze",
+            "Kongrünzsätze",
             "gleichschenklige und gleichseitige Dreiecke",
             "Voraussetzung und Behauptung",
             "dynamische Geometriesoftware",
@@ -140,7 +140,7 @@
       "lernbereiche": [
         {
           "id": "D7 1.1",
-          "titel": "Verstehend zuhoeren",
+          "titel": "Verstehend zuhören",
           "kompetenzen": [
             "Aussage und Intention erfassen",
             "gesprochene Texte verstehen"
@@ -160,8 +160,8 @@
           "id": "D7 1.3",
           "titel": "Mit anderen sprechen",
           "kompetenzen": [
-            "Gespraechssituationen bewaeltigen",
-            "demokratische Gespraechskultur",
+            "Gesprächssituationen bewältigen",
+            "demokratische Gesprächskultur",
             "eigene Meinung mit Argumenten vertreten"
           ]
         },
@@ -178,14 +178,14 @@
           "titel": "Lesetechniken und -strategien anwenden",
           "kompetenzen": [
             "Lesetechniken je nach Lesezweck",
-            "schulische und aussersschulische Lektuere"
+            "schulische und aussersschulische Lektüre"
           ]
         },
         {
           "id": "D7 2.2",
           "titel": "Literarische Texte verstehen und nutzen",
           "kompetenzen": [
-            "Jugendbuecher, Gedichte, Balladen",
+            "Jugendbücher, Gedichte, Balladen",
             "typische Themen und Motive",
             "handlungs- und produktionsorientierte Methoden",
             "mindestens eine Ganzschrift"
@@ -197,7 +197,7 @@
           "kompetenzen": [
             "mediale Formen",
             "Informationen entnehmen",
-            "Qualitaet von Informationen und Argumenten pruefen"
+            "Qualität von Informationen und Argumenten prüfen"
           ]
         },
         {
@@ -206,12 +206,12 @@
           "kompetenzen": [
             "Internetrecherche beurteilen",
             "Mediennutzung reflektieren",
-            "Hoertexte und Filme untersuchen"
+            "Hörtexte und Filme untersuchen"
           ]
         },
         {
           "id": "D7 3.1",
-          "titel": "Ueber Schreibfertigkeiten verfuegen",
+          "titel": "Über Schreibfertigkeiten verfügen",
           "kompetenzen": [
             "Erzählen, Informieren, Argumentieren",
             "sprachliche Mittel gezielt einsetzen",
@@ -226,21 +226,21 @@
             "adressatengerecht konzipieren",
             "wirkungsvoll erzählen",
             "informierende Texte",
-            "begruendete Stellungnahme",
+            "begründete Stellungnahme",
             "Argumente linear anordnen"
           ]
         },
         {
           "id": "D7 3.3",
-          "titel": "Texte ueberarbeiten",
+          "titel": "Texte überarbeiten",
           "kompetenzen": [
             "Texte nach Kriterien beurteilen",
-            "gezielt ueberarbeiten"
+            "gezielt überarbeiten"
           ]
         },
         {
           "id": "D7 4.1",
-          "titel": "Sprachliche Verstaendigung untersuchen",
+          "titel": "Sprachliche Verständigung untersuchen",
           "kompetenzen": [
             "Wortschatzentwicklung und Bedeutungswandel",
             "sprachliche Gestaltung und Wirkung"
@@ -253,7 +253,7 @@
             "Sprache als System",
             "Verbmodi unterscheiden",
             "Satzglieder analysieren",
-            "einfache und komplexe Saetze",
+            "einfache und komplexe Sätze",
             "Wortschatz erweitern"
           ]
         },
@@ -275,12 +275,12 @@
         },
         {
           "nr": 2,
-          "thema": "Satzglieder und Satzgefuege",
+          "thema": "Satzglieder und Satzgefüge",
           "lernbereich": "D7 4.2"
         },
         {
           "nr": 3,
-          "thema": "Zeichensetzung bei Satzgefuegen",
+          "thema": "Zeichensetzung bei Satzgefügen",
           "lernbereich": "D7 4.3"
         },
         {
@@ -315,16 +315,16 @@
           "id": "E7 1.1",
           "titel": "Kommunikative Fertigkeiten",
           "kompetenzen": [
-            "Hoerverstehen: laengere Sprachaeusserungen, Global- und Detailinformationen, Gefuehlslagen erkennen",
-            "Leseverstehen: laengere authentische Texte, Lesetechniken, fluessig vorlesen",
-            "Sprechen: Personen, Orte, Ereignisse beschreiben; Alltagssituationen; Praesentationen",
-            "Schreiben: laengere Texte, orthographische Korrektheit und klare Gedankenfuehrung",
-            "Sprachmittlung: muendlich und schriftlich uebertragen, Kompensationsstrategien"
+            "Hörverstehen: längere Sprachäusserungen, Global- und Detailinformationen, Gefühlslagen erkennen",
+            "Leseverstehen: längere authentische Texte, Lesetechniken, flüssig vorlesen",
+            "Sprechen: Personen, Orte, Ereignisse beschreiben; Alltagssituationen; Präsentationen",
+            "Schreiben: längere Texte, orthographische Korrektheit und klare Gedankenführung",
+            "Sprachmittlung: mündlich und schriftlich übertragen, Kompensationsstrategien"
           ]
         },
         {
           "id": "E7 1.2",
-          "titel": "Verfuegen ueber sprachliche Mittel",
+          "titel": "Verfügen über sprachliche Mittel",
           "kompetenzen": [
             "Wortschatz zu Geographie, Geschichte und Alltag",
             "idiomatische Wendungen und phrasal verbs",
@@ -332,8 +332,8 @@
             "Grammatik: Reflexivpronomen und reciprocal pronouns",
             "Grammatik: present perfect simple und progressive",
             "Grammatik: past perfect simple",
-            "Grammatik: Konditionalsaetze II und III",
-            "Aussprache: fluessiges Sprechen, Lautschrift selbststaendig nutzen"
+            "Grammatik: Konditionalsätze II und III",
+            "Aussprache: flüssiges Sprechen, Lautschrift selbstständig nutzen"
           ]
         },
         {
@@ -341,7 +341,7 @@
           "titel": "Interkulturelle Kompetenzen",
           "kompetenzen": [
             "geographische und historische Grundkenntnisse zu UK und USA",
-            "Verstaendnis fuer verschiedene Lebensweisen",
+            "Verständnis für verschiedene Lebensweisen",
             "kulturell angemessenes Verhalten in Alltagssituationen"
           ]
         },
@@ -360,8 +360,8 @@
           "id": "E7 4",
           "titel": "Methodische Kompetenzen",
           "kompetenzen": [
-            "Lernprozess selbststaendig gestalten",
-            "Lese- und Hoerverstehensstrategien",
+            "Lernprozess selbstständig gestalten",
+            "Lese- und Hörverstehensstrategien",
             "Nachschlagewerke und digitale Medien nutzen"
           ]
         },
@@ -369,11 +369,11 @@
           "id": "E7 5",
           "titel": "Themengebiete",
           "kompetenzen": [
-            "Lebenswelt Jugendlicher in Nordamerika: Essgewohnheiten, Braeuche, Feste (Thanksgiving, Independence Day), Schulalltag, Sport",
-            "Mediennutzung Jugendlicher: Moeglichkeiten und Gefahren",
+            "Lebenswelt Jugendlicher in Nordamerika: Essgewohnheiten, Bräuche, Feste (Thanksgiving, Independence Day), Schulalltag, Sport",
+            "Mediennutzung Jugendlicher: Möglichkeiten und Gefahren",
             "Wales und Desert South-West",
             "Geschichte: 1066 Normans and Saxons, Henry VIII, Elizabeth I, Kolonialisierung Nordamerikas",
-            "Sprachreflexion: Deutsch-Englisch im Vergleich, Lehnwoerter, Sprachwandel"
+            "Sprachreflexion: Deutsch-Englisch im Vergleich, Lehnwörter, Sprachwandel"
           ]
         }
       ],
@@ -439,7 +439,7 @@
             "Klimadiagramme analysieren und zeichnen",
             "Statistiken interpretieren",
             "Daten aus Presse und Reiseliteratur erschliessen",
-            "geographische Darstellungen kritisch pruefen",
+            "geographische Darstellungen kritisch prüfen",
             "digitale Geomedien nutzen"
           ]
         },
@@ -447,27 +447,27 @@
           "id": "Geo7 2",
           "titel": "Einheit und Vielfalt in Europa",
           "kompetenzen": [
-            "europaeische Staaten und Regionen ordnen",
-            "die europaeische Idee darstellen",
-            "europaeische Zusammenarbeit erlaeutern",
+            "europäische Staaten und Regionen ordnen",
+            "die europäische Idee darstellen",
+            "europäische Zusammenarbeit erläutern",
             "Kultur und Lebensweisen analysieren"
           ]
         },
         {
           "id": "Geo7 3",
-          "titel": "Naturgeographie Europas im Ueberblick",
+          "titel": "Naturgeographie Europas im Überblick",
           "kompetenzen": [
-            "naturraeumliche Gliederung Europas",
+            "naturräumliche Gliederung Europas",
             "Klimadaten in Diagramme umwandeln",
             "Klima und Vegetation darstellen",
-            "Vulkanismus und Erdbeben erlaeutern"
+            "Vulkanismus und Erdbeben erläutern"
           ]
         },
         {
           "id": "Geo7 4",
-          "titel": "Laendliche Raeume Europas",
+          "titel": "Ländliche Räume Europas",
           "kompetenzen": [
-            "Naturfaktoren und laendliche Nutzung",
+            "Naturfaktoren und ländliche Nutzung",
             "raum-zeitliche Entwicklungen",
             "landwirtschaftliches Potenzial bewerten",
             "Folgewirkungen der Nutzung",
@@ -476,20 +476,20 @@
         },
         {
           "id": "Geo7 5",
-          "titel": "Metropolen und Verdichtungsraeume in Europa",
+          "titel": "Metropolen und Verdichtungsräume in Europa",
           "kompetenzen": [
             "Merkmale und Herausforderungen von Metropolen",
             "Standortfaktoren",
-            "grenzuebergreifende Infrastrukturprojekte bewerten",
+            "grenzübergreifende Infrastrukturprojekte bewerten",
             "aktuelle Entwicklungen diskutieren"
           ]
         },
         {
           "id": "Geo7 6",
-          "titel": "Meere und Kuesten Europas",
+          "titel": "Meere und Küsten Europas",
           "kompetenzen": [
-            "europaeische Meere charakterisieren",
-            "Kuestenformung",
+            "europäische Meere charakterisieren",
+            "Küstenformung",
             "wirtschaftliche Bedeutung und Nutzungskonflikte",
             "Schutz der Meere"
           ]
@@ -503,7 +503,7 @@
         },
         {
           "nr": 2,
-          "thema": "Europa: Staaten und die europaeische Idee",
+          "thema": "Europa: Staaten und die europäische Idee",
           "lernbereich": "Geo7 2"
         },
         {
@@ -513,17 +513,17 @@
         },
         {
           "nr": 4,
-          "thema": "Laendliche Raeume und Landwirtschaft",
+          "thema": "Ländliche Räume und Landwirtschaft",
           "lernbereich": "Geo7 4"
         },
         {
           "nr": 5,
-          "thema": "Metropolen und Verdichtungsraeume",
+          "thema": "Metropolen und Verdichtungsräume",
           "lernbereich": "Geo7 5"
         },
         {
           "nr": 6,
-          "thema": "Meere und Kuesten",
+          "thema": "Meere und Küsten",
           "lernbereich": "Geo7 6"
         }
       ]
@@ -535,14 +535,14 @@
       "lernbereiche": [
         {
           "id": "G7 1",
-          "titel": "Koenig und Reich: Herrschaft im Mittelalter",
+          "titel": "König und Reich: Herrschaft im Mittelalter",
           "stunden": 7,
           "kompetenzen": [
             "Herrschaftsstrukturen des Mittelalters",
             "Entstehung des Ottonischen Reichs",
             "Reichskirchensystem und Investiturstreit",
             "Geschichtskarten nutzen",
-            "Kaiserkroenung 962, Adel, Lehnswesen, Kurfuersten"
+            "Kaiserkrönung 962, Adel, Lehnswesen, Kurfürsten"
           ]
         },
         {
@@ -552,18 +552,18 @@
           "kompetenzen": [
             "Lebensmerkmale und kulturelle Leistungen",
             "Quellen zu Lebensformen",
-            "Architektur und hoefische Kultur",
-            "historische Strukturen in Altstaedten",
+            "Architektur und höfische Kultur",
+            "historische Strukturen in Altstädten",
             "Umgang mit Seuchen"
           ]
         },
         {
           "id": "G7 3",
-          "titel": "Neue raeumliche und geistige Horizonte",
+          "titel": "Neue räumliche und geistige Horizonte",
           "stunden": 11,
           "kompetenzen": [
             "Kulturkontakt: Konflikte und Chancen",
-            "Quellen zu den Kreuzzuegen",
+            "Quellen zu den Kreuzzügen",
             "Eroberung Konstantinopels 1453",
             "Menschenbild der Renaissance",
             "Entdeckungsfahrten und Kolonialisierung"
@@ -575,10 +575,10 @@
           "stunden": 6,
           "kompetenzen": [
             "Wirtschaft, Politik und Gesellschaft",
-            "Handel am Obergermanisch-Raetischen Limes",
+            "Handel am Obergermanisch-Rätischen Limes",
             "Europa und China im Mittelalter",
             "Hanse und Fugger",
-            "Geschichtskarten zu Handelsraeumen"
+            "Geschichtskarten zu Handelsräumen"
           ]
         },
         {
@@ -586,11 +586,11 @@
           "titel": "Das konfessionelle Zeitalter",
           "stunden": 8,
           "kompetenzen": [
-            "religioese und politische Konflikte",
+            "religiöse und politische Konflikte",
             "Reformation und Luther beurteilen",
             "Politik und Religion",
-            "Dreissigjaehriger Krieg und Westfaelischer Friede",
-            "Flugblaetter als Quelle"
+            "Dreissigjähriger Krieg und Westfälischer Friede",
+            "Flugblätter als Quelle"
           ]
         },
         {
@@ -598,8 +598,8 @@
           "titel": "Absolutismus und Barock",
           "stunden": 8,
           "kompetenzen": [
-            "franzoesischer Absolutismus",
-            "absolutistisches Herrschaftsverstaendnis",
+            "französischer Absolutismus",
+            "absolutistisches Herrschaftsverständnis",
             "Versailles",
             "regionale Rezeption",
             "balance of power"
@@ -611,7 +611,7 @@
           "stunden": 6,
           "kompetenzen": [
             "Bauwerke als historische Quellen",
-            "Herrschaftsverstaendnis in Baudenkmaelern",
+            "Herrschaftsverständnis in Baudenkmälern",
             "Bauwerke Epochen zuordnen",
             "Architektur und Herrschaftsform"
           ]
@@ -630,7 +630,7 @@
         },
         {
           "nr": 3,
-          "thema": "Kreuzzuege, Renaissance, Entdeckungen",
+          "thema": "Kreuzzüge, Renaissance, Entdeckungen",
           "lernbereich": "G7 3"
         },
         {
@@ -640,7 +640,7 @@
         },
         {
           "nr": 5,
-          "thema": "Reformation und Dreissigjaehriger Krieg",
+          "thema": "Reformation und Dreissigjähriger Krieg",
           "lernbereich": "G7 5"
         },
         {
@@ -659,7 +659,7 @@
       "kuerzel": "nt",
       "name": "Natur und Technik",
       "uebertrittsfach": false,
-      "hinweis": "Ein Fach mit zwei Teilen: Physik (NT7 1) und Informatik (NT7 2), je ca. 28 Stunden. Kein getrennter Schwerpunkt, wie das Jahrgangsstufenprofil vermuten laesst.",
+      "hinweis": "Ein Fach mit zwei Teilen: Physik (NT7 1) und Informatik (NT7 2), je ca. 28 Stunden. Kein getrennter Schwerpunkt, wie das Jahrgangsstufenprofil vermuten lässt.",
       "lernbereiche": [
         {
           "id": "NT7 1.1",
@@ -667,19 +667,19 @@
           "stunden": 10,
           "kompetenzen": [
             "Beobachtungen an Modellversuchen dokumentieren",
-            "Magnetismus mit einfachen Modellen erlaeutern, Erdmagnetfeld zur Orientierung",
-            "Experimente zur Dichte unregelmaessiger Körper planen",
+            "Magnetismus mit einfachen Modellen erläutern, Erdmagnetfeld zur Orientierung",
+            "Experimente zur Dichte unregelmässiger Körper planen",
             "Dichte und Masse berechnen, Genauigkeit beachten",
-            "Dichte als Bewertungskriterium fuer Werkstoffe"
+            "Dichte als Bewertungskriterium für Werkstoffe"
           ]
         },
         {
           "id": "NT7 1.2",
-          "titel": "Optische Phaenomene",
+          "titel": "Optische Phänomene",
           "stunden": 10,
           "kompetenzen": [
             "Farben und Schatten experimentell erkunden",
-            "Sehvorgang und Schatten mit Lichtausbreitungsmodellen erklaeren",
+            "Sehvorgang und Schatten mit Lichtausbreitungsmodellen erklären",
             "physikalische Aspekte in Sicherheitsempfehlungen",
             "Mondphasen und Finsternisse mit Fachsprache und Zeichnung"
           ]
@@ -689,9 +689,9 @@
           "titel": "Elektrische Stromkreise",
           "stunden": 8,
           "kompetenzen": [
-            "elektrostatische Phaenomene mit Ladung und Atommodell",
+            "elektrostatische Phänomene mit Ladung und Atommodell",
             "Strom als bewegte Ladungen",
-            "Waerme- und Leuchtwirkung",
+            "Wärme- und Leuchtwirkung",
             "magnetische Stromwirkung experimentell",
             "Schaltungen selbst entwickeln und aufbauen"
           ]
@@ -704,7 +704,7 @@
             "vernetzte Strukturen objektorientiert modellieren",
             "Suchstrategien im Internet, Ergebnisse kritisch bewerten",
             "Hypertext mit WYSIWYG-Editoren, Urheberrecht und Zitation",
-            "Uebermittlung elektronischer Dokumente"
+            "Übermittlung elektronischer Dokumente"
           ]
         },
         {
@@ -713,12 +713,12 @@
           "stunden": 5,
           "kompetenzen": [
             "digitale Kommunikation bewerten: Chancen, Risiken, Auswirkungen",
-            "Persoenlichkeitsrechte schuetzen"
+            "Persönlichkeitsrechte schützen"
           ]
         },
         {
           "id": "NT7 2.3",
-          "titel": "Beschreibung von Ablaeufen durch Algorithmen",
+          "titel": "Beschreibung von Abläufen durch Algorithmen",
           "stunden": 11,
           "kompetenzen": [
             "Problemstellungen analysieren, Algorithmen entwickeln und beschreiben",
@@ -774,39 +774,39 @@
       ]
     },
     {
-      "kuerzel": "franzoesisch",
-      "name": "Franzoesisch",
+      "kuerzel": "französisch",
+      "name": "Französisch",
       "uebertrittsfach": false,
-      "auspraegung": "2. Fremdsprache (bestaetigt 04.09.2026)",
+      "auspraegung": "2. Fremdsprache (bestätigt 04.09.2026)",
       "lernbereiche": [
         {
           "id": "F7 1.1",
           "titel": "Kommunikative Fertigkeiten",
           "kompetenzen": [
-            "Hoerverstehen: kurze einfache Audiotexte, vertraute Themen",
-            "Leseverstehen: kurze bildgestuetzte Texte",
-            "Sprechen: Gegenstaende, Orte, Personen beschreiben; Vergangenes erzählen; Vorlieben und Abneigungen; Anweisungen mit Hoeflichkeitsformen",
+            "Hörverstehen: kurze einfache Audiotexte, vertraute Themen",
+            "Leseverstehen: kurze bildgestützte Texte",
+            "Sprechen: Gegenstände, Orte, Personen beschreiben; Vergangenes erzählen; Vorlieben und Abneigungen; Anweisungen mit Höflichkeitsformen",
             "Schreiben: Phonem-Graphem-Beziehungen, diakritische Zeichen, Dialoge, E-Mails, Nachrichten",
             "Sprachmittlung: dolmetschen in Routinesituationen"
           ]
         },
         {
           "id": "F7 1.2",
-          "titel": "Verfuegen ueber sprachliche Mittel",
+          "titel": "Verfügen über sprachliche Mittel",
           "kompetenzen": [
-            "Wortschatz fuer Alltagssituationen",
+            "Wortschatz für Alltagssituationen",
             "Kardinal- und Ordinalzahlen bis eine Million",
             "Funktionswortschatz zur Bildbeschreibung",
             "Grammatik: Relativpronomen qui, que, ou",
-            "Grammatik: Teilungsartikel und Mengenausdruecke",
+            "Grammatik: Teilungsartikel und Mengenausdrücke",
             "Grammatik: Komparativ und Superlativ",
             "Grammatik: Verben auf -ir (dormir, finir)",
-            "Grammatik: unregelmaessige Verben (devoir, savoir, boire, connaitre, mettre, ouvrir, venir, vivre, voir)",
-            "Grammatik: reflexive Verben in Praesens, futur proche, Imperativ",
+            "Grammatik: unregelmässige Verben (devoir, savoir, boire, connaitre, mettre, ouvrir, venir, vivre, voir)",
+            "Grammatik: reflexive Verben in Präsens, futur proche, Imperativ",
             "Grammatik: passe compose mit avoir und etre",
             "Grammatik: imparfait und passe compose im Gegensatz",
             "Grammatik: Imperativ mit Pronomen",
-            "Grammatik: indirekte Rede und Fragen im Praesens",
+            "Grammatik: indirekte Rede und Fragen im Präsens",
             "Aussprache und Betonung"
           ]
         },
@@ -814,8 +814,8 @@
           "id": "F7 2",
           "titel": "Interkulturelle Kompetenzen",
           "kompetenzen": [
-            "Region Bretagne und franzoesische Geographie",
-            "Alltag deutscher und franzoesischer Jugendlicher vergleichen",
+            "Region Bretagne und französische Geographie",
+            "Alltag deutscher und französischer Jugendlicher vergleichen",
             "situationsgerechte Kommunikation"
           ]
         },
@@ -823,10 +823,10 @@
           "id": "F7 3",
           "titel": "Text- und Medienkompetenzen",
           "kompetenzen": [
-            "Entschluesselungshilfen nutzen",
-            "Sinneinheiten ueber Ueberschriften und Schluesselwoerter",
+            "Entschlüsselungshilfen nutzen",
+            "Sinneinheiten über Überschriften und Schlüsselwörter",
             "Personen in fiktionalen Texten charakterisieren",
-            "Handlungsablaeufe mit Konnektoren nacherzählen",
+            "Handlungsabläufe mit Konnektoren nacherzählen",
             "kurze illustrierte Texte gestalten"
           ]
         },
@@ -836,9 +836,9 @@
           "kompetenzen": [
             "Sprachlerntechniken, digitale Aufnahmen, Wortschatzarbeit",
             "Fehlervermeidung und Selbstkorrektur",
-            "Apps, Woerterbuecher, Lernsoftware",
+            "Apps, Wörterbücher, Lernsoftware",
             "Vergleich mit Deutsch und Englisch",
-            "Strategien fuer Hoer- und Leseverstehen"
+            "Strategien für Hör- und Leseverstehen"
           ]
         },
         {
@@ -849,7 +849,7 @@
             "Alltag: Familienleben, Tagesablauf, Hobbys, Schule, Wetter",
             "Geographie: Paris, Lyon, Nantes, Bretagne, Stadt und Land",
             "Reisen: Reiseplanung, Austausch, Frankreich als Urlaubsland",
-            "Geschichte: Gallier und Roemer (Asterix)",
+            "Geschichte: Gallier und Römer (Asterix)",
             "Kultur: bandes dessinees"
           ]
         }
@@ -867,7 +867,7 @@
         },
         {
           "nr": 3,
-          "thema": "Verben auf -ir und unregelmaessige Verben",
+          "thema": "Verben auf -ir und unregelmässige Verben",
           "lernbereich": "F7 1.2"
         },
         {
@@ -906,7 +906,7 @@
       "kuerzel": "ethik",
       "name": "Ethik",
       "uebertrittsfach": false,
-      "hinweis": "Helena besucht Ethik, nicht Religion (bestaetigt 04.09.2026).",
+      "hinweis": "Helena besucht Ethik, nicht Religion (bestätigt 04.09.2026).",
       "lernbereiche": [
         {
           "id": "Eth7 1",
@@ -928,13 +928,13 @@
           "kompetenzen": [
             "Konflikte als Chance annehmen",
             "Konfliktursachen erkennen: Motive und Interessen",
-            "offene Kommunikation statt Scheinloesungen",
+            "offene Kommunikation statt Scheinlösungen",
             "gewaltfreie Lösung durch Kompromiss",
             "Perspektivwechsel und Empathie",
-            "Spiegeln, aktives Zuhoeren, Ich-Botschaften",
+            "Spiegeln, aktives Zuhören, Ich-Botschaften",
             "argumentieren mit rationalen Grundprinzipien",
             "emotionale Selbstkontrolle",
-            "Mobbingopfer unterstuetzen"
+            "Mobbingopfer unterstützen"
           ]
         },
         {
@@ -942,8 +942,8 @@
           "titel": "Erwachsen werden",
           "stunden": 18,
           "kompetenzen": [
-            "koerperliche, psychische und soziale Veraenderungen in der Pubertaet",
-            "fremde Perspektiven zur Identitaetsfindung",
+            "körperliche, psychische und soziale Veränderungen in der Pubertät",
+            "fremde Perspektiven zur Identitätsfindung",
             "Selbstwahrnehmung von aussen",
             "Gruppendruck und Selbstbestimmung",
             "wachsende Verantwortung im Jugendalter"
@@ -953,7 +953,7 @@
       "lernpfad": [
         {
           "nr": 1,
-          "thema": "Konflikte und Konfliktloesung",
+          "thema": "Konflikte und Konfliktlösung",
           "lernbereich": "Eth7 2"
         },
         {
@@ -971,8 +971,8 @@
   ],
   "regeln_fuer_spiele": {
     "einordnung": "Jedes Foto wird einem Lernbereich zugeordnet. Passt nichts, wird 'unbekannt' gesetzt statt geraten.",
-    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das naechste Thema darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beilaeufige Erwaehnung. Niemals als Aufgabe, die geloest werden muss, um weiterzukommen.",
-    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt uebernommen.",
+    "vorgriff": "Der aktuelle Lernbereich ist der Kern des Spiels. Das nächste Thema darf nur GESTREIFT werden - als Nebenfigur, Sammelobjekt oder beiläufige Erwähnung. Niemals als Aufgabe, die gelöst werden muss, um weiterzukommen.",
+    "eigene_aufgaben": "Das Foto sagt, WORUM es geht - nicht, WAS gefragt wird. Aufgaben werden immer neu erfunden, nie vom Blatt übernommen.",
     "alter": "Helena ist 12/13 Jahre und geht aufs Gymnasium. KEINE Grundschul-Optik, keine Kindersprache, kein Konfetti-Kindergarten. Sachlicher, jugendlicher Ton.",
     "reihenfolge": "Der Gymnasiallehrplan gibt Stundenzahlen und damit eine Reihenfolge vor. lernpfad bei Mathematik ist deshalb belastbar, nicht nur geschätzt."
   }
