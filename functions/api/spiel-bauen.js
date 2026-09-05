@@ -111,7 +111,10 @@ export async function onRequestPost(context) {
     },
     body: JSON.stringify({
       model: MODELL,
-      max_tokens: 16000,
+      // 20000 statt 16000: Seit die Aufgaben ein Bild-Feld tragen, sind die
+      // Antworten laenger. Ein abgeschnittenes Ergebnis kommt als leeres
+      // Spiel zurueck - einmal beobachtet am 06.09.2026.
+      max_tokens: 20000,
       thinking: { type: "adaptive" },
       output_config: { effort: "medium" },
       system: [{ type: "text", text: systemtext(kind, lehrplan), cache_control: { type: "ephemeral" } }],
