@@ -109,18 +109,28 @@ export async function fehlversucheLoeschen(request, env) {
 }
 
 
-// Die Seite, die statt Pauls Bereich erscheint, solange niemand angemeldet ist.
-export function anmeldeSeite() {
+// Wie der jeweilige Bereich sich vorstellt.
+const BEREICHE = {
+  paul: { name: "Pauls Lernwelt", satz: "Hier lernt Paul. Wenn du seinen Code kennst, kannst du rein.",
+          farbe: "#4f46e5", rgb: "79,70,229" },
+  leon: { name: "Leons Lernwelt", satz: "Hier lernt Leon. Wenn du seinen Code kennst, kannst du rein.",
+          farbe: "#16a34a", rgb: "22,163,74" },
+};
+
+// Die Seite, die statt des Bereichs erscheint, solange niemand angemeldet ist.
+export function anmeldeSeite(kind) {
+  const wer = String(kind || "paul").toLowerCase();
+  const b = BEREICHE[wer] || BEREICHE.paul;
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pauls Lernwelt</title>
+<title>${b.name}</title>
 <style>
   :root{
     --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
-    --paul:#4f46e5; --schlecht:#f04438;
+    --paul:${b.farbe}; --schlecht:#f04438;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
   }
@@ -151,7 +161,7 @@ export function anmeldeSeite() {
   button{
     width:100%;margin-top:8px;border:none;border-radius:17px;padding:17px;
     background:var(--paul);color:#fff;font-family:var(--rund);font-size:18px;font-weight:700;
-    cursor:pointer;box-shadow:0 8px 20px rgba(79,70,229,.3);
+    cursor:pointer;box-shadow:0 8px 20px rgba(${b.rgb},.3);
   }
   button:active{transform:scale(.985)}
   button:disabled{opacity:.5}
@@ -160,8 +170,8 @@ export function anmeldeSeite() {
 <body>
   <div class="karte">
     <div class="schloss">&#128274;</div>
-    <h1>Pauls Lernwelt</h1>
-    <p>Hier lernt Paul. Wenn du seinen Code kennst, kannst du rein.</p>
+    <h1>${b.name}</h1>
+    <p>${b.satz}</p>
     <input id="code" type="password" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="Code">
     <div class="fehler" id="fehler"></div>
     <button id="los">Rein damit</button>
@@ -180,7 +190,7 @@ export function anmeldeSeite() {
     fetch("/api/code-pruefen", {
       method:"POST", credentials:"same-origin",
       headers:{"content-type":"application/json"},
-      body: JSON.stringify({code: code})
+      body: JSON.stringify({code: code, kind: "${wer}"})
     })
     .then(function(r){ return r.json(); })
     .then(function(a){

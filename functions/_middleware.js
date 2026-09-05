@@ -3,7 +3,7 @@
 // und so in jede HTML-Seite schreiben, dass die Spiele ihn beim Start schon kennen –
 // ganz OHNE die Spiel-Dateien selbst zu verändern.
 
-import { ausweisGueltig, anmeldeSeite } from "./api/_riegel.js";
+import { ausweisGueltig, anmeldeSeite, geheimFuer } from "./api/_riegel.js";
 
 export async function onRequest(context) {
   const { request, next, env } = context;
@@ -19,9 +19,11 @@ export async function onRequest(context) {
   // Unterordner greift bei Cloudflare NICHT für statische Dateien, nur für
   // Functions – deshalb ist dies die einzige Stelle, an der es wirkt.
   // Fehlt das Secret, wird niemand ausgesperrt.
-  if (url.pathname.startsWith("/paul/") || url.pathname === "/paul") {
-    if (env.PAUL_CODE && !(await ausweisGueltig(request, env.PAUL_CODE, env))) {
-      return new Response(anmeldeSeite(), {
+  const bereich = url.pathname.match(/^\/(paul|leon)(?:\/|$)/);
+  if (bereich) {
+    const geheim = geheimFuer(env, bereich[1]);
+    if (geheim && !(await ausweisGueltig(request, geheim, env))) {
+      return new Response(anmeldeSeite(bereich[1]), {
         status: 401,
         headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
       });

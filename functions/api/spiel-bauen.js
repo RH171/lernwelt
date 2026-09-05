@@ -10,7 +10,7 @@
 // getrennt. Dieselben Daten kann eine feste Bauform füllen oder ein frei
 // erfundenes Spiel - das entscheidet die Werkstatt, nicht der Server.
 
-import { ausweisGueltig } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { spielSichern } from "./spiele.js";
 
 const MODELL = "claude-opus-5";
@@ -36,10 +36,6 @@ export async function onRequestPost(context) {
   if (!env.PAUL_CODE) {
     return fehler(500, "Auf dem Server fehlt der Zugangscode. Denny muss ihn bei Cloudflare als PAUL_CODE hinterlegen.");
   }
-  if (!(await ausweisGueltig(request, env.PAUL_CODE, env))) {
-    return fehler(401, "Hier darf nur Paul bauen. Bitte melde dich mit deinem Code an.");
-  }
-
   if (!env.ANTHROPIC_API_KEY) {
     return fehler(500, "Der Schlüssel fehlt auf dem Server. Denny muss ihn bei Cloudflare als ANTHROPIC_API_KEY hinterlegen.");
   }
@@ -52,6 +48,12 @@ export async function onRequestPost(context) {
   }
 
   const kind = KINDER[auftrag.kind] ? auftrag.kind : "paul";
+
+  // Erst jetzt pruefen: jedes Kind hat sein eigenes Geheimnis. Bis Denny fuer
+  // ein Kind einen eigenen Code hinterlegt, gilt PAUL_CODE (siehe _riegel.js).
+  if (!(await ausweisGueltig(request, geheimFuer(env, kind), env))) {
+    return fehler(401, "Hier darfst du nur mit deinem Code bauen. Bitte melde dich an.");
+  }
   const seiten = Array.isArray(auftrag.seiten) ? auftrag.seiten : [];
 
   const wunsch = String(auftrag.wunsch || "").trim().slice(0, 600);
@@ -137,7 +139,7 @@ export async function onRequestPost(context) {
   // Aufheben, damit Paul es wiederfindet und daraus weitere Spiele ableiten kann.
   // Ein Fehler beim Speichern darf das fertige Spiel nicht kosten.
   try {
-    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten);
+    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten, kind);
   } catch (e) {
     spiel.nichtGespeichert = true;
   }
