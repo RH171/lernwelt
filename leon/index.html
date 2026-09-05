@@ -209,32 +209,6 @@
   }
   .codefeld:focus{outline:none;border-color:var(--leon)}
   .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
-  .sammlung{margin-top:16px}
-  .sammlung h3{font-family:var(--rund);font-size:19px;margin:0 0 4px}
-  .liste{display:grid;gap:10px;margin-top:14px}
-  .eintrag{
-    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
-    border:1.5px solid #e8eef0;background:#fff;border-radius:18px;
-    padding:13px 14px;cursor:pointer;font-family:var(--font);color:var(--ink);
-    transition:border-color .12s,box-shadow .12s,transform .1s;
-  }
-  .eintrag:hover{border-color:#bfe8cd;box-shadow:0 4px 14px rgba(16,185,129,.1)}
-  .eintrag:active{transform:scale(.99)}
-  .eintrag .em{font-size:23px;flex:none;width:46px;height:46px;border-radius:15px;
-               display:grid;place-items:center;background:#f2fcf5;border:1px solid #e2f5e9}
-  .eintrag .txt{flex:1;min-width:0}
-  .eintrag .tt{font-family:var(--rund);font-weight:600;font-size:16px;
-               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .eintrag .ts{font-size:13px;color:var(--muted);margin-top:3px;
-               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  /* Zeigt, dass der ganze Eintrag ein Startknopf ist. */
-  .eintrag .los-pfeil{flex:none;color:var(--leon);font-size:13px;opacity:.55}
-  .eintrag:hover .los-pfeil{opacity:1}
-  /* Das Wegwerfen soll man finden, aber nicht aus Versehen treffen. */
-  .eintrag .loeschen{flex:none;border:none;background:none;color:#c3ccd2;
-                     font-size:17px;line-height:1;cursor:pointer;
-                     padding:7px 5px;border-radius:9px;transition:color .12s,background .12s}
-  .eintrag .loeschen:hover{color:var(--schlecht);background:#fff1f0}
   .wiederholen{
     background:linear-gradient(135deg,#eef1ff,#f6f1ff);
     border:1px solid #ddd9fb;border-radius:20px;padding:20px 22px;margin-bottom:16px;
@@ -310,11 +284,6 @@
       <button class="knopf" id="wh-los">Nochmal spielen</button>
     </div>
 
-    <div class="karte sammlung verborgen" id="sammlung">
-      <h3>Deine Spiele</h3>
-      <p class="unter">Alles, was du gebaut hast – zum Nochmalspielen.</p>
-      <div class="liste" id="liste"></div>
-    </div>
   </section>
 
   <!-- 2. Es wird gebaut -->
@@ -424,13 +393,11 @@
 
   /* ---------- Gebaute Spiele ---------- */
 
-  var FACH_ZEICHEN = {mathe:"\u{1F522}", deutsch:"\u{1F4D6}", hsu:"\u{1F30D}",
-                      musik:"\u{1F3B5}", englisch:"\u{1F1EC}\u{1F1E7}", religion:"\u{1F54A}"};
 
   function sammlungLaden(){
     fetch("/api/spiele?kind=leon", {credentials:"same-origin"})
       .then(function(r){ return r.json(); })
-      .then(function(a){ if (a && a.ok){ SPIELE = a.spiele || []; malSammlung(SPIELE); malThemen(); } })
+      .then(function(a){ if (a && a.ok){ SPIELE = a.spiele || []; wiederholungVorschlagen(SPIELE); malThemen(); } })
       .catch(function(){});
   }
 
@@ -467,65 +434,6 @@
       : "Das hast du " + wann + " gespielt. Wenn du es jetzt nochmal machst, bleibt es viel besser hängen.";
     $("wh-los").onclick = function(){ spielHolen(e.id); };
     $("wiederholen").classList.remove("verborgen");
-  }
-
-  function malSammlung(spiele){
-    var kasten = $("liste");
-    $("sammlung").classList.toggle("verborgen", spiele.length === 0);
-    wiederholungVorschlagen(spiele);
-    kasten.innerHTML = "";
-    spiele.forEach(function(e){
-      var d = document.createElement("div");
-      d.className = "eintrag";
-      var wann = "";
-      try {
-        var t = new Date(e.erzeugt);
-        var heute = new Date();
-        var gleich = t.toDateString() === heute.toDateString();
-        wann = gleich ? "heute" : t.toLocaleDateString("de-DE", {day:"numeric", month:"long"});
-      } catch(err){}
-      // Das Symbol des Themenfelds, aus dem das Spiel stammt - so erkennt Leon
-      // auf einen Blick, wozu es gehoert. Frueher stand hier bei allen dasselbe.
-      var th = null;
-      try { th = THEMEN.filter(function(t){ return t.schluessel === e.quelle; })[0] || null; } catch(err){}
-
-      d.innerHTML =
-        '<div class="em">' + (th ? th.bild : (FACH_ZEICHEN[e.fach] || "\u{1F3AE}")) + '</div>' +
-        '<div class="txt"><div class="tt"></div><div class="ts"></div></div>' +
-        '<span class="los-pfeil">\u25B6</span>' +
-        '<button class="loeschen" title="Wegwerfen">\u00D7</button>';
-      d.querySelector(".tt").textContent = e.titel || "Spiel";
-      // Kurz halten: der volle Lehrplansatz ist fuer ein Kind unlesbar.
-      d.querySelector(".ts").textContent =
-        (th ? th.titel : (e.thema || "")) + " \u00B7 " + e.aufgaben + " Aufgaben \u00B7 " + wann;
-      d.addEventListener("click", function(ev){
-        if (ev.target.classList.contains("loeschen")) return;
-        spielHolen(e.id);
-      });
-      d.querySelector(".loeschen").addEventListener("click", function(ev){
-        ev.stopPropagation();
-        spielWegwerfen(e.id, e.titel);
-      });
-      kasten.appendChild(d);
-    });
-  }
-
-  function spielHolen(id){
-    fetch("/api/spiele?kind=leon&id=" + encodeURIComponent(id), {credentials:"same-origin"})
-      .then(function(r){ return r.json(); })
-      .then(function(a){
-        if (a && a.ok && a.spiel){ spiel = a.spiel; starteSpiel(); }
-        else melde("Das Spiel konnte ich nicht laden.", "fehler");
-      })
-      .catch(function(){ melde("Das Spiel konnte ich nicht laden.", "fehler"); });
-  }
-
-  function spielWegwerfen(id, titel){
-    if (!window.confirm('"' + (titel || "Dieses Spiel") + '" wirklich wegwerfen?')) return;
-    fetch("/api/spiele?kind=leon&id=" + encodeURIComponent(id), {method:"DELETE", credentials:"same-origin"})
-      .then(function(r){ return r.json(); })
-      .then(function(a){ if (a && a.ok){ SPIELE = a.spiele || []; malSammlung(SPIELE); malThemen(); } })
-      .catch(function(){});
   }
 
   /* ---------- Material aufnehmen ---------- */
@@ -692,10 +600,16 @@
   }
 
   function fertigesSpiel(th){
-    for (var i = 0; i < SPIELE.length; i++){
-      if (passt(SPIELE[i], th)) return SPIELE[i];   // Liste ist neueste zuerst
-    }
-    return null;
+    var passende = SPIELE.filter(function(e){ return passt(e, th); });
+    if (!passende.length) return null;
+    // Das am laengsten nicht gespielte zuerst - so wiederholt sich nichts
+    // unnoetig, und Leon bekommt von allein Abwechslung.
+    passende.sort(function(a, b){
+      var za = new Date(a.zuletztGespielt || 0).getTime();
+      var zb = new Date(b.zuletztGespielt || 0).getTime();
+      return za - zb;
+    });
+    return passende[0];
   }
 
   // Merkt sich, woran Leon gerade arbeitet - fuer "noch eins zu diesem Thema".
