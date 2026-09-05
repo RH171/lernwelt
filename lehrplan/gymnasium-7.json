@@ -13,7 +13,7 @@
     {
       "kuerzel": "mathe",
       "name": "Mathematik",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "M7 1.1",
@@ -136,7 +136,7 @@
     {
       "kuerzel": "deutsch",
       "name": "Deutsch",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "D7 1.1",
@@ -308,7 +308,7 @@
     {
       "kuerzel": "englisch",
       "name": "Englisch",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "auspraegung": "1. Fremdsprache",
       "lernbereiche": [
         {
@@ -428,7 +428,7 @@
     {
       "kuerzel": "geographie",
       "name": "Geographie",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "Geo7 1",
@@ -531,7 +531,7 @@
     {
       "kuerzel": "geschichte",
       "name": "Geschichte",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "G7 1",
@@ -658,7 +658,7 @@
     {
       "kuerzel": "nt",
       "name": "Natur und Technik",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "hinweis": "Ein Fach mit zwei Teilen: Physik (NT7 1) und Informatik (NT7 2), je ca. 28 Stunden. Kein getrennter Schwerpunkt, wie das Jahrgangsstufenprofil vermuten laesst.",
       "lernbereiche": [
         {
@@ -776,7 +776,7 @@
     {
       "kuerzel": "franzoesisch",
       "name": "Franzoesisch",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "auspraegung": "2. Fremdsprache (bestaetigt 04.09.2026)",
       "lernbereiche": [
         {
@@ -905,7 +905,7 @@
     {
       "kuerzel": "ethik",
       "name": "Ethik",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "hinweis": "Helena besucht Ethik, nicht Religion (bestaetigt 04.09.2026).",
       "lernbereiche": [
         {

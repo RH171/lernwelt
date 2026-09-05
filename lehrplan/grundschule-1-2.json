@@ -11,7 +11,7 @@
     {
       "kuerzel": "mathe",
       "name": "Mathematik",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "M1/2 1",
@@ -124,7 +124,7 @@
     {
       "kuerzel": "deutsch",
       "name": "Deutsch",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "D1/2 1.1",
@@ -360,7 +360,7 @@
     {
       "kuerzel": "hsu",
       "name": "Heimat- und Sachunterricht",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "lernbereiche": [
         {
           "id": "HSU1/2 1.1",
@@ -561,7 +561,7 @@
     {
       "kuerzel": "musik",
       "name": "Musik",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "hinweis": "In Jgst. 1/2 gibt es keine Ein-/Zweistuendigkeit - die Flexibilisierung betrifft nur 3/4.",
       "lernbereiche": [
         {

@@ -15,7 +15,7 @@
     {
       "kuerzel": "mathe",
       "name": "Mathematik",
-      "übertrittsfach": true,
+      "uebertrittsfach": true,
       "lernbereiche": [
         {
           "id": "M3/4 1.1",
@@ -205,7 +205,7 @@
     {
       "kuerzel": "deutsch",
       "name": "Deutsch",
-      "übertrittsfach": true,
+      "uebertrittsfach": true,
       "lernbereiche": [
         {
           "id": "D3/4 1.1",
@@ -443,7 +443,7 @@
     {
       "kuerzel": "hsu",
       "name": "Heimat- und Sachunterricht",
-      "übertrittsfach": true,
+      "uebertrittsfach": true,
       "lernbereiche": [
         {
           "id": "HSU3/4 1.1",
@@ -657,7 +657,7 @@
     {
       "kuerzel": "religion-kath",
       "name": "Katholische Religionslehre",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "bekenntnis": "katholisch",
       "lernbereiche": [
         {
@@ -834,7 +834,7 @@
     {
       "kuerzel": "musik",
       "name": "Musik",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "auspraegung": "zweistuendig",
       "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
       "lernbereiche": [
@@ -929,7 +929,7 @@
     {
       "kuerzel": "englisch",
       "name": "Englisch",
-      "übertrittsfach": false,
+      "uebertrittsfach": false,
       "auspraegung": "zweistuendig",
       "hinweis": "Zweistuendige Fassung - von Denny am 04.09.2026 als die an Pauls Schule unterrichtete bestaetigt.",
       "lernbereiche": [
