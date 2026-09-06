@@ -296,7 +296,11 @@ function buildLevel(){
 
     // Fragetor: drei Glühbirnen in verschiedenen Höhen, Energiebarriere
     const gx=x+60;
-    const opts=qq.a.map((txt,idx)=>({txt,idx}));
+    // Auch die Reihenfolge mischen, nicht nur die Höhen: Die richtige Antwort
+    // steht in den Daten immer an erster Stelle (correct:0). Vorher war sie
+    // damit IMMER die linke Birne - man konnte das Spiel gewinnen, ohne eine
+    // einzige Frage zu lesen.
+    const opts=qq.a.map((txt,idx)=>({txt,idx})).sort(()=>Math.random()-0.5);
     // Positionen der Birnen (verschiedene Höhen -> Doppelsprung nötig)
     const heights=[gy-90, gy-200, gy-310];
     // mische Höhen zufällig
