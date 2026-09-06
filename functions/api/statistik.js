@@ -72,6 +72,35 @@ function saeubern(r) {
   };
 }
 
+/* ---------- Aufraeumen ---------- */
+// DELETE /api/statistik?kind=leon[&alles=1]
+// Ohne "alles" wird nur die neueste Runde entfernt - fuer den Fall, dass
+// jemand anderes als das Kind eine Runde gespielt hat (Testlauf, kleine
+// Schwester am Tablet). Nur mit Elternzugang.
+export async function onRequestDelete(context) {
+  const { request, env } = context;
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+  if (!(await ausweisGueltig(request, geheimFuer(env, "eltern"), env)))
+    return json(401, { ok: false, fehler: "Bitte mit dem Eltern-Code anmelden." });
+
+  const url = new URL(request.url);
+  const kind = kindAus(request, null);
+  if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+
+  if (url.searchParams.get("alles") === "1") {
+    await env.PAUL_KV.delete(RUNDEN(kind));
+    return json(200, { ok: true, entfernt: "alles" });
+  }
+  let liste = [];
+  try {
+    const roh = await env.PAUL_KV.get(RUNDEN(kind));
+    liste = roh ? JSON.parse(roh) : [];
+  } catch (e) {}
+  const weg = liste.shift();
+  await env.PAUL_KV.put(RUNDEN(kind), JSON.stringify(liste));
+  return json(200, { ok: true, entfernt: weg ? (weg.titel || "eine Runde") : "nichts", uebrig: liste.length });
+}
+
 /* ---------- Auswerten ---------- */
 
 export async function onRequestGet(context) {
