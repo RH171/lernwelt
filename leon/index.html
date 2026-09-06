@@ -38,13 +38,6 @@
     cursor:pointer;padding:9px;
   }
   @media (max-width:340px){ .themen{grid-template-columns:1fr} }
-  /* Auf breiten Bildschirmen mehr Spalten - sonst scrollt Leon an zehn Themen
-     vorbei, statt sie auf einen Blick zu sehen. Die Hülle darf dafür etwas
-     breiter werden; drei Spalten bleiben lesbar, fünf wären zu schmal. */
-  @media (min-width:760px){
-    .huelle{max-width:940px}
-    .themen{grid-template-columns:repeat(3,1fr);gap:13px}
-  }
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
@@ -55,6 +48,13 @@
     padding:16px; padding-bottom:calc(24px + env(safe-area-inset-bottom));
   }
   .huelle{max-width:760px;margin:0 auto}
+  /* Auf breiten Bildschirmen mehr Spalten - sonst scrollt Leon an zehn Themen
+     vorbei, statt sie auf einen Blick zu sehen. Die Hülle darf dafür etwas
+     breiter werden; drei Spalten bleiben lesbar, fünf wären zu schmal. */
+  @media (min-width:760px){
+    .huelle{max-width:940px}
+    .themen{grid-template-columns:repeat(3,1fr);gap:13px}
+  }
   header{display:flex;align-items:center;gap:12px;margin:6px 0 20px}
   .zurueck{
     display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink);
