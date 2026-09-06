@@ -440,6 +440,7 @@
     var buttons=document.querySelectorAll("#opts .opt");
     buttons.forEach(function(b){ b.disabled=true; });
     var isRight=(picked===correct);
+    try{ window.lernstand && window.lernstand.antwort(isRight, "schaltungen lesen", picked, correct); }catch(e){}
     var ex=document.getElementById("explain");
 
     if(isRight){

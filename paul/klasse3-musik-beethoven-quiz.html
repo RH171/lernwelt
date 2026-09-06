@@ -1441,6 +1441,7 @@ function initTF(){
   function answer(val){
     $('tf-yes').disabled=true; $('tf-no').disabled=true;
     const ok = (val===items[idx].correct);
+    try{ window.lernstand && window.lernstand.antwort(ok, "beethoven wissen"); }catch(e){}
     if(ok){ correct++; $('tf-fb').textContent=PRAISE[Math.floor(Math.random()*PRAISE.length)]; $('tf-fb').className='feedback good'; }
     else { $('tf-fb').textContent='Das stimmt nicht ganz. Richtig wäre: '+(items[idx].correct?'Wahr':'Falsch')+'.'; $('tf-fb').className='feedback bad'; }
     setTimeout(()=>{

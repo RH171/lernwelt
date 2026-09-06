@@ -625,6 +625,7 @@
   function lockChoices(){ var bs=el.opts.querySelectorAll(".opt"); for(var i=0;i<bs.length;i++) bs[i].disabled=true; }
   function answerChoice(btn,correct){
     lockChoices();
+    try{ window.lernstand && window.lernstand.antwort(!!correct, "gewichte umrechnen"); }catch(e){}
     if(correct){ btn.classList.add("right"); onCorrect(); }
     else { btn.classList.add("wrong"); var bs=el.opts.querySelectorAll(".opt");
       for(var i=0;i<bs.length;i++){ if(cur.options[i].correct) bs[i].classList.add("right"); } onWrong(); }

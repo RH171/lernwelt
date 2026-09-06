@@ -598,6 +598,8 @@
     var ok = (parseInt(entry[0],10)===task.aH &&
               parseInt(entry[1],10)===task.aZ &&
               parseInt(entry[2],10)===task.aE);
+    try{ window.lernstand && window.lernstand.antwort(ok, "schriftlich minus",
+          entry.join(""), String(task.aH)+String(task.aZ)+String(task.aE)); }catch(e){}
 
     // Zell-Färbung
     ansCells[0].className="ans "+(parseInt(entry[0],10)===task.aH?"rightcell":"wrongcell");
