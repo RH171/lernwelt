@@ -61,6 +61,18 @@
   .anmeldung button{width:100%;margin-top:12px;border:none;border-radius:14px;padding:15px;
     background:var(--akzent);color:#fff;font-family:var(--rund);font-size:17px;font-weight:700;cursor:pointer}
   .fehler{color:var(--schlecht);font-size:14px;min-height:20px;margin-top:10px}
+  .meldung{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:11px;background:#fff}
+  .meldung.problem{border-left:4px solid var(--schlecht)}
+  .meldung.wunsch{border-left:4px solid #6366f1}
+  .meldung .kopf{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+  .meldung .wer{font-family:var(--rund);font-weight:700}
+  .meldung .wann{color:var(--muted);font-size:12.5px}
+  .meldung .wo{color:var(--muted);font-size:12.5px;margin-left:auto}
+  .meldung .was{font-size:15px;line-height:1.55;white-space:pre-line}
+  .meldung img{max-width:100%;border-radius:10px;border:1px solid var(--line);margin-top:10px;display:block;cursor:zoom-in}
+  .meldung .weg{margin-top:10px;border:none;background:#f2f3f8;color:var(--muted);
+                border-radius:9px;padding:7px 12px;font-size:13px;cursor:pointer}
+  .meldung .weg:hover{background:#ffe9e9;color:var(--schlecht)}
   .verborgen{display:none !important}
   @media(max-width:560px){ td,th{padding-left:4px;padding-right:4px} .balken{display:none} }
 </style>
@@ -81,6 +93,7 @@
       <h1>Lernstand</h1>
       <span class="stand" id="stand"></span>
     </header>
+    <div id="meldungen"></div>
     <div class="reiter" id="reiter"></div>
     <div id="inhalt"></div>
   </div>
@@ -110,6 +123,7 @@
         if (!a.j || !a.j.ok){ zeige("anmelden"); $("codefehler").textContent = (a.j&&a.j.fehler)||"Das ging nicht."; return; }
         DATEN = a.j.kinder || {};
         zeige("daten");
+        meldungenLaden();
         reiterMalen();
       })
       .catch(function(){ zeige("anmelden"); });
@@ -134,6 +148,53 @@
   }
   $("anmelden").addEventListener("click", anmelden);
   $("code").addEventListener("keydown", function(e){ if(e.key==="Enter") anmelden(); });
+
+  // Was die Kinder selbst gemeldet haben. Steht ganz oben - eine Meldung
+  // von Paul ist wertvoller als jede Statistik: Er sieht Dinge, die im
+  // Code nicht auffallen.
+  function meldungenLaden(){
+    fetch("/api/melden", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (j && j.ok) meldungenMalen(j.meldungen || []); })
+      .catch(function(){});
+  }
+
+  function meldungenMalen(liste){
+    var kasten = $("meldungen");
+    if (!liste.length){ kasten.innerHTML = ""; return; }
+    var h = '<div class="karte"><h2>Gemeldet von den Kindern (' + liste.length + ')</h2>' +
+            '<p class="unter">Direkt aus dem Spiel geschickt.</p><div id="meldeliste"></div></div>';
+    kasten.innerHTML = h;
+    var ziel = $("meldeliste");
+    liste.forEach(function(m){
+      var d = document.createElement("div");
+      d.className = "meldung " + (m.art === "wunsch" ? "wunsch" : "problem");
+      d.innerHTML =
+        '<div class="kopf">' +
+          '<span class="wer">' + (m.art === "wunsch" ? "\u2728 " : "\u{1F41B} ") + esc(kindName(m.kind)) + '</span>' +
+          '<span class="wann">' + esc(wann(m.zeit)) + '</span>' +
+          '<span class="wo">' + esc(m.titel || m.wo || "") + '</span>' +
+        '</div>' +
+        '<div class="was"></div>' +
+        (m.hatBild ? '<img data-bild="' + esc(m.id) + '" alt="Bild zur Meldung">' : '') +
+        '<button class="weg" data-weg="' + esc(m.id) + '">Erledigt – wegräumen</button>';
+      d.querySelector(".was").textContent = m.text || "(nur ein Bild)";
+      ziel.appendChild(d);
+
+      if (m.hatBild){
+        fetch("/api/melden?bild=" + encodeURIComponent(m.id), {credentials:"same-origin"})
+          .then(function(r){ return r.json(); })
+          .then(function(j){ if (j && j.ok && j.bild){ var i = d.querySelector("img"); if (i) i.src = j.bild; } })
+          .catch(function(){});
+      }
+      d.querySelector(".weg").addEventListener("click", function(){
+        fetch("/api/melden?id=" + encodeURIComponent(m.id), {method:"DELETE", credentials:"same-origin"})
+          .then(function(){ meldungenLaden(); }).catch(function(){});
+      });
+    });
+  }
+
+  function kindName(k){ return k ? k.charAt(0).toUpperCase()+k.slice(1) : "Jemand"; }
 
   function reiterMalen(){
     var namen = Object.keys(DATEN).filter(function(k){ return DATEN[k] && DATEN[k].runden; });
