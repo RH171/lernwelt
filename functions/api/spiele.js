@@ -137,6 +137,7 @@ export async function spielSichern(env, spiel, seiten, kind, quelle, verbrauch) 
     // jedes Mal neu - 90 Sekunden Warten fuer nichts.
     quelle: quelle || "",
     verbrauch: kostenSchaetzen(verbrauch),
+    modell: spiel.modell || null,
     titel: spiel.titel,
     fach: spiel.fach,
     thema: spiel.thema,

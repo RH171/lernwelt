@@ -15,6 +15,14 @@ import { spielSichern } from "./spiele.js";
 
 const MODELL = "claude-opus-5";
 
+// Zum Vergleichen: Ein Auftrag darf ein anderes Modell verlangen, aber nur
+// aus dieser Liste - sonst koennte jemand ein teures Modell erzwingen.
+const MODELLE_ERLAUBT = {
+  "opus":   "claude-opus-5",
+  "sonnet": "claude-sonnet-5",
+  "haiku":  "claude-haiku-4-5-20251001",
+};
+
 // Welches Kind lernt nach welchem Lehrplan.
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 9 },
@@ -110,7 +118,7 @@ export async function onRequestPost(context) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: MODELL,
+      model: MODELLE_ERLAUBT[String(auftrag.modell || "").toLowerCase()] || MODELL,
       // 20000 statt 16000: Seit die Aufgaben ein Bild-Feld tragen, sind die
       // Antworten laenger. Ein abgeschnittenes Ergebnis kommt als leeres
       // Spiel zurueck - einmal beobachtet am 06.09.2026.
@@ -149,6 +157,7 @@ export async function onRequestPost(context) {
 
   spiel.erzeugt = new Date().toISOString();
   spiel.kind = kind;
+  spiel.modell = MODELLE_ERLAUBT[String(auftrag.modell || "").toLowerCase()] || MODELL;
 
   // Aufheben, damit Paul es wiederfindet und daraus weitere Spiele ableiten kann.
   // Ein Fehler beim Speichern darf das fertige Spiel nicht kosten.
