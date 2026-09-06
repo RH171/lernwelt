@@ -183,67 +183,19 @@
   @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
 
   /* ---------- Code-Riegel (weiches Schloss) ---------- */
-  #gate{position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center;
     background:linear-gradient(180deg,#0e1320,#0b0f18); padding:20px; transition:opacity .2s ease;}
-  #gate .gatecard{background:var(--surface); border:1px solid var(--line); border-radius:24px;
     padding:34px 26px; max-width:360px; width:100%; text-align:center; box-shadow:var(--shadow);}
-  #gate .glock{font-size:44px; line-height:1;}
-  #gate h2{font-family:var(--round); font-weight:800; font-size:22px; margin:12px 0 4px; color:var(--ink);}
-  #gate p{color:var(--muted); font-size:13.5px; margin:0 0 20px;}
-  #gate input{width:100%; text-align:center; font-size:30px; letter-spacing:.4em; font-family:var(--round);
     font-weight:800; color:var(--ink); background:var(--surface2); border:1.5px solid var(--line);
     border-radius:14px; padding:14px; outline:none;}
-  #gate input:focus{border-color:var(--brand);}
-  #gate button{width:100%; margin-top:14px; border:none; border-radius:14px; padding:14px; cursor:pointer;
     font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
     background:linear-gradient(150deg,var(--brand),#7c5cff);}
-  #gate .err{color:var(--no); font-size:13px; min-height:18px; margin-top:12px; font-weight:700;}
   @keyframes shake{10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(4px);}
     30%,50%,70%{transform:translateX(-8px);}40%,60%{transform:translateX(8px);}}
-  #gate.wrong .gatecard{animation:shake .4s;}
 </style>
 <link rel="stylesheet" href="/beruehrung.css">
 </head>
 <body>
-<div id="gate">
-  <div class="gatecard">
-    <div class="glock">🔒</div>
-    <h2>Helenas Bereich</h2>
-    <p>Bitte gib deinen Code ein</p>
-    <input id="gatePin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••" aria-label="Code">
-    <button id="gateGo">Öffnen</button>
-    <div class="err" id="gateErr"></div>
-  </div>
-</div>
-<script>
-(function(){
-  var PIN="1234"; /* <-- hier kann der Code später geändert werden */
-  var gate=document.getElementById("gate");
-  function unlocked(){ return /(?:^|;\s*)helena_ok=1(?:;|$)/.test(document.cookie); }
-  function remember(){
-    var d=new Date(); d.setTime(d.getTime()+30*24*60*60*1000); /* 30 Tage */
-    document.cookie="helena_ok=1; path=/helena/; expires="+d.toUTCString()+"; SameSite=Lax";
-  }
-  /* Alt-Markierung aus localStorage entfernen – die wurde über Pauls Sync verteilt */
-  try{ localStorage.removeItem("helena-unlocked"); }catch(e){}
-  if(unlocked()){ if(gate&&gate.parentNode) gate.parentNode.removeChild(gate); return; }
-  var inp=document.getElementById("gatePin"), err=document.getElementById("gateErr");
-  function tryOpen(){
-    if(inp.value===PIN){
-      remember();
-      gate.style.opacity="0";
-      setTimeout(function(){ if(gate.parentNode) gate.parentNode.removeChild(gate); }, 200);
-    } else {
-      err.textContent="Falscher Code – nochmal versuchen";
-      gate.classList.add("wrong"); setTimeout(function(){ gate.classList.remove("wrong"); }, 400);
-      inp.value=""; inp.focus();
-    }
-  }
-  document.getElementById("gateGo").addEventListener("click", tryOpen);
-  inp.addEventListener("keydown", function(e){ if(e.key==="Enter") tryOpen(); });
-  setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 100);
-})();
-</script>
+
 <div class="wrap">
   <header>
     <div class="logo">
