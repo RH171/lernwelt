@@ -116,7 +116,7 @@ export async function onRequestPost(context) {
     inhalt.push({ type: "text", text: `Ich habe kein Bild dabei. Bau mir ein Spiel nach diesem Wunsch: ${wunsch}` });
   }
 
-  const antwort = await fetch("https://api.anthropic.com/v1/messages", {
+  const anfrageStellen = () => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -125,10 +125,10 @@ export async function onRequestPost(context) {
     },
     body: JSON.stringify({
       model: MODELLE_ERLAUBT[String(auftrag.modell || "").toLowerCase()] || MODELL,
-      // 20000 statt 16000: Seit die Aufgaben ein Bild-Feld tragen, sind die
-      // Antworten laenger. Ein abgeschnittenes Ergebnis kommt als leeres
-      // Spiel zurueck - einmal beobachtet am 06.09.2026.
-      max_tokens: 20000,
+      // Grosszuegig: Mit Bild und Merkmal je Aufgabe sind die Antworten lang
+      // geworden, und ein abgeschnittenes Ergebnis kommt als leeres Spiel
+      // zurueck. Am 6.9.2026 zweimal beobachtet, danach von 16000 auf 32000.
+      max_tokens: 32000,
       thinking: { type: "adaptive" },
       output_config: { effort: "medium" },
       system: [{ type: "text", text: systemtext(kind, lehrplan), cache_control: { type: "ephemeral" } }],
@@ -137,6 +137,8 @@ export async function onRequestPost(context) {
       messages: [{ role: "user", content: inhalt }],
     }),
   });
+
+  let antwort = await anfrageStellen();
 
   if (!antwort.ok) {
     const text = await antwort.text().catch(() => "");
@@ -156,7 +158,20 @@ export async function onRequestPost(context) {
   // Bevor irgendetwas gespeichert oder ausgeliefert wird: Taugt das Spiel?
   // Am 06.09.2026 kam ein Spiel mit einer einzigen Aufgabe zurueck - fuer ein
   // Kind ist das kein Spiel. Lieber ein ehrlicher Fehler als Murks im Regal.
-  const maengel = pruefeSpiel(spiel);
+  let maengel = pruefeSpiel(spiel);
+  if (maengel.length) {
+    // Einmal nachfassen. Diese Aussetzer sind sporadisch, und ein Kind soll
+    // nicht mit einer Fehlermeldung dastehen, wenn ein zweiter Anlauf reicht.
+    const zweite = await anfrageStellen();
+    if (zweite.ok) {
+      const d2 = await zweite.json();
+      const b2 = (d2.content || []).find((c) => c.type === "tool_use");
+      if (b2 && b2.input && !pruefeSpiel(b2.input).length) {
+        Object.assign(spiel, b2.input);
+        maengel = [];
+      }
+    }
+  }
   if (maengel.length) {
     return fehler(502, "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen.");
   }
