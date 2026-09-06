@@ -895,7 +895,10 @@
 
   var VORLESEN_SCHLUESSEL = "leon-vorlesen";
   var vorlesenAn = false;
-  try { vorlesenAn = localStorage.getItem(VORLESEN_SCHLUESSEL) === "1"; } catch(e){}
+  // Bewusst NICHT gespeichert: Über den Sync landete die Einstellung auf
+  // anderen Geräten und die Seite fing dort von selbst an zu sprechen.
+  // Wer vorgelesen haben will, drückt den Knopf - für diese Sitzung.
+  try { localStorage.removeItem(VORLESEN_SCHLUESSEL); } catch(e){}
 
   var kannSprechen = (typeof window.speechSynthesis !== "undefined" &&
                       typeof window.SpeechSynthesisUtterance !== "undefined");
@@ -911,10 +914,16 @@
     window.speechSynthesis.onvoiceschanged = stimmeSuchen;
   }
 
+  var sprichAufWunsch = false;
+
   function stopp(){ if (kannSprechen) try { window.speechSynthesis.cancel(); } catch(e){} }
 
   function sprich(text){
-    if (!kannSprechen || !text) return;
+    if (!kannSprechen || !text || !vorlesenAn && !sprichAufWunsch) return;
+    // Nicht sprechen, wenn niemand hinschaut. Sonst sammelt der Browser die
+    // Ansagen und gibt sie aus, sobald irgendwo eine Taste gedrückt wird -
+    // auch in einem ganz anderen Programm.
+    if (document.hidden) { stopp(); return; }
     stopp();
     var t = String(text).replace(/\s+/g, " ").trim();
     if (!t) return;
@@ -950,14 +959,23 @@
 
   $("vorlesen").addEventListener("click", function(){
     vorlesenAn = !vorlesenAn;
-    try { localStorage.setItem(VORLESEN_SCHLUESSEL, vorlesenAn ? "1" : "0"); } catch(e){}
+    try { localStorage.removeItem(VORLESEN_SCHLUESSEL); } catch(e){}
     vorleseKnopfMalen();
     if (vorlesenAn) aufgabeVorlesen(); else stopp();
   });
 
   // Auf die Frage tippen liest sie noch einmal vor - auch wenn der
   // Schalter aus ist. Ein Kind fragt lieber nochmal, als aufzugeben.
-  $("frage").addEventListener("click", function(){ if (kannSprechen) aufgabeVorlesen(); });
+  $("frage").addEventListener("click", function(){
+    if (!kannSprechen) return;
+    sprichAufWunsch = true;          // ausdrücklich angetippt
+    aufgabeVorlesen();
+    setTimeout(function(){ sprichAufWunsch = false; }, 1500);
+  });
+
+  // Verlässt Leon den Tab oder die Seite, ist sofort Ruhe.
+  document.addEventListener("visibilitychange", function(){ if (document.hidden) stopp(); });
+  window.addEventListener("pagehide", stopp);
 
   vorleseKnopfMalen();
 
