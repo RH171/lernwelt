@@ -678,6 +678,7 @@ function answer(i, btn){
   const q = round.pool[round.idx];
   const isOk = i === q.correct;
   state.stats.answered++; if(isOk) state.stats.correct++; saveStats();
+  try{ window.lernstand && window.lernstand.antwort(isOk, "subjekt und praedikat"); }catch(e){}
   const buttons = [...$("options").children];
   buttons.forEach((b,bi)=>{
     b.classList.add("locked");

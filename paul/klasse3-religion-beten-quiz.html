@@ -418,6 +418,7 @@
 
   function choose(btn,opt,idx,item){
     if(locked) return; locked=true;
+    try{ window.lernstand && window.lernstand.antwort(!!opt.correct, "beten und gebete"); }catch(e){}
     const all=[...document.querySelectorAll(".ans")];
     all.forEach(a=>{ a.disabled=true; });
     const fb=$("feedback");

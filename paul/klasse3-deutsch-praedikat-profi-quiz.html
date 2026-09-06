@@ -345,6 +345,7 @@ function afterAnswer(){
 function check(){
   if(Q.answered) return;
   var right=Q.sel.length===1 && Q.sel[0]===Q.cur.c[0];
+  try{ if(Q.attempt===0 && window.lernstand) window.lernstand.antwort(right, "praedikat finden"); }catch(e){}
   var fb=document.getElementById("feedback");
   var cards=document.getElementById("words").children;
   var answer=Q.cur.w[Q.cur.c[0]];

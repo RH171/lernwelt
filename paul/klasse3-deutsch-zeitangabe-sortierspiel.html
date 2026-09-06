@@ -392,6 +392,8 @@
     if(locked || !cur) return;
     locked = true;
     var d=cur.data, ok=(k===d.cat);
+    try{ window.lernstand && window.lernstand.antwort(ok,
+          "zeitangabe: " + (d.cat||"?"), String(k), String(d.cat)); }catch(e){}
     if(ok){
       var gain=10; if(streak>=4) gain=20; else if(streak>=2) gain=15;
       streak++; right++; xp+=gain; session++;

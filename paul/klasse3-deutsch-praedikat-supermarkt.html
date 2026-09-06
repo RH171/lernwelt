@@ -346,6 +346,8 @@ function checkout(){
   var correct=G.current.c.slice().sort(function(a,b){return a-b;});
   var chosen=G.selected.slice().sort(function(a,b){return a-b;});
   var right=correct.length===chosen.length && correct.every(function(v,i){return v===chosen[i];});
+  try{ window.lernstand && window.lernstand.antwort(right,
+        G.current.t==="subjekt" ? "subjekt finden" : "praedikat finden"); }catch(e){}
   var fb=document.getElementById("feedback");
   var term=G.current.t==="subjekt"?"Subjekt":"Prädikat";
   var answerWords=G.current.c.map(function(i){return G.current.w[i];}).join(" ");
