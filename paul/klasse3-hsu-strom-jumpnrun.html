@@ -696,6 +696,11 @@ function update(){
 
 function answerBulb(g,b){
   if(g.solved) return;
+  try{
+    var _stimmt = (b.idx===g.q.correct);
+    if((_stimmt || !b.wrong) && window.lernstand)
+      window.lernstand.antwort(_stimmt, "strom: " + String((g.q && g.q.topic) || "").toLowerCase());
+  }catch(e){}
   if(b.idx===g.q.correct){
     b.lit=true; g.solved=true; game.correct++; game.streak++;
     if(game.streak>SAVE.best){ SAVE.best=game.streak; }

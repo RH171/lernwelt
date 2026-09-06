@@ -334,6 +334,8 @@
         it.wack += 0.06;
         var by = it.y + Math.sin(it.wack)*5;
         if(kreisRechteck(it.x, by, it.r, held.x,held.y,held.w,held.h)){
+          try{ window.lernstand && window.lernstand.antwort(!!it.korrekt, "praedikat finden",
+                String(it.wort||""), ""); }catch(e){}
           if(it.korrekt){ ballonRichtig(it, by); }
           else { it.weg = true; herzVerlieren(); funken(it.x,by,'#ef4444',12); }
         }
