@@ -60,6 +60,7 @@ function saeubern(r) {
     thema: text(r.thema, 90),
     lernbereich: text(r.lernbereich, 60),
     sekunden: zahl(r.sekunden, 36000),
+    nurBesuch: !!r.nurBesuch,
     aufgaben: r.aufgaben.slice(0, 40).map((a) => ({
       merkmal: text(a.merkmal, 40).toLowerCase(),
       art: text(a.art, 14),
@@ -147,6 +148,10 @@ function auswerten(liste) {
     jeThema[t] = jeThema[t] || { name: t, thema: r.thema || t, aufgaben: 0, richtig: 0, sekunden: 0 };
 
     for (const a of r.aufgaben || []) {
+      // Ein "Besuch" ist keine gelöste Aufgabe: Er sagt nur, dass gespielt
+      // wurde. Er darf die Quote nicht schönen - sonst stünden Pauls
+      // Eigenbau-Spiele mit 100 Prozent in der Auswertung.
+      if (a.art === "besuch") { jeThema[t].sekunden += a.sekunden || 0; continue; }
       g.aufgaben++; jeThema[t].aufgaben++; jeWoche[woche].aufgaben++;
       jeThema[t].sekunden += a.sekunden || 0;
       if (a.stimmt) { g.richtig++; jeThema[t].richtig++; jeWoche[woche].richtig++; }
@@ -170,12 +175,19 @@ function auswerten(liste) {
   const mitQuote = (o) => Object.assign({}, o, {
     quote: o.aufgaben ? Math.round((o.richtig / o.aufgaben) * 100) : null,
     schnitt: o.aufgaben ? Math.round((o.sekunden || 0) / o.aufgaben) : null,
+    minuten: Math.round((o.sekunden || 0) / 60),
   });
 
   const merkmale = Object.values(jeMerkmal).map(mitQuote)
     .sort((a, b) => (a.quote - b.quote) || (b.aufgaben - a.aufgaben));
   const themen = Object.values(jeThema).map(mitQuote)
-    .sort((a, b) => (a.quote - b.quote) || (b.aufgaben - a.aufgaben));
+    .sort((a, b) => {
+      // Themen ganz ohne bewertete Aufgaben (reine Spielzeit) nach hinten.
+      if (a.quote == null && b.quote == null) return b.sekunden - a.sekunden;
+      if (a.quote == null) return 1;
+      if (b.quote == null) return -1;
+      return (a.quote - b.quote) || (b.aufgaben - a.aufgaben);
+    });
 
   const verlauf = Object.values(jeWoche)
     .map((w) => Object.assign({}, w, {
