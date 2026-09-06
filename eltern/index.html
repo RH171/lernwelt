@@ -173,7 +173,7 @@
         '<div class="kopf">' +
           '<span class="wer">' + (m.art === "wunsch" ? "\u2728 " : "\u{1F41B} ") + esc(kindName(m.kind)) + '</span>' +
           '<span class="wann">' + esc(wann(m.zeit)) + '</span>' +
-          '<span class="wo">' + esc(m.titel || m.wo || "") + '</span>' +
+          '<span class="wo">' + esc(m.titel || m.wo || "") + (m.geraet ? " \u00B7 " + esc(m.geraet) : "") + '</span>' +
         '</div>' +
         '<div class="was"></div>' +
         (m.hatBild ? '<img data-bild="' + esc(m.id) + '" alt="Bild zur Meldung">' : '') +
@@ -270,6 +270,20 @@
     if ((d.themen||[]).length){
       h += '<div class="karte"><h2>Nach Thema</h2><p class="unter">Schwächstes zuerst.</p>' +
            tabelle(d.themen, true) + '</div>';
+    }
+
+    /* Womit gespielt wird - hilft bei Usability-Fragen */
+    if ((d.geraete||[]).length){
+      h += '<div class="karte"><h2>Womit gespielt wird</h2>' +
+           '<p class="unter">Wo es hakt, hängt oft am Gerät. Deshalb wird es mitgeschrieben.</p>' +
+           '<table><thead><tr><th>Gerät</th><th style="text-align:right">Runden</th>' +
+           '<th style="text-align:right">Zeit</th></tr></thead><tbody>';
+      d.geraete.forEach(function(g){
+        h += '<tr><td>' + esc(g.name) + '</td>' +
+             '<td style="text-align:right;color:var(--muted)">' + g.runden + '</td>' +
+             '<td style="text-align:right;color:var(--muted)">' + minuten(g.minuten) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
     }
 
     /* Letzte Runden */
