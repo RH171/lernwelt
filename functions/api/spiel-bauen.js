@@ -153,7 +153,7 @@ export async function onRequestPost(context) {
   // Aufheben, damit Paul es wiederfindet und daraus weitere Spiele ableiten kann.
   // Ein Fehler beim Speichern darf das fertige Spiel nicht kosten.
   try {
-    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten, kind, quelle);
+    if (env.PAUL_KV) spiel.id = await spielSichern(env, spiel, seiten, kind, quelle, daten.usage);
   } catch (e) {
     spiel.nichtGespeichert = true;
   }

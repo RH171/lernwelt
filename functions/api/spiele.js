@@ -111,7 +111,22 @@ function json(status, daten) {
 }
 
 // Wird von spiel-bauen.js benutzt.
-export async function spielSichern(env, spiel, seiten, kind, quelle) {
+// Kalibriert an der Anthropic-Console (5.9.2026: 4,32 $ für 29 Bauten).
+// Die Console bleibt die Wahrheit - das hier gibt nur ein Gefühl dafür,
+// welches Spiel wie ins Gewicht fällt.
+const PREIS_JE_MIO = { ein: 15, aus: 75, cache_lesen: 1.5, cache_schreiben: 18.75 };
+
+function kostenSchaetzen(u) {
+  if (!u) return null;
+  const ein = (u.input_tokens || 0), aus = (u.output_tokens || 0);
+  const cSchreib = u.cache_creation_input_tokens || 0;
+  const cLesen = u.cache_read_input_tokens || 0;
+  const d = (ein * PREIS_JE_MIO.ein + aus * PREIS_JE_MIO.aus +
+             cSchreib * PREIS_JE_MIO.cache_schreiben + cLesen * PREIS_JE_MIO.cache_lesen) / 1e6;
+  return { ein, aus, cache_neu: cSchreib, cache_gelesen: cLesen, dollar: Math.round(d * 10000) / 10000 };
+}
+
+export async function spielSichern(env, spiel, seiten, kind, quelle, verbrauch) {
   const id = neueId();
   const eintrag = {
     id,
@@ -119,6 +134,7 @@ export async function spielSichern(env, spiel, seiten, kind, quelle) {
     // dass zu diesem Thema schon etwas Fertiges bereitliegt, und baut nicht
     // jedes Mal neu - 90 Sekunden Warten fuer nichts.
     quelle: quelle || "",
+    verbrauch: kostenSchaetzen(verbrauch),
     titel: spiel.titel,
     fach: spiel.fach,
     thema: spiel.thema,
