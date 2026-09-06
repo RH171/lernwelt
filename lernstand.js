@@ -288,7 +288,8 @@
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         kind: KIND, text: text, bild: bildDaten,
-        art: gewaehlteArt, wo: location.pathname, titel: document.title || ""
+        art: gewaehlteArt, wo: location.pathname, titel: document.title || "",
+        geraet: geraet()
       })
     })
     .then(function (r) { return r.json(); })
@@ -318,6 +319,35 @@
   }
 
   if (NUR_MELDEN) return;   // Hub und Werkstatt schreiben ihre Runden selbst mit
+
+  // Auf welchem Gerät wird gespielt? Das muss man ein Kind nicht fragen -
+  // der Browser weiß es. Bewusst nur eine kurze, lesbare Beschreibung und
+  // keine vollständige Browser-Kennung: Die wäre ein Fingerabdruck, und für
+  // Usability-Fragen reicht "iPad, 1024x768, Touch" vollkommen.
+  function geraet() {
+    try {
+      var u = navigator.userAgent || "";
+      var art =
+        /iPad/i.test(u) || (/Macintosh/i.test(u) && navigator.maxTouchPoints > 1) ? "iPad" :
+        /iPhone|iPod/i.test(u) ? "iPhone" :
+        /Android/i.test(u) ? (/Mobile/i.test(u) ? "Android-Handy" : "Android-Tablet") :
+        /Macintosh|Mac OS X/i.test(u) ? "Mac" :
+        /Windows/i.test(u) ? "Windows-PC" :
+        /CrOS/i.test(u) ? "Chromebook" :
+        /Linux/i.test(u) ? "Linux" : "unbekannt";
+      var browser =
+        /EdgA?\//i.test(u) ? "Edge" :
+        /OPR\//i.test(u) ? "Opera" :
+        /Firefox\//i.test(u) ? "Firefox" :
+        /CriOS|Chrome\//i.test(u) ? "Chrome" :
+        /Safari\//i.test(u) ? "Safari" : "";
+      var b = window.screen ? window.screen.width : 0;
+      var h = window.screen ? window.screen.height : 0;
+      var tasten = (navigator.maxTouchPoints || 0) > 0 ? "Touch" : "Maus";
+      var quer = window.innerWidth > window.innerHeight ? "quer" : "hoch";
+      return [art, browser, b + "x" + h, tasten, quer].filter(Boolean).join(" \u00B7 ");
+    } catch (e) { return ""; }
+  }
 
   var begonnen = Date.now();
   var aufgaben = [];
@@ -360,6 +390,7 @@
       spielId: DATEI, titel: document.title || DATEI,
       quelle: DATEI, fach: d.fach, thema: d.thema, lernbereich: "",
       sekunden: sekunden,
+      geraet: geraet(),
       // Hat das Spiel nichts gemeldet, halten wir wenigstens fest, DASS
       // gespielt wurde - ohne Ergebnis, damit keine Quote verfälscht wird.
       aufgaben: aufgaben.length ? aufgaben : [{ merkmal: "", art: "besuch", stimmt: true,

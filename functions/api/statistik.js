@@ -61,6 +61,7 @@ function saeubern(r) {
     lernbereich: text(r.lernbereich, 60),
     sekunden: zahl(r.sekunden, 36000),
     nurBesuch: !!r.nurBesuch,
+    geraet: text(r.geraet, 80),
     aufgaben: r.aufgaben.slice(0, 40).map((a) => ({
       merkmal: text(a.merkmal, 40).toLowerCase(),
       art: text(a.art, 14),
@@ -136,10 +137,15 @@ function auswerten(liste) {
   if (!liste.length) return leer;
 
   const g = { runden: liste.length, aufgaben: 0, richtig: 0, sekunden: 0 };
-  const jeMerkmal = {}, jeThema = {}, jeWoche = {}, fehlerBilder = {};
+  const jeMerkmal = {}, jeThema = {}, jeWoche = {}, fehlerBilder = {}, jeGeraet = {};
 
   for (const r of liste) {
     g.sekunden += r.sekunden || 0;
+    if (r.geraet) {
+      jeGeraet[r.geraet] = jeGeraet[r.geraet] || { name: r.geraet, runden: 0, minuten: 0 };
+      jeGeraet[r.geraet].runden++;
+      jeGeraet[r.geraet].minuten += (r.sekunden || 0) / 60;
+    }
     const woche = wochenSchluessel(r.zeit);
     jeWoche[woche] = jeWoche[woche] || { woche, aufgaben: 0, richtig: 0, minuten: 0 };
     jeWoche[woche].minuten += (r.sekunden || 0) / 60;
@@ -206,6 +212,9 @@ function auswerten(liste) {
     });
 
   return {
+    geraete: Object.values(jeGeraet)
+      .map((x) => Object.assign({}, x, { minuten: Math.round(x.minuten) }))
+      .sort((a, b) => b.runden - a.runden),
     runden: g.runden,
     aufgaben: g.aufgaben,
     richtig: g.richtig,

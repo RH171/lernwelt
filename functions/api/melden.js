@@ -92,6 +92,7 @@ export async function onRequestPost(context) {
     art: daten.art === "wunsch" ? "wunsch" : "problem",
     wo: String(daten.wo || "").slice(0, 200),
     titel: String(daten.titel || "").slice(0, 120),
+    geraet: String(daten.geraet || "").slice(0, 80),
     status: "offen",
     ungelesenKind: false,
     verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 }],
