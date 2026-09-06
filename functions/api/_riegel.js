@@ -32,7 +32,8 @@ export function gleich(a, b) {
 // so sperrt ein fehlendes Secret niemanden aus. Sobald Denny z. B. LEON_CODE
 // bei Cloudflare setzt, hat Leon seinen eigenen Zugang und seine eigene
 // Anmeldung; Pauls Ausweis gilt dann dort nicht mehr.
-const CODE_NAMEN = { paul: "PAUL_CODE", leon: "LEON_CODE", helena: "HELENA_CODE" };
+const CODE_NAMEN = { paul: "PAUL_CODE", leon: "LEON_CODE", helena: "HELENA_CODE",
+                     eltern: "ELTERN_CODE" };
 
 export function geheimFuer(env, kind) {
   const name = CODE_NAMEN[String(kind || "").toLowerCase()];
@@ -113,6 +114,8 @@ export async function fehlversucheLoeschen(request, env) {
 const BEREICHE = {
   paul: { name: "Pauls Lernwelt", satz: "Hier lernt Paul. Wenn du seinen Code kennst, kannst du rein.",
           farbe: "#4f46e5", rgb: "79,70,229" },
+  eltern: { name: "Lernstand", satz: "Hier sieht Denny, wie es den Kindern beim Lernen geht.",
+            farbe: "#475569", rgb: "71,85,105" },
   leon: { name: "Leons Lernwelt", satz: "Hier lernt Leon. Wenn du seinen Code kennst, kannst du rein.",
           farbe: "#10b981", rgb: "16,185,129" },
 };
