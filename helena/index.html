@@ -55,6 +55,19 @@
   .seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 22%,var(--surface2));
     border-color:var(--brand); color:#fff;}
   .seg button:hover{border-color:var(--brand);}
+  .heute{text-align:center; padding:22px 16px 6px;}
+  .heutezahl{font-family:var(--round); font-size:56px; font-weight:800; line-height:1;
+             background:linear-gradient(150deg,var(--brand),#7c5cff);
+             -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .heutetext{color:var(--muted); font-size:15px; margin-top:6px; line-height:1.45;}
+  .feineinst{margin-top:18px; border-top:1px solid var(--line); padding-top:14px;}
+  .feineinst>summary{cursor:pointer; color:var(--muted); font-size:14.5px; padding:8px 0;
+                     list-style:none; text-align:center;}
+  .feineinst>summary::-webkit-details-marker{display:none;}
+  .feineinst>summary::after{content:" ▾";}
+  .feineinst[open]>summary::after{content:" ▴";}
+  .feinbody{padding-top:8px;}
+  .tipp{color:var(--muted); font-size:12.5px; margin:8px 2px 0; line-height:1.5;}
   .start{width:100%; margin-top:4px; border:none; border-radius:14px; padding:15px; cursor:pointer;
     font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
     background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 10px 26px rgba(124,92,255,.4);
@@ -214,28 +227,40 @@
   </header>
 
   <section class="setup" id="setup">
-    <h2>Bereit zum Üben?</h2>
-    <div class="field">
-      <label for="unit">Einheit</label>
-      <select id="unit"></select>
-    </div>
-    <div class="field">
-      <label>Richtung</label>
-      <div class="seg" id="dir">
-        <button data-v="de2en" aria-pressed="true">Deutsch → Englisch</button>
-        <button data-v="en2de" aria-pressed="false">Englisch → Deutsch</button>
-        <button data-v="mix" aria-pressed="false">Gemischt</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Übung</label>
-      <div class="seg" id="mode">
-        <button data-v="mc" aria-pressed="true">Multiple-Choice</button>
-        <button data-v="type" aria-pressed="false">Eintippen</button>
-        <button data-v="cloze" aria-pressed="false">Lückentext</button>
-      </div>
+    <!-- Ein Hauptweg statt drei Entscheidungen: Das System weiss, was ansteht.
+         Wer selbst aussuchen will, klappt es unten auf. -->
+    <div class="heute" id="heute">
+      <div class="heutezahl" id="heuteZahl">–</div>
+      <div class="heutetext" id="faelligText">wird geladen …</div>
     </div>
     <button class="start" id="startBtn">Los geht's</button>
+
+    <details class="feineinst">
+      <summary>Lieber selbst aussuchen</summary>
+      <div class="feinbody">
+        <div class="field">
+          <label for="unit">Einheit</label>
+          <select id="unit"></select>
+        </div>
+        <div class="field">
+          <label>Richtung</label>
+          <div class="seg" id="dir">
+            <button data-v="de2en" aria-pressed="true">Deutsch → Englisch</button>
+            <button data-v="en2de" aria-pressed="false">Englisch → Deutsch</button>
+            <button data-v="mix" aria-pressed="false">Gemischt</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Übung</label>
+          <div class="seg" id="mode">
+            <button data-v="type" aria-pressed="false">Eintippen</button>
+            <button data-v="mc" aria-pressed="true">Multiple-Choice</button>
+            <button data-v="cloze" aria-pressed="false">Lückentext</button>
+          </div>
+          <p class="tipp">Eintippen bringt am meisten – man muss das Wort wirklich abrufen.</p>
+        </div>
+      </div>
+    </details>
 
     <details class="adder">
       <summary>＋ Neue Einheit aus Foto</summary>
@@ -2480,6 +2505,10 @@
   var unitSel=$("#unit");
   function fillUnits(sel){
     unitSel.innerHTML="";
+    // Der Normalfall zuerst: Das System stellt zusammen, was ansteht.
+    var o0=document.createElement("option");
+    o0.value="__faellig"; o0.textContent="★ Was heute dran ist";
+    unitSel.appendChild(o0);
     // Nach Jahrgangsstufe gruppieren: Helena soll auf einen Blick sehen,
     // was Grundwortschatz ist und was Wiederholung aus der 6. Klasse.
     var gruppen=[
@@ -2503,6 +2532,27 @@
     if(sel) unitSel.value=sel;
   }
   fillUnits();
+  unitSel.value="__faellig";
+
+  // Die Zahl oben: Was steht heute an?
+  function heuteMalen(){
+    var z=faelligZaehlen();
+    var zahl=$("#heuteZahl"), txt=$("#faelligText");
+    if(!zahl||!txt) return;
+    var offen=z.faellig;
+    if(offen){
+      zahl.textContent=offen;
+      txt.textContent=(offen===1?"Wort ist heute dran":"W\u00f6rter sind heute dran")+
+        (z.neu?" \u00b7 "+z.neu+" noch nie ge\u00fcbt":"");
+    } else if(z.neu){
+      zahl.textContent=Math.min(z.neu,20);
+      txt.textContent="neue W\u00f6rter zum Kennenlernen \u00b7 nichts Altes f\u00e4llig";
+    } else {
+      zahl.textContent="\u2713";
+      txt.textContent="Alles sitzt. Komm morgen wieder \u2013 oder such dir unten etwas aus.";
+    }
+  }
+  heuteMalen();
 
   /* ---------- XP & Streak ---------- */
   var xp=parseInt(get("helena-vok-xp","0"),10)||0;
@@ -2868,6 +2918,7 @@
 
   function finish(){
     lernstandSenden();
+    heuteMalen();
     $("#play").style.display="none";
     var e=$("#end"); e.style.display="block";
     var reviewHtml="";
