@@ -175,9 +175,17 @@ export async function onRequestPost(context) {
 // Was ein Spiel mindestens erfuellen muss, damit es ein Kind vorgesetzt bekommt.
 const MIN_AUFGABEN = 5;
 
+// Titel, die offensichtlich stehengeblieben sind. Am 6.9.2026 kam ein
+// fertiges Spiel mit dem Titel "Platzhalter" zurueck - Aufgaben gut,
+// Ueberschrift vergessen.
+const TITEL_MURKS = /^(platzhalter|titel|spiel|unbenannt|todo|beispiel|test|neues spiel|lernspiel)\.?$/i;
+
 function pruefeSpiel(spiel) {
   const m = [];
   const auf = (spiel && spiel.aufgaben) || [];
+  const t = String((spiel && spiel.titel) || "").trim();
+  if (!t) m.push("ohne Titel");
+  else if (TITEL_MURKS.test(t)) m.push(`Titel "${t}" ist ein Platzhalter`);
   if (auf.length < MIN_AUFGABEN) {
     m.push(`nur ${auf.length} statt mindestens ${MIN_AUFGABEN} Aufgaben`);
   }
@@ -292,6 +300,8 @@ Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußbal
 
 15. BLEIB IM ZAHLENRAUM DER JAHRGANGSSTUFE. Jahrgangsstufe 1/2: bis 100. Jahrgangsstufe 3/4: bis 1 000 000, schriftlich bis 10 000. Jahrgangsstufe 7: nach Lehrplan.
     Das gilt AUCH BEI GRÖSSEN, und da wird es gern übersehen: "150 cm - 40 cm" ist eine Rechnung über 100 und in der 2. Klasse zu schwer, auch wenn Zentimeter dranstehen. Erlaubt sind dort Vergleichen ("Was ist länger: 3 m oder 250 cm?") und Umrechnen ("2 m sind wie viele cm?") - gerechnet wird nur innerhalb des Zahlenraums.
+
+17. GIB DEM SPIEL EINEN ECHTEN NAMEN. "titel" ist der Name, den das Kind oben sieht - etwas, das Lust macht ("Anpfiff im Ronhof"). Niemals "Platzhalter", "Titel", "Spiel" oder Ähnliches stehen lassen.
 
 16. HALTE DIE FRAGE KURZ. In Jahrgangsstufe 1/2 höchstens etwa 100 Zeichen, in Jahrgangsstufe 3/4 etwa 150. Ein Gedanke pro Satz. Wer gerade erst lesen lernt, gibt bei einer langen Frage auf, bevor er beim Rechnen ist. Steckt die Aufgabe voller Vorgeschichte, streich die Vorgeschichte - nicht die Aufgabe. Was man zeichnen kann, gehört ins Bild (Regel 14) und nicht in den Text.
 
