@@ -7,7 +7,10 @@
  * Absichtlich zurückhaltend: nur Mindestmasse und etwas Abstand. Das Aussehen
  * der Spiele bleibt, wie Paul es gebaut hat. */
 
-@media (pointer: coarse) {
+/* Zwei Bedingungen mit ODER: echtes Touch-Gerät ODER schmaler Bildschirm.
+ * Das zweite ist Absicht - manche Tablets melden ihren Zeigertyp nicht
+ * verlässlich, und auf einem schmalen Fenster schaden grössere Knöpfe nie. */
+@media (pointer: coarse), (max-width: 1024px) {
 
   button,
   a[class*="btn"], a[class*="knopf"], a.zurueck, a.home, a.back,
