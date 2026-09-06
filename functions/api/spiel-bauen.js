@@ -13,10 +13,16 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { spielSichern } from "./spiele.js";
 
+// Entscheidung vom 06.09.2026 nach einem Vergleich an denselben Themen:
+// Es bleibt bei Opus 5. Sonnet 5 war zwar schneller und guenstiger, riss aber
+// den Zahlenraum ("214 cm + 214 cm" in der 2. Klasse), setzte weniger Bilder
+// und liess Merkhilfen weg. Haiku 4.5 lieferte gar nichts. Der Unterschied
+// waere rund 0,09 $ je Spiel gewesen - dafuer nicht die Qualitaet eintauschen.
 const MODELL = "claude-opus-5";
 
-// Zum Vergleichen: Ein Auftrag darf ein anderes Modell verlangen, aber nur
-// aus dieser Liste - sonst koennte jemand ein teures Modell erzwingen.
+// Nur zum Nachmessen: Ein Auftrag darf ein anderes Modell verlangen, aber nur
+// aus dieser Liste. Die Oberflaeche sendet nichts davon - Leon und Paul bauen
+// immer mit MODELL.
 const MODELLE_ERLAUBT = {
   "opus":   "claude-opus-5",
   "sonnet": "claude-sonnet-5",
