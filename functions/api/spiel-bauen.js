@@ -307,6 +307,8 @@ Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußbal
 15. BLEIB IM ZAHLENRAUM DER JAHRGANGSSTUFE. Jahrgangsstufe 1/2: bis 100. Jahrgangsstufe 3/4: bis 1 000 000, schriftlich bis 10 000. Jahrgangsstufe 7: nach Lehrplan.
     Das gilt AUCH BEI GRÖSSEN, und da wird es gern übersehen: "150 cm - 40 cm" ist eine Rechnung über 100 und in der 2. Klasse zu schwer, auch wenn Zentimeter dranstehen. Erlaubt sind dort Vergleichen ("Was ist länger: 3 m oder 250 cm?") und Umrechnen ("2 m sind wie viele cm?") - gerechnet wird nur innerhalb des Zahlenraums.
 
+18. SAG BEI JEDER AUFGABE, WAS SIE ÜBT. Das Feld "merkmal" ist kein Schmuck: Daraus sehen die Eltern später, wo es hakt - "Zehnerübergang beim Minus: 3 von 8 richtig" ist eine Hilfe, "Mathe: 60 Prozent" ist keine. Halte die Schlüssel klein, knapp und WIEDERVERWENDBAR: Dieselbe Sache muss in jedem Spiel gleich heißen, sonst lässt sich nichts zählen. Gut: "5er-reihe", "zehneruebergang plus", "zehneruebergang minus", "halbe stunden", "viertelstunden", "muenzen erkennen", "rueckgeld", "zahlen zerlegen", "nachbarzahlen", "cm in m", "symmetrieachsen", "strichlisten lesen". Schlecht: "Aufgabe 3", "Rechnen mit Fußball", "gemischt".
+
 17. GIB DEM SPIEL EINEN ECHTEN NAMEN. "titel" ist der Name, den das Kind oben sieht - etwas, das Lust macht ("Anpfiff im Ronhof"). Niemals "Platzhalter", "Titel", "Spiel" oder Ähnliches stehen lassen.
 
 16. HALTE DIE FRAGE KURZ. In Jahrgangsstufe 1/2 höchstens etwa 100 Zeichen, in Jahrgangsstufe 3/4 etwa 150. Ein Gedanke pro Satz. Wer gerade erst lesen lernt, gibt bei einer langen Frage auf, bevor er beim Rechnen ist. Steckt die Aufgabe voller Vorgeschichte, streich die Vorgeschichte - nicht die Aufgabe. Was man zeichnen kann, gehört ins Bild (Regel 14) und nicht in den Text.
@@ -380,9 +382,10 @@ const WERKZEUG = {
             richtig: { type: "string", description: "Die richtige Antwort. Bei art=teilschritte das Endergebnis." },
             erklaerung: { type: "string", description: "Der Weg zur Lösung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, höchstens fünf Zeilen. Kein Fließtext. Ohne Merkhilfe - die kommt ins Feld merke." },
             merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 8). Leer lassen, wenn nichts wirklich passt." },
+            merkmal: { type: "string", description: 'Was GENAU diese Aufgabe übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Damit sehen die Eltern später, wo es hakt. Sei spezifisch: nicht "rechnen", sondern "5er-reihe", "zehneruebergang plus", "halbe stunden", "muenzen erkennen", "zahlen zerlegen", "symmetrieachsen", "cm in m". Gleiche Sache = gleicher Schlüssel, damit man zählen kann.' },
             bild: { type: "string", description: 'Ein Bild zur Aufgabe, oder "" wenn keins hilft. NUR diese Formen: "uhr:STUNDE:MINUTE" (z. B. uhr:3:30), "strichliste:ANZAHL", "menge:ANZAHL:WAS" (was: ball, tor, spieler, stern, apfel, punkt, muenze, schuh), "form:NAME" (kreis, dreieck, quadrat, rechteck, fuenfeck, sechseck), "zahlenstrahl:VON:BIS:MARKE" (z. B. zahlenstrahl:0:100:47). Nichts anderes - andere Formate werden nicht gezeichnet.' },
           },
-          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke", "bild"],
+          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke", "bild", "merkmal"],
           additionalProperties: false,
         },
       },
