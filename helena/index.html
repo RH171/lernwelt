@@ -2692,6 +2692,8 @@
 
   /* ---------- Übungslogik ---------- */
   var queue=[], curUnit=null, roundDir="de2en", total=0, mastered=0, wrongWords=[], answered=false;
+  // Mitschrift für den Lernstand: Was wurde geübt, was saß, wie lange.
+  var protokoll=[], rundeBegonnen=0, karteBegonnen=0;
 
   function startSession(){
     roundDir=dir;
@@ -2704,6 +2706,7 @@
       queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0, unitId:curUnit.id};}));
     }
     total=queue.length; mastered=0; wrongWords=[];
+    protokoll=[]; rundeBegonnen=Date.now();
     if (!total){ meldungKeineWoerter(); return; }
     $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
     nextCard();
@@ -2718,6 +2721,7 @@
 
   function nextCard(){
     answered=false;
+    karteBegonnen=Date.now();
     $("#prog").style.width=(total? Math.round(mastered/total*100):0)+"%";
     if(!queue.length){ finish(); return; }
     var item=queue[0], p=item.p;
@@ -2790,7 +2794,20 @@
     answered=true;
     // Beim ERSTEN Versuch zählt es fürs Gedächtnis - wer dreimal rät und
     // dann trifft, kann das Wort noch nicht.
-    if(item.tries === 0) wortMerken(item.unitId, item.p, correct);
+    if(item.tries === 0){
+      wortMerken(item.unitId, item.p, correct);
+      // Einheit als Merkmal - daran sieht man in der Auswertung, wo es hakt.
+      var einheit = allUnits().filter(function(u){return u.id===item.unitId;})[0];
+      protokoll.push({
+        merkmal: (einheit ? einheit.name : "Vokabeln").toLowerCase(),
+        art: "vokabel",
+        stimmt: !!correct,
+        nachspielzeit: false,
+        sekunden: karteBegonnen ? Math.round((Date.now()-karteBegonnen)/1000) : 0,
+        gegeben: correct ? "" : String(item.p.de).slice(0,30),
+        richtig: String(item.p.en).slice(0,30)
+      });
+    }
     if(correct){ mastered++; xp+=10; queue.shift(); }
     else{
       item.tries++; if(wrongWords.indexOf(item.p)<0) wrongWords.push(item.p);
@@ -2832,7 +2849,25 @@
     afterAnswer(correct,item._sol,item);
   }
 
+  function lernstandSenden(){
+    if(!protokoll.length) return;
+    var runde={
+      spielId:"helena-vokabeln", titel:"Vokabeln Englisch",
+      quelle:(curUnit&&curUnit.id)||"", fach:"englisch",
+      thema:(curUnit&&curUnit.name)||"Vokabeln", lernbereich:"",
+      sekunden: rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0,
+      aufgaben: protokoll
+    };
+    protokoll=[];
+    try{
+      fetch("/api/statistik",{method:"POST",credentials:"same-origin",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({kind:"helena", runde:runde})}).catch(function(){});
+    }catch(e){}
+  }
+
   function finish(){
+    lernstandSenden();
     $("#play").style.display="none";
     var e=$("#end"); e.style.display="block";
     var reviewHtml="";

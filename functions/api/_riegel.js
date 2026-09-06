@@ -36,7 +36,12 @@ const CODE_NAMEN = { paul: "PAUL_CODE", leon: "LEON_CODE", helena: "HELENA_CODE"
                      eltern: "ELTERN_CODE" };
 
 export function geheimFuer(env, kind) {
-  const name = CODE_NAMEN[String(kind || "").toLowerCase()];
+  const k = String(kind || "").toLowerCase();
+  const name = CODE_NAMEN[k];
+  // Der Elternbereich fällt NICHT auf PAUL_CODE zurück: Sonst könnten die
+  // Kinder mit ihrem eigenen Code die Auswertung über sich selbst lesen.
+  // Ohne gesetztes ELTERN_CODE bleibt er zu - das ist die sichere Seite.
+  if (k === "eltern") return env.ELTERN_CODE || null;
   return (name && env[name]) || env.PAUL_CODE;
 }
 

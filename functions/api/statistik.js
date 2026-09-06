@@ -28,8 +28,14 @@ export async function onRequestPost(context) {
   const kind = kindAus(request, daten);
   if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
 
-  // Nur das Kind selbst darf für sich schreiben.
-  if (!(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+  // Nur das Kind selbst darf für sich schreiben. Ausnahme: Ist für ein Kind
+  // gar kein eigener Code hinterlegt und sein Bereich damit offen (derzeit
+  // Helena), kann es sich auch nicht anmelden - dann nehmen wir die Runde
+  // trotzdem an. Sobald HELENA_CODE gesetzt ist, gilt wieder der Ausweis.
+  const eigenerCode = (kind === "paul" && env.PAUL_CODE) ||
+                      (kind === "leon" && env.LEON_CODE) ||
+                      (kind === "helena" && env.HELENA_CODE);
+  if (eigenerCode && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
   const runde = saeubern(daten.runde);
