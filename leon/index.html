@@ -221,6 +221,14 @@
     cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
   }
   .wiederholen .knopf:active{transform:scale(.99)}
+  /* Rückschau, kein Druckmittel: was schon geschafft ist, nicht was fehlt.
+     Keine Serie, die man verlieren kann - siehe Bauregeln. */
+  .torstand{
+    display:flex;align-items:center;gap:10px;margin-bottom:14px;
+    background:#eefbf2;border:1px solid #cdeedd;border-radius:15px;padding:11px 14px;
+  }
+  .torstand .zahl{font-family:var(--rund);font-size:23px;font-weight:800;color:#0f7a45}
+  .torstand .wort{font-size:14px;color:#3d7a5c;line-height:1.35}
   .fragezeile{display:flex;align-items:flex-start;gap:10px}
   .fragezeile .frage{flex:1;cursor:pointer}
   .vorlesen{
@@ -276,6 +284,7 @@
   <!-- 1. Material sammeln -->
   <section id="sicht-aufnahme">
     <div class="karte">
+      <div class="torstand verborgen" id="torstand"></div>
       <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was willst du üben?</div>
       <p class="unter">Tipp auf ein Feld – ich baue dir daraus ein Spiel.</p>
 
@@ -695,6 +704,25 @@
 
   // Merkt sich, woran Leon gerade arbeitet - fuer "noch eins zu diesem Thema".
   var letztesThema = null;
+
+  // Zeigt, was Leon zusammen geschafft hat. Bewusst nur die Summe: keine
+  // Quote, keine Serie, nichts, das man verlieren kann.
+  function torstandMalen(){
+    var tore = 0, runden = 0;
+    try {
+      var d = JSON.parse(localStorage.getItem("lw-progress:" + DATEI) || "{}");
+      tore = Math.round((d.xp || 0) / 10);
+      runden = d.uebung || 0;
+    } catch(e){}
+    var kasten = $("torstand");
+    if (!kasten) return;
+    if (!tore){ kasten.classList.add("verborgen"); return; }
+    kasten.innerHTML = '<span class="zahl">\u26BD ' + tore + '</span><span class="wort"></span>';
+    kasten.querySelector(".wort").textContent =
+      tore === 1 ? "Tor hast du schon geschossen."
+                 : "Tore hast du schon geschossen" + (runden > 1 ? ", in " + runden + " Runden." : ".");
+    kasten.classList.remove("verborgen");
+  }
 
   function malThemen(){
     var kasten = $("themen");
