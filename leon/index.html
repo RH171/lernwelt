@@ -221,6 +221,16 @@
     cursor:pointer;box-shadow:0 6px 16px rgba(79,70,229,.26);
   }
   .wiederholen .knopf:active{transform:scale(.99)}
+  .fragezeile{display:flex;align-items:flex-start;gap:10px}
+  .fragezeile .frage{flex:1;cursor:pointer}
+  .vorlesen{
+    flex:none;width:48px;height:48px;border-radius:15px;margin-top:10px;
+    border:2px solid var(--line);background:#fbfcff;font-size:22px;
+    cursor:pointer;line-height:1;display:grid;place-items:center;
+    filter:grayscale(1);opacity:.5;transition:all .12s;
+  }
+  .vorlesen.an{border-color:var(--leon);background:#eefbf2;filter:none;opacity:1}
+  .vorlesen:active{transform:scale(.94)}
   .bild{display:flex;justify-content:center;margin:4px 0 16px}
   .bild svg{width:100%;height:auto;display:block}
   .spielkopf{
@@ -319,7 +329,10 @@
       <div class="nachspiel verborgen" id="nachspiel"></div>
       <div class="fortschritt"><i id="balken" style="width:0%"></i></div>
       <div class="zaehler" id="zaehler"></div>
-      <div class="frage" id="frage"></div>
+      <div class="fragezeile">
+        <div class="frage" id="frage"></div>
+        <button class="vorlesen" id="vorlesen" aria-label="Vorlesen">\u{1F50A}</button>
+      </div>
       <div id="bild"></div>
       <div class="wahl" id="wahl"></div>
       <div class="rueck" id="rueck"></div>
@@ -356,6 +369,37 @@
   // falsch hatte und nie wieder sieht, bleibt falsch im Kopf. Genau eine
   // zweite Runde: Ein Kind soll üben, nicht feststecken.
   var folge = [], pos = 0, danebenGegangen = [], nachspielzeit = false, aufgeholt = 0;
+
+  // Wo Leon gerade steht. Lädt er versehentlich neu oder tippt auf "Nochmal
+  // von vorn", war sonst der ganze Durchlauf weg - bei Aufgabe 10 von 12
+  // ist das bitter.
+  var STAND_SCHLUESSEL = "leon-stand";
+
+  function standSichern(){
+    if (!spiel || !spiel.id) return;
+    try {
+      localStorage.setItem(STAND_SCHLUESSEL, JSON.stringify({
+        id: spiel.id, pos: pos, folge: folge, richtig: richtig,
+        aufgeholt: aufgeholt, nachspielzeit: nachspielzeit,
+        daneben: danebenGegangen, zeit: Date.now()
+      }));
+    } catch(e){}
+  }
+
+  function standHolen(){
+    try {
+      var r = JSON.parse(localStorage.getItem(STAND_SCHLUESSEL) || "null");
+      if (!r || !r.id || !Array.isArray(r.folge)) return null;
+      // Nach einem halben Tag ist der Faden ohnehin gerissen.
+      if (Date.now() - (r.zeit || 0) > 12 * 3600000) return null;
+      if (r.pos >= r.folge.length) return null;
+      return r;
+    } catch(e){ return null; }
+  }
+
+  function standLoeschen(){
+    try { localStorage.removeItem(STAND_SCHLUESSEL); } catch(e){}
+  }
 
   function $(id){ return document.getElementById(id); }
 
@@ -798,6 +842,79 @@
   }
 
 
+  /* ---------- Vorlesen ----------
+     Leon ist sieben und liest noch nicht flüssig. Wer an einer Frage
+     scheitert, weil er sie nicht lesen kann, scheitert nicht an Mathe.
+     Der Browser spricht selbst - das kostet nichts und braucht kein Netz. */
+
+  var VORLESEN_SCHLUESSEL = "leon-vorlesen";
+  var vorlesenAn = false;
+  try { vorlesenAn = localStorage.getItem(VORLESEN_SCHLUESSEL) === "1"; } catch(e){}
+
+  var kannSprechen = (typeof window.speechSynthesis !== "undefined" &&
+                      typeof window.SpeechSynthesisUtterance !== "undefined");
+  var deutscheStimme = null;
+
+  function stimmeSuchen(){
+    if (!kannSprechen) return;
+    var alle = window.speechSynthesis.getVoices() || [];
+    deutscheStimme = alle.filter(function(v){ return /^de/i.test(v.lang); })[0] || null;
+  }
+  if (kannSprechen){
+    stimmeSuchen();
+    window.speechSynthesis.onvoiceschanged = stimmeSuchen;
+  }
+
+  function stopp(){ if (kannSprechen) try { window.speechSynthesis.cancel(); } catch(e){} }
+
+  function sprich(text){
+    if (!kannSprechen || !text) return;
+    stopp();
+    var t = String(text).replace(/\s+/g, " ").trim();
+    if (!t) return;
+    var u = new SpeechSynthesisUtterance(t);
+    u.lang = "de-DE";
+    if (deutscheStimme) u.voice = deutscheStimme;
+    u.rate = 0.92;    // etwas langsamer als normal - für ein Kind angenehmer
+    u.pitch = 1.05;
+    try { window.speechSynthesis.speak(u); } catch(e){}
+  }
+
+  // Frage und Antworten am Stück, damit Leon die Auswahl auch hört.
+  function aufgabeVorlesen(){
+    var a = spiel && spiel.aufgaben ? spiel.aufgaben[nr] : null;
+    if (!a) return;
+    var teile = [a.frage];
+    var knoepfe = $("wahl").querySelectorAll("button");
+    if (knoepfe.length && (a.art || "wahl") === "wahl"){
+      Array.prototype.forEach.call(knoepfe, function(b, i){
+        teile.push((i+1) + ": " + b.textContent);
+      });
+    }
+    sprich(teile.join(". "));
+  }
+
+  function vorleseKnopfMalen(){
+    var k = $("vorlesen");
+    if (!kannSprechen){ k.classList.add("verborgen"); return; }
+    k.classList.toggle("an", vorlesenAn);
+    k.setAttribute("aria-pressed", vorlesenAn ? "true" : "false");
+    k.title = vorlesenAn ? "Vorlesen ist an" : "Vorlesen einschalten";
+  }
+
+  $("vorlesen").addEventListener("click", function(){
+    vorlesenAn = !vorlesenAn;
+    try { localStorage.setItem(VORLESEN_SCHLUESSEL, vorlesenAn ? "1" : "0"); } catch(e){}
+    vorleseKnopfMalen();
+    if (vorlesenAn) aufgabeVorlesen(); else stopp();
+  });
+
+  // Auf die Frage tippen liest sie noch einmal vor - auch wenn der
+  // Schalter aus ist. Ein Kind fragt lieber nochmal, als aufzugeben.
+  $("frage").addEventListener("click", function(){ if (kannSprechen) aufgabeVorlesen(); });
+
+  vorleseKnopfMalen();
+
   /* ---------- Bilder ----------
      Die KI zeichnet NICHT selbst - sie sagt nur, WAS zu sehen sein soll
      ("uhr:3:00"), gezeichnet wird hier mit festem Code. So kann kein
@@ -1031,6 +1148,10 @@
     if (art === "eingabe" && a.richtig) malEingabe(a);
     else if (art === "teilschritte" && a.teilschritte && a.teilschritte.length) malKette(a);
     else malWahl(a);
+
+    stopp();
+    if (vorlesenAn) setTimeout(aufgabeVorlesen, 220);
+    standSichern();
   }
 
   /* ---- Vier Antworten zum Antippen ---- */
@@ -1177,6 +1298,14 @@
       ? (nachspielzeit ? "<b>Jetzt sitzt es!</b>" : "<b>Richtig!</b>")
       : "<b>Fast!</b>";
     $("rueck").innerHTML = kopf + rueckmeldung(a, stimmt ? "" : gegeben);
+    if (vorlesenAn){
+      var gesagt = (stimmt ? (nachspielzeit ? "Jetzt sitzt es!" : "Richtig!") : "Fast!");
+      var d = stimmt ? "" : diagnose(a, gegeben);
+      setTimeout(function(){
+        sprich(gesagt + " " + (d ? d + " " : "") + (a.erklaerung || "") +
+               (a.merke ? " Merke: " + a.merke : ""));
+      }, 200);
+    }
     $("weiter").classList.remove("verborgen");
     var letzte = (pos + 1 >= folge.length);
     $("weiter").textContent = (letzte && (nachspielzeit || !danebenGegangen.length))
@@ -1259,6 +1388,7 @@
       }).catch(function(){});
     }
 
+    standLoeschen();
     zeige("ende");
     konfetti(true);
   }
