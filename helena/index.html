@@ -2761,8 +2761,12 @@
     roundDir=dir;
     if (unitSel.value === "__faellig"){
       // Das System stellt zusammen, was ansteht - fällige zuerst, dann Neues.
-      curUnit = { id:"__faellig", name:"Was heute dran ist" };
       queue = faelligeAuswahl(20);
+      // pairs mitgeben: Daraus werden die falschen Antwortmöglichkeiten
+      // gezogen, und das Ergebnisbild braucht die Anzahl. Ohne sie blieb
+      // die Karte leer.
+      curUnit = { id:"__faellig", name:"Was heute dran ist",
+                  pairs: queue.map(function(it){ return it.p; }) };
     } else {
       curUnit=allUnits().filter(function(u){return u.id===unitSel.value;})[0]||UNITS[0];
       queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0, unitId:curUnit.id};}));
