@@ -289,6 +289,8 @@
       if(aktReihe.items[i].korrekt) richtig=aktReihe.items[i];
     }
     aktReihe.geloest = true;
+    try{ window.lernstand && window.lernstand.antwort(!!(gewaehlt && gewaehlt.korrekt), "praedikat finden",
+          String((gewaehlt&&gewaehlt.wort)||"nichts gewählt"), String((richtig&&richtig.wort)||"")); }catch(e){}
     if(gewaehlt && gewaehlt.korrekt){
       gewaehlt.gewonnen=true;
       punkte += 20; geloesteSaetze++;
