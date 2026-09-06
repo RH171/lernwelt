@@ -701,15 +701,19 @@
     kasten.innerHTML = "";
     THEMEN.forEach(function(th){
       var fertig = fertigesSpiel(th);
+      var stand = standHolen();
+      var offen = (fertig && stand && stand.id === fertig.id) ? stand : null;
       var feld = document.createElement("div");
       feld.className = "thema" + (th.jetzt ? " jetzt" : "") + (fertig ? " fertig" : "");
+      var fuss = offen
+        ? '<span class="bereit">\u25B6 weiter bei ' + (offen.pos + 1) + '</span>'
+        : (fertig
+            ? '<span class="' + (th.jetzt ? 'dran' : 'bereit') + '">' +
+              weltZeichen(fertig.welt) + ' ' + (th.jetzt ? 'gerade dran' : 'sofort spielen') + '</span>'
+            : (th.jetzt ? '<span class="dran">gerade dran</span>' : ''));
       feld.innerHTML =
         '<span class="bild">' + th.bild + '</span>' +
-        '<span>' + escape2(th.titel) + '</span>' +
-        (fertig
-          ? '<span class="' + (th.jetzt ? 'dran' : 'bereit') + '">' +
-            weltZeichen(fertig.welt) + ' ' + (th.jetzt ? 'gerade dran' : 'sofort spielen') + '</span>'
-          : (th.jetzt ? '<span class="dran">gerade dran</span>' : ''));
+        '<span>' + escape2(th.titel) + '</span>' + fuss;
       feld.addEventListener("click", function(){
         var da = fertigesSpiel(th);
         letztesThema = th;
@@ -727,6 +731,7 @@
   }
 
   malThemen();
+  torstandMalen();
 
   // Der Foto- und Schreibweg ist da, steht aber nicht im Vordergrund.
   $("mehr-auf").addEventListener("click", function(){
@@ -1056,7 +1061,27 @@
     nr = 0; richtig = 0;
     folge = spiel.aufgaben.map(function(_, i){ return i; });
     pos = 0; danebenGegangen = []; nachspielzeit = false; aufgeholt = 0;
-    $("nachspiel").classList.add("verborgen");
+
+    // Lag ein angefangener Durchlauf zu genau diesem Spiel herum, machen wir
+    // dort weiter, statt Leon wieder bei Aufgabe 1 anfangen zu lassen.
+    var stand = standHolen();
+    if (stand && stand.id === spiel.id){
+      var heil = stand.folge.every(function(i){ return i >= 0 && i < spiel.aufgaben.length; });
+      if (heil){
+        folge = stand.folge; pos = stand.pos;
+        richtig = stand.richtig || 0; aufgeholt = stand.aufgeholt || 0;
+        nachspielzeit = !!stand.nachspielzeit;
+        danebenGegangen = Array.isArray(stand.daneben) ? stand.daneben : [];
+      }
+    }
+    nr = folge[pos];
+
+    $("nachspiel").classList.toggle("verborgen", !nachspielzeit);
+    if (nachspielzeit){
+      $("nachspiel").textContent = folge.length === 1
+        ? "\u26BD Nachspielzeit \u00B7 eine Aufgabe noch"
+        : "\u26BD Nachspielzeit \u00B7 " + folge.length + " Aufgaben nochmal";
+    }
     // Ein Schild, das ein Kind auch wirklich liest: Symbol und Name der Welt.
     // Vorher standen hier drei blasse Schnipsel, darunter der Lehrplansatz -
     // geschrieben für Erwachsene, überlesen von Kindern.
@@ -1389,6 +1414,7 @@
     }
 
     standLoeschen();
+    torstandMalen();
     zeige("ende");
     konfetti(true);
   }
