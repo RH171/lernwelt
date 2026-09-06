@@ -38,6 +38,13 @@
     cursor:pointer;padding:9px;
   }
   @media (max-width:340px){ .themen{grid-template-columns:1fr} }
+  /* Auf breiten Bildschirmen mehr Spalten - sonst scrollt Leon an zehn Themen
+     vorbei, statt sie auf einen Blick zu sehen. Die Hülle darf dafür etwas
+     breiter werden; drei Spalten bleiben lesbar, fünf wären zu schmal. */
+  @media (min-width:760px){
+    .huelle{max-width:940px}
+    .themen{grid-template-columns:repeat(3,1fr);gap:13px}
+  }
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
