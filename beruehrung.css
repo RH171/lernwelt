@@ -17,6 +17,22 @@
     /* Waagrecht nur dort erzwingen, wo es nicht die Anordnung sprengt. */
   }
 
+  /* Zurück-Links tragen oft gar keine Klasse - sie sind aber daran zu
+     erkennen, wohin sie zeigen. */
+  a[href$="index.html"], a[href="/"], a[href="../"], a[href="./"],
+  a[href^="/paul/"], a[href^="/leon/"], a[href^="/helena/"],
+  a.chip, a.home, a.zurueck {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Zahlenwahl im Beethoven-Quiz und ähnliche schmale Knöpfchen. */
+  .goal-opt, .num, .zahl-opt, .pick, a.chip, .chip {
+    min-width: 44px;
+    justify-content: center;
+  }
+
   /* Kleine, runde Knöpfe (Ton, Zurück, Zahlen) brauchen auch Breite. */
   button.iconbtn, .iconbtn, .rundknopf, .num, .zahlknopf,
   button[class*="icon"], button[class*="sound"], button[class*="ton"] {
