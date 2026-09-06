@@ -1360,14 +1360,23 @@
 
     var huelle = document.createElement("div");
     huelle.className = "eingabe";
+    // Jeder Teilschritt bekommt ein Feld mit eigenem Namen. Sonst hält der
+    // Browser es fuer dasselbe Feld wie eben und traegt die vorige Zahl
+    // wieder ein - Paul hat genau das gemeldet: "Die Zahl geht nicht weg,
+    // wenn ich auf die nächste Aufgabe komme." Auf dem iPad greift
+    // autocomplete="off" allein nicht.
+    var feldName = "schritt-" + nr + "-" + teilNr + "-" + Date.now();
     huelle.innerHTML =
-      '<input type="text" inputmode="numeric" autocomplete="off" aria-label="Deine Antwort" placeholder="?">' +
+      '<input type="text" inputmode="numeric" autocomplete="off" autocorrect="off" ' +
+      'spellcheck="false" name="' + feldName + '" id="' + feldName + '" ' +
+      'aria-label="Deine Antwort" placeholder="?">' +
       '<button class="pruefen">Prüfen</button>';
 
     kette.appendChild(glied);
     kette.appendChild(huelle);
 
     var feld = huelle.querySelector("input");
+    feld.value = "";                     // ganz sicher leer starten
     var knopf = huelle.querySelector(".pruefen");
     feld.focus();
     var fehlversuche = 0;
