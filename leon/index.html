@@ -424,6 +424,11 @@
 
   function $(id){ return document.getElementById(id); }
 
+  // Mitschrift für den Lernstand: was wurde geübt, was saß, wie lange wurde
+  // gebraucht. Wird am Ende einer Runde an /api/statistik geschickt. Es
+  // werden KEINE Aufgabentexte und keine Fotos übertragen - nur Merkmale.
+  var protokoll = [], rundeBegonnen = 0, aufgabeBegonnen = 0;
+
   // Zurück-Knopf: gespeicherte Hub-Adresse, sonst index.html
   // Kein Blick in "hub-url" - der Schluessel gehoert Pauls Bereich.
 
@@ -1111,6 +1116,39 @@
     return svgHuelle(teile.join(""), B, 100);
   }
 
+  function protokollieren(a, stimmt, gegeben, inNachspielzeit){
+    protokoll.push({
+      merkmal: (a && a.merkmal) ? String(a.merkmal) : "",
+      art: (a && a.art) ? a.art : "wahl",
+      stimmt: !!stimmt,
+      nachspielzeit: !!inNachspielzeit,
+      sekunden: aufgabeBegonnen ? Math.round((Date.now() - aufgabeBegonnen) / 1000) : 0,
+      gegeben: stimmt ? "" : String(gegeben == null ? "" : gegeben),
+      richtig: (a && a.richtig != null) ? String(a.richtig) : ""
+    });
+  }
+
+  // Am Ende einer Runde einmal senden. Schlägt es fehl, ist das Spiel
+  // trotzdem gespielt - der Lernstand ist Beiwerk, kein Selbstzweck.
+  function lernstandSenden(){
+    if (!protokoll.length) return;
+    var runde = {
+      spielId: (spiel && spiel.id) || "", titel: (spiel && spiel.titel) || "",
+      quelle: (spiel && spiel.quelle) || "", fach: (spiel && spiel.fach) || "",
+      thema: (spiel && spiel.thema) || "", lernbereich: (spiel && spiel.lernbereich) || "",
+      sekunden: rundeBegonnen ? Math.round((Date.now() - rundeBegonnen) / 1000) : 0,
+      aufgaben: protokoll
+    };
+    protokoll = [];
+    try {
+      fetch("/api/statistik", {
+        method: "POST", credentials: "same-origin",
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify({kind: "leon", runde: runde})
+      }).catch(function(){});
+    } catch(e){}
+  }
+
   function starteSpiel(){
     if (!spiel.aufgaben || !spiel.aufgaben.length){
       zeige("aufnahme");
@@ -1118,6 +1156,7 @@
       return;
     }
     nr = 0; richtig = 0;
+    protokoll = []; rundeBegonnen = Date.now();
     folge = spiel.aufgaben.map(function(_, i){ return i; });
     pos = 0; danebenGegangen = []; nachspielzeit = false; aufgeholt = 0;
 
@@ -1225,6 +1264,7 @@
     $("bild").innerHTML = malBild(a.bild);
     $("rueck").className = "rueck";
     $("weiter").classList.add("verborgen");
+    aufgabeBegonnen = Date.now();
     $("wahl").innerHTML = "";
     teilNr = 0; versuch = 0;
 
@@ -1377,6 +1417,7 @@
     } else if (!nachspielzeit){
       danebenGegangen.push(nr);          // die kommt gleich nochmal
     }
+    protokollieren(a, stimmt, gegeben, nachspielzeit);
     $("rueck").className = "rueck " + (stimmt ? "gut" : "schlecht") + " zeigen";
     var kopf = stimmt
       ? (nachspielzeit ? "<b>Jetzt sitzt es!</b>" : "<b>Richtig!</b>")
@@ -1474,6 +1515,7 @@
 
     standLoeschen();
     torstandMalen();
+    lernstandSenden();
     zeige("ende");
     konfetti(true);
   }
