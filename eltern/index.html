@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lernstand</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --karte:#fff; --ink:#161821; --muted:#6b7280; --line:#e5e8ef;
+    --gut:#12a35f; --mittel:#e8a13a; --schlecht:#e05252; --akzent:#475569;
+    --paul:#4f46e5; --leon:#10b981; --helena:#e0457b;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+       font-size:15px;line-height:1.5;padding:22px 16px 60px}
+  .huelle{max-width:940px;margin:0 auto}
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+  h1{font-family:var(--rund);font-size:26px;margin:0;letter-spacing:-.01em}
+  .stand{color:var(--muted);font-size:13.5px}
+  .reiter{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .reiter button{
+    border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:9px 16px;
+    font-family:var(--rund);font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;
+  }
+  .reiter button.an{border-color:var(--akzent);color:var(--ink);background:#eef1f6}
+  .karte{background:var(--karte);border:1px solid var(--line);border-radius:16px;
+         padding:18px 20px;margin-bottom:16px}
+  .karte h2{font-family:var(--rund);font-size:17px;margin:0 0 4px}
+  .karte .unter{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+  .zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+  .zahl{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:13px 14px}
+  .zahl .gross{font-family:var(--rund);font-size:24px;font-weight:800;line-height:1.1}
+  .zahl .klein{color:var(--muted);font-size:12.5px;margin-top:3px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:12.5px;
+     text-transform:uppercase;letter-spacing:.04em;padding:0 8px 8px;border-bottom:1px solid var(--line)}
+  td{padding:9px 8px;border-bottom:1px solid #f1f3f7;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .balken{height:7px;background:#eef1f6;border-radius:99px;overflow:hidden;min-width:70px}
+  .balken i{display:block;height:100%;border-radius:99px}
+  .q{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+  .gut{color:var(--gut)} .mittel{color:var(--mittel)} .schlecht{color:var(--schlecht)}
+  .b-gut{background:var(--gut)} .b-mittel{background:var(--mittel)} .b-schlecht{background:var(--schlecht)}
+  .hinweis{background:#fff8ec;border:1px solid #f5e2bf;border-radius:13px;padding:14px 16px;
+           font-size:14.5px;line-height:1.55}
+  .hinweis b{color:#8a5a10}
+  .leer{color:var(--muted);font-size:14px;padding:6px 0}
+  .muster{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+          background:#f5f7fa;border-radius:7px;padding:2px 7px}
+  .verlauf{display:flex;align-items:flex-end;gap:7px;height:110px;margin-top:6px}
+  .verlauf .w{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:26px}
+  .verlauf .saeule{width:100%;background:var(--leon);border-radius:5px 5px 0 0;min-height:3px}
+  .verlauf .wert{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .verlauf .datum{font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .anmeldung{max-width:380px;margin:60px auto;text-align:center}
+  .anmeldung input{width:100%;max-width:210px;margin:18px auto 0;display:block;text-align:center;
+    font-family:var(--rund);font-size:30px;letter-spacing:.2em;padding:14px 12px;
+    border:2px solid var(--line);border-radius:14px;background:#fff}
+  .anmeldung button{width:100%;margin-top:12px;border:none;border-radius:14px;padding:15px;
+    background:var(--akzent);color:#fff;font-family:var(--rund);font-size:17px;font-weight:700;cursor:pointer}
+  .fehler{color:var(--schlecht);font-size:14px;min-height:20px;margin-top:10px}
+  .verborgen{display:none !important}
+  @media(max-width:560px){ td,th{padding-left:4px;padding-right:4px} .balken{display:none} }
+</style>
+</head>
+<body>
+<div class="huelle">
+
+  <div id="sicht-anmelden" class="anmeldung verborgen">
+    <h1>Lernstand</h1>
+    <p class="stand">Hier siehst du, wie es Paul und Leon beim Lernen geht.</p>
+    <input id="code" type="password" inputmode="numeric" autocomplete="off" maxlength="12" aria-label="Code">
+    <div class="fehler" id="codefehler"></div>
+    <button id="anmelden">Ansehen</button>
+  </div>
+
+  <div id="sicht-daten" class="verborgen">
+    <header>
+      <h1>Lernstand</h1>
+      <span class="stand" id="stand"></span>
+    </header>
+    <div class="reiter" id="reiter"></div>
+    <div id="inhalt"></div>
+  </div>
+
+</div>
+<script>
+(function(){
+  "use strict";
+  function $(id){ return document.getElementById(id); }
+  function esc(t){ var d=document.createElement("div"); d.textContent=(t==null?"":String(t)); return d.innerHTML; }
+
+  var DATEN = null, KIND = null;
+  var FARBEN = {paul:"var(--paul)", leon:"var(--leon)", helena:"var(--helena)"};
+
+  function stufe(q){ return q >= 85 ? "gut" : q >= 65 ? "mittel" : "schlecht"; }
+
+  function zeige(welche){
+    $("sicht-anmelden").classList.toggle("verborgen", welche !== "anmelden");
+    $("sicht-daten").classList.toggle("verborgen", welche !== "daten");
+  }
+
+  function laden(){
+    fetch("/api/statistik", {credentials:"same-origin"})
+      .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
+      .then(function(a){
+        if (a.status === 401){ zeige("anmelden"); $("code").focus(); return; }
+        if (!a.j || !a.j.ok){ zeige("anmelden"); $("codefehler").textContent = (a.j&&a.j.fehler)||"Das ging nicht."; return; }
+        DATEN = a.j.kinder || {};
+        zeige("daten");
+        reiterMalen();
+      })
+      .catch(function(){ zeige("anmelden"); });
+  }
+
+  function anmelden(){
+    var code = $("code").value.trim();
+    if (!code){ $("codefehler").textContent = "Bitte den Code eingeben."; return; }
+    $("anmelden").disabled = true; $("codefehler").textContent = "";
+    fetch("/api/code-pruefen?kind=eltern", {
+      method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
+      body: JSON.stringify({code: code, kind: "eltern"})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      $("anmelden").disabled = false;
+      if (j && j.ok){ $("code").value=""; laden(); return; }
+      $("code").value=""; $("code").focus();
+      $("codefehler").textContent = (j && j.fehler) || "Das hat nicht geklappt.";
+    })
+    .catch(function(){ $("anmelden").disabled=false; $("codefehler").textContent="Server nicht erreichbar."; });
+  }
+  $("anmelden").addEventListener("click", anmelden);
+  $("code").addEventListener("keydown", function(e){ if(e.key==="Enter") anmelden(); });
+
+  function reiterMalen(){
+    var namen = Object.keys(DATEN).filter(function(k){ return DATEN[k] && DATEN[k].runden; });
+    if (!namen.length) namen = Object.keys(DATEN);
+    var kasten = $("reiter"); kasten.innerHTML = "";
+    namen.forEach(function(k){
+      var b = document.createElement("button");
+      b.textContent = k.charAt(0).toUpperCase()+k.slice(1) +
+                      (DATEN[k] && DATEN[k].runden ? " (" + DATEN[k].runden + ")" : "");
+      b.addEventListener("click", function(){ KIND = k; reiterMalen(); malen(); });
+      if (k === KIND) b.classList.add("an");
+      kasten.appendChild(b);
+    });
+    if (!KIND){ KIND = namen[0]; reiterMalen(); malen(); }
+  }
+
+  function malen(){
+    var d = DATEN[KIND] || {};
+    var h = "";
+    $("stand").textContent = "Stand: " + new Date().toLocaleString("de-DE", {dateStyle:"medium", timeStyle:"short"});
+
+    if (!d.runden){
+      $("inhalt").innerHTML = '<div class="karte"><h2>Noch nichts gespielt</h2>' +
+        '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
+      return;
+    }
+
+    /* Überblick */
+    h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
+      kachel(d.quote + " %", "richtig gelöst", stufe(d.quote)) +
+      kachel(d.aufgaben, "Aufgaben in " + d.runden + " Runden") +
+      kachel(minuten(d.minuten), "Zeit insgesamt") +
+      kachel(d.aufgaben ? Math.round(d.minuten*60/d.aufgaben) + " s" : "–", "je Aufgabe") +
+      '</div></div>';
+
+    /* Problemzonen - das Wichtigste zuerst */
+    var schwach = (d.merkmale||[]).filter(function(m){ return m.aufgaben >= 3 && m.quote < 80; });
+    h += '<div class="karte"><h2>Woran es hakt</h2>' +
+         '<p class="unter">Nur Themen mit mindestens drei Versuchen. Das oberste zuerst üben.</p>';
+    if (!schwach.length){
+      h += '<div class="leer">Nichts Auffälliges – alles über 80 Prozent.</div>';
+    } else {
+      h += tabelle(schwach.slice(0,10));
+    }
+    h += '</div>';
+
+    /* Wiederkehrende Fehler */
+    if ((d.stolpersteine||[]).length){
+      h += '<div class="karte"><h2>Immer derselbe Fehler</h2>' +
+           '<p class="unter">Diese falsche Antwort kam mehrfach – das ist meist ein Denkfehler mit System, kein Verrutschen.</p><table><tbody>';
+      d.stolpersteine.forEach(function(s){
+        h += '<tr><td><b>' + esc(s.merkmal) + '</b></td>' +
+             '<td><span class="muster">' + esc(s.muster) + '</span></td>' +
+             '<td style="text-align:right;color:var(--muted)">' + s.wieOft + '×</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+
+    /* Was sitzt */
+    var stark = (d.merkmale||[]).filter(function(m){ return m.aufgaben >= 3 && m.quote >= 80; });
+    if (stark.length){
+      h += '<div class="karte"><h2>Was sitzt</h2><p class="unter">Hier ist keine Übung nötig.</p>' +
+           tabelle(stark.slice(0,8)) + '</div>';
+    }
+
+    /* Verlauf */
+    if ((d.verlauf||[]).length > 1){
+      h += '<div class="karte"><h2>Entwicklung</h2><p class="unter">Anteil richtiger Antworten je Woche.</p>' +
+           verlauf(d.verlauf) + '</div>';
+    }
+
+    /* Themen */
+    if ((d.themen||[]).length){
+      h += '<div class="karte"><h2>Nach Thema</h2><p class="unter">Schwächstes zuerst.</p>' +
+           tabelle(d.themen, true) + '</div>';
+    }
+
+    /* Letzte Runden */
+    h += '<div class="karte"><h2>Zuletzt gespielt</h2><table><thead><tr><th>Wann</th><th>Spiel</th>' +
+         '<th style="text-align:right">Ergebnis</th><th style="text-align:right">Dauer</th></tr></thead><tbody>';
+    (d.letzte||[]).forEach(function(r){
+      var q = r.aufgaben ? Math.round(r.richtig/r.aufgaben*100) : 0;
+      h += '<tr><td style="color:var(--muted);white-space:nowrap">' + esc(wann(r.zeit)) + '</td>' +
+           '<td>' + esc(r.titel||"–") + '</td>' +
+           '<td style="text-align:right" class="q ' + stufe(q) + '">' + r.richtig + '/' + r.aufgaben + '</td>' +
+           '<td style="text-align:right;color:var(--muted)">' + (r.minuten||0) + ' min</td></tr>';
+    });
+    h += '</tbody></table></div>';
+
+    $("inhalt").innerHTML = h;
+  }
+
+  function kachel(gross, klein, klasse){
+    return '<div class="zahl"><div class="gross ' + (klasse||"") + '">' + esc(gross) + '</div>' +
+           '<div class="klein">' + esc(klein) + '</div></div>';
+  }
+
+  function tabelle(zeilen, istThema){
+    var h = '<table><thead><tr><th>' + (istThema ? "Thema" : "Was geübt wird") +
+            '</th><th style="width:34%">Anteil richtig</th>' +
+            '<th style="text-align:right">Versuche</th></tr></thead><tbody>';
+    zeilen.forEach(function(m){
+      var s = stufe(m.quote);
+      h += '<tr><td><b>' + esc(istThema ? (m.thema||m.name) : m.name) + '</b></td>' +
+           '<td><div style="display:flex;align-items:center;gap:9px">' +
+             '<span class="q ' + s + '">' + m.quote + ' %</span>' +
+             '<span class="balken" style="flex:1"><i class="b-' + s + '" style="width:' + m.quote + '%"></i></span>' +
+           '</div></td>' +
+           '<td style="text-align:right;color:var(--muted)">' + m.richtig + '/' + m.aufgaben + '</td></tr>';
+    });
+    return h + '</tbody></table>';
+  }
+
+  function verlauf(wochen){
+    var letzte = wochen.slice(-12);
+    var h = '<div class="verlauf">';
+    letzte.forEach(function(w){
+      var q = w.quote == null ? 0 : w.quote;
+      h += '<div class="w" title="' + esc(w.aufgaben + " Aufgaben, " + w.minuten + " min") + '">' +
+             '<span class="wert">' + q + '%</span>' +
+             '<div class="saeule" style="height:' + Math.max(3, q) + '%;background:' + (FARBEN[KIND]||"var(--akzent)") + '"></div>' +
+             '<span class="datum">' + esc(kurzDatum(w.woche)) + '</span>' +
+           '</div>';
+    });
+    return h + '</div>';
+  }
+
+  function minuten(m){
+    if (!m) return "0 min";
+    if (m < 60) return m + " min";
+    return Math.floor(m/60) + " h " + (m%60) + " min";
+  }
+  function wann(iso){
+    try {
+      var d = new Date(iso), jetzt = new Date();
+      if (d.toDateString() === jetzt.toDateString()) return "heute " + d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+      return d.toLocaleDateString("de-DE",{day:"numeric",month:"short"});
+    } catch(e){ return "–"; }
+  }
+  function kurzDatum(iso){
+    try { return new Date(iso).toLocaleDateString("de-DE",{day:"numeric",month:"numeric"}); } catch(e){ return "?"; }
+  }
+
+  laden();
+})();
+</script>
+</body>
+</html>
