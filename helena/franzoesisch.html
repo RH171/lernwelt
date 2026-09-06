@@ -38,6 +38,18 @@
     border-radius:999px; padding:7px 12px; font-family:var(--round); font-weight:800; font-size:13.5px;}
   .chip small{color:var(--muted); font-weight:600; font-size:11px;}
 
+  /* Auf schmalen Schirmen lief der Kopf über: Der Titel brach dreizeilig um
+     und die Chips wurden rechts abgeschnitten. Jetzt darf er umbrechen. */
+  @media (max-width:560px){
+    header{flex-wrap:wrap; gap:10px;}
+    .logo{width:100%;}
+    .logo h1{font-size:18px; white-space:nowrap;}
+    .logo p{font-size:12px;}
+    .mark{width:40px; height:40px; font-size:21px;}
+    .stats{width:100%; flex-wrap:wrap; gap:7px;}
+    .chip{padding:8px 11px; font-size:13px;}
+  }
+
   .setup{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
     padding:18px; box-shadow:var(--shadow); margin-bottom:16px;}
   .setup h2{font-family:var(--round); font-weight:800; font-size:16px; margin:0 0 14px;}
@@ -55,6 +67,19 @@
   .seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 22%,var(--surface2));
     border-color:var(--brand); color:#fff;}
   .seg button:hover{border-color:var(--brand);}
+  .heute{text-align:center; padding:22px 16px 6px;}
+  .heutezahl{font-family:var(--round); font-size:56px; font-weight:800; line-height:1;
+             background:linear-gradient(150deg,var(--brand),#7c5cff);
+             -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .heutetext{color:var(--muted); font-size:15px; margin-top:6px; line-height:1.45;}
+  .feineinst{margin-top:18px; border-top:1px solid var(--line); padding-top:14px;}
+  .feineinst>summary{cursor:pointer; color:var(--muted); font-size:14.5px; padding:8px 0;
+                     list-style:none; text-align:center;}
+  .feineinst>summary::-webkit-details-marker{display:none;}
+  .feineinst>summary::after{content:" ▾";}
+  .feineinst[open]>summary::after{content:" ▴";}
+  .feinbody{padding-top:8px;}
+  .tipp{color:var(--muted); font-size:12.5px; margin:8px 2px 0; line-height:1.5;}
   .start{width:100%; margin-top:4px; border:none; border-radius:14px; padding:15px; cursor:pointer;
     font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
     background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 10px 26px rgba(124,92,255,.4);
@@ -214,28 +239,40 @@
   </header>
 
   <section class="setup" id="setup">
-    <h2>Bereit zum Üben?</h2>
-    <div class="field">
-      <label for="unit">Einheit</label>
-      <select id="unit"></select>
-    </div>
-    <div class="field">
-      <label>Richtung</label>
-      <div class="seg" id="dir">
-        <button data-v="de2en" aria-pressed="true">Deutsch → Französisch</button>
-        <button data-v="en2de" aria-pressed="false">Französisch → Deutsch</button>
-        <button data-v="mix" aria-pressed="false">Gemischt</button>
-      </div>
-    </div>
-    <div class="field">
-      <label>Übung</label>
-      <div class="seg" id="mode">
-        <button data-v="mc" aria-pressed="true">Multiple-Choice</button>
-        <button data-v="type" aria-pressed="false">Eintippen</button>
-        <button data-v="cloze" aria-pressed="false">Lückentext</button>
-      </div>
+    <!-- Ein Hauptweg statt drei Entscheidungen: Das System weiss, was ansteht.
+         Wer selbst aussuchen will, klappt es unten auf. -->
+    <div class="heute" id="heute">
+      <div class="heutezahl" id="heuteZahl">–</div>
+      <div class="heutetext" id="faelligText">wird geladen …</div>
     </div>
     <button class="start" id="startBtn">Los geht's</button>
+
+    <details class="feineinst">
+      <summary>Lieber selbst aussuchen</summary>
+      <div class="feinbody">
+        <div class="field">
+          <label for="unit">Einheit</label>
+          <select id="unit"></select>
+        </div>
+        <div class="field">
+          <label>Richtung</label>
+          <div class="seg" id="dir">
+            <button data-v="de2en" aria-pressed="true">Deutsch → Französisch</button>
+            <button data-v="en2de" aria-pressed="false">Französisch → Deutsch</button>
+            <button data-v="mix" aria-pressed="false">Gemischt</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Übung</label>
+          <div class="seg" id="mode">
+            <button data-v="type" aria-pressed="false">Eintippen</button>
+            <button data-v="mc" aria-pressed="true">Multiple-Choice</button>
+            <button data-v="cloze" aria-pressed="false">Lückentext</button>
+          </div>
+          <p class="tipp">Eintippen bringt am meisten – man muss das Wort wirklich abrufen.</p>
+        </div>
+      </div>
+    </details>
 
     <details class="adder">
       <summary>＋ Neue Einheit aus Foto</summary>
@@ -1155,6 +1192,10 @@
   var unitSel=$("#unit");
   function fillUnits(sel){
     unitSel.innerHTML="";
+    // Der Normalfall zuerst: Das System stellt zusammen, was ansteht.
+    var o0=document.createElement("option");
+    o0.value="__faellig"; o0.textContent="★ Was heute dran ist";
+    unitSel.appendChild(o0);
     // Nach Jahrgangsstufe gruppieren: Helena soll auf einen Blick sehen,
     // was Grundwortschatz ist und was Wiederholung aus der 6. Klasse.
     var gruppen=[
@@ -1177,6 +1218,27 @@
     if(sel) unitSel.value=sel;
   }
   fillUnits();
+  unitSel.value="__faellig";
+
+  // Die Zahl oben: Was steht heute an?
+  function heuteMalen(){
+    var z=faelligZaehlen();
+    var zahl=$("#heuteZahl"), txt=$("#faelligText");
+    if(!zahl||!txt) return;
+    var offen=z.faellig;
+    if(offen){
+      zahl.textContent=offen;
+      txt.textContent=(offen===1?"Wort ist heute dran":"W\u00f6rter sind heute dran")+
+        (z.neu?" \u00b7 "+z.neu+" noch nie ge\u00fcbt":"");
+    } else if(z.neu){
+      zahl.textContent=Math.min(z.neu,20);
+      txt.textContent="neue W\u00f6rter zum Kennenlernen \u00b7 nichts Altes f\u00e4llig";
+    } else {
+      zahl.textContent="\u2713";
+      txt.textContent="Alles sitzt. Komm morgen wieder \u2013 oder such dir unten etwas aus.";
+    }
+  }
+  heuteMalen();
 
   /* ---------- XP & Streak ---------- */
   var xp=parseInt(get("helena-fr-xp","0"),10)||0;
@@ -1285,21 +1347,121 @@
     }).join("");
   }
 
+
+  /* ---------- Wort-Gedächtnis (Leitner) ----------
+     Bis hierher merkte sich der Trainer XP, Serie und Datum - aber nicht,
+     WELCHE Wörter sitzen. Jede Sitzung fing bei null an: Ein Wort, das
+     fünfmal danebenging, kam so oft dran wie eines, das man im Schlaf kann.
+     Verteiltes Wiederholen ist aber der stärkste Einzeleffekt beim
+     Vokabellernen - also merken wir uns pro Wort, wann es zuletzt saß.
+
+     Fünf Fächer mit wachsendem Abstand. Richtig: eine Stufe hoch.
+     Daneben: zurück auf Anfang, das Wort kommt morgen wieder. */
+
+  var FACH_TAGE = [0, 1, 3, 7, 16, 35];      // Fach 0 = heute noch einmal
+  var WISSEN_SCHLUESSEL = "helena-fr-wissen";
+
+  function wissenLaden(){
+    try { var o = JSON.parse(get(WISSEN_SCHLUESSEL, "{}")); return (o && typeof o === "object") ? o : {}; }
+    catch(e){ return {}; }
+  }
+  function wissenSichern(w){ try { set(WISSEN_SCHLUESSEL, JSON.stringify(w)); } catch(e){} }
+
+  // Ein Wort eindeutig benennen - die Einheit gehört dazu, sonst kollidieren
+  // gleiche Wörter aus verschiedenen Einheiten.
+  function wortSchluessel(unitId, p){ return unitId + "|" + p.en; }
+
+  function heuteZahl(){ return Math.floor(Date.now() / 86400000); }
+
+  function standVon(wissen, schl){
+    return wissen[schl] || { fach: 0, faellig: 0, richtig: 0, falsch: 0 };
+  }
+
+  // Was ist heute dran? Fällige zuerst, dann neue Wörter zum Auffüllen.
+  function faelligeAuswahl(maxAnzahl){
+    var wissen = wissenLaden(), heute = heuteZahl();
+    var faellig = [], neu = [];
+    allUnits().forEach(function(u){
+      u.pairs.forEach(function(p){
+        var st = wissen[wortSchluessel(u.id, p)];
+        if (!st) neu.push({p:p, tries:0, unitId:u.id});
+        else if (st.faellig <= heute) faellig.push({p:p, tries:0, unitId:u.id, faellig:st.faellig});
+      });
+    });
+    // Am längsten überfällig zuerst - das ist am ehesten am Vergessen.
+    faellig.sort(function(a,b){ return a.faellig - b.faellig; });
+    var raus = faellig.slice(0, maxAnzahl);
+    if (raus.length < maxAnzahl) raus = raus.concat(shuffle(neu).slice(0, maxAnzahl - raus.length));
+    // Mischen: Themen durcheinander üben sitzt besser als Block für Block,
+    // auch wenn es sich schwerer anfühlt.
+    return shuffle(raus);
+  }
+
+  function faelligZaehlen(){
+    var wissen = wissenLaden(), heute = heuteZahl(), n = 0, neu = 0;
+    allUnits().forEach(function(u){
+      u.pairs.forEach(function(p){
+        var st = wissen[wortSchluessel(u.id, p)];
+        if (!st) neu++; else if (st.faellig <= heute) n++;
+      });
+    });
+    return { faellig: n, neu: neu };
+  }
+
+  // Nach jeder Antwort das Fach nachführen.
+  function wortMerken(unitId, p, richtig){
+    if (!unitId) return;
+    var wissen = wissenLaden(), schl = wortSchluessel(unitId, p);
+    var st = standVon(wissen, schl);
+    if (richtig){
+      st.fach = Math.min(st.fach + 1, FACH_TAGE.length - 1);
+      st.richtig++;
+    } else {
+      st.fach = 0;
+      st.falsch++;
+    }
+    st.faellig = heuteZahl() + FACH_TAGE[st.fach];
+    st.zuletzt = new Date().toISOString().slice(0,10);
+    wissen[schl] = st;
+    wissenSichern(wissen);
+  }
+
   /* ---------- Übungslogik ---------- */
   var queue=[], curUnit=null, roundDir="de2en", total=0, mastered=0, wrongWords=[], answered=false;
+  // Mitschrift für den Lernstand: Was wurde geübt, was saß, wie lange.
+  var protokoll=[], rundeBegonnen=0, karteBegonnen=0;
 
   function startSession(){
-    curUnit=allUnits().filter(function(u){return u.id===unitSel.value;})[0]||UNITS[0];
     roundDir=dir;
-    queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0};}));
+    if (unitSel.value === "__faellig"){
+      // Das System stellt zusammen, was ansteht - fällige zuerst, dann Neues.
+      queue = faelligeAuswahl(20);
+      // pairs mitgeben: Daraus werden die falschen Antwortmöglichkeiten
+      // gezogen, und das Ergebnisbild braucht die Anzahl. Ohne sie blieb
+      // die Karte leer.
+      curUnit = { id:"__faellig", name:"Was heute dran ist",
+                  pairs: queue.map(function(it){ return it.p; }) };
+    } else {
+      curUnit=allUnits().filter(function(u){return u.id===unitSel.value;})[0]||UNITS[0];
+      queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0, unitId:curUnit.id};}));
+    }
     total=queue.length; mastered=0; wrongWords=[];
+    protokoll=[]; rundeBegonnen=Date.now();
+    if (!total){ meldungKeineWoerter(); return; }
     $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
     nextCard();
   }
+  function meldungKeineWoerter(){
+    $("#setup").style.display="block"; $("#play").style.display="none";
+    var e=$("#faelligText");
+    if(e) e.textContent="Gerade ist nichts fällig - alles sitzt. Wähle unten eine Einheit, wenn du trotzdem üben willst.";
+  }
+
   function pickDir(){ return roundDir==="mix" ? (Math.random()<.5?"de2en":"en2de") : roundDir; }
 
   function nextCard(){
     answered=false;
+    karteBegonnen=Date.now();
     $("#prog").style.width=(total? Math.round(mastered/total*100):0)+"%";
     if(!queue.length){ finish(); return; }
     var item=queue[0], p=item.p;
@@ -1370,6 +1532,22 @@
 
   function award(item,correct){
     answered=true;
+    // Beim ERSTEN Versuch zählt es fürs Gedächtnis - wer dreimal rät und
+    // dann trifft, kann das Wort noch nicht.
+    if(item.tries === 0){
+      wortMerken(item.unitId, item.p, correct);
+      // Einheit als Merkmal - daran sieht man in der Auswertung, wo es hakt.
+      var einheit = allUnits().filter(function(u){return u.id===item.unitId;})[0];
+      protokoll.push({
+        merkmal: (einheit ? einheit.name : "Vokabeln").toLowerCase(),
+        art: "vokabel",
+        stimmt: !!correct,
+        nachspielzeit: false,
+        sekunden: karteBegonnen ? Math.round((Date.now()-karteBegonnen)/1000) : 0,
+        gegeben: correct ? "" : String(item.p.de).slice(0,30),
+        richtig: String(item.p.en).slice(0,30)
+      });
+    }
     if(correct){ mastered++; xp+=10; queue.shift(); }
     else{
       item.tries++; if(wrongWords.indexOf(item.p)<0) wrongWords.push(item.p);
@@ -1411,7 +1589,26 @@
     afterAnswer(correct,item._sol,item);
   }
 
+  function lernstandSenden(){
+    if(!protokoll.length) return;
+    var runde={
+      spielId:"helena-vokabeln-fr", titel:"Vokabeln Französisch",
+      quelle:(curUnit&&curUnit.id)||"", fach:"franzoesisch",
+      thema:(curUnit&&curUnit.name)||"Vokabeln", lernbereich:"",
+      sekunden: rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0,
+      aufgaben: protokoll
+    };
+    protokoll=[];
+    try{
+      fetch("/api/statistik",{method:"POST",credentials:"same-origin",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({kind:"helena", runde:runde})}).catch(function(){});
+    }catch(e){}
+  }
+
   function finish(){
+    lernstandSenden();
+    heuteMalen();
     $("#play").style.display="none";
     var e=$("#end"); e.style.display="block";
     var reviewHtml="";
