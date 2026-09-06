@@ -106,6 +106,15 @@
 
   function dialogOeffnen() {
     if (document.getElementById("melde-huelle")) return;
+    // Wartet eine Antwort? Dann die zuerst zeigen - Paul soll nicht suchen
+    // muessen, was aus seiner Meldung geworden ist.
+    var offen = meineFaeden.filter(function (f) { return f.ungelesenKind; })[0];
+    if (offen) { fadenZeigen(offen); return; }
+    dialogOeffnenNeu();
+  }
+
+  function dialogOeffnenNeu() {
+    if (document.getElementById("melde-huelle")) return;
     bildDaten = ""; gewaehlteArt = "problem";
 
     var h = document.createElement("div");
@@ -148,6 +157,91 @@
     });
     h.querySelector("#melde-schicken").addEventListener("click", function () { schicken(h); });
     setTimeout(function () { h.querySelector("#melde-text").focus(); }, 60);
+  }
+
+  // Der Gespraechsfaden: Was Paul geschrieben hat, was die Werkstatt
+  // geantwortet hat, und die Moeglichkeit weiterzureden - bis er selbst sagt,
+  // dass es passt.
+  function fadenZeigen(faden) {
+    var h = document.createElement("div");
+    h.id = "melde-huelle";
+    var blasen = (faden.verlauf || []).map(function (n) {
+      var vonMir = (n.von !== "werkstatt");
+      return '<div class="blase ' + (vonMir ? "von-kind" : "von-werkstatt") + '">' +
+               '<span class="wer">' + (vonMir ? "Du" : "Werkstatt") + '</span>' +
+               entschaerfen(n.text || "") +
+             '</div>';
+    }).join("");
+
+    h.innerHTML =
+      '<div id="melde-karte">' +
+        '<h3>Deine Meldung</h3>' +
+        '<p class="u">Wir haben dir geantwortet. Passt es so, oder fehlt noch was?</p>' +
+        '<div class="faden faden-liste">' + blasen + '</div>' +
+        '<textarea id="melde-text" maxlength="1500" placeholder="Antworte hier …"></textarea>' +
+        '<button type="button" class="schicken" id="melde-schicken">Abschicken</button>' +
+        '<button type="button" class="passt" id="melde-passt">Passt jetzt! \u{1F44D}</button>' +
+        '<button type="button" class="zurueck" id="melde-neu">Etwas anderes melden</button>' +
+      '</div>';
+    document.body.appendChild(h);
+    h.addEventListener("click", function (e) { if (e.target === h) schliessen(h, faden); });
+
+    h.querySelector("#melde-schicken").addEventListener("click", function () {
+      antwortSchicken(h, faden);
+    });
+    h.querySelector("#melde-passt").addEventListener("click", function () {
+      fetch("/api/melden", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: KIND, id: faden.id, status: "passt" })
+      }).then(function () {
+        h.querySelector("#melde-karte").innerHTML =
+          '<div class="fertig"><div class="haken">\u{1F389}</div><h3>Super!</h3>' +
+          '<p class="u">Danke, dass du es gemeldet hast.</p></div>';
+        setTimeout(function () { h.remove(); nachAntwortenSehen(); }, 1700);
+      }).catch(function () {});
+    });
+    h.querySelector("#melde-neu").addEventListener("click", function () {
+      gelesenMerken(faden); h.remove(); dialogOeffnenNeu();
+    });
+
+    gelesenMerken(faden);
+  }
+
+  function schliessen(h, faden) { if (faden) gelesenMerken(faden); h.remove(); }
+
+  // Als gelesen vermerken, damit der rote Punkt verschwindet.
+  function gelesenMerken(faden) {
+    faden.ungelesenKind = false;
+    var k = document.getElementById("melde-knopf");
+    if (k && !meineFaeden.some(function (f) { return f.ungelesenKind; })) k.classList.remove("hat-neues");
+  }
+
+  function antwortSchicken(h, faden) {
+    var text = h.querySelector("#melde-text").value.trim();
+    if (!text && !bildDaten) { h.querySelector("#melde-text").focus(); return; }
+    var knopf = h.querySelector("#melde-schicken");
+    knopf.disabled = true; knopf.textContent = "Wird geschickt \u2026";
+    fetch("/api/melden", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: KIND, id: faden.id, text: text, bild: bildDaten, alsKind: true })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j || !j.ok) throw new Error("nein");
+      h.querySelector("#melde-karte").innerHTML =
+        '<div class="fertig"><div class="haken">\u{1F44D}</div><h3>Ist angekommen</h3>' +
+        '<p class="u">Wir melden uns wieder.</p></div>';
+      setTimeout(function () { h.remove(); nachAntwortenSehen(); }, 1700);
+    })
+    .catch(function () { knopf.disabled = false; knopf.textContent = "Nochmal versuchen"; });
+  }
+
+  function entschaerfen(t) {
+    var d = document.createElement("div");
+    d.textContent = String(t == null ? "" : t);
+    return d.innerHTML;
   }
 
   // Grosse Fotos vorher verkleinern - sonst passt kein Bild durch.
@@ -201,10 +295,17 @@
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", melderBauen);
-  } else {
+  function melderStarten(){
     melderBauen();
+    nachAntwortenSehen();
+    // Alle zwei Minuten nachsehen - eine Antwort soll ankommen, auch wenn
+    // Paul gerade spielt.
+    setInterval(nachAntwortenSehen, 120000);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", melderStarten);
+  } else {
+    melderStarten();
   }
 
   if (NUR_MELDEN) return;   // Hub und Werkstatt schreiben ihre Runden selbst mit
