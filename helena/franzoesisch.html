@@ -1158,8 +1158,7 @@
     // Nach Jahrgangsstufe gruppieren: Helena soll auf einen Blick sehen,
     // was Grundwortschatz ist und was Wiederholung aus der 6. Klasse.
     var gruppen=[
-      {stufe:5, titel:"Grundwortschatz"},
-      {stufe:6, titel:"Wiederholung 6. Klasse"},
+            {stufe:6, titel:"Erstes Lernjahr"},
       {stufe:0, titel:"Meine eigenen Einheiten"}
     ];
     gruppen.forEach(function(g){
@@ -1319,7 +1318,7 @@
       } else {
         c.innerHTML='<div class="kicker">Lückentext · Französisch</div>'+
           '<div class="prompt">'+p.de+'</div>'+
-          '<div class="hint">Ergänze das englische Wort: <span class="masked">'+maskWord(p.en)+'</span></div>'+
+          '<div class="hint">Ergänze das französische Wort: <span class="masked">'+maskWord(p.en)+'</span></div>'+
           '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ganzes Wort"><button id="chk">Prüfen</button></div>'+
           '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
       }
@@ -1337,7 +1336,7 @@
 
     var sayBtn = (d==="en2de")
       ? '<button class="say" title="Aussprache" data-say="'+p.en.replace(/"/g,'')+'">🔊</button>' : '';
-    var head='<div class="kicker">'+(d==="de2en"?"Deutsch → Englisch":"Englisch → Deutsch")+'</div>'+
+    var head='<div class="kicker">'+(d==="de2en"?"Deutsch → Französisch":"Französisch → Deutsch")+'</div>'+
              '<div class="prompt">'+promptWord+sayBtn+'</div>';
 
     if(mode==="mc"){
@@ -1510,7 +1509,7 @@
     var rows=$("#pvrows");
     function addRowEl(en,de){
       var r=document.createElement("div"); r.className="pvrow";
-      r.innerHTML='<input class="pven" placeholder="englisch" value="'+attrEsc(en)+'">'+
+      r.innerHTML='<input class="pven" placeholder="französisch" value="'+attrEsc(en)+'">'+
         '<span class="pvarr">→</span>'+
         '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
         '<button class="pvx" type="button" title="Zeile entfernen">✕</button>';
