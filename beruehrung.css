@@ -1,0 +1,36 @@
+/* Fingerfreundlich - nur dort, wo mit dem Finger getippt wird.
+ *
+ * Auf iPad und Handy braucht eine Tippfläche mindestens 44 Pixel Kantenlänge,
+ * sonst trifft ein Kind daneben. Am Laptop mit Maus ist das unnötig, deshalb
+ * greift alles hier ausschliesslich bei (pointer: coarse) - also bei Touch.
+ *
+ * Absichtlich zurückhaltend: nur Mindestmasse und etwas Abstand. Das Aussehen
+ * der Spiele bleibt, wie Paul es gebaut hat. */
+
+@media (pointer: coarse) {
+
+  button,
+  a[class*="btn"], a[class*="knopf"], a.zurueck, a.home, a.back,
+  [role="button"],
+  .opt, .ans, .choice, .knopf, .thema, .key, .iconbtn, .pill-btn {
+    min-height: 44px;
+    /* Waagrecht nur dort erzwingen, wo es nicht die Anordnung sprengt. */
+  }
+
+  /* Kleine, runde Knöpfe (Ton, Zurück, Zahlen) brauchen auch Breite. */
+  button.iconbtn, .iconbtn, .rundknopf, .num, .zahlknopf,
+  button[class*="icon"], button[class*="sound"], button[class*="ton"] {
+    min-width: 44px;
+  }
+
+  /* Eingabefelder: gross genug zum Treffen, und 16px Schrift verhindert,
+     dass iOS beim Antippen hineinzoomt. */
+  input[type="text"], input[type="number"], input:not([type]), textarea, select {
+    min-height: 44px;
+    font-size: max(16px, 1em);
+  }
+
+  /* Nebeneinanderliegende Knöpfe nicht kleben lassen - sonst trifft man
+     bei schnellem Tippen den falschen. */
+  .opt + .opt, .ans + .ans, .knopf + .knopf { margin-top: 2px; }
+}
