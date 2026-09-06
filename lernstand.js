@@ -212,6 +212,15 @@
 
   // Als gelesen vermerken, damit der rote Punkt verschwindet.
   function gelesenMerken(faden) {
+    if (faden.ungelesenKind) {
+      try {
+        fetch("/api/melden", {
+          method: "POST", credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: KIND, id: faden.id, gelesen: true })
+        }).catch(function () {});
+      } catch (e) {}
+    }
     faden.ungelesenKind = false;
     var k = document.getElementById("melde-knopf");
     if (k && !meineFaeden.some(function (f) { return f.ungelesenKind; })) k.classList.remove("hat-neues");

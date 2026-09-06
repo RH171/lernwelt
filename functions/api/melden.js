@@ -41,6 +41,13 @@ export async function onRequestPost(context) {
     const faden = liste.find((m) => m.id === daten.id);
     if (!faden) return json(404, { ok: false, fehler: "Den Faden gibt es nicht mehr." });
 
+    // Gelesen. Sonst kaeme der rote Punkt nach jedem Seitenwechsel zurueck.
+    if (daten.gelesen && alsKind) {
+      faden.ungelesenKind = false;
+      await liste_speichern(env, liste);
+      return json(200, { ok: true });
+    }
+
     // "Passt jetzt" darf nur das Kind sagen - es ist seine Meldung.
     if (daten.status === "passt" && alsKind) {
       faden.status = "erledigt";
