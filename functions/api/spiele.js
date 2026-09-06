@@ -114,7 +114,9 @@ function json(status, daten) {
 // Kalibriert an der Anthropic-Console (5.9.2026: 4,32 $ für 29 Bauten).
 // Die Console bleibt die Wahrheit - das hier gibt nur ein Gefühl dafür,
 // welches Spiel wie ins Gewicht fällt.
-const PREIS_JE_MIO = { ein: 15, aus: 75, cache_lesen: 1.5, cache_schreiben: 18.75 };
+// Listenpreise Claude Opus 5 (nachgeschlagen 6.9.2026):
+// Eingang 5 $, Ausgang 25 $, Cache schreiben 6,25 $, Cache lesen 0,50 $ je Mio.
+const PREIS_JE_MIO = { ein: 5, aus: 25, cache_lesen: 0.5, cache_schreiben: 6.25 };
 
 function kostenSchaetzen(u) {
   if (!u) return null;
