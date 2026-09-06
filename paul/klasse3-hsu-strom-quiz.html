@@ -627,6 +627,7 @@ function answer(btn, correct, q){
     else o.classList.add('dim');
   });
   const ex=document.getElementById('qExplain');
+  try{ window.lernstand && window.lernstand.antwort(correct, "stromkreis verstehen"); }catch(e){}
   if(correct){
     btn.classList.add('correct'); sndRight(); fxConfetti();
     quizRight++; state.totalRight++;
@@ -800,5 +801,6 @@ function fxConfetti(){
   }catch(e){}
 }
 </script>
+<script src="/lernstand.js" defer></script>
 </body>
 </html>

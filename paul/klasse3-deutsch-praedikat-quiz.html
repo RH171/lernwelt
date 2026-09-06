@@ -539,6 +539,7 @@ function choose(btn, opts, q, buttons, qid){
   const correct = picked === q.answer;
   if(correct){ score++; removeMistake(qid); fxConfetti(); }
   else { addMistake(qid); }
+  try{ window.lernstand && window.lernstand.antwort(correct, "praedikat finden", picked, q.answer); }catch(e){}
 
   buttons.forEach(b=>{
     b.disabled = true;
@@ -881,5 +882,6 @@ function fxConfetti(){
   }catch(e){}
 }
 </script>
+<script src="/lernstand.js" defer></script>
 </body>
 </html>
