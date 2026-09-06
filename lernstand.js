@@ -59,7 +59,21 @@
       '#melde-karte .abbrechen{width:100%;margin-top:8px;padding:12px;border:none;border-radius:12px;' +
         'background:#f2f3f8;color:#1b1c22;font-size:15px;cursor:pointer}' +
       '#melde-karte .fertig{text-align:center;padding:14px 0}' +
-      '#melde-karte .fertig .haken{font-size:44px}';
+      '#melde-karte .fertig .haken{font-size:44px}' +
+      '#melde-punkt{position:absolute;top:-3px;right:-3px;width:17px;height:17px;border-radius:50%;' +
+        'background:#ef4444;border:2px solid #fff;display:none}' +
+      '#melde-knopf.hat-neues #melde-punkt{display:block}' +
+      '#melde-knopf{position:fixed}' +
+      '.faden{margin:0 0 14px}' +
+      '.faden .blase{padding:11px 13px;border-radius:14px;margin-bottom:8px;font-size:15px;line-height:1.5;white-space:pre-line}' +
+      '.faden .von-kind{background:#eef0ff;border-bottom-right-radius:5px;margin-left:22px}' +
+      '.faden .von-werkstatt{background:#f2f6f3;border:1px solid #dfeae2;border-bottom-left-radius:5px;margin-right:22px}' +
+      '.faden .wer{display:block;font-size:12px;color:#6b7280;margin-bottom:3px;font-weight:600}' +
+      '.faden img{max-width:100%;border-radius:10px;margin-top:7px;display:block}' +
+      '.faden-liste{max-height:44vh;overflow:auto;margin-bottom:12px}' +
+      '#melde-karte .passt{width:100%;margin-top:8px;padding:13px;border:none;border-radius:13px;' +
+        'background:#12a35f;color:#fff;font-size:16px;font-weight:700;cursor:pointer}' +
+      '#melde-karte .zurueck{background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:6px 0}';
     document.head.appendChild(stil);
 
     var knopf = document.createElement("button");
@@ -67,12 +81,28 @@
     knopf.type = "button";
     knopf.title = "Hier stimmt was nicht";
     knopf.setAttribute("aria-label", "Problem melden");
-    knopf.textContent = "\u{1F4AC}";
+    knopf.innerHTML = "\u{1F4AC}<span id=\"melde-punkt\"></span>";
+    knopf.style.position = "fixed";
     knopf.addEventListener("click", dialogOeffnen);
     document.body.appendChild(knopf);
   }
 
   var gewaehlteArt = "problem", bildDaten = "";
+  var meineFaeden = [];
+
+  // Hat die Werkstatt geantwortet? Dann bekommt der Knopf einen roten Punkt.
+  function nachAntwortenSehen(){
+    fetch("/api/melden?meine=1&kind=" + encodeURIComponent(KIND), {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) return;
+        meineFaeden = j.meldungen || [];
+        var neues = meineFaeden.some(function(f){ return f.ungelesenKind; });
+        var k = document.getElementById("melde-knopf");
+        if (k) k.classList.toggle("hat-neues", neues);
+      })
+      .catch(function(){});
+  }
 
   function dialogOeffnen() {
     if (document.getElementById("melde-huelle")) return;
