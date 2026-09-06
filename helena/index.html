@@ -324,1317 +324,2202 @@
 
   /* ---------- Themen-Einheiten (eigene Listen, kein Buch-Inhalt) ---------- */
   var UNITS=[
-    {
-      "id": "town",
-      "name": "Stadt & Wege",
-      "pairs": [
-        {
-          "en": "town",
-          "de": "die Stadt",
-          "ex": "I live in a small town."
-        },
-        {
-          "en": "city",
-          "de": "die Großstadt",
-          "ex": "London is a very big city."
-        },
-        {
-          "en": "street",
-          "de": "die Straße",
-          "ex": "Our street is very quiet."
-        },
-        {
-          "en": "shop",
-          "de": "der Laden / das Geschäft",
-          "ex": "There is a new shop near the station."
-        },
-        {
-          "en": "market",
-          "de": "der Markt",
-          "ex": "We buy fruit at the market."
-        },
-        {
-          "en": "station",
-          "de": "der Bahnhof",
-          "ex": "The train leaves from the station."
-        },
-        {
-          "en": "bank",
-          "de": "die Bank",
-          "ex": "My mum works at a bank."
-        },
-        {
-          "en": "church",
-          "de": "die Kirche",
-          "ex": "The old church is in the centre."
-        },
-        {
-          "en": "bridge",
-          "de": "die Brücke",
-          "ex": "We walked over the bridge."
-        },
-        {
-          "en": "square",
-          "de": "der Platz",
-          "ex": "The market square is full of people."
-        },
-        {
-          "en": "corner",
-          "de": "die Ecke",
-          "ex": "The shop is on the corner."
-        },
-        {
-          "en": "to turn",
-          "de": "abbiegen",
-          "ex": "Turn left at the traffic lights."
-        },
-        {
-          "en": "left",
-          "de": "links",
-          "ex": "The bakery is on the left."
-        },
-        {
-          "en": "right",
-          "de": "rechts",
-          "ex": "Go right after the bank."
-        },
-        {
-          "en": "straight on",
-          "de": "geradeaus",
-          "ex": "Go straight on for two minutes."
-        },
-        {
-          "en": "between",
-          "de": "zwischen",
-          "ex": "The café is between the bank and the shop."
-        },
-        {
-          "en": "opposite",
-          "de": "gegenüber",
-          "ex": "The park is opposite the school."
-        }
-      ]
-    },
-    {
-      "id": "school",
-      "name": "Schule & Fächer",
-      "pairs": [
-        {
-          "en": "school",
-          "de": "die Schule",
-          "ex": "Our school starts at eight o'clock."
-        },
-        {
-          "en": "teacher",
-          "de": "der Lehrer / die Lehrerin",
-          "ex": "Our English teacher is very funny."
-        },
-        {
-          "en": "classroom",
-          "de": "das Klassenzimmer",
-          "ex": "The classroom is on the first floor."
-        },
-        {
-          "en": "lesson",
-          "de": "die Stunde / der Unterricht",
-          "ex": "The maths lesson was hard today."
-        },
-        {
-          "en": "homework",
-          "de": "die Hausaufgaben",
-          "ex": "I always do my homework after dinner."
-        },
-        {
-          "en": "subject",
-          "de": "das (Schul-)Fach",
-          "ex": "My favourite subject is history."
-        },
-        {
-          "en": "break",
-          "de": "die Pause",
-          "ex": "We play football during the break."
-        },
-        {
-          "en": "timetable",
-          "de": "der Stundenplan",
-          "ex": "Look at the timetable for tomorrow."
-        },
-        {
-          "en": "exercise book",
-          "de": "das Heft",
-          "ex": "Write the new words in your exercise book."
-        },
-        {
-          "en": "pencil case",
-          "de": "das Federmäppchen",
-          "ex": "My pencil case is full of pens."
-        },
-        {
-          "en": "to learn",
-          "de": "lernen",
-          "ex": "We learn English and French at school."
-        },
-        {
-          "en": "to explain",
-          "de": "erklären",
-          "ex": "Can you explain this exercise to me?"
-        },
-        {
-          "en": "difficult",
-          "de": "schwierig",
-          "ex": "The last test was really difficult."
-        },
-        {
-          "en": "maths",
-          "de": "Mathe",
-          "ex": "I am quite good at maths."
-        },
-        {
-          "en": "mark",
-          "de": "die Note",
-          "ex": "She got a very good mark in the test."
-        },
-        {
-          "en": "to pass",
-          "de": "bestehen",
-          "ex": "I hope I pass the exam."
-        }
-      ]
-    },
-    {
-      "id": "family",
-      "name": "Familie & Freunde",
-      "pairs": [
-        {
-          "en": "family",
-          "de": "die Familie",
-          "ex": "My family is quite big."
-        },
-        {
-          "en": "parents",
-          "de": "die Eltern",
-          "ex": "My parents work in the city."
-        },
-        {
-          "en": "brother",
-          "de": "der Bruder",
-          "ex": "My brother is older than me."
-        },
-        {
-          "en": "sister",
-          "de": "die Schwester",
-          "ex": "I have one little sister."
-        },
-        {
-          "en": "grandparents",
-          "de": "die Großeltern",
-          "ex": "We visit our grandparents on Sundays."
-        },
-        {
-          "en": "aunt",
-          "de": "die Tante",
-          "ex": "My aunt lives in Scotland."
-        },
-        {
-          "en": "uncle",
-          "de": "der Onkel",
-          "ex": "My uncle has a big dog."
-        },
-        {
-          "en": "cousin",
-          "de": "der Cousin / die Cousine",
-          "ex": "My cousin is the same age as me."
-        },
-        {
-          "en": "friend",
-          "de": "der Freund / die Freundin",
-          "ex": "She is my best friend."
-        },
-        {
-          "en": "neighbour",
-          "de": "der Nachbar / die Nachbarin",
-          "ex": "Our neighbour is very nice."
-        },
-        {
-          "en": "born",
-          "de": "geboren",
-          "ex": "I was born in 2013."
-        },
-        {
-          "en": "friendly",
-          "de": "freundlich",
-          "ex": "The new boy is very friendly."
-        },
-        {
-          "en": "funny",
-          "de": "lustig",
-          "ex": "My uncle tells funny jokes."
-        },
-        {
-          "en": "tall",
-          "de": "groß (Person)",
-          "ex": "My brother is very tall."
-        },
-        {
-          "en": "curly",
-          "de": "lockig",
-          "ex": "She has curly brown hair."
-        },
-        {
-          "en": "to look like",
-          "de": "aussehen wie",
-          "ex": "I look like my mother."
-        }
-      ]
-    },
-    {
-      "id": "routine",
-      "name": "Tagesablauf & Uhrzeit",
-      "pairs": [
-        {
-          "en": "to get up",
-          "de": "aufstehen",
-          "ex": "I get up at half past six."
-        },
-        {
-          "en": "to wake up",
-          "de": "aufwachen",
-          "ex": "I wake up before my alarm rings."
-        },
-        {
-          "en": "breakfast",
-          "de": "das Frühstück",
-          "ex": "I have breakfast with my family."
-        },
-        {
-          "en": "to brush",
-          "de": "putzen",
-          "ex": "I brush my teeth twice a day."
-        },
-        {
-          "en": "morning",
-          "de": "der Morgen",
-          "ex": "In the morning I ride my bike to school."
-        },
-        {
-          "en": "afternoon",
-          "de": "der Nachmittag",
-          "ex": "We meet in the afternoon."
-        },
-        {
-          "en": "evening",
-          "de": "der Abend",
-          "ex": "In the evening I read a book."
-        },
-        {
-          "en": "o'clock",
-          "de": "Uhr (volle Stunde)",
-          "ex": "It is seven o'clock."
-        },
-        {
-          "en": "half past",
-          "de": "halb (nach)",
-          "ex": "It is half past eight now."
-        },
-        {
-          "en": "quarter past",
-          "de": "Viertel nach",
-          "ex": "The film starts at quarter past nine."
-        },
-        {
-          "en": "quarter to",
-          "de": "Viertel vor",
-          "ex": "It is quarter to ten."
-        },
-        {
-          "en": "to have lunch",
-          "de": "zu Mittag essen",
-          "ex": "We have lunch at school."
-        },
-        {
-          "en": "to go to bed",
-          "de": "ins Bett gehen",
-          "ex": "I go to bed at nine o'clock."
-        },
-        {
-          "en": "early",
-          "de": "früh",
-          "ex": "She always gets up early."
-        },
-        {
-          "en": "late",
-          "de": "spät",
-          "ex": "Sorry, I am late!"
-        },
-        {
-          "en": "every day",
-          "de": "jeden Tag",
-          "ex": "I practise the piano every day."
-        }
-      ]
-    },
-    {
-      "id": "food",
-      "name": "Essen & Trinken",
-      "pairs": [
-        {
-          "en": "bread",
-          "de": "das Brot",
-          "ex": "I like bread with butter and jam."
-        },
-        {
-          "en": "apple",
-          "de": "der Apfel",
-          "ex": "An apple a day is healthy."
-        },
-        {
-          "en": "milk",
-          "de": "die Milch",
-          "ex": "She drinks a glass of milk."
-        },
-        {
-          "en": "water",
-          "de": "das Wasser",
-          "ex": "Can I have some water, please?"
-        },
-        {
-          "en": "cheese",
-          "de": "der Käse",
-          "ex": "This pizza has a lot of cheese."
-        },
-        {
-          "en": "egg",
-          "de": "das Ei",
-          "ex": "I eat an egg for breakfast."
-        },
-        {
-          "en": "chicken",
-          "de": "das Hähnchen",
-          "ex": "We had chicken and rice for dinner."
-        },
-        {
-          "en": "vegetables",
-          "de": "das Gemüse",
-          "ex": "You should eat more vegetables."
-        },
-        {
-          "en": "fruit",
-          "de": "das Obst",
-          "ex": "Fruit is good for you."
-        },
-        {
-          "en": "juice",
-          "de": "der Saft",
-          "ex": "I would like an orange juice."
-        },
-        {
-          "en": "dinner",
-          "de": "das Abendessen",
-          "ex": "We have dinner at seven."
-        },
-        {
-          "en": "hungry",
-          "de": "hungrig",
-          "ex": "I am really hungry now."
-        },
-        {
-          "en": "thirsty",
-          "de": "durstig",
-          "ex": "After sport I am always thirsty."
-        },
-        {
-          "en": "to taste",
-          "de": "schmecken / kosten",
-          "ex": "Can you taste the salt in the soup?"
-        },
-        {
-          "en": "delicious",
-          "de": "lecker / köstlich",
-          "ex": "This soup is really delicious!"
-        },
-        {
-          "en": "to cook",
-          "de": "kochen",
-          "ex": "My dad can cook very well."
-        },
-        {
-          "en": "knife",
-          "de": "das Messer",
-          "ex": "Cut the bread with a knife."
-        },
-        {
-          "en": "fork",
-          "de": "die Gabel",
-          "ex": "Eat your salad with a fork."
-        }
-      ]
-    },
-    {
-      "id": "hobbies",
-      "name": "Hobbys & Sport",
-      "pairs": [
-        {
-          "en": "hobby",
-          "de": "das Hobby",
-          "ex": "My favourite hobby is painting."
-        },
-        {
-          "en": "football",
-          "de": "der Fußball",
-          "ex": "We play football every Saturday."
-        },
-        {
-          "en": "to swim",
-          "de": "schwimmen",
-          "ex": "I can swim very fast."
-        },
-        {
-          "en": "to dance",
-          "de": "tanzen",
-          "ex": "She loves to dance."
-        },
-        {
-          "en": "to paint",
-          "de": "malen",
-          "ex": "I like to paint pictures."
-        },
-        {
-          "en": "to ride",
-          "de": "reiten / fahren",
-          "ex": "I ride my bike to school."
-        },
-        {
-          "en": "team",
-          "de": "die Mannschaft",
-          "ex": "Our team won the game."
-        },
-        {
-          "en": "to win",
-          "de": "gewinnen",
-          "ex": "We hope to win the match."
-        },
-        {
-          "en": "to lose",
-          "de": "verlieren",
-          "ex": "Nobody likes to lose."
-        },
-        {
-          "en": "to practise",
-          "de": "üben",
-          "ex": "I practise the guitar every day."
-        },
-        {
-          "en": "club",
-          "de": "der Verein / Klub",
-          "ex": "I am in a chess club."
-        },
-        {
-          "en": "gym",
-          "de": "die Turnhalle",
-          "ex": "We do sport in the gym."
-        },
-        {
-          "en": "bike",
-          "de": "das Fahrrad",
-          "ex": "My new bike is red."
-        },
-        {
-          "en": "to collect",
-          "de": "sammeln",
-          "ex": "I collect old coins."
-        },
-        {
-          "en": "to watch",
-          "de": "anschauen",
-          "ex": "We watch films at the weekend."
-        },
-        {
-          "en": "free time",
-          "de": "die Freizeit",
-          "ex": "In my free time I read comics."
-        }
-      ]
-    },
-    {
-      "id": "home",
-      "name": "Zuhause & Möbel",
-      "pairs": [
-        {
-          "en": "house",
-          "de": "das Haus",
-          "ex": "We live in a big house."
-        },
-        {
-          "en": "flat",
-          "de": "die Wohnung",
-          "ex": "They live in a small flat."
-        },
-        {
-          "en": "room",
-          "de": "das Zimmer",
-          "ex": "My room is on the first floor."
-        },
-        {
-          "en": "kitchen",
-          "de": "die Küche",
-          "ex": "We cook dinner in the kitchen."
-        },
-        {
-          "en": "bedroom",
-          "de": "das Schlafzimmer",
-          "ex": "My bedroom is very tidy."
-        },
-        {
-          "en": "bathroom",
-          "de": "das Badezimmer",
-          "ex": "The bathroom is next to my room."
-        },
-        {
-          "en": "garden",
-          "de": "der Garten",
-          "ex": "We play in the garden."
-        },
-        {
-          "en": "table",
-          "de": "der Tisch",
-          "ex": "Put the plates on the table."
-        },
-        {
-          "en": "chair",
-          "de": "der Stuhl",
-          "ex": "There is a chair by the window."
-        },
-        {
-          "en": "bed",
-          "de": "das Bett",
-          "ex": "I make my bed every morning."
-        },
-        {
-          "en": "door",
-          "de": "die Tür",
-          "ex": "Please close the door."
-        },
-        {
-          "en": "window",
-          "de": "das Fenster",
-          "ex": "Open the window, it is hot."
-        },
-        {
-          "en": "wall",
-          "de": "die Wand / die Mauer",
-          "ex": "There is a poster on the wall."
-        },
-        {
-          "en": "floor",
-          "de": "der Boden / das Stockwerk",
-          "ex": "My books are on the floor."
-        },
-        {
-          "en": "cupboard",
-          "de": "der Schrank",
-          "ex": "The cups are in the cupboard."
-        },
-        {
-          "en": "lamp",
-          "de": "die Lampe",
-          "ex": "Turn on the lamp, please."
-        }
-      ]
-    },
-    {
-      "id": "clothes",
-      "name": "Kleidung & Einkaufen",
-      "pairs": [
-        {
-          "en": "clothes",
-          "de": "die Kleidung",
-          "ex": "I buy new clothes in autumn."
-        },
-        {
-          "en": "trousers",
-          "de": "die Hose",
-          "ex": "These trousers are too long."
-        },
-        {
-          "en": "shirt",
-          "de": "das Hemd",
-          "ex": "He wears a white shirt."
-        },
-        {
-          "en": "dress",
-          "de": "das Kleid",
-          "ex": "She has a beautiful dress."
-        },
-        {
-          "en": "jumper",
-          "de": "der Pullover",
-          "ex": "It is cold, put on a jumper."
-        },
-        {
-          "en": "shoes",
-          "de": "die Schuhe",
-          "ex": "My new shoes are black."
-        },
-        {
-          "en": "jacket",
-          "de": "die Jacke",
-          "ex": "Take your jacket, it is raining."
-        },
-        {
-          "en": "hat",
-          "de": "der Hut / die Mütze",
-          "ex": "He always wears a funny hat."
-        },
-        {
-          "en": "to wear",
-          "de": "tragen (Kleidung)",
-          "ex": "I wear a uniform at school."
-        },
-        {
-          "en": "to buy",
-          "de": "kaufen",
-          "ex": "I want to buy a present."
-        },
-        {
-          "en": "to pay",
-          "de": "bezahlen",
-          "ex": "You can pay at the till."
-        },
-        {
-          "en": "money",
-          "de": "das Geld",
-          "ex": "I do not have much money."
-        },
-        {
-          "en": "expensive",
-          "de": "teuer",
-          "ex": "This jacket is too expensive."
-        },
-        {
-          "en": "cheap",
-          "de": "billig / günstig",
-          "ex": "The shoes were really cheap."
-        },
-        {
-          "en": "size",
-          "de": "die Größe",
-          "ex": "What size are you?"
-        },
-        {
-          "en": "shop assistant",
-          "de": "der Verkäufer / die Verkäuferin",
-          "ex": "The shop assistant was very helpful."
-        }
-      ]
-    },
-    {
-      "id": "travel",
-      "name": "Ferien & Reisen",
-      "pairs": [
-        {
-          "en": "holiday",
-          "de": "die Ferien / der Urlaub",
-          "ex": "We go on holiday in summer."
-        },
-        {
-          "en": "trip",
-          "de": "der Ausflug",
-          "ex": "We had a school trip to York."
-        },
-        {
-          "en": "beach",
-          "de": "der Strand",
-          "ex": "We played on the beach all day."
-        },
-        {
-          "en": "sea",
-          "de": "das Meer",
-          "ex": "The sea was warm and blue."
-        },
-        {
-          "en": "mountain",
-          "de": "der Berg",
-          "ex": "We climbed a high mountain."
-        },
-        {
-          "en": "plane",
-          "de": "das Flugzeug",
-          "ex": "Our plane leaves at ten."
-        },
-        {
-          "en": "airport",
-          "de": "der Flughafen",
-          "ex": "We waited at the airport."
-        },
-        {
-          "en": "suitcase",
-          "de": "der Koffer",
-          "ex": "My suitcase is very heavy."
-        },
-        {
-          "en": "ticket",
-          "de": "das Ticket / die Fahrkarte",
-          "ex": "I bought a ticket for the train."
-        },
-        {
-          "en": "hotel",
-          "de": "das Hotel",
-          "ex": "Our hotel was near the beach."
-        },
-        {
-          "en": "map",
-          "de": "die Landkarte / der Stadtplan",
-          "ex": "Look at the map to find the way."
-        },
-        {
-          "en": "to travel",
-          "de": "reisen",
-          "ex": "I love to travel by train."
-        },
-        {
-          "en": "abroad",
-          "de": "im Ausland",
-          "ex": "This year we went abroad."
-        },
-        {
-          "en": "journey",
-          "de": "die Reise / die Fahrt",
-          "ex": "The journey took five hours."
-        },
-        {
-          "en": "to pack",
-          "de": "packen",
-          "ex": "Do not forget to pack your toothbrush."
-        },
-        {
-          "en": "camera",
-          "de": "die Kamera",
-          "ex": "I took lots of photos with my camera."
-        }
-      ]
-    },
-    {
-      "id": "animals",
-      "name": "Tiere & Natur",
-      "pairs": [
-        {
-          "en": "animal",
-          "de": "das Tier",
-          "ex": "The lion is a wild animal."
-        },
-        {
-          "en": "dog",
-          "de": "der Hund",
-          "ex": "Our dog likes long walks."
-        },
-        {
-          "en": "cat",
-          "de": "die Katze",
-          "ex": "The cat is sleeping on the sofa."
-        },
-        {
-          "en": "horse",
-          "de": "das Pferd",
-          "ex": "She rides a brown horse."
-        },
-        {
-          "en": "bird",
-          "de": "der Vogel",
-          "ex": "A little bird sat on the tree."
-        },
-        {
-          "en": "fish",
-          "de": "der Fisch",
-          "ex": "There is a big fish in the pond."
-        },
-        {
-          "en": "tree",
-          "de": "der Baum",
-          "ex": "The tree in our garden is very old."
-        },
-        {
-          "en": "flower",
-          "de": "die Blume",
-          "ex": "She picked a yellow flower."
-        },
-        {
-          "en": "forest",
-          "de": "der Wald",
-          "ex": "We went for a walk in the forest."
-        },
-        {
-          "en": "river",
-          "de": "der Fluss",
-          "ex": "The river is cold and deep."
-        },
-        {
-          "en": "field",
-          "de": "das Feld / die Wiese",
-          "ex": "The cows are in the field."
-        },
-        {
-          "en": "mouse",
-          "de": "die Maus",
-          "ex": "The cat is chasing a mouse."
-        },
-        {
-          "en": "rabbit",
-          "de": "das Kaninchen",
-          "ex": "My rabbit has soft grey fur."
-        },
-        {
-          "en": "wild",
-          "de": "wild",
-          "ex": "Foxes are wild animals."
-        },
-        {
-          "en": "to feed",
-          "de": "füttern",
-          "ex": "I feed my rabbit every morning."
-        },
-        {
-          "en": "leaf",
-          "de": "das Blatt",
-          "ex": "A red leaf fell from the tree."
-        }
-      ]
-    },
-    {
-      "id": "weather",
-      "name": "Wetter & Jahreszeiten",
-      "pairs": [
-        {
-          "en": "weather",
-          "de": "das Wetter",
-          "ex": "The weather is nice today."
-        },
-        {
-          "en": "sun",
-          "de": "die Sonne",
-          "ex": "The sun is shining."
-        },
-        {
-          "en": "rain",
-          "de": "der Regen",
-          "ex": "I do not like the rain."
-        },
-        {
-          "en": "snow",
-          "de": "der Schnee",
-          "ex": "The children play in the snow."
-        },
-        {
-          "en": "wind",
-          "de": "der Wind",
-          "ex": "The wind is very strong today."
-        },
-        {
-          "en": "cloud",
-          "de": "die Wolke",
-          "ex": "There is one white cloud in the sky."
-        },
-        {
-          "en": "warm",
-          "de": "warm",
-          "ex": "It is warm and sunny."
-        },
-        {
-          "en": "cold",
-          "de": "kalt",
-          "ex": "It is very cold in winter."
-        },
-        {
-          "en": "sunny",
-          "de": "sonnig",
-          "ex": "Tomorrow will be sunny."
-        },
-        {
-          "en": "rainy",
-          "de": "regnerisch",
-          "ex": "It was a grey, rainy day."
-        },
-        {
-          "en": "spring",
-          "de": "der Frühling",
-          "ex": "The flowers grow in spring."
-        },
-        {
-          "en": "summer",
-          "de": "der Sommer",
-          "ex": "We swim in the sea in summer."
-        },
-        {
-          "en": "autumn",
-          "de": "der Herbst",
-          "ex": "The leaves fall in autumn."
-        },
-        {
-          "en": "winter",
-          "de": "der Winter",
-          "ex": "It often snows in winter."
-        },
-        {
-          "en": "season",
-          "de": "die Jahreszeit",
-          "ex": "My favourite season is spring."
-        },
-        {
-          "en": "degree",
-          "de": "der Grad",
-          "ex": "It is only one degree outside today."
-        }
-      ]
-    },
-    {
-      "id": "feelings",
-      "name": "Gefühle & Adjektive",
-      "pairs": [
-        {
-          "en": "happy",
-          "de": "glücklich / froh",
-          "ex": "I am very happy today."
-        },
-        {
-          "en": "sad",
-          "de": "traurig",
-          "ex": "She felt sad after the film."
-        },
-        {
-          "en": "angry",
-          "de": "wütend / böse",
-          "ex": "Dad was angry about the mess."
-        },
-        {
-          "en": "tired",
-          "de": "müde",
-          "ex": "I am tired after school."
-        },
-        {
-          "en": "afraid",
-          "de": "ängstlich / Angst haben",
-          "ex": "I am afraid of spiders."
-        },
-        {
-          "en": "bored",
-          "de": "gelangweilt",
-          "ex": "The children were bored in the rain."
-        },
-        {
-          "en": "excited",
-          "de": "aufgeregt / gespannt",
-          "ex": "We are excited about the trip."
-        },
-        {
-          "en": "surprised",
-          "de": "überrascht",
-          "ex": "She was surprised by the present."
-        },
-        {
-          "en": "proud",
-          "de": "stolz",
-          "ex": "My parents are proud of me."
-        },
-        {
-          "en": "nervous",
-          "de": "nervös",
-          "ex": "I am nervous before a test."
-        },
-        {
-          "en": "glad",
-          "de": "froh",
-          "ex": "I am glad you are here."
-        },
-        {
-          "en": "lucky",
-          "de": "glücklich (Glück haben)",
-          "ex": "You are so lucky!"
-        },
-        {
-          "en": "nice",
-          "de": "nett / schön",
-          "ex": "That was a nice surprise."
-        },
-        {
-          "en": "boring",
-          "de": "langweilig",
-          "ex": "The film was really boring."
-        },
-        {
-          "en": "great",
-          "de": "toll / großartig",
-          "ex": "We had a great time."
-        },
-        {
-          "en": "terrible",
-          "de": "schrecklich",
-          "ex": "The weather was terrible."
-        }
-      ]
-    },
-    {
-      "id": "body",
-      "name": "Körper & Gesundheit",
-      "pairs": [
-        {
-          "en": "body",
-          "de": "der Körper",
-          "ex": "Sport is good for your body."
-        },
-        {
-          "en": "head",
-          "de": "der Kopf",
-          "ex": "My head hurts a little."
-        },
-        {
-          "en": "hand",
-          "de": "die Hand",
-          "ex": "Give me your hand."
-        },
-        {
-          "en": "arm",
-          "de": "der Arm",
-          "ex": "He broke his arm last week."
-        },
-        {
-          "en": "leg",
-          "de": "das Bein",
-          "ex": "The dog hurt its leg."
-        },
-        {
-          "en": "foot",
-          "de": "der Fuß",
-          "ex": "I have a stone in my foot."
-        },
-        {
-          "en": "eye",
-          "de": "das Auge",
-          "ex": "She has one blue eye and one green eye."
-        },
-        {
-          "en": "ear",
-          "de": "das Ohr",
-          "ex": "I cannot hear well with this ear."
-        },
-        {
-          "en": "tooth",
-          "de": "der Zahn",
-          "ex": "The dentist checked every tooth."
-        },
-        {
-          "en": "hair",
-          "de": "die Haare",
-          "ex": "She has long dark hair."
-        },
-        {
-          "en": "ill",
-          "de": "krank",
-          "ex": "I was ill last week."
-        },
-        {
-          "en": "to hurt",
-          "de": "wehtun / verletzen",
-          "ex": "Does your tooth hurt?"
-        },
-        {
-          "en": "doctor",
-          "de": "der Arzt / die Ärztin",
-          "ex": "The doctor gave me some medicine."
-        },
-        {
-          "en": "medicine",
-          "de": "die Medizin",
-          "ex": "Take this medicine twice a day."
-        },
-        {
-          "en": "healthy",
-          "de": "gesund",
-          "ex": "Fruit and vegetables are healthy."
-        },
-        {
-          "en": "to feel",
-          "de": "sich fühlen",
-          "ex": "I feel much better today."
-        }
-      ]
-    },
-    {
-      "id": "irregular",
-      "name": "Unregelmäßige Verben",
-      "pairs": [
-        {
-          "en": "go",
-          "de": "gehen (went, gone)",
-          "ex": "We go to the park on Sundays."
-        },
-        {
-          "en": "have",
-          "de": "haben (had, had)",
-          "ex": "We have lunch at one."
-        },
-        {
-          "en": "do",
-          "de": "tun / machen (did, done)",
-          "ex": "I do my homework after school."
-        },
-        {
-          "en": "make",
-          "de": "machen (made, made)",
-          "ex": "I make my bed every morning."
-        },
-        {
-          "en": "see",
-          "de": "sehen (saw, seen)",
-          "ex": "I can see the sea from here."
-        },
-        {
-          "en": "eat",
-          "de": "essen (ate, eaten)",
-          "ex": "We eat dinner together."
-        },
-        {
-          "en": "drink",
-          "de": "trinken (drank, drunk)",
-          "ex": "I drink water after sport."
-        },
-        {
-          "en": "give",
-          "de": "geben (gave, given)",
-          "ex": "Please give me the book."
-        },
-        {
-          "en": "take",
-          "de": "nehmen (took, taken)",
-          "ex": "I take the bus to town."
-        },
-        {
-          "en": "come",
-          "de": "kommen (came, come)",
-          "ex": "Come to my house later."
-        },
-        {
-          "en": "buy",
-          "de": "kaufen (bought, bought)",
-          "ex": "I want to buy new shoes."
-        },
-        {
-          "en": "find",
-          "de": "finden (found, found)",
-          "ex": "I cannot find my keys."
-        },
-        {
-          "en": "write",
-          "de": "schreiben (wrote, written)",
-          "ex": "I write to my pen friend."
-        },
-        {
-          "en": "read",
-          "de": "lesen (read, read)",
-          "ex": "I read comics in bed."
-        },
-        {
-          "en": "speak",
-          "de": "sprechen (spoke, spoken)",
-          "ex": "We speak English in class."
-        },
-        {
-          "en": "run",
-          "de": "rennen / laufen (ran, run)",
-          "ex": "I run in the park every day."
-        }
-      ]
-    },
-    {
-      "id": "question",
-      "name": "Frage- & Verbindungswörter",
-      "pairs": [
-        {
-          "en": "what",
-          "de": "was",
-          "ex": "What is your name?"
-        },
-        {
-          "en": "who",
-          "de": "wer",
-          "ex": "Who is that boy?"
-        },
-        {
-          "en": "where",
-          "de": "wo / wohin",
-          "ex": "Where do you live?"
-        },
-        {
-          "en": "when",
-          "de": "wann",
-          "ex": "When does the film start?"
-        },
-        {
-          "en": "why",
-          "de": "warum",
-          "ex": "Why are you so late?"
-        },
-        {
-          "en": "how",
-          "de": "wie",
-          "ex": "How are you today?"
-        },
-        {
-          "en": "which",
-          "de": "welche(r/s)",
-          "ex": "Which book is yours?"
-        },
-        {
-          "en": "whose",
-          "de": "wessen",
-          "ex": "Whose bag is this?"
-        },
-        {
-          "en": "because",
-          "de": "weil",
-          "ex": "I stayed home because I was ill."
-        },
-        {
-          "en": "but",
-          "de": "aber",
-          "ex": "I like tea but not coffee."
-        },
-        {
-          "en": "and",
-          "de": "und",
-          "ex": "I have a dog and a cat."
-        },
-        {
-          "en": "or",
-          "de": "oder",
-          "ex": "Do you want tea or juice?"
-        },
-        {
-          "en": "so",
-          "de": "also / deshalb",
-          "ex": "It was raining, so we stayed inside."
-        },
-        {
-          "en": "then",
-          "de": "dann",
-          "ex": "First we ate, then we played."
-        },
-        {
-          "en": "before",
-          "de": "bevor / vor",
-          "ex": "Wash your hands before dinner."
-        },
-        {
-          "en": "after",
-          "de": "nach / nachdem",
-          "ex": "We went home after the game."
-        },
-        {
-          "en": "also",
-          "de": "auch",
-          "ex": "She sings and also plays the piano."
-        }
-      ]
-    }
-  ];
+  {
+    "id": "town",
+    "name": "Stadt & Wege",
+    "pairs": [
+      {
+        "en": "town",
+        "de": "die Stadt",
+        "ex": "I live in a small town."
+      },
+      {
+        "en": "city",
+        "de": "die Großstadt",
+        "ex": "London is a very big city."
+      },
+      {
+        "en": "street",
+        "de": "die Straße",
+        "ex": "Our street is very quiet."
+      },
+      {
+        "en": "shop",
+        "de": "der Laden / das Geschäft",
+        "ex": "There is a new shop near the station."
+      },
+      {
+        "en": "market",
+        "de": "der Markt",
+        "ex": "We buy fruit at the market."
+      },
+      {
+        "en": "station",
+        "de": "der Bahnhof",
+        "ex": "The train leaves from the station."
+      },
+      {
+        "en": "bank",
+        "de": "die Bank",
+        "ex": "My mum works at a bank."
+      },
+      {
+        "en": "church",
+        "de": "die Kirche",
+        "ex": "The old church is in the centre."
+      },
+      {
+        "en": "bridge",
+        "de": "die Brücke",
+        "ex": "We walked over the bridge."
+      },
+      {
+        "en": "square",
+        "de": "der Platz",
+        "ex": "The market square is full of people."
+      },
+      {
+        "en": "corner",
+        "de": "die Ecke",
+        "ex": "The shop is on the corner."
+      },
+      {
+        "en": "to turn",
+        "de": "abbiegen",
+        "ex": "Turn left at the traffic lights."
+      },
+      {
+        "en": "left",
+        "de": "links",
+        "ex": "The bakery is on the left."
+      },
+      {
+        "en": "right",
+        "de": "rechts",
+        "ex": "Go right after the bank."
+      },
+      {
+        "en": "straight on",
+        "de": "geradeaus",
+        "ex": "Go straight on for two minutes."
+      },
+      {
+        "en": "between",
+        "de": "zwischen",
+        "ex": "The café is between the bank and the shop."
+      },
+      {
+        "en": "opposite",
+        "de": "gegenüber",
+        "ex": "The park is opposite the school."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "school",
+    "name": "Schule & Fächer",
+    "pairs": [
+      {
+        "en": "school",
+        "de": "die Schule",
+        "ex": "Our school starts at eight o'clock."
+      },
+      {
+        "en": "teacher",
+        "de": "der Lehrer / die Lehrerin",
+        "ex": "Our English teacher is very funny."
+      },
+      {
+        "en": "classroom",
+        "de": "das Klassenzimmer",
+        "ex": "The classroom is on the first floor."
+      },
+      {
+        "en": "lesson",
+        "de": "die Stunde / der Unterricht",
+        "ex": "The maths lesson was hard today."
+      },
+      {
+        "en": "homework",
+        "de": "die Hausaufgaben",
+        "ex": "I always do my homework after dinner."
+      },
+      {
+        "en": "subject",
+        "de": "das (Schul-)Fach",
+        "ex": "My favourite subject is history."
+      },
+      {
+        "en": "break",
+        "de": "die Pause",
+        "ex": "We play football during the break."
+      },
+      {
+        "en": "timetable",
+        "de": "der Stundenplan",
+        "ex": "Look at the timetable for tomorrow."
+      },
+      {
+        "en": "exercise book",
+        "de": "das Heft",
+        "ex": "Write the new words in your exercise book."
+      },
+      {
+        "en": "pencil case",
+        "de": "das Federmäppchen",
+        "ex": "My pencil case is full of pens."
+      },
+      {
+        "en": "to learn",
+        "de": "lernen",
+        "ex": "We learn English and French at school."
+      },
+      {
+        "en": "to explain",
+        "de": "erklären",
+        "ex": "Can you explain this exercise to me?"
+      },
+      {
+        "en": "difficult",
+        "de": "schwierig",
+        "ex": "The last test was really difficult."
+      },
+      {
+        "en": "maths",
+        "de": "Mathe",
+        "ex": "I am quite good at maths."
+      },
+      {
+        "en": "mark",
+        "de": "die Note",
+        "ex": "She got a very good mark in the test."
+      },
+      {
+        "en": "to pass",
+        "de": "bestehen",
+        "ex": "I hope I pass the exam."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "family",
+    "name": "Familie & Freunde",
+    "pairs": [
+      {
+        "en": "family",
+        "de": "die Familie",
+        "ex": "My family is quite big."
+      },
+      {
+        "en": "parents",
+        "de": "die Eltern",
+        "ex": "My parents work in the city."
+      },
+      {
+        "en": "brother",
+        "de": "der Bruder",
+        "ex": "My brother is older than me."
+      },
+      {
+        "en": "sister",
+        "de": "die Schwester",
+        "ex": "I have one little sister."
+      },
+      {
+        "en": "grandparents",
+        "de": "die Großeltern",
+        "ex": "We visit our grandparents on Sundays."
+      },
+      {
+        "en": "aunt",
+        "de": "die Tante",
+        "ex": "My aunt lives in Scotland."
+      },
+      {
+        "en": "uncle",
+        "de": "der Onkel",
+        "ex": "My uncle has a big dog."
+      },
+      {
+        "en": "cousin",
+        "de": "der Cousin / die Cousine",
+        "ex": "My cousin is the same age as me."
+      },
+      {
+        "en": "friend",
+        "de": "der Freund / die Freundin",
+        "ex": "She is my best friend."
+      },
+      {
+        "en": "neighbour",
+        "de": "der Nachbar / die Nachbarin",
+        "ex": "Our neighbour is very nice."
+      },
+      {
+        "en": "born",
+        "de": "geboren",
+        "ex": "I was born in 2013."
+      },
+      {
+        "en": "friendly",
+        "de": "freundlich",
+        "ex": "The new boy is very friendly."
+      },
+      {
+        "en": "funny",
+        "de": "lustig",
+        "ex": "My uncle tells funny jokes."
+      },
+      {
+        "en": "tall",
+        "de": "groß (Person)",
+        "ex": "My brother is very tall."
+      },
+      {
+        "en": "curly",
+        "de": "lockig",
+        "ex": "She has curly brown hair."
+      },
+      {
+        "en": "to look like",
+        "de": "aussehen wie",
+        "ex": "I look like my mother."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "routine",
+    "name": "Tagesablauf & Uhrzeit",
+    "pairs": [
+      {
+        "en": "to get up",
+        "de": "aufstehen",
+        "ex": "I get up at half past six."
+      },
+      {
+        "en": "to wake up",
+        "de": "aufwachen",
+        "ex": "I wake up before my alarm rings."
+      },
+      {
+        "en": "breakfast",
+        "de": "das Frühstück",
+        "ex": "I have breakfast with my family."
+      },
+      {
+        "en": "to brush",
+        "de": "putzen",
+        "ex": "I brush my teeth twice a day."
+      },
+      {
+        "en": "morning",
+        "de": "der Morgen",
+        "ex": "In the morning I ride my bike to school."
+      },
+      {
+        "en": "afternoon",
+        "de": "der Nachmittag",
+        "ex": "We meet in the afternoon."
+      },
+      {
+        "en": "evening",
+        "de": "der Abend",
+        "ex": "In the evening I read a book."
+      },
+      {
+        "en": "o'clock",
+        "de": "Uhr (volle Stunde)",
+        "ex": "It is seven o'clock."
+      },
+      {
+        "en": "half past",
+        "de": "halb (nach)",
+        "ex": "It is half past eight now."
+      },
+      {
+        "en": "quarter past",
+        "de": "Viertel nach",
+        "ex": "The film starts at quarter past nine."
+      },
+      {
+        "en": "quarter to",
+        "de": "Viertel vor",
+        "ex": "It is quarter to ten."
+      },
+      {
+        "en": "to have lunch",
+        "de": "zu Mittag essen",
+        "ex": "We have lunch at school."
+      },
+      {
+        "en": "to go to bed",
+        "de": "ins Bett gehen",
+        "ex": "I go to bed at nine o'clock."
+      },
+      {
+        "en": "early",
+        "de": "früh",
+        "ex": "She always gets up early."
+      },
+      {
+        "en": "late",
+        "de": "spät",
+        "ex": "Sorry, I am late!"
+      },
+      {
+        "en": "every day",
+        "de": "jeden Tag",
+        "ex": "I practise the piano every day."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "food",
+    "name": "Essen & Trinken",
+    "pairs": [
+      {
+        "en": "bread",
+        "de": "das Brot",
+        "ex": "I like bread with butter and jam."
+      },
+      {
+        "en": "apple",
+        "de": "der Apfel",
+        "ex": "An apple a day is healthy."
+      },
+      {
+        "en": "milk",
+        "de": "die Milch",
+        "ex": "She drinks a glass of milk."
+      },
+      {
+        "en": "water",
+        "de": "das Wasser",
+        "ex": "Can I have some water, please?"
+      },
+      {
+        "en": "cheese",
+        "de": "der Käse",
+        "ex": "This pizza has a lot of cheese."
+      },
+      {
+        "en": "egg",
+        "de": "das Ei",
+        "ex": "I eat an egg for breakfast."
+      },
+      {
+        "en": "chicken",
+        "de": "das Hähnchen",
+        "ex": "We had chicken and rice for dinner."
+      },
+      {
+        "en": "vegetables",
+        "de": "das Gemüse",
+        "ex": "You should eat more vegetables."
+      },
+      {
+        "en": "fruit",
+        "de": "das Obst",
+        "ex": "Fruit is good for you."
+      },
+      {
+        "en": "juice",
+        "de": "der Saft",
+        "ex": "I would like an orange juice."
+      },
+      {
+        "en": "dinner",
+        "de": "das Abendessen",
+        "ex": "We have dinner at seven."
+      },
+      {
+        "en": "hungry",
+        "de": "hungrig",
+        "ex": "I am really hungry now."
+      },
+      {
+        "en": "thirsty",
+        "de": "durstig",
+        "ex": "After sport I am always thirsty."
+      },
+      {
+        "en": "to taste",
+        "de": "schmecken / kosten",
+        "ex": "Can you taste the salt in the soup?"
+      },
+      {
+        "en": "delicious",
+        "de": "lecker / köstlich",
+        "ex": "This soup is really delicious!"
+      },
+      {
+        "en": "to cook",
+        "de": "kochen",
+        "ex": "My dad can cook very well."
+      },
+      {
+        "en": "knife",
+        "de": "das Messer",
+        "ex": "Cut the bread with a knife."
+      },
+      {
+        "en": "fork",
+        "de": "die Gabel",
+        "ex": "Eat your salad with a fork."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "hobbies",
+    "name": "Hobbys & Sport",
+    "pairs": [
+      {
+        "en": "hobby",
+        "de": "das Hobby",
+        "ex": "My favourite hobby is painting."
+      },
+      {
+        "en": "football",
+        "de": "der Fußball",
+        "ex": "We play football every Saturday."
+      },
+      {
+        "en": "to swim",
+        "de": "schwimmen",
+        "ex": "I can swim very fast."
+      },
+      {
+        "en": "to dance",
+        "de": "tanzen",
+        "ex": "She loves to dance."
+      },
+      {
+        "en": "to paint",
+        "de": "malen",
+        "ex": "I like to paint pictures."
+      },
+      {
+        "en": "to ride",
+        "de": "reiten / fahren",
+        "ex": "I ride my bike to school."
+      },
+      {
+        "en": "team",
+        "de": "die Mannschaft",
+        "ex": "Our team won the game."
+      },
+      {
+        "en": "to win",
+        "de": "gewinnen",
+        "ex": "We hope to win the match."
+      },
+      {
+        "en": "to lose",
+        "de": "verlieren",
+        "ex": "Nobody likes to lose."
+      },
+      {
+        "en": "to practise",
+        "de": "üben",
+        "ex": "I practise the guitar every day."
+      },
+      {
+        "en": "club",
+        "de": "der Verein / Klub",
+        "ex": "I am in a chess club."
+      },
+      {
+        "en": "gym",
+        "de": "die Turnhalle",
+        "ex": "We do sport in the gym."
+      },
+      {
+        "en": "bike",
+        "de": "das Fahrrad",
+        "ex": "My new bike is red."
+      },
+      {
+        "en": "to collect",
+        "de": "sammeln",
+        "ex": "I collect old coins."
+      },
+      {
+        "en": "to watch",
+        "de": "anschauen",
+        "ex": "We watch films at the weekend."
+      },
+      {
+        "en": "free time",
+        "de": "die Freizeit",
+        "ex": "In my free time I read comics."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "home",
+    "name": "Zuhause & Möbel",
+    "pairs": [
+      {
+        "en": "house",
+        "de": "das Haus",
+        "ex": "We live in a big house."
+      },
+      {
+        "en": "flat",
+        "de": "die Wohnung",
+        "ex": "They live in a small flat."
+      },
+      {
+        "en": "room",
+        "de": "das Zimmer",
+        "ex": "My room is on the first floor."
+      },
+      {
+        "en": "kitchen",
+        "de": "die Küche",
+        "ex": "We cook dinner in the kitchen."
+      },
+      {
+        "en": "bedroom",
+        "de": "das Schlafzimmer",
+        "ex": "My bedroom is very tidy."
+      },
+      {
+        "en": "bathroom",
+        "de": "das Badezimmer",
+        "ex": "The bathroom is next to my room."
+      },
+      {
+        "en": "garden",
+        "de": "der Garten",
+        "ex": "We play in the garden."
+      },
+      {
+        "en": "table",
+        "de": "der Tisch",
+        "ex": "Put the plates on the table."
+      },
+      {
+        "en": "chair",
+        "de": "der Stuhl",
+        "ex": "There is a chair by the window."
+      },
+      {
+        "en": "bed",
+        "de": "das Bett",
+        "ex": "I make my bed every morning."
+      },
+      {
+        "en": "door",
+        "de": "die Tür",
+        "ex": "Please close the door."
+      },
+      {
+        "en": "window",
+        "de": "das Fenster",
+        "ex": "Open the window, it is hot."
+      },
+      {
+        "en": "wall",
+        "de": "die Wand / die Mauer",
+        "ex": "There is a poster on the wall."
+      },
+      {
+        "en": "floor",
+        "de": "der Boden / das Stockwerk",
+        "ex": "My books are on the floor."
+      },
+      {
+        "en": "cupboard",
+        "de": "der Schrank",
+        "ex": "The cups are in the cupboard."
+      },
+      {
+        "en": "lamp",
+        "de": "die Lampe",
+        "ex": "Turn on the lamp, please."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "clothes",
+    "name": "Kleidung & Einkaufen",
+    "pairs": [
+      {
+        "en": "clothes",
+        "de": "die Kleidung",
+        "ex": "I buy new clothes in autumn."
+      },
+      {
+        "en": "trousers",
+        "de": "die Hose",
+        "ex": "These trousers are too long."
+      },
+      {
+        "en": "shirt",
+        "de": "das Hemd",
+        "ex": "He wears a white shirt."
+      },
+      {
+        "en": "dress",
+        "de": "das Kleid",
+        "ex": "She has a beautiful dress."
+      },
+      {
+        "en": "jumper",
+        "de": "der Pullover",
+        "ex": "It is cold, put on a jumper."
+      },
+      {
+        "en": "shoes",
+        "de": "die Schuhe",
+        "ex": "My new shoes are black."
+      },
+      {
+        "en": "jacket",
+        "de": "die Jacke",
+        "ex": "Take your jacket, it is raining."
+      },
+      {
+        "en": "hat",
+        "de": "der Hut / die Mütze",
+        "ex": "He always wears a funny hat."
+      },
+      {
+        "en": "to wear",
+        "de": "tragen (Kleidung)",
+        "ex": "I wear a uniform at school."
+      },
+      {
+        "en": "to buy",
+        "de": "kaufen",
+        "ex": "I want to buy a present."
+      },
+      {
+        "en": "to pay",
+        "de": "bezahlen",
+        "ex": "You can pay at the till."
+      },
+      {
+        "en": "money",
+        "de": "das Geld",
+        "ex": "I do not have much money."
+      },
+      {
+        "en": "expensive",
+        "de": "teuer",
+        "ex": "This jacket is too expensive."
+      },
+      {
+        "en": "cheap",
+        "de": "billig / günstig",
+        "ex": "The shoes were really cheap."
+      },
+      {
+        "en": "size",
+        "de": "die Größe",
+        "ex": "What size are you?"
+      },
+      {
+        "en": "shop assistant",
+        "de": "der Verkäufer / die Verkäuferin",
+        "ex": "The shop assistant was very helpful."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "travel",
+    "name": "Ferien & Reisen",
+    "pairs": [
+      {
+        "en": "holiday",
+        "de": "die Ferien / der Urlaub",
+        "ex": "We go on holiday in summer."
+      },
+      {
+        "en": "trip",
+        "de": "der Ausflug",
+        "ex": "We had a school trip to York."
+      },
+      {
+        "en": "beach",
+        "de": "der Strand",
+        "ex": "We played on the beach all day."
+      },
+      {
+        "en": "sea",
+        "de": "das Meer",
+        "ex": "The sea was warm and blue."
+      },
+      {
+        "en": "mountain",
+        "de": "der Berg",
+        "ex": "We climbed a high mountain."
+      },
+      {
+        "en": "plane",
+        "de": "das Flugzeug",
+        "ex": "Our plane leaves at ten."
+      },
+      {
+        "en": "airport",
+        "de": "der Flughafen",
+        "ex": "We waited at the airport."
+      },
+      {
+        "en": "suitcase",
+        "de": "der Koffer",
+        "ex": "My suitcase is very heavy."
+      },
+      {
+        "en": "ticket",
+        "de": "das Ticket / die Fahrkarte",
+        "ex": "I bought a ticket for the train."
+      },
+      {
+        "en": "hotel",
+        "de": "das Hotel",
+        "ex": "Our hotel was near the beach."
+      },
+      {
+        "en": "map",
+        "de": "die Landkarte / der Stadtplan",
+        "ex": "Look at the map to find the way."
+      },
+      {
+        "en": "to travel",
+        "de": "reisen",
+        "ex": "I love to travel by train."
+      },
+      {
+        "en": "abroad",
+        "de": "im Ausland",
+        "ex": "This year we went abroad."
+      },
+      {
+        "en": "journey",
+        "de": "die Reise / die Fahrt",
+        "ex": "The journey took five hours."
+      },
+      {
+        "en": "to pack",
+        "de": "packen",
+        "ex": "Do not forget to pack your toothbrush."
+      },
+      {
+        "en": "camera",
+        "de": "die Kamera",
+        "ex": "I took lots of photos with my camera."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "animals",
+    "name": "Tiere & Natur",
+    "pairs": [
+      {
+        "en": "animal",
+        "de": "das Tier",
+        "ex": "The lion is a wild animal."
+      },
+      {
+        "en": "dog",
+        "de": "der Hund",
+        "ex": "Our dog likes long walks."
+      },
+      {
+        "en": "cat",
+        "de": "die Katze",
+        "ex": "The cat is sleeping on the sofa."
+      },
+      {
+        "en": "horse",
+        "de": "das Pferd",
+        "ex": "She rides a brown horse."
+      },
+      {
+        "en": "bird",
+        "de": "der Vogel",
+        "ex": "A little bird sat on the tree."
+      },
+      {
+        "en": "fish",
+        "de": "der Fisch",
+        "ex": "There is a big fish in the pond."
+      },
+      {
+        "en": "tree",
+        "de": "der Baum",
+        "ex": "The tree in our garden is very old."
+      },
+      {
+        "en": "flower",
+        "de": "die Blume",
+        "ex": "She picked a yellow flower."
+      },
+      {
+        "en": "forest",
+        "de": "der Wald",
+        "ex": "We went for a walk in the forest."
+      },
+      {
+        "en": "river",
+        "de": "der Fluss",
+        "ex": "The river is cold and deep."
+      },
+      {
+        "en": "field",
+        "de": "das Feld / die Wiese",
+        "ex": "The cows are in the field."
+      },
+      {
+        "en": "mouse",
+        "de": "die Maus",
+        "ex": "The cat is chasing a mouse."
+      },
+      {
+        "en": "rabbit",
+        "de": "das Kaninchen",
+        "ex": "My rabbit has soft grey fur."
+      },
+      {
+        "en": "wild",
+        "de": "wild",
+        "ex": "Foxes are wild animals."
+      },
+      {
+        "en": "to feed",
+        "de": "füttern",
+        "ex": "I feed my rabbit every morning."
+      },
+      {
+        "en": "leaf",
+        "de": "das Blatt",
+        "ex": "A red leaf fell from the tree."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "weather",
+    "name": "Wetter & Jahreszeiten",
+    "pairs": [
+      {
+        "en": "weather",
+        "de": "das Wetter",
+        "ex": "The weather is nice today."
+      },
+      {
+        "en": "sun",
+        "de": "die Sonne",
+        "ex": "The sun is shining."
+      },
+      {
+        "en": "rain",
+        "de": "der Regen",
+        "ex": "I do not like the rain."
+      },
+      {
+        "en": "snow",
+        "de": "der Schnee",
+        "ex": "The children play in the snow."
+      },
+      {
+        "en": "wind",
+        "de": "der Wind",
+        "ex": "The wind is very strong today."
+      },
+      {
+        "en": "cloud",
+        "de": "die Wolke",
+        "ex": "There is one white cloud in the sky."
+      },
+      {
+        "en": "warm",
+        "de": "warm",
+        "ex": "It is warm and sunny."
+      },
+      {
+        "en": "cold",
+        "de": "kalt",
+        "ex": "It is very cold in winter."
+      },
+      {
+        "en": "sunny",
+        "de": "sonnig",
+        "ex": "Tomorrow will be sunny."
+      },
+      {
+        "en": "rainy",
+        "de": "regnerisch",
+        "ex": "It was a grey, rainy day."
+      },
+      {
+        "en": "spring",
+        "de": "der Frühling",
+        "ex": "The flowers grow in spring."
+      },
+      {
+        "en": "summer",
+        "de": "der Sommer",
+        "ex": "We swim in the sea in summer."
+      },
+      {
+        "en": "autumn",
+        "de": "der Herbst",
+        "ex": "The leaves fall in autumn."
+      },
+      {
+        "en": "winter",
+        "de": "der Winter",
+        "ex": "It often snows in winter."
+      },
+      {
+        "en": "season",
+        "de": "die Jahreszeit",
+        "ex": "My favourite season is spring."
+      },
+      {
+        "en": "degree",
+        "de": "der Grad",
+        "ex": "It is only one degree outside today."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "feelings",
+    "name": "Gefühle & Adjektive",
+    "pairs": [
+      {
+        "en": "happy",
+        "de": "glücklich / froh",
+        "ex": "I am very happy today."
+      },
+      {
+        "en": "sad",
+        "de": "traurig",
+        "ex": "She felt sad after the film."
+      },
+      {
+        "en": "angry",
+        "de": "wütend / böse",
+        "ex": "Dad was angry about the mess."
+      },
+      {
+        "en": "tired",
+        "de": "müde",
+        "ex": "I am tired after school."
+      },
+      {
+        "en": "afraid",
+        "de": "ängstlich / Angst haben",
+        "ex": "I am afraid of spiders."
+      },
+      {
+        "en": "bored",
+        "de": "gelangweilt",
+        "ex": "The children were bored in the rain."
+      },
+      {
+        "en": "excited",
+        "de": "aufgeregt / gespannt",
+        "ex": "We are excited about the trip."
+      },
+      {
+        "en": "surprised",
+        "de": "überrascht",
+        "ex": "She was surprised by the present."
+      },
+      {
+        "en": "proud",
+        "de": "stolz",
+        "ex": "My parents are proud of me."
+      },
+      {
+        "en": "nervous",
+        "de": "nervös",
+        "ex": "I am nervous before a test."
+      },
+      {
+        "en": "glad",
+        "de": "froh",
+        "ex": "I am glad you are here."
+      },
+      {
+        "en": "lucky",
+        "de": "glücklich (Glück haben)",
+        "ex": "You are so lucky!"
+      },
+      {
+        "en": "nice",
+        "de": "nett / schön",
+        "ex": "That was a nice surprise."
+      },
+      {
+        "en": "boring",
+        "de": "langweilig",
+        "ex": "The film was really boring."
+      },
+      {
+        "en": "great",
+        "de": "toll / großartig",
+        "ex": "We had a great time."
+      },
+      {
+        "en": "terrible",
+        "de": "schrecklich",
+        "ex": "The weather was terrible."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "body",
+    "name": "Körper & Gesundheit",
+    "pairs": [
+      {
+        "en": "body",
+        "de": "der Körper",
+        "ex": "Sport is good for your body."
+      },
+      {
+        "en": "head",
+        "de": "der Kopf",
+        "ex": "My head hurts a little."
+      },
+      {
+        "en": "hand",
+        "de": "die Hand",
+        "ex": "Give me your hand."
+      },
+      {
+        "en": "arm",
+        "de": "der Arm",
+        "ex": "He broke his arm last week."
+      },
+      {
+        "en": "leg",
+        "de": "das Bein",
+        "ex": "The dog hurt its leg."
+      },
+      {
+        "en": "foot",
+        "de": "der Fuß",
+        "ex": "I have a stone in my foot."
+      },
+      {
+        "en": "eye",
+        "de": "das Auge",
+        "ex": "She has one blue eye and one green eye."
+      },
+      {
+        "en": "ear",
+        "de": "das Ohr",
+        "ex": "I cannot hear well with this ear."
+      },
+      {
+        "en": "tooth",
+        "de": "der Zahn",
+        "ex": "The dentist checked every tooth."
+      },
+      {
+        "en": "hair",
+        "de": "die Haare",
+        "ex": "She has long dark hair."
+      },
+      {
+        "en": "ill",
+        "de": "krank",
+        "ex": "I was ill last week."
+      },
+      {
+        "en": "to hurt",
+        "de": "wehtun / verletzen",
+        "ex": "Does your tooth hurt?"
+      },
+      {
+        "en": "doctor",
+        "de": "der Arzt / die Ärztin",
+        "ex": "The doctor gave me some medicine."
+      },
+      {
+        "en": "medicine",
+        "de": "die Medizin",
+        "ex": "Take this medicine twice a day."
+      },
+      {
+        "en": "healthy",
+        "de": "gesund",
+        "ex": "Fruit and vegetables are healthy."
+      },
+      {
+        "en": "to feel",
+        "de": "sich fühlen",
+        "ex": "I feel much better today."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "irregular",
+    "name": "Unregelmäßige Verben",
+    "pairs": [
+      {
+        "en": "go",
+        "de": "gehen (went, gone)",
+        "ex": "We go to the park on Sundays."
+      },
+      {
+        "en": "have",
+        "de": "haben (had, had)",
+        "ex": "We have lunch at one."
+      },
+      {
+        "en": "do",
+        "de": "tun / machen (did, done)",
+        "ex": "I do my homework after school."
+      },
+      {
+        "en": "make",
+        "de": "machen (made, made)",
+        "ex": "I make my bed every morning."
+      },
+      {
+        "en": "see",
+        "de": "sehen (saw, seen)",
+        "ex": "I can see the sea from here."
+      },
+      {
+        "en": "eat",
+        "de": "essen (ate, eaten)",
+        "ex": "We eat dinner together."
+      },
+      {
+        "en": "drink",
+        "de": "trinken (drank, drunk)",
+        "ex": "I drink water after sport."
+      },
+      {
+        "en": "give",
+        "de": "geben (gave, given)",
+        "ex": "Please give me the book."
+      },
+      {
+        "en": "take",
+        "de": "nehmen (took, taken)",
+        "ex": "I take the bus to town."
+      },
+      {
+        "en": "come",
+        "de": "kommen (came, come)",
+        "ex": "Come to my house later."
+      },
+      {
+        "en": "buy",
+        "de": "kaufen (bought, bought)",
+        "ex": "I want to buy new shoes."
+      },
+      {
+        "en": "find",
+        "de": "finden (found, found)",
+        "ex": "I cannot find my keys."
+      },
+      {
+        "en": "write",
+        "de": "schreiben (wrote, written)",
+        "ex": "I write to my pen friend."
+      },
+      {
+        "en": "read",
+        "de": "lesen (read, read)",
+        "ex": "I read comics in bed."
+      },
+      {
+        "en": "speak",
+        "de": "sprechen (spoke, spoken)",
+        "ex": "We speak English in class."
+      },
+      {
+        "en": "run",
+        "de": "rennen / laufen (ran, run)",
+        "ex": "I run in the park every day."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "question",
+    "name": "Frage- & Verbindungswörter",
+    "pairs": [
+      {
+        "en": "what",
+        "de": "was",
+        "ex": "What is your name?"
+      },
+      {
+        "en": "who",
+        "de": "wer",
+        "ex": "Who is that boy?"
+      },
+      {
+        "en": "where",
+        "de": "wo / wohin",
+        "ex": "Where do you live?"
+      },
+      {
+        "en": "when",
+        "de": "wann",
+        "ex": "When does the film start?"
+      },
+      {
+        "en": "why",
+        "de": "warum",
+        "ex": "Why are you so late?"
+      },
+      {
+        "en": "how",
+        "de": "wie",
+        "ex": "How are you today?"
+      },
+      {
+        "en": "which",
+        "de": "welche(r/s)",
+        "ex": "Which book is yours?"
+      },
+      {
+        "en": "whose",
+        "de": "wessen",
+        "ex": "Whose bag is this?"
+      },
+      {
+        "en": "because",
+        "de": "weil",
+        "ex": "I stayed home because I was ill."
+      },
+      {
+        "en": "but",
+        "de": "aber",
+        "ex": "I like tea but not coffee."
+      },
+      {
+        "en": "and",
+        "de": "und",
+        "ex": "I have a dog and a cat."
+      },
+      {
+        "en": "or",
+        "de": "oder",
+        "ex": "Do you want tea or juice?"
+      },
+      {
+        "en": "so",
+        "de": "also / deshalb",
+        "ex": "It was raining, so we stayed inside."
+      },
+      {
+        "en": "then",
+        "de": "dann",
+        "ex": "First we ate, then we played."
+      },
+      {
+        "en": "before",
+        "de": "bevor / vor",
+        "ex": "Wash your hands before dinner."
+      },
+      {
+        "en": "after",
+        "de": "nach / nachdem",
+        "ex": "We went home after the game."
+      },
+      {
+        "en": "also",
+        "de": "auch",
+        "ex": "She sings and also plays the piano."
+      }
+    ],
+    "stufe": 5
+  },
+  {
+    "id": "past6",
+    "name": "Vergangenheit erzählen",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "to happen",
+        "de": "passieren, geschehen",
+        "ex": "What happened after the film?"
+      },
+      {
+        "en": "to arrive",
+        "de": "ankommen",
+        "ex": "We arrived at the station at six."
+      },
+      {
+        "en": "to decide",
+        "de": "sich entscheiden",
+        "ex": "She decided to take the bus."
+      },
+      {
+        "en": "to notice",
+        "de": "bemerken",
+        "ex": "I noticed a strange noise."
+      },
+      {
+        "en": "to realise",
+        "de": "merken, klar werden",
+        "ex": "He realised he had lost his key."
+      },
+      {
+        "en": "to disappear",
+        "de": "verschwinden",
+        "ex": "The cat disappeared behind the wall."
+      },
+      {
+        "en": "to explain",
+        "de": "erklären",
+        "ex": "Our teacher explained the rule again."
+      },
+      {
+        "en": "to promise",
+        "de": "versprechen",
+        "ex": "I promised to call her back."
+      },
+      {
+        "en": "suddenly",
+        "de": "plötzlich",
+        "ex": "Suddenly the lights went out."
+      },
+      {
+        "en": "later",
+        "de": "später",
+        "ex": "Two hours later we were home."
+      },
+      {
+        "en": "ago",
+        "de": "vor (Zeitangabe)",
+        "ex": "We moved here three years ago."
+      },
+      {
+        "en": "last night",
+        "de": "gestern Abend, letzte Nacht",
+        "ex": "Last night I read until eleven."
+      },
+      {
+        "en": "once",
+        "de": "einmal",
+        "ex": "Once I saw a fox in our garden."
+      },
+      {
+        "en": "while",
+        "de": "während",
+        "ex": "While I was cooking, the phone rang."
+      },
+      {
+        "en": "at first",
+        "de": "zuerst, anfangs",
+        "ex": "At first I did not like it."
+      },
+      {
+        "en": "in the end",
+        "de": "am Ende, schließlich",
+        "ex": "In the end everything was fine."
+      }
+    ]
+  },
+  {
+    "id": "compare6",
+    "name": "Vergleichen & beschreiben",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "better than",
+        "de": "besser als",
+        "ex": "This book is better than the film."
+      },
+      {
+        "en": "worse than",
+        "de": "schlechter als",
+        "ex": "The weather is worse than yesterday."
+      },
+      {
+        "en": "the best",
+        "de": "der/die/das beste",
+        "ex": "She is the best player in our team."
+      },
+      {
+        "en": "the worst",
+        "de": "der/die/das schlechteste",
+        "ex": "That was the worst day of the week."
+      },
+      {
+        "en": "more expensive",
+        "de": "teurer",
+        "ex": "Trainers are more expensive than boots."
+      },
+      {
+        "en": "cheaper",
+        "de": "billiger, günstiger",
+        "ex": "The market is cheaper than the shop."
+      },
+      {
+        "en": "as ... as",
+        "de": "so ... wie",
+        "ex": "My bike is as old as yours."
+      },
+      {
+        "en": "different from",
+        "de": "anders als, verschieden von",
+        "ex": "School here is different from home."
+      },
+      {
+        "en": "similar",
+        "de": "ähnlich",
+        "ex": "Our answers were very similar."
+      },
+      {
+        "en": "enough",
+        "de": "genug",
+        "ex": "We do not have enough time."
+      },
+      {
+        "en": "quite",
+        "de": "ziemlich",
+        "ex": "The test was quite easy."
+      },
+      {
+        "en": "really",
+        "de": "wirklich, sehr",
+        "ex": "That film was really funny."
+      },
+      {
+        "en": "careful",
+        "de": "vorsichtig, sorgfältig",
+        "ex": "Be careful on the wet floor."
+      },
+      {
+        "en": "boring",
+        "de": "langweilig",
+        "ex": "The last part was a bit boring."
+      },
+      {
+        "en": "exciting",
+        "de": "spannend, aufregend",
+        "ex": "The match was very exciting."
+      },
+      {
+        "en": "terrible",
+        "de": "schrecklich",
+        "ex": "The food smelled terrible."
+      }
+    ]
+  },
+  {
+    "id": "opinion6",
+    "name": "Meinung sagen & diskutieren",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "I think",
+        "de": "ich denke, ich finde",
+        "ex": "I think we should leave now."
+      },
+      {
+        "en": "in my opinion",
+        "de": "meiner Meinung nach",
+        "ex": "In my opinion the rule is unfair."
+      },
+      {
+        "en": "to agree",
+        "de": "zustimmen",
+        "ex": "I agree with you."
+      },
+      {
+        "en": "to disagree",
+        "de": "anderer Meinung sein",
+        "ex": "Sorry, but I disagree."
+      },
+      {
+        "en": "because",
+        "de": "weil",
+        "ex": "I like it because it is easy."
+      },
+      {
+        "en": "however",
+        "de": "jedoch, allerdings",
+        "ex": "It is cheap. However, it is not good."
+      },
+      {
+        "en": "maybe",
+        "de": "vielleicht",
+        "ex": "Maybe she is still at school."
+      },
+      {
+        "en": "of course",
+        "de": "natürlich, selbstverständlich",
+        "ex": "Of course you can come with us."
+      },
+      {
+        "en": "actually",
+        "de": "eigentlich, tatsächlich",
+        "ex": "Actually, I have never tried it."
+      },
+      {
+        "en": "to prefer",
+        "de": "lieber mögen, bevorzugen",
+        "ex": "I prefer tea to coffee."
+      },
+      {
+        "en": "reason",
+        "de": "der Grund",
+        "ex": "What is the reason for the delay?"
+      },
+      {
+        "en": "problem",
+        "de": "das Problem",
+        "ex": "That is not a big problem."
+      },
+      {
+        "en": "idea",
+        "de": "die Idee",
+        "ex": "That is a really good idea."
+      },
+      {
+        "en": "to suggest",
+        "de": "vorschlagen",
+        "ex": "I suggest we meet at four."
+      },
+      {
+        "en": "important",
+        "de": "wichtig",
+        "ex": "It is important to be on time."
+      },
+      {
+        "en": "right",
+        "de": "richtig; recht haben",
+        "ex": "You are right about that."
+      }
+    ]
+  },
+  {
+    "id": "media6",
+    "name": "Medien & Technik",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "screen",
+        "de": "der Bildschirm",
+        "ex": "Do not sit too close to the screen."
+      },
+      {
+        "en": "password",
+        "de": "das Passwort",
+        "ex": "Never share your password."
+      },
+      {
+        "en": "to download",
+        "de": "herunterladen",
+        "ex": "I downloaded the file yesterday."
+      },
+      {
+        "en": "to upload",
+        "de": "hochladen",
+        "ex": "She uploaded the photos."
+      },
+      {
+        "en": "message",
+        "de": "die Nachricht",
+        "ex": "I got a message from Tom."
+      },
+      {
+        "en": "to send",
+        "de": "senden, schicken",
+        "ex": "Please send me the link."
+      },
+      {
+        "en": "to search",
+        "de": "suchen",
+        "ex": "I searched for it online."
+      },
+      {
+        "en": "website",
+        "de": "die Website, Internetseite",
+        "ex": "Our school has a new website."
+      },
+      {
+        "en": "news",
+        "de": "die Nachrichten",
+        "ex": "The news starts at eight."
+      },
+      {
+        "en": "advertisement",
+        "de": "die Werbung, die Anzeige",
+        "ex": "There are too many advertisements."
+      },
+      {
+        "en": "to switch on",
+        "de": "einschalten",
+        "ex": "Switch on the light, please."
+      },
+      {
+        "en": "to switch off",
+        "de": "ausschalten",
+        "ex": "Please switch off your phone."
+      },
+      {
+        "en": "battery",
+        "de": "die Batterie, der Akku",
+        "ex": "My battery is almost empty."
+      },
+      {
+        "en": "headphones",
+        "de": "die Kopfhörer",
+        "ex": "He never goes out without headphones."
+      },
+      {
+        "en": "careful online",
+        "de": "vorsichtig im Netz",
+        "ex": "Be careful online with your data."
+      },
+      {
+        "en": "to chat",
+        "de": "chatten, plaudern",
+        "ex": "We chatted for an hour."
+      }
+    ]
+  },
+  {
+    "id": "festivals6",
+    "name": "Feste & Bräuche",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "to celebrate",
+        "de": "feiern",
+        "ex": "We celebrate my birthday in May."
+      },
+      {
+        "en": "celebration",
+        "de": "die Feier",
+        "ex": "It was a big celebration."
+      },
+      {
+        "en": "tradition",
+        "de": "die Tradition, der Brauch",
+        "ex": "That is an old British tradition."
+      },
+      {
+        "en": "to decorate",
+        "de": "schmücken, dekorieren",
+        "ex": "They decorated the hall."
+      },
+      {
+        "en": "present",
+        "de": "das Geschenk",
+        "ex": "She got a present from her aunt."
+      },
+      {
+        "en": "to invite",
+        "de": "einladen",
+        "ex": "I invited six friends."
+      },
+      {
+        "en": "guest",
+        "de": "der Gast",
+        "ex": "The guests arrived at seven."
+      },
+      {
+        "en": "costume",
+        "de": "das Kostüm, die Verkleidung",
+        "ex": "His costume was really scary."
+      },
+      {
+        "en": "pumpkin",
+        "de": "der Kürbis",
+        "ex": "We made a lamp from a pumpkin."
+      },
+      {
+        "en": "fireworks",
+        "de": "das Feuerwerk",
+        "ex": "The fireworks were amazing."
+      },
+      {
+        "en": "parade",
+        "de": "der Umzug, die Parade",
+        "ex": "We watched the parade in town."
+      },
+      {
+        "en": "Boxing Day",
+        "de": "der 26. Dezember (brit. Feiertag)",
+        "ex": "On Boxing Day the shops are busy."
+      },
+      {
+        "en": "turkey",
+        "de": "der Truthahn, die Pute",
+        "ex": "They eat turkey at Christmas."
+      },
+      {
+        "en": "candle",
+        "de": "die Kerze",
+        "ex": "There were candles on the table."
+      },
+      {
+        "en": "to wish",
+        "de": "wünschen",
+        "ex": "I wish you a happy new year."
+      },
+      {
+        "en": "lucky",
+        "de": "glücklich, Glück habend",
+        "ex": "You were lucky to win."
+      }
+    ]
+  },
+  {
+    "id": "britain6",
+    "name": "Großbritannien & London",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "the United Kingdom",
+        "de": "das Vereinigte Königreich",
+        "ex": "The United Kingdom has four parts."
+      },
+      {
+        "en": "England",
+        "de": "England",
+        "ex": "England is the largest part."
+      },
+      {
+        "en": "Scotland",
+        "de": "Schottland",
+        "ex": "Edinburgh is the capital of Scotland."
+      },
+      {
+        "en": "Wales",
+        "de": "Wales",
+        "ex": "Wales is famous for its castles."
+      },
+      {
+        "en": "capital",
+        "de": "die Hauptstadt",
+        "ex": "London is the capital of the UK."
+      },
+      {
+        "en": "river",
+        "de": "der Fluss",
+        "ex": "The river Thames flows through London."
+      },
+      {
+        "en": "bridge",
+        "de": "die Brücke",
+        "ex": "Tower Bridge is very famous."
+      },
+      {
+        "en": "castle",
+        "de": "die Burg, das Schloss",
+        "ex": "We visited an old castle."
+      },
+      {
+        "en": "tower",
+        "de": "der Turm",
+        "ex": "You can climb the tower."
+      },
+      {
+        "en": "museum",
+        "de": "das Museum",
+        "ex": "Many museums in London are free."
+      },
+      {
+        "en": "double-decker",
+        "de": "der Doppeldeckerbus",
+        "ex": "We went by double-decker."
+      },
+      {
+        "en": "the Underground",
+        "de": "die U-Bahn (in London)",
+        "ex": "We took the Underground to the park."
+      },
+      {
+        "en": "pound",
+        "de": "das Pfund (Währung)",
+        "ex": "The ticket costs three pounds."
+      },
+      {
+        "en": "queue",
+        "de": "die Schlange (Warteschlange)",
+        "ex": "There was a long queue at the door."
+      },
+      {
+        "en": "flag",
+        "de": "die Flagge, die Fahne",
+        "ex": "The British flag is called the Union Jack."
+      },
+      {
+        "en": "abroad",
+        "de": "im Ausland, ins Ausland",
+        "ex": "They often travel abroad."
+      }
+    ]
+  },
+  {
+    "id": "jobs6",
+    "name": "Berufe & Pläne",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "job",
+        "de": "der Job, die Arbeitsstelle",
+        "ex": "My sister has a new job."
+      },
+      {
+        "en": "to work as",
+        "de": "arbeiten als",
+        "ex": "He works as a nurse."
+      },
+      {
+        "en": "nurse",
+        "de": "die Krankenpflegerin, der Krankenpfleger",
+        "ex": "The nurse was very friendly."
+      },
+      {
+        "en": "engineer",
+        "de": "der Ingenieur, die Ingenieurin",
+        "ex": "She wants to be an engineer."
+      },
+      {
+        "en": "vet",
+        "de": "die Tierärztin, der Tierarzt",
+        "ex": "We took the dog to the vet."
+      },
+      {
+        "en": "firefighter",
+        "de": "die Feuerwehrfrau, der Feuerwehrmann",
+        "ex": "The firefighters arrived quickly."
+      },
+      {
+        "en": "shop assistant",
+        "de": "die Verkäuferin, der Verkäufer",
+        "ex": "The shop assistant helped us."
+      },
+      {
+        "en": "to earn",
+        "de": "verdienen",
+        "ex": "He earns money with a paper round."
+      },
+      {
+        "en": "to apply",
+        "de": "sich bewerben",
+        "ex": "She applied for a summer job."
+      },
+      {
+        "en": "experience",
+        "de": "die Erfahrung",
+        "ex": "You need some experience for that."
+      },
+      {
+        "en": "to train",
+        "de": "ausbilden, trainieren",
+        "ex": "They train new staff every year."
+      },
+      {
+        "en": "future",
+        "de": "die Zukunft",
+        "ex": "In the future I want to travel."
+      },
+      {
+        "en": "to be going to",
+        "de": "vorhaben zu, werden",
+        "ex": "I am going to study French."
+      },
+      {
+        "en": "plan",
+        "de": "der Plan",
+        "ex": "What are your plans for the summer?"
+      },
+      {
+        "en": "to hope",
+        "de": "hoffen",
+        "ex": "I hope to see you soon."
+      },
+      {
+        "en": "proud",
+        "de": "stolz",
+        "ex": "My parents were proud of me."
+      }
+    ]
+  },
+  {
+    "id": "environment6",
+    "name": "Umwelt & Natur",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "environment",
+        "de": "die Umwelt",
+        "ex": "We must protect the environment."
+      },
+      {
+        "en": "to protect",
+        "de": "schützen",
+        "ex": "These rules protect wild animals."
+      },
+      {
+        "en": "rubbish",
+        "de": "der Müll, der Abfall",
+        "ex": "Please put the rubbish in the bin."
+      },
+      {
+        "en": "to recycle",
+        "de": "wiederverwerten, recyceln",
+        "ex": "We recycle paper and glass."
+      },
+      {
+        "en": "plastic",
+        "de": "das Plastik",
+        "ex": "There is too much plastic in the sea."
+      },
+      {
+        "en": "to waste",
+        "de": "verschwenden",
+        "ex": "Do not waste water."
+      },
+      {
+        "en": "energy",
+        "de": "die Energie",
+        "ex": "Solar panels make clean energy."
+      },
+      {
+        "en": "to save",
+        "de": "sparen; retten",
+        "ex": "Turn off the light to save energy."
+      },
+      {
+        "en": "climate",
+        "de": "das Klima",
+        "ex": "The climate is changing."
+      },
+      {
+        "en": "forest",
+        "de": "der Wald",
+        "ex": "We walked through the forest."
+      },
+      {
+        "en": "field",
+        "de": "das Feld, die Wiese",
+        "ex": "Cows were standing in the field."
+      },
+      {
+        "en": "beach",
+        "de": "der Strand",
+        "ex": "The beach was clean and quiet."
+      },
+      {
+        "en": "to grow",
+        "de": "wachsen, anbauen",
+        "ex": "They grow vegetables in the garden."
+      },
+      {
+        "en": "dangerous",
+        "de": "gefährlich",
+        "ex": "That road is dangerous for cyclists."
+      },
+      {
+        "en": "to clean up",
+        "de": "aufräumen, säubern",
+        "ex": "Our class cleaned up the park."
+      },
+      {
+        "en": "nature",
+        "de": "die Natur",
+        "ex": "He loves being out in nature."
+      }
+    ]
+  },
+  {
+    "id": "shopping6",
+    "name": "Einkaufen & Mengen",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "a few",
+        "de": "ein paar (zählbar)",
+        "ex": "I bought a few apples."
+      },
+      {
+        "en": "a little",
+        "de": "ein wenig (nicht zählbar)",
+        "ex": "Add a little salt."
+      },
+      {
+        "en": "a lot of",
+        "de": "viel, viele",
+        "ex": "There were a lot of people."
+      },
+      {
+        "en": "some",
+        "de": "etwas, einige",
+        "ex": "We need some milk."
+      },
+      {
+        "en": "any",
+        "de": "etwas, irgendein (Frage/Verneinung)",
+        "ex": "Have you got any change?"
+      },
+      {
+        "en": "enough money",
+        "de": "genug Geld",
+        "ex": "I do not have enough money."
+      },
+      {
+        "en": "to cost",
+        "de": "kosten",
+        "ex": "How much does it cost?"
+      },
+      {
+        "en": "to spend",
+        "de": "ausgeben (Geld); verbringen",
+        "ex": "She spent ten pounds."
+      },
+      {
+        "en": "change",
+        "de": "das Wechselgeld",
+        "ex": "Here is your change."
+      },
+      {
+        "en": "receipt",
+        "de": "der Kassenbon, die Quittung",
+        "ex": "Keep the receipt, please."
+      },
+      {
+        "en": "size",
+        "de": "die Größe",
+        "ex": "Do you have this in a bigger size?"
+      },
+      {
+        "en": "to try on",
+        "de": "anprobieren",
+        "ex": "Can I try on these shoes?"
+      },
+      {
+        "en": "to fit",
+        "de": "passen",
+        "ex": "These trousers do not fit."
+      },
+      {
+        "en": "bargain",
+        "de": "das Schnäppchen",
+        "ex": "Ten pounds is a real bargain."
+      },
+      {
+        "en": "to pay",
+        "de": "bezahlen",
+        "ex": "You can pay at the till."
+      },
+      {
+        "en": "till",
+        "de": "die Kasse",
+        "ex": "Please pay at the till over there."
+      }
+    ]
+  },
+  {
+    "id": "schoolday6",
+    "name": "Schulalltag in England",
+    "stufe": 6,
+    "pairs": [
+      {
+        "en": "uniform",
+        "de": "die Schuluniform",
+        "ex": "Most pupils wear a uniform."
+      },
+      {
+        "en": "pupil",
+        "de": "die Schülerin, der Schüler",
+        "ex": "There are 30 pupils in the class."
+      },
+      {
+        "en": "break",
+        "de": "die Pause",
+        "ex": "We play football at break."
+      },
+      {
+        "en": "timetable",
+        "de": "der Stundenplan",
+        "ex": "Our timetable changes every term."
+      },
+      {
+        "en": "term",
+        "de": "das Schulhalbjahr, das Trimester",
+        "ex": "The summer term ends in July."
+      },
+      {
+        "en": "homework",
+        "de": "die Hausaufgaben",
+        "ex": "I finished my homework early."
+      },
+      {
+        "en": "to hand in",
+        "de": "abgeben",
+        "ex": "Hand in your essays on Friday."
+      },
+      {
+        "en": "marks",
+        "de": "die Noten",
+        "ex": "She got very good marks."
+      },
+      {
+        "en": "to pass",
+        "de": "bestehen",
+        "ex": "He passed the test easily."
+      },
+      {
+        "en": "to fail",
+        "de": "durchfallen",
+        "ex": "Nobody failed the exam."
+      },
+      {
+        "en": "canteen",
+        "de": "die Mensa, die Kantine",
+        "ex": "We eat lunch in the canteen."
+      },
+      {
+        "en": "assembly",
+        "de": "die Schulversammlung",
+        "ex": "Assembly is every Monday morning."
+      },
+      {
+        "en": "head teacher",
+        "de": "die Schulleiterin, der Schulleiter",
+        "ex": "The head teacher gave a speech."
+      },
+      {
+        "en": "club",
+        "de": "die AG, der Klub",
+        "ex": "I joined the drama club."
+      },
+      {
+        "en": "to be late",
+        "de": "zu spät kommen",
+        "ex": "Do not be late for the lesson."
+      },
+      {
+        "en": "rule",
+        "de": "die Regel",
+        "ex": "The school rules are clear."
+      }
+    ]
+  }
+];
 
   function customUnits(){ try{var a=JSON.parse(get("helena-vok-custom-units","[]"));return Array.isArray(a)?a:[];}catch(e){return [];} }
   function allUnits(){ return UNITS.concat(customUnits()); }
@@ -1642,9 +2527,25 @@
   var unitSel=$("#unit");
   function fillUnits(sel){
     unitSel.innerHTML="";
-    allUnits().forEach(function(u){
-      var o=document.createElement("option"); o.value=u.id; o.textContent=u.name+" ("+u.pairs.length+")";
-      unitSel.appendChild(o);
+    // Nach Jahrgangsstufe gruppieren: Helena soll auf einen Blick sehen,
+    // was Grundwortschatz ist und was Wiederholung aus der 6. Klasse.
+    var gruppen=[
+      {stufe:5, titel:"Grundwortschatz"},
+      {stufe:6, titel:"Wiederholung 6. Klasse"},
+      {stufe:0, titel:"Meine eigenen Einheiten"}
+    ];
+    gruppen.forEach(function(g){
+      var drin=allUnits().filter(function(u){
+        return g.stufe===0 ? !u.stufe : (u.stufe||5)===g.stufe;
+      });
+      if(!drin.length) return;
+      var gr=document.createElement("optgroup"); gr.label=g.titel;
+      drin.forEach(function(u){
+        var o=document.createElement("option");
+        o.value=u.id; o.textContent=u.name+" ("+u.pairs.length+")";
+        gr.appendChild(o);
+      });
+      unitSel.appendChild(gr);
     });
     if(sel) unitSel.value=sel;
   }
