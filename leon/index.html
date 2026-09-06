@@ -382,12 +382,23 @@
   // Wo Leon gerade steht. Lädt er versehentlich neu oder tippt auf "Nochmal
   // von vorn", war sonst der ganze Durchlauf weg - bei Aufgabe 10 von 12
   // ist das bitter.
+  // ACHTUNG, sessionStorage und nicht localStorage: Die Middleware schreibt
+  // beim Seitenaufbau den gesamten gespeicherten Stand aus der Cloud in den
+  // localStorage zurueck und ueberschreibt dabei alles Frische. Der
+  // Spielstand war so nach jedem Neuladen wieder der alte. sessionStorage
+  // fasst der Sync nicht an - und fuer "aus Versehen neu geladen" reicht er,
+  // denn der Tab bleibt ja offen.
   var STAND_SCHLUESSEL = "leon-stand";
+  var standLager = (function(){
+    try { window.sessionStorage.setItem("__t","1"); window.sessionStorage.removeItem("__t");
+          return window.sessionStorage; } catch(e){ return null; }
+  })();
 
   function standSichern(){
     if (!spiel || !spiel.id) return;
     try {
-      localStorage.setItem(STAND_SCHLUESSEL, JSON.stringify({
+      if (!standLager) return;
+      standLager.setItem(STAND_SCHLUESSEL, JSON.stringify({
         id: spiel.id, pos: pos, folge: folge, richtig: richtig,
         aufgeholt: aufgeholt, nachspielzeit: nachspielzeit,
         daneben: danebenGegangen, zeit: Date.now()
@@ -397,7 +408,8 @@
 
   function standHolen(){
     try {
-      var r = JSON.parse(localStorage.getItem(STAND_SCHLUESSEL) || "null");
+      if (!standLager) return null;
+      var r = JSON.parse(standLager.getItem(STAND_SCHLUESSEL) || "null");
       if (!r || !r.id || !Array.isArray(r.folge)) return null;
       // Nach einem halben Tag ist der Faden ohnehin gerissen.
       if (Date.now() - (r.zeit || 0) > 12 * 3600000) return null;
@@ -407,7 +419,7 @@
   }
 
   function standLoeschen(){
-    try { localStorage.removeItem(STAND_SCHLUESSEL); } catch(e){}
+    try { if (standLager) standLager.removeItem(STAND_SCHLUESSEL); } catch(e){}
   }
 
   function $(id){ return document.getElementById(id); }
@@ -758,6 +770,7 @@
     bauen(th ? th.schluessel : "");
   }
 
+  try { localStorage.removeItem(STAND_SCHLUESSEL); } catch(e){}   // Altlast aus dem Sync
   malThemen();
   torstandMalen();
 
