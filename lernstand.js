@@ -513,6 +513,49 @@
     } catch (e) {}
   }
 
-  window.addEventListener("pagehide", senden);
+  /* ---------- Puls: "hier spielt gerade jemand" ----------
+     Damit kein Update ausgerollt wird, während ein Kind mitten in einer
+     Aufgabe steckt. Der Wächter auf Dennys Rechner fragt vor dem Hochladen
+     nach und wartet, wenn jemand da ist.
+
+     Bewusst sparsam: alle drei Minuten, und nur solange die Seite wirklich
+     sichtbar ist. Ein vergessener Tab im Hintergrund pulst nicht - sonst
+     würde ein offenes iPad in der Ecke jedes Update für immer blockieren. */
+
+  var PULS_TAKT = 180000;                 // 3 Minuten
+  var pulsUhr = null, binGemeldet = false;
+
+  function pulsSchicken(weg) {
+    var text = JSON.stringify({ kind: KIND, weg: !!weg });
+    try {
+      if (weg && navigator.sendBeacon) {
+        navigator.sendBeacon("/api/aktiv", new Blob([text], { type: "application/json" }));
+      } else {
+        fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
+          headers: { "content-type": "application/json" }, body: text,
+          keepalive: !!weg }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+
+  function pulsAn() {
+    if (pulsUhr) return;
+    binGemeldet = true;
+    pulsSchicken(false);
+    pulsUhr = setInterval(function () { pulsSchicken(false); }, PULS_TAKT);
+  }
+
+  function pulsAus() {
+    if (pulsUhr) { clearInterval(pulsUhr); pulsUhr = null; }
+    // Sauber abmelden, damit der Wächter nicht acht Minuten Stille abwartet.
+    if (binGemeldet) { binGemeldet = false; pulsSchicken(true); }
+  }
+
+  if (!document.hidden) pulsAn();
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) pulsAus(); else pulsAn();
+  });
+
+  window.addEventListener("pagehide", function () { senden(); pulsAus(); });
   document.addEventListener("visibilitychange", function () { if (document.hidden) senden(); });
 })();
