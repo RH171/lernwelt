@@ -147,6 +147,23 @@ function auswerten(liste) {
   const g = { runden: 0, aufgaben: 0, richtig: 0, sekunden: 0, pause: 0, bauen: 0 };
   const jeMerkmal = {}, jeThema = {}, jeWoche = {}, fehlerBilder = {}, jeGeraet = {};
 
+  // Ein Topf je Tag, Woche und Jahreszeit. Daraus wird unten "heute / diese
+  // Woche / dieser Herbst" und der Vergleich zum Zeitraum davor.
+  const jeZeitraum = { tag: {}, woche: {}, jahreszeit: {} };
+  const zaehle = (art, schluessel, r, aufgaben, richtig) => {
+    const t = jeZeitraum[art];
+    t[schluessel] = t[schluessel] ||
+      { runden: 0, aufgaben: 0, richtig: 0, sekunden: 0, pause: 0, bauen: 0, tage: {} };
+    const e = t[schluessel];
+    if (r.zeitart === "bauen") { e.bauen += r.sekunden || 0; return; }
+    e.runden++;
+    e.aufgaben += aufgaben;
+    e.richtig += richtig;
+    e.sekunden += r.sekunden || 0;
+    e.pause += r.pause || 0;
+    e.tage[tagSchluessel(r.zeit)] = 1;
+  };
+
   for (const r of liste) {
     // Das Gerät zählt immer mit - auch beim Bauen wird es benutzt, und die
     // Layoutprüfung soll es kennen.
@@ -165,6 +182,11 @@ function auswerten(liste) {
     const woche = wochenSchluessel(r.zeit);
     jeWoche[woche] = jeWoche[woche] || { woche, aufgaben: 0, richtig: 0, minuten: 0 };
     jeWoche[woche].minuten += (r.sekunden || 0) / 60;
+
+    const echte = (r.aufgaben || []).filter((a) => a.art !== "besuch" && a.art !== "bauen");
+    zaehle("tag", tagSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length);
+    zaehle("woche", woche, r, echte.length, echte.filter((a) => a.stimmt).length);
+    zaehle("jahreszeit", jahreszeitSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length);
 
     const t = r.quelle || r.thema || "unbekannt";
     jeThema[t] = jeThema[t] || { name: t, thema: r.thema || t, aufgaben: 0, richtig: 0, sekunden: 0 };
@@ -227,7 +249,45 @@ function auswerten(liste) {
       return { merkmal, muster: rest, wieOft: n };
     });
 
+  /* ---------- Die drei Zeiträume fertig rechnen ----------
+     Jeweils der laufende Zeitraum und der davor. Der Vergleich ist der Punkt:
+     "8 Minuten" sagt wenig, "8 Minuten, letzte Woche waren es 3" sagt viel. */
+  const jetzt = new Date();
+  const jz = jahreszeitVon(jetzt);
+  const vorigerTag = new Date(jetzt); vorigerTag.setDate(vorigerTag.getDate() - 1);
+  const vorigeWoche = new Date(jetzt); vorigeWoche.setDate(vorigeWoche.getDate() - 7);
+  const vorigeJz = new Date(jetzt); vorigeJz.setMonth(vorigeJz.getMonth() - 3);
+
+  const leerTopf = { runden: 0, aufgaben: 0, richtig: 0, sekunden: 0, pause: 0, bauen: 0, tage: {} };
+  const fertig = (topf) => {
+    const e = topf || leerTopf;
+    return {
+      runden: e.runden,
+      aufgaben: e.aufgaben,
+      richtig: e.richtig,
+      quote: e.aufgaben ? Math.round((e.richtig / e.aufgaben) * 100) : null,
+      minuten: Math.round(e.sekunden / 60),
+      minutenPause: Math.round(e.pause / 60),
+      minutenBauen: Math.round(e.bauen / 60),
+      tageAktiv: Object.keys(e.tage || {}).length,
+    };
+  };
+
+  const zeitraeume = {
+    tag: Object.assign({ titel: "Heute", art: "tag" },
+      fertig(jeZeitraum.tag[tagSchluessel(jetzt)]),
+      { davor: fertig(jeZeitraum.tag[tagSchluessel(vorigerTag)]), davorTitel: "gestern" }),
+    woche: Object.assign({ titel: "Diese Woche", art: "woche", kw: kalenderwoche(jetzt) },
+      fertig(jeZeitraum.woche[wochenSchluessel(jetzt.toISOString())]),
+      { davor: fertig(jeZeitraum.woche[wochenSchluessel(vorigeWoche.toISOString())]), davorTitel: "letzte Woche" }),
+    jahreszeit: Object.assign({ titel: jz.name + " " + jz.jahr, art: "jahreszeit" },
+      fertig(jeZeitraum.jahreszeit[jz.jahr + "-" + jz.name]),
+      { davor: fertig(jeZeitraum.jahreszeit[jahreszeitSchluessel(vorigeJz.toISOString())]),
+        davorTitel: jahreszeitVon(vorigeJz).name }),
+  };
+
   return {
+    zeitraeume,
     geraete: Object.values(jeGeraet)
       .map((x) => Object.assign({}, x, { minuten: Math.round(x.minuten) }))
       .sort((a, b) => b.runden - a.runden),
@@ -242,15 +302,72 @@ function auswerten(liste) {
     themen,
     verlauf,
     stolpersteine,
-    letzte: liste.slice(0, 12).map((r) => ({
-      zeit: r.zeit, titel: r.titel, thema: r.thema, minuten: Math.round((r.sekunden || 0) / 60),
-      aufgaben: (r.aufgaben || []).length,
-      richtig: (r.aufgaben || []).filter((a) => a.stimmt).length,
-    })),
+    letzte: liste.slice(0, 12).map((r) => {
+      const echte = (r.aufgaben || []).filter((a) => a.art !== "besuch" && a.art !== "bauen");
+      const d = new Date(r.zeit);
+      const j = isNaN(d) ? null : jahreszeitVon(d);
+      return {
+        zeit: r.zeit, titel: r.titel, thema: r.thema,
+        minuten: Math.round((r.sekunden || 0) / 60),
+        sekunden: r.sekunden || 0,
+        minutenPause: Math.round((r.pause || 0) / 60),
+        zeitart: r.zeitart || "lernen",
+        // Tag, Woche und Jahreszeit stehen fertig dabei - die Seite soll nicht
+        // jedes Mal selbst rechnen und dabei anders zählen als der Server.
+        wochentag: isNaN(d) ? "" : ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][d.getDay()],
+        kw: kalenderwoche(r.zeit),
+        jahreszeit: j ? j.name : "",
+        aufgaben: echte.length,
+        richtig: echte.filter((a) => a.stimmt).length,
+        geraet: r.geraet || "",
+      };
+    }),
   };
 }
 
 // Montag der jeweiligen Woche, als "2026-09-07".
+/* ---------- Tag, Woche, Jahreszeit ----------
+   Denny am 07.09.2026: Er will je Eintrag Tag, Woche und Jahreszeit sehen -
+   und dazu, wie viel gelernt, wie viele Spiele und wie viel Zeit.
+
+   Jahreszeiten meteorologisch: Frühling März-Mai, Sommer Juni-August,
+   Herbst September-November, Winter Dezember-Februar. Der Winter gehört zum
+   Jahr, in dem er ANFÄNGT - sonst zerfiele eine Weihnachtswoche in zwei. */
+
+const JAHRESZEITEN = ["Winter", "Frühling", "Sommer", "Herbst"];
+
+function jahreszeitVon(d) {
+  const m = d.getMonth();                       // 0 = Januar
+  if (m >= 2 && m <= 4) return { name: "Frühling", jahr: d.getFullYear() };
+  if (m >= 5 && m <= 7) return { name: "Sommer", jahr: d.getFullYear() };
+  if (m >= 8 && m <= 10) return { name: "Herbst", jahr: d.getFullYear() };
+  return { name: "Winter", jahr: m === 11 ? d.getFullYear() : d.getFullYear() - 1 };
+}
+
+function jahreszeitSchluessel(iso) {
+  const d = new Date(iso || Date.now());
+  if (isNaN(d)) return "?";
+  const j = jahreszeitVon(d);
+  return j.jahr + "-" + j.name;
+}
+
+// Kalenderwoche nach ISO 8601 - die Zählung, die auch im Schulkalender steht.
+function kalenderwoche(iso) {
+  const d = new Date(iso || Date.now());
+  if (isNaN(d)) return null;
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - ((t.getUTCDay() + 6) % 7));
+  const jahresbeginn = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - jahresbeginn) / 86400000 + 1) / 7);
+}
+
+function tagSchluessel(iso) {
+  const d = new Date(iso || Date.now());
+  if (isNaN(d)) return "?";
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") +
+         "-" + String(d.getDate()).padStart(2, "0");
+}
+
 function wochenSchluessel(iso) {
   const d = new Date(iso || Date.now());
   if (isNaN(d)) return "?";
