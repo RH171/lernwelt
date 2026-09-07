@@ -353,7 +353,7 @@
       .then(function(r){ return r.json(); })
       .then(function(a){
         zeige(a && a.ok ? "aufnahme" : "anmelden");
-        if (a && a.ok) sammlungLaden(); else $("code").focus();
+        if (a && a.ok) { sammlungLaden(); ausAdresseStarten(); } else $("code").focus();
       })
       .catch(function(){ zeige("anmelden"); });
   }
@@ -400,6 +400,20 @@
 
   var FACH_ZEICHEN = {mathe:"\u{1F522}", deutsch:"\u{1F4D6}", hsu:"\u{1F30D}",
                       musik:"\u{1F3B5}", englisch:"\u{1F1EC}\u{1F1E7}", religion:"\u{1F54A}"};
+
+  // Aus Pauls Lernwelt kann ein Spiel direkt aufgerufen werden:
+  // werkstatt.html?spiel=<id>. Sonst muesste er erst hierher und dann noch
+  // einmal suchen - er wollte sie ja gerade schneller finden.
+  function ausAdresseStarten(){
+    var id = "";
+    try { id = new URL(location.href).searchParams.get("spiel") || ""; } catch(e){}
+    if (!id) return false;
+    // Die Adresse wieder aufraeumen, damit ein Neuladen nicht dasselbe Spiel
+    // noch einmal startet.
+    try { history.replaceState(null, "", location.pathname); } catch(e){}
+    spielHolen(id);
+    return true;
+  }
 
   function sammlungLaden(){
     fetch("/api/spiele", {credentials:"same-origin"})

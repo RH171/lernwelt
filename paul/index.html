@@ -219,6 +219,29 @@
   .invitecard .s{color:var(--muted);font-size:12.5px;margin-top:2px;}
 
   /* ---------- Klasse 4 placeholder ---------- */
+  /* Pauls Wunsch vom 06.09.2026: "Das die Spiele die ich in der Werkstatt
+     Bau das sie in meiner lernwelt drin sind in einen Ordner der dann ganz
+     unten in meiner Lernwelt ist." Zugeklappt, damit die Lernwelt oben
+     aussieht wie bisher - er hat sie so gebaut. */
+  .werkstattfach{margin:26px 0 0;border:1px solid var(--line,#e6e7ef);border-radius:18px;
+    background:var(--card,#fff);overflow:hidden;}
+  .werkstattfach>summary{display:flex;align-items:center;gap:10px;min-height:52px;
+    padding:0 16px;cursor:pointer;font-family:var(--round);font-weight:800;font-size:17px;
+    list-style:none;}
+  .werkstattfach>summary::-webkit-details-marker{display:none;}
+  .werkstattfach>summary::after{content:"▾";margin-left:auto;color:var(--muted);font-size:14px;}
+  .werkstattfach[open]>summary::after{content:"▴";}
+  .wf-em{font-size:22px;}
+  .wf-zahl{color:var(--muted);font-weight:700;font-size:14px;}
+  .wf-liste{display:grid;gap:8px;padding:4px 12px 14px;}
+  .wf-spiel{display:flex;align-items:center;gap:11px;min-height:52px;padding:8px 12px;
+    border:1px solid var(--line,#e6e7ef);border-radius:14px;background:var(--bg2,#f7f8fc);
+    text-decoration:none;color:inherit;font:inherit;text-align:left;cursor:pointer;width:100%;}
+  .wf-spiel:active{transform:scale(.99);}
+  .wf-spiel .wf-t{font-weight:700;}
+  .wf-spiel .wf-u{color:var(--muted);font-size:13px;margin-top:1px;}
+  .wf-leer{color:var(--muted);font-size:14px;padding:2px 4px 6px;line-height:1.6;}
+
   .soon{
     text-align:center;background:var(--card);border:1px solid var(--line);border-radius:24px;
     padding:46px 24px;box-shadow:var(--shadow);
@@ -443,6 +466,11 @@
     <h3>Klasse 4 kommt bald!</h3>
     <p>Nach den Sommerferien füllt sich hier deine neue Klasse.<br>Stell oben einfach wieder auf <b>Klasse 3</b>, um weiterzuspielen.</p>
   </div>
+
+  <details class="werkstattfach" id="werkstattfach" hidden>
+    <summary><span class="wf-em">🛠️</span> Meine Werkstatt-Spiele <span class="wf-zahl" id="wfZahl"></span></summary>
+    <div class="wf-liste" id="wfListe"></div>
+  </details>
 
   <p class="foot">
     Deine Lernwelt wächst mit jedem Arbeitsblatt. 🌱<br>
