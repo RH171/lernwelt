@@ -348,6 +348,7 @@
     }
     total=queue.length; mastered=0; wrongWords=[];
     protokoll=[]; rundeBegonnen=Date.now();
+    if(LS()) LS().uhrZuruecksetzen();
     gesehen={};
     queue.forEach(function(it){ gesehen[wortSchluessel(it.unitId,it.p)]=1; });
     if (!total){ meldungKeineWoerter(); return; }
@@ -572,19 +573,28 @@
     });
   }
 
+  function LS(){ return window.lernstand || null; }
+
   function lernstandSenden(){
     if(!protokoll.length) return;
     var runde={
       spielId:K.spielId, titel:K.titel,
       quelle:(curUnit&&curUnit.id)||"", fach:K.fach,
       thema:(curUnit&&curUnit.name)||"Vokabeln", lernbereich:"",
-      sekunden: rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0,
+      // Dieselbe ehrliche Uhr wie in Pauls Welt: Wanduhrzeit ist keine
+      // Lernzeit. Wer das Handy weglegt und wiederkommt, sammelt sonst
+      // Minuten, in denen nichts geübt wurde.
+      sekunden: LS() ? LS().aktiveSekunden()
+                     : (rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0),
+      pause: LS() ? Math.max(0, LS().wanduhrSekunden() - LS().aktiveSekunden()) : 0,
+      zeitart: "lernen",
       // Ohne das stand bei Helenas Runden kein Geraet - und damit liess sich
       // nicht pruefen, wogegen ihr Layout eigentlich stimmen muss.
-      geraet: (window.lernstand && window.lernstand.geraet) ? window.lernstand.geraet() : "",
+      geraet: LS() ? LS().geraet() : "",
       aufgaben: protokoll
     };
     protokoll=[];
+    if(LS()) LS().uhrZuruecksetzen();
     ausgangSichern(ausgangLaden().concat([runde]));
     ausgangLeeren();
   }
@@ -593,6 +603,9 @@
   window.addEventListener("online", ausgangLeeren);
 
   function finish(){
+    // Erst ablesen, dann senden: lernstandSenden stellt die Uhr zurueck.
+    var geuebteSekunden = LS() ? LS().aktiveSekunden()
+                               : (rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0);
     lernstandSenden();
     heuteMalen(); sitztMalen();
     $("#play").style.display="none";
@@ -632,7 +645,9 @@
       : "";
 
     var s=sitztZaehlen();
-    var minuten = rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/60000) : 0;
+    // Dieselbe Zahl, die auch in der Auswertung landet - sonst stimmt das
+    // eine nicht mit dem anderen überein.
+    var minuten = Math.round(geuebteSekunden / 60);
 
     e.innerHTML='<div class="done">'+
       sternHtml+

@@ -713,6 +713,47 @@
   // trotzdem gespielt - der Lernstand ist Beiwerk, kein Selbstzweck.
   function LS(){ return window.lernstand || null; }
 
+  /* ---------- Bauen ist Arbeit, aber kein Lernen ----------
+     Denny am 07.09.2026: "Ich moechte, dass die Entwicklungszeit und die
+     Arbeit nicht gemessen werden in der Statistik seiner Lernzeit."
+
+     Paul soll sich in der Werkstatt frei bewegen duerfen. Was er dabei baut,
+     faellt darum unter "bauen" und wird in der Auswertung getrennt
+     ausgewiesen - nicht verschwiegen, aber auch nicht als Ueben verkauft.
+
+     Die Uhr laeuft in Abschnitten: bis zum Spielstart ist es Bauen, waehrend
+     des Spiels ist es Lernen, danach wieder Bauen. */
+
+  var imSpiel = false;
+
+  function bauzeitMelden(){
+    if (imSpiel || !LS()) return;
+    var sek = LS().aktiveSekunden();
+    if (sek < 30) return;                 // ein Blick in die Werkstatt ist kein Bauen
+    var runde = {
+      spielId: "werkstatt", titel: "In der Werkstatt gebaut",
+      quelle: "werkstatt", fach: "", thema: "Werkstatt", lernbereich: "",
+      sekunden: sek,
+      pause: Math.max(0, LS().wanduhrSekunden() - sek),
+      zeitart: "bauen",
+      geraet: LS().geraet(),
+      aufgaben: [{ merkmal: "", art: "bauen", stimmt: true, nachspielzeit: false,
+                   sekunden: sek, gegeben: "", richtig: "" }],
+      nurBesuch: true
+    };
+    LS().uhrZuruecksetzen();
+    try {
+      fetch("/api/statistik", { method: "POST", credentials: "same-origin",
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify({ kind: "paul", runde: runde }) }).catch(function(){});
+    } catch(e){}
+  }
+
+  // Beim Verlassen: Was noch offen ist, kommt in den richtigen Topf.
+  window.addEventListener("pagehide", function(){
+    if (imSpiel) lernstandSenden(); else bauzeitMelden();
+  });
+
   function lernstandSenden(){
     if (!protokoll.length) return;
     var runde = {
@@ -729,6 +770,8 @@
       aufgaben: protokoll
     };
     protokoll = [];
+    imSpiel = false;
+    if (LS()) LS().uhrZuruecksetzen();     // ab hier wird wieder gebaut
     try {
       fetch("/api/statistik", {
         method: "POST", credentials: "same-origin",
@@ -749,6 +792,7 @@
     // Ab hier wird gespielt, nicht mehr gebaut - die Uhr faengt neu an.
     bauzeitMelden();
     if (LS()) LS().uhrZuruecksetzen();
+    imSpiel = true;
     $("marken").innerHTML =
       '<span class="marke">' + escape2(spiel.titel || "Spiel") + '</span>' +
       (spiel.thema ? '<span class="marke">' + escape2(spiel.thema) + '</span>' : "") +
