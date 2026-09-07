@@ -101,6 +101,20 @@ export async function onRequestDelete(context) {
     await env.PAUL_KV.delete(RUNDEN(kind));
     return json(200, { ok: true, entfernt: "alles" });
   }
+
+  // Alles vor einem Stichtag wegräumen: ?vor=2026-09-07 entfernt jede Runde,
+  // die vor diesem Tag liegt. Denny am 07.09.2026: "Wir zählen erst ab heute."
+  const vor = url.searchParams.get("vor");
+  if (vor && /^\d{4}-\d{2}-\d{2}$/.test(vor)) {
+    let liste = [];
+    try {
+      const roh = await env.PAUL_KV.get(RUNDEN(kind));
+      liste = roh ? JSON.parse(roh) : [];
+    } catch (e) {}
+    const bleibt = liste.filter((r) => String(r.zeit || "").slice(0, 10) >= vor);
+    await env.PAUL_KV.put(RUNDEN(kind), JSON.stringify(bleibt));
+    return json(200, { ok: true, entfernt: liste.length - bleibt.length, uebrig: bleibt.length });
+  }
   let liste = [];
   try {
     const roh = await env.PAUL_KV.get(RUNDEN(kind));
