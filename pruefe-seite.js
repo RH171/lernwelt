@@ -4,6 +4,11 @@
 const fs = require("fs");
 const path = require("path");
 
+// Schluesselwoerter, die vor einer Klammer stehen duerfen, ohne Funktion zu sein.
+const WORTE = new Set(["if","for","while","switch","catch","return","typeof","new","function",
+  "super","this","void","delete","in","of","async","await","yield","case","throw","else","do",
+  "try","finally","instanceof","class","extends","import","export","with"]);
+
 const EINGEBAUT = new Set(["if","for","while","switch","catch","return","typeof","new","function",
   "parseInt","parseFloat","Number","String","Array","Object","Math","Date","JSON","fetch","setTimeout",
   "setInterval","clearInterval","clearTimeout","encodeURIComponent","decodeURIComponent","isNaN",
@@ -72,9 +77,20 @@ for (const datei of process.argv.slice(2)) {
 
   try { new Function(js); } catch (e) { fehler.push("Syntaxfehler: " + e.message); }
 
+  // Nur den echten Code betrachten. Kommentare, Zeichenketten und
+  // Regex-Literale werden durch Leerzeichen ersetzt - sonst meldet jedes
+  // "rgba(" aus eingebettetem CSS und jedes "(Foto)" aus einem Kommentar
+  // einen Fehler, und die echten Treffer gehen im Rauschen unter.
+  const ohneText = nurCode(js);
+
+  const gebuendelt = js.split("\n").some((z) => z.length > 2000);
+
   const definiert = new Set([...js.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]));
   // auch "const iso = d => ..." und "var f = function(){}"
   [...js.matchAll(/(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?(?:function|\(|[A-Za-z_$][\w$]*\s*=>)/g)].forEach(m => definiert.add(m[1]));
+  // Klassen-Deklarationen: "class Sprung extends ..." wird mit "new Sprung()" benutzt
+  for (const m of ohneText.matchAll(/\bclass\s+([A-Za-z_$][\w$]*)/g)) definiert.add(m[1]);
+
   // Klassen-Methoden und Kurzschreibweise in Objekten: "name(args) {"
   for (const m of ohneText.matchAll(/(?:^|[;{}\n])\s*(?:static\s+|async\s+|get\s+|set\s+|\*\s*)*([A-Za-z_$][\w$]*)\s*\([^()]*\)\s*\{/g))
     definiert.add(m[1]);
@@ -84,16 +100,10 @@ for (const datei of process.argv.slice(2)) {
   for (const m of js.matchAll(/function\s*[A-Za-z_$\w]*\s*\(([^)]*)\)/g))
     m[1].split(",").map(x => x.trim()).filter(Boolean).forEach(x => definiert.add(x));
 
-  // Aufrufe nur ausserhalb von Zeichenketten suchen: sonst meldet jedes
-  // "rgba(" und "scale(" aus eingebettetem CSS einen Fehler.
-  // Nur den echten Code betrachten. Kommentare, Zeichenketten und
-  // Regex-Literale werden durch Leerzeichen ersetzt - sonst meldet jedes
-  // "rgba(" aus eingebettetem CSS und jedes "(Foto)" aus einem Kommentar
-  // einen Fehler, und die echten Treffer gehen im Rauschen unter.
-  const ohneText = nurCode(js);
-  const ohneRegex = ohneText;
-  const aufgerufen = new Set([...ohneText.matchAll(/(?<![.\w$])([a-zA-Z_$][\w$]*)\s*\(/g)].map(m => m[1]));
-  for (const name of aufgerufen) {
+  const aufgerufen = new Set(
+    [...ohneText.matchAll(/(?<![.\w$])(?<!new\s)(?<!new\s\s)([a-zA-Z_$][\w$]*)\s*\(/g)]
+      .map(m => m[1]).filter(n => !WORTE.has(n)));
+  for (const name of (gebuendelt ? [] : aufgerufen)) {
     if (!definiert.has(name) && !EINGEBAUT.has(name) && !/^[A-Z]/.test(name)) {
       // Nur melden, wenn es wie ein echter Aufruf aussieht (nicht in Kommentar/String)
       const zeile = ohneText.split("\n").find(z => new RegExp("(?<![.\\w$])" + name + "\\s*\\(").test(z) && !z.trim().startsWith("//"));
@@ -112,6 +122,7 @@ for (const datei of process.argv.slice(2)) {
 
   const einmalig = [...new Set(fehler)];
   fehlerGesamt += einmalig.length;
-  console.log(`${datei}: ${einmalig.length ? "\n  - " + einmalig.join("\n  - ") : "in Ordnung"}`);
+  const anmerkung = gebuendelt ? " (enthält eine eingebettete Bibliothek – nur Syntax und IDs geprüft)" : "";
+  console.log(`${datei}:${anmerkung} ${einmalig.length ? "\n  - " + einmalig.join("\n  - ") : "in Ordnung"}`);
 }
 process.exit(fehlerGesamt ? 1 : 0);
