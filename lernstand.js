@@ -197,11 +197,69 @@
 
   function dialogOeffnen() {
     if (document.getElementById("melde-huelle")) return;
-    // Wartet eine Antwort? Dann die zuerst zeigen - Paul soll nicht suchen
+    // Wartet eine Antwort? Dann die zuerst zeigen - niemand soll suchen
     // muessen, was aus seiner Meldung geworden ist.
     var offen = meineFaeden.filter(function (f) { return f.ungelesenKind; })[0];
     if (offen) { fadenZeigen(offen); return; }
+    // Sonst: die eigenen Meldungen auflisten. Helena am 07.09.2026: "Ich habe
+    // dir grade einen Fehler gemeldet und habe auf den Text jetzt keinen
+    // Zugriff mehr und weiss auch nicht ob du noch Fragen hast." Vorher fuehrte
+    // der Knopf immer direkt in eine NEUE Meldung - das Geschriebene war weg.
+    if (meineFaeden.length) { listeZeigen(); return; }
     dialogOeffnenNeu();
+  }
+
+  // Alles, was dieses Kind gemeldet hat - jederzeit nachlesbar.
+  function listeZeigen() {
+    var h = document.createElement("div");
+    h.id = "melde-huelle";
+
+    var zeilen = meineFaeden.map(function (f, i) {
+      var v = f.verlauf || [];
+      var erste = v[0] || {};
+      var letzte = v[v.length - 1] || {};
+      var stand = f.status === "erledigt" ? "erledigt"
+                : (letzte.von === "werkstatt" ? "beantwortet" : "wartet auf Antwort");
+      var text = (erste.text || "").trim() || (erste.hatBild ? "(nur ein Bild)" : "(ohne Text)");
+      return '<button type="button" class="fadenzeile" data-nr="' + i + '">' +
+               '<span class="fz-text">' + entschaerfen(text.slice(0, 90)) +
+                 (text.length > 90 ? "\u2026" : "") + '</span>' +
+               '<span class="fz-stand ' + (f.ungelesenKind ? "neu" : "") + '">' +
+                 entschaerfen(stand) + ' \u00B7 ' + entschaerfen(wannKurz(f.zeit)) + '</span>' +
+             '</button>';
+    }).join("");
+
+    h.innerHTML =
+      '<div id="melde-karte">' +
+        '<h3>Deine Meldungen</h3>' +
+        '<p class="u">Tipp auf eine Meldung, um sie nachzulesen oder etwas dazuzuschreiben.</p>' +
+        '<div class="fadenliste">' + zeilen + '</div>' +
+        '<button type="button" class="schicken" id="melde-neu2">Etwas Neues melden</button>' +
+        '<button type="button" class="zurueck" id="melde-zu">Schließen</button>' +
+      '</div>';
+    document.body.appendChild(h);
+
+    h.addEventListener("click", function (e) { if (e.target === h) h.remove(); });
+    h.querySelector("#melde-zu").addEventListener("click", function () { h.remove(); });
+    h.querySelector("#melde-neu2").addEventListener("click", function () {
+      h.remove(); dialogOeffnenNeu();
+    });
+    Array.prototype.forEach.call(h.querySelectorAll(".fadenzeile"), function (b) {
+      b.addEventListener("click", function () {
+        var f = meineFaeden[Number(b.getAttribute("data-nr"))];
+        h.remove();
+        if (f) fadenZeigen(f);
+      });
+    });
+  }
+
+  function wannKurz(iso) {
+    try {
+      var d = new Date(iso), heute = new Date();
+      if (d.toDateString() === heute.toDateString())
+        return "heute " + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      return d.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
+    } catch (e) { return ""; }
   }
 
   function dialogOeffnenNeu() {
@@ -254,6 +312,8 @@
   // geantwortet hat, und die Moeglichkeit weiterzureden - bis er selbst sagt,
   // dass es passt.
   function fadenZeigen(faden) {
+    var v0 = faden.verlauf || [];
+    var beantwortet = v0.some(function (n) { return n.von === "werkstatt"; });
     var h = document.createElement("div");
     h.id = "melde-huelle";
     var blasen = (faden.verlauf || []).map(function (n) {
@@ -268,12 +328,14 @@
     h.innerHTML =
       '<div id="melde-karte">' +
         '<h3>Deine Meldung</h3>' +
-        '<p class="u">Wir haben dir geantwortet. Passt es so, oder fehlt noch was?</p>' +
+        '<p class="u">' + (beantwortet
+          ? "Wir haben dir geantwortet. Passt es so, oder fehlt noch was?"
+          : "Angekommen \u2013 wir schauen es uns an. Du kannst hier noch etwas dazuschreiben.") + '</p>' +
         '<div class="faden faden-liste">' + blasen + '</div>' +
         '<textarea id="melde-text" maxlength="1500" placeholder="Antworte hier …"></textarea>' +
         '<button type="button" class="schicken" id="melde-schicken">Abschicken</button>' +
-        '<button type="button" class="passt" id="melde-passt">Passt jetzt! \u{1F44D}</button>' +
-        '<button type="button" class="zurueck" id="melde-neu">Etwas anderes melden</button>' +
+        (beantwortet ? '<button type="button" class="passt" id="melde-passt">Passt jetzt! \u{1F44D}</button>' : "") +
+        '<button type="button" class="zurueck" id="melde-neu">Zurück zu deinen Meldungen</button>' +
       '</div>';
     document.body.appendChild(h);
     h.addEventListener("click", function (e) { if (e.target === h) schliessen(h, faden); });
@@ -287,7 +349,7 @@
     h.querySelector("#melde-schicken").addEventListener("click", function () {
       antwortSchicken(h, faden);
     });
-    h.querySelector("#melde-passt").addEventListener("click", function () {
+    if (beantwortet) h.querySelector("#melde-passt").addEventListener("click", function () {
       fetch("/api/melden", {
         method: "POST", credentials: "same-origin",
         headers: { "content-type": "application/json" },
@@ -300,7 +362,8 @@
       }).catch(function () {});
     });
     h.querySelector("#melde-neu").addEventListener("click", function () {
-      gelesenMerken(faden); h.remove(); dialogOeffnenNeu();
+      gelesenMerken(faden); h.remove();
+      if (meineFaeden.length) listeZeigen(); else dialogOeffnenNeu();
     });
 
     gelesenMerken(faden);
