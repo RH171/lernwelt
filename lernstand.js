@@ -123,6 +123,14 @@
   var ANGESPROCHEN = "lernstand-angesprochen";
   var schonGefragt = false;
 
+  // Die automatische Eingangsbestaetigung ist keine Antwort von einem Menschen.
+  // Ueberall, wo es darum geht, OB schon geantwortet wurde, muss sie draussen
+  // bleiben - sonst saehe jede frische Meldung sofort erledigt aus.
+  function vonHand(n) { return n.von === "werkstatt" && !n.automatisch; }
+  function echteEintraege(f) {
+    return (f.verlauf || []).filter(function (n) { return !n.automatisch; });
+  }
+
   function schonAngesprochen(id){
     try {
       var d = JSON.parse(localStorage.getItem(ANGESPROCHEN) || "{}");
@@ -153,7 +161,7 @@
     // 2. Ein Bild ohne ein Wort dazu - da fehlt uns die Hälfte.
     var stumm = meineFaeden.filter(function(f){
       if (f.status === "erledigt" || schonAngesprochen(f.id)) return false;
-      var v = f.verlauf || [];
+      var v = echteEintraege(f);
       if (v.length !== 1) return false;                 // schon im Gespräch
       return v[0].hatBild && !(v[0].text || "").trim();
     })[0];
@@ -215,11 +223,11 @@
     h.id = "melde-huelle";
 
     var zeilen = meineFaeden.map(function (f, i) {
-      var v = f.verlauf || [];
+      var v = echteEintraege(f);
       var erste = v[0] || {};
       var letzte = v[v.length - 1] || {};
       var stand = f.status === "erledigt" ? "erledigt"
-                : (letzte.von === "werkstatt" ? "beantwortet" : "wartet auf Antwort");
+                : (vonHand(letzte) ? "beantwortet" : "wartet auf Antwort");
       var text = (erste.text || "").trim() || (erste.hatBild ? "(nur ein Bild)" : "(ohne Text)");
       return '<button type="button" class="fadenzeile" data-nr="' + i + '">' +
                '<span class="fz-text">' + entschaerfen(text.slice(0, 90)) +
@@ -312,8 +320,7 @@
   // geantwortet hat, und die Moeglichkeit weiterzureden - bis er selbst sagt,
   // dass es passt.
   function fadenZeigen(faden) {
-    var v0 = faden.verlauf || [];
-    var beantwortet = v0.some(function (n) { return n.von === "werkstatt"; });
+    var beantwortet = (faden.verlauf || []).some(vonHand);
     var h = document.createElement("div");
     h.id = "melde-huelle";
     var blasen = (faden.verlauf || []).map(function (n) {
