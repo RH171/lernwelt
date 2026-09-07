@@ -66,7 +66,10 @@
     ]);
     gruppen.forEach(function(g){
       var drin=allUnits().filter(function(u){
-        return g.stufe===0 ? !u.stufe : (u.stufe||5)===g.stufe;
+        // Eigene Einheiten haben keine Stufe. Ohne die zweite Bedingung
+        // rutschten sie zusaetzlich in die Gruppe mit der Stufe 5 und standen
+        // zweimal im Menue.
+        return g.stufe===0 ? !u.stufe : (u.stufe===g.stufe);
       });
       if(!drin.length) return;
       var gr=document.createElement("optgroup"); gr.label=g.titel;
