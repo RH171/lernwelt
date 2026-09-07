@@ -8,7 +8,16 @@ const EINGEBAUT = new Set(["if","for","while","switch","catch","return","typeof"
   "parseInt","parseFloat","Number","String","Array","Object","Math","Date","JSON","fetch","setTimeout",
   "setInterval","clearInterval","clearTimeout","encodeURIComponent","decodeURIComponent","isNaN",
   "Promise","RegExp","requestAnimationFrame","FileReader","Image","Blob","URL","SpeechSynthesisUtterance",
-  "confirm","alert","escape2","atob","btoa","Set","Map","Error"]);
+  "confirm","alert","escape2","atob","btoa","Set","Map","Error",
+  "matchMedia","getComputedStyle","requestIdleCallback","queueMicrotask","structuredClone",
+  "AbortController","IntersectionObserver","MutationObserver","ResizeObserver","WeakMap","WeakSet",
+  "Symbol","BigInt","Proxy","Reflect","TextEncoder","TextDecoder","DataTransfer","Response",
+  "Request","Headers","Event","CustomEvent","PointerEvent","KeyboardEvent","MouseEvent",
+  "TouchEvent","Audio","Worker","define","require","OffscreenCanvas","ImageData","Path2D",
+  "DOMParser","XMLHttpRequest","AudioContext","webkitAudioContext","SpeechSynthesisUtterance",
+  "IntersectionObserverEntry","CSS","Intl","WebAssembly","ArrayBuffer","DataView",
+  "Uint8Array","Uint16Array","Uint32Array","Int8Array","Int16Array","Int32Array",
+  "Float32Array","Float64Array","Uint8ClampedArray","BigInt64Array","BigUint64Array"]);
 
 // Ein kleiner Abtaster: Zustand fuer Zustand durch die Datei. Mit einzelnen
 // Regeln ging es schief - ein /"/g riss den Zeichenketten-Filter auf, und
@@ -66,6 +75,10 @@ for (const datei of process.argv.slice(2)) {
   const definiert = new Set([...js.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]));
   // auch "const iso = d => ..." und "var f = function(){}"
   [...js.matchAll(/(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?(?:function|\(|[A-Za-z_$][\w$]*\s*=>)/g)].forEach(m => definiert.add(m[1]));
+  // Klassen-Methoden und Kurzschreibweise in Objekten: "name(args) {"
+  for (const m of ohneText.matchAll(/(?:^|[;{}\n])\s*(?:static\s+|async\s+|get\s+|set\s+|\*\s*)*([A-Za-z_$][\w$]*)\s*\([^()]*\)\s*\{/g))
+    definiert.add(m[1]);
+
   // Auch Parameter zaehlen als definiert - sonst gilt jede Rueckruffunktion,
   // die als Argument hereinkommt, faelschlich als fehlend.
   for (const m of js.matchAll(/function\s*[A-Za-z_$\w]*\s*\(([^)]*)\)/g))
