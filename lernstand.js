@@ -61,13 +61,23 @@
         'background:#fbfcff;font-size:14.5px;cursor:pointer;color:#1b1c22}' +
       '#melde-vorschau{max-height:120px;border-radius:10px;border:1px solid #e5e8ef;display:none}' +
       '#melde-karte .fadenliste{display:grid;gap:8px;margin-bottom:14px}' +
-      '#melde-karte .fadenzeile{display:block;width:100%;text-align:left;background:#f4f6fa;' +
+      '#melde-karte .fadenreihe{display:flex;align-items:stretch;gap:6px}' +
+      '#melde-karte .fadenzeile{display:block;flex:1;min-width:0;text-align:left;background:#f4f6fa;' +
         'border:1px solid #e3e6ef;border-radius:12px;padding:11px 13px;cursor:pointer;' +
         'font:inherit;color:#1b1c22;min-height:44px}' +
       '#melde-karte .fadenzeile:active{transform:scale(.99)}' +
       '#melde-karte .fz-text{display:block;font-weight:600;line-height:1.45}' +
       '#melde-karte .fz-stand{display:block;color:#6b7280;font-size:12.5px;margin-top:3px}' +
       '#melde-karte .fz-stand.neu{color:#7c5cff;font-weight:700}' +
+      '#melde-karte .fz-weg{flex:none;width:44px;min-height:44px;border:1px solid #e3e6ef;' +
+        'border-radius:12px;background:#f4f6fa;color:#8b90a0;font-size:16px;cursor:pointer;' +
+        'font-family:inherit}' +
+      '#melde-karte .fz-weg:active{transform:scale(.94)}' +
+      '#melde-karte .fz-zurueck{flex:1;display:flex;align-items:center;justify-content:space-between;' +
+        'gap:8px;background:#f4f6fa;border:1px solid #e3e6ef;border-radius:12px;padding:11px 13px;' +
+        'color:#6b7280;font-size:13.5px}' +
+      '#melde-karte .fz-undo{background:none;border:none;color:#7c5cff;font-weight:700;' +
+        'font-size:13.5px;cursor:pointer;font-family:inherit;min-height:44px;padding:0 4px}' +
       '#melde-karte .schicken{width:100%;margin-top:15px;padding:15px;border:none;border-radius:14px;' +
         'background:#4f46e5;color:#fff;font-size:17px;font-weight:700;cursor:pointer}' +
       '#melde-karte .schicken:disabled{opacity:.5}' +
@@ -258,12 +268,19 @@
       var stand = f.status === "erledigt" ? "erledigt"
                 : (vonHand(letzte) ? "beantwortet" : "wartet auf Antwort");
       var text = (erste.text || "").trim() || (erste.hatBild ? "(nur ein Bild)" : "(ohne Text)");
-      return '<button type="button" class="fadenzeile" data-nr="' + i + '">' +
-               '<span class="fz-text">' + entschaerfen(text.slice(0, 90)) +
-                 (text.length > 90 ? "\u2026" : "") + '</span>' +
-               '<span class="fz-stand ' + (f.ungelesenKind ? "neu" : "") + '">' +
-                 entschaerfen(stand) + ' \u00B7 ' + entschaerfen(wannKurz(f.zeit)) + '</span>' +
-             '</button>';
+      // Helena am 07.09.2026: "Kannst du oben bei meinen Meldungen einen X
+      // Knopf anbringen damit ich dann die Themen anklicken kann und sie
+      // loeschen kann, wenn ich will!!!"
+      return '<div class="fadenreihe">' +
+               '<button type="button" class="fadenzeile" data-nr="' + i + '">' +
+                 '<span class="fz-text">' + entschaerfen(text.slice(0, 90)) +
+                   (text.length > 90 ? "\u2026" : "") + '</span>' +
+                 '<span class="fz-stand ' + (f.ungelesenKind ? "neu" : "") + '">' +
+                   entschaerfen(stand) + ' \u00B7 ' + entschaerfen(wannKurz(f.zeit)) + '</span>' +
+               '</button>' +
+               '<button type="button" class="fz-weg" data-weg="' + i + '" ' +
+                 'aria-label="Diese Meldung wegräumen" title="Wegräumen">\u2715</button>' +
+             '</div>';
     }).join("");
 
     h.innerHTML =
@@ -286,6 +303,32 @@
         var f = meineFaeden[Number(b.getAttribute("data-nr"))];
         h.remove();
         if (f) fadenZeigen(f);
+      });
+    });
+
+    // Wegraeumen mit kurzer Umkehr - versehentlich getippt ist schnell.
+    Array.prototype.forEach.call(h.querySelectorAll(".fz-weg"), function (x) {
+      x.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var f = meineFaeden[Number(x.getAttribute("data-weg"))];
+        if (!f) return;
+        var reihe = x.parentNode;
+        reihe.innerHTML = '<div class="fz-zurueck">Weggeräumt. ' +
+          '<button type="button" class="fz-undo">Doch behalten</button></div>';
+        var uhr = setTimeout(function () {
+          fetch("/api/melden?id=" + encodeURIComponent(f.id) + "&kind=" + encodeURIComponent(KIND),
+                { method: "DELETE", credentials: "same-origin" })
+            .then(function () {
+              meineFaeden = meineFaeden.filter(function (a) { return a.id !== f.id; });
+              reihe.remove();
+              if (!h.querySelectorAll(".fadenreihe").length) { h.remove(); dialogOeffnenNeu(); }
+            })
+            .catch(function () {});
+        }, 5000);
+        reihe.querySelector(".fz-undo").addEventListener("click", function () {
+          clearTimeout(uhr);
+          h.remove(); listeZeigen();
+        });
       });
     });
   }
