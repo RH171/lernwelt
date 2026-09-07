@@ -502,7 +502,18 @@
     var text = h.querySelector("#melde-text").value.trim();
     if (!text && !bildDaten) { h.querySelector("#melde-text").focus(); return; }
     var knopf = h.querySelector("#melde-schicken");
-    knopf.disabled = true; knopf.textContent = "Wird geschickt …";
+    knopf.disabled = true;
+    // Die Werkstatt antwortet im selben Aufruf - das dauert ein paar Sekunden.
+    // Solange sagen, was passiert, statt das Kind vor einem toten Knopf sitzen
+    // zu lassen.
+    knopf.textContent = "Wird geschickt \u2026";
+    var warten = ["Wird geschickt \u2026", "Die Werkstatt liest mit \u2026",
+                  "Ich denke nach \u2026", "Gleich \u2026"];
+    var wi = 0;
+    var uhr = setInterval(function () {
+      wi = (wi + 1) % warten.length;
+      knopf.textContent = warten[wi];
+    }, 2200);
 
     fetch("/api/melden", {
       method: "POST", credentials: "same-origin",
@@ -515,13 +526,18 @@
     })
     .then(function (r) { return r.json(); })
     .then(function (j) {
+      clearInterval(uhr);
       if (!j || !j.ok) throw new Error("nein");
+      // Antwort schon da? Dann direkt zeigen - so fuehlt es sich an wie ein
+      // Gespraech und nicht wie ein Briefkasten.
+      if (j.faden) { h.remove(); meineFaeden = ersetzeFaden(j.faden); fadenZeigen(j.faden); return; }
       h.querySelector("#melde-karte").innerHTML =
         '<div class="fertig"><div class="haken">\u{1F44D}</div>' +
         '<h3>Danke!</h3><p class="u">Wir schauen uns das an.</p></div>';
-      setTimeout(function () { h.remove(); }, 1800);
+      setTimeout(function () { h.remove(); nachAntwortenSehen(); }, 1800);
     })
     .catch(function () {
+      clearInterval(uhr);
       knopf.disabled = false; knopf.textContent = "Nochmal versuchen";
     });
   }
