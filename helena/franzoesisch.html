@@ -147,6 +147,28 @@
   .review div{padding:5px 0; border-bottom:1px solid var(--line);}
   .review div:last-child{border-bottom:none;}
 
+  /* --- Bewertung als Rueckschau: Sterne, Bilanz, Rekord --- */
+  .sterne{font-size:38px; letter-spacing:6px; line-height:1;}
+  .sterne .an{color:var(--gold);}
+  .sterne .aus{color:var(--line);}
+  .rekord{color:var(--gold) !important; font-weight:700;}
+  .bilanz{display:flex; gap:10px; margin:18px 0 4px;}
+  .bilanz div{flex:1; background:var(--surface2); border:1px solid var(--line);
+    border-radius:14px; padding:12px 6px;}
+  .bilanz b{display:block; font-family:var(--round); font-size:22px; font-weight:800; color:var(--text);}
+  .bilanz small{display:block; color:var(--muted); font-size:11.5px; font-weight:600; margin-top:3px;}
+  .done .ghost{margin-top:10px; width:100%; padding:12px;}
+
+  /* --- Hoeren & schreiben --- */
+  .hoerfeld{display:grid; place-items:center; margin:6px 0 14px;}
+  .hoerknopf{width:82px; height:82px; border-radius:50%; border:1px solid var(--line);
+    background:var(--surface2); color:var(--brand); font-size:34px; cursor:pointer;
+    display:grid; place-items:center; transition:transform .12s;}
+  .hoerknopf:active{transform:scale(.93);}
+
+  /* --- Restzeit im Zeitmodus --- */
+  .uhrrest{float:right; color:var(--muted); font-size:12.5px; font-weight:700;}
+
   .adder{margin-top:16px;}
   .adder summary{cursor:pointer; color:var(--muted); font-size:13px; font-weight:700; list-style:none;}
   .adder summary::-webkit-details-marker{display:none;}
@@ -235,6 +257,7 @@
       <a class="chip" href="index.html" title="Zum Englisch-Trainer">🇬🇧 Englisch</a>
       <div class="chip">🔥 <span id="streak">0</span><small>Tage</small></div>
       <div class="chip">✦ <span id="xp">0</span><small>XP</small></div>
+      <div class="chip">🧠 <span id="sitzt">0</span><small>sitzen</small></div>
     </div>
   </header>
 
@@ -268,8 +291,18 @@
             <button data-v="type" aria-pressed="false">Eintippen</button>
             <button data-v="mc" aria-pressed="true">Multiple-Choice</button>
             <button data-v="cloze" aria-pressed="false">Lückentext</button>
+            <button data-v="hoeren" aria-pressed="false">Hören</button>
           </div>
-          <p class="tipp">Eintippen bringt am meisten – man muss das Wort wirklich abrufen.</p>
+          <p class="tipp">Eintippen und Hören bringen am meisten – da musst du das Wort wirklich abrufen, nicht nur wiedererkennen.</p>
+        </div>
+        <div class="field">
+          <label>Wie lange</label>
+          <div class="seg" id="dauer">
+            <button data-v="0" aria-pressed="true">Eine Runde</button>
+            <button data-v="10" aria-pressed="false">10 Minuten</button>
+            <button data-v="15" aria-pressed="false">15 Minuten</button>
+          </div>
+          <p class="tipp">Mit Minuten läuft es weiter, bis die Zeit um ist – gut für Zug oder Auto.</p>
         </div>
       </div>
     </details>
@@ -294,7 +327,7 @@
   </section>
 
   <section id="play" style="display:none">
-    <button class="backbtn" id="backBtn" type="button">‹ Zurück zur Übersicht</button>
+    <button class="backbtn" id="backBtn" type="button">‹ Zurück zur Übersicht</button><span class="uhrrest" id="uhrRest"></span>
     <div class="bar"><i id="prog"></i></div>
     <div class="card" id="card"></div>
   </section>
@@ -306,1527 +339,889 @@
 <canvas id="cf"></canvas>
 
 <script>
-(function(){
-  "use strict";
-  var $=function(s){return document.querySelector(s);};
-  var get=function(k,d){try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}};
-  var set=function(k,v){try{localStorage.setItem(k,v);}catch(e){}};
-
-  /* ---------- Themen-Einheiten (eigene Listen, kein Buch-Inhalt) ---------- */
-  var UNITS=[
-  {
-    "id": "presenter",
-    "name": "Sich vorstellen",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "bonjour",
-        "de": "guten Tag, hallo",
-        "ex": "Bonjour, je m'appelle Léa."
-      },
-      {
-        "en": "salut",
-        "de": "hallo, tschüss (unter Freunden)",
-        "ex": "Salut, ça va ?"
-      },
-      {
-        "en": "je m'appelle",
-        "de": "ich heiße",
-        "ex": "Je m'appelle Hélène."
-      },
-      {
-        "en": "comment tu t'appelles ?",
-        "de": "wie heißt du?",
-        "ex": "Et toi, comment tu t'appelles ?"
-      },
-      {
-        "en": "j'ai douze ans",
-        "de": "ich bin zwölf Jahre alt",
-        "ex": "J'ai douze ans et demi."
-      },
-      {
-        "en": "j'habite à",
-        "de": "ich wohne in",
-        "ex": "J'habite à Fürth."
-      },
-      {
-        "en": "ça va",
-        "de": "es geht mir gut",
-        "ex": "Ça va, merci !"
-      },
-      {
-        "en": "enchanté / enchantée",
-        "de": "sehr erfreut",
-        "ex": "Enchantée de te rencontrer."
-      },
-      {
-        "en": "au revoir",
-        "de": "auf Wiedersehen",
-        "ex": "Au revoir et à demain !"
-      },
-      {
-        "en": "à bientôt",
-        "de": "bis bald",
-        "ex": "À bientôt, Marie !"
-      },
-      {
-        "en": "s'il te plaît",
-        "de": "bitte (zu einer Person, die man duzt)",
-        "ex": "Passe-moi le livre, s'il te plaît."
-      },
-      {
-        "en": "merci beaucoup",
-        "de": "vielen Dank",
-        "ex": "Merci beaucoup pour ton aide."
-      },
-      {
-        "en": "pardon",
-        "de": "Entschuldigung",
-        "ex": "Pardon, je suis en retard."
-      },
-      {
-        "en": "oui / non",
-        "de": "ja / nein",
-        "ex": "Oui, c'est vrai. Non, pas du tout."
-      },
-      {
-        "en": "le prénom",
-        "de": "der Vorname",
-        "ex": "Quel est ton prénom ?"
-      },
-      {
-        "en": "l'âge (m)",
-        "de": "das Alter",
-        "ex": "Quel âge as-tu ?"
-      }
-    ]
-  },
-  {
-    "id": "famille",
-    "name": "Familie & Freunde",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "la famille",
-        "de": "die Familie",
-        "ex": "Ma famille est assez grande."
-      },
-      {
-        "en": "la mère",
-        "de": "die Mutter",
-        "ex": "Ma mère travaille à l'hôpital."
-      },
-      {
-        "en": "le père",
-        "de": "der Vater",
-        "ex": "Mon père aime le sport."
-      },
-      {
-        "en": "les parents (m)",
-        "de": "die Eltern",
-        "ex": "Mes parents habitent à Nuremberg."
-      },
-      {
-        "en": "la sœur",
-        "de": "die Schwester",
-        "ex": "J'ai une petite sœur."
-      },
-      {
-        "en": "le frère",
-        "de": "der Bruder",
-        "ex": "Mon frère a huit ans."
-      },
-      {
-        "en": "la grand-mère",
-        "de": "die Großmutter",
-        "ex": "Ma grand-mère fait un bon gâteau."
-      },
-      {
-        "en": "le grand-père",
-        "de": "der Großvater",
-        "ex": "Mon grand-père raconte des histoires."
-      },
-      {
-        "en": "l'ami (m) / l'amie (f)",
-        "de": "der Freund / die Freundin",
-        "ex": "C'est mon amie Camille."
-      },
-      {
-        "en": "le copain / la copine",
-        "de": "der Kumpel / die Freundin",
-        "ex": "Je joue avec mes copains."
-      },
-      {
-        "en": "le chien",
-        "de": "der Hund",
-        "ex": "Notre chien s'appelle Max."
-      },
-      {
-        "en": "le chat",
-        "de": "die Katze",
-        "ex": "Le chat dort sur le lit."
-      },
-      {
-        "en": "gentil / gentille",
-        "de": "nett",
-        "ex": "Ta sœur est très gentille."
-      },
-      {
-        "en": "sympa",
-        "de": "sympathisch, nett",
-        "ex": "Les voisins sont sympas."
-      },
-      {
-        "en": "ensemble",
-        "de": "zusammen",
-        "ex": "Nous jouons ensemble."
-      },
-      {
-        "en": "aimer",
-        "de": "lieben, mögen",
-        "ex": "J'aime beaucoup ma famille."
-      }
-    ]
-  },
-  {
-    "id": "ecole",
-    "name": "Schule & Unterricht",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "l'école (f)",
-        "de": "die Schule",
-        "ex": "L'école commence à huit heures."
-      },
-      {
-        "en": "le collège",
-        "de": "die weiterführende Schule (Frankreich)",
-        "ex": "Je vais au collège depuis un an."
-      },
-      {
-        "en": "la classe",
-        "de": "die Klasse",
-        "ex": "Nous sommes vingt-cinq dans la classe."
-      },
-      {
-        "en": "le professeur",
-        "de": "die Lehrerin, der Lehrer",
-        "ex": "Le professeur explique la règle."
-      },
-      {
-        "en": "l'élève (m/f)",
-        "de": "die Schülerin, der Schüler",
-        "ex": "Les élèves écoutent bien."
-      },
-      {
-        "en": "le cours",
-        "de": "der Unterricht, die Stunde",
-        "ex": "Le cours de français est intéressant."
-      },
-      {
-        "en": "le cahier",
-        "de": "das Heft",
-        "ex": "Ouvre ton cahier, s'il te plaît."
-      },
-      {
-        "en": "le livre",
-        "de": "das Buch",
-        "ex": "Mon livre est dans le sac."
-      },
-      {
-        "en": "le stylo",
-        "de": "der Kugelschreiber",
-        "ex": "J'ai perdu mon stylo."
-      },
-      {
-        "en": "la trousse",
-        "de": "das Federmäppchen",
-        "ex": "Ma trousse est bleue."
-      },
-      {
-        "en": "les devoirs (m)",
-        "de": "die Hausaufgaben",
-        "ex": "Je fais mes devoirs après le dîner."
-      },
-      {
-        "en": "la récréation",
-        "de": "die Pause",
-        "ex": "Pendant la récréation, on joue dehors."
-      },
-      {
-        "en": "difficile",
-        "de": "schwierig",
-        "ex": "Cet exercice est difficile."
-      },
-      {
-        "en": "facile",
-        "de": "leicht, einfach",
-        "ex": "La question était facile."
-      },
-      {
-        "en": "apprendre",
-        "de": "lernen",
-        "ex": "J'apprends le français depuis un an."
-      },
-      {
-        "en": "écouter",
-        "de": "zuhören",
-        "ex": "Écoutez bien le dialogue !"
-      }
-    ]
-  },
-  {
-    "id": "nombres",
-    "name": "Zahlen, Farben & Zeit",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "un, deux, trois",
-        "de": "eins, zwei, drei",
-        "ex": "Un, deux, trois - on y va !"
-      },
-      {
-        "en": "dix",
-        "de": "zehn",
-        "ex": "Il y a dix élèves ici."
-      },
-      {
-        "en": "vingt",
-        "de": "zwanzig",
-        "ex": "Le livre coûte vingt euros."
-      },
-      {
-        "en": "cent",
-        "de": "hundert",
-        "ex": "Il y a cent pages dans ce livre."
-      },
-      {
-        "en": "rouge",
-        "de": "rot",
-        "ex": "J'ai un vélo rouge."
-      },
-      {
-        "en": "bleu / bleue",
-        "de": "blau",
-        "ex": "La porte est bleue."
-      },
-      {
-        "en": "vert / verte",
-        "de": "grün",
-        "ex": "Le sac vert est à moi."
-      },
-      {
-        "en": "jaune",
-        "de": "gelb",
-        "ex": "Le soleil est jaune sur le dessin."
-      },
-      {
-        "en": "noir / noire",
-        "de": "schwarz",
-        "ex": "Le chat noir dort ici."
-      },
-      {
-        "en": "blanc / blanche",
-        "de": "weiß",
-        "ex": "La maison blanche est jolie."
-      },
-      {
-        "en": "le lundi",
-        "de": "der Montag",
-        "ex": "Le lundi, j'ai sport."
-      },
-      {
-        "en": "le week-end",
-        "de": "das Wochenende",
-        "ex": "Le week-end, je dors longtemps."
-      },
-      {
-        "en": "aujourd'hui",
-        "de": "heute",
-        "ex": "Aujourd'hui, il fait beau."
-      },
-      {
-        "en": "demain",
-        "de": "morgen",
-        "ex": "Demain, nous avons un test."
-      },
-      {
-        "en": "maintenant",
-        "de": "jetzt",
-        "ex": "Maintenant, je dois partir."
-      },
-      {
-        "en": "quelle heure est-il ?",
-        "de": "wie spät ist es?",
-        "ex": "Quelle heure est-il, s'il te plaît ?"
-      }
-    ]
-  },
-  {
-    "id": "journee",
-    "name": "Tagesablauf",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "se lever",
-        "de": "aufstehen",
-        "ex": "Je me lève à sept heures."
-      },
-      {
-        "en": "le matin",
-        "de": "der Morgen, morgens",
-        "ex": "Le matin, je prends un thé."
-      },
-      {
-        "en": "le soir",
-        "de": "der Abend, abends",
-        "ex": "Le soir, je lis un peu."
-      },
-      {
-        "en": "le petit déjeuner",
-        "de": "das Frühstück",
-        "ex": "Le petit déjeuner est prêt."
-      },
-      {
-        "en": "prendre",
-        "de": "nehmen",
-        "ex": "Je prends le bus à sept heures et demie."
-      },
-      {
-        "en": "aller",
-        "de": "gehen, fahren",
-        "ex": "Je vais à l'école à vélo."
-      },
-      {
-        "en": "rentrer",
-        "de": "nach Hause kommen",
-        "ex": "Je rentre vers seize heures."
-      },
-      {
-        "en": "manger",
-        "de": "essen",
-        "ex": "Nous mangeons à midi."
-      },
-      {
-        "en": "faire",
-        "de": "machen, tun",
-        "ex": "Qu'est-ce que tu fais ce soir ?"
-      },
-      {
-        "en": "regarder",
-        "de": "anschauen, ansehen",
-        "ex": "Je regarde un film."
-      },
-      {
-        "en": "se coucher",
-        "de": "ins Bett gehen",
-        "ex": "Je me couche à vingt et une heures."
-      },
-      {
-        "en": "fatigué / fatiguée",
-        "de": "müde",
-        "ex": "Je suis très fatiguée."
-      },
-      {
-        "en": "tôt",
-        "de": "früh",
-        "ex": "Elle part tôt le matin."
-      },
-      {
-        "en": "tard",
-        "de": "spät",
-        "ex": "Il est déjà tard."
-      },
-      {
-        "en": "souvent",
-        "de": "oft",
-        "ex": "Je vais souvent au parc."
-      },
-      {
-        "en": "toujours",
-        "de": "immer",
-        "ex": "Il est toujours en retard."
-      }
-    ]
-  },
-  {
-    "id": "manger",
-    "name": "Essen & Trinken",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "le pain",
-        "de": "das Brot",
-        "ex": "J'achète du pain le matin."
-      },
-      {
-        "en": "le fromage",
-        "de": "der Käse",
-        "ex": "Le fromage français est célèbre."
-      },
-      {
-        "en": "la pomme",
-        "de": "der Apfel",
-        "ex": "Je mange une pomme chaque jour."
-      },
-      {
-        "en": "le gâteau",
-        "de": "der Kuchen",
-        "ex": "Le gâteau est délicieux."
-      },
-      {
-        "en": "l'eau (f)",
-        "de": "das Wasser",
-        "ex": "Un verre d'eau, s'il vous plaît."
-      },
-      {
-        "en": "le lait",
-        "de": "die Milch",
-        "ex": "Je bois du lait le matin."
-      },
-      {
-        "en": "le jus d'orange",
-        "de": "der Orangensaft",
-        "ex": "Elle commande un jus d'orange."
-      },
-      {
-        "en": "le repas",
-        "de": "die Mahlzeit",
-        "ex": "Le repas est prêt !"
-      },
-      {
-        "en": "le déjeuner",
-        "de": "das Mittagessen",
-        "ex": "Le déjeuner est à midi."
-      },
-      {
-        "en": "le dîner",
-        "de": "das Abendessen",
-        "ex": "Le dîner est à dix-neuf heures."
-      },
-      {
-        "en": "avoir faim",
-        "de": "Hunger haben",
-        "ex": "J'ai faim, on mange ?"
-      },
-      {
-        "en": "avoir soif",
-        "de": "Durst haben",
-        "ex": "Tu as soif ?"
-      },
-      {
-        "en": "bon / bonne",
-        "de": "gut, lecker",
-        "ex": "Cette soupe est très bonne."
-      },
-      {
-        "en": "délicieux",
-        "de": "köstlich",
-        "ex": "Ce dessert est délicieux."
-      },
-      {
-        "en": "boire",
-        "de": "trinken",
-        "ex": "Je bois de l'eau."
-      },
-      {
-        "en": "la boulangerie",
-        "de": "die Bäckerei",
-        "ex": "La boulangerie ouvre à sept heures."
-      }
-    ]
-  },
-  {
-    "id": "loisirs",
-    "name": "Freizeit & Sport",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "le sport",
-        "de": "der Sport",
-        "ex": "Le sport, c'est ma passion."
-      },
-      {
-        "en": "jouer",
-        "de": "spielen",
-        "ex": "Je joue au foot le mercredi."
-      },
-      {
-        "en": "le foot",
-        "de": "der Fußball",
-        "ex": "On regarde le foot ensemble."
-      },
-      {
-        "en": "la natation",
-        "de": "das Schwimmen",
-        "ex": "La natation, c'est génial."
-      },
-      {
-        "en": "le vélo",
-        "de": "das Fahrrad",
-        "ex": "Je fais du vélo le week-end."
-      },
-      {
-        "en": "la musique",
-        "de": "die Musik",
-        "ex": "J'écoute de la musique."
-      },
-      {
-        "en": "la guitare",
-        "de": "die Gitarre",
-        "ex": "Elle joue de la guitare."
-      },
-      {
-        "en": "danser",
-        "de": "tanzen",
-        "ex": "Nous dansons à la fête."
-      },
-      {
-        "en": "lire",
-        "de": "lesen",
-        "ex": "J'aime lire des romans."
-      },
-      {
-        "en": "le film",
-        "de": "der Film",
-        "ex": "Ce film est vraiment bien."
-      },
-      {
-        "en": "la piscine",
-        "de": "das Schwimmbad",
-        "ex": "On va à la piscine samedi."
-      },
-      {
-        "en": "le parc",
-        "de": "der Park",
-        "ex": "Le parc est près d'ici."
-      },
-      {
-        "en": "génial",
-        "de": "toll, super",
-        "ex": "C'était génial !"
-      },
-      {
-        "en": "s'amuser",
-        "de": "sich amüsieren, Spaß haben",
-        "ex": "On s'amuse bien ensemble."
-      },
-      {
-        "en": "le temps libre",
-        "de": "die Freizeit",
-        "ex": "J'ai peu de temps libre."
-      },
-      {
-        "en": "préférer",
-        "de": "lieber mögen",
-        "ex": "Je préfère le tennis."
-      }
-    ]
-  },
-  {
-    "id": "maison",
-    "name": "Zuhause & Zimmer",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "la maison",
-        "de": "das Haus",
-        "ex": "Notre maison est petite."
-      },
-      {
-        "en": "l'appartement (m)",
-        "de": "die Wohnung",
-        "ex": "Ils habitent dans un appartement."
-      },
-      {
-        "en": "la chambre",
-        "de": "das Zimmer",
-        "ex": "Ma chambre est en haut."
-      },
-      {
-        "en": "la cuisine",
-        "de": "die Küche",
-        "ex": "On mange dans la cuisine."
-      },
-      {
-        "en": "la salle de bains",
-        "de": "das Badezimmer",
-        "ex": "La salle de bains est à droite."
-      },
-      {
-        "en": "le jardin",
-        "de": "der Garten",
-        "ex": "Le jardin est derrière la maison."
-      },
-      {
-        "en": "la table",
-        "de": "der Tisch",
-        "ex": "Le livre est sur la table."
-      },
-      {
-        "en": "la chaise",
-        "de": "der Stuhl",
-        "ex": "Prends une chaise !"
-      },
-      {
-        "en": "le lit",
-        "de": "das Bett",
-        "ex": "Mon lit est très confortable."
-      },
-      {
-        "en": "la fenêtre",
-        "de": "das Fenster",
-        "ex": "Ouvre la fenêtre, il fait chaud."
-      },
-      {
-        "en": "la porte",
-        "de": "die Tür",
-        "ex": "Ferme la porte, s'il te plaît."
-      },
-      {
-        "en": "l'étage (m)",
-        "de": "das Stockwerk",
-        "ex": "Nous habitons au premier étage."
-      },
-      {
-        "en": "grand / grande",
-        "de": "groß",
-        "ex": "C'est une grande maison."
-      },
-      {
-        "en": "petit / petite",
-        "de": "klein",
-        "ex": "J'ai une petite chambre."
-      },
-      {
-        "en": "sur / sous",
-        "de": "auf / unter",
-        "ex": "Le chat est sous la table."
-      },
-      {
-        "en": "à côté de",
-        "de": "neben",
-        "ex": "La lampe est à côté du lit."
-      }
-    ]
-  },
-  {
-    "id": "ville",
-    "name": "Stadt & Wege",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "la ville",
-        "de": "die Stadt",
-        "ex": "J'aime beaucoup cette ville."
-      },
-      {
-        "en": "la rue",
-        "de": "die Straße",
-        "ex": "Notre rue est calme."
-      },
-      {
-        "en": "la gare",
-        "de": "der Bahnhof",
-        "ex": "La gare est loin d'ici."
-      },
-      {
-        "en": "le magasin",
-        "de": "der Laden, das Geschäft",
-        "ex": "Ce magasin ferme à sept heures."
-      },
-      {
-        "en": "le marché",
-        "de": "der Markt",
-        "ex": "Le marché est le samedi matin."
-      },
-      {
-        "en": "la place",
-        "de": "der Platz",
-        "ex": "On se retrouve sur la place."
-      },
-      {
-        "en": "l'église (f)",
-        "de": "die Kirche",
-        "ex": "L'église est très vieille."
-      },
-      {
-        "en": "à gauche",
-        "de": "links",
-        "ex": "Tourne à gauche après le pont."
-      },
-      {
-        "en": "à droite",
-        "de": "rechts",
-        "ex": "La poste est à droite."
-      },
-      {
-        "en": "tout droit",
-        "de": "geradeaus",
-        "ex": "Continuez tout droit."
-      },
-      {
-        "en": "près de",
-        "de": "in der Nähe von",
-        "ex": "J'habite près du parc."
-      },
-      {
-        "en": "loin de",
-        "de": "weit weg von",
-        "ex": "C'est loin d'ici ?"
-      },
-      {
-        "en": "le bus",
-        "de": "der Bus",
-        "ex": "Je prends le bus numéro huit."
-      },
-      {
-        "en": "la voiture",
-        "de": "das Auto",
-        "ex": "Mes parents ont une voiture."
-      },
-      {
-        "en": "où est ... ?",
-        "de": "wo ist ...?",
-        "ex": "Excusez-moi, où est la gare ?"
-      },
-      {
-        "en": "traverser",
-        "de": "überqueren",
-        "ex": "Traverse la rue ici."
-      }
-    ]
-  },
-  {
-    "id": "verbes",
-    "name": "Wichtige Verben & Wörtchen",
-    "stufe": 6,
-    "pairs": [
-      {
-        "en": "être",
-        "de": "sein",
-        "ex": "Je suis allemande, il est français."
-      },
-      {
-        "en": "avoir",
-        "de": "haben",
-        "ex": "J'ai un frère et une sœur."
-      },
-      {
-        "en": "il y a",
-        "de": "es gibt",
-        "ex": "Il y a un parc près d'ici."
-      },
-      {
-        "en": "parler",
-        "de": "sprechen",
-        "ex": "Je parle un peu français."
-      },
-      {
-        "en": "habiter",
-        "de": "wohnen",
-        "ex": "Nous habitons en Bavière."
-      },
-      {
-        "en": "vouloir",
-        "de": "wollen",
-        "ex": "Je veux apprendre le français."
-      },
-      {
-        "en": "pouvoir",
-        "de": "können, dürfen",
-        "ex": "Tu peux répéter, s'il te plaît ?"
-      },
-      {
-        "en": "savoir",
-        "de": "wissen, können (gelernt)",
-        "ex": "Je sais nager."
-      },
-      {
-        "en": "venir",
-        "de": "kommen",
-        "ex": "Elle vient de Lyon."
-      },
-      {
-        "en": "voir",
-        "de": "sehen",
-        "ex": "Je vois la tour de là."
-      },
-      {
-        "en": "avec / sans",
-        "de": "mit / ohne",
-        "ex": "Je viens avec toi."
-      },
-      {
-        "en": "mais",
-        "de": "aber",
-        "ex": "C'est cher, mais c'est bien."
-      },
-      {
-        "en": "parce que",
-        "de": "weil",
-        "ex": "Je reste parce que je suis fatiguée."
-      },
-      {
-        "en": "aussi",
-        "de": "auch",
-        "ex": "Moi aussi, j'aime ça."
-      },
-      {
-        "en": "très",
-        "de": "sehr",
-        "ex": "C'est très intéressant."
-      },
-      {
-        "en": "un peu",
-        "de": "ein bisschen",
-        "ex": "Je comprends un peu."
-      }
-    ]
-  }
-];
-
-  function customUnits(){ try{var a=JSON.parse(get("helena-fr-custom-units","[]"));return Array.isArray(a)?a:[];}catch(e){return [];} }
-  function allUnits(){ return UNITS.concat(customUnits()); }
-
-  var unitSel=$("#unit");
-  function fillUnits(sel){
-    unitSel.innerHTML="";
-    // Der Normalfall zuerst: Das System stellt zusammen, was ansteht.
-    var o0=document.createElement("option");
-    o0.value="__faellig"; o0.textContent="★ Was heute dran ist";
-    unitSel.appendChild(o0);
-    // Nach Jahrgangsstufe gruppieren: Helena soll auf einen Blick sehen,
-    // was Grundwortschatz ist und was Wiederholung aus der 6. Klasse.
-    var gruppen=[
-            {stufe:6, titel:"Erstes Lernjahr"},
-      {stufe:0, titel:"Meine eigenen Einheiten"}
-    ];
-    gruppen.forEach(function(g){
-      var drin=allUnits().filter(function(u){
-        return g.stufe===0 ? !u.stufe : (u.stufe||5)===g.stufe;
-      });
-      if(!drin.length) return;
-      var gr=document.createElement("optgroup"); gr.label=g.titel;
-      drin.forEach(function(u){
-        var o=document.createElement("option");
-        o.value=u.id; o.textContent=u.name+" ("+u.pairs.length+")";
-        gr.appendChild(o);
-      });
-      unitSel.appendChild(gr);
-    });
-    if(sel) unitSel.value=sel;
-  }
-  fillUnits();
-  unitSel.value="__faellig";
-
-  // Die Zahl oben: Was steht heute an?
-  function heuteMalen(){
-    var z=faelligZaehlen();
-    var zahl=$("#heuteZahl"), txt=$("#faelligText");
-    if(!zahl||!txt) return;
-    var offen=z.faellig;
-    if(offen){
-      zahl.textContent=offen;
-      txt.textContent=(offen===1?"Wort ist heute dran":"W\u00f6rter sind heute dran")+
-        (z.neu?" \u00b7 "+z.neu+" noch nie ge\u00fcbt":"");
-    } else if(z.neu){
-      zahl.textContent=Math.min(z.neu,20);
-      txt.textContent="neue W\u00f6rter zum Kennenlernen \u00b7 nichts Altes f\u00e4llig";
-    } else {
-      zahl.textContent="\u2713";
-      txt.textContent="Alles sitzt. Komm morgen wieder \u2013 oder such dir unten etwas aus.";
-    }
-  }
-  heuteMalen();
-
-  /* ---------- XP & Streak ---------- */
-  var xp=parseInt(get("helena-fr-xp","0"),10)||0;
-  var streak=parseInt(get("helena-fr-streak","0"),10)||0;
-  (function(){
-    var today=new Date(); today.setHours(0,0,0,0);
-    var iso=today.toISOString().slice(0,10);
-    var last=get("helena-fr-last",null);
-    if(last!==iso){
-      var y=new Date(today); y.setDate(y.getDate()-1);
-      streak=(last===y.toISOString().slice(0,10))?streak+1:1;
-      set("helena-fr-streak",String(streak)); set("helena-fr-last",iso);
-    }
-    if(streak<1){streak=1; set("helena-fr-streak","1");}
-  })();
-  function paintStats(){ $("#xp").textContent=xp; $("#streak").textContent=streak; }
-  paintStats();
-
-  function writeProgress(best,uebung){
-    try{ set("lw-progress:helena-franzoesisch-vokabeltrainer.html",
-      JSON.stringify({xp:xp,best:best||0,uebung:uebung||0})); }catch(e){}
-  }
-
-  /* ---------- Einstellungen ---------- */
-  var dir="de2en", mode="mc";
-  function seg(id,cb){
-    var g=$(id);
-    g.addEventListener("click",function(e){
-      var b=e.target.closest("button"); if(!b) return;
-      [].forEach.call(g.children,function(x){x.setAttribute("aria-pressed","false");});
-      b.setAttribute("aria-pressed","true"); cb(b.getAttribute("data-v")); blip();
-    });
-  }
-  seg("#dir",function(v){dir=v;});
-  seg("#mode",function(v){mode=v;});
-
-  /* ---------- Sound ---------- */
-  var actx=null;
-  function tone(f,d,delay,type){
-    try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
-      var o=actx.createOscillator(),g=actx.createGain(); o.type=type||"sine"; o.frequency.value=f;
-      var t=actx.currentTime+(delay||0); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.16,t+.02);
-      g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(actx.destination);
-      o.start(t); o.stop(t+d+.02);
-    }catch(e){}
-  }
-  function blip(){tone(620,.1,0,"triangle");}
-  function good(){tone(660,.12,0);tone(880,.16,.1);}
-  function bad(){tone(300,.18,0,"sawtooth");}
-  function fanfare(){tone(523,.15,0);tone(659,.15,.12);tone(784,.28,.24);}
-
-  /* ---------- Vorlesen (Französisch) – beste verfügbare Stimme ---------- */
-  var bestVoice=null;
-  function chooseVoice(){
-    try{
-      var vs=speechSynthesis.getVoices()||[]; if(!vs.length) return;
-      function score(v){
-        var n=(v.name||"").toLowerCase(), l=(v.lang||"").toLowerCase().replace("_","-"), s=0;
-        if(l.indexOf("fr")!==0) return -1;                 // nur Französisch
-        if(l.indexOf("en-gb")===0) s+=3; else s+=1;         // britisch bevorzugt (Green Line)
-        if(n.indexOf("google")>=0) s+=6;                    // Chrome-Google-Stimmen: sehr gut
-        if(v.localService===false) s+=3;                    // Netz-Stimmen meist besser
-        if(/(daniel|kate|serena|arthur|martha|libby|sonia|aria|natasha|jenny|ryan|neural|enhanced|premium|siri)/.test(n)) s+=4;
-        if(/compact|kompakt|eloquence|fred|albert/.test(n)) s-=4;   // blecherne Altstimmen meiden
-        return s;
-      }
-      var ranked=vs.map(function(v){return {v:v,s:score(v)};})
-                   .filter(function(x){return x.s>=0;})
-                   .sort(function(a,b){return b.s-a.s;});
-      if(ranked.length) bestVoice=ranked[0].v;
-    }catch(e){}
-  }
-  chooseVoice();
-  try{ speechSynthesis.onvoiceschanged=chooseVoice; }catch(e){}
-
-  function say(text){
-    try{
-      var u=new SpeechSynthesisUtterance(text);
-      if(bestVoice){ u.voice=bestVoice; u.lang=bestVoice.lang; } else { u.lang="fr-FR"; }
-      u.rate=.88;
-      speechSynthesis.cancel(); speechSynthesis.speak(u);
-    }catch(e){}
-  }
-
-  /* ---------- Helfer ---------- */
-  function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
-  function normalize(s){
-    return (s||"").toLowerCase().trim()
-      .replace(/^(to|der|die|das|the|a|an)\s+/,"")
-      .replace(/[.,!?;:'’]/g,"").replace(/\s+/g," ");
-  }
-  function clozeTarget(en){ return en.replace(/^to\s+/,"").trim(); }
-  function esc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
-  function makeCloze(sentence, target){
-    if(!sentence) return null;
-    var pat=new RegExp("\\b"+esc(target).replace(/\s+/g,"\\s+")+"\\b","i");
-    if(!pat.test(sentence)) return null;
-    var blank='<span class="gap">'+Array(Math.max(4,target.replace(/\s/g,"").length)+1).join("_")+'</span>';
-    return sentence.replace(pat, blank);
-  }
-  function maskWord(w){
-    return w.split("").map(function(ch,i){
-      if(!/[a-zA-ZäöüÄÖÜß]/.test(ch)) return ch;
-      if(i===0 || i===w.length-1) return ch;
-      return Math.random()<.55 ? "_" : ch;
-    }).join("");
-  }
-
-
-  /* ---------- Wort-Gedächtnis (Leitner) ----------
-     Bis hierher merkte sich der Trainer XP, Serie und Datum - aber nicht,
-     WELCHE Wörter sitzen. Jede Sitzung fing bei null an: Ein Wort, das
-     fünfmal danebenging, kam so oft dran wie eines, das man im Schlaf kann.
-     Verteiltes Wiederholen ist aber der stärkste Einzeleffekt beim
-     Vokabellernen - also merken wir uns pro Wort, wann es zuletzt saß.
-
-     Fünf Fächer mit wachsendem Abstand. Richtig: eine Stufe hoch.
-     Daneben: zurück auf Anfang, das Wort kommt morgen wieder. */
-
-  var FACH_TAGE = [0, 1, 3, 7, 16, 35];      // Fach 0 = heute noch einmal
-  var WISSEN_SCHLUESSEL = "helena-fr-wissen";
-
-  function wissenLaden(){
-    try { var o = JSON.parse(get(WISSEN_SCHLUESSEL, "{}")); return (o && typeof o === "object") ? o : {}; }
-    catch(e){ return {}; }
-  }
-  function wissenSichern(w){ try { set(WISSEN_SCHLUESSEL, JSON.stringify(w)); } catch(e){} }
-
-  // Ein Wort eindeutig benennen - die Einheit gehört dazu, sonst kollidieren
-  // gleiche Wörter aus verschiedenen Einheiten.
-  function wortSchluessel(unitId, p){ return unitId + "|" + p.en; }
-
-  function heuteZahl(){ return Math.floor(Date.now() / 86400000); }
-
-  function standVon(wissen, schl){
-    return wissen[schl] || { fach: 0, faellig: 0, richtig: 0, falsch: 0 };
-  }
-
-  // Was ist heute dran? Fällige zuerst, dann neue Wörter zum Auffüllen.
-  function faelligeAuswahl(maxAnzahl){
-    var wissen = wissenLaden(), heute = heuteZahl();
-    var faellig = [], neu = [];
-    allUnits().forEach(function(u){
-      u.pairs.forEach(function(p){
-        var st = wissen[wortSchluessel(u.id, p)];
-        if (!st) neu.push({p:p, tries:0, unitId:u.id});
-        else if (st.faellig <= heute) faellig.push({p:p, tries:0, unitId:u.id, faellig:st.faellig});
-      });
-    });
-    // Am längsten überfällig zuerst - das ist am ehesten am Vergessen.
-    faellig.sort(function(a,b){ return a.faellig - b.faellig; });
-    var raus = faellig.slice(0, maxAnzahl);
-    if (raus.length < maxAnzahl) raus = raus.concat(shuffle(neu).slice(0, maxAnzahl - raus.length));
-    // Mischen: Themen durcheinander üben sitzt besser als Block für Block,
-    // auch wenn es sich schwerer anfühlt.
-    return shuffle(raus);
-  }
-
-  function faelligZaehlen(){
-    var wissen = wissenLaden(), heute = heuteZahl(), n = 0, neu = 0;
-    allUnits().forEach(function(u){
-      u.pairs.forEach(function(p){
-        var st = wissen[wortSchluessel(u.id, p)];
-        if (!st) neu++; else if (st.faellig <= heute) n++;
-      });
-    });
-    return { faellig: n, neu: neu };
-  }
-
-  // Nach jeder Antwort das Fach nachführen.
-  function wortMerken(unitId, p, richtig){
-    if (!unitId) return;
-    var wissen = wissenLaden(), schl = wortSchluessel(unitId, p);
-    var st = standVon(wissen, schl);
-    if (richtig){
-      st.fach = Math.min(st.fach + 1, FACH_TAGE.length - 1);
-      st.richtig++;
-    } else {
-      st.fach = 0;
-      st.falsch++;
-    }
-    st.faellig = heuteZahl() + FACH_TAGE[st.fach];
-    st.zuletzt = new Date().toISOString().slice(0,10);
-    wissen[schl] = st;
-    wissenSichern(wissen);
-  }
-
-  /* ---------- Übungslogik ---------- */
-  var queue=[], curUnit=null, roundDir="de2en", total=0, mastered=0, wrongWords=[], answered=false;
-  // Mitschrift für den Lernstand: Was wurde geübt, was saß, wie lange.
-  var protokoll=[], rundeBegonnen=0, karteBegonnen=0;
-
-  function startSession(){
-    roundDir=dir;
-    if (unitSel.value === "__faellig"){
-      // Das System stellt zusammen, was ansteht - fällige zuerst, dann Neues.
-      queue = faelligeAuswahl(20);
-      // pairs mitgeben: Daraus werden die falschen Antwortmöglichkeiten
-      // gezogen, und das Ergebnisbild braucht die Anzahl. Ohne sie blieb
-      // die Karte leer.
-      curUnit = { id:"__faellig", name:"Was heute dran ist",
-                  pairs: queue.map(function(it){ return it.p; }) };
-    } else {
-      curUnit=allUnits().filter(function(u){return u.id===unitSel.value;})[0]||UNITS[0];
-      queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0, unitId:curUnit.id};}));
-    }
-    total=queue.length; mastered=0; wrongWords=[];
-    protokoll=[]; rundeBegonnen=Date.now();
-    if (!total){ meldungKeineWoerter(); return; }
-    $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
-    nextCard();
-  }
-  function meldungKeineWoerter(){
-    $("#setup").style.display="block"; $("#play").style.display="none";
-    var e=$("#faelligText");
-    if(e) e.textContent="Gerade ist nichts fällig - alles sitzt. Wähle unten eine Einheit, wenn du trotzdem üben willst.";
-  }
-
-  function pickDir(){ return roundDir==="mix" ? (Math.random()<.5?"de2en":"en2de") : roundDir; }
-
-  function nextCard(){
-    answered=false;
-    karteBegonnen=Date.now();
-    $("#prog").style.width=(total? Math.round(mastered/total*100):0)+"%";
-    if(!queue.length){ finish(); return; }
-    var item=queue[0], p=item.p;
-    var c=$("#card");
-
-    if(mode==="cloze"){
-      var tgt=clozeTarget(p.en);
-      var sentHtml=makeCloze(p.ex, tgt);
-      item._sol=p.en; item._solLang="en"; item._prompt=p.en;
-      if(sentHtml){
-        c.innerHTML='<div class="kicker">Lückentext · Französisch</div>'+
-          '<div class="clozemean">bedeutet: <b>'+p.de+'</b></div>'+
-          '<div class="clozesent">'+sentHtml+'</div>'+
-          '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="fehlendes Wort"><button id="chk">Prüfen</button></div>'+
-          '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
-      } else {
-        c.innerHTML='<div class="kicker">Lückentext · Französisch</div>'+
-          '<div class="prompt">'+p.de+'</div>'+
-          '<div class="hint">Ergänze das französische Wort: <span class="masked">'+maskWord(p.en)+'</span></div>'+
-          '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ganzes Wort"><button id="chk">Prüfen</button></div>'+
-          '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
-      }
-      var ipc=$("#ipt"); ipc.focus();
-      var goc=function(){ if(!answered) judgeText(ipc.value,item); };
-      $("#chk").addEventListener("click",goc);
-      ipc.addEventListener("keydown",function(e){ if(e.key==="Enter") goc(); });
-      return;
-    }
-
-    var d=pickDir();
-    var promptWord = d==="de2en" ? p.de : p.en;
-    var solution   = d==="de2en" ? p.en : p.de;
-    item._d=d; item._sol=solution; item._solLang=(d==="de2en"?"en":"de"); item._prompt=promptWord;
-
-    var sayBtn = (d==="en2de")
-      ? '<button class="say" title="Aussprache" data-say="'+p.en.replace(/"/g,'')+'">🔊</button>' : '';
-    var head='<div class="kicker">'+(d==="de2en"?"Deutsch → Französisch":"Französisch → Deutsch")+'</div>'+
-             '<div class="prompt">'+promptWord+sayBtn+'</div>';
-
-    if(mode==="mc"){
-      var opts=[solution];
-      var pool=shuffle(curUnit.pairs.map(function(x){return d==="de2en"?x.en:x.de;})
-                 .filter(function(w){return w!==solution;}));
-      while(opts.length<4 && pool.length) opts.push(pool.pop());
-      opts=shuffle(opts);
-      c.innerHTML=head+'<div class="hint">Wähle die richtige Übersetzung</div><div class="choices" id="ch"></div>'+
-        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
-      var ch=$("#ch");
-      opts.forEach(function(o){
-        var b=document.createElement("button"); b.className="choice"; b.textContent=o;
-        b.addEventListener("click",function(){ if(answered) return; judgeChoice(b,o,solution,item); });
-        ch.appendChild(b);
-      });
-    } else { /* type */
-      c.innerHTML=head+'<div class="hint">Tippe die Übersetzung ein</div>'+
-        '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="…"><button id="chk">Prüfen</button></div>'+
-        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
-      var ipt=$("#ipt"); ipt.focus();
-      var go=function(){ if(!answered) judgeText(ipt.value,item); };
-      $("#chk").addEventListener("click",go);
-      ipt.addEventListener("keydown",function(e){ if(e.key==="Enter") go(); });
-    }
-
-    var sb=c.querySelector("[data-say]");
-    if(sb) sb.addEventListener("click",function(){ say(sb.getAttribute("data-say")); });
-    if(d==="en2de") say(p.en);
-  }
-
-  function award(item,correct){
-    answered=true;
-    // Beim ERSTEN Versuch zählt es fürs Gedächtnis - wer dreimal rät und
-    // dann trifft, kann das Wort noch nicht.
-    if(item.tries === 0){
-      wortMerken(item.unitId, item.p, correct);
-      // Einheit als Merkmal - daran sieht man in der Auswertung, wo es hakt.
-      var einheit = allUnits().filter(function(u){return u.id===item.unitId;})[0];
-      protokoll.push({
-        merkmal: (einheit ? einheit.name : "Vokabeln").toLowerCase(),
-        art: "vokabel",
-        stimmt: !!correct,
-        nachspielzeit: false,
-        sekunden: karteBegonnen ? Math.round((Date.now()-karteBegonnen)/1000) : 0,
-        gegeben: correct ? "" : String(item.p.de).slice(0,30),
-        richtig: String(item.p.en).slice(0,30)
-      });
-    }
-    if(correct){ mastered++; xp+=10; queue.shift(); }
-    else{
-      item.tries++; if(wrongWords.indexOf(item.p)<0) wrongWords.push(item.p);
-      queue.shift(); queue.splice(Math.min(3,queue.length),0,item);
-      total=mastered+queue.length;
-    }
-    xp=Math.max(0,xp); set("helena-fr-xp",String(xp)); paintStats();
-    writeProgress(mastered, wrongWords.length);
-  }
-
-  function afterAnswer(correct,solution,item){
-    var vd=$("#vd");
-    if(correct){ vd.className="verdict ok"; vd.textContent="Richtig! ✦ +10 XP"; good(); }
-    else{ vd.className="verdict no"; vd.textContent="Richtig wäre: "+solution; bad(); }
-    if(item && item.p && item.p.ex){ var e=$("#exs"); if(e) e.textContent="„"+item.p.ex+"\u201c"; }
-    var b=document.createElement("button"); b.className="next"; b.textContent="Weiter ›";
-    b.addEventListener("click",nextCard);
-    $("#card").appendChild(b); b.focus();
-  }
-
-  function judgeChoice(btn,chosen,solution,item){
-    var correct=(chosen===solution);
-    award(item,correct);
-    [].forEach.call($("#ch").children,function(x){
-      x.disabled=true;
-      if(x.textContent===solution) x.classList.add("ok");
-      else if(x===btn && !correct) x.classList.add("no");
-    });
-    if(item.p && item.p.en) say(item.p.en);
-    afterAnswer(correct,solution,item);
-  }
-
-  function judgeText(val,item){
-    var correct = normalize(val)===normalize(item._sol);
-    var ipt=$("#ipt"); ipt.classList.add(correct?"ok":"no"); ipt.disabled=true;
-    var chk=$("#chk"); if(chk) chk.disabled=true;
-    award(item,correct);
-    if(item.p && item.p.en) say(item.p.en);
-    afterAnswer(correct,item._sol,item);
-  }
-
-  function lernstandSenden(){
-    if(!protokoll.length) return;
-    var runde={
-      spielId:"helena-vokabeln-fr", titel:"Vokabeln Französisch",
-      quelle:(curUnit&&curUnit.id)||"", fach:"franzoesisch",
-      thema:(curUnit&&curUnit.name)||"Vokabeln", lernbereich:"",
-      sekunden: rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0,
-      aufgaben: protokoll
-    };
-    protokoll=[];
-    try{
-      fetch("/api/statistik",{method:"POST",credentials:"same-origin",
-        headers:{"content-type":"application/json"},
-        body:JSON.stringify({kind:"helena", runde:runde})}).catch(function(){});
-    }catch(e){}
-  }
-
-  function finish(){
-    lernstandSenden();
-    heuteMalen();
-    $("#play").style.display="none";
-    var e=$("#end"); e.style.display="block";
-    var reviewHtml="";
-    if(wrongWords.length){
-      reviewHtml='<div class="review"><b>Nochmal anschauen:</b>'+
-        wrongWords.map(function(p){return '<div>'+p.en+' — '+p.de+'</div>';}).join("")+'</div>';
-    }
-    var perfect=!wrongWords.length;
-    e.innerHTML='<div class="done">'+
-      '<div class="big">'+(perfect?"🏆":"💪")+'</div>'+
-      '<h2>'+(perfect?"Perfekt gemeistert!":"Gut drangeblieben!")+'</h2>'+
-      '<p>'+curUnit.name+' · '+curUnit.pairs.length+' Vokabeln</p>'+
-      '<p>Gesamt-XP: <b style="color:var(--gold)">'+xp+'</b></p>'+
-      reviewHtml+
-      '<button class="start" id="again">Neue Runde</button></div>';
-    $("#again").addEventListener("click",function(){ $("#end").style.display="none"; $("#setup").style.display="block"; });
-    writeProgress(mastered, wrongWords.length);
-    if(perfect){ confetti(); fanfare(); } else { good(); }
-  }
-
-  $("#startBtn").addEventListener("click",startSession);
-
-  function endToSetup(){
-    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
-    $("#play").style.display="none"; $("#end").style.display="none"; $("#setup").style.display="block";
-    blip();
-  }
-  $("#backBtn").addEventListener("click", endToSetup);
-
-  /* ---------- Neue Einheit aus gescanntem Text ---------- */
-  function attrEsc(s){ return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
-  function cleanTok(s){
-    return (s||"")
-      .replace(/^[\s•·\-\*\u2013\u2014\d\.\)\(]+/,"")   /* führende Bullets/Nummern/Striche */
-      .replace(/\/[^\/]*\//g,"")                          /* /Lautschrift/ */
-      .replace(/\[[^\]]*\]/g,"")                          /* [Lautschrift] */
-      .replace(/\s+/g," ").trim();
-  }
-  function smartSplitLine(l){
-    var toks=(l||"").split(/\s+/).filter(Boolean);
-    if(toks.length<2) return null;
-    var artRe=/^(der|die|das|dem|den|des|ein|eine|einen|einem|sich)$/i;
-    for(var i=1;i<toks.length;i++){ if(artRe.test(toks[i])) return [toks.slice(0,i).join(" "), toks.slice(i).join(" ")]; }
-    for(var j=1;j<toks.length;j++){ if(/[äöüßÄÖÜ]/.test(toks[j])) return [toks.slice(0,j).join(" "), toks.slice(j).join(" ")]; }
-    return [toks.slice(0,toks.length-1).join(" "), toks[toks.length-1]];
-  }
-  function parseVocab(text){
-    var lines=(text||"").split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
-    if(!lines.length) return [];
-    var sepRe=/\s*(?:=|→|\u2192|::|:|\t|\u2013|\u2014| {2,}| - )\s*/;
-    var withSep=0, singleTok=0;
-    lines.forEach(function(l){ if(sepRe.test(l)) withSep++; if(l.split(/\s+/).filter(Boolean).length<2) singleTok++; });
-    var half=Math.max(2, Math.floor(lines.length*0.5));
-    var pairs=[];
-    if(withSep>=half){
-      lines.forEach(function(l){ if(l.search(sepRe)<0) return; var m=l.split(sepRe);
-        var en=cleanTok(m[0]), de=cleanTok(m.slice(1).join(" ")); if(en&&de) pairs.push({en:en,de:de}); });
-    } else if(singleTok >= Math.ceil(lines.length*0.4)){
-      for(var i=0;i+1<lines.length;i+=2){ var en2=cleanTok(lines[i]), de2=cleanTok(lines[i+1]); if(en2&&de2) pairs.push({en:en2,de:de2}); }
-    } else {
-      lines.forEach(function(l){ var s=smartSplitLine(cleanTok(l)); if(s){ var en=cleanTok(s[0]), de=cleanTok(s[1]); if(en&&de) pairs.push({en:en,de:de}); } });
-    }
-    return pairs;
-  }
-
-  /* Spalten über die größte horizontale Lücke je Zeile trennen (aus Foto-Positionen) */
-  function splitByGap(words){
-    var ws=(words||[]).filter(function(w){return w.text && w.text.trim() && w.bbox;}).sort(function(a,b){return a.bbox.x0-b.bbox.x0;});
-    if(ws.length<2) return null;
-    var maxGap=-1, idx=-1;
-    for(var i=0;i<ws.length-1;i++){ var g=ws[i+1].bbox.x0 - ws[i].bbox.x1; if(g>maxGap){ maxGap=g; idx=i; } }
-    var avgH=ws.reduce(function(s,w){return s+(w.bbox.y1-w.bbox.y0);},0)/ws.length;
-    if(maxGap < avgH*0.8) return null;
-    var en=ws.slice(0,idx+1).map(function(w){return w.text;}).join(" ").replace(/\s+/g," ").trim();
-    var de=ws.slice(idx+1).map(function(w){return w.text;}).join(" ").replace(/\s+/g," ").trim();
-    return (en&&de)?{en:en,de:de}:null;
-  }
-  function pairsFromOCR(data){
-    if(!data) return [];
-    var lines=data.lines||[]; var pairs=[];
-    lines.forEach(function(l){ var p=splitByGap(l.words||[]); if(p) pairs.push(p); });
-    if(pairs.length>=2) return pairs;
-    return parseVocab(data.text||"");   /* Fallback, falls kein klares Spaltenbild */
-  }
-
-  function renderPreview(pairs){
-    var box=$("#preview"); box.style.display="block";
-    box.innerHTML=
-      '<div class="pvhead"><span><b>'+pairs.length+' Paare erkannt</b> – bitte prüfen</span>'+
-      '<button class="mini" id="swapBtn" type="button">↔ Spalten tauschen</button></div>'+
-      '<div id="pvrows"></div>'+
-      '<button class="mini" id="addRow" type="button">＋ Zeile</button>'+
-      '<div class="pvsave"><button id="saveUnit" type="button">Einheit speichern</button>'+
-      '<button class="ghost" id="cancelUnit" type="button">Abbrechen</button></div>';
-    var rows=$("#pvrows");
-    function addRowEl(en,de){
-      var r=document.createElement("div"); r.className="pvrow";
-      r.innerHTML='<input class="pven" placeholder="französisch" value="'+attrEsc(en)+'">'+
-        '<span class="pvarr">→</span>'+
-        '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
-        '<button class="pvx" type="button" title="Zeile entfernen">✕</button>';
-      r.querySelector(".pvx").addEventListener("click",function(){ r.parentNode.removeChild(r); });
-      rows.appendChild(r);
-    }
-    pairs.forEach(function(p){ addRowEl(p.en,p.de); });
-    $("#addRow").addEventListener("click",function(){ addRowEl("",""); });
-    $("#swapBtn").addEventListener("click",function(){
-      [].forEach.call(rows.querySelectorAll(".pvrow"),function(r){
-        var a=r.querySelector(".pven"), b=r.querySelector(".pvde"); var t=a.value; a.value=b.value; b.value=t;
-      });
-    });
-    $("#cancelUnit").addEventListener("click",function(){ box.style.display="none"; box.innerHTML=""; });
-    $("#saveUnit").addEventListener("click",saveFromPreview);
-  }
-
-  function saveFromPreview(){
-    var name=($("#unitName").value||"").trim() || "Neue Einheit";
-    var pairs=[];
-    [].forEach.call($("#pvrows").children,function(r){
-      var en=r.querySelector(".pven").value.trim(), de=r.querySelector(".pvde").value.trim();
-      if(en && de) pairs.push({en:en, de:de});
-    });
-    var msg=$("#addMsg");
-    if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare."; msg.style.color="var(--no)"; return; }
-    var units=customUnits(); var id="u"+Date.now();
-    units.push({id:id, name:name, pairs:pairs});
-    set("helena-fr-custom-units",JSON.stringify(units));
-    fillUnits(id); renderMyUnits();
-    $("#unitName").value=""; $("#pasteBox").value="";
-    var box=$("#preview"); box.style.display="none"; box.innerHTML="";
-    msg.textContent="Gespeichert: „"+name+"\u201c ("+pairs.length+" Vokabeln) ✓"; msg.style.color="var(--ok)";
-    blip();
-  }
-
-  $("#detectBtn").addEventListener("click",function(){
-    var pairs=parseVocab($("#pasteBox").value);
-    var msg=$("#addMsg");
-    if(!pairs.length){ msg.textContent="Nichts erkannt – bitte Text einfügen und erneut auf Erkennen tippen."; msg.style.color="var(--no)"; return; }
-    msg.textContent=""; renderPreview(pairs);
-  });
-
-  /* ---------- Foto aufnehmen -> Texterkennung im Browser ---------- */
-  function setOcr(txt){ var s=$("#ocrStatus"); if(!txt){ s.style.display="none"; s.textContent=""; return; } s.style.display="block"; s.textContent=txt; }
-  function loadTesseract(cb){
-    if(window.Tesseract){ cb(true); return; }
-    var s=document.createElement("script");
-    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
-    s.onload=function(){ cb(!!window.Tesseract); };
-    s.onerror=function(){ cb(false); };
-    document.head.appendChild(s);
-  }
-  function handleImage(file){
-    if(!file) return;
-    var msg=$("#addMsg"); msg.textContent="";
-    setOcr("Texterkennung wird geladen … (beim ersten Mal etwas Geduld)");
-    loadTesseract(function(ok){
-      if(!ok){ setOcr(""); msg.textContent="Texterkennung ließ sich nicht laden – Internet prüfen oder Liste als Text einfügen."; msg.style.color="var(--no)"; return; }
-      setOcr("Lese Wortliste … 0 %");
-      var worker;
-      window.Tesseract.createWorker("eng+deu",1,{ logger:function(m){
-          if(m && m.status==="recognizing text"){ setOcr("Lese Wortliste … "+Math.round((m.progress||0)*100)+" %"); }
-          else if(m && m.status){ setOcr("Bereite Texterkennung vor …"); }
-        }})
-        .then(function(w){ worker=w; return w.recognize(file, {}, { blocks:true }); })
-        .then(function(res){
-          try{ if(worker) worker.terminate(); }catch(e){}
-          setOcr("");
-          var pairs=pairsFromOCR(res && res.data);
-          if(!pairs.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
-          msg.textContent=""; renderPreview(pairs);
-        })
-        .catch(function(){ try{ if(worker) worker.terminate(); }catch(e){} setOcr(""); msg.textContent="Bei der Erkennung ging etwas schief – bitte nochmal versuchen."; msg.style.color="var(--no)"; });
-    });
-  }
-  $("#photoBtn").addEventListener("click",function(){ $("#photoInput").click(); });
-  $("#photoInput").addEventListener("change",function(e){
-    var f=e.target.files && e.target.files[0]; handleImage(f); e.target.value="";
-  });
-
-  /* ---------- Eigene Einheiten verwalten (löschen) ---------- */
-  function renderMyUnits(){
-    var box=$("#myUnits"); var mine=customUnits();
-    if(!mine.length){ box.innerHTML=""; return; }
-    var html='<div class="muhead">Meine Einheiten</div>';
-    mine.forEach(function(u){
-      html+='<div class="myunit"><span>'+attrEsc(u.name)+' ('+u.pairs.length+')</span>'+
-        '<button class="del" type="button" data-id="'+u.id+'">löschen</button></div>';
-    });
-    box.innerHTML=html;
-    [].forEach.call(box.querySelectorAll(".del"),function(btn){
-      btn.addEventListener("click",function(){
-        var id=btn.getAttribute("data-id");
-        var left=customUnits().filter(function(u){return u.id!==id;});
-        set("helena-fr-custom-units",JSON.stringify(left));
-        fillUnits(); renderMyUnits(); blip();
-      });
-    });
-  }
-  renderMyUnits();
-
-  /* ---------- Konfetti ---------- */
-  function confetti(){
-    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var c=$("#cf"); if(!c.getContext) return; var x=c.getContext("2d");
-    c.width=innerWidth; c.height=innerHeight;
-    var cols=["#a78bfa","#7c5cff","#49d6bd","#ffce5c","#ff7a6b"], P=[];
-    for(var i=0;i<120;i++)P.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.4,
-      r:5+Math.random()*6,vy:2+Math.random()*3.5,vx:-1.5+Math.random()*3,
-      rot:Math.random()*6.28,vr:-.2+Math.random()*.4,col:cols[i%cols.length]});
-    var f=0;(function loop(){ x.clearRect(0,0,c.width,c.height); f++;
-      P.forEach(function(p){ p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.vy+=.05;
-        x.save();x.translate(p.x,p.y);x.rotate(p.rot);x.fillStyle=p.col;
-        x.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);x.restore(); });
-      if(f<200)requestAnimationFrame(loop); else x.clearRect(0,0,c.width,c.height);
-    })();
-  }
-
-})();
+/* Was diese Seite von der anderen unterscheidet - alles Weitere steht
+   in trainer.js und gilt fuer beide Sprachen gleich. */
+window.HELENA_KONFIG = {
+  praefix: "helena-fr",
+  sprache: "Französisch", spracheAdj: "französische", spracheKlein: "französisch",
+  stimmeVorwahl: "fr", stimmeBevorzugt: "fr-fr", stimmeRueckfall: "fr-FR",
+  gruppen: [{stufe:6, titel:"Erstes Lernjahr"}],
+  fortschritt: "lw-progress:helena-franzoesisch-vokabeltrainer.html",
+  spielId: "helena-vokabeln-fr", titel: "Vokabeln Französisch", fach: "franzoesisch",
+  units: [
+ {
+  "id": "presenter",
+  "name": "Sich vorstellen",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "bonjour",
+    "de": "guten Tag, hallo",
+    "ex": "Bonjour, je m'appelle Léa."
+   },
+   {
+    "en": "salut",
+    "de": "hallo, tschüss (unter Freunden)",
+    "ex": "Salut, ça va ?"
+   },
+   {
+    "en": "je m'appelle",
+    "de": "ich heiße",
+    "ex": "Je m'appelle Hélène."
+   },
+   {
+    "en": "comment tu t'appelles ?",
+    "de": "wie heißt du?",
+    "ex": "Et toi, comment tu t'appelles ?"
+   },
+   {
+    "en": "j'ai douze ans",
+    "de": "ich bin zwölf Jahre alt",
+    "ex": "J'ai douze ans et demi."
+   },
+   {
+    "en": "j'habite à",
+    "de": "ich wohne in",
+    "ex": "J'habite à Fürth."
+   },
+   {
+    "en": "ça va",
+    "de": "es geht mir gut",
+    "ex": "Ça va, merci !"
+   },
+   {
+    "en": "enchanté / enchantée",
+    "de": "sehr erfreut",
+    "ex": "Enchantée de te rencontrer."
+   },
+   {
+    "en": "au revoir",
+    "de": "auf Wiedersehen",
+    "ex": "Au revoir et à demain !"
+   },
+   {
+    "en": "à bientôt",
+    "de": "bis bald",
+    "ex": "À bientôt, Marie !"
+   },
+   {
+    "en": "s'il te plaît",
+    "de": "bitte (zu einer Person, die man duzt)",
+    "ex": "Passe-moi le livre, s'il te plaît."
+   },
+   {
+    "en": "merci beaucoup",
+    "de": "vielen Dank",
+    "ex": "Merci beaucoup pour ton aide."
+   },
+   {
+    "en": "pardon",
+    "de": "Entschuldigung",
+    "ex": "Pardon, je suis en retard."
+   },
+   {
+    "en": "oui / non",
+    "de": "ja / nein",
+    "ex": "Oui, c'est vrai. Non, pas du tout."
+   },
+   {
+    "en": "le prénom",
+    "de": "der Vorname",
+    "ex": "Quel est ton prénom ?"
+   },
+   {
+    "en": "l'âge (m)",
+    "de": "das Alter",
+    "ex": "Quel âge as-tu ?"
+   }
+  ]
+ },
+ {
+  "id": "famille",
+  "name": "Familie & Freunde",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "la famille",
+    "de": "die Familie",
+    "ex": "Ma famille est assez grande."
+   },
+   {
+    "en": "la mère",
+    "de": "die Mutter",
+    "ex": "Ma mère travaille à l'hôpital."
+   },
+   {
+    "en": "le père",
+    "de": "der Vater",
+    "ex": "Mon père aime le sport."
+   },
+   {
+    "en": "les parents (m)",
+    "de": "die Eltern",
+    "ex": "Mes parents habitent à Nuremberg."
+   },
+   {
+    "en": "la sœur",
+    "de": "die Schwester",
+    "ex": "J'ai une petite sœur."
+   },
+   {
+    "en": "le frère",
+    "de": "der Bruder",
+    "ex": "Mon frère a huit ans."
+   },
+   {
+    "en": "la grand-mère",
+    "de": "die Großmutter",
+    "ex": "Ma grand-mère fait un bon gâteau."
+   },
+   {
+    "en": "le grand-père",
+    "de": "der Großvater",
+    "ex": "Mon grand-père raconte des histoires."
+   },
+   {
+    "en": "l'ami (m) / l'amie (f)",
+    "de": "der Freund / die Freundin",
+    "ex": "C'est mon amie Camille."
+   },
+   {
+    "en": "le copain / la copine",
+    "de": "der Kumpel / die Freundin",
+    "ex": "Je joue avec mes copains."
+   },
+   {
+    "en": "le chien",
+    "de": "der Hund",
+    "ex": "Notre chien s'appelle Max."
+   },
+   {
+    "en": "le chat",
+    "de": "die Katze",
+    "ex": "Le chat dort sur le lit."
+   },
+   {
+    "en": "gentil / gentille",
+    "de": "nett",
+    "ex": "Ta sœur est très gentille."
+   },
+   {
+    "en": "sympa",
+    "de": "sympathisch, nett",
+    "ex": "Les voisins sont sympas."
+   },
+   {
+    "en": "ensemble",
+    "de": "zusammen",
+    "ex": "Nous jouons ensemble."
+   },
+   {
+    "en": "aimer",
+    "de": "lieben, mögen",
+    "ex": "J'aime beaucoup ma famille."
+   }
+  ]
+ },
+ {
+  "id": "ecole",
+  "name": "Schule & Unterricht",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "l'école (f)",
+    "de": "die Schule",
+    "ex": "L'école commence à huit heures."
+   },
+   {
+    "en": "le collège",
+    "de": "die weiterführende Schule (Frankreich)",
+    "ex": "Je vais au collège depuis un an."
+   },
+   {
+    "en": "la classe",
+    "de": "die Klasse",
+    "ex": "Nous sommes vingt-cinq dans la classe."
+   },
+   {
+    "en": "le professeur",
+    "de": "die Lehrerin, der Lehrer",
+    "ex": "Le professeur explique la règle."
+   },
+   {
+    "en": "l'élève (m/f)",
+    "de": "die Schülerin, der Schüler",
+    "ex": "Les élèves écoutent bien."
+   },
+   {
+    "en": "le cours",
+    "de": "der Unterricht, die Stunde",
+    "ex": "Le cours de français est intéressant."
+   },
+   {
+    "en": "le cahier",
+    "de": "das Heft",
+    "ex": "Ouvre ton cahier, s'il te plaît."
+   },
+   {
+    "en": "le livre",
+    "de": "das Buch",
+    "ex": "Mon livre est dans le sac."
+   },
+   {
+    "en": "le stylo",
+    "de": "der Kugelschreiber",
+    "ex": "J'ai perdu mon stylo."
+   },
+   {
+    "en": "la trousse",
+    "de": "das Federmäppchen",
+    "ex": "Ma trousse est bleue."
+   },
+   {
+    "en": "les devoirs (m)",
+    "de": "die Hausaufgaben",
+    "ex": "Je fais mes devoirs après le dîner."
+   },
+   {
+    "en": "la récréation",
+    "de": "die Pause",
+    "ex": "Pendant la récréation, on joue dehors."
+   },
+   {
+    "en": "difficile",
+    "de": "schwierig",
+    "ex": "Cet exercice est difficile."
+   },
+   {
+    "en": "facile",
+    "de": "leicht, einfach",
+    "ex": "La question était facile."
+   },
+   {
+    "en": "apprendre",
+    "de": "lernen",
+    "ex": "J'apprends le français depuis un an."
+   },
+   {
+    "en": "écouter",
+    "de": "zuhören",
+    "ex": "Écoutez bien le dialogue !"
+   }
+  ]
+ },
+ {
+  "id": "nombres",
+  "name": "Zahlen, Farben & Zeit",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "un, deux, trois",
+    "de": "eins, zwei, drei",
+    "ex": "Un, deux, trois - on y va !"
+   },
+   {
+    "en": "dix",
+    "de": "zehn",
+    "ex": "Il y a dix élèves ici."
+   },
+   {
+    "en": "vingt",
+    "de": "zwanzig",
+    "ex": "Le livre coûte vingt euros."
+   },
+   {
+    "en": "cent",
+    "de": "hundert",
+    "ex": "Il y a cent pages dans ce livre."
+   },
+   {
+    "en": "rouge",
+    "de": "rot",
+    "ex": "J'ai un vélo rouge."
+   },
+   {
+    "en": "bleu / bleue",
+    "de": "blau",
+    "ex": "La porte est bleue."
+   },
+   {
+    "en": "vert / verte",
+    "de": "grün",
+    "ex": "Le sac vert est à moi."
+   },
+   {
+    "en": "jaune",
+    "de": "gelb",
+    "ex": "Le soleil est jaune sur le dessin."
+   },
+   {
+    "en": "noir / noire",
+    "de": "schwarz",
+    "ex": "Le chat noir dort ici."
+   },
+   {
+    "en": "blanc / blanche",
+    "de": "weiß",
+    "ex": "La maison blanche est jolie."
+   },
+   {
+    "en": "le lundi",
+    "de": "der Montag",
+    "ex": "Le lundi, j'ai sport."
+   },
+   {
+    "en": "le week-end",
+    "de": "das Wochenende",
+    "ex": "Le week-end, je dors longtemps."
+   },
+   {
+    "en": "aujourd'hui",
+    "de": "heute",
+    "ex": "Aujourd'hui, il fait beau."
+   },
+   {
+    "en": "demain",
+    "de": "morgen",
+    "ex": "Demain, nous avons un test."
+   },
+   {
+    "en": "maintenant",
+    "de": "jetzt",
+    "ex": "Maintenant, je dois partir."
+   },
+   {
+    "en": "quelle heure est-il ?",
+    "de": "wie spät ist es?",
+    "ex": "Quelle heure est-il, s'il te plaît ?"
+   }
+  ]
+ },
+ {
+  "id": "journee",
+  "name": "Tagesablauf",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "se lever",
+    "de": "aufstehen",
+    "ex": "Je me lève à sept heures."
+   },
+   {
+    "en": "le matin",
+    "de": "der Morgen, morgens",
+    "ex": "Le matin, je prends un thé."
+   },
+   {
+    "en": "le soir",
+    "de": "der Abend, abends",
+    "ex": "Le soir, je lis un peu."
+   },
+   {
+    "en": "le petit déjeuner",
+    "de": "das Frühstück",
+    "ex": "Le petit déjeuner est prêt."
+   },
+   {
+    "en": "prendre",
+    "de": "nehmen",
+    "ex": "Je prends le bus à sept heures et demie."
+   },
+   {
+    "en": "aller",
+    "de": "gehen, fahren",
+    "ex": "Je vais à l'école à vélo."
+   },
+   {
+    "en": "rentrer",
+    "de": "nach Hause kommen",
+    "ex": "Je rentre vers seize heures."
+   },
+   {
+    "en": "manger",
+    "de": "essen",
+    "ex": "Nous mangeons à midi."
+   },
+   {
+    "en": "faire",
+    "de": "machen, tun",
+    "ex": "Qu'est-ce que tu fais ce soir ?"
+   },
+   {
+    "en": "regarder",
+    "de": "anschauen, ansehen",
+    "ex": "Je regarde un film."
+   },
+   {
+    "en": "se coucher",
+    "de": "ins Bett gehen",
+    "ex": "Je me couche à vingt et une heures."
+   },
+   {
+    "en": "fatigué / fatiguée",
+    "de": "müde",
+    "ex": "Je suis très fatiguée."
+   },
+   {
+    "en": "tôt",
+    "de": "früh",
+    "ex": "Elle part tôt le matin."
+   },
+   {
+    "en": "tard",
+    "de": "spät",
+    "ex": "Il est déjà tard."
+   },
+   {
+    "en": "souvent",
+    "de": "oft",
+    "ex": "Je vais souvent au parc."
+   },
+   {
+    "en": "toujours",
+    "de": "immer",
+    "ex": "Il est toujours en retard."
+   }
+  ]
+ },
+ {
+  "id": "manger",
+  "name": "Essen & Trinken",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "le pain",
+    "de": "das Brot",
+    "ex": "J'achète du pain le matin."
+   },
+   {
+    "en": "le fromage",
+    "de": "der Käse",
+    "ex": "Le fromage français est célèbre."
+   },
+   {
+    "en": "la pomme",
+    "de": "der Apfel",
+    "ex": "Je mange une pomme chaque jour."
+   },
+   {
+    "en": "le gâteau",
+    "de": "der Kuchen",
+    "ex": "Le gâteau est délicieux."
+   },
+   {
+    "en": "l'eau (f)",
+    "de": "das Wasser",
+    "ex": "Un verre d'eau, s'il vous plaît."
+   },
+   {
+    "en": "le lait",
+    "de": "die Milch",
+    "ex": "Je bois du lait le matin."
+   },
+   {
+    "en": "le jus d'orange",
+    "de": "der Orangensaft",
+    "ex": "Elle commande un jus d'orange."
+   },
+   {
+    "en": "le repas",
+    "de": "die Mahlzeit",
+    "ex": "Le repas est prêt !"
+   },
+   {
+    "en": "le déjeuner",
+    "de": "das Mittagessen",
+    "ex": "Le déjeuner est à midi."
+   },
+   {
+    "en": "le dîner",
+    "de": "das Abendessen",
+    "ex": "Le dîner est à dix-neuf heures."
+   },
+   {
+    "en": "avoir faim",
+    "de": "Hunger haben",
+    "ex": "J'ai faim, on mange ?"
+   },
+   {
+    "en": "avoir soif",
+    "de": "Durst haben",
+    "ex": "Tu as soif ?"
+   },
+   {
+    "en": "bon / bonne",
+    "de": "gut, lecker",
+    "ex": "Cette soupe est très bonne."
+   },
+   {
+    "en": "délicieux",
+    "de": "köstlich",
+    "ex": "Ce dessert est délicieux."
+   },
+   {
+    "en": "boire",
+    "de": "trinken",
+    "ex": "Je bois de l'eau."
+   },
+   {
+    "en": "la boulangerie",
+    "de": "die Bäckerei",
+    "ex": "La boulangerie ouvre à sept heures."
+   }
+  ]
+ },
+ {
+  "id": "loisirs",
+  "name": "Freizeit & Sport",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "le sport",
+    "de": "der Sport",
+    "ex": "Le sport, c'est ma passion."
+   },
+   {
+    "en": "jouer",
+    "de": "spielen",
+    "ex": "Je joue au foot le mercredi."
+   },
+   {
+    "en": "le foot",
+    "de": "der Fußball",
+    "ex": "On regarde le foot ensemble."
+   },
+   {
+    "en": "la natation",
+    "de": "das Schwimmen",
+    "ex": "La natation, c'est génial."
+   },
+   {
+    "en": "le vélo",
+    "de": "das Fahrrad",
+    "ex": "Je fais du vélo le week-end."
+   },
+   {
+    "en": "la musique",
+    "de": "die Musik",
+    "ex": "J'écoute de la musique."
+   },
+   {
+    "en": "la guitare",
+    "de": "die Gitarre",
+    "ex": "Elle joue de la guitare."
+   },
+   {
+    "en": "danser",
+    "de": "tanzen",
+    "ex": "Nous dansons à la fête."
+   },
+   {
+    "en": "lire",
+    "de": "lesen",
+    "ex": "J'aime lire des romans."
+   },
+   {
+    "en": "le film",
+    "de": "der Film",
+    "ex": "Ce film est vraiment bien."
+   },
+   {
+    "en": "la piscine",
+    "de": "das Schwimmbad",
+    "ex": "On va à la piscine samedi."
+   },
+   {
+    "en": "le parc",
+    "de": "der Park",
+    "ex": "Le parc est près d'ici."
+   },
+   {
+    "en": "génial",
+    "de": "toll, super",
+    "ex": "C'était génial !"
+   },
+   {
+    "en": "s'amuser",
+    "de": "sich amüsieren, Spaß haben",
+    "ex": "On s'amuse bien ensemble."
+   },
+   {
+    "en": "le temps libre",
+    "de": "die Freizeit",
+    "ex": "J'ai peu de temps libre."
+   },
+   {
+    "en": "préférer",
+    "de": "lieber mögen",
+    "ex": "Je préfère le tennis."
+   }
+  ]
+ },
+ {
+  "id": "maison",
+  "name": "Zuhause & Zimmer",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "la maison",
+    "de": "das Haus",
+    "ex": "Notre maison est petite."
+   },
+   {
+    "en": "l'appartement (m)",
+    "de": "die Wohnung",
+    "ex": "Ils habitent dans un appartement."
+   },
+   {
+    "en": "la chambre",
+    "de": "das Zimmer",
+    "ex": "Ma chambre est en haut."
+   },
+   {
+    "en": "la cuisine",
+    "de": "die Küche",
+    "ex": "On mange dans la cuisine."
+   },
+   {
+    "en": "la salle de bains",
+    "de": "das Badezimmer",
+    "ex": "La salle de bains est à droite."
+   },
+   {
+    "en": "le jardin",
+    "de": "der Garten",
+    "ex": "Le jardin est derrière la maison."
+   },
+   {
+    "en": "la table",
+    "de": "der Tisch",
+    "ex": "Le livre est sur la table."
+   },
+   {
+    "en": "la chaise",
+    "de": "der Stuhl",
+    "ex": "Prends une chaise !"
+   },
+   {
+    "en": "le lit",
+    "de": "das Bett",
+    "ex": "Mon lit est très confortable."
+   },
+   {
+    "en": "la fenêtre",
+    "de": "das Fenster",
+    "ex": "Ouvre la fenêtre, il fait chaud."
+   },
+   {
+    "en": "la porte",
+    "de": "die Tür",
+    "ex": "Ferme la porte, s'il te plaît."
+   },
+   {
+    "en": "l'étage (m)",
+    "de": "das Stockwerk",
+    "ex": "Nous habitons au premier étage."
+   },
+   {
+    "en": "grand / grande",
+    "de": "groß",
+    "ex": "C'est une grande maison."
+   },
+   {
+    "en": "petit / petite",
+    "de": "klein",
+    "ex": "J'ai une petite chambre."
+   },
+   {
+    "en": "sur / sous",
+    "de": "auf / unter",
+    "ex": "Le chat est sous la table."
+   },
+   {
+    "en": "à côté de",
+    "de": "neben",
+    "ex": "La lampe est à côté du lit."
+   }
+  ]
+ },
+ {
+  "id": "ville",
+  "name": "Stadt & Wege",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "la ville",
+    "de": "die Stadt",
+    "ex": "J'aime beaucoup cette ville."
+   },
+   {
+    "en": "la rue",
+    "de": "die Straße",
+    "ex": "Notre rue est calme."
+   },
+   {
+    "en": "la gare",
+    "de": "der Bahnhof",
+    "ex": "La gare est loin d'ici."
+   },
+   {
+    "en": "le magasin",
+    "de": "der Laden, das Geschäft",
+    "ex": "Ce magasin ferme à sept heures."
+   },
+   {
+    "en": "le marché",
+    "de": "der Markt",
+    "ex": "Le marché est le samedi matin."
+   },
+   {
+    "en": "la place",
+    "de": "der Platz",
+    "ex": "On se retrouve sur la place."
+   },
+   {
+    "en": "l'église (f)",
+    "de": "die Kirche",
+    "ex": "L'église est très vieille."
+   },
+   {
+    "en": "à gauche",
+    "de": "links",
+    "ex": "Tourne à gauche après le pont."
+   },
+   {
+    "en": "à droite",
+    "de": "rechts",
+    "ex": "La poste est à droite."
+   },
+   {
+    "en": "tout droit",
+    "de": "geradeaus",
+    "ex": "Continuez tout droit."
+   },
+   {
+    "en": "près de",
+    "de": "in der Nähe von",
+    "ex": "J'habite près du parc."
+   },
+   {
+    "en": "loin de",
+    "de": "weit weg von",
+    "ex": "C'est loin d'ici ?"
+   },
+   {
+    "en": "le bus",
+    "de": "der Bus",
+    "ex": "Je prends le bus numéro huit."
+   },
+   {
+    "en": "la voiture",
+    "de": "das Auto",
+    "ex": "Mes parents ont une voiture."
+   },
+   {
+    "en": "où est ... ?",
+    "de": "wo ist ...?",
+    "ex": "Excusez-moi, où est la gare ?"
+   },
+   {
+    "en": "traverser",
+    "de": "überqueren",
+    "ex": "Traverse la rue ici."
+   }
+  ]
+ },
+ {
+  "id": "verbes",
+  "name": "Wichtige Verben & Wörtchen",
+  "stufe": 6,
+  "pairs": [
+   {
+    "en": "être",
+    "de": "sein",
+    "ex": "Je suis allemande, il est français."
+   },
+   {
+    "en": "avoir",
+    "de": "haben",
+    "ex": "J'ai un frère et une sœur."
+   },
+   {
+    "en": "il y a",
+    "de": "es gibt",
+    "ex": "Il y a un parc près d'ici."
+   },
+   {
+    "en": "parler",
+    "de": "sprechen",
+    "ex": "Je parle un peu français."
+   },
+   {
+    "en": "habiter",
+    "de": "wohnen",
+    "ex": "Nous habitons en Bavière."
+   },
+   {
+    "en": "vouloir",
+    "de": "wollen",
+    "ex": "Je veux apprendre le français."
+   },
+   {
+    "en": "pouvoir",
+    "de": "können, dürfen",
+    "ex": "Tu peux répéter, s'il te plaît ?"
+   },
+   {
+    "en": "savoir",
+    "de": "wissen, können (gelernt)",
+    "ex": "Je sais nager."
+   },
+   {
+    "en": "venir",
+    "de": "kommen",
+    "ex": "Elle vient de Lyon."
+   },
+   {
+    "en": "voir",
+    "de": "sehen",
+    "ex": "Je vois la tour de là."
+   },
+   {
+    "en": "avec / sans",
+    "de": "mit / ohne",
+    "ex": "Je viens avec toi."
+   },
+   {
+    "en": "mais",
+    "de": "aber",
+    "ex": "C'est cher, mais c'est bien."
+   },
+   {
+    "en": "parce que",
+    "de": "weil",
+    "ex": "Je reste parce que je suis fatiguée."
+   },
+   {
+    "en": "aussi",
+    "de": "auch",
+    "ex": "Moi aussi, j'aime ça."
+   },
+   {
+    "en": "très",
+    "de": "sehr",
+    "ex": "C'est très intéressant."
+   },
+   {
+    "en": "un peu",
+    "de": "ein bisschen",
+    "ex": "Je comprends un peu."
+   }
+  ]
+ }
+]
+};
 </script>
+<script src="/helena/trainer.js"></script>
 </body>
 </html>
