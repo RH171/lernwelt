@@ -504,7 +504,11 @@
   }, 5000);
 
   function aktiveSekunden() {
-    return Math.round((aktivMs + (laeuftSeit ? Date.now() - laeuftSeit : 0)) / 1000);
+    // Die Deckelung beim Ablesen rechnen, nicht erst beim naechsten Takt:
+    // Sonst meldete eine Runde, die mitten in einer Pause endet, bis zu fuenf
+    // Sekunden zu viel.
+    var bis = Math.min(Date.now(), letzteRegung + PAUSE_AB);
+    return Math.round((aktivMs + (laeuftSeit ? Math.max(0, bis - laeuftSeit) : 0)) / 1000);
   }
   function wanduhrSekunden() { return Math.round((Date.now() - begonnen) / 1000); }
 
