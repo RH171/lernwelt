@@ -4,8 +4,15 @@
  * Der Sinn: dieselbe Prüfung jedes Mal, damit ein Vergleich möglich ist -
  * nicht jedes Mal ein anderer Blick.
  *
- *     layoutMessen()              die Seite, wie sie gerade dasteht
- *     layoutMessen({still:true})  ohne Töne (setzt Web-Audio stumm)
+ *     await layoutMessen()                     die Seite, wie sie gerade dasteht
+ *     await layoutMessen({still:true})         ohne Töne
+ *     await layoutMessen({beruehrung:true})    mit den Touch-Regeln
+ *
+ * ZUR BERÜHRUNG: Der Testbrowser meldet bei iPad-Breite kein
+ * "pointer: coarse", die Regeln aus beruehrung.css greifen dort also nicht -
+ * auf Pauls echtem iPad sehr wohl. Ohne {beruehrung:true} meldet die Messung
+ * darum Tippziele als zu klein, die in Wirklichkeit stimmen. Bei jedem
+ * Touch-Gerät aus geraete.json also IMMER mit.
  *
  * Gemessen wird, was ein Kind merkt:
  *  - muss es scrollen, um weiterzukommen?
@@ -13,8 +20,23 @@
  *  - rutscht etwas seitlich aus dem Bild?
  *  - ist Schrift zu klein zum Lesen?
  */
-function layoutMessen(opt) {
+async function layoutMessen(opt) {
   opt = opt || {};
+
+  // Die Touch-Regeln ohne ihre Bedingung einspielen - dann sieht die Messung,
+  // was das Kind auf seinem Gerät wirklich sieht.
+  if (opt.beruehrung && !document.getElementById("mess-beruehrung")) {
+    try {
+      var css = await fetch("/beruehrung.css").then(function (r) { return r.text(); });
+      var auf = css.indexOf("{", css.indexOf("@media"));
+      var zu  = css.lastIndexOf("}");
+      var st = document.createElement("style");
+      st.id = "mess-beruehrung";
+      st.textContent = css.slice(auf + 1, zu);
+      document.head.appendChild(st);
+      await new Promise(function (r) { setTimeout(r, 60); });
+    } catch (e) {}
+  }
 
   if (opt.still) {
     try {
@@ -50,6 +72,10 @@ function layoutMessen(opt) {
 
   var zuKlein = [], unterDemRand = [], zuSchmal = [], winzigeSchrift = [];
 
+  // Was das Kind drücken MUSS, um weiterzukommen.
+  var HAUPTKNOPF = ".next, .start, .schicken, .weiter, #weiter, #startBtn, #chk, #again," +
+                   " [type='submit'], button.primaer, .cta";
+
   var tippbar = document.querySelectorAll(
     "button, a[href], input, select, textarea, summary, [role='button'], .choice, .opt, .thema");
   Array.prototype.forEach.call(tippbar, function (el) {
@@ -57,8 +83,10 @@ function layoutMessen(opt) {
     var r = el.getBoundingClientRect();
     if (r.height < 44) zuKlein.push(text(el) + " · " + Math.round(r.height) + "px hoch");
     if (r.width  < 44 && r.height < 44) zuSchmal.push(text(el) + " · " + Math.round(r.width) + "px breit");
-    // Ein Knopf, den man nur nach Scrollen erreicht, unterbricht den Fluss.
-    if (r.top >= H) unterDemRand.push(text(el) + " · " + Math.round(r.top - H) + "px darunter");
+    // Nur die HAUPTknöpfe zählen. Dass eine Spieleliste weiterscrollt, ist
+    // normal; dass "Weiter" oder "Los geht's" unter dem Rand liegt, nicht.
+    if (r.top >= H && el.matches(HAUPTKNOPF))
+      unterDemRand.push(text(el) + " · " + Math.round(r.top - H) + "px darunter");
   });
 
   Array.prototype.forEach.call(document.querySelectorAll("p, li, small, .hint, .tipp, .foot"), function (el) {
@@ -78,6 +106,7 @@ function layoutMessen(opt) {
     tippzieleZuSchmal: einmalig(zuSchmal),
     knoepfeUnterDemRand: einmalig(unterDemRand),
     schriftUnter12px: einmalig(winzigeSchrift),
+    beruehrungGeprueft: !!opt.beruehrung,
     sauber: !(doc.scrollWidth > W + 1) && !zuKlein.length && !unterDemRand.length && !winzigeSchrift.length
   };
 }
