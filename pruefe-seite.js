@@ -59,6 +59,26 @@ function nurCode(q) {
   return raus;
 }
 
+// Eine Adresse wie "/lernstand.js" meint die Wurzel der WEBSITE, nicht den
+// Ordner, aus dem das Werkzeug gestartet wurde. Deshalb vom Ort der HTML-Datei
+// aus nach oben suchen - sonst meldet ein Aufruf aus dem falschen Verzeichnis
+// lauter Dateien als fehlend, die es sehr wohl gibt.
+function finde(adresse, htmlDatei) {
+  if (!adresse.startsWith("/")) {
+    const p = path.join(path.dirname(htmlDatei), adresse);
+    return fs.existsSync(p) ? p : null;
+  }
+  let ordner = path.resolve(path.dirname(htmlDatei));
+  for (let i = 0; i < 6; i++) {
+    const p = path.join(ordner, adresse.slice(1));
+    if (fs.existsSync(p)) return p;
+    const hoeher = path.dirname(ordner);
+    if (hoeher === ordner) break;
+    ordner = hoeher;
+  }
+  return null;
+}
+
 let fehlerGesamt = 0;
 for (const datei of process.argv.slice(2)) {
   const h = fs.readFileSync(datei, "utf8");
@@ -68,8 +88,8 @@ for (const datei of process.argv.slice(2)) {
   let js = "";
   for (const m of h.matchAll(/<script>([\s\S]*?)<\/script>/g)) js += m[1] + "\n";
   for (const m of h.matchAll(/<script[^>]*\bsrc="([^"]+)"/g)) {
-    const pfad = m[1].startsWith("/") ? m[1].slice(1) : path.join(path.dirname(datei), m[1]);
-    if (!fs.existsSync(pfad)) { console.log(`${datei}: ${m[1]} gibt es nicht`); fehlerGesamt++; continue; }
+    const pfad = finde(m[1], datei);
+    if (!pfad) { console.log(`${datei}: ${m[1]} gibt es nicht`); fehlerGesamt++; continue; }
     js += fs.readFileSync(pfad, "utf8") + "\n";
   }
   if (!js.trim()) { console.log(`${datei}: kein Skript gefunden`); continue; }
