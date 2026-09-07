@@ -37,7 +37,10 @@ for (const datei of process.argv.slice(2)) {
 
   // Aufrufe nur ausserhalb von Zeichenketten suchen: sonst meldet jedes
   // "rgba(" und "scale(" aus eingebettetem CSS einen Fehler.
-  const ohneText = js.replace(/'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`/g, '""');
+  // Erst Regex-Literale entfernen, dann Zeichenketten. Andersherum reisst ein
+  // /"/g den Filter auf und alles Folgende gilt als Text.
+  const ohneRegex = js.replace(/([=(,:[!&|?{};]\s*)\/(?![\/*])(?:[^/\\\n[]|\\.|\[(?:[^\]\\]|\\.)*\])+\/[gimsuy]*/g, "$1 0 ");
+  const ohneText = ohneRegex.replace(/'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`/g, '""');
   const aufgerufen = new Set([...ohneText.matchAll(/(?<![.\w$])([a-zA-Z_$][\w$]*)\s*\(/g)].map(m => m[1]));
   for (const name of aufgerufen) {
     if (!definiert.has(name) && !EINGEBAUT.has(name) && !/^[A-Z]/.test(name)) {
