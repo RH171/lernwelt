@@ -322,7 +322,9 @@
   // Sagt der Seite, ob gerade gespielt wird. Auf dem Handy blendet das die
   // Kopfzeile aus - siehe die Begruendung im CSS der Seite.
   function ansicht(was){
-    document.body.classList.toggle("spielt", was === "spiel");
+    // Beim Spielen UND beim Ergebnis: Kopf- und Fusszeile weg. Beides sind
+    // Momente, in denen sie weiterkommen will, nicht Punktestaende lesen.
+    document.body.classList.toggle("konzentriert", was === "spiel" || was === "ende");
   }
 
   function startSession(){
