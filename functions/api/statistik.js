@@ -66,6 +66,10 @@ function saeubern(r) {
     thema: text(r.thema, 90),
     lernbereich: text(r.lernbereich, 60),
     sekunden: zahl(r.sekunden, 36000),
+    // Lernen, Pausieren und Entwickeln duerfen nicht in einen Topf. Denny am
+    // 07.09.2026: die Bauzeit in der Werkstatt gehoert nicht in die Lernzeit.
+    zeitart: ["lernen", "bauen"].includes(r.zeitart) ? r.zeitart : "lernen",
+    pause: zahl(r.pause, 36000),
     nurBesuch: !!r.nurBesuch,
     geraet: text(r.geraet, 80),
     aufgaben: r.aufgaben.slice(0, 40).map((a) => ({
@@ -139,19 +143,28 @@ export async function onRequestGet(context) {
 
 function auswerten(liste) {
   const leer = { runden: 0, aufgaben: 0, richtig: 0, quote: null, minuten: 0,
+                 minutenPause: 0, minutenBauen: 0, geraete: [],
                  merkmale: [], themen: [], verlauf: [], letzte: [], stolpersteine: [] };
   if (!liste.length) return leer;
 
-  const g = { runden: liste.length, aufgaben: 0, richtig: 0, sekunden: 0 };
+  const g = { runden: 0, aufgaben: 0, richtig: 0, sekunden: 0, pause: 0, bauen: 0 };
   const jeMerkmal = {}, jeThema = {}, jeWoche = {}, fehlerBilder = {}, jeGeraet = {};
 
   for (const r of liste) {
-    g.sekunden += r.sekunden || 0;
+    // Das Gerät zählt immer mit - auch beim Bauen wird es benutzt, und die
+    // Layoutprüfung soll es kennen.
     if (r.geraet) {
       jeGeraet[r.geraet] = jeGeraet[r.geraet] || { name: r.geraet, runden: 0, minuten: 0 };
       jeGeraet[r.geraet].runden++;
       jeGeraet[r.geraet].minuten += (r.sekunden || 0) / 60;
     }
+
+    // Bauzeit ist keine Lernzeit. Sie wird gezeigt, aber getrennt - sonst
+    // sähe eine Stunde Werkstatt aus wie eine Stunde Üben.
+    if (r.zeitart === "bauen") { g.bauen += r.sekunden || 0; continue; }
+    g.runden++;
+    g.sekunden += r.sekunden || 0;
+    g.pause += r.pause || 0;
     const woche = wochenSchluessel(r.zeit);
     jeWoche[woche] = jeWoche[woche] || { woche, aufgaben: 0, richtig: 0, minuten: 0 };
     jeWoche[woche].minuten += (r.sekunden || 0) / 60;
@@ -226,6 +239,8 @@ function auswerten(liste) {
     richtig: g.richtig,
     quote: g.aufgaben ? Math.round((g.richtig / g.aufgaben) * 100) : null,
     minuten: Math.round(g.sekunden / 60),
+    minutenPause: Math.round(g.pause / 60),
+    minutenBauen: Math.round(g.bauen / 60),
     merkmale,
     themen,
     verlauf,

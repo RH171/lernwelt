@@ -711,13 +711,21 @@
 
   // Am Ende einer Runde einmal senden. Schlägt es fehl, ist das Spiel
   // trotzdem gespielt - der Lernstand ist Beiwerk, kein Selbstzweck.
+  function LS(){ return window.lernstand || null; }
+
   function lernstandSenden(){
     if (!protokoll.length) return;
     var runde = {
       spielId: (spiel && spiel.id) || "", titel: (spiel && spiel.titel) || "",
       quelle: (spiel && spiel.quelle) || "", fach: (spiel && spiel.fach) || "",
       thema: (spiel && spiel.thema) || "", lernbereich: (spiel && spiel.lernbereich) || "",
-      sekunden: rundeBegonnen ? Math.round((Date.now() - rundeBegonnen) / 1000) : 0,
+      // Dieselbe ehrliche Uhr wie überall: nur was sichtbar und wach war.
+      // Die Wanduhr zählte auch mit, wenn Paul zwischendurch weg war.
+      sekunden: LS() ? LS().aktiveSekunden()
+                     : (rundeBegonnen ? Math.round((Date.now() - rundeBegonnen) / 1000) : 0),
+      pause: LS() ? Math.max(0, LS().wanduhrSekunden() - LS().aktiveSekunden()) : 0,
+      zeitart: "lernen",
+      geraet: LS() ? LS().geraet() : "",
       aufgaben: protokoll
     };
     protokoll = [];
@@ -738,6 +746,9 @@
     }
     nr = 0; richtig = 0;
     protokoll = []; rundeBegonnen = Date.now();
+    // Ab hier wird gespielt, nicht mehr gebaut - die Uhr faengt neu an.
+    bauzeitMelden();
+    if (LS()) LS().uhrZuruecksetzen();
     $("marken").innerHTML =
       '<span class="marke">' + escape2(spiel.titel || "Spiel") + '</span>' +
       (spiel.thema ? '<span class="marke">' + escape2(spiel.thema) + '</span>' : "") +

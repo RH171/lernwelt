@@ -470,6 +470,46 @@
   var aufgaben = [];
   var gesendet = false;
 
+  /* ---------- Aktive Zeit ----------
+     Wanduhrzeit ist keine Lernzeit. Wer eine Seite offen liegen lässt und
+     weggeht, hat nicht gelernt - bisher zählte das trotzdem mit. Gezählt wird
+     jetzt nur, solange die Seite sichtbar ist UND in den letzten Minuten
+     etwas passiert ist.
+
+     Die Schonfrist ist mit Absicht grosszügig: Ein Kind, das eine Aufgabe
+     liest und nachdenkt, rührt sich zwei Minuten lang nicht - das ist die
+     wertvollste Zeit überhaupt und darf nicht als Pause gelten. Erst danach
+     hält die Uhr an und läuft bei der nächsten Regung weiter. */
+
+  var PAUSE_AB = 120000;                 // zwei Minuten ohne Regung
+  var aktivMs = 0, laeuftSeit = 0, letzteRegung = Date.now();
+
+  function uhrAnhalten(bis) {
+    if (!laeuftSeit) return;
+    aktivMs += Math.max(0, (bis || Date.now()) - laeuftSeit);
+    laeuftSeit = 0;
+  }
+  function uhrStarten() {
+    if (laeuftSeit || document.hidden) return;
+    laeuftSeit = Date.now();
+  }
+  function regung() { letzteRegung = Date.now(); uhrStarten(); }
+
+  ["pointerdown", "keydown", "touchstart", "wheel", "scroll", "click"].forEach(function (e) {
+    document.addEventListener(e, regung, { passive: true, capture: true });
+  });
+  setInterval(function () {
+    if (!laeuftSeit) return;
+    if (Date.now() - letzteRegung > PAUSE_AB) uhrAnhalten(letzteRegung + PAUSE_AB);
+  }, 5000);
+
+  function aktiveSekunden() {
+    return Math.round((aktivMs + (laeuftSeit ? Date.now() - laeuftSeit : 0)) / 1000);
+  }
+  function wanduhrSekunden() { return Math.round((Date.now() - begonnen) / 1000); }
+
+  uhrStarten();
+
   // "klasse3-deutsch-praedikat-springer" -> Fach "deutsch", Thema "praedikat springer"
   function ausDateiname() {
     var t = DATEI.split("-");
@@ -482,6 +522,13 @@
     // Wer seine Runde selbst zusammenstellt (Helenas Vokabeltrainer), soll
     // dieselbe Geraeteangabe verwenden - sonst fehlt sie dort ganz.
     geraet: geraet,
+
+    // Dieselbe ehrliche Uhr fuer alle: Werkstatt und Vokabeltrainer messen
+    // ihre Runden damit, statt jeder mit einer eigenen Wanduhr.
+    aktiveSekunden: aktiveSekunden,
+    wanduhrSekunden: wanduhrSekunden,
+    // Am Anfang einer Runde auf null stellen.
+    uhrZuruecksetzen: function () { aktivMs = 0; laeuftSeit = 0; begonnen = Date.now(); regung(); },
 
     // Ein Spiel kann jede beantwortete Aufgabe melden - freiwillig.
     antwort: function (stimmt, merkmal, gegeben, richtig) {
@@ -502,7 +549,8 @@
   function senden() {
     if (NUR_MELDEN) return;   // Hub, Werkstatt und Vokabeltrainer schreiben selbst mit
     if (gesendet) return;
-    var sekunden = Math.round((Date.now() - begonnen) / 1000);
+    uhrAnhalten();
+    var sekunden = aktiveSekunden();
     // Unter einer halben Minute war es kein Spielen, sondern ein Blick.
     if (sekunden < 30) return;
     gesendet = true;
@@ -512,6 +560,9 @@
       spielId: DATEI, titel: document.title || DATEI,
       quelle: DATEI, fach: d.fach, thema: d.thema, lernbereich: "",
       sekunden: sekunden,
+      // Getrennt ausweisen, was getrennt gehoert: gelernt, pausiert, gebaut.
+      zeitart: "lernen",
+      pause: Math.max(0, wanduhrSekunden() - sekunden),
       geraet: geraet(),
       // Hat das Spiel nichts gemeldet, halten wir wenigstens fest, DASS
       // gespielt wurde - ohne Ergebnis, damit keine Quote verfälscht wird.
@@ -575,6 +626,8 @@
     if (document.hidden) pulsAus(); else pulsAn();
   });
 
-  window.addEventListener("pagehide", function () { senden(); pulsAus(); });
-  document.addEventListener("visibilitychange", function () { if (document.hidden) senden(); });
+  window.addEventListener("pagehide", function () { uhrAnhalten(); senden(); pulsAus(); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) { uhrAnhalten(); senden(); } else { regung(); }
+  });
 })();
