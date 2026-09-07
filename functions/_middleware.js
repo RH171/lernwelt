@@ -78,7 +78,13 @@ export async function onRequest(context) {
   const seedScript =
     "<script>(function(){try{var d=" +
     blobJson +
-    ';if(d&&typeof d==="object"){for(var k in d){if(Object.prototype.hasOwnProperty.call(d,k)){try{localStorage.setItem(k,d[k]);}catch(e){}}}}}catch(e){}})();<\/script>';
+    ';if(d&&typeof d==="object"){for(var k in d){if(Object.prototype.hasOwnProperty.call(d,k)){try{localStorage.setItem(k,d[k]);}catch(e){}}}}' +
+    // Marke fuer das Sync-Skript: Der Stand aus der Cloud ist angekommen.
+    // Nur dann darf es den Cloud-Stand ERSETZEN und damit auch Geloeschtes
+    // wirklich loeschen. Ohne die Marke wird nur zusammengefuehrt - sonst
+    // koennte ein Geraet, dem der Seed nicht geglueckt ist, alles wegwischen.
+    'window.__lwStandGeladen=true;' +
+    '}catch(e){}})();<\/script>';
 
   // Sync-Skript: schiebt spätere Änderungen zurück in die Cloud. Timing unkritisch.
   const syncScript = '<script src="/paul-sync.js" defer><\/script>';

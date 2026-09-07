@@ -47,15 +47,25 @@
   var ZIEL = "/api/progress?kind=" + KIND;
   var timer = null;
 
+  // Nur wenn der Seed angekommen ist, kennt dieses Geraet den vollstaendigen
+  // Stand - dann darf es ihn ersetzen, und Geloeschtes verschwindet auch
+  // wirklich. Sonst wird nur zusammengefuehrt, damit ein Geraet ohne Seed
+  // nicht den Stand aller anderen wegwischt.
+  function paket() {
+    var d = snapshot();
+    if (!Object.keys(d).length) return null;
+    return JSON.stringify({ daten: d, vollstaendig: window.__lwStandGeladen === true });
+  }
+
   function push() {
     try {
-      var d = snapshot();
-      if (!Object.keys(d).length) return;   // nichts zu sichern
+      var text = paket();
+      if (!text) return;                    // nichts zu sichern
       fetch(ZIEL, {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(d),
+        body: text,
         keepalive: true
       }).catch(function () {});
     } catch (e) {}
@@ -78,9 +88,8 @@
   // Beim Verlassen der Seite den Stand sicher wegschreiben.
   function flush() {
     try {
-      var d = snapshot();
-      if (!Object.keys(d).length) return;
-      var text = JSON.stringify(d);
+      var text = paket();
+      if (!text) return;
       if (navigator.sendBeacon) {
         navigator.sendBeacon(ZIEL, new Blob([text], { type: "application/json" }));
       } else {
