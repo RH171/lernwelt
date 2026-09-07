@@ -95,7 +95,31 @@ export async function onRequestPost(context) {
     geraet: String(daten.geraet || "").slice(0, 80),
     status: "offen",
     ungelesenKind: false,
-    verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 }],
+    verlauf: [
+      { von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 },
+      // Sofort eine Eingangsbestaetigung. Helena am 07.09.2026: "Ich habe dir
+      // grade einen Fehler gemeldet ... und weiss auch nicht ob du noch Fragen
+      // hast." Eine Meldung, auf die stundenlang gar nichts zurueckkommt, fuehlt
+      // sich an, als waere sie ins Leere gegangen.
+      //
+      // Bewusst NICHT so getan, als antworte hier schon jemand: Es steht
+      // ausdruecklich dabei, dass ein Mensch noch draufschaut und das dauern
+      // kann. Ein Kind, das eine echte Antwort erwartet und eine Maschine
+      // bekommt, ist schlechter dran als eines, dem man sagt, wie es laeuft.
+      {
+        von: "werkstatt",
+        text: "Angekommen! \u2705 Deine Meldung liegt jetzt in der Werkstatt.\n\n" +
+              "Sie wird gelesen, sobald jemand dort ist - das kann ein paar Stunden dauern, " +
+              "manchmal bis zum naechsten Tag. Du musst nichts weiter tun.\n\n" +
+              "Sobald eine Antwort da ist, geht sie beim naechsten Oeffnen von selbst auf. " +
+              "Und ueber den Sprechblasen-Knopf findest du diese Meldung jederzeit wieder - " +
+              "auch um noch etwas dazuzuschreiben, wenn dir etwas einfaellt.",
+        zeit: new Date().toISOString(),
+        hatBild: false,
+        nr: 1,
+        automatisch: true,
+      },
+    ],
   });
   await liste_speichern(env, liste);
   return json(200, { ok: true, id });
