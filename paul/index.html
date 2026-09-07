@@ -1107,6 +1107,60 @@
     document.getElementById("hello").textContent = "Willkommen in deiner neuen Lernwelt, Paul! 🎉";
     setTimeout(()=>{ confetti(); fanfare(); }, 350);
   }
+
+  /* ---------- Pauls Werkstatt-Fach ----------
+     Sein Wunsch vom 06.09.2026. Die Spiele lagen bisher nur in der Werkstatt;
+     wer sie wiederfinden wollte, musste erst dorthin. Jetzt stehen sie hier
+     unten, und ein Tipp startet sie direkt.
+
+     Faellt der Abruf aus, bleibt das Fach verborgen - die Lernwelt
+     funktioniert dann genauso, wie Paul sie gebaut hat. */
+  (function werkstattFach(){
+    const fach = document.getElementById("werkstattfach");
+    if(!fach) return;
+
+    fetch("/api/spiele", {credentials:"same-origin"})
+      .then(r => r.ok ? r.json() : null)
+      .then(a => {
+        if(!a || !a.ok || !Array.isArray(a.spiele) || !a.spiele.length) return;
+        const liste = document.getElementById("wfListe");
+        const zahl  = document.getElementById("wfZahl");
+        zahl.textContent = "(" + a.spiele.length + ")";
+        liste.innerHTML = "";
+
+        a.spiele.forEach(e => {
+          let wann = "";
+          try {
+            const t = new Date(e.erzeugt), heute = new Date();
+            wann = t.toDateString() === heute.toDateString()
+              ? "heute gebaut"
+              : "gebaut am " + t.toLocaleDateString("de-DE", {day:"numeric", month:"long"});
+          } catch(err){}
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "wf-spiel";
+          b.innerHTML = '<span class="wf-em"></span><span><span class="wf-t"></span>' +
+                        '<span class="wf-u" style="display:block"></span></span>';
+          b.querySelector(".wf-em").textContent = FACH_ICON[e.fach] || "\u{1F3AE}";
+          b.querySelector(".wf-t").textContent  = e.titel || "Spiel";
+          b.querySelector(".wf-u").textContent  =
+            (e.thema ? e.thema + " \u00B7 " : "") + e.aufgaben + " Aufgaben \u00B7 " + wann;
+          b.addEventListener("click", () => {
+            location.href = "werkstatt.html?spiel=" + encodeURIComponent(e.id);
+          });
+          liste.appendChild(b);
+        });
+
+        const hinweis = document.createElement("p");
+        hinweis.className = "wf-leer";
+        hinweis.textContent = "Diese Spiele hast du selbst gebaut. Ein Tipp startet sie \u2013 " +
+                              "in der Werkstatt kannst du sie auch wegwerfen.";
+        liste.appendChild(hinweis);
+
+        fach.hidden = false;
+      })
+      .catch(() => {});
+  })();
 })();
 </script>
 <script src="/lernstand.js" defer></script>
