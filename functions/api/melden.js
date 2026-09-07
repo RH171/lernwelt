@@ -13,6 +13,48 @@
 // DELETE /api/melden?id=...           -> wegräumen (Eltern)
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
+import { antwortErzeugen } from "./_antwort.js";
+
+// Damit ein offener Bereich nicht zur Kostenfalle wird: hoechstens so viele
+// sofortige Antworten je Kind und Stunde. Danach bleibt die Meldung normal
+// liegen - nur ohne Sofortantwort.
+const ANTWORTEN_PRO_STUNDE = 12;
+
+async function darfAntworten(env, kind) {
+  const stunde = new Date().toISOString().slice(0, 13);
+  const schluessel = "antwortzaehler:" + kind + ":" + stunde;
+  let n = 0;
+  try { n = Number(await env.PAUL_KV.get(schluessel)) || 0; } catch (e) {}
+  if (n >= ANTWORTEN_PRO_STUNDE) return false;
+  try { await env.PAUL_KV.put(schluessel, String(n + 1), { expirationTtl: 7200 }); } catch (e) {}
+  return true;
+}
+
+// Die Werkstatt antwortet selbst - im selben Aufruf, damit das Kind die
+// Antwort sofort sieht. Schlaegt es fehl (kein Schluessel, Modell nicht
+// erreichbar, Grenze erreicht), bleibt wenigstens die Eingangsbestaetigung.
+async function sofortAntworten(env, faden, kind, text, bild) {
+  const nr = faden.verlauf.length;
+  let antwort = null;
+  if (await darfAntworten(env, kind)) {
+    antwort = await antwortErzeugen(env, {
+      kind, text, bild, seite: faden.seite, geraet: faden.geraet,
+      verlauf: faden.verlauf.slice(0, -1),
+    });
+  }
+  const eintrag = antwort
+    ? { von: "werkstatt", text: antwort, zeit: new Date().toISOString(),
+        hatBild: false, nr, vonKi: true }
+    : { von: "werkstatt", nr, hatBild: false, zeit: new Date().toISOString(),
+        automatisch: true,
+        text: "Angekommen! \u2705 Deine Meldung liegt in der Werkstatt.\n\n" +
+              "Gerade konnte ich dir nicht gleich richtig antworten \u2013 aber sie ist da " +
+              "und geht nicht verloren. Schau spaeter nochmal in diesen Faden." };
+  faden.verlauf.push(eintrag);
+  faden.status = "beantwortet";
+  faden.ungelesenKind = false;   // das Kind sieht die Antwort ja sofort
+  return eintrag;
+}
 
 const KINDER = ["paul", "leon", "helena"];
 const LISTE = "meldungen";
@@ -81,8 +123,16 @@ export async function onRequestPost(context) {
     faden.status = von === "werkstatt" ? "beantwortet" : "offen";
     // Das Kind soll sehen, dass etwas Neues da ist.
     faden.ungelesenKind = von === "werkstatt";
+
+    // Schreibt das KIND, wird auch hier sofort geantwortet - genau wie in
+    // einem Chat. Sonst waere die erste Antwort schnell und jede weitere
+    // Rueckfrage laege wieder tagelang.
+    let antwort = null;
+    if (von !== "werkstatt") {
+      antwort = await sofortAntworten(env, faden, von, text, bild);
+    }
     await liste_speichern(env, liste);
-    return json(200, { ok: true, faden });
+    return json(200, { ok: true, faden, antwort });
   }
 
   /* --- Ein neuer Faden --- */
@@ -105,34 +155,15 @@ export async function onRequestPost(context) {
     geraet: String(daten.geraet || "").slice(0, 80),
     status: "offen",
     ungelesenKind: false,
-    verlauf: [
-      { von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 },
-      // Sofort eine Eingangsbestaetigung. Helena am 07.09.2026: "Ich habe dir
-      // grade einen Fehler gemeldet ... und weiss auch nicht ob du noch Fragen
-      // hast." Eine Meldung, auf die stundenlang gar nichts zurueckkommt, fuehlt
-      // sich an, als waere sie ins Leere gegangen.
-      //
-      // Bewusst NICHT so getan, als antworte hier schon jemand: Es steht
-      // ausdruecklich dabei, dass ein Mensch noch draufschaut und das dauern
-      // kann. Ein Kind, das eine echte Antwort erwartet und eine Maschine
-      // bekommt, ist schlechter dran als eines, dem man sagt, wie es laeuft.
-      {
-        von: "werkstatt",
-        text: "Angekommen! \u2705 Deine Meldung liegt jetzt in der Werkstatt.\n\n" +
-              "Sie wird gelesen, sobald jemand dort ist - das kann ein paar Stunden dauern, " +
-              "manchmal bis zum naechsten Tag. Du musst nichts weiter tun.\n\n" +
-              "Sobald eine Antwort da ist, geht sie beim naechsten Oeffnen von selbst auf. " +
-              "Und ueber den Sprechblasen-Knopf findest du diese Meldung jederzeit wieder - " +
-              "auch um noch etwas dazuzuschreiben, wenn dir etwas einfaellt.",
-        zeit: new Date().toISOString(),
-        hatBild: false,
-        nr: 1,
-        automatisch: true,
-      },
-    ],
+    verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 }],
   });
+
+  // Sofort antworten - noch in diesem Aufruf, damit das Kind die Antwort
+  // direkt im Fenster sieht und nicht warten muss.
+  const neuerFaden = liste[0];
+  const antwort = await sofortAntworten(env, neuerFaden, kind, text, bild);
   await liste_speichern(env, liste);
-  return json(200, { ok: true, id });
+  return json(200, { ok: true, id, antwort, faden: neuerFaden });
 }
 
 export async function onRequestGet(context) {

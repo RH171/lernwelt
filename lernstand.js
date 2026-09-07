@@ -407,6 +407,17 @@
 
   function schliessen(h, faden) { if (faden) gelesenMerken(faden); h.remove(); }
 
+  // Den frisch gespeicherten Stand eines Fadens uebernehmen.
+  function ersetzeFaden(neu) {
+    var drin = false;
+    var raus = meineFaeden.map(function (f) {
+      if (f.id === neu.id) { drin = true; return neu; }
+      return f;
+    });
+    if (!drin) raus.unshift(neu);
+    return raus;
+  }
+
   // Ein Bild aus dem eigenen Faden holen. Der Server prueft, dass es dem Kind
   // gehoert; hier interessiert nur, ob eins ankommt.
   function bildHolen(fadenId, nr, fertig) {
@@ -446,6 +457,9 @@
     .then(function (r) { return r.json(); })
     .then(function (j) {
       if (!j || !j.ok) throw new Error("nein");
+      // Die Werkstatt hat schon geantwortet - dann gleich zeigen, statt das
+      // Fenster zu schliessen und das Kind suchen zu lassen.
+      if (j.faden) { h.remove(); meineFaeden = ersetzeFaden(j.faden); fadenZeigen(j.faden); return; }
       h.querySelector("#melde-karte").innerHTML =
         '<div class="fertig"><div class="haken">\u{1F44D}</div><h3>Ist angekommen</h3>' +
         '<p class="u">Wir melden uns wieder.</p></div>';
