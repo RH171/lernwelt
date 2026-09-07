@@ -224,6 +224,13 @@
     body.konzentriert .bilanz{margin:14px 0 4px;}
     body.konzentriert .sterne{font-size:32px;}
 
+    /* Die beiden Aufklappzeilen sind Tippziele. Die allgemeine Regel in
+       beruehrung.css verliert hier gegen ".adder summary" - deshalb steht das
+       Mindestmass noch einmal dort, wo es hingehoert: bei der Seite selbst. */
+    .feineinst>summary, .adder summary{
+      min-height:44px; display:flex; align-items:center;
+    }
+
     /* Die Antwort-Zeile ist der Ort, an dem der Daumen liegt. */
     .answer{gap:8px;}
     .answer button{min-height:48px;}
