@@ -10,6 +10,41 @@ const EINGEBAUT = new Set(["if","for","while","switch","catch","return","typeof"
   "Promise","RegExp","requestAnimationFrame","FileReader","Image","Blob","URL","SpeechSynthesisUtterance",
   "confirm","alert","escape2","atob","btoa","Set","Map","Error"]);
 
+// Ein kleiner Abtaster: Zustand fuer Zustand durch die Datei. Mit einzelnen
+// Regeln ging es schief - ein /"/g riss den Zeichenketten-Filter auf, und
+// Blockkommentare mit Klammern sahen aus wie Funktionsaufrufe.
+function nurCode(q) {
+  let raus = "", i = 0, letzter = "";
+  const leer = (n) => { for (let k = 0; k < n; k++) raus += " "; };
+  while (i < q.length) {
+    const c = q[i], d = q[i + 1];
+    if (c === "/" && d === "/") { const e = q.indexOf("\n", i); const bis = e < 0 ? q.length : e; leer(bis - i); i = bis; continue; }
+    if (c === "/" && d === "*") { const e = q.indexOf("*/", i + 2); const bis = e < 0 ? q.length : e + 2;
+      for (let k = i; k < bis; k++) raus += q[k] === "\n" ? "\n" : " "; i = bis; continue; }
+    if (c === '"' || c === "'" || c === "`") {
+      let k = i + 1;
+      while (k < q.length && q[k] !== c) { if (q[k] === "\\") k++; k++; }
+      leer(k - i + 1); i = k + 1; letzter = "x"; continue;
+    }
+    // Regex oder Division? Nach Name, Zahl, ) ] } ist es eine Division.
+    if (c === "/" && !/[\w$)\]}]/.test(letzter)) {
+      let k = i + 1, klasse = false;
+      while (k < q.length && (klasse || q[k] !== "/")) {
+        if (q[k] === "\\") k++;
+        else if (q[k] === "[") klasse = true;
+        else if (q[k] === "]") klasse = false;
+        else if (q[k] === "\n") break;
+        k++;
+      }
+      if (q[k] === "/") { while (k + 1 < q.length && /[gimsuy]/.test(q[k + 1])) k++; leer(k - i + 1); i = k + 1; letzter = "x"; continue; }
+    }
+    raus += c;
+    if (!/\s/.test(c)) letzter = c;
+    i++;
+  }
+  return raus;
+}
+
 let fehlerGesamt = 0;
 for (const datei of process.argv.slice(2)) {
   const h = fs.readFileSync(datei, "utf8");
@@ -29,7 +64,8 @@ for (const datei of process.argv.slice(2)) {
   try { new Function(js); } catch (e) { fehler.push("Syntaxfehler: " + e.message); }
 
   const definiert = new Set([...js.matchAll(/function\s+([A-Za-z_$][\w$]*)\s*\(/g)].map(m => m[1]));
-  [...js.matchAll(/(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:function|\()/g)].forEach(m => definiert.add(m[1]));
+  // auch "const iso = d => ..." und "var f = function(){}"
+  [...js.matchAll(/(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?(?:function|\(|[A-Za-z_$][\w$]*\s*=>)/g)].forEach(m => definiert.add(m[1]));
   // Auch Parameter zaehlen als definiert - sonst gilt jede Rueckruffunktion,
   // die als Argument hereinkommt, faelschlich als fehlend.
   for (const m of js.matchAll(/function\s*[A-Za-z_$\w]*\s*\(([^)]*)\)/g))
@@ -37,10 +73,12 @@ for (const datei of process.argv.slice(2)) {
 
   // Aufrufe nur ausserhalb von Zeichenketten suchen: sonst meldet jedes
   // "rgba(" und "scale(" aus eingebettetem CSS einen Fehler.
-  // Erst Regex-Literale entfernen, dann Zeichenketten. Andersherum reisst ein
-  // /"/g den Filter auf und alles Folgende gilt als Text.
-  const ohneRegex = js.replace(/([=(,:[!&|?{};]\s*)\/(?![\/*])(?:[^/\\\n[]|\\.|\[(?:[^\]\\]|\\.)*\])+\/[gimsuy]*/g, "$1 0 ");
-  const ohneText = ohneRegex.replace(/'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\.|[^`\\])*`/g, '""');
+  // Nur den echten Code betrachten. Kommentare, Zeichenketten und
+  // Regex-Literale werden durch Leerzeichen ersetzt - sonst meldet jedes
+  // "rgba(" aus eingebettetem CSS und jedes "(Foto)" aus einem Kommentar
+  // einen Fehler, und die echten Treffer gehen im Rauschen unter.
+  const ohneText = nurCode(js);
+  const ohneRegex = ohneText;
   const aufgerufen = new Set([...ohneText.matchAll(/(?<![.\w$])([a-zA-Z_$][\w$]*)\s*\(/g)].map(m => m[1]));
   for (const name of aufgerufen) {
     if (!definiert.has(name) && !EINGEBAUT.has(name) && !/^[A-Z]/.test(name)) {
