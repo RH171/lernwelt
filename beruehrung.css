@@ -52,4 +52,15 @@
   /* Nebeneinanderliegende Knöpfe nicht kleben lassen - sonst trifft man
      bei schnellem Tippen den falschen. */
   .opt + .opt, .ans + .ans, .knopf + .knopf { margin-top: 2px; }
+
+  /* Aufklappzeilen sind Knöpfe, auch wenn sie nicht so aussehen. In Helenas
+     Trainer war "Neue Einheit aus Foto" 15 Pixel hoch - genau der Weg, den
+     sie mit dem Buch in der Hand treffen soll. */
+  summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  summary::-webkit-details-marker { display: none; }
 }
