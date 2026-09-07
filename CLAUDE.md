@@ -16,11 +16,13 @@ Kind auf, statt sich zu beschweren.
 
        ./werkstatt.sh geraete
 
-   Taucht ein Gerät auf, das nicht in `pruefung/geraete.json` steht: eintragen,
-   mit Beleg, und ab dann mitprüfen.
+   Taucht ein Gerät auf, das nicht in `../pruefung-geraete.json` steht: eintragen,
+   mit Beleg, und ab dann mitprüfen. Die Datei liegt bewusst **ausserhalb** des
+   Web-Ordners — sie verbindet Kindernamen mit Gerätemodellen und hätte sonst
+   offen im Netz gestanden.
 
 2. **Messen, nicht anschauen.** `pruefung/layout-messen.js` in die Seite laden
-   und für jede Größe aus `pruefung/geraete.json` aufrufen:
+   und für jede Größe aus `../pruefung-geraete.json` aufrufen:
 
        const q = await fetch('/pruefung/layout-messen.js').then(r=>r.text());
        window.__mess = new Function(q + '; return layoutMessen;')();
