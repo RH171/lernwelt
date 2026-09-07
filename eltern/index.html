@@ -69,10 +69,27 @@
   .meldung .wann{color:var(--muted);font-size:12.5px}
   .meldung .wo{color:var(--muted);font-size:12.5px;margin-left:auto}
   .meldung .was{font-size:15px;line-height:1.55;white-space:pre-line}
-  .meldung img{max-width:100%;border-radius:10px;border:1px solid var(--line);margin-top:10px;display:block;cursor:zoom-in}
-  .meldung .weg{margin-top:10px;border:none;background:#f2f3f8;color:var(--muted);
-                border-radius:9px;padding:7px 12px;font-size:13px;cursor:pointer}
+  /* Screenshots vom iPad sind hoch und schmal - ohne Deckel füllt einer die
+     ganze Seite. Angetippt geht er in voller Größe auf. */
+  .meldung img{max-width:100%;max-height:260px;width:auto;object-fit:contain;
+               border-radius:10px;border:1px solid var(--line);margin-top:10px;
+               display:block;cursor:zoom-in;background:#f8fafc}
+  .meldung img.gross{max-height:none}
+  .meldung .lupe{font-size:12px;color:var(--muted);margin-top:5px}
+  .meldung{position:relative}
+  /* Das X sitzt oben rechts in jeder Meldung. */
+  .meldung .weg{position:absolute;top:9px;right:9px;width:32px;height:32px;
+                border:none;background:transparent;color:#b6bec6;border-radius:9px;
+                font-size:19px;line-height:1;cursor:pointer;padding:0;
+                display:grid;place-items:center;transition:background .12s,color .12s}
   .meldung .weg:hover{background:#ffe9e9;color:var(--schlecht)}
+  .meldung .kopf{padding-right:36px}
+  /* Kurz Zeit zum Zurücknehmen, falls man danebentippt. */
+  .rueckgaengig{display:flex;align-items:center;gap:12px;background:#eef1f6;
+                border:1px solid var(--line);border-radius:13px;padding:11px 14px;margin-bottom:11px;
+                font-size:14px;color:var(--muted)}
+  .rueckgaengig button{margin-left:auto;border:none;background:var(--akzent);color:#fff;
+                       border-radius:9px;padding:7px 13px;font-size:13.5px;cursor:pointer}
   .verborgen{display:none !important}
   @media(max-width:560px){ td,th{padding-left:4px;padding-right:4px} .balken{display:none} }
 </style>
@@ -176,8 +193,9 @@
           '<span class="wo">' + esc(m.titel || m.wo || "") + (m.geraet ? " \u00B7 " + esc(m.geraet) : "") + '</span>' +
         '</div>' +
         '<div class="was"></div>' +
-        (m.hatBild ? '<img data-bild="' + esc(m.id) + '" alt="Bild zur Meldung">' : '') +
-        '<button class="weg" data-weg="' + esc(m.id) + '">Erledigt – wegräumen</button>';
+        (m.hatBild ? '<img data-bild="' + esc(m.id) + '" alt="Bild zur Meldung">' +
+                     '<div class="lupe">Bild antippen zum Vergrößern</div>' : '') +
+        '<button class="weg" data-weg="' + esc(m.id) + '" title="Wegräumen" aria-label="Meldung wegräumen">✕</button>';
       d.querySelector(".was").textContent = m.text || "(nur ein Bild)";
       ziel.appendChild(d);
 
@@ -187,10 +205,39 @@
           .then(function(j){ if (j && j.ok && j.bild){ var i = d.querySelector("img"); if (i) i.src = j.bild; } })
           .catch(function(){});
       }
+      var bild = d.querySelector("img");
+      if (bild) bild.addEventListener("click", function(){ bild.classList.toggle("gross"); });
+
       d.querySelector(".weg").addEventListener("click", function(){
-        fetch("/api/melden?id=" + encodeURIComponent(m.id), {method:"DELETE", credentials:"same-origin"})
-          .then(function(){ meldungenLaden(); }).catch(function(){});
+        wegraeumen(d, m);
       });
+    });
+  }
+
+  // Erst ausblenden, dann nach kurzer Frist wirklich löschen - wer daneben
+  // tippt, holt die Meldung samt Bild zurück.
+  var offeneLoeschungen = {};
+  function wegraeumen(karte, m){
+    karte.style.display = "none";
+    var leiste = document.createElement("div");
+    leiste.className = "rueckgaengig";
+    leiste.innerHTML = '<span></span><button type="button">Rückgängig</button>';
+    leiste.querySelector("span").textContent = "Meldung von " + kindName(m.kind) + " weggeräumt.";
+    karte.parentNode.insertBefore(leiste, karte);
+
+    var timer = setTimeout(function(){
+      delete offeneLoeschungen[m.id];
+      leiste.remove();
+      fetch("/api/melden?id=" + encodeURIComponent(m.id), {method:"DELETE", credentials:"same-origin"})
+        .then(function(){ meldungenLaden(); }).catch(function(){});
+    }, 7000);
+    offeneLoeschungen[m.id] = timer;
+
+    leiste.querySelector("button").addEventListener("click", function(){
+      clearTimeout(timer);
+      delete offeneLoeschungen[m.id];
+      leiste.remove();
+      karte.style.display = "";
     });
   }
 
