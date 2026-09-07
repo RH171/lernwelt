@@ -401,7 +401,9 @@
       if (r.jahreszeit) zusatz.push(r.jahreszeit);
       if (r.minutenPause) zusatz.push(r.minutenPause + " min Pause");
       h += '<tr><td style="white-space:nowrap">' +
-             '<div>' + esc((r.wochentag ? r.wochentag + ", " : "") + wann(r.zeit)) + '</div>' +
+             // "Mo, heute 08:17" ist doppelt gemoppelt - bei heute reicht heute.
+             '<div>' + esc(istHeute(r.zeit) ? wann(r.zeit)
+                            : (r.wochentag ? r.wochentag + ", " : "") + wann(r.zeit)) + '</div>' +
              '<div class="nebenzeile">' + esc(zusatz.join(" · ")) + '</div></td>' +
            '<td>' + esc(r.titel||"–") +
              (bauen ? '<span class="marke">gebaut</span>' : '') +
@@ -442,17 +444,26 @@
   // Besser oder schlechter als davor? Ohne Wertung formuliert - es geht um
   // die Richtung, nicht um eine Note.
   function vergleich(z){
-    var v = z.davor; if (!v || (!v.runden && !z.runden)) return "";
-    var teile = [];
-    if (v.minuten || z.minuten) teile.push(pfeil(z.minuten, v.minuten) + " " + minuten(v.minuten));
-    if (v.aufgaben || z.aufgaben) teile.push(pfeil(z.aufgaben, v.aufgaben) + " " + v.aufgaben + " Aufgaben");
-    if (!teile.length) return "";
-    return '<div class="zr-davor">' + esc(z.davorTitel) + ': ' + teile.join(" · ") + '</div>';
+    var v = z.davor; if (!v) return "";
+    // Ohne Gegenstueck kein Vergleich: Ein Pfeil nach oben gegen eine Null
+    // sieht nach Fortschritt aus, wo einfach nichts aufgezeichnet ist.
+    if (!v.runden){
+      if (!z.runden) return "";
+      return '<div class="zr-davor">' + esc(z.davorTitel) + ': nichts aufgezeichnet</div>';
+    }
+    var teile = [pfeil(z.minuten, v.minuten) + " " + minuten(v.minuten),
+                 pfeil(z.aufgaben, v.aufgaben) + " " + v.aufgaben + " Aufgaben"];
+    return '<div class="zr-davor">' + esc(z.davorTitel) + ': ' + teile.join(" \u00B7 ") + '</div>';
   }
   function pfeil(jetzt, davor){
     if (jetzt > davor) return "\u2191";
     if (jetzt < davor) return "\u2193";
     return "\u2192";
+  }
+
+  function istHeute(iso){
+    try { return new Date(iso).toDateString() === new Date().toDateString(); }
+    catch(e){ return false; }
   }
 
   function fachName(f){
