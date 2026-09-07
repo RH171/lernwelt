@@ -67,6 +67,7 @@ function saeubern(r) {
     // 07.09.2026: die Bauzeit in der Werkstatt gehoert nicht in die Lernzeit.
     zeitart: ["lernen", "bauen"].includes(r.zeitart) ? r.zeitart : "lernen",
     pause: zahl(r.pause, 36000),
+    vorrat: zahl(r.vorrat, 100000),
     nurBesuch: !!r.nurBesuch,
     geraet: text(r.geraet, 80),
     aufgaben: r.aufgaben.slice(0, 40).map((a) => ({
@@ -150,6 +151,11 @@ function auswerten(liste) {
   // Ein Topf je Tag, Woche und Jahreszeit. Daraus wird unten "heute / diese
   // Woche / dieser Herbst" und der Vergleich zum Zeitraum davor.
   const jeZeitraum = { tag: {}, woche: {}, jahreszeit: {} };
+
+  // Wie viel vom Wortschatz ist überhaupt schon angefasst? Die richtige
+  // Antwort steht bei jeder Aufgabe dabei - daraus lassen sich die
+  // VERSCHIEDENEN Wörter zählen, nicht nur die Versuche.
+  const jeFach = {};
   const zaehle = (art, schluessel, r, aufgaben, richtig) => {
     const t = jeZeitraum[art];
     t[schluessel] = t[schluessel] ||
@@ -182,6 +188,12 @@ function auswerten(liste) {
     const woche = wochenSchluessel(r.zeit);
     jeWoche[woche] = jeWoche[woche] || { woche, aufgaben: 0, richtig: 0, minuten: 0 };
     jeWoche[woche].minuten += (r.sekunden || 0) / 60;
+
+    if (r.fach) {
+      const f = (jeFach[r.fach] = jeFach[r.fach] || { fach: r.fach, vorrat: 0, woerter: new Set() });
+      if (r.vorrat > f.vorrat) f.vorrat = r.vorrat;
+      for (const a of r.aufgaben || []) if (a.richtig) f.woerter.add(a.richtig.toLowerCase());
+    }
 
     const echte = (r.aufgaben || []).filter((a) => a.art !== "besuch" && a.art !== "bauen");
     zaehle("tag", tagSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length);
@@ -286,8 +298,20 @@ function auswerten(liste) {
         davorTitel: jahreszeitVon(vorigeJz).name }),
   };
 
+  // Nur wo ein Vorrat gemeldet wurde, ist ein Anteil überhaupt sinnvoll.
+  const wortschatz = Object.values(jeFach)
+    .filter((f) => f.vorrat > 0)
+    .map((f) => ({
+      fach: f.fach,
+      vorrat: f.vorrat,
+      angefasst: f.woerter.size,
+      anteil: Math.round((f.woerter.size / f.vorrat) * 100),
+    }))
+    .sort((a, b) => b.vorrat - a.vorrat);
+
   return {
     zeitraeume,
+    wortschatz,
     geraete: Object.values(jeGeraet)
       .map((x) => Object.assign({}, x, { minuten: Math.round(x.minuten) }))
       .sort((a, b) => b.runden - a.runden),

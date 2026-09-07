@@ -130,6 +130,10 @@
   /* ---------- Einstellungen ---------- */
   var dir=liebste("richtung","de2en"), mode=liebste("modus","mc");
   var dauerMin=parseInt(liebste("dauer","0"),10)||0;   // 0 = nach Woertern, sonst Minuten
+  // Wie viele Antworten stehen bei Multiple-Choice zur Wahl? Mehr heisst
+  // schwerer: bei zwei ist die Haelfte geraten, bei fuenf muss man das Wort
+  // schon fast wissen.
+  var wahlAnzahl=parseInt(liebste("auswahl","4"),10)||4;
   function seg(id,cb){
     var g=$(id);
     g.addEventListener("click",function(e){
@@ -141,6 +145,7 @@
   seg("#dir",function(v){dir=v;});
   seg("#mode",function(v){mode=v;});
   seg("#dauer",function(v){dauerMin=parseInt(v,10)||0;});
+  seg("#auswahl",function(v){wahlAnzahl=Math.max(2,Math.min(5,parseInt(v,10)||4));});
 
   // Was sie zuletzt am haeufigsten genommen hat, steht schon da.
   function segSetzen(id,wert){
@@ -150,6 +155,7 @@
     });
   }
   segSetzen("#dir",dir); segSetzen("#mode",mode); segSetzen("#dauer",dauerMin);
+  segSetzen("#auswahl",wahlAnzahl);
 
   /* ---------- Sound ---------- */
   var actx=null;
@@ -332,6 +338,7 @@
     rundenModus=mode;
     vorliebeZaehlen("richtung",dir); vorliebeZaehlen("modus",mode);
     vorliebeZaehlen("dauer",String(dauerMin)); vorliebeZaehlen("einheit",unitSel.value);
+    vorliebeZaehlen("auswahl",String(wahlAnzahl));
     zeitEnde = dauerMin ? Date.now() + dauerMin*60000 : 0;
     erstRichtig=0; erstGesamt=0; lauf=0; laufBest=0;
     if (unitSel.value === "__faellig"){
@@ -456,7 +463,7 @@
       var opts=[solution];
       var pool=shuffle(curUnit.pairs.map(function(x){return d==="de2en"?x.en:x.de;})
                  .filter(function(w){return w!==solution;}));
-      while(opts.length<4 && pool.length) opts.push(pool.pop());
+      while(opts.length<wahlAnzahl && pool.length) opts.push(pool.pop());
       opts=shuffle(opts);
       c.innerHTML=head+'<div class="hint">Wähle die richtige Übersetzung</div><div class="choices" id="ch"></div>'+
         '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
@@ -481,7 +488,13 @@
     if(d==="en2de") say(p.en);
   }
 
-  var ART_NAME = { mc:"vok-auswahl", type:"vok-tippen", cloze:"vok-luecke", hoeren:"vok-hoeren" };
+  function artName(){
+    // Bei Multiple-Choice steht die Anzahl mit dabei: "vok-auswahl-5" ist eine
+    // ganz andere Aufgabe als "vok-auswahl-2", und in der Auswertung soll man
+    // das auseinanderhalten koennen.
+    if (rundenModus === "mc") return "vok-auswahl-" + wahlAnzahl;
+    return { type:"vok-tippen", cloze:"vok-luecke", hoeren:"vok-hoeren" }[rundenModus] || "vokabel";
+  }
 
   function award(item,correct){
     answered=true;
@@ -497,7 +510,7 @@
         merkmal: (einheit ? einheit.name : "Vokabeln").toLowerCase(),
         // Die Uebungsart steht mit in der Auswertung - daran sieht man, ob
         // sie wirklich abruft (tippen, hoeren) oder nur wiedererkennt (mc).
-        art: ART_NAME[rundenModus] || "vokabel",
+        art: artName(),
         stimmt: !!correct,
         nachspielzeit: false,
         sekunden: karteBegonnen ? Math.round((Date.now()-karteBegonnen)/1000) : 0,
@@ -591,6 +604,9 @@
       // Ohne das stand bei Helenas Runden kein Geraet - und damit liess sich
       // nicht pruefen, wogegen ihr Layout eigentlich stimmen muss.
       geraet: LS() ? LS().geraet() : "",
+      // Wie viele Woerter stehen ueberhaupt zur Verfuegung? Ohne das kann die
+      // Elternseite nicht sagen, wie viel vom Vorrat schon angefasst ist.
+      vorrat: allUnits().reduce(function(n,u){ return n + (u.pairs ? u.pairs.length : 0); }, 0),
       aufgaben: protokoll
     };
     protokoll=[];
