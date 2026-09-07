@@ -736,9 +736,62 @@
       } else {
         fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
           headers: { "content-type": "application/json" }, body: text,
-          keepalive: !!weg }).catch(function () {});
+          keepalive: !!weg })
+          .then(function (r) { return r.json(); })
+          .then(function (j) { if (j && j.updateWartet) updateFragen(); })
+          .catch(function () {});
       }
     } catch (e) {}
+  }
+
+  /* ---------- "Darf ich kurz?" ----------
+     Denny am 07.09.2026: Statt ein Update stumm zu blockieren, bis irgendwann
+     niemand mehr spielt, fragt die App selbst. Wer gerade mitten in einer
+     Aufgabe steckt, sagt "gleich nicht" - wer sowieso nur herumklickt, sagt ja
+     und hat die neue Fassung sofort.
+
+     Ohne Antwort passiert nichts. Niemand wird hinausgeworfen. */
+
+  var updateGefragt = false;
+
+  function updateFragen() {
+    if (updateGefragt) return;
+    if (document.getElementById("melde-huelle")) return;   // nicht ins Gespraech platzen
+    updateGefragt = true;
+
+    var h = document.createElement("div");
+    h.id = "melde-huelle";
+    h.innerHTML =
+      '<div id="melde-karte">' +
+        '<h3>Darf ich kurz? \u{1F527}</h3>' +
+        '<p class="u">Es liegt eine Verbesserung bereit. Zum Einspielen muss die ' +
+        'Seite einmal neu laden \u2013 das dauert ein paar Sekunden. ' +
+        'Dein Fortschritt bleibt gespeichert.</p>' +
+        '<button type="button" class="schicken" id="up-ja">Ja, jetzt gleich</button>' +
+        '<button type="button" class="zurueck" id="up-nein">Gerade nicht \u2013 später nochmal fragen</button>' +
+      '</div>';
+    document.body.appendChild(h);
+
+    h.querySelector("#up-nein").addEventListener("click", function () {
+      h.remove();
+      // In zehn Minuten darf noch einmal gefragt werden.
+      setTimeout(function () { updateGefragt = false; }, 600000);
+    });
+
+    h.querySelector("#up-ja").addEventListener("click", function () {
+      h.querySelector("#melde-karte").innerHTML =
+        '<div class="fertig"><div class="haken">\u{1F527}</div><h3>Danke!</h3>' +
+        '<p class="u">Einen Moment \u2013 die Seite lädt gleich neu.</p></div>';
+      pulsAus();
+      fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: KIND, updateOk: true }) })
+        .catch(function () {})
+        .then(function () {
+          // Genug Zeit, damit das Ausrollen durchlaufen kann.
+          setTimeout(function () { location.reload(); }, 75000);
+        });
+    });
   }
 
   function pulsAn() {
