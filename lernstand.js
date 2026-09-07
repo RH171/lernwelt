@@ -60,6 +60,14 @@
       '#melde-karte .bildknopf{padding:11px 14px;border-radius:12px;border:2px dashed #cfd5e4;' +
         'background:#fbfcff;font-size:14.5px;cursor:pointer;color:#1b1c22}' +
       '#melde-vorschau{max-height:120px;border-radius:10px;border:1px solid #e5e8ef;display:none}' +
+      '#melde-karte .fadenliste{display:grid;gap:8px;margin-bottom:14px}' +
+      '#melde-karte .fadenzeile{display:block;width:100%;text-align:left;background:#f4f6fa;' +
+        'border:1px solid #e3e6ef;border-radius:12px;padding:11px 13px;cursor:pointer;' +
+        'font:inherit;color:#1b1c22;min-height:44px}' +
+      '#melde-karte .fadenzeile:active{transform:scale(.99)}' +
+      '#melde-karte .fz-text{display:block;font-weight:600;line-height:1.45}' +
+      '#melde-karte .fz-stand{display:block;color:#6b7280;font-size:12.5px;margin-top:3px}' +
+      '#melde-karte .fz-stand.neu{color:#7c5cff;font-weight:700}' +
       '#melde-karte .schicken{width:100%;margin-top:15px;padding:15px;border:none;border-radius:14px;' +
         'background:#4f46e5;color:#fff;font-size:17px;font-weight:700;cursor:pointer}' +
       '#melde-karte .schicken:disabled{opacity:.5}' +
@@ -91,6 +99,7 @@
     knopf.innerHTML = "\u{1F4AC}<span id=\"melde-punkt\"></span>";
     knopf.style.position = "fixed";
     knopf.addEventListener("click", dialogOeffnen);
+    abstandSchaffen();
     document.body.appendChild(knopf);
   }
 
@@ -201,6 +210,26 @@
       antwortSchicken(h, faden);
     });
     setTimeout(function(){ h.querySelector("#melde-text").focus(); }, 60);
+  }
+
+  // Der schwebende Knopf sitzt VOR dem Seiteninhalt. Auf Helenas Handy
+  // (360x643) verdeckte er die Fusszeile - im Screenshot ihrer Meldung vom
+  // 07.09.2026 gut zu sehen. Ein Abstandhalter am Dokumentende schafft Platz,
+  // ohne in das Layout der Spiele einzugreifen.
+  //
+  // Seiten, die gar nicht scrollen (Spiele mit fester Buehne, overflow:hidden),
+  // bleiben unberuehrt: dort wuerde der Abstandhalter nur eine Bildlaufleiste
+  // erzeugen, wo vorher keine war.
+  function abstandSchaffen() {
+    try {
+      if (document.getElementById("melde-abstand")) return;
+      var s = getComputedStyle(document.body);
+      if (s.overflow === "hidden" || s.overflowY === "hidden") return;
+      var a = document.createElement("div");
+      a.id = "melde-abstand";
+      a.style.cssText = "height:78px;flex:none;grid-column:1/-1;pointer-events:none";
+      document.body.appendChild(a);
+    } catch (e) {}
   }
 
   function dialogOeffnen() {
