@@ -1,7 +1,18 @@
 // Läuft vor JEDER Anfrage an die Lernwelt.
-// Aufgabe: Pauls gespeicherten Fortschritt aus dem Cloud-Speicher (KV) holen
-// und so in jede HTML-Seite schreiben, dass die Spiele ihn beim Start schon kennen –
-// ganz OHNE die Spiel-Dateien selbst zu verändern.
+//
+// Zwei Aufgaben: den Zugangsriegel bewachen, und den gespeicherten Fortschritt
+// eines Kindes so in SEINE Seiten schreiben, dass die Spiele ihn beim Start
+// schon kennen – ganz OHNE die Spiel-Dateien selbst zu verändern.
+//
+// Am 07.09.2026 geändert. Vorher wurde Pauls Fortschritt in JEDE HTML-Seite
+// gesetzt: auch in die öffentliche Startseite, in Helenas offenen Bereich und
+// in die Ersatzseite für unbekannte Adressen. Damit standen 85 Schlüssel mit
+// Datum, Punkten und Sekunden jeder Spielrunde offen im Netz, für jeden
+// abrufbar, der lernwelt.rh171.de aufrief. Gemessen und behoben.
+//
+// Jetzt: nur innerhalb von /paul/, /leon/ und /helena/, und dort nur der
+// Speicher genau dieses Kindes. Bei /paul/ und /leon/ ist der Riegel davor
+// schon durchlaufen - wer bis hierher kommt, ist angemeldet.
 
 import { ausweisGueltig, anmeldeSeite, geheimFuer } from "./api/_riegel.js";
 
@@ -39,11 +50,23 @@ export async function onRequest(context) {
     return response;
   }
 
-  // Pauls Fortschritt aus dem Cloud-Speicher holen (defensiv – bei Fehler: nichts seeden).
+  // Welchem Kind gehört diese Seite? Ausserhalb der drei Bereiche wird nichts
+  // gesetzt - die Startseite und unbekannte Adressen bleiben unpersönlich.
+  const kindTreffer = url.pathname.match(/^\/(paul|leon|helena)(?:\/|$)/);
+  if (!kindTreffer) {
+    return response;
+  }
+  const kind = kindTreffer[1];
+
+  // Pauls Speicher behält seinen alten Namen - er ist der einzige mit Inhalt
+  // aus der Zeit davor, und ein Umzug wäre nur eine Fehlerquelle.
+  const speicher = kind === "paul" ? "paul-blob" : "blob:" + kind;
+
+  // Fortschritt holen (defensiv – bei Fehler: nichts seeden).
   let blobJson = "null";
   try {
     if (env.PAUL_KV) {
-      const stored = await env.PAUL_KV.get("paul-blob");
+      const stored = await env.PAUL_KV.get(speicher);
       if (stored) blobJson = stored;
     }
   } catch (e) {
