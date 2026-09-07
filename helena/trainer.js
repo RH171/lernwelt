@@ -30,6 +30,36 @@
      soll nicht jedes Mal dieselben drei Knoepfe druecken muessen. Was wir
      NICHT tun: die Anforderung senken. Wer nur Multiple-Choice waehlt,
      bekommt in der gemischten Runde trotzdem Karten zum Eintippen. */
+  /* ---------- Was ausdruecklich eingestellt wurde ----------
+     Helena am 07.09.2026: "Wenn ich bei ,lieber selbst aussuchen' etwas selber
+     aussuche ist es wenn ich aufhoere und wieder rein gehe alles wieder so als
+     haette ich nichts geaendert. Mach dass, das was ich eingestellt habe so
+     bleibt biss ich es selbst wieder aendere."
+
+     Sie hat recht. Die Vorlieben unten zaehlen mit, was jemand OFT waehlt, und
+     greifen erst ab dreimal - das war als Schutz gedacht, damit ein einmaliges
+     Ausprobieren nicht gleich zur Gewohnheit erklaert wird. Fuer eine
+     ABSICHTLICHE Einstellung ist das aber schlicht falsch: Wer etwas einstellt,
+     will es behalten, und zwar sofort.
+
+     Deshalb zwei getrennte Dinge: die Einstellung hier gilt immer und sofort,
+     die Vorlieben weiter unten sind nur noch der Rueckfall fuer den allerersten
+     Besuch. */
+  var EINSTELLUNG = PRE+"-einstellung";
+
+  function einstellungLaden(){
+    try { var e = JSON.parse(get(EINSTELLUNG,"{}")); return (e && typeof e==="object") ? e : {}; }
+    catch(e){ return {}; }
+  }
+  function einstellungMerken(){
+    try {
+      set(EINSTELLUNG, JSON.stringify({
+        richtung: dir, modus: mode, dauer: dauerMin, auswahl: wahlAnzahl,
+        einheit: unitSel ? unitSel.value : ""
+      }));
+    } catch(e){}
+  }
+
   var VORLIEBEN = PRE+"-vorlieben";
   function vorliebenLaden(){
     try { var v=JSON.parse(get(VORLIEBEN,"{}")); return (v&&typeof v==="object")?v:{}; }
@@ -82,7 +112,9 @@
     });
     if(sel) unitSel.value=sel;
   }
-  fillUnits();
+  // Auch die gewaehlte Einheit bleibt stehen - sie gehoert zu dem, was
+  // Helena "selbst ausgesucht" hat.
+  fillUnits(einstellungLaden().einheit || "");
   unitSel.value="__faellig";
 
   // Die Zahl oben: Was steht heute an?
@@ -128,12 +160,16 @@
   }
 
   /* ---------- Einstellungen ---------- */
-  var dir=liebste("richtung","de2en"), mode=liebste("modus","mc");
-  var dauerMin=parseInt(liebste("dauer","0"),10)||0;   // 0 = nach Woertern, sonst Minuten
+  var eingestellt = einstellungLaden();
+  var dir  = eingestellt.richtung || liebste("richtung","de2en");
+  var mode = eingestellt.modus    || liebste("modus","mc");
+  var dauerMin = eingestellt.dauer !== undefined
+    ? (parseInt(eingestellt.dauer,10)||0)
+    : (parseInt(liebste("dauer","0"),10)||0);           // 0 = nach Woertern, sonst Minuten
   // Wie viele Antworten stehen bei Multiple-Choice zur Wahl? Mehr heisst
   // schwerer: bei zwei ist die Haelfte geraten, bei fuenf muss man das Wort
   // schon fast wissen.
-  var wahlAnzahl=parseInt(liebste("auswahl","4"),10)||4;
+  var wahlAnzahl = parseInt(eingestellt.auswahl || liebste("auswahl","4"),10)||4;
   function seg(id,cb){
     var g=$(id);
     g.addEventListener("click",function(e){
@@ -142,10 +178,21 @@
       b.setAttribute("aria-pressed","true"); cb(b.getAttribute("data-v")); blip();
     });
   }
-  seg("#dir",function(v){dir=v;});
-  seg("#mode",function(v){mode=v;});
-  seg("#dauer",function(v){dauerMin=parseInt(v,10)||0;});
-  seg("#auswahl",function(v){wahlAnzahl=Math.max(2,Math.min(5,parseInt(v,10)||4));});
+  seg("#dir",function(v){dir=v; einstellungMerken();});
+  seg("#mode",function(v){mode=v; einstellungMerken();});
+  seg("#dauer",function(v){dauerMin=parseInt(v,10)||0; einstellungMerken();});
+  seg("#auswahl",function(v){wahlAnzahl=Math.max(2,Math.min(5,parseInt(v,10)||4)); einstellungMerken();});
+  if (unitSel) unitSel.addEventListener("change", einstellungMerken);
+
+  // War die Feineinstellung offen, ist sie es beim naechsten Mal wieder.
+  (function(){
+    var f = document.querySelector("details.feineinst");
+    if (!f) return;
+    try { if (get(PRE+"-feineinst","") === "auf") f.open = true; } catch(e){}
+    f.addEventListener("toggle", function(){
+      try { set(PRE+"-feineinst", f.open ? "auf" : "zu"); } catch(e){}
+    });
+  })();
 
   // Was sie zuletzt am haeufigsten genommen hat, steht schon da.
   function segSetzen(id,wert){
