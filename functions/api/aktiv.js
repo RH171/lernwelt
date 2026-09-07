@@ -12,7 +12,7 @@
 // davon gibt es am Tag nur begrenzt viele. Alle 3 Minuten reicht vollkommen -
 // wir wollen wissen, ob jemand spielt, nicht wo die Maus steht.
 
-import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const SCHLUESSEL = (kind) => "aktiv:" + kind;
@@ -30,12 +30,11 @@ export async function onRequestPost(context) {
   const kind = String(daten.kind || "").toLowerCase();
   if (!KINDER.includes(kind)) return json(400, { ok: false, fehler: "Welches Kind denn?" });
 
-  // Dieselbe Regel wie beim Lernstand: Wo ein eigener Code hinterlegt ist,
-  // muss der Ausweis stimmen. Helenas Bereich ist offen und darf ohne.
-  const eigenerCode = (kind === "paul" && env.PAUL_CODE) ||
-                      (kind === "leon" && env.LEON_CODE) ||
-                      (kind === "helena" && env.HELENA_CODE);
-  if (eigenerCode && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+  // Liegt der Bereich des Kindes hinter dem Riegel, muss der Ausweis stimmen.
+  // Helenas Bereich ist offen - sie kann sich gar nicht anmelden, also nehmen
+  // wir dort ohne Ausweis an. Sobald HELENA_CODE gesetzt und ihr Bereich in
+  // GESCHUETZT aufgenommen wird, gilt auch fuer sie der Ausweis.
+  if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
   if (daten.weg) {

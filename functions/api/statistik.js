@@ -6,7 +6,7 @@
 // Liegt im selben KV wie alles andere, unter eigenem Präfix "lernstand:".
 // Der Fortschritt unter "paul-blob" wird nicht berührt.
 
-import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const RUNDEN = (kind) => "lernstand:" + kind;
@@ -28,14 +28,11 @@ export async function onRequestPost(context) {
   const kind = kindAus(request, daten);
   if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
 
-  // Nur das Kind selbst darf für sich schreiben. Ausnahme: Ist für ein Kind
-  // gar kein eigener Code hinterlegt und sein Bereich damit offen (derzeit
-  // Helena), kann es sich auch nicht anmelden - dann nehmen wir die Runde
-  // trotzdem an. Sobald HELENA_CODE gesetzt ist, gilt wieder der Ausweis.
-  const eigenerCode = (kind === "paul" && env.PAUL_CODE) ||
-                      (kind === "leon" && env.LEON_CODE) ||
-                      (kind === "helena" && env.HELENA_CODE);
-  if (eigenerCode && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+  // Liegt der Bereich des Kindes hinter dem Riegel, muss der Ausweis stimmen.
+  // Helenas Bereich ist offen - sie kann sich gar nicht anmelden, also nehmen
+  // wir dort ohne Ausweis an. Sobald HELENA_CODE gesetzt und ihr Bereich in
+  // GESCHUETZT aufgenommen wird, gilt auch fuer sie der Ausweis.
+  if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
   const runde = saeubern(daten.runde);

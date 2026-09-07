@@ -6,6 +6,20 @@
 // paul-sync.js eingesammelt und über KV an ALLE Geräte verteilt - der Code
 // wäre damit öffentlich. Ein Cookie fasst der Sync nicht an.
 
+// Welche Bereiche hinter dem Riegel liegen. MUSS mit dem Muster in
+// functions/_middleware.js uebereinstimmen - dort steht /^\/(paul|leon|eltern)/.
+//
+// Warum das hier steht: Die APIs hatten ihre eigene Fassung dieser Frage und
+// schauten nur auf LEON_CODE. Der ist nicht gesetzt (Leon nimmt Pauls Code),
+// also galt sein Bereich fuer die API als offen - jeder konnte Runden in seine
+// Statistik schreiben, obwohl die Seite selbst einen Code verlangt. Gefunden
+// beim Durchpruefen am 07.09.2026.
+export const GESCHUETZT = ["paul", "leon", "eltern"];
+
+export function brauchtAusweis(env, kind) {
+  return GESCHUETZT.includes(String(kind || "").toLowerCase()) && !!geheimFuer(env, kind);
+}
+
 const COOKIE = "lw_werkstatt";
 const TAGE = 30;
 
