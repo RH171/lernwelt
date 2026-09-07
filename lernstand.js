@@ -14,7 +14,12 @@
   if (window.lernstand) return;
 
   var DATEI = (location.pathname.split("/").pop() || "").replace(/\.html?$/i, "") || "index";
-  var NUR_MELDEN = (DATEI === "index" || DATEI === "werkstatt");   // die schreiben selbst mit
+  // Seiten, die ihre Runden selbst an /api/statistik melden. Der Dateiname
+  // reicht dafuer nicht: Helenas "franzoesisch.html" heisst nicht "index",
+  // schreibt aber sehr wohl selbst mit. Deshalb darf eine Seite es auch
+  // ausdruecklich sagen: <script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+  var NUR_MELDEN = (DATEI === "index" || DATEI === "werkstatt"
+                    || window.LERNSTAND_SCHREIBT_SELBST === true);
 
   var KIND = /\/leon\//.test(location.pathname) ? "leon"
            : /\/helena\//.test(location.pathname) ? "helena" : "paul";
@@ -421,7 +426,11 @@
     melderStarten();
   }
 
-  if (NUR_MELDEN) return;   // Hub und Werkstatt schreiben ihre Runden selbst mit
+  // Frueher stand hier "if (NUR_MELDEN) return;". Damit fielen auf dem Hub,
+  // in der Werkstatt und in Helenas Trainer auch der Anwesenheits-Puls und die
+  // Geraeteangabe weg - der Waechter vor dem Ausrollen sah diese Seiten also
+  // gar nicht. NUR_MELDEN schaltet jetzt nur noch die automatische
+  // Besuchs-Runde ab, weiter unten an der einen Stelle, wo sie entsteht.
 
   // Auf welchem Gerät wird gespielt? Das muss man ein Kind nicht fragen -
   // der Browser weiß es. Bewusst nur eine kurze, lesbare Beschreibung und
@@ -491,6 +500,7 @@
   };
 
   function senden() {
+    if (NUR_MELDEN) return;   // Hub, Werkstatt und Vokabeltrainer schreiben selbst mit
     if (gesendet) return;
     var sekunden = Math.round((Date.now() - begonnen) / 1000);
     // Unter einer halben Minute war es kein Spielen, sondern ein Blick.
