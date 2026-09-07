@@ -579,6 +579,9 @@
       quelle:(curUnit&&curUnit.id)||"", fach:K.fach,
       thema:(curUnit&&curUnit.name)||"Vokabeln", lernbereich:"",
       sekunden: rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0,
+      // Ohne das stand bei Helenas Runden kein Geraet - und damit liess sich
+      // nicht pruefen, wogegen ihr Layout eigentlich stimmen muss.
+      geraet: (window.lernstand && window.lernstand.geraet) ? window.lernstand.geraet() : "",
       aufgaben: protokoll
     };
     protokoll=[];

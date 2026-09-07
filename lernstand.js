@@ -444,11 +444,16 @@
         /Firefox\//i.test(u) ? "Firefox" :
         /CriOS|Chrome\//i.test(u) ? "Chrome" :
         /Safari\//i.test(u) ? "Safari" : "";
-      var b = window.screen ? window.screen.width : 0;
-      var h = window.screen ? window.screen.height : 0;
+      // Bisher stand hier nur die Bildschirmgroesse. Die ist auf dem iPad fest
+      // (820x1180), egal wie er gehalten wird - fuer das Layout zaehlt aber
+      // das FENSTER. Beides steht jetzt drin: das Fenster sagt, wogegen ich
+      // pruefen muss, der Schirm sagt, welches Geraet es ist.
+      var fb = window.innerWidth || 0, fh = window.innerHeight || 0;
+      var sb = window.screen ? window.screen.width : 0;
+      var sh = window.screen ? window.screen.height : 0;
       var tasten = (navigator.maxTouchPoints || 0) > 0 ? "Touch" : "Maus";
-      var quer = window.innerWidth > window.innerHeight ? "quer" : "hoch";
-      return [art, browser, b + "x" + h, tasten, quer].filter(Boolean).join(" \u00B7 ");
+      return [art, browser, "Fenster " + fb + "x" + fh,
+              (sb ? "Schirm " + sb + "x" + sh : ""), tasten].filter(Boolean).join(" \u00B7 ");
     } catch (e) { return ""; }
   }
 
@@ -465,6 +470,10 @@
   }
 
   window.lernstand = {
+    // Wer seine Runde selbst zusammenstellt (Helenas Vokabeltrainer), soll
+    // dieselbe Geraeteangabe verwenden - sonst fehlt sie dort ganz.
+    geraet: geraet,
+
     // Ein Spiel kann jede beantwortete Aufgabe melden - freiwillig.
     antwort: function (stimmt, merkmal, gegeben, richtig) {
       try {
