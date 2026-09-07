@@ -100,8 +100,91 @@
         var neues = meineFaeden.some(function(f){ return f.ungelesenKind; });
         var k = document.getElementById("melde-knopf");
         if (k) k.classList.toggle("hat-neues", neues);
+        offenesAnsprechen();
       })
       .catch(function(){});
+  }
+
+  /* ---------- Offene Punkte von selbst ansprechen ----------
+     Ein roter Punkt wird übersehen. Wenn etwas offen ist - eine Antwort
+     ungelesen, oder ein Bild ohne ein Wort dazu - fragen wir beim Öffnen
+     einmal freundlich nach, statt darauf zu warten, dass das Kind von sich
+     aus nachschaut. Höchstens einmal pro Tag und Faden. */
+
+  var ANGESPROCHEN = "lernstand-angesprochen";
+
+  function schonAngesprochen(id){
+    try {
+      var d = JSON.parse(localStorage.getItem(ANGESPROCHEN) || "{}");
+      return d[id] === new Date().toISOString().slice(0,10);
+    } catch(e){ return false; }
+  }
+  function ansprechenVermerken(id){
+    try {
+      var d = JSON.parse(localStorage.getItem(ANGESPROCHEN) || "{}");
+      d[id] = new Date().toISOString().slice(0,10);
+      localStorage.setItem(ANGESPROCHEN, JSON.stringify(d));
+    } catch(e){}
+  }
+
+  function offenesAnsprechen(){
+    if (document.getElementById("melde-huelle")) return;
+
+    // 1. Eine ungelesene Antwort - die soll das Kind sehen.
+    var antwort = meineFaeden.filter(function(f){
+      return f.ungelesenKind && !schonAngesprochen(f.id);
+    })[0];
+    if (antwort){
+      ansprechenVermerken(antwort.id);
+      setTimeout(function(){ fadenZeigen(antwort); }, 1400);
+      return;
+    }
+
+    // 2. Ein Bild ohne ein Wort dazu - da fehlt uns die Hälfte.
+    var stumm = meineFaeden.filter(function(f){
+      if (f.status === "erledigt" || schonAngesprochen(f.id)) return false;
+      var v = f.verlauf || [];
+      if (v.length !== 1) return false;                 // schon im Gespräch
+      return v[0].hatBild && !(v[0].text || "").trim();
+    })[0];
+    if (stumm){
+      ansprechenVermerken(stumm.id);
+      setTimeout(function(){ nachBildFragen(stumm); }, 1400);
+    }
+  }
+
+  // Das Bild zeigen und fragen, was daran nicht stimmt.
+  function nachBildFragen(faden){
+    if (document.getElementById("melde-huelle")) return;
+    var h = document.createElement("div");
+    h.id = "melde-huelle";
+    h.innerHTML =
+      '<div id="melde-karte">' +
+        '<h3>Kurze Frage zu deinem Bild</h3>' +
+        '<p class="u">Du hast mir dieses Bild geschickt, aber nichts dazugeschrieben. ' +
+        'Was stimmt da nicht? Ein Satz reicht – dann kann ich es reparieren.</p>' +
+        '<img id="melde-altbild" alt="Dein Bild" style="max-width:100%;max-height:200px;' +
+          'border-radius:12px;display:block;margin-bottom:12px;object-fit:contain;background:#f4f6fa">' +
+        '<textarea id="melde-text" maxlength="1500" placeholder="Zum Beispiel: Der Knopf reagiert nicht, wenn ich …"></textarea>' +
+        '<button type="button" class="schicken" id="melde-schicken">Abschicken</button>' +
+        '<button type="button" class="zurueck" id="melde-spaeter">Später</button>' +
+      '</div>';
+    document.body.appendChild(h);
+
+    fetch("/api/melden?meine=1&kind=" + encodeURIComponent(KIND), {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(){
+        var i = h.querySelector("#melde-altbild");
+        if (i) i.src = "/api/melden?bild=" + encodeURIComponent(faden.id) + "&roh=1";
+      })
+      .catch(function(){});
+
+    h.addEventListener("click", function(e){ if (e.target === h) h.remove(); });
+    h.querySelector("#melde-spaeter").addEventListener("click", function(){ h.remove(); });
+    h.querySelector("#melde-schicken").addEventListener("click", function(){
+      antwortSchicken(h, faden);
+    });
+    setTimeout(function(){ h.querySelector("#melde-text").focus(); }, 60);
   }
 
   function dialogOeffnen() {
