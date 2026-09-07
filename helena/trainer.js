@@ -621,10 +621,17 @@
       '<p>'+unter+'</p>'+
       rekordHtml+
       '<div class="bilanz">'+
-        '<div><b>'+s.sitzt+'</b><small>W\u00f6rter sitzen</small></div>'+
-        '<div><b>'+s.aufDemWeg+'</b><small>auf dem Weg</small></div>'+
+        '<div><b>'+erstGesamt+'</b><small>W\u00f6rter ge\u00fcbt</small></div>'+
+        '<div><b>'+s.sitzt+'</b><small>sitzen fest</small></div>'+
         '<div><b>'+(minuten||"<1")+'</b><small>Minuten</small></div>'+
       '</div>'+
+      // Am Anfang steht dort eine Null. Die ist richtig - aber sie braucht
+      // eine Erklaerung, sonst sieht ein guter Durchgang nach nichts aus.
+      (s.sitzt===0
+        ? '<p class="fussnote">\u201esitzen fest\u201c z\u00e4hlt erst, wenn du ein Wort nach ' +
+          'Tagen Pause noch konntest. Daf\u00fcr hast du heute den Grundstein gelegt' +
+          (s.aufDemWeg ? ' \u2013 '+s.aufDemWeg+' sind schon auf dem Weg.' : '.') + '</p>'
+        : '')+
       reviewHtml+
       '<button class="start" id="again">Noch eine Runde</button>'+
       '<button class="ghost" id="zurueckUebersicht" type="button">Zur \u00dcbersicht</button>'+
