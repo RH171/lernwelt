@@ -369,12 +369,31 @@
           : "Angekommen \u2013 wir schauen es uns an. Du kannst hier noch etwas dazuschreiben.") + '</p>' +
         '<div class="faden faden-liste">' + blasen + '</div>' +
         '<textarea id="melde-text" maxlength="1500" placeholder="Antworte hier …"></textarea>' +
+        // Paul am 07.09.2026: "Wenn ich mit dir schreibe kann ich dir nur an
+        // Anfang ein Bild senden und dann nicht mehr weil kein Knopf da ist."
+        // Er hatte recht - im laufenden Gespraech gab es den Knopf gar nicht,
+        // obwohl der Server Bilder in jeder Nachricht annimmt. Gerade dort
+        // braucht man ihn am meisten: wenn nachgefragt wird, wie es aussieht.
+        '<div class="bildreihe">' +
+          '<button type="button" class="bildknopf" id="melde-bildknopf">\u{1F4F7} Bild dazutun</button>' +
+          '<img id="melde-vorschau" alt="">' +
+        '</div>' +
+        '<input type="file" id="melde-datei" accept="image/*" style="display:none">' +
         '<button type="button" class="schicken" id="melde-schicken">Abschicken</button>' +
         (beantwortet ? '<button type="button" class="passt" id="melde-passt">Passt jetzt! \u{1F44D}</button>' : "") +
         '<button type="button" class="zurueck" id="melde-neu">Zurück zu deinen Meldungen</button>' +
       '</div>';
     document.body.appendChild(h);
     h.addEventListener("click", function (e) { if (e.target === h) schliessen(h, faden); });
+
+    bildDaten = "";
+    h.querySelector("#melde-bildknopf").addEventListener("click", function () {
+      h.querySelector("#melde-datei").click();
+    });
+    h.querySelector("#melde-datei").addEventListener("change", function (e) {
+      var d = e.target.files && e.target.files[0];
+      if (d) bildLesen(d, h);
+    });
 
     Array.prototype.forEach.call(h.querySelectorAll(".blasenbild"), function (i) {
       bildHolen(faden.id, i.getAttribute("data-nr"), function (d) {
