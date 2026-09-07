@@ -188,6 +188,49 @@
   .adder .tiny{color:var(--muted); font-size:11.5px; margin-top:8px;}
 
   .foot{text-align:center; color:var(--muted); font-size:11.5px; margin-top:26px; line-height:1.6;}
+
+  /* ---------------------------------------------------------------
+     Handy: während des Spielens zählt nur die Aufgabe.
+
+     Gemessen auf einem 390x844-Handy: Kopfzeile, Zeichen-Chips und
+     Zurück-Knopf verbrauchten 268 Pixel, bevor die erste Frage anfing.
+     Mit offener Tastatur lag "Weiter" dadurch 142 Pixel unter dem Rand -
+     Helena hätte nach jedem einzelnen Wort scrollen müssen. Die Angaben
+     zu XP und Serie stehen vor und nach der Runde, mitten in der Aufgabe
+     braucht sie niemand.
+     --------------------------------------------------------------- */
+  @media (max-width: 560px) {
+    .wrap{padding:14px 14px 24px;}
+    header{margin-bottom:12px;}
+    .stats{gap:6px;}
+
+    body.spielt header,
+    body.spielt .foot{display:none;}
+
+    body.spielt .wrap{padding-top:10px;}
+    body.spielt .card{padding:18px 16px; border-radius:18px;}
+    body.spielt .bar{margin-bottom:12px;}
+
+    /* Der Zurück-Knopf bleibt erreichbar, nimmt aber keine ganze Zeile mehr. */
+    body.spielt .backbtn{
+      padding:6px 12px; font-size:13px; margin-bottom:10px;
+      min-height:38px;
+    }
+    body.spielt .uhrrest{margin-top:10px;}
+
+    /* Die Antwort-Zeile ist der Ort, an dem der Daumen liegt. */
+    .answer{gap:8px;}
+    .answer button{min-height:48px;}
+    .next{min-height:50px; width:100%;}
+    .choice{min-height:50px;}
+  }
+
+  /* Kleine Handys (iPhone SE, 375x667): noch einmal enger. */
+  @media (max-width: 560px) and (max-height: 700px) {
+    body.spielt .card{padding:14px 14px;}
+    .prompt{font-size:24px;}
+    .choice{min-height:46px;}
+  }
   .backbtn{display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line);
     color:var(--muted); border-radius:999px; padding:9px 15px; font-family:var(--font); font-size:13.5px; font-weight:700;
     cursor:pointer; margin-bottom:14px; transition:.14s;}

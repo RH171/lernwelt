@@ -319,6 +319,12 @@
   var erstRichtig=0, erstGesamt=0, lauf=0, laufBest=0;
   function kannSprechen(){ return typeof speechSynthesis!=="undefined"; }
 
+  // Sagt der Seite, ob gerade gespielt wird. Auf dem Handy blendet das die
+  // Kopfzeile aus - siehe die Begruendung im CSS der Seite.
+  function ansicht(was){
+    document.body.classList.toggle("spielt", was === "spiel");
+  }
+
   function startSession(){
     roundDir=dir;
     rundenModus=mode;
@@ -344,9 +350,12 @@
     queue.forEach(function(it){ gesehen[wortSchluessel(it.unitId,it.p)]=1; });
     if (!total){ meldungKeineWoerter(); return; }
     $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
+    ansicht("spiel");
+    window.scrollTo(0,0);
     nextCard();
   }
   function meldungKeineWoerter(){
+    ansicht("start");
     $("#setup").style.display="block"; $("#play").style.display="none";
     var e=$("#faelligText");
     if(e) e.textContent="Gerade ist nichts fällig - alles sitzt. Wähle unten eine Einheit, wenn du trotzdem üben willst.";
@@ -582,6 +591,8 @@
     lernstandSenden();
     heuteMalen(); sitztMalen();
     $("#play").style.display="none";
+    ansicht("ende");
+    window.scrollTo(0,0);
     var e=$("#end"); e.style.display="block";
 
     var reviewHtml="";
@@ -658,6 +669,7 @@
   function endToSetup(){
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     $("#play").style.display="none"; $("#end").style.display="none"; $("#setup").style.display="block";
+    ansicht("start"); window.scrollTo(0,0);
     blip();
   }
   $("#backBtn").addEventListener("click", endToSetup);
