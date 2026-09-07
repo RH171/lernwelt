@@ -676,21 +676,39 @@
     for(var j=1;j<toks.length;j++){ if(/[äöüßÄÖÜ]/.test(toks[j])) return [toks.slice(0,j).join(" "), toks.slice(j).join(" ")]; }
     return [toks.slice(0,toks.length-1).join(" "), toks[toks.length-1]];
   }
+  // Was beim Erkennen liegen blieb. Wird angezeigt, statt still zu verschwinden -
+  // eine Vokabel, die aus dem Foto faellt, faellt sonst aus dem Lernen.
+  var nichtErkannt = [];
+
   function parseVocab(text){
+    nichtErkannt = [];
     var lines=(text||"").split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
     if(!lines.length) return [];
-    var sepRe=/\s*(?:=|→|\u2192|::|:|\t|\u2013|\u2014| {2,}| - )\s*/;
+    var sepRe=/\s*(?:=|→|\u2192|::|:|\t|\u2013|\u2014| {2,}| - | , )\s*/;
     var withSep=0, singleTok=0;
     lines.forEach(function(l){ if(sepRe.test(l)) withSep++; if(l.split(/\s+/).filter(Boolean).length<2) singleTok++; });
     var half=Math.max(2, Math.floor(lines.length*0.5));
     var pairs=[];
     if(withSep>=half){
-      lines.forEach(function(l){ if(l.search(sepRe)<0) return; var m=l.split(sepRe);
-        var en=cleanTok(m[0]), de=cleanTok(m.slice(1).join(" ")); if(en&&de) pairs.push({en:en,de:de}); });
+      lines.forEach(function(l){
+        if(l.search(sepRe)>=0){
+          var m=l.split(sepRe);
+          var en=cleanTok(m[0]), de=cleanTok(m.slice(1).join(" "));
+          if(en&&de){ pairs.push({en:en,de:de}); return; }
+        }
+        // Kein sauberer Trenner: noch einmal mit der Wortarten-Heuristik.
+        var s2=smartSplitLine(cleanTok(l));
+        if(s2 && cleanTok(s2[0]) && cleanTok(s2[1])) pairs.push({en:cleanTok(s2[0]), de:cleanTok(s2[1])});
+        else nichtErkannt.push(l);
+      });
     } else if(singleTok >= Math.ceil(lines.length*0.4)){
-      for(var i=0;i+1<lines.length;i+=2){ var en2=cleanTok(lines[i]), de2=cleanTok(lines[i+1]); if(en2&&de2) pairs.push({en:en2,de:de2}); }
+      for(var i=0;i+1<lines.length;i+=2){ var en2=cleanTok(lines[i]), de2=cleanTok(lines[i+1]);
+        if(en2&&de2) pairs.push({en:en2,de:de2}); else { if(lines[i]) nichtErkannt.push(lines[i]); if(lines[i+1]) nichtErkannt.push(lines[i+1]); } }
+      if(lines.length % 2) nichtErkannt.push(lines[lines.length-1]);
     } else {
-      lines.forEach(function(l){ var s=smartSplitLine(cleanTok(l)); if(s){ var en=cleanTok(s[0]), de=cleanTok(s[1]); if(en&&de) pairs.push({en:en,de:de}); } });
+      lines.forEach(function(l){ var s=smartSplitLine(cleanTok(l));
+        var en3=s?cleanTok(s[0]):"", de3=s?cleanTok(s[1]):"";
+        if(en3&&de3) pairs.push({en:en3,de:de3}); else nichtErkannt.push(l); });
     }
     return pairs;
   }
@@ -720,6 +738,12 @@
     box.innerHTML=
       '<div class="pvhead"><span><b>'+pairs.length+' Paare erkannt</b> – bitte prüfen</span>'+
       '<button class="mini" id="swapBtn" type="button">↔ Spalten tauschen</button></div>'+
+      (nichtErkannt.length
+        ? '<div class="pvrest"><b>'+nichtErkannt.length+' Zeile'+(nichtErkannt.length>1?'n':'')+
+          ' konnte ich nicht aufteilen.</b> Trag sie unten von Hand ein – oder lass sie weg.'+
+          nichtErkannt.slice(0,8).map(function(z){ return '<div>'+attrEsc(z)+'</div>'; }).join("")+
+          (nichtErkannt.length>8 ? '<div>…</div>' : '')+'</div>'
+        : '')+
       '<div id="pvrows"></div>'+
       '<button class="mini" id="addRow" type="button">＋ Zeile</button>'+
       '<div class="pvsave"><button id="saveUnit" type="button">Einheit speichern</button>'+
