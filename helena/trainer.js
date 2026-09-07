@@ -140,6 +140,9 @@
   /* ---------- XP & Streak ---------- */
   var xp=parseInt(get(PRE+"-xp","0"),10)||0;
   var streak=parseInt(get(PRE+"-streak","0"),10)||0;
+  // Ist heute der erste Besuch des Tages - die Serie also gerade eben
+  // gewachsen? Nur dann wird sie am Rundenende hervorgehoben.
+  var serieNeuHeute=false;
   (function(){
     var today=new Date(); today.setHours(0,0,0,0);
     var iso=today.toISOString().slice(0,10);
@@ -148,6 +151,7 @@
       var y=new Date(today); y.setDate(y.getDate()-1);
       streak=(last===y.toISOString().slice(0,10))?streak+1:1;
       set(PRE+"-streak",String(streak)); set(PRE+"-last",iso);
+      serieNeuHeute=true;
     }
     if(streak<1){streak=1; set(PRE+"-streak","1");}
   })();
@@ -707,6 +711,21 @@
         " richtige hintereinander"+(neuerRekord?" \ud83c\udf89":"")+'</p>'
       : "";
 
+    // Helena am 07.09.2026: die Serie stand nur oben in der Leiste und war
+    // nach der Runde weg - dabei ist genau das der Moment, in dem sie gerade
+    // um einen Tag gewachsen ist.
+    var serieText, serieZusatz;
+    if(streak>1){
+      serieText=streak+" Tage in Folge";
+      serieZusatz=serieNeuHeute ? "heute drangeh\u00e4ngt" : "";
+    } else {
+      serieText="Heute ge\u00fcbt";
+      serieZusatz="Tag 1 deiner Serie";
+    }
+    var serieHtml='<div class="serie'+(serieNeuHeute?" gewachsen":"")+'">'+
+      "\ud83d\udd25 "+serieText+
+      (serieZusatz?' <small>'+serieZusatz+'</small>':'')+'</div>';
+
     var s=sitztZaehlen();
     // Dieselbe Zahl, die auch in der Auswertung landet - sonst stimmt das
     // eine nicht mit dem anderen überein.
@@ -717,6 +736,7 @@
       '<h2>'+kopf+'</h2>'+
       '<p>'+unter+'</p>'+
       rekordHtml+
+      serieHtml+
       '<div class="bilanz">'+
         '<div><b>'+erstGesamt+'</b><small>W\u00f6rter ge\u00fcbt</small></div>'+
         '<div><b>'+s.sitzt+'</b><small>sitzen fest</small></div>'+

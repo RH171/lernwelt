@@ -152,6 +152,17 @@
   .sterne .an{color:var(--gold);}
   .sterne .aus{color:var(--line);}
   .rekord{color:var(--gold) !important; font-weight:700;}
+  /* Die Serie am Rundenende - Helena sah sie bisher nur oben in der Leiste,
+     und dort war sie genau in dem Moment weg, in dem sie gewachsen ist.
+     Die Pille zentriert sich von selbst: .done ist text-align:center, und
+     inline-flex ist ein Inline-Kasten. */
+  .serie{display:inline-flex; align-items:center; gap:7px; margin:12px 0 2px;
+    background:var(--surface2); border:1px solid var(--line); border-radius:999px;
+    padding:9px 15px; font-size:14.5px; font-weight:700; color:var(--text);
+    min-height:24px;}
+  .serie small{color:var(--muted); font-weight:600; font-size:12.5px;}
+  .serie.gewachsen{background:color-mix(in srgb,var(--gold) 14%,var(--surface2));
+    border-color:color-mix(in srgb,var(--gold) 40%,var(--line));}
   .bilanz{display:flex; gap:10px; margin:18px 0 4px;}
   .bilanz div{flex:1; background:var(--surface2); border:1px solid var(--line);
     border-radius:14px; padding:12px 6px;}
