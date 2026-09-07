@@ -36,6 +36,8 @@
         'box-shadow:0 3px 14px rgba(0,0,0,.22);display:grid;place-items:center;' +
         'font-family:system-ui,sans-serif;padding:0}' +
       '#melde-knopf:active{transform:scale(.93)}' +
+      '#melde-karte .blasenbild{display:block;max-width:100%;max-height:180px;border-radius:10px;'+
+      'margin-top:8px;object-fit:contain;background:#f4f6fa}' +
       '#melde-huelle{position:fixed;inset:0;z-index:2147483001;background:rgba(15,18,28,.55);' +
         'display:grid;place-items:center;padding:16px;font-family:system-ui,sans-serif}' +
       '#melde-karte{background:#fff;color:#1b1c22;border-radius:20px;padding:20px;' +
@@ -100,7 +102,9 @@
         var neues = meineFaeden.some(function(f){ return f.ungelesenKind; });
         var k = document.getElementById("melde-knopf");
         if (k) k.classList.toggle("hat-neues", neues);
-        offenesAnsprechen();
+        // Nur beim Oeffnen von selbst fragen. Mitten im Spiel waere ein
+        // Fenster vor der Nase eine Stoerung - da genuegt der rote Punkt.
+        if (!schonGefragt) { schonGefragt = true; offenesAnsprechen(); }
       })
       .catch(function(){});
   }
@@ -112,6 +116,7 @@
      aus nachschaut. Höchstens einmal pro Tag und Faden. */
 
   var ANGESPROCHEN = "lernstand-angesprochen";
+  var schonGefragt = false;
 
   function schonAngesprochen(id){
     try {
@@ -171,13 +176,11 @@
       '</div>';
     document.body.appendChild(h);
 
-    fetch("/api/melden?meine=1&kind=" + encodeURIComponent(KIND), {credentials:"same-origin"})
-      .then(function(r){ return r.json(); })
-      .then(function(){
-        var i = h.querySelector("#melde-altbild");
-        if (i) i.src = "/api/melden?bild=" + encodeURIComponent(faden.id) + "&roh=1";
-      })
-      .catch(function(){});
+    bildHolen(faden.id, 0, function(datenUrl){
+      var i = h.querySelector("#melde-altbild");
+      if (!i) return;
+      if (datenUrl) i.src = datenUrl; else i.remove();
+    });
 
     h.addEventListener("click", function(e){ if (e.target === h) h.remove(); });
     h.querySelector("#melde-spaeter").addEventListener("click", function(){ h.remove(); });
@@ -253,6 +256,7 @@
       return '<div class="blase ' + (vonMir ? "von-kind" : "von-werkstatt") + '">' +
                '<span class="wer">' + (vonMir ? "Du" : "Werkstatt") + '</span>' +
                entschaerfen(n.text || "") +
+               (n.hatBild ? '<img class="blasenbild" data-nr="' + (n.nr || 0) + '" alt="Dein Bild">' : "") +
              '</div>';
     }).join("");
 
@@ -268,6 +272,12 @@
       '</div>';
     document.body.appendChild(h);
     h.addEventListener("click", function (e) { if (e.target === h) schliessen(h, faden); });
+
+    Array.prototype.forEach.call(h.querySelectorAll(".blasenbild"), function (i) {
+      bildHolen(faden.id, i.getAttribute("data-nr"), function (d) {
+        if (d) i.src = d; else i.remove();
+      });
+    });
 
     h.querySelector("#melde-schicken").addEventListener("click", function () {
       antwortSchicken(h, faden);
@@ -292,6 +302,16 @@
   }
 
   function schliessen(h, faden) { if (faden) gelesenMerken(faden); h.remove(); }
+
+  // Ein Bild aus dem eigenen Faden holen. Der Server prueft, dass es dem Kind
+  // gehoert; hier interessiert nur, ob eins ankommt.
+  function bildHolen(fadenId, nr, fertig) {
+    fetch("/api/melden?meine=1&kind=" + encodeURIComponent(KIND) +
+          "&bild=" + encodeURIComponent(fadenId + ":" + nr), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { fertig(j && j.ok ? j.bild : null); })
+      .catch(function () { fertig(null); });
+  }
 
   // Als gelesen vermerken, damit der rote Punkt verschwindet.
   function gelesenMerken(faden) {
