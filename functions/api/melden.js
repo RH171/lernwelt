@@ -12,7 +12,7 @@
 // POST   /api/melden {id, status}     -> "passt jetzt" (Kind) / erledigt (Eltern)
 // DELETE /api/melden?id=...           -> wegräumen (Eltern)
 
-import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const LISTE = "meldungen";
@@ -29,9 +29,19 @@ export async function onRequestPost(context) {
   const kind = KINDER.includes(String(daten.kind || "").toLowerCase())
     ? String(daten.kind).toLowerCase() : null;
 
-  // Wer schreibt? Ein Kind mit seinem Code, oder die Werkstatt mit dem Elterncode.
+  // Wer schreibt? Ein Kind aus seinem Bereich, oder die Werkstatt mit dem
+  // Elterncode.
+  //
+  // Bis zum 07.09.2026 wurde hier fuer JEDES Kind ein Ausweis verlangt - auch
+  // fuer Helena, deren Bereich offen ist. geheimFuer() faellt fuer sie auf
+  // PAUL_CODE zurueck, sie haette also Pauls Code gebraucht, um einen Fehler
+  // zu melden. Dass es bei ihr trotzdem ging, lag nur an einem Cookie, das
+  // zufaellig auf ihrem Handy lag; auf einem frischen Geraet waere sie
+  // ausgesperrt gewesen. Jetzt gilt dieselbe Regel wie ueberall sonst.
   const alsEltern = await ausweisGueltig(request, geheimFuer(env, "eltern"), env);
-  const alsKind = kind ? await ausweisGueltig(request, geheimFuer(env, kind), env) : false;
+  const alsKind = kind
+    ? (!brauchtAusweis(env, kind) || await ausweisGueltig(request, geheimFuer(env, kind), env))
+    : false;
   if (!alsEltern && !alsKind) return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
   let liste = await listeHolen(env);
@@ -135,7 +145,10 @@ export async function onRequestGet(context) {
   const kind = String(url.searchParams.get("kind") || "").toLowerCase();
   if (meine) {
     if (!KINDER.includes(kind)) return json(400, { ok: false, fehler: "Wer denn?" });
-    if (!(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+    // Gleiche Regel wie beim Schreiben: Wo der Bereich offen ist, braucht es
+    // keinen Ausweis. Sonst haette Helena ihre eigenen Meldungen nicht lesen
+    // koennen - genau das, was sie sich gewuenscht hat.
+    if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
       return json(401, { ok: false, fehler: "Nicht angemeldet." });
     const liste = await listeHolen(env);
     const meins = liste.filter((m) => m.kind === kind);
