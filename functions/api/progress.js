@@ -61,27 +61,41 @@ export async function onRequestPost(context) {
   if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
   if (!(await darfEr(request, env, kind))) return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
-  let neu = null;
-  try { neu = JSON.parse(await request.text()); } catch (e) {}
-  if (!neu || typeof neu !== "object" || Array.isArray(neu))
+  let paket = null;
+  try { paket = JSON.parse(await request.text()); } catch (e) {}
+  if (!paket || typeof paket !== "object" || Array.isArray(paket))
+    return json(400, { ok: false, fehler: "Das war kein Objekt." });
+
+  // Zwei Formen erlaubt: {daten:{...}, vollstaendig:true} vom Sync-Skript,
+  // und ein blankes Objekt (aeltere Seiten, die noch im Browser-Cache liegen).
+  const neu = (paket.daten && typeof paket.daten === "object" && !Array.isArray(paket.daten))
+    ? paket.daten : paket;
+  const vollstaendig = paket.vollstaendig === true;
+
+  if (typeof neu !== "object" || Array.isArray(neu))
     return json(400, { ok: false, fehler: "Das war kein Objekt." });
 
   // Ein leeres Objekt löscht nichts. Ein Browser, der gerade erst startet und
   // noch nichts geladen hat, soll nicht den ganzen Stand wegwischen können -
-  // das war der Weg, auf dem der Fortschritt verlorenging.
+  // genau das war der Weg, auf dem der Fortschritt verlorenging.
   if (!Object.keys(neu).length) return json(200, { ok: true, unveraendert: true });
 
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
 
-  // Zusammenführen statt ersetzen: Wer von einem Gerät kommt, das eine Sache
-  // noch nicht kennt, soll sie nicht bei allen anderen löschen.
-  let alt = {};
-  try {
-    const roh = await env.PAUL_KV.get(SCHLUESSEL(kind));
-    if (roh) alt = JSON.parse(roh) || {};
-  } catch (e) {}
-  await env.PAUL_KV.put(SCHLUESSEL(kind), JSON.stringify(Object.assign(alt, neu)));
-  return json(200, { ok: true });
+  // Hat das Gerät den Stand aus der Cloud bekommen, kennt es ihn vollständig -
+  // dann darf es ihn ERSETZEN, und Weggeworfenes bleibt weg. Sonst wird nur
+  // ZUSAMMENGEFÜHRT: lieber ein Schlüssel zu viel als ein Stand zu wenig.
+  let fertig = neu;
+  if (!vollstaendig) {
+    let alt = {};
+    try {
+      const roh = await env.PAUL_KV.get(SCHLUESSEL(kind));
+      if (roh) alt = JSON.parse(roh) || {};
+    } catch (e) {}
+    fertig = Object.assign(alt, neu);
+  }
+  await env.PAUL_KV.put(SCHLUESSEL(kind), JSON.stringify(fertig));
+  return json(200, { ok: true, ersetzt: vollstaendig });
 }
 
 function json(status, daten) {
