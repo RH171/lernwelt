@@ -1,45 +1,92 @@
-// Cloud-Speicher für Pauls Fortschritt.
-// POST  /api/progress  -> speichert den übergebenen Fortschritt
-// GET   /api/progress  -> liefert den gespeicherten Fortschritt (Fallback/Debug)
+// Cloud-Speicher für den Fortschritt der Kinder.
+//
+// GET  /api/progress?kind=paul   -> liefert den gespeicherten Fortschritt
+// POST /api/progress?kind=paul   -> speichert ihn
+//
+// Am 07.09.2026 grundlegend geändert. Vorher gab es EINEN gemeinsamen Speicher
+// ("paul-blob") für alle Kinder, und beide Richtungen waren ohne Anmeldung
+// offen. Drei Folgen, alle gemessen:
+//
+//   1. Jeder im Netz konnte den kompletten Fortschritt lesen - Datum, Punkte
+//      und Sekunden jeder Spielrunde seit Juni.
+//   2. Jeder konnte ihn mit einem einzigen Aufruf ERSETZEN. Genau das ist beim
+//      Durchprüfen aus Versehen passiert.
+//   3. Helenas Vokabeldaten lagen in Pauls Speicher, weil das Sync-Skript den
+//      ganzen localStorage einsammelte.
+//
+// Jetzt: ein Speicher je Kind, und wer hinter dem Riegel wohnt, braucht den
+// Ausweis. Helenas Bereich ist offen - sie kann sich nicht anmelden, also gilt
+// für sie dieselbe Ausnahme wie beim Lernstand.
+
+import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
+
+const KINDER = ["paul", "leon", "helena"];
+
+// Pauls Speicher behält seinen alten Namen. Er ist der einzige mit Inhalt aus
+// der Zeit davor, und ein Umzug würde nur eine Fehlerquelle schaffen.
+const SCHLUESSEL = (kind) => (kind === "paul" ? "paul-blob" : "blob:" + kind);
+
+function kindAus(request) {
+  const url = new URL(request.url);
+  const k = String(url.searchParams.get("kind") || "").toLowerCase();
+  return KINDER.includes(k) ? k : null;
+}
+
+async function darfEr(request, env, kind) {
+  if (!brauchtAusweis(env, kind)) return true;
+  return await ausweisGueltig(request, geheimFuer(env, kind), env);
+}
 
 export async function onRequestGet(context) {
-  const { env } = context;
+  const { request, env } = context;
+  const kind = kindAus(request);
+  if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+  if (!(await darfEr(request, env, kind))) return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
   try {
-    const data = (env.PAUL_KV && (await env.PAUL_KV.get("paul-blob"))) || "null";
-    return new Response(data, {
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-      },
+    const daten = (env.PAUL_KV && (await env.PAUL_KV.get(SCHLUESSEL(kind)))) || "null";
+    return new Response(daten, {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
     });
   } catch (e) {
     return new Response("null", {
-      headers: { "content-type": "application/json; charset=utf-8" },
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
     });
   }
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+  const kind = kindAus(request);
+  if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+  if (!(await darfEr(request, env, kind))) return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  let neu = null;
+  try { neu = JSON.parse(await request.text()); } catch (e) {}
+  if (!neu || typeof neu !== "object" || Array.isArray(neu))
+    return json(400, { ok: false, fehler: "Das war kein Objekt." });
+
+  // Ein leeres Objekt löscht nichts. Ein Browser, der gerade erst startet und
+  // noch nichts geladen hat, soll nicht den ganzen Stand wegwischen können -
+  // das war der Weg, auf dem der Fortschritt verlorenging.
+  if (!Object.keys(neu).length) return json(200, { ok: true, unveraendert: true });
+
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+
+  // Zusammenführen statt ersetzen: Wer von einem Gerät kommt, das eine Sache
+  // noch nicht kennt, soll sie nicht bei allen anderen löschen.
+  let alt = {};
   try {
-    const body = await request.text();
-    const parsed = JSON.parse(body); // muss gültiges JSON-Objekt sein
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      if (env.PAUL_KV) {
-        await env.PAUL_KV.put("paul-blob", JSON.stringify(parsed));
-      }
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { "content-type": "application/json" },
-      });
-    }
-    return new Response(JSON.stringify({ ok: false, error: "kein Objekt" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: "ungueltig" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
-  }
+    const roh = await env.PAUL_KV.get(SCHLUESSEL(kind));
+    if (roh) alt = JSON.parse(roh) || {};
+  } catch (e) {}
+  await env.PAUL_KV.put(SCHLUESSEL(kind), JSON.stringify(Object.assign(alt, neu)));
+  return json(200, { ok: true });
+}
+
+function json(status, daten) {
+  return new Response(JSON.stringify(daten), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
 }
