@@ -47,6 +47,32 @@
   .hinweis{background:#fff8ec;border:1px solid #f5e2bf;border-radius:13px;padding:14px 16px;
            font-size:14.5px;line-height:1.55}
   .hinweis b{color:#8a5a10}
+
+  /* --- Tag, Woche, Jahreszeit --- */
+  .zeitraeume{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px;}
+  .zr{border:1px solid var(--line); border-radius:12px; padding:13px 15px; background:var(--bg);}
+  .zr h3{margin:0 0 9px; font-size:15px; font-weight:700;}
+  .zr h3 .kw{color:var(--muted); font-weight:600; font-size:12.5px;}
+  .zr-zeile{display:flex; justify-content:space-between; gap:10px; padding:3px 0; font-size:13.5px;}
+  .zr-zeile span{color:var(--muted);}
+  .zr-davor{margin-top:9px; padding-top:8px; border-top:1px solid var(--line);
+    color:var(--muted); font-size:12.5px;}
+
+  /* --- Wortschatz --- */
+  .vorrat{margin:0 0 14px;}
+  .vorrat:last-child{margin-bottom:0;}
+  .vorrat-kopf{display:flex; justify-content:space-between; gap:10px; font-size:13.5px; margin-bottom:6px;}
+  .vorrat-kopf span{color:var(--muted);}
+  .balken{height:9px; background:var(--bg); border:1px solid var(--line);
+    border-radius:999px; overflow:hidden;}
+  .balken i{display:block; height:100%; background:var(--gut); border-radius:999px;}
+
+  /* --- Zuletzt gespielt --- */
+  .nebenzeile{color:var(--muted); font-size:12px; margin-top:2px;}
+  .marke{display:inline-block; margin-left:7px; padding:1px 7px; border-radius:999px;
+    background:var(--bg); border:1px solid var(--line);
+    color:var(--muted); font-size:11.5px; font-weight:600; vertical-align:middle;}
+
   .leer{color:var(--muted);font-size:14px;padding:6px 0}
   .muster{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
           background:#f5f7fa;border-radius:7px;padding:2px 7px}
@@ -278,6 +304,34 @@
       kachel(d.aufgaben ? Math.round(d.minuten*60/d.aufgaben) + " s" : "–", "je Aufgabe") +
       '</div></div>';
 
+    /* Tag, Woche, Jahreszeit - Dennys Wunsch vom 07.09.2026.
+       Eine Zahl allein sagt wenig. "8 Minuten" wird erst zur Aussage, wenn
+       daneben steht, wie viel es im Zeitraum davor war. */
+    if (d.zeitraeume){
+      h += '<div class="karte"><h2>Tag, Woche und Jahreszeit</h2>' +
+           '<p class="unter">Wie viel gelernt, wie viele Spiele, wie viel Zeit – und wie es davor war.</p>' +
+           '<div class="zeitraeume">';
+      ["tag","woche","jahreszeit"].forEach(function(k){
+        var z = d.zeitraeume[k]; if (!z) return;
+        h += zeitraum(z);
+      });
+      h += '</div></div>';
+    }
+
+    /* Wortschatz: wie viel vom Vorrat ist überhaupt angefasst? */
+    if ((d.wortschatz||[]).length){
+      h += '<div class="karte"><h2>Wortschatz</h2>' +
+           '<p class="unter">Wie viele verschiedene Wörter schon drankamen. Mehr Wörter nachzulegen hilft erst, wenn der Vorrat wirklich knapp wird.</p>';
+      d.wortschatz.forEach(function(w){
+        h += '<div class="vorrat">' +
+             '<div class="vorrat-kopf"><b>' + esc(fachName(w.fach)) + '</b>' +
+             '<span>' + w.angefasst + ' von ' + w.vorrat + ' Wörtern · ' + w.anteil + ' %</span></div>' +
+             '<div class="balken"><i style="width:' + Math.max(1, Math.min(100, w.anteil)) + '%"></i></div>' +
+             '</div>';
+      });
+      h += '</div>';
+    }
+
     /* Problemzonen - das Wichtigste zuerst */
     var schwach = (d.merkmale||[]).filter(function(m){ return m.aufgaben >= 3 && m.quote < 80; });
     h += '<div class="karte"><h2>Woran es hakt</h2>' +
@@ -335,18 +389,82 @@
     }
 
     /* Letzte Runden */
-    h += '<div class="karte"><h2>Zuletzt gespielt</h2><table><thead><tr><th>Wann</th><th>Spiel</th>' +
+    h += '<div class="karte"><h2>Zuletzt gespielt</h2>' +
+         '<p class="unter">Mit Tag, Kalenderwoche und Jahreszeit – damit man später noch weiß, wann das war.</p>' +
+         '<table><thead><tr><th>Wann</th><th>Spiel</th>' +
          '<th style="text-align:right">Ergebnis</th><th style="text-align:right">Dauer</th></tr></thead><tbody>';
     (d.letzte||[]).forEach(function(r){
       var q = r.aufgaben ? Math.round(r.richtig/r.aufgaben*100) : 0;
-      h += '<tr><td style="color:var(--muted);white-space:nowrap">' + esc(wann(r.zeit)) + '</td>' +
-           '<td>' + esc(r.titel||"–") + '</td>' +
-           '<td style="text-align:right" class="q ' + stufe(q) + '">' + r.richtig + '/' + r.aufgaben + '</td>' +
-           '<td style="text-align:right;color:var(--muted)">' + (r.minuten||0) + ' min</td></tr>';
+      var bauen = (r.zeitart === "bauen");
+      var zusatz = [];
+      if (r.kw) zusatz.push("KW " + r.kw);
+      if (r.jahreszeit) zusatz.push(r.jahreszeit);
+      if (r.minutenPause) zusatz.push(r.minutenPause + " min Pause");
+      h += '<tr><td style="white-space:nowrap">' +
+             '<div>' + esc((r.wochentag ? r.wochentag + ", " : "") + wann(r.zeit)) + '</div>' +
+             '<div class="nebenzeile">' + esc(zusatz.join(" · ")) + '</div></td>' +
+           '<td>' + esc(r.titel||"–") +
+             (bauen ? '<span class="marke">gebaut</span>' : '') +
+             (r.thema ? '<div class="nebenzeile">' + esc(r.thema) + '</div>' : '') + '</td>' +
+           '<td style="text-align:right">' +
+             (bauen || !r.aufgaben
+               ? '<span style="color:var(--muted)">–</span>'
+               : '<span class="q ' + stufe(q) + '">' + r.richtig + '/' + r.aufgaben + '</span>') +
+             '</td>' +
+           '<td style="text-align:right;color:var(--muted)">' + kurzZeit(r) + '</td></tr>';
     });
     h += '</tbody></table></div>';
 
     $("inhalt").innerHTML = h;
+  }
+
+  // Ein Zeitraum-Block: was gelernt, wie viele Spiele, wie viel Zeit -
+  // und darunter der Vergleich zum Zeitraum davor.
+  function zeitraum(z){
+    var titel = z.titel + (z.kw ? ' <span class="kw">KW ' + z.kw + '</span>' : '');
+    var inhalt;
+    if (!z.runden && !z.minutenBauen){
+      inhalt = '<div class="leer" style="margin:0">Noch nichts gespielt.</div>';
+    } else {
+      inhalt =
+        '<div class="zr-zeile"><span>Gelernt</span><b>' +
+          (z.aufgaben ? z.richtig + ' von ' + z.aufgaben + ' richtig' + (z.quote !== null ? ' · ' + z.quote + ' %' : '') : '–') +
+        '</b></div>' +
+        '<div class="zr-zeile"><span>Spiele</span><b>' + z.runden + '</b></div>' +
+        '<div class="zr-zeile"><span>Lernzeit</span><b>' + minuten(z.minuten) + '</b></div>' +
+        (z.minutenPause ? '<div class="zr-zeile"><span>davon Pause</span><b>' + minuten(z.minutenPause) + '</b></div>' : '') +
+        (z.minutenBauen ? '<div class="zr-zeile"><span>Werkstatt gebaut</span><b>' + minuten(z.minutenBauen) + '</b></div>' : '') +
+        (z.tageAktiv > 1 ? '<div class="zr-zeile"><span>Tage aktiv</span><b>' + z.tageAktiv + '</b></div>' : '');
+    }
+    return '<div class="zr"><h3>' + titel + '</h3>' + inhalt + vergleich(z) + '</div>';
+  }
+
+  // Besser oder schlechter als davor? Ohne Wertung formuliert - es geht um
+  // die Richtung, nicht um eine Note.
+  function vergleich(z){
+    var v = z.davor; if (!v || (!v.runden && !z.runden)) return "";
+    var teile = [];
+    if (v.minuten || z.minuten) teile.push(pfeil(z.minuten, v.minuten) + " " + minuten(v.minuten));
+    if (v.aufgaben || z.aufgaben) teile.push(pfeil(z.aufgaben, v.aufgaben) + " " + v.aufgaben + " Aufgaben");
+    if (!teile.length) return "";
+    return '<div class="zr-davor">' + esc(z.davorTitel) + ': ' + teile.join(" · ") + '</div>';
+  }
+  function pfeil(jetzt, davor){
+    if (jetzt > davor) return "\u2191";
+    if (jetzt < davor) return "\u2193";
+    return "\u2192";
+  }
+
+  function fachName(f){
+    return ({englisch:"Englisch", franzoesisch:"Französisch", deutsch:"Deutsch",
+             mathe:"Mathe", hsu:"HSU", musik:"Musik", religion:"Religion"})[f] || f;
+  }
+
+  // Unter einer Minute ist "0 min" irreführend - dann lieber Sekunden.
+  function kurzZeit(r){
+    if (r.minuten) return r.minuten + " min";
+    if (r.sekunden) return r.sekunden + " s";
+    return "–";
   }
 
   function kachel(gross, klein, klasse){
