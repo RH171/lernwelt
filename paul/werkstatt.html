@@ -961,10 +961,25 @@
     feld.addEventListener("keydown", function(e){ if (e.key === "Enter") ab(); });
   }
 
-  // "1736", " 1736 " und "1.736" gelten als dasselbe
+  // "1736", " 1736 " und "1.736" gelten als dasselbe.
+  //
+  // Und seit Pauls Meldung vom 07.09.2026 auch: Die Einheit darf fehlen, wenn
+  // sie schon in der Frage steht. Er hatte "3250" auf "Wie viel Gramm sind
+  // das?" geantwortet - richtig - und bekam "Fast!", weil die erwartete
+  // Antwort "3250 g" hiess. Eine WIDERSPRECHENDE Einheit ("3250 kg") bleibt
+  // falsch, sonst waere jede Umrechnung sinnlos.
   function zahlGleich(a, b){
     var sauber = function(s){ return String(s).replace(/[\s.'\u00A0]/g, "").toLowerCase(); };
-    return sauber(a) === sauber(b);
+    var A = sauber(a), B = sauber(b);
+    if (A === B) return true;
+
+    var teile = function(s){
+      var m = s.match(/^(-?[0-9,]+)([a-z\u00e4\u00f6\u00fc\u00df\u00b2\u00b3%\u00b0\u20ac\/]*)$/);
+      return m ? { zahl: m[1], einheit: m[2] } : null;
+    };
+    var x = teile(A), y = teile(B);
+    if (!x || !y || x.zahl !== y.zahl) return false;
+    return !x.einheit || !y.einheit || x.einheit === y.einheit;
   }
 
   function loesungZeigen(stimmt, a, gegeben){

@@ -222,6 +222,18 @@ function pruefeSpiel(spiel) {
     }
     if ((a.art || "") === "teilschritte" && !(a.teilschritte || []).length)
       m.push(`Aufgabe ${nr} ist eine Schrittkette ohne Schritte`);
+
+    // Getippte Antworten mit Einheit sind der Fehler, den Paul am 07.09.2026
+    // gemeldet hat: Er tippte 3250, erwartet war "3250 g", und die richtige
+    // Antwort galt als falsch. Der Vergleich verzeiht das inzwischen - aber
+    // gar nicht erst entstehen lassen ist besser.
+    const nackt = (w) => !/^-?[\d.,\s]*\d\s*[^\d\s,.].*$/.test(String(w == null ? "" : w).trim());
+    if ((a.art || "") === "eingabe" && !nackt(a.richtig))
+      m.push(`Aufgabe ${nr}: die Lösung "${a.richtig}" trägt eine Einheit - die gehört in die Frage`);
+    (a.teilschritte || []).forEach((sch, j) => {
+      if (!nackt(sch.richtig))
+        m.push(`Aufgabe ${nr}, Schritt ${j + 1}: die Lösung "${sch.richtig}" trägt eine Einheit`);
+    });
   });
   return m;
 }
@@ -259,6 +271,7 @@ DEINE REGELN
 5. WECHSLE DIE AUFGABENART. Nicht zwölfmal dasselbe. Jede Aufgabe hat ein Feld "art":
    - "wahl": vier Antworten zum Antippen. Gut für Verstehensfragen, Fehlersuche, Begriffe. Fülle "antworten" und "richtig", "teilschritte" bleibt leer.
    - "eingabe": das Kind tippt die Zahl selbst. Kein Raten möglich. Fülle nur "richtig", "antworten" und "teilschritte" bleiben leer.
+     WICHTIG: Bei "eingabe" und bei "teilschritte" ist "richtig" eine NACKTE ZAHL, ohne Einheit - also "3250", nicht "3250 g". Die Einheit gehört in die FRAGE ("Wie viel Gramm sind das?"), nicht in die Antwort. Sonst tippt das Kind die richtige Zahl und bekommt gesagt, sie sei falsch. Genau das ist Paul am 07.09.2026 passiert.
    - "teilschritte": eine Kette kleiner Fragen, die zusammen den Rechenweg gehen. Fülle "teilschritte", "antworten" bleibt leer, "richtig" ist das Endergebnis.
    Mische etwa so: die Hälfte "wahl", ein Drittel "eingabe", der Rest "teilschritte". Beginne mit einer leichten "wahl"-Aufgabe zum Aufwärmen.
 
@@ -390,13 +403,13 @@ const WERKZEUG = {
                 type: "object",
                 properties: {
                   frage: { type: "string", description: "Kurze Frage, z. B. 'Wie viel ist 8 · 7?'" },
-                  richtig: { type: "string", description: "Die Antwort als Zahl." },
+                  richtig: { type: "string", description: "Die Antwort als nackte Zahl, ohne Einheit." },
                 },
                 required: ["frage", "richtig"],
                 additionalProperties: false,
               },
             },
-            richtig: { type: "string", description: "Die richtige Antwort. Bei art=teilschritte das Endergebnis." },
+            richtig: { type: "string", description: "Die richtige Antwort. Bei art=teilschritte das Endergebnis. Bei art=eingabe und bei teilschritten eine nackte Zahl OHNE Einheit - die Einheit steht in der Frage." },
             erklaerung: { type: "string", description: "Der Weg zur Lösung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, höchstens fünf Zeilen. Kein Fließtext. Ohne Merkhilfe - die kommt ins Feld merke." },
             merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 8). Leer lassen, wenn nichts wirklich passt." },
             merkmal: { type: "string", description: 'Was GENAU diese Aufgabe übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Damit sehen die Eltern später, wo es hakt. Sei spezifisch: nicht "rechnen", sondern "5er-reihe", "zehneruebergang plus", "halbe stunden", "muenzen erkennen", "zahlen zerlegen", "symmetrieachsen", "cm in m". Gleiche Sache = gleicher Schlüssel, damit man zählen kann.' },
