@@ -213,13 +213,24 @@ export async function onRequestGet(context) {
 export async function onRequestDelete(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
-  if (!(await ausweisGueltig(request, geheimFuer(env, "eltern"), env)))
-    return json(401, { ok: false, fehler: "Bitte mit dem Eltern-Code anmelden." });
 
-  const id = new URL(request.url).searchParams.get("id");
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
   if (!id) return json(400, { ok: false, fehler: "Welche Meldung denn?" });
+
   const liste = await listeHolen(env);
   const faden = liste.find((m) => m.id === id);
+
+  // Helena am 07.09.2026: "Kannst du oben bei meinen Meldungen einen X Knopf
+  // anbringen damit ich dann die Themen anklicken kann und sie loeschen kann,
+  // wenn ich will!!!" - Ein Kind darf seine EIGENEN Meldungen wegraeumen.
+  // Fremde nicht, und die Eltern duerfen weiterhin alles.
+  const meins = String(url.searchParams.get("kind") || "").toLowerCase();
+  const alsKindSelbst = faden && meins && KINDER.includes(meins) && faden.kind === meins &&
+    (!brauchtAusweis(env, meins) || await ausweisGueltig(request, geheimFuer(env, meins), env));
+
+  if (!alsKindSelbst && !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env)))
+    return json(401, { ok: false, fehler: "Das darfst du nicht loeschen." });
   await liste_speichern(env, liste.filter((m) => m.id !== id));
   if (faden) for (let i = 0; i < (faden.verlauf || []).length; i++) {
     try { await env.PAUL_KV.delete("meldung-bild:" + id + ":" + i); } catch (e) {}
