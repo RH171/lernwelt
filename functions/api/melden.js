@@ -114,7 +114,20 @@ export async function onRequestGet(context) {
     if (!(await ausweisGueltig(request, geheimFuer(env, kind), env)))
       return json(401, { ok: false, fehler: "Nicht angemeldet." });
     const liste = await listeHolen(env);
-    return json(200, { ok: true, meldungen: liste.filter((m) => m.kind === kind) });
+    const meins = liste.filter((m) => m.kind === kind);
+
+    // Sein eigenes Bild darf das Kind sehen - aber nur aus einem Faden, der
+    // ihm auch gehoert. Die Kennung <id>:<nr> wird dafuer aufgetrennt.
+    const eigenesBild = url.searchParams.get("bild");
+    if (eigenesBild) {
+      const fadenId = String(eigenesBild).split(":")[0];
+      if (!meins.some((m) => m.id === fadenId))
+        return json(403, { ok: false, fehler: "Das ist nicht deins." });
+      const d = await env.PAUL_KV.get("meldung-bild:" + eigenesBild);
+      if (!d) return json(404, { ok: false, fehler: "Kein Bild dabei." });
+      return json(200, { ok: true, bild: d });
+    }
+    return json(200, { ok: true, meldungen: meins });
   }
 
   if (!(await ausweisGueltig(request, geheimFuer(env, "eltern"), env)))
