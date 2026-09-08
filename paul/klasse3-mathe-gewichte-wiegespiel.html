@@ -134,6 +134,51 @@
   .buy.owned{background:#e9fbf2;color:var(--mathe2);box-shadow:none;cursor:default;}
   .buy.maxed{background:#eef2f8;color:var(--muted);box-shadow:none;cursor:default;}
 
+  /* ===== Waage zum Ausprobieren + Markt-Tagebuch (Pauls Wunsch, 08.09.2026) =====
+     Paul: "Wenn du die Gewichte erst auf die Waage legen und wieder wegnehmen
+     darfst, kannst du in Ruhe tuefteln, statt gleich raten zu muessen." */
+  .opts.wide{display:block;}
+  .ivscale .ivbeam{transition:transform .38s cubic-bezier(.3,1.1,.4,1);}
+  .ivscale .ivpan{transition:transform .38s cubic-bezier(.3,1.1,.4,1);}
+  .ivread{display:flex;align-items:baseline;justify-content:center;gap:9px;flex-wrap:wrap;
+    margin:2px 0 12px;font-family:var(--round);font-weight:800;font-size:21px;}
+  .ivread .ivstat{font-size:13.5px;font-weight:700;color:var(--muted);}
+  .ivread.level{color:var(--mathe2);}
+  .ivread.level .ivstat{color:var(--mathe2);}
+  .ivlbl{color:var(--muted);font-size:12.5px;font-weight:700;margin:10px 2px 6px;}
+  .ivon{display:flex;flex-wrap:wrap;gap:7px;min-height:48px;align-items:center;}
+  .ivon .ivnone{color:var(--muted);font-size:13px;}
+  .ivchip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;
+    border:2px solid #b6975f;border-radius:13px;background:#efe0c4;color:#5a4527;
+    font-family:var(--round);font-weight:800;font-size:15px;cursor:pointer;}
+  .ivchip:active{transform:scale(.95);}
+  .ivchip .ivx{font-size:13px;color:#8a6b45;}
+  .ivchip:disabled{opacity:.6;cursor:default;}
+  .ivgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .ivw{position:relative;min-height:52px;border:2px solid var(--line);background:#fff;border-radius:14px;
+    font-family:var(--round);font-weight:800;font-size:15px;color:var(--ink);cursor:pointer;padding:8px 3px;}
+  .ivw:active{transform:scale(.96);background:#f3f7ff;}
+  .ivw .ivcnt{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:11px;
+    background:var(--mathe);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 5px;}
+  .ivw:disabled{opacity:.4;cursor:default;}
+  .ivdone{margin-top:13px;width:100%;min-height:52px;border:none;border-radius:15px;padding:14px;
+    font-family:var(--round);font-weight:800;font-size:16px;color:#fff;cursor:pointer;
+    background:linear-gradient(150deg,var(--mathe),var(--mathe2));}
+  .ivdone:disabled{background:#e7ebf3;color:#8d94a6;cursor:default;}
+
+  .tg-row{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:6px;}
+  .tg-card{flex:1 1 calc(50% - 5px);min-width:120px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:12px 11px;box-shadow:var(--shadow);}
+  .tg-v{font-family:var(--round);font-weight:800;font-size:20px;line-height:1.15;}
+  .tg-c{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.3;}
+  .tg-e{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);
+    border-radius:15px;padding:10px 12px;margin-bottom:8px;}
+  .tg-emj{font-size:25px;flex:none;}
+  .tg-b{flex:1;min-width:0;}
+  .tg-t{font-family:var(--round);font-weight:800;font-size:14.5px;}
+  .tg-s{color:var(--muted);font-size:12px;margin-top:1px;}
+  .tg-leer{text-align:center;color:var(--muted);font-size:14px;padding:24px 12px;line-height:1.55;}
+
   canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60;}
   @media(max-width:420px){ .opt{font-size:17px;} .title{font-size:17px;} .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);} }
   @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
