@@ -24,6 +24,38 @@ const SCHLUESSEL = (kind) => "aktiv:" + kind;
 const WUNSCH = "ausrollen:wunsch";
 const WUNSCH_GILT = 900;          // 15 Minuten, dann verfaellt die Frage
 
+// Woran gerade gebaut wird - Pauls Meldung 5z785gdjxc vom 08.09.2026: "wenn das
+// Fenster aufplatzt ... da will ich gerne wissen, was du da überhaupt machst",
+// und auf die Rückfrage, ob ein grober Satz reicht: "Ich will was genaueres".
+// Der Satz wird beim Ausrollen mitgeschickt und im Fenster angezeigt.
+//
+// Warum er einen Ausweis braucht: Diese Antwort steht ungeschützt im Netz - ohne
+// Riegel könnte jeder Fremde Paul einen beliebigen Satz auf den Bildschirm
+// schreiben. Der reine "es liegt etwas bereit"-Schalter bleibt offen wie bisher;
+// er verrät nichts und ist nur ein Ja/Nein.
+const WAS_MAX = 160;
+
+function wasSaeubern(roh) {
+  return String(roh || "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")   // Steuerzeichen raus
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, WAS_MAX);
+}
+
+// Was liegt bereit? Gibt {da, was} zurueck. Alte Eintraege (nur ein Zeitstempel)
+// werden weiter verstanden - dann eben ohne Satz.
+async function wunschLesen(env) {
+  let roh = null;
+  try { roh = await env.PAUL_KV.get(WUNSCH); } catch (e) {}
+  if (!roh) return { da: false, was: "" };
+  try {
+    const d = JSON.parse(roh);
+    if (d && typeof d === "object") return { da: true, was: wasSaeubern(d.was) };
+  } catch (e) {}
+  return { da: true, was: "" };
+}
+
 // Nach so vielen Sekunden ohne Puls gilt jemand als weg. Etwas mehr als zwei
 // Pulsabstände, damit ein verschlucktes Signal niemanden verschwinden lässt.
 const STILLE_BIS_WEG = 480;
@@ -70,9 +102,9 @@ export async function onRequestPost(context) {
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
-  let updateWartet = false;
-  try { updateWartet = !!(await env.PAUL_KV.get(WUNSCH)); } catch (e) {}
-  return json(200, { ok: true, updateWartet });
+  // updateWas sagt zusaetzlich, woran gebaut wurde - Paul wollte es genau wissen.
+  const w = await wunschLesen(env);
+  return json(200, { ok: true, updateWartet: w.da, updateWas: w.was });
 }
 
 export async function onRequestGet(context) {
@@ -83,7 +115,17 @@ export async function onRequestGet(context) {
   // beim naechsten Puls nach - hoechstens WUNSCH_GILT Sekunden lang.
   const url = new URL(request.url);
   if (url.searchParams.get("wunsch") === "1") {
-    try { await env.PAUL_KV.put(WUNSCH, String(Date.now()), { expirationTtl: WUNSCH_GILT }); } catch (e) {}
+    // Den Satz nimmt der Server nur von jemandem an, der den Elternausweis hat.
+    let was = "";
+    const roh = wasSaeubern(url.searchParams.get("was"));
+    if (roh) {
+      const geheim = geheimFuer(env, "eltern");
+      if (geheim && (await ausweisGueltig(request, geheim, env))) was = roh;
+    }
+    try {
+      await env.PAUL_KV.put(WUNSCH, JSON.stringify({ t: Date.now(), was }),
+                            { expirationTtl: WUNSCH_GILT });
+    } catch (e) {}
   } else if (url.searchParams.get("wunsch") === "0") {
     try { await env.PAUL_KV.delete(WUNSCH); } catch (e) {}
   }
@@ -96,9 +138,8 @@ export async function onRequestGet(context) {
   }
   const seit = juengste ? Math.round((Date.now() - juengste) / 1000) : null;
   const frei = seit === null || seit > STILLE_BIS_WEG;
-  let gefragt = false;
-  try { gefragt = !!(await env.PAUL_KV.get(WUNSCH)); } catch (e) {}
-  return json(200, { ok: true, frei, seit, stilleBisWeg: STILLE_BIS_WEG, gefragt });
+  const w = await wunschLesen(env);
+  return json(200, { ok: true, frei, seit, stilleBisWeg: STILLE_BIS_WEG, gefragt: w.da });
 }
 
 function json(status, daten) {

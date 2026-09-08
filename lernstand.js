@@ -98,6 +98,9 @@
         'color:#6b7280;font-size:13.5px}' +
       '#melde-karte .fz-undo{background:none;border:none;color:#7c5cff;font-weight:700;' +
         'font-size:13.5px;cursor:pointer;font-family:inherit;min-height:44px;padding:0 4px}' +
+      '#melde-karte .woran{margin:0 0 14px;padding:12px 14px;border-radius:13px;' +
+        'background:#f3f0ff;border:1px solid #e0d9ff;color:#1b1c22;font-size:15px;' +
+        'line-height:1.45;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}' +
       '#melde-karte .schicken{width:100%;margin-top:15px;padding:15px;border:none;border-radius:14px;' +
         'background:#4f46e5;color:#fff;font-size:17px;font-weight:700;cursor:pointer}' +
       '#melde-karte .schicken:disabled{opacity:.5}' +
@@ -1002,7 +1005,7 @@
           headers: { "content-type": "application/json" }, body: text,
           keepalive: !!weg })
           .then(function (r) { return r.json(); })
-          .then(function (j) { if (j && j.updateWartet) updateFragen(); })
+          .then(function (j) { if (j && j.updateWartet) updateFragen(j.updateWas); })
           .catch(function () {});
       }
     } catch (e) {}
@@ -1014,26 +1017,40 @@
      Aufgabe steckt, sagt "gleich nicht" - wer sowieso nur herumklickt, sagt ja
      und hat die neue Fassung sofort.
 
-     Ohne Antwort passiert nichts. Niemand wird hinausgeworfen. */
+     Ohne Antwort passiert nichts. Niemand wird hinausgeworfen.
+
+     Paul am 08.09.2026 (Meldung 5z785gdjxc): "wenn das Fenster aufplatzt ... da
+     will ich gerne wissen, was du da überhaupt machst" - und auf die Rückfrage,
+     ob ein grober Satz reicht: "Ich will was genaueres". Deshalb steht jetzt
+     drin, woran gebaut wurde, bevor er auf "Ja" drückt. Der Satz kommt vom
+     Server (updateWas) und wird als Text gesetzt, nie als HTML - was dort
+     steht, soll gelesen und nicht ausgeführt werden. */
 
   var updateGefragt = false;
 
-  function updateFragen() {
+  function updateFragen(woran) {
     if (updateGefragt) return;
     if (document.getElementById("melde-huelle")) return;   // nicht ins Gespraech platzen
     updateGefragt = true;
+
+    var satz = String(woran == null ? "" : woran).trim();
 
     var h = document.createElement("div");
     h.id = "melde-huelle";
     h.innerHTML =
       '<div id="melde-karte">' +
         '<h3>Darf ich kurz? \u{1F527}</h3>' +
-        '<p class="u">Es liegt eine Verbesserung bereit. Zum Einspielen muss die ' +
+        (satz
+          ? '<p class="u">Das habe ich gerade f\u00fcr dich gebaut:</p>' +
+            '<div class="woran" id="up-woran"></div>'
+          : '<p class="u">Es liegt eine Verbesserung bereit.</p>') +
+        '<p class="u">Zum Einspielen muss die ' +
         'Seite einmal neu laden \u2013 das dauert ein paar Sekunden. ' +
         'Dein Fortschritt bleibt gespeichert.</p>' +
         '<button type="button" class="schicken" id="up-ja">Ja, jetzt gleich</button>' +
         '<button type="button" class="zurueck" id="up-nein">Gerade nicht \u2013 später nochmal fragen</button>' +
       '</div>';
+    if (satz) h.querySelector("#up-woran").textContent = satz;
     document.body.appendChild(h);
 
     h.querySelector("#up-nein").addEventListener("click", function () {
