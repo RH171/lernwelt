@@ -613,7 +613,9 @@
       else if(bad) bad.parentNode.removeChild(bad);
       b.disabled=cur._fertig||voll;
     });
-    if(voll&&!gerade&&!cur._fertig) d.stat.textContent="Mehr passt nicht drauf – nimm etwas wieder runter.";
+    if(voll&&!gerade&&!cur._fertig) d.stat.textContent = diff<0
+      ? "Voller geht die Waage nicht – tausch kleine Stücke gegen ein großes."
+      : "Voller geht die Waage nicht – nimm etwas wieder runter.";
 
     d.done.disabled=!gerade||cur._fertig;
     d.done.textContent=gerade?"Passt! Kunde bedienen ✓":"Die Waage steht noch schief";
