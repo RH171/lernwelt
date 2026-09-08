@@ -507,10 +507,12 @@
 
   /* ---- Rekorde und Tagebuch ---- */
   function loadRek(){
-    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0};
+    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0,kunden:0};
     try{ var s=JSON.parse(gi(LS.rekorde,"null"));
       if(s&&typeof s==="object") for(var k in d) if(typeof s[k]==="number") d[k]=s[k];
     }catch(e){}
+    /* Wer schon vorher gespielt hat, faengt nicht bei null an. */
+    if(!d.kunden) d.kunden=num(LS.served);
     return d;
   }
   var rek=loadRek();
@@ -686,12 +688,13 @@
     document.getElementById("dRankName").textContent=rk.cur.name;
     document.getElementById("dTaler").textContent=wallet;
     var h='<div class="tg-row">'
-      +tgCard(num(LS.served),"👥 Kunden bedient")
-      +tgCard(num(LS.games),"📅 Markttage")
-      +tgCard(rek.schwer?gLabel(rek.schwer):"–","🏋️ schwerste Bestellung")
-      +tgCard(rek.stuecke||"–","⚖️ meiste Gewichtsstücke auf einmal")
-      +tgCard(num(LS.best),"🔥 längste Serie")
+      +tgCard(rek.kunden,"👥 Kunden bedient")
+      +tgCard(num(LS.games),"📅 Markttage geschafft")
+      +tgCard(rek.auftraege,"⚖️ Aufträge an der Waage")
       +tgCard(rek.dran,"💪 nicht aufgegeben")
+      +tgCard(rek.schwer?gLabel(rek.schwer):"–","🏋️ schwerste Bestellung")
+      +tgCard(rek.stuecke||"–","🔢 meiste Gewichtsstücke auf einmal")
+      +tgCard(num(LS.best),"🔥 längste Serie")
       +'</div>';
     h+='<div class="ivlbl">📓 Deine letzten Wiege-Aufträge</div>';
     var d=loadDiary().slice().reverse();
@@ -949,7 +952,7 @@
   function onCorrect(){
     sRight(); sCoin(); streak++;
     var coins=talerPerSale(); wallet+=coins; dayTaler+=coins; saveWallet();
-    rek.verdient+=coins; saveRek();
+    rek.verdient+=coins; rek.kunden++; saveRek();
     var gain=12+(streak>=3?4:0); dayXp+=gain; dayRight++;
     si(LS.xp,String(num(LS.xp)+gain)); if(streak>num(LS.best)) si(LS.best,String(streak));
     el.streak.textContent=streak; el.earn.textContent="+"+dayTaler; el.pTaler.textContent=wallet; paintRank();
