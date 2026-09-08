@@ -49,8 +49,8 @@
         'max-width:430px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 18px 50px rgba(0,0,0,.3)}' +
       '#melde-karte h3{margin:0 0 4px;font-size:20px}' +
       '#melde-karte p.u{margin:0 0 14px;color:#6b7280;font-size:14px;line-height:1.5}' +
-      '#melde-karte .arten{display:flex;gap:8px;margin-bottom:12px}' +
-      '#melde-karte .arten button{flex:1;padding:11px;border-radius:12px;border:2px solid #e5e8ef;' +
+      '#melde-karte .arten{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}' +
+      '#melde-karte .arten button{padding:11px;border-radius:12px;border:2px solid #e5e8ef;' +
         'background:#fbfcff;font-size:14.5px;font-weight:600;cursor:pointer;color:#1b1c22}' +
       '#melde-karte .arten button.an{border-color:#4f46e5;background:#eef0ff}' +
       '#melde-karte textarea{width:100%;min-height:96px;border:2px solid #e5e8ef;border-radius:13px;' +
@@ -60,12 +60,18 @@
       '#melde-karte .bildknopf{padding:11px 14px;border-radius:12px;border:2px dashed #cfd5e4;' +
         'background:#fbfcff;font-size:14.5px;cursor:pointer;color:#1b1c22}' +
       '#melde-vorschau{max-height:120px;border-radius:10px;border:1px solid #e5e8ef;display:none}' +
-      '#melde-karte .ideenknopf{grid-column:1/-1}' +
+      '#melde-karte .ideenknopf{grid-column:1/-1;border-style:dashed;background:#faf9ff}' +
       '#melde-karte .ideenliste{display:grid;gap:9px;margin-bottom:12px}' +
-      '#melde-karte .ideenkarte{display:block;width:100%;text-align:left;cursor:pointer;' +
-        'background:#f4f6fa;border:1.5px solid #e3e6ef;border-radius:14px;padding:12px 14px;' +
-        'font:inherit;color:#1b1c22;min-height:44px}' +
-      '#melde-karte .ideenkarte:active{transform:scale(.99);border-color:#7c5cff}' +
+      '#melde-karte .ideenkarte{display:flex;gap:11px;align-items:flex-start;width:100%;' +
+        'text-align:left;cursor:pointer;background:#f4f6fa;border:1.5px solid #e3e6ef;' +
+        'border-radius:14px;padding:12px 13px;font:inherit;color:#1b1c22;min-height:44px}' +
+      '#melde-karte .ideenkarte:active{transform:scale(.99)}' +
+      '#melde-karte .ideenkarte.an{border-color:#7c5cff;background:#f3f0ff}' +
+      '#melde-karte .ik-haken{flex:none;width:24px;height:24px;border-radius:7px;' +
+        'border:2px solid #c9cede;background:#fff;color:transparent;font-size:15px;' +
+        'font-weight:900;display:grid;place-items:center;margin-top:1px}' +
+      '#melde-karte .ideenkarte.an .ik-haken{background:#7c5cff;border-color:#7c5cff;color:#fff}' +
+      '#melde-karte .ik-text{flex:1;min-width:0}' +
       '#melde-karte .ik-t{display:block;font-weight:700;line-height:1.4}' +
       '#melde-karte .ik-w{display:block;color:#6b7280;font-size:12.5px;margin-top:3px;line-height:1.45}' +
       '#melde-karte .ideenlader{display:flex;gap:7px;justify-content:center;padding:18px 0 6px}' +
@@ -439,37 +445,70 @@
   }
 
   function ideenZeigen(h, ideen) {
+    // Denny am 08.09.2026: "Vielleicht auch so bauen, dass die Kinder die Idee
+    // anhaken koennen, welche sie davon umgesetzt haben wollen." Also nicht
+    // eine auswaehlen, sondern beliebig viele - warum sollte ein Kind sich
+    // entscheiden muessen, wenn ihm zwei gefallen.
+    var gewaehlt = [];
+
     var karten = ideen.map(function (i, n) {
-      return '<button type="button" class="ideenkarte" data-nr="' + n + '">' +
-               '<span class="ik-t">' + entschaerfen(i.titel) + '</span>' +
-               '<span class="ik-w">' + entschaerfen(i.warum) + '</span>' +
+      return '<button type="button" class="ideenkarte" data-nr="' + n + '" aria-pressed="false">' +
+               '<span class="ik-haken">\u2713</span>' +
+               '<span class="ik-text">' +
+                 '<span class="ik-t">' + entschaerfen(i.titel) + '</span>' +
+                 '<span class="ik-w">' + entschaerfen(i.warum) + '</span>' +
+               '</span>' +
              '</button>';
     }).join("");
 
     h.querySelector("#melde-karte").innerHTML =
       '<h3>\u{1F4A1} Meine Ideen für dieses Spiel</h3>' +
-      '<p class="u">Tipp die an, die dir gefällt \u2013 dann baue ich sie. ' +
-      'Oder schreib darunter, wie du es lieber hättest.</p>' +
+      '<p class="u">Hak alles an, was du haben willst \u2013 gern auch mehrere. ' +
+      'Und schreib darunter, wenn du etwas anders hättest.</p>' +
       '<div class="ideenliste">' + karten + '</div>' +
-      '<textarea id="melde-text" maxlength="1500" placeholder="Oder: so hätte ich es lieber \u2026"></textarea>' +
-      '<button type="button" class="schicken" id="ideen-eigen">Meine eigene Idee schicken</button>' +
+      '<textarea id="melde-text" maxlength="1500" placeholder="Noch eine eigene Idee, oder: so hätte ich es lieber \u2026"></textarea>' +
+      '<button type="button" class="schicken" id="ideen-ab" disabled>Erst etwas anhaken</button>' +
       '<button type="button" class="zurueck" id="ideen-zu">Doch nicht</button>';
 
+    var ab = h.querySelector("#ideen-ab");
+    var feld = h.querySelector("#melde-text");
+
+    function knopfPflegen() {
+      var eigenes = (feld.value || "").trim();
+      var n = gewaehlt.length;
+      ab.disabled = (n === 0 && !eigenes);
+      ab.textContent = n === 0
+        ? (eigenes ? "Meine eigene Idee schicken" : "Erst etwas anhaken")
+        : (n === 1 ? "Diese eine hätte ich gern" : "Diese " + n + " hätte ich gern");
+    }
+
     h.querySelector("#ideen-zu").addEventListener("click", function () { h.remove(); });
+    feld.addEventListener("input", knopfPflegen);
 
     Array.prototype.forEach.call(h.querySelectorAll(".ideenkarte"), function (b) {
       b.addEventListener("click", function () {
-        var i = ideen[Number(b.getAttribute("data-nr"))];
-        var eigenes = (h.querySelector("#melde-text").value || "").trim();
-        ideeSchicken(h, "Ich hätte gern: " + i.titel + "\n(" + i.warum + ")" +
-                        (eigenes ? "\n\nDazu noch von mir: " + eigenes : ""));
+        var n = Number(b.getAttribute("data-nr"));
+        var i = gewaehlt.indexOf(n);
+        if (i < 0) gewaehlt.push(n); else gewaehlt.splice(i, 1);
+        var an = gewaehlt.indexOf(n) >= 0;
+        b.classList.toggle("an", an);
+        b.setAttribute("aria-pressed", an ? "true" : "false");
+        knopfPflegen();
       });
     });
 
-    h.querySelector("#ideen-eigen").addEventListener("click", function () {
-      var t = (h.querySelector("#melde-text").value || "").trim();
-      if (!t) { h.querySelector("#melde-text").focus(); return; }
-      ideeSchicken(h, t);
+    ab.addEventListener("click", function () {
+      var eigenes = (feld.value || "").trim();
+      var teile = [];
+      if (gewaehlt.length) {
+        teile.push(gewaehlt.length === 1 ? "Das hätte ich gern:" : "Das hätte ich gern:");
+        gewaehlt.sort(function (x, y) { return x - y; }).forEach(function (n) {
+          teile.push("\u2713 " + ideen[n].titel + " (" + ideen[n].warum + ")");
+        });
+      }
+      if (eigenes) teile.push((teile.length ? "\nUnd von mir selbst: " : "") + eigenes);
+      if (!teile.length) return;
+      ideeSchicken(h, teile.join("\n"));
     });
   }
 
