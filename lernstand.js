@@ -121,7 +121,10 @@
       '.faden-liste{max-height:44vh;overflow:auto;margin-bottom:12px}' +
       '#melde-karte .passt{width:100%;margin-top:8px;padding:13px;border:none;border-radius:13px;' +
         'background:#12a35f;color:#fff;font-size:16px;font-weight:700;cursor:pointer}' +
-      '#melde-karte .zurueck{background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:6px 0}';
+      '#melde-karte .zurueck{background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;' +
+        // 44 px auch mit der Maus: beruehrung.css hebt Knoepfe nur auf Tippgeraeten
+        // an, und "Gerade nicht" war am Rechner nur 28 px hoch.
+        'padding:6px 0;min-height:44px;width:100%}';
     document.head.appendChild(stil);
 
     var knopf = document.createElement("button");
