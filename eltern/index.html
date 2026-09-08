@@ -332,6 +332,27 @@
       h += '</div>';
     }
 
+    /* Wie geübt wurde. Ohne das vergleicht die Seite Äpfel mit Birnen:
+       Wiedererkennen und Abrufen stehen sonst gleichwertig nebeneinander. */
+    if ((d.arten||[]).length){
+      h += '<div class="karte"><h2>Wie geübt wird</h2>' +
+           '<p class="unter">Eine niedrige Quote beim Eintippen ist mehr wert als eine hohe beim Ankreuzen – ' +
+           'da muss das Wort wirklich abgerufen werden. Deshalb stehen die Arten hier getrennt.</p>' +
+           '<table><thead><tr><th>Übungsart</th><th style="width:30%">Anteil richtig</th>' +
+           '<th style="text-align:right">Aufgaben</th><th style="text-align:right">je Aufgabe</th></tr></thead><tbody>';
+      d.arten.forEach(function(a){
+        var st = stufe(a.quote);
+        h += '<tr><td><b>' + esc(artName(a.art)) + '</b>' +
+               '<div class="nebenzeile">' + esc(artErklaerung(a.art)) + '</div></td>' +
+             '<td><div class="balken"><i class="b-' + st + '" style="width:' +
+               Math.max(2, Math.min(100, a.quote||0)) + '%"></i></div>' +
+               '<span class="q ' + st + '">' + (a.quote===null?"–":a.quote + " %") + '</span></td>' +
+             '<td style="text-align:right;color:var(--muted)">' + a.aufgaben + '</td>' +
+             '<td style="text-align:right;color:var(--muted)">' + (a.schnitt||0) + ' s</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+
     /* Problemzonen - das Wichtigste zuerst */
     var schwach = (d.merkmale||[]).filter(function(m){ return m.aufgaben >= 3 && m.quote < 80; });
     h += '<div class="karte"><h2>Woran es hakt</h2>' +
@@ -464,6 +485,23 @@
   function istHeute(iso){
     try { return new Date(iso).toDateString() === new Date().toDateString(); }
     catch(e){ return false; }
+  }
+
+  // Aus "vok-auswahl-4" wird "Ankreuzen (4 zur Wahl)" - die nackte Kennung
+  // sagt einem Elternteil nichts.
+  function artName(a){
+    if (a.indexOf("vok-auswahl") === 0){
+      var n = a.split("-")[2];
+      return "Ankreuzen" + (n ? " (" + n + " zur Wahl)" : "");
+    }
+    return ({ "vok-tippen":"Eintippen", "vok-luecke":"Lückentext", "vok-hoeren":"Hören & schreiben",
+              "vokabel":"Vokabeln", "spiel":"Im Spiel" })[a] || a;
+  }
+  function artErklaerung(a){
+    if (a.indexOf("vok-auswahl") === 0) return "wiedererkennen – am leichtesten";
+    return ({ "vok-tippen":"abrufen und schreiben – am wirksamsten",
+              "vok-luecke":"im Satz ergänzen",
+              "vok-hoeren":"hören und schreiben – am schwersten" })[a] || "";
   }
 
   function fachName(f){

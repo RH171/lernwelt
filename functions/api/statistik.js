@@ -155,7 +155,7 @@ export async function onRequestGet(context) {
 
 function auswerten(liste) {
   const leer = { runden: 0, aufgaben: 0, richtig: 0, quote: null, minuten: 0,
-                 minutenPause: 0, minutenBauen: 0, geraete: [],
+                 minutenPause: 0, minutenBauen: 0, geraete: [], arten: [],
                  merkmale: [], themen: [], verlauf: [], letzte: [], stolpersteine: [] };
   if (!liste.length) return leer;
 
@@ -170,6 +170,12 @@ function auswerten(liste) {
   // Antwort steht bei jeder Aufgabe dabei - daraus lassen sich die
   // VERSCHIEDENEN Wörter zählen, nicht nur die Versuche.
   const jeFach = {};
+
+  // Wie GEUEBT wurde, nicht nur wie gut. Helena am 07.09.2026 abends: 11 von 20
+  // - nach 95 Prozent am Morgen. Der Einbruch war kein Rueckschritt, sie hatte
+  // von Multiple-Choice auf Eintippen umgestellt. Ohne diese Zahl liest sich
+  // das wie "sie wird schlechter", dabei ist es das Gegenteil.
+  const jeArt = {};
   const zaehle = (art, schluessel, r, aufgaben, richtig) => {
     const t = jeZeitraum[art];
     t[schluessel] = t[schluessel] ||
@@ -225,6 +231,15 @@ function auswerten(liste) {
       g.aufgaben++; jeThema[t].aufgaben++; jeWoche[woche].aufgaben++;
       jeThema[t].sekunden += a.sekunden || 0;
       if (a.stimmt) { g.richtig++; jeThema[t].richtig++; jeWoche[woche].richtig++; }
+
+      if (a.art && a.art !== "spiel" && a.art !== "besuch") {
+        const k = a.art;
+        jeArt[k] = jeArt[k] || { art: k, aufgaben: 0, richtig: 0, sekunden: 0, zuletzt: r.zeit };
+        jeArt[k].aufgaben++;
+        jeArt[k].sekunden += a.sekunden || 0;
+        if (a.stimmt) jeArt[k].richtig++;
+        if (r.zeit > jeArt[k].zuletzt) jeArt[k].zuletzt = r.zeit;
+      }
 
       const m = a.merkmal || "ohne Angabe";
       jeMerkmal[m] = jeMerkmal[m] || { name: m, aufgaben: 0, richtig: 0, sekunden: 0, zuletzt: r.zeit };
@@ -323,9 +338,19 @@ function auswerten(liste) {
     }))
     .sort((a, b) => b.vorrat - a.vorrat);
 
+  // Nur zeigen, wenn wirklich verschiedene Arten geuebt wurden - bei einer
+  // einzigen waere die Aufstellung nur Ballast.
+  const arten = Object.values(jeArt)
+    .map((x) => Object.assign({}, x, {
+      quote: x.aufgaben ? Math.round((x.richtig / x.aufgaben) * 100) : null,
+      schnitt: x.aufgaben ? Math.round(x.sekunden / x.aufgaben) : null,
+    }))
+    .sort((a, b) => b.aufgaben - a.aufgaben);
+
   return {
     zeitraeume,
     wortschatz,
+    arten: arten.length > 1 ? arten : [],
     geraete: Object.values(jeGeraet)
       .map((x) => Object.assign({}, x, { minuten: Math.round(x.minuten) }))
       .sort((a, b) => b.runden - a.runden),
