@@ -36,11 +36,15 @@ const WUNSCH_GILT = 900;          // 15 Minuten, dann verfaellt die Frage
 const WAS_MAX = 160;
 
 function wasSaeubern(roh) {
-  return String(roh || "")
+  const t = String(roh || "")
     .replace(/[\u0000-\u001f\u007f]+/g, " ")   // Steuerzeichen raus
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, WAS_MAX);
+    .trim();
+  if (t.length <= WAS_MAX) return t;
+  // Nicht mitten im Wort abschneiden - Paul soll lesen koennen, was dasteht.
+  const kurz = t.slice(0, WAS_MAX - 1);
+  const luecke = kurz.lastIndexOf(" ");
+  return (luecke > WAS_MAX - 45 ? kurz.slice(0, luecke) : kurz).replace(/[ ,;:.-]+$/, "") + "\u2026";
 }
 
 // Was liegt bereit? Gibt {da, was} zurueck. Alte Eintraege (nur ein Zeitstempel)
