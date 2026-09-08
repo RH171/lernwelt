@@ -67,6 +67,27 @@ Cloudflare Pages rollt jeden Push sofort aus. Wer mitten in einer Aufgabe
 steckt, bekäme die Seite unter den Fingern weggetauscht. Der Puls dafür kommt
 aus `lernstand.js`; `functions/api/aktiv.js` beantwortet die Frage.
 
+### Im Fenster steht, woran gebaut wurde
+
+Paul am 08.09.2026 über die Frage „Darf ich kurz?": *„da will ich gerne wissen,
+was du da überhaupt machst"* — und auf die Rückfrage, ob ein grober Satz reicht:
+*„Ich will was genaueres"*.
+
+Deshalb schickt `ausrollen-frei.sh` den Satz mit, wenn es nachfragt. Er kommt
+**aus den Commits, die gleich hochgehen**: Auto-Uploads fallen raus, vom Rest
+fällt das `Meldung <id> (Kind): ` davor weg. Damit steht im Fenster genau das,
+was gebaut wurde — und nichts Ausgedachtes. **Ein schlecht formulierter Commit
+ist ab jetzt ein Text, den ein Kind liest.**
+
+Von Hand geht es auch:
+
+    ./werkstatt.sh bauzettel "Ich repariere den Fehler mit den 3250 Gramm"
+
+Den Satz nimmt der Server nur mit Elternausweis an (`werkstatt.sh` holt ihn sich
+selbst aus dem Schlüsselbund). Die Frage, *ob* etwas bereitliegt, bleibt weiter
+offen beantwortbar — sie verrät nichts. Ohne Ausweis fällt es still auf das alte
+„Es liegt eine Verbesserung bereit" zurück; gefragt wird auf jeden Fall.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
