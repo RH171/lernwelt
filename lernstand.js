@@ -110,6 +110,7 @@
     knopf.style.position = "fixed";
     knopf.addEventListener("click", dialogOeffnen);
     abstandSchaffen();
+    tastenAbfangen();
     document.body.appendChild(knopf);
   }
 
@@ -240,6 +241,27 @@
       a.style.cssText = "height:78px;flex:none;grid-column:1/-1;pointer-events:none";
       document.body.appendChild(a);
     } catch (e) {}
+  }
+
+  /* ---------- Tasten gehoeren dem Melde-Fenster ----------
+     Pauls Spiele horchen am Dokument auf Tastendruecke: Im Wiege-Meister
+     steuern w, a, s und d die Figur, und das Spiel schluckt sie mit
+     preventDefault. Steht das Melde-Fenster darueber, verschwinden genau diese
+     Buchstaben beim Tippen - Paul konnte am 08.09.2026 kein "das" schreiben,
+     nur ein grosses "D", weil Grossbuchstaben nicht belegt sind.
+
+     Statt fuenf Spiele einzeln zu aendern, hoert das Ereignis hier auf: Alles,
+     was innerhalb des Fensters getippt wird, kommt nicht mehr bis zum Dokument
+     durch. Das Eingabefeld selbst hat seine Handler da laengst gehabt, und der
+     Buchstabe wird trotzdem eingefuegt - gestoppt wird nur die Weiterreichung,
+     nicht die Wirkung. Gilt auch fuer Spiele, die es noch gar nicht gibt. */
+  function tastenAbfangen() {
+    ["keydown", "keyup", "keypress", "input", "beforeinput"].forEach(function (art) {
+      document.addEventListener(art, function (e) {
+        var h = document.getElementById("melde-huelle");
+        if (h && h.contains(e.target)) e.stopPropagation();
+      }, true);
+    });
   }
 
   function dialogOeffnen() {
