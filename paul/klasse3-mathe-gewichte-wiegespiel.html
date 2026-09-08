@@ -307,7 +307,8 @@
   /* HEILIG (bestehend): wiege-xp, wiege-best, wiege-served, wiege-mistakes, wiege-sound, wiege-games
      NEU: wiege-taler, wiege-shop, wiege-pos  (Sync sichert alle Keys automatisch) */
   var LS={ xp:"wiege-xp", best:"wiege-best", served:"wiege-served", mistakes:"wiege-mistakes",
-    sound:"wiege-sound", games:"wiege-games", taler:"wiege-taler", shop:"wiege-shop", pos:"wiege-pos" };
+    sound:"wiege-sound", games:"wiege-games", taler:"wiege-taler", shop:"wiege-shop", pos:"wiege-pos",
+    rekorde:"wiege-rekorde", tagebuch:"wiege-tagebuch" };
   function gi(k,d){ try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;} }
   function si(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
   function num(k){ var n=parseInt(gi(k,"0"),10); return isNaN(n)?0:n; }
@@ -474,8 +475,247 @@
         explain:"Eine Woche hat 7 Tage: "+per+" g · 7 = <b>"+correct+" g</b>."};
     }
   }
-  var GENS=[genWaage,genUmrechnen,genOrdnen,genUeberschlag];
-  function newQuestion(){ return pick(GENS)(); }
+  /* ================= Waage zum Ausprobieren (Paul, 08.09.2026) =================
+     Drei Wuensche aus seiner Meldung:
+       1. Gewichte auflegen UND wieder wegnehmen duerfen - in Ruhe tuefteln.
+       2. Kunden, die eine ganz genaue Menge wollen ("1 kg 250 g").
+       3. Ein Markt-Tagebuch mit seinen Wiege-Rekorden.
+     Die Waage neigt sich, solange es nicht stimmt. Fertig geht erst, wenn sie
+     gerade steht - hier kann man nichts falsch machen, nur tuefteln. */
+  var STUECKE=[1000,500,200,100,50,20,10];
+  var MAXST=12;                      /* mehr passt weder aufs Bild noch in den Kopf */
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function gLabel(g){
+    if(g>=1000) return (g%1000===0) ? (g/1000)+" kg" : Math.floor(g/1000)+" kg "+(g%1000)+" g";
+    return g+" g";
+  }
+  function summe(a){ var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s; }
+  function zerlegen(g){ var out=[],r=g;
+    for(var i=0;i<STUECKE.length;i++){ while(r>=STUECKE[i]){ out.push(STUECKE[i]); r-=STUECKE[i]; } }
+    return out; }
+  function zufallGewicht(minN,maxN){
+    var n=minN+Math.floor(Math.random()*(maxN-minN+1)),sum=0;
+    for(var i=0;i<n;i++){
+      var moeglich=[]; for(var k=0;k<STUECKE.length;k++) if(sum+STUECKE[k]<=2000) moeglich.push(STUECKE[k]);
+      if(!moeglich.length) break;
+      sum+=pick(moeglich);
+    }
+    return sum<20?60:sum;
+  }
+
+  /* ---- Rekorde und Tagebuch ---- */
+  function loadRek(){
+    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0};
+    try{ var s=JSON.parse(gi(LS.rekorde,"null"));
+      if(s&&typeof s==="object") for(var k in d) if(typeof s[k]==="number") d[k]=s[k];
+    }catch(e){}
+    return d;
+  }
+  var rek=loadRek();
+  function saveRek(){ si(LS.rekorde, JSON.stringify(rek)); }
+  function loadDiary(){ try{ var a=JSON.parse(gi(LS.tagebuch,"[]")); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function saveDiary(a){ si(LS.tagebuch, JSON.stringify(a.slice(-30))); }
+  function zwei(n){ return (n<10?"0":"")+n; }
+  function heute(){ var d=new Date();
+    return zwei(d.getDate())+"."+zwei(d.getMonth()+1)+"."+d.getFullYear(); }
+
+  /* ---- Die Waage selbst ---- */
+  function ivScaleHTML(){
+    return '<svg class="ivscale" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg"'
+      +' role="img" aria-label="Balkenwaage zum Ausprobieren">'
+      +'<rect x="110" y="200" width="100" height="14" rx="7" fill="#9a7b52"/>'
+      +'<rect x="152" y="60" width="16" height="145" rx="5" fill="#b8935f"/>'
+      +'<g class="ivbeam"><rect x="52" y="57" width="216" height="10" rx="5" fill="#c39a63"/></g>'
+      +'<circle cx="160" cy="62" r="9" fill="#8a6b45"/>'
+      +'<g class="ivpan ivpanL">'
+        +'<line x1="0" y1="0" x2="0" y2="46" stroke="#8a6b45" stroke-width="2"/>'
+        +'<path d="M-32 46 Q0 72 32 46" fill="none" stroke="#8a6b45" stroke-width="2.5"/>'
+        +'<ellipse cx="0" cy="46" rx="34" ry="8" fill="#e7d3ad" stroke="#b6975f" stroke-width="1.5"/>'
+        +'<text class="ivware" x="0" y="42" text-anchor="middle" font-size="34"></text>'
+        +'<text class="ivwunsch" x="0" y="66" text-anchor="middle" font-size="12.5" font-weight="800" fill="#5a4527"></text>'
+      +'</g>'
+      +'<g class="ivpan ivpanR">'
+        +'<line x1="0" y1="0" x2="0" y2="46" stroke="#8a6b45" stroke-width="2"/>'
+        +'<path d="M-32 46 Q0 72 32 46" fill="none" stroke="#8a6b45" stroke-width="2.5"/>'
+        +'<ellipse cx="0" cy="46" rx="34" ry="8" fill="#e7d3ad" stroke="#b6975f" stroke-width="1.5"/>'
+        +'<g class="ivstack"></g>'
+      +'</g></svg>';
+  }
+  function ivStackHTML(list){
+    var s=list.slice().sort(function(a,b){ return b-a; }),h="",zeig=Math.min(s.length,4);
+    for(var i=0;i<zeig;i++){ var y=39-i*12;
+      h+='<g transform="translate(0,'+y+')">'
+        +'<rect x="-25" y="-6.5" width="50" height="13" rx="3.5" fill="#d8be92" stroke="#b6975f" stroke-width="1"/>'
+        +'<text x="0" y="3.5" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5a4527">'+gLabel(s[i])+'</text></g>';
+    }
+    if(s.length>zeig) h+='<text x="0" y="'+(39-zeig*12-3)+'" text-anchor="middle" font-size="9.5" font-weight="800" fill="#8a6b45">+'+(s.length-zeig)+' mehr</text>';
+    return h;
+  }
+  function ivPanelHTML(){
+    var h='<div class="ivread"><span class="ivsum">0 g</span><span class="ivstat">Leg ein Gewicht auf.</span></div>'
+      +'<div class="ivlbl">Auf der Waage – tippen nimmt wieder weg</div>'
+      +'<div class="ivon"></div>'
+      +'<div class="ivlbl">Gewichtsstücke – tippen legt auf</div>'
+      +'<div class="ivgrid">';
+    for(var i=0;i<STUECKE.length;i++) h+='<button type="button" class="ivw" data-w="'+STUECKE[i]+'">'+gLabel(STUECKE[i])+'</button>';
+    return h+'</div><button type="button" class="ivdone" disabled>Die Waage steht noch schief</button>';
+  }
+  function ivFind(){
+    var w=el.work,o=el.opts;
+    return { beam:w.querySelector(".ivbeam"), panL:w.querySelector(".ivpanL"), panR:w.querySelector(".ivpanR"),
+      ware:w.querySelector(".ivware"), wunsch:w.querySelector(".ivwunsch"), stack:w.querySelector(".ivstack"),
+      read:o.querySelector(".ivread"), sum:o.querySelector(".ivsum"), stat:o.querySelector(".ivstat"),
+      on:o.querySelector(".ivon"), grid:o.querySelector(".ivgrid"), done:o.querySelector(".ivdone") };
+  }
+  function ivRender(){
+    var d=ivFind(); if(!d.beam) return;
+    var sum=summe(cur._legt), diff=sum-cur.ziel, leer=cur._legt.length===0;
+
+    /* Neigung: klein anfangen, aber gleich sichtbar - 10 g darf man sehen. */
+    var t=0;
+    if(diff!==0) t=(diff>0?1:-1)*12*Math.min(1,Math.sqrt(Math.abs(diff)/400));
+    var rad=t*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad);
+    d.beam.setAttribute("transform","rotate("+t.toFixed(2)+",160,62)");
+    d.panL.setAttribute("transform","translate("+(160-88*cs).toFixed(1)+","+(62-88*sn).toFixed(1)+")");
+    d.panR.setAttribute("transform","translate("+(160+88*cs).toFixed(1)+","+(62+88*sn).toFixed(1)+")");
+    d.ware.textContent=cur.panLinks||"";
+    d.wunsch.textContent=cur.geheim?"?":(cur.panLabel||"");
+    d.stack.innerHTML=ivStackHTML(cur._legt);
+
+    d.sum.textContent=gLabel(sum);
+    var gerade=(diff===0&&!leer);
+    var stat;
+    if(leer) stat=cur.geheim?"Leg los und probier aus!":"Leg Gewichte auf, bis es passt.";
+    else if(diff<0) stat=cur.geheim?"Die Ware ist noch schwerer ⬇️":"Noch zu leicht ⬇️";
+    else if(diff>0) stat=cur.geheim?"Zu viel – die Ware ist leichter ⬆️":"Zu schwer ⬆️";
+    else stat="Die Waage steht gerade! ⚖️";
+    d.stat.textContent=stat;
+    d.read.className=gerade?"ivread level":"ivread";
+
+    var h="";
+    if(leer) h='<span class="ivnone">Noch nichts drauf – such dir ein Stück aus.</span>';
+    else { var s=cur._legt;
+      for(var i=0;i<s.length;i++) h+='<button type="button" class="ivchip" data-off="'+i+'"'
+        +(cur._fertig?" disabled":"")+'>'+gLabel(s[i])+' <span class="ivx">✕</span></button>';
+    }
+    d.on.innerHTML=h;
+    if(!cur._fertig) d.on.querySelectorAll(".ivchip").forEach(function(c){
+      c.addEventListener("click",function(){ ivAb(parseInt(c.getAttribute("data-off"),10)); }); });
+
+    var voll=cur._legt.length>=MAXST;
+    d.grid.querySelectorAll(".ivw").forEach(function(b){
+      var w=parseInt(b.getAttribute("data-w"),10),n=0;
+      for(var i=0;i<cur._legt.length;i++) if(cur._legt[i]===w) n++;
+      var bad=b.querySelector(".ivcnt");
+      if(n>0){ if(!bad){ bad=document.createElement("span"); bad.className="ivcnt"; b.appendChild(bad); } bad.textContent=n; }
+      else if(bad) bad.parentNode.removeChild(bad);
+      b.disabled=cur._fertig||voll;
+    });
+    if(voll&&!gerade&&!cur._fertig) d.stat.textContent="Mehr passt nicht drauf – nimm etwas wieder runter.";
+
+    d.done.disabled=!gerade||cur._fertig;
+    d.done.textContent=gerade?"Passt! Kunde bedienen ✓":"Die Waage steht noch schief";
+  }
+  function ivAuf(w){
+    if(cur._fertig||cur._legt.length>=MAXST) return;
+    cur._legt.push(w); cur._legt.sort(function(a,b){ return b-a; });
+    sClick(); ivRender();
+  }
+  function ivAb(i){
+    if(cur._fertig||i<0||i>=cur._legt.length) return;
+    cur._legt.splice(i,1); cur._abgenommen++;
+    tone(420,.08,0,"triangle",.1); ivRender();
+  }
+  function ivBind(){
+    var d=ivFind();
+    d.grid.querySelectorAll(".ivw").forEach(function(b){
+      b.addEventListener("click",function(){ ivAuf(parseInt(b.getAttribute("data-w"),10)); }); });
+    d.done.addEventListener("click",ivFertig);
+  }
+  function ivFertig(){
+    if(cur._fertig) return;
+    if(summe(cur._legt)!==cur.ziel||!cur._legt.length) return;   /* Knopf ist sonst aus */
+    cur._fertig=true; ivRender();
+    try{ window.lernstand && window.lernstand.antwort(true, "gewichte legen"); }catch(e){}
+    ivBuchen(); onCorrect();
+  }
+  /* "Nicht aufgegeben" heisst hier: es ging nicht auf Anhieb auf, ein Stueck
+     musste wieder runter - und Paul ist trotzdem drangeblieben. */
+  function ivBuchen(){
+    var n=cur._legt.length, dran=cur._abgenommen>0?1:0;
+    rek.auftraege++; rek.gelegt+=n;
+    if(cur.ziel>rek.schwer) rek.schwer=cur.ziel;
+    if(n>rek.stuecke) rek.stuecke=n;
+    if(dran) rek.dran++;
+    saveRek();
+    var d=loadDiary();
+    d.push({d:heute(), t:cur.panLabel||gLabel(cur.ziel), g:cur.ziel, n:n, dran:dran, e:cur.panLinks||"⚖️"});
+    saveDiary(d);
+  }
+
+  /* ---- Die beiden neuen Kundentypen ---- */
+  function genErwiegen(){
+    var g=pick(GOODS), ziel=zufallGewicht(2,4);
+    return {kind:"erwiegen", mode:"waage", ziel:ziel, panLinks:g, panLabel:"", geheim:true, work:"",
+      bubble:"Wie schwer ist meine Ware "+g+"? Leg Gewichte auf, bis die Waage gerade steht!",
+      speak:"Wie schwer ist meine Ware? Leg Gewichtsstücke auf, bis die Waage gerade steht.",
+      explain:"Die Ware wiegt <b>"+gLabel(ziel)+"</b> – zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
+  }
+  function genWunsch(){
+    var g=pick(GOODS), r=Math.random(), ziel, txt;
+    if(r<0.38){ var kg=1+Math.floor(Math.random()*2), rest=pick([50,100,150,200,250,300,350,500,750]);
+      ziel=kg*1000+rest; txt=kg+" kg "+rest+" g"; }
+    else if(r<0.65){ var f=pick([{l:"¼ kg",g:250},{l:"½ kg",g:500},{l:"¾ kg",g:750},{l:"1½ kg",g:1500}]);
+      ziel=f.g; txt=f.l; }
+    else { ziel=zufallGewicht(2,4); txt=ziel+" g"; }
+    return {kind:"wunsch", mode:"waage", ziel:ziel, panLinks:g, panLabel:txt, geheim:false, work:"",
+      bubble:"Ich möchte genau "+txt+" "+g+" – stell mir die Gewichte dafür ein!",
+      speak:"Ich möchte genau "+txt+". Stell mir die Gewichte dafür ein.",
+      explain:"<b>"+txt+" sind "+ziel+" g</b> – zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
+  }
+
+  /* ---- Markt-Tagebuch ---- */
+  function tgCard(v,c){ return '<div class="tg-card"><div class="tg-v">'+esc(v)+'</div><div class="tg-c">'+c+'</div></div>'; }
+  function renderDiary(){
+    var rk=rankFor(num(LS.xp));
+    document.getElementById("dRankEmj").textContent=rk.cur.emj;
+    document.getElementById("dRankName").textContent=rk.cur.name;
+    document.getElementById("dTaler").textContent=wallet;
+    var h='<div class="tg-row">'
+      +tgCard(num(LS.served),"👥 Kunden bedient")
+      +tgCard(num(LS.games),"📅 Markttage")
+      +tgCard(rek.schwer?gLabel(rek.schwer):"–","🏋️ schwerste Bestellung")
+      +tgCard(rek.stuecke||"–","⚖️ meiste Gewichtsstücke auf einmal")
+      +tgCard(num(LS.best),"🔥 längste Serie")
+      +tgCard(rek.dran,"💪 nicht aufgegeben")
+      +'</div>';
+    h+='<div class="ivlbl">📓 Deine letzten Wiege-Aufträge</div>';
+    var d=loadDiary().slice().reverse();
+    if(!d.length){
+      h+='<div class="tg-leer">Hier ist noch nichts drin.<br>Bedien einen Kunden an der Waage –<br>dann schreibt sich dein Tagebuch von selbst. ⚖️</div>';
+    } else {
+      for(var i=0;i<d.length&&i<15;i++){ var e=d[i], n=e.n||0;
+        h+='<div class="tg-e"><div class="tg-emj">'+esc(e.e||"⚖️")+'</div><div class="tg-b">'
+          +'<div class="tg-t">'+esc(e.t)+(e.dran?" 💪":"")+'</div>'
+          +'<div class="tg-s">'+esc(e.d)+' · '+n+' Gewichtsstück'+(n===1?"":"e")+(e.dran?' · drangeblieben':'')+'</div>'
+          +'</div></div>';
+      }
+      if(rek.dran>0) h+='<div class="tg-leer">💪 heißt: es ging nicht sofort auf – du hast ein Stück wieder runtergenommen und weitergetüftelt.</div>';
+    }
+    document.getElementById("diaryBody").innerHTML=h;
+  }
+
+  /* Pauls zwei Wuensche kommen doppelt in den Topf - er hat ausdruecklich
+     danach gefragt. Zweimal derselbe Kunde hintereinander aber nicht. */
+  var GENS=[genErwiegen,genWunsch,genWaage,genUmrechnen,genOrdnen,genUeberschlag,genErwiegen,genWunsch];
+  var letzterGen=null;
+  function newQuestion(){
+    var g=pick(GENS),schutz=0;
+    while(g===letzterGen&&schutz<8){ g=pick(GENS); schutz++; }
+    letzterGen=g; return g();
+  }
 
   /* ================= SHOP-Daten (GRÖSSER) ================= */
   var KASSE_MAX=10, KASSE_PRICES=[20,40,70,110,160,230,320,430,560]; /* Level 1->2 ... 9->10 */
@@ -645,7 +885,7 @@
   var el={
     start:document.getElementById("startScreen"), market:document.getElementById("marketScreen"),
     shop:document.getElementById("shopScreen"), play:document.getElementById("playScreen"),
-    end:document.getElementById("endScreen"),
+    end:document.getElementById("endScreen"), diary:document.getElementById("diaryScreen"),
     rankEmj:document.getElementById("rankEmj"), rankName:document.getElementById("rankName"),
     rankSub:document.getElementById("rankSub"), xpFill:document.getElementById("xpFill"),
     streak:document.getElementById("streakVal"), earn:document.getElementById("earnVal"),
@@ -655,7 +895,7 @@
     fb:document.getElementById("fb"), next:document.getElementById("nextBtn"),
     pTaler:document.getElementById("pTaler")
   };
-  function show(elm){ [el.start,el.market,el.shop,el.play,el.end].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
+  function show(elm){ [el.start,el.market,el.shop,el.play,el.end,el.diary].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
 
   function paintRank(){
     var xp=num(LS.xp),rk=rankFor(xp);
@@ -669,11 +909,15 @@
   function renderQuestion(){
     el.fb.className="fb"; el.fb.innerHTML=""; el.next.className="next";
     el.avatar.textContent=pick(CUSTOMERS); el.bubble.textContent=cur.bubble;
-    el.work.innerHTML=cur.work||""; el.opts.innerHTML=""; el.orderHint.className="orderhint hidden";
+    el.work.innerHTML=cur.work||""; el.opts.innerHTML=""; el.opts.className="opts"; el.orderHint.className="orderhint hidden";
     el.streak.textContent=streak; el.earn.textContent="+"+dayTaler; el.pTaler.textContent=wallet;
     var totalN=trainQueue?trainQueue.total:DAY, curN=trainQueue?(trainQueue.total-trainQueue.list.length):(idx+1);
     el.cust.textContent=curN+"/"+totalN; paintRank();
-    if(cur.mode==="choice"){
+    if(cur.mode==="waage"){
+      cur._legt=[]; cur._abgenommen=0; cur._fertig=false;
+      el.work.innerHTML=ivScaleHTML(); el.opts.className="opts wide";
+      el.opts.innerHTML=ivPanelHTML(); ivBind(); ivRender();
+    } else if(cur.mode==="choice"){
       cur.options.forEach(function(o){ var b=document.createElement("button"); b.className="opt"; b.textContent=o.label;
         b.addEventListener("click",function(){ answerChoice(b,o.correct); }); el.opts.appendChild(b); });
     } else {
@@ -703,6 +947,7 @@
   function onCorrect(){
     sRight(); sCoin(); streak++;
     var coins=talerPerSale(); wallet+=coins; dayTaler+=coins; saveWallet();
+    rek.verdient+=coins; saveRek();
     var gain=12+(streak>=3?4:0); dayXp+=gain; dayRight++;
     si(LS.xp,String(num(LS.xp)+gain)); if(streak>num(LS.best)) si(LS.best,String(streak));
     el.streak.textContent=streak; el.earn.textContent="+"+dayTaler; el.pTaler.textContent=wallet; paintRank();
@@ -764,6 +1009,8 @@
   document.getElementById("serveBtn").addEventListener("click",function(){ sClick(); startDay(); });
   document.getElementById("shopBtn").addEventListener("click",function(){ sClick(); renderShop(); show(el.shop); window.scrollTo(0,0); });
   document.getElementById("backToMarket").addEventListener("click",function(){ sClick(); goMarket(); });
+  document.getElementById("diaryBtn").addEventListener("click",function(){ sClick(); renderDiary(); show(el.diary); window.scrollTo(0,0); });
+  document.getElementById("backFromDiary").addEventListener("click",function(){ sClick(); goMarket(); });
   document.getElementById("toMarketBtn").addEventListener("click",function(){ sClick(); goMarket(); });
   document.getElementById("againBtn").addEventListener("click",function(){ sClick(); startDay(); });
   document.getElementById("trainBtn").addEventListener("click",function(){ sClick(); startTraining(); });
