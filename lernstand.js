@@ -60,6 +60,20 @@
       '#melde-karte .bildknopf{padding:11px 14px;border-radius:12px;border:2px dashed #cfd5e4;' +
         'background:#fbfcff;font-size:14.5px;cursor:pointer;color:#1b1c22}' +
       '#melde-vorschau{max-height:120px;border-radius:10px;border:1px solid #e5e8ef;display:none}' +
+      '#melde-karte .ideenknopf{grid-column:1/-1}' +
+      '#melde-karte .ideenliste{display:grid;gap:9px;margin-bottom:12px}' +
+      '#melde-karte .ideenkarte{display:block;width:100%;text-align:left;cursor:pointer;' +
+        'background:#f4f6fa;border:1.5px solid #e3e6ef;border-radius:14px;padding:12px 14px;' +
+        'font:inherit;color:#1b1c22;min-height:44px}' +
+      '#melde-karte .ideenkarte:active{transform:scale(.99);border-color:#7c5cff}' +
+      '#melde-karte .ik-t{display:block;font-weight:700;line-height:1.4}' +
+      '#melde-karte .ik-w{display:block;color:#6b7280;font-size:12.5px;margin-top:3px;line-height:1.45}' +
+      '#melde-karte .ideenlader{display:flex;gap:7px;justify-content:center;padding:18px 0 6px}' +
+      '#melde-karte .ideenlader span{width:9px;height:9px;border-radius:50%;background:#c9cede;' +
+        'animation:mldenk 1.1s infinite ease-in-out}' +
+      '#melde-karte .ideenlader span:nth-child(2){animation-delay:.15s}' +
+      '#melde-karte .ideenlader span:nth-child(3){animation-delay:.3s}' +
+      '@keyframes mldenk{0%,80%,100%{opacity:.35;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}' +
       '#melde-karte .fadenliste{display:grid;gap:8px;margin-bottom:14px}' +
       '#melde-karte .fadenreihe{display:flex;align-items:stretch;gap:6px}' +
       '#melde-karte .fadenzeile{display:block;flex:1;min-width:0;text-align:left;background:#f4f6fa;' +
@@ -364,6 +378,128 @@
     } catch (e) { return ""; }
   }
 
+  /* ---------- "Hast du eine Idee?" ----------
+     Dennys Vorschlag vom 08.09.2026: Paul wollte fragen, wie man sein Spiel
+     weiterentwickeln koennte. Vor einem leeren Feld faellt einem Kind oft
+     nichts ein - auf drei Vorschlaege antwortet es sofort. Es kann einen
+     annehmen, oder darunter schreiben, wie es das lieber haette. */
+
+  function seiteBeschreiben() {
+    var teile = [];
+    try {
+      var h1 = document.querySelector("h1");
+      if (h1) teile.push(h1.textContent.trim());
+      Array.prototype.slice.call(document.querySelectorAll("h2, .sub, .intro, p"), 0, 4)
+        .forEach(function (e) {
+          var t = (e.textContent || "").trim();
+          if (t.length > 12 && t.length < 240) teile.push(t);
+        });
+    } catch (e) {}
+    return teile.join(" \u00B7 ").slice(0, 1100);
+  }
+
+  function ideenHolen() {
+    if (document.getElementById("melde-huelle")) return;
+    var h = document.createElement("div");
+    h.id = "melde-huelle";
+    h.innerHTML =
+      '<div id="melde-karte">' +
+        '<h3>\u{1F4A1} Was könnte besser werden?</h3>' +
+        '<p class="u">Ich schaue mir dieses Spiel an und überlege \u2026</p>' +
+        '<div class="ideenlader"><span></span><span></span><span></span></div>' +
+      '</div>';
+    document.body.appendChild(h);
+    h.addEventListener("click", function (e) { if (e.target === h) h.remove(); });
+
+    fetch("/api/ideen", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        kind: KIND, seite: location.pathname,
+        titel: document.title || DATEI, beschreibung: seiteBeschreiben()
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.ideen || !j.ideen.length) throw new Error("nix");
+        ideenZeigen(h, j.ideen);
+      })
+      .catch(function () {
+        h.querySelector("#melde-karte").innerHTML =
+          '<h3>Gerade fällt mir nichts ein</h3>' +
+          '<p class="u">Das lag an mir, nicht an dir. Probier es gleich nochmal \u2013 ' +
+          'oder schreib einfach selbst, was du dir wünschst.</p>' +
+          '<button type="button" class="schicken" id="ideen-selbst">Selbst schreiben</button>' +
+          '<button type="button" class="zurueck" id="ideen-zu">Später</button>';
+        h.querySelector("#ideen-zu").addEventListener("click", function () { h.remove(); });
+        h.querySelector("#ideen-selbst").addEventListener("click", function () {
+          h.remove(); dialogOeffnenNeu();
+        });
+      });
+  }
+
+  function ideenZeigen(h, ideen) {
+    var karten = ideen.map(function (i, n) {
+      return '<button type="button" class="ideenkarte" data-nr="' + n + '">' +
+               '<span class="ik-t">' + entschaerfen(i.titel) + '</span>' +
+               '<span class="ik-w">' + entschaerfen(i.warum) + '</span>' +
+             '</button>';
+    }).join("");
+
+    h.querySelector("#melde-karte").innerHTML =
+      '<h3>\u{1F4A1} Meine Ideen für dieses Spiel</h3>' +
+      '<p class="u">Tipp die an, die dir gefällt \u2013 dann baue ich sie. ' +
+      'Oder schreib darunter, wie du es lieber hättest.</p>' +
+      '<div class="ideenliste">' + karten + '</div>' +
+      '<textarea id="melde-text" maxlength="1500" placeholder="Oder: so hätte ich es lieber \u2026"></textarea>' +
+      '<button type="button" class="schicken" id="ideen-eigen">Meine eigene Idee schicken</button>' +
+      '<button type="button" class="zurueck" id="ideen-zu">Doch nicht</button>';
+
+    h.querySelector("#ideen-zu").addEventListener("click", function () { h.remove(); });
+
+    Array.prototype.forEach.call(h.querySelectorAll(".ideenkarte"), function (b) {
+      b.addEventListener("click", function () {
+        var i = ideen[Number(b.getAttribute("data-nr"))];
+        var eigenes = (h.querySelector("#melde-text").value || "").trim();
+        ideeSchicken(h, "Ich hätte gern: " + i.titel + "\n(" + i.warum + ")" +
+                        (eigenes ? "\n\nDazu noch von mir: " + eigenes : ""));
+      });
+    });
+
+    h.querySelector("#ideen-eigen").addEventListener("click", function () {
+      var t = (h.querySelector("#melde-text").value || "").trim();
+      if (!t) { h.querySelector("#melde-text").focus(); return; }
+      ideeSchicken(h, t);
+    });
+  }
+
+  function ideeSchicken(h, text) {
+    var karte = h.querySelector("#melde-karte");
+    karte.innerHTML = '<div class="fertig"><div class="haken">\u{1F4A1}</div>' +
+      '<h3>Ich schau es mir an</h3><p class="u">Einen Moment \u2026</p></div>';
+    fetch("/api/melden", {
+      method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        kind: KIND, text: text, bild: "", art: "wunsch",
+        wo: location.pathname, titel: document.title || "", geraet: geraet()
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error("nein");
+        if (j.faden) { h.remove(); meineFaeden = ersetzeFaden(j.faden); fadenZeigen(j.faden); return; }
+        karte.innerHTML = '<div class="fertig"><div class="haken">\u{1F44D}</div>' +
+          '<h3>Ist angekommen</h3><p class="u">Danke für deine Idee!</p></div>';
+        setTimeout(function () { h.remove(); nachAntwortenSehen(); }, 1700);
+      })
+      .catch(function () {
+        karte.innerHTML = '<div class="fertig"><h3>Das ging schief</h3>' +
+          '<p class="u">Probier es bitte gleich nochmal.</p></div>';
+        setTimeout(function () { h.remove(); }, 2200);
+      });
+  }
+
   function dialogOeffnenNeu() {
     if (document.getElementById("melde-huelle")) return;
     bildDaten = ""; gewaehlteArt = "problem";
@@ -377,6 +513,7 @@
         '<div class="arten">' +
           '<button type="button" data-art="problem" class="an">\u{1F41B} Da ist ein Fehler</button>' +
           '<button type="button" data-art="wunsch">✨ Ich wünsche mir was</button>' +
+          '<button type="button" data-art="ideen" class="ideenknopf">\u{1F4A1} Hast du eine Idee?</button>' +
         '</div>' +
         '<textarea id="melde-text" maxlength="1500" placeholder="Zum Beispiel: Der Knopf geht nicht, wenn ich ihn zweimal drücke."></textarea>' +
         '<div class="bildreihe">' +
@@ -393,7 +530,11 @@
     h.querySelector("#melde-abbrechen").addEventListener("click", function () { h.remove(); });
     Array.prototype.forEach.call(h.querySelectorAll(".arten button"), function (b) {
       b.addEventListener("click", function () {
-        gewaehlteArt = b.getAttribute("data-art");
+        var art = b.getAttribute("data-art");
+        // Der Ideen-Knopf ist keine Auswahl, sondern eine Frage an die
+        // Werkstatt: "Was koennte man hier besser machen?"
+        if (art === "ideen") { h.remove(); ideenHolen(); return; }
+        gewaehlteArt = art;
         Array.prototype.forEach.call(h.querySelectorAll(".arten button"), function (x) {
           x.classList.toggle("an", x === b);
         });
