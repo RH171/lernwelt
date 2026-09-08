@@ -21,15 +21,30 @@ Kind auf, statt sich zu beschweren.
    Web-Ordners — sie verbindet Kindernamen mit Gerätemodellen und hätte sonst
    offen im Netz gestanden.
 
-2. **Messen, nicht anschauen.** `pruefung/layout-messen.js` in die Seite laden
-   und für jede Größe aus `../pruefung-geraete.json` aufrufen:
+2. **Messen, nicht anschauen.** Das macht ein Aufruf, seit dem 08.09.2026:
 
-       const q = await fetch('/pruefung/layout-messen.js').then(r=>r.text());
-       window.__mess = new Function(q + '; return layoutMessen;')();
-       await window.__mess({still:true, beruehrung:true});
+       node geraete-messen.js /paul/klasse3-mathe-gewichte-wiegespiel.html paul
+
+   `../geraete-messen.js` fährt jede Größe aus `../pruefung-geraete.json` durch
+   und ruft dort `pruefung/layout-messen.js` auf. Es braucht **kein npm-Paket**:
+   ein eigener kleiner Webserver, Chrome mit `--headless=new` und dem
+   DevTools-Protokoll, gesteuert über das in Node eingebaute `WebSocket`.
+   Rückgabe 0 = alles sauber, 2 = es hakt. Das zweite Wort wählt die Geräte
+   aus, auf denen dieses Kind wirklich spielt.
 
    `sauber: true` heißt: kein Tippziel unter 44 px, kein Hauptknopf unter dem
    Rand, nichts seitlich raus, keine Schrift unter 12 px.
+
+   **Den Ruhezustand zu messen reicht nicht.** `../mess-schritte.js` sagt, wohin
+   die Messung laufen soll — beim Wiege-Meister bis zu einem Waage-Kunden, zur
+   beladenen Waage, ins leere und ins volle Markt-Tagebuch. Eine Etappe mit
+   `neu: true` bekommt vorher einen frischen Seitenaufruf; `__saat(name)` legt
+   dafür den Speicherstand hin. Für eine andere Seite diese Datei umschreiben —
+   ohne sie wird nur gemessen, wie die Seite aufgeht.
+
+   Wer beim Bauen einen Chrome abwürgt, lässt einen Prozess auf Port 9222
+   stehen; der nächste Lauf hängt sich dann stumm an den alten.
+   `pkill -f "remote-debugging-port=922"` räumt das auf.
 
 3. **`beruehrung: true` ist bei jedem Touch-Gerät Pflicht.** Der Testbrowser
    meldet bei iPad-Breite kein `pointer: coarse`, die Regeln aus
