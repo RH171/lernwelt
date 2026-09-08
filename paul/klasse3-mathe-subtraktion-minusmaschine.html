@@ -199,6 +199,16 @@
     .choice .ce{font-size:21px;}
     .choice .cs{font-size:11.5px;margin-top:1px;}
     .card{padding:14px 14px;}
+
+    /* Die drei Schwierigkeitskarten standen untereinander und brauchten allein
+       272 Pixel. Nebeneinander, ohne die Erklaerungszeile, sind es rund 80 -
+       "Leicht", "Knifflig" und "Gemischt" sagen mit ihrem Zeichen genug. Auf
+       breiteren Schirmen bleibt alles, wie Paul es gebaut hat. */
+    .diff3{grid-template-columns:1fr 1fr 1fr; gap:7px;}
+    .diff3 .choice{padding:9px 4px; min-height:66px;}
+    .diff3 .cs{display:none;}
+    .diff3 .ct{font-size:13px;}
+    .diff3 .ce{font-size:20px;}
   }
 </style>
 <link rel="stylesheet" href="/beruehrung.css">
