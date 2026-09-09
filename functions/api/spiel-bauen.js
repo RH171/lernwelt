@@ -39,11 +39,15 @@ const KINDER = {
             // Rueckfrage nach dem zweiten Tor: "soll er Theo heißen. Weil der ist
             // auch Torwart und mein bester Freund." Dass die gehaltenen Baelle
             // dabeistehen sollen, hat er mit "Ja" bestaetigt.
+            // Nachgeschaerft am 09.09.2026 (Meldung fqhdfzd8ij): "In allen spielen
+            // soll Leon und Theo als Torwart genannt werden", wer oefter drankommt -
+            // "Hauptsächlich ich" - und auf die Frage, ob Theo dann Stuermer wird:
+            // "Nein Theo ist auch Torwart".
             // Das steht hier und nicht bei den Interessen, weil es eine Ansage des
             // Kindes ist und keine Beobachtung ueber das Kind - sie wiegt schwerer.
             wuensche: [
-              'TORWART HEISST LEON. Bekommt ein Torwart in einer Aufgabe einen Namen, dann heißt er Leon - nie anders. Leon steht selbst im Tor und soll sich wiedererkennen. Das ist keine erfundene Person im Sinn von Regel 13, sondern das Kind selbst.',
-              'DER ZWEITE TORWART HEISST THEO. Stehen zwei Torhüter auf dem Platz, weil zwei Mannschaften spielen, heißt der andere Theo - Leons bester Freund, der auch im Tor steht. Mehr als diese beiden benannten Torhüter gibt es nicht.',
+              'TORWART HEISST LEON. Bekommt ein Torwart in einer Aufgabe einen Namen, dann heißt er Leon - nie anders. Leon steht selbst im Tor und soll sich wiedererkennen. Das ist keine erfundene Person im Sinn von Regel 13, sondern das Kind selbst. Kommt in einem Spiel nur ein einziger Torwart vor, ist es immer Leon: Er will hauptsächlich selbst im Tor stehen.',
+              'DER ZWEITE TORWART HEISST THEO. Stehen zwei Torhüter auf dem Platz, weil zwei Mannschaften spielen, heißt der andere Theo - Leons bester Freund. Mehr als diese beiden benannten Torhüter gibt es nicht. Theo ist IMMER Torwart und nie Stürmer, Verteidiger oder Feldspieler; er hütet das andere Tor. Und Leon kommt öfter vor als Theo - über ein ganzes Spiel gesehen ist Leon meistens dabei, Theo ab und zu.',
               'SAG, WIE VIELE BÄLLE SIE GEHALTEN HABEN. Kommen Leon und Theo zusammen vor, dann steht in der Aufgabe, wie viele Bälle jeder gehalten hat, und genau mit diesen Zahlen wird gerechnet - zusammenzählen, abziehen, vergleichen. So: "Leon hält 7 Bälle, Theo hält 5. Wie viele sind das zusammen?" Die Zahlen bleiben im Zahlenraum aus Regel 15.',
               'NUR WENN EIN TORWART VORKOMMT. Erzwinge dafür keine Fußball-Aufgabe. Eine Tiefsee- oder Werkstatt-Welt bleibt eine Tiefsee- oder Werkstatt-Welt; Abwechslung ist weiter erwünscht (Regel 13, letzter Absatz).'
             ] },
@@ -280,12 +284,23 @@ function bildTaugt(spec) {
     case "uhr":          return zahl(teile[1]) && (teile[2] === undefined || zahl(teile[2]));
     case "strichliste":  return zahl(teile[1]) && Number(teile[1]) <= 60;
     case "menge":        return zahl(teile[1]) && Number(teile[1]) >= 1 && Number(teile[1]) <= 40 &&
-                                MENGE_DINGE.includes(String(teile[2] || "").trim());
+                                !!mengeDing(teile[2]);
     case "form":         return BILD_FORMEN.some((f) => wort.includes(f));
     case "zahlenstrahl": return teile.length >= 4 && zahl(teile[1]) && zahl(teile[2]) &&
                                 Number(teile[2]) > Number(teile[1]) && teile.slice(3).every(zahl);
     default:             return false;
   }
+}
+
+// Mehrzahl mitlesen, genau wie mengeName() in leon/index.html: "flaschen"
+// zeichnet die Oberflaeche als Flasche, also darf es hier nicht durchfallen.
+function mengeDing(was) {
+  const roh = String(was || "").trim().toLowerCase();
+  for (const v of [roh, roh.replace(/en$/, ""), roh.replace(/n$/, ""),
+                   roh.replace(/e$/, ""), roh.replace(/s$/, "")]) {
+    if (MENGE_DINGE.includes(v)) return v;
+  }
+  return "";
 }
 
 function bilderAufraeumen(spiel) {
