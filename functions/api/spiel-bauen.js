@@ -57,6 +57,19 @@ const MAX_SEITEN = 20;                // Werkstatt-Grenze; Bücher kommen späte
 // Die Bauformen, die die Werkstatt darstellen kann.
 const SPIELARTEN = ["quiz", "zuordnen", "luecken", "karteikarten", "sammeln"];
 
+// Was die Oberflaeche als Menge wirklich zeichnen kann (leon/index.html,
+// MENGE_ZEICHEN und MENGE_FORMEN). Der Auftrag an Claude und die Pruefung
+// unten benutzen dieselbe Liste - sonst laufen sie auseinander.
+//
+// Leon am 09.09.2026 (Meldung jt9m7ev2a7) zu einer Aufgabe ueber 10 Flaschen,
+// neben der 10 Muenzen lagen: "Bitte achte darauf, Bebilderungen so zu
+// waehlen, dass sie unterstuetzen und nicht verwirren." Die Flasche fehlte in
+// der Liste, also griff Claude zur naechstbesten Sache. Jetzt gibt es sie.
+const MENGE_DINGE = ["ball", "tor", "spieler", "stern", "apfel", "punkt", "muenze", "schuh",
+                     "flasche", "trikot", "pokal", "auto", "blume", "fisch", "kuchen", "herz"];
+
+const BILD_FORMEN = ["kreis", "dreieck", "quadrat", "rechteck", "fuenfeck", "f\u00fcnfeck", "sechseck"];
+
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -189,6 +202,9 @@ export async function onRequestPost(context) {
     return fehler(502, "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen.");
   }
 
+  // Bilder, die die Oberflaeche nicht zeichnen kann, gar nicht erst aufheben.
+  bilderAufraeumen(spiel);
+
   spiel.erzeugt = new Date().toISOString();
   spiel.kind = kind;
   spiel.modell = MODELLE_ERLAUBT[String(auftrag.modell || "").toLowerCase()] || MODELL;
@@ -249,6 +265,35 @@ function pruefeSpiel(spiel) {
     });
   });
   return m;
+}
+
+// Ein falsches Bild ist schlimmer als gar keins: Das Kind sucht dann erst den
+// Zusammenhang, den es nicht gibt. Was die Oberflaeche nicht sauber zeichnen
+// kann, wird hier still geleert - die Frage steht ja im Text und traegt allein.
+function bildTaugt(spec) {
+  const t = String(spec || "").trim().toLowerCase();
+  if (!t) return false;
+  const teile = t.split(":");
+  const zahl = (w) => /^\d+$/.test(String(w == null ? "" : w).trim());
+  const wort = String(teile[1] || "").trim();
+  switch (teile[0]) {
+    case "uhr":          return zahl(teile[1]) && (teile[2] === undefined || zahl(teile[2]));
+    case "strichliste":  return zahl(teile[1]) && Number(teile[1]) <= 60;
+    case "menge":        return zahl(teile[1]) && Number(teile[1]) >= 1 && Number(teile[1]) <= 40 &&
+                                MENGE_DINGE.includes(String(teile[2] || "").trim());
+    case "form":         return BILD_FORMEN.some((f) => wort.includes(f));
+    case "zahlenstrahl": return teile.length >= 4 && zahl(teile[1]) && zahl(teile[2]) &&
+                                Number(teile[2]) > Number(teile[1]) && teile.slice(3).every(zahl);
+    default:             return false;
+  }
+}
+
+function bilderAufraeumen(spiel) {
+  const raus = [];
+  for (const a of (spiel && spiel.aufgaben) || []) {
+    if (a && a.bild && !bildTaugt(a.bild)) { raus.push(a.bild); a.bild = ""; }
+  }
+  return raus;
 }
 
 function fehler(status, text) {
@@ -365,10 +410,14 @@ Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußbal
 14. ZEIG ES, STATT ES ZU BESCHREIBEN. Im Feld "bild" kannst du ein Bild anfordern. Du zeichnest es nicht selbst - du sagst nur, was zu sehen sein soll; gezeichnet wird es sauber im Browser. Nutze es überall dort, wo ein Kind sonst etwas im Kopf zusammenbauen müsste:
     - "uhr:3:30" bei JEDER Uhrzeit-Aufgabe. Die Zeiger stehen dann genau so, wie es die Aufgabe sagt. Schreib dann NICHT mehr "der große Zeiger steht auf der 12" - man sieht es ja. Frag stattdessen schlicht "Wie spät ist es?".
     - "strichliste:12" bei Strichlisten, statt die Striche im Text aufzuzählen.
-    - "menge:7:ball" wenn etwas abgezählt werden soll (ball, tor, spieler, stern, apfel, punkt, muenze, schuh).
+    - "menge:7:ball" wenn etwas abgezählt werden soll. NUR diese Dinge: ${MENGE_DINGE.join(", ")}.
     - "form:dreieck" bei Formen. Frag "Wie heißt diese Form?", statt sie zu beschreiben.
     - "zahlenstrahl:0:100:47" beim Einordnen von Zahlen, bei Nachbarzahlen, beim Vergleichen.
     Passt nichts davon, lass "bild" leer (""). Erfinde keine anderen Formate. Und ein Bild ersetzt die Frage nicht: Der Text muss weiterhin sagen, was zu tun ist.
+
+    DAS BILD MUSS ZEIGEN, WOVON DIE AUFGABE SPRICHT. Geht es um Flaschen, liegen dort Flaschen - keine Münzen, keine Bälle. Geht es um 10 Flaschen zu je 2 €, dann ist die Menge, die man sieht, die Menge aus der Frage (10), nicht der Preis (2) und nicht das Ergebnis (20). Ein Bild, das etwas anderes zeigt als die Frage, ist schlimmer als gar kein Bild: Das Kind sucht dann erst den Zusammenhang, den es nicht gibt.
+    Leon hat genau das gemeldet (09.09.2026): "Bitte achte darauf, Bebilderungen so zu wählen, dass sie unterstützen und nicht verwirren."
+    Steht dein Ding nicht in der Liste oben, dann kleide die Aufgabe in etwas ein, das drinsteht - oder lass "bild" leer. Ein anderes Wort hineinzuschreiben hilft nicht, es wird dann nichts gezeichnet.
 
 13. NIMM, WAS DAS KIND SCHON VERSTEHT. Steht oben unter DAS KIND ein Steckenpferd, dann kleide einen guten Teil der Aufgaben darin ein. Wer Fußball versteht, versteht auch Tore zählen, Trikotnummern, Spielminuten, Zuschauer auf den Rängen, Punkte in der Tabelle, Eckbälle, Auswechslungen. Das ist kein Zuckerguss, sondern ein Anker: Das Kind rechnet mit Dingen, die es sich sofort vorstellen kann, und muss nicht erst die Geschichte entschlüsseln.
     ABER ERFINDE KEINE TATSACHEN über echte Vereine oder echte Menschen. Keine erfundenen Spielernamen, die wie echte klingen, keine erfundenen Ergebnisse, Tabellenplätze, Rekorde oder Vereinsgeschichten. Ausgedachte Figuren sind genau richtig ("Trainer Bodo", "die Nummer 7 von Leons Mannschaft"). Der Verein selbst, sein Spitzname, sein Stadion und die Heimatstadt dürfen als Kulisse vorkommen - mehr nicht.
@@ -432,7 +481,7 @@ const WERKZEUG = {
             erklaerung: { type: "string", description: "Der Weg zur Lösung, GEGLIEDERT: ein Schritt pro Zeile, getrennt durch \\n, höchstens fünf Zeilen. Kein Fließtext. Ohne Merkhilfe - die kommt ins Feld merke." },
             merke: { type: "string", description: "EIN Rechentrick ODER EIN Signalwort der Aufgabe (siehe Regel 8). Leer lassen, wenn nichts wirklich passt." },
             merkmal: { type: "string", description: 'Was GENAU diese Aufgabe übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Damit sehen die Eltern später, wo es hakt. Sei spezifisch: nicht "rechnen", sondern "5er-reihe", "zehneruebergang plus", "halbe stunden", "muenzen erkennen", "zahlen zerlegen", "symmetrieachsen", "cm in m". Gleiche Sache = gleicher Schlüssel, damit man zählen kann.' },
-            bild: { type: "string", description: 'Ein Bild zur Aufgabe, oder "" wenn keins hilft. NUR diese Formen: "uhr:STUNDE:MINUTE" (z. B. uhr:3:30), "strichliste:ANZAHL", "menge:ANZAHL:WAS" (was: ball, tor, spieler, stern, apfel, punkt, muenze, schuh), "form:NAME" (kreis, dreieck, quadrat, rechteck, fuenfeck, sechseck), "zahlenstrahl:VON:BIS:MARKE" (z. B. zahlenstrahl:0:100:47). Nichts anderes - andere Formate werden nicht gezeichnet.' },
+            bild: { type: "string", description: 'Ein Bild zur Aufgabe, oder "" wenn keins hilft. NUR diese Formen: "uhr:STUNDE:MINUTE" (z. B. uhr:3:30), "strichliste:ANZAHL", "menge:ANZAHL:WAS" (was: ' + MENGE_DINGE.join(", ") + '), "form:NAME" (kreis, dreieck, quadrat, rechteck, fuenfeck, sechseck), "zahlenstrahl:VON:BIS:MARKE" (z. B. zahlenstrahl:0:100:47). Nichts anderes - andere Formate werden nicht gezeichnet.' },
           },
           required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke", "bild", "merkmal"],
           additionalProperties: false,
