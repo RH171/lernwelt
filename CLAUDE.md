@@ -35,12 +35,26 @@ Kind auf, statt sich zu beschweren.
    `sauber: true` heißt: kein Tippziel unter 44 px, kein Hauptknopf unter dem
    Rand, nichts seitlich raus, keine Schrift unter 12 px.
 
-   **Den Ruhezustand zu messen reicht nicht.** `../mess-schritte.js` sagt, wohin
+   **Den Ruhezustand zu messen reicht nicht.** Eine Schritt-Datei sagt, wohin
    die Messung laufen soll — beim Wiege-Meister bis zu einem Waage-Kunden, zur
    beladenen Waage, ins leere und ins volle Markt-Tagebuch. Eine Etappe mit
    `neu: true` bekommt vorher einen frischen Seitenaufruf; `__saat(name)` legt
-   dafür den Speicherstand hin. Für eine andere Seite diese Datei umschreiben —
-   ohne sie wird nur gemessen, wie die Seite aufgeht.
+   dafür den Speicherstand hin.
+
+   **Jede Seite hat ihre eigene Schritt-Datei**, benannt hinter dem Kind:
+
+       node geraete-messen.js /leon/ leon mess-schritte-leon.js
+
+   Ohne dritte Angabe gilt `../mess-schritte.js` (der Wiege-Meister). Vorher gab
+   es nur diese eine Datei, und wer eine andere Seite messen wollte, musste sie
+   umschreiben und riss dabei die Schritte der ersten ein.
+
+   Holt eine Seite ihre Inhalte erst vom Server — Leons Seite tut das —, kommt
+   man mit Schritten allein nicht ans Ziel: Der Messrechner fährt nur einen
+   Dateiserver ohne API hoch. Dafür gibt es `__vorLaden()`. Was dort steht,
+   läuft bei **jedem** Seitenaufruf noch **vor** dem Skript der Seite;
+   `mess-schritte-leon.js` schiebt darin `fetch` ein Probespiel unter. Gemessen
+   wird damit die echte Seite mit echten Aufgaben, nur ohne Netz.
 
    Wer beim Bauen einen Chrome abwürgt, lässt einen Prozess auf Port 9222
    stehen; der nächste Lauf hängt sich dann stumm an den alten.
