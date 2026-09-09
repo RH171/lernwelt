@@ -88,6 +88,34 @@ selbst aus dem Schlüsselbund). Die Frage, *ob* etwas bereitliegt, bleibt weiter
 offen beantwortbar — sie verrät nichts. Ohne Ausweis fällt es still auf das alte
 „Es liegt eine Verbesserung bereit" zurück; gefragt wird auf jeden Fall.
 
+## Wünsche der Kinder stehen in der Kinder-Tabelle
+
+Sagt ein Kind, wie seine Spiele sein sollen, gehört das nicht in eine Antwort im
+Faden, sondern in `functions/api/spiel-bauen.js` unter `KINDER[<kind>].wuensche`
+— eine Liste von Sätzen, die als eigener Block **WAS DAS KIND SICH SELBST
+GEWÜNSCHT HAT** direkt unter „DAS KIND" in den Auftrag geht. Wo sie greifen,
+gehen sie der eigenen Idee des Baumeisters vor.
+
+Getrennt von `interessen`, und das mit Absicht: `interessen` ist eine
+Beobachtung *über* das Kind, `wuensche` ist eine Ansage *vom* Kind. Die wiegt
+schwerer und darf nicht mit ihr verschwimmen.
+
+Beim Schreiben eines Wunsches gehört dazu:
+
+- **Das Zitat als Kommentar darüber**, mit Datum und Meldungskennung. Sonst weiß
+  in vier Wochen niemand mehr, ob das jemand ausgedacht oder ein Kind gesagt hat.
+- **Die Grenze mitschreiben.** Leons Torwart-Wunsch (09.09.2026, `c75z9z49k5`)
+  hat als letzten Punkt „nur wenn ein Torwart vorkommt" — ohne den hätte jedes
+  Spiel im Stadion gespielt und die Abwechslung wäre weg.
+- **Auf die Regeln verweisen**, gegen die der Wunsch sonst läuft (Zahlenraum,
+  keine erfundenen echten Personen), damit der Baumeister nicht raten muss.
+
+Ein Wunsch wirkt erst im **nächsten gebauten** Spiel. Fertige Spiele bleiben
+liegen, wie sie sind — die Themenfelder spielen sie ohne Warten und ohne Kosten
+sofort an. Dem Kind also sagen, wie es ein frisches bekommt („Ein ganz neues
+Spiel dazu bauen" am Ende einer Runde), sonst sucht es die Änderung im alten
+Spiel und findet sie nicht.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
