@@ -1485,6 +1485,18 @@
     $("weiter").textContent = (letzte && (nachspielzeit || !danebenGegangen.length))
       ? "Fertig"
       : (letzte ? "Weiter zur Nachspielzeit" : "Weiter");
+
+    // Erklärung, Merkhilfe und "Weiter" kommen erst jetzt dazu - und schieben
+    // den Knopf unter den Rand. Gemessen am 09.09.2026: auf Leons iPad 185 px
+    // darunter, auf einem Handy fast 400. Das Kind sieht die Erklärung und
+    // findet den Weg nicht weiter. Also nachfassen, statt es suchen zu lassen.
+    // Nur wenn er wirklich unten raushängt - sonst springt die Seite grundlos.
+    setTimeout(function(){
+      var w = $("weiter");
+      if (w.getBoundingClientRect().bottom > window.innerHeight - 8) {
+        w.scrollIntoView({block: "end", behavior: "smooth"});
+      }
+    }, 60);
   }
 
   function pruefeWahl(knopf, gewaehlt, a){
