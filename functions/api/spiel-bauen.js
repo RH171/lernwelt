@@ -33,7 +33,20 @@ const MODELLE_ERLAUBT = {
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 9 },
   leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 7,
-            interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus." },
+            interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus.",
+            // Leon am 09.09.2026 (Meldung c75z9z49k5): "Wenn ein Torwart mit Namen
+            // benannt wird, muss der Leon heißen. Weil Leon ist Torwart." Auf die
+            // Rueckfrage nach dem zweiten Tor: "soll er Theo heißen. Weil der ist
+            // auch Torwart und mein bester Freund." Dass die gehaltenen Baelle
+            // dabeistehen sollen, hat er mit "Ja" bestaetigt.
+            // Das steht hier und nicht bei den Interessen, weil es eine Ansage des
+            // Kindes ist und keine Beobachtung ueber das Kind - sie wiegt schwerer.
+            wuensche: [
+              'TORWART HEISST LEON. Bekommt ein Torwart in einer Aufgabe einen Namen, dann heißt er Leon - nie anders. Leon steht selbst im Tor und soll sich wiedererkennen. Das ist keine erfundene Person im Sinn von Regel 13, sondern das Kind selbst.',
+              'DER ZWEITE TORWART HEISST THEO. Stehen zwei Torhüter auf dem Platz, weil zwei Mannschaften spielen, heißt der andere Theo - Leons bester Freund, der auch im Tor steht. Mehr als diese beiden benannten Torhüter gibt es nicht.',
+              'SAG, WIE VIELE BÄLLE SIE GEHALTEN HABEN. Kommen Leon und Theo zusammen vor, dann steht in der Aufgabe, wie viele Bälle jeder gehalten hat, und genau mit diesen Zahlen wird gerechnet - zusammenzählen, abziehen, vergleichen. So: "Leon hält 7 Bälle, Theo hält 5. Wie viele sind das zusammen?" Die Zahlen bleiben im Zahlenraum aus Regel 15.',
+              'NUR WENN EIN TORWART VORKOMMT. Erzwinge dafür keine Fußball-Aufgabe. Eine Tiefsee- oder Werkstatt-Welt bleibt eine Tiefsee- oder Werkstatt-Welt; Abwechslung ist weiter erwünscht (Regel 13, letzter Absatz).'
+            ] },
   helena: { datei: "gymnasium-7.json",     stufe: "7. Klasse Gymnasium",   alter: 12 },
 };
 
@@ -257,6 +270,12 @@ function systemtext(kind, lehrplan) {
 
 DAS KIND
 ${kind.charAt(0).toUpperCase() + kind.slice(1)}, ${k.alter} Jahre, ${k.stufe}, Bayern.${k.interessen ? "\nWoran sein Herz hängt: " + k.interessen : ""}
+${(k.wuensche && k.wuensche.length) ? `
+WAS DAS KIND SICH SELBST GEWÜNSCHT HAT
+Diese Sätze kommen vom Kind, nicht von mir. Wo sie greifen, gehen sie deiner
+eigenen Idee vor - das Kind erkennt sofort, ob du zugehört hast.
+${k.wuensche.map((w, i) => `W${i + 1}. ${w}`).join("\n")}
+` : ""}
 
 DER LEHRPLAN (LehrplanPLUS Bayern)
 ${faecher}
@@ -352,7 +371,7 @@ Wähle eine Einkleidung, die zum Thema passt und Spaß macht - Weltraum, Fußbal
     Passt nichts davon, lass "bild" leer (""). Erfinde keine anderen Formate. Und ein Bild ersetzt die Frage nicht: Der Text muss weiterhin sagen, was zu tun ist.
 
 13. NIMM, WAS DAS KIND SCHON VERSTEHT. Steht oben unter DAS KIND ein Steckenpferd, dann kleide einen guten Teil der Aufgaben darin ein. Wer Fußball versteht, versteht auch Tore zählen, Trikotnummern, Spielminuten, Zuschauer auf den Rängen, Punkte in der Tabelle, Eckbälle, Auswechslungen. Das ist kein Zuckerguss, sondern ein Anker: Das Kind rechnet mit Dingen, die es sich sofort vorstellen kann, und muss nicht erst die Geschichte entschlüsseln.
-    ABER ERFINDE KEINE TATSACHEN über echte Vereine oder echte Menschen. Keine erfundenen Spielernamen, die wie echte klingen, keine erfundenen Ergebnisse, Tabellenplätze, Rekorde oder Vereinsgeschichten. Ausgedachte Figuren sind genau richtig ("Torwart Tom", "die Nummer 7 von Leons Mannschaft"). Der Verein selbst, sein Spitzname, sein Stadion und die Heimatstadt dürfen als Kulisse vorkommen - mehr nicht.
+    ABER ERFINDE KEINE TATSACHEN über echte Vereine oder echte Menschen. Keine erfundenen Spielernamen, die wie echte klingen, keine erfundenen Ergebnisse, Tabellenplätze, Rekorde oder Vereinsgeschichten. Ausgedachte Figuren sind genau richtig ("Trainer Bodo", "die Nummer 7 von Leons Mannschaft"). Der Verein selbst, sein Spitzname, sein Stadion und die Heimatstadt dürfen als Kulisse vorkommen - mehr nicht.
     Und nicht jedes Spiel muss dasselbe Thema haben. Abwechslung hält es frisch: mal das Stadion, mal die Tiefsee, mal die Werkstatt.
 
 Gib genau ein Spiel über das Werkzeug zurück.`;
