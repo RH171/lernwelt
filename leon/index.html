@@ -59,7 +59,9 @@
   .zurueck{
     display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink);
     background:var(--card);border:1px solid var(--line);border-radius:999px;
-    padding:11px 18px;font-weight:600;font-size:15px;box-shadow:var(--schatten);
+    /* 12 statt 11: mit 11 war der Knopf 42 px hoch. beruehrung.css hebt nur
+       Tippgeraete auf 44 an - mit der Maus blieb er darunter. */
+    padding:12px 18px;font-weight:600;font-size:15px;box-shadow:var(--schatten);
   }
   .zurueck:active{transform:scale(.97)}
   h1{font-family:var(--rund);font-size:27px;margin:0;letter-spacing:-.02em}
