@@ -1075,16 +1075,48 @@
   // Als Escapes notiert - direkt eingefügte Emojis überleben nicht jeden
   // Umweg durch Editoren und Kodierungen.
   var MENGE_ZEICHEN = {ball:"\u26BD", tor:"\u{1F945}", spieler:"\u{1F3C3}", stern:"\u2B50",
-                       apfel:"\u{1F34E}", punkt:"\u25CF", muenze:"\u{1FA99}", schuh:"\u{1F45F}"};
+                       apfel:"\u{1F34E}", punkt:"\u25CF", muenze:"\u{1FA99}", schuh:"\u{1F45F}",
+                       trikot:"\u{1F455}", pokal:"\u{1F3C6}", auto:"\u{1F697}", blume:"\u{1F338}",
+                       fisch:"\u{1F41F}", kuchen:"\u{1F370}", herz:"\u2764\uFE0F"};
+
+  // Was kein Zeichen sauber trifft, wird gezeichnet. Eine Flasche gibt es als
+  // Emoji nur mit Alkohol dran - fuer das Getraenk am Sportplatz falsch.
+  var MENGE_FORMEN = {
+    flasche: '<rect x="17.5" y="1" width="9" height="6" rx="2" fill="#1b1c22"/>' +
+             '<path d="M18 7 h8 v7 l6 8 v16 q0 4 -4 4 h-12 q-4 0 -4 -4 v-16 l6 -8 z" ' +
+             'fill="#e8f6ff" stroke="#1b1c22" stroke-width="2.5" stroke-linejoin="round"/>' +
+             '<rect x="14.5" y="26" width="15" height="8" fill="#10b981"/>'
+  };
+
+  // Mehrzahl mitlesen: "10 Flaschen" darf nicht daran scheitern, dass die
+  // Liste "flasche" heisst.
+  function mengeName(was){
+    var roh = String(was || "").toLowerCase().trim();
+    var versuche = [roh, roh.replace(/en$/, ""), roh.replace(/n$/, ""),
+                    roh.replace(/e$/, ""), roh.replace(/s$/, "")];
+    for (var i = 0; i < versuche.length; i++){
+      if (MENGE_ZEICHEN[versuche[i]] || MENGE_FORMEN[versuche[i]]) return versuche[i];
+    }
+    return "";
+  }
 
   // Anzahl zum Abzählen - in Fünfergruppen, damit man nicht einzeln zählen muss.
+  //
+  // Kennt die Werkstatt das Ding nicht, kommt KEIN Bild - frueher wurde
+  // stillschweigend ein Fussball gemalt. Leon am 09.09.2026 (Meldung
+  // jt9m7ev2a7), als neben einer Aufgabe ueber 10 Flaschen 10 Muenzen lagen:
+  // "Bitte achte darauf, Bebilderungen so zu waehlen, dass sie unterstuetzen
+  // und nicht verwirren." Ein falsches Bild ist schlimmer als gar keins.
   function svgMenge(anzahl, was){
     if (isNaN(anzahl) || anzahl < 1 || anzahl > 40) return "";
-    var z = MENGE_ZEICHEN[String(was || "").toLowerCase()] || "\u26BD";
+    var name = mengeName(was);
+    if (!name) return "";
+    var z = MENGE_ZEICHEN[name], form = MENGE_FORMEN[name];
     var proReihe = Math.min(5, anzahl), reihen = Math.ceil(anzahl / 5), teile = [];
     for (var i = 0; i < anzahl; i++){
       var sp = i % 5, ze = Math.floor(i / 5);
-      teile.push('<text x="' + (30 + sp*52) + '" y="' + (42 + ze*52) + '" font-size="38" text-anchor="middle">' + z + '</text>');
+      if (form) teile.push('<g transform="translate(' + (8 + sp*52) + ',' + (6 + ze*52) + ')">' + form + '</g>');
+      else      teile.push('<text x="' + (30 + sp*52) + '" y="' + (42 + ze*52) + '" font-size="38" text-anchor="middle">' + z + '</text>');
     }
     return svgHuelle(teile.join(""), 8 + proReihe*52, 8 + reihen*52);
   }
