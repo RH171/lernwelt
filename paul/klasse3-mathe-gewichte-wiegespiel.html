@@ -810,7 +810,7 @@
     var g=pick(GOODS);
     if(letzteWiegung){
       var moeglich=VERGLEICHE.filter(function(v){ return vergleichTaugt(v,letzteWiegung); });
-      if(moeglich.length && Math.random()<0.5){
+      if(moeglich.length && true){
         var v=pick(moeglich), vor=letzteWiegung, ziel=v.f(vor);
         return {kind:"kopf", mode:"waage", ziel:ziel, panLinks:g, panLabel:v.kurz, panZeigt:"\ud83e\udd14",
           geheim:false, work:"", bonus:KOPF_ZUSCHLAG, bonusText:"Mitdenk-Zuschlag \ud83e\udde0",
@@ -865,8 +865,7 @@
   /* Pauls Wuensche kommen doppelt in den Topf - er hat ausdruecklich danach
      gefragt. Zweimal derselbe Kunde hintereinander aber nicht.
      genKopf seit 12.09.2026 (Meldung zjqgkp3xmg). */
-  var GENS=[genErwiegen,genWunsch,genEilig,genKopf,genWaage,genUmrechnen,genOrdnen,genUeberschlag,
-            genErwiegen,genWunsch,genEilig,genKopf];
+  var GENS=[genWunsch,genKopf,genKopf,genKopf,genKopf,genKopf,genKopf,genKopf];
   var letzterGen=null;
   function newQuestion(){
     var g=pick(GENS),schutz=0;
