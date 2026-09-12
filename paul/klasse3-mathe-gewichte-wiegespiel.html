@@ -718,7 +718,7 @@
   function genEilig(){
     var g=pick(GOODS), e=pick(EILIG);
     return {kind:"eilig", mode:"waage", ziel:e.g, panLinks:g, panLabel:e.l, geheim:false, work:"",
-      bonus:EIL_ZUSCHLAG,
+      bonus:EIL_ZUSCHLAG, bonusText:"Eil-Zuschlag \u23f1\ufe0f",
       bubble:"\u23f1\ufe0f "+pick(EIL_GRUND)+"! Schnell genau "+e.l+" "+g
             +" \u2013 daf\u00fcr zahle ich extra Taler. Lass dir ruhig Zeit beim Legen.",
       speak:"Ich habe es eilig. Bitte genau "+e.l+". Daf\u00fcr gibt es extra Taler.",
@@ -751,6 +751,83 @@
       explain:"<b>"+txt+" sind "+ziel+" g</b> – zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
   }
 
+  /* ============ Mitdenk-Kunden (Paul, 12.09.2026, Meldung zjqgkp3xmg) ==========
+     Paul: "Manche Kunden sagen nur 'ein halbes Kilo Aepfel' oder '200 g mehr
+     als eben', da musst du selbst mitdenken statt nur abzulesen - und diese
+     Kunden geben mehr Taler."
+
+     Zwei Sorten Kunde:
+       a) bestellt in WORTEN - keine Ziffer zum Ablesen, erst umrechnen.
+       b) bestellt im VERGLEICH - "200 g mehr als eben".
+
+     "Eben" heisst hier immer: das Gewicht, das zuletzt an dieser Waage
+     gestimmt hat, und der Satz sagt es ausdruecklich dazu ("als das, was du
+     gerade eben gewogen hast"). Damit faellt die Frage weg, ob der Kunde
+     davor oder die letzte Wiegung gemeint ist - in diesem Spiel ist beides
+     dasselbe, und Paul muss nicht raten, was gemeint war.
+
+     Auf der Waagschale steht bei diesen Kunden keine Zahl, sondern ein
+     Denk-Gesicht - sonst waere das Mitdenken wieder nur Ablesen. Schief
+     stehen darf die Waage weiter sichtbar: wer sich verrechnet, sieht es und
+     legt nach. Falsch machen kann man auch hier nichts, es gibt keine Uhr
+     und nichts geht verloren - der Zuschlag kommt hinterher obendrauf. */
+  var KOPF_ZUSCHLAG=4;
+  var letzteWiegung=null;
+
+  /* Alles in Worten, nichts zum Ablesen. Jede Menge geht mit hoechstens
+     vier Stuecken auf - nachgerechnet, nicht geschaetzt. */
+  var WORTMENGEN=[
+    {w:"ein halbes Kilo",g:500},{w:"ein viertel Kilo",g:250},
+    {w:"ein dreiviertel Kilo",g:750},{w:"ein ganzes Kilo",g:1000},
+    {w:"anderthalb Kilo",g:1500},{w:"zwei Kilo",g:2000},
+    {w:"zweieinhalb Kilo",g:2500},{w:"ein Kilo und ein viertel",g:1250},
+    {w:"ein halbes Kilo und hundert Gramm dazu",g:600},
+    {w:"dreihundert Gramm",g:300},{w:"zweihundertf\u00fcnfzig Gramm",g:250},
+    {w:"f\u00fcnfhundertf\u00fcnfzig Gramm",g:550},{w:"siebenhundert Gramm",g:700},
+    {w:"neunhundert Gramm",g:900},{w:"vierhundertzwanzig Gramm",g:420},
+    {w:"achtzig Gramm",g:80}
+  ];
+  var VERGLEICHE=[
+    {s:"200 g mehr als das, was du gerade eben gewogen hast", kurz:"200 g mehr als eben", f:function(a){return a+200;}},
+    {s:"100 g mehr als das, was du gerade eben gewogen hast", kurz:"100 g mehr als eben", f:function(a){return a+100;}},
+    {s:"250 g mehr als das, was du gerade eben gewogen hast", kurz:"250 g mehr als eben", f:function(a){return a+250;}},
+    {s:"50 g mehr als das, was du gerade eben gewogen hast",  kurz:"50 g mehr als eben",  f:function(a){return a+50;}},
+    {s:"100 g weniger als das, was du gerade eben gewogen hast", kurz:"100 g weniger als eben", f:function(a){return a-100;}},
+    {s:"200 g weniger als das, was du gerade eben gewogen hast", kurz:"200 g weniger als eben", f:function(a){return a-200;}},
+    {s:"50 g weniger als das, was du gerade eben gewogen hast",  kurz:"50 g weniger als eben",  f:function(a){return a-50;}},
+    {s:"das Doppelte von dem, was du gerade eben gewogen hast", kurz:"das Doppelte von eben", f:function(a){return a*2;}},
+    {s:"die H\u00e4lfte von dem, was du gerade eben gewogen hast", kurz:"die H\u00e4lfte von eben", f:function(a){return a/2;}}
+  ];
+  /* Ein Vergleich zaehlt nur, wenn er auch legbar bleibt: ganze Zahl, nicht
+     unter 20 g, nicht ueber 2500 g, auf 5 g glatt und mit den vorhandenen
+     Stuecken zu schaffen. Sonst faellt der Kunde auf eine Wort-Bestellung
+     zurueck - lieber eine leichtere Aufgabe als eine, die nicht aufgeht. */
+  function vergleichTaugt(v,vor){
+    var z=v.f(vor);
+    return z===Math.round(z) && z>=20 && z<=2500 && z%5===0 && zerlegen(z).length<=MAXST;
+  }
+  function genKopf(){
+    var g=pick(GOODS);
+    if(letzteWiegung){
+      var moeglich=VERGLEICHE.filter(function(v){ return vergleichTaugt(v,letzteWiegung); });
+      if(moeglich.length && Math.random()<0.5){
+        var v=pick(moeglich), vor=letzteWiegung, ziel=v.f(vor);
+        return {kind:"kopf", mode:"waage", ziel:ziel, panLinks:g, panLabel:v.kurz, panZeigt:"\ud83e\udd14",
+          geheim:false, work:"", bonus:KOPF_ZUSCHLAG, bonusText:"Mitdenk-Zuschlag \ud83e\udde0",
+          bubble:"\ud83e\udde0 Ich m\u00f6chte "+v.s+" \u2013 "+g+" bitte! Rechne selbst, daf\u00fcr zahle ich extra Taler.",
+          speak:"Ich m\u00f6chte "+v.s+". Rechne selbst, daf\u00fcr zahle ich extra Taler.",
+          explain:"Zuletzt hast du <b>"+gLabel(vor)+"</b> gewogen. <b>"+v.kurz+"</b> sind <b>"
+                 +gLabel(ziel)+"</b> \u2013 zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
+      }
+    }
+    var m=pick(WORTMENGEN);
+    return {kind:"kopf", mode:"waage", ziel:m.g, panLinks:g, panLabel:m.w, panZeigt:"\ud83e\udd14",
+      geheim:false, work:"", bonus:KOPF_ZUSCHLAG, bonusText:"Mitdenk-Zuschlag \ud83e\udde0",
+      bubble:"\ud83e\udde0 Ich h\u00e4tte gern "+m.w+" "+g+" \u2013 sag du mir, wie viel Gramm das sind!",
+      speak:"Ich h\u00e4tte gern "+m.w+". Sag du mir, wie viel Gramm das sind.",
+      explain:"<b>"+m.w+"</b> sind <b>"+m.g+" g</b> \u2013 zum Beispiel "+zerlegen(m.g).map(gLabel).join(" + ")+"."};
+  }
+
   /* ---- Markt-Tagebuch ---- */
   function tgCard(v,c){ return '<div class="tg-card"><div class="tg-v">'+esc(v)+'</div><div class="tg-c">'+c+'</div></div>'; }
   function renderDiary(){
@@ -766,6 +843,7 @@
       +tgCard(rek.schwer?gLabel(rek.schwer):"–","🏋️ schwerste Bestellung")
       +tgCard(rek.stuecke||"–","🔢 meiste Gewichtsstücke auf einmal")
       +tgCard(rek.eilig,"⏱️ eilige Kunden geschafft")
+      +tgCard(rek.kopf,"🧠 selbst mitgedacht")
       +tgCard(num(LS.best),"🔥 längste Serie")
       +'</div>';
     h+='<div class="ivlbl">📓 Deine letzten Wiege-Aufträge</div>';
@@ -775,7 +853,7 @@
     } else {
       for(var i=0;i<d.length&&i<15;i++){ var e=d[i], n=e.n||0;
         h+='<div class="tg-e"><div class="tg-emj">'+esc(e.e||"⚖️")+'</div><div class="tg-b">'
-          +'<div class="tg-t">'+esc(e.t)+(e.dran?" 💪":"")+(e.eil?" ⏱️":"")+'</div>'
+          +'<div class="tg-t">'+esc(e.t)+(e.dran?" 💪":"")+(e.eil?" ⏱️":"")+(e.kop?" 🧠":"")+'</div>'
           +'<div class="tg-s">'+esc(e.d)+' · '+n+' Gewichtsstück'+(n===1?"":"e")+(e.dran?' · drangeblieben':'')+'</div>'
           +'</div></div>';
       }
@@ -784,10 +862,11 @@
     document.getElementById("diaryBody").innerHTML=h;
   }
 
-  /* Pauls zwei Wuensche kommen doppelt in den Topf - er hat ausdruecklich
-     danach gefragt. Zweimal derselbe Kunde hintereinander aber nicht. */
-  var GENS=[genErwiegen,genWunsch,genEilig,genWaage,genUmrechnen,genOrdnen,genUeberschlag,
-            genErwiegen,genWunsch,genEilig];
+  /* Pauls Wuensche kommen doppelt in den Topf - er hat ausdruecklich danach
+     gefragt. Zweimal derselbe Kunde hintereinander aber nicht.
+     genKopf seit 12.09.2026 (Meldung zjqgkp3xmg). */
+  var GENS=[genErwiegen,genWunsch,genEilig,genKopf,genWaage,genUmrechnen,genOrdnen,genUeberschlag,
+            genErwiegen,genWunsch,genEilig,genKopf];
   var letzterGen=null;
   function newQuestion(){
     var g=pick(GENS),schutz=0;
@@ -885,7 +964,35 @@
     document.getElementById("mIncome").textContent="+"+talerPerSale()+" 🪙 pro Kunde";
     document.getElementById("mTaler").textContent=wallet;
   }
-  function renderMarket(){ buildFixtures(); safePlayerCell(); ensurePlayer(); paintMarketHeader(); }
+  /* ---- Markttafel am Stand (Paul, 12.09.2026, Meldung zjqgkp3xmg) ----
+     "Am Stand haengt eine Tafel, auf der steht, wie viele Kunden du schon
+     bedient hast und welche Gewichte du zuletzt genau getroffen hast, damit du
+     siehst, wie viel Uebung du schon gesammelt hast."
+     Rueckschau, keine Vorgabe: hier steht, was Paul geschafft HAT - kein Ziel,
+     das er noch erreichen muesste, und nichts, was verfallen koennte. */
+  function renderTafel(){
+    var t=document.getElementById("tafel"); if(!t) return;
+    var h='<div class="tafel-k"><span>\ud83d\udccb</span><span class="tafel-t">MARKTTAFEL</span></div>'
+      +'<div class="tafel-z">'
+      +'<span><b>'+rek.kunden+'</b> Kunden bedient</span>'
+      +'<span><b>'+rek.auftraege+'</b> mal gewogen</span>'
+      +(rek.dran?'<span><b>'+rek.dran+'</b> mal drangeblieben \ud83d\udcaa</span>':'')
+      +(rek.kopf?'<span><b>'+rek.kopf+'</b> mal mitgedacht \ud83e\udde0</span>':'')
+      +'</div>'
+      +'<div class="tafel-l">ZULETZT GENAU GETROFFEN</div>';
+    var d=loadDiary().slice(-6).reverse();
+    if(!d.length){
+      h+='<div class="tafel-leer">Noch nichts an der Tafel. Bedien einen Kunden an der Waage \u2013 '
+        +'dann haengt hier dein erstes Gewicht. \u2696\ufe0f</div>';
+    } else {
+      h+='<div class="tafel-g">';
+      for(var i=0;i<d.length;i++)
+        h+='<span class="tafel-w'+(i===0?' neu':'')+'">'+esc(gLabel(d[i].g||0))+'</span>';
+      h+='</div>';
+    }
+    t.innerHTML=h;
+  }
+  function renderMarket(){ buildFixtures(); safePlayerCell(); ensurePlayer(); paintMarketHeader(); renderTafel(); }
 
   document.querySelectorAll(".dbtn[data-dir]").forEach(function(b){
     b.addEventListener("click",function(){ var d=b.getAttribute("data-dir");
@@ -1024,8 +1131,8 @@
 
   function onCorrect(){
     sRight(); sCoin(); streak++;
-    /* Eilige Kunden zahlen drauf - Pauls Wunsch vom 08.09.2026. */
-    var extra=(cur&&cur.bonus)?cur.bonus:0;
+    /* Eilige und Mitdenk-Kunden zahlen drauf - Pauls Wunsch vom 08.09. und 12.09.2026. */
+    var extra=(cur&&cur.bonus)?cur.bonus:0, extraName=(cur&&cur.bonusText)||"Zuschlag";
     var coins=talerPerSale()+extra; wallet+=coins; dayTaler+=coins; saveWallet();
     rek.verdient+=coins; rek.kunden++; saveRek();
     var gain=12+(streak>=3?4:0); dayXp+=gain; dayRight++;
@@ -1034,7 +1141,7 @@
     var msgs=["Super gewogen! 🎉","Genau richtig! 💪","Klasse gerechnet!","Perfekt! ⭐","Toll drangeblieben!"];
     el.fb.className="fb ok show";
     el.fb.innerHTML="<b>"+pick(msgs)+"</b> +"+gain+" XP · +"+coins+" 🪙"
-      +(extra?" (davon "+extra+" Eil-Zuschlag \u23f1\ufe0f)":"")
+      +(extra?" (davon "+extra+" "+extraName+")":"")
       +(streak>=3?" · 🔥 Serie "+streak+"!":"");
     confetti(streak>=5?150:90); showNext();
   }
