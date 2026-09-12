@@ -31,7 +31,19 @@ const MODELLE_ERLAUBT = {
 
 // Welches Kind lernt nach welchem Lehrplan.
 const KINDER = {
-  paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 9 },
+  paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 9,
+            // Paul am 12.09.2026 (Meldung zjqgkp3xmg) zum Wiege-Meister: "Manche
+            // Kunden sagen nur 'ein halbes Kilo Äpfel' oder '200 g mehr als eben',
+            // da musst du selbst mitdenken statt nur abzulesen - und diese Kunden
+            // geben mehr Taler." Im Wiege-Meister ist das gebaut; hier steht es,
+            // weil es fuer jedes Spiel gilt, das er sich bauen laesst.
+            // Das steht bei den Wuenschen und nicht bei den Interessen, weil es
+            // eine Ansage des Kindes ist und keine Beobachtung ueber das Kind.
+            wuensche: [
+              'NICHT JEDE MENGE ALS ZAHL HINSCHREIBEN. Paul will mitdenken statt ablesen. Nenne in einem Teil der Aufgaben die Menge in Worten ("ein halbes Kilo", "dreihundert Gramm", "anderthalb Liter") oder im Vergleich zu etwas, das in derselben Aufgabe schon dasteht ("200 g mehr als der erste Sack"). Dann ist der erste Schritt das Umrechnen und nicht das Abschreiben.',
+              'DER VERGLEICH MUSS EINDEUTIG SEIN. Sagt eine Aufgabe "200 g mehr als eben", dann steht in derselben Aufgabe, WORAUF sich das bezieht - beim Namen genannt, nicht aus der Aufgabe davor zu erraten. Eine Aufgabe, bei der Paul raten muss, was gemeint war, prüft nicht das Rechnen, sondern das Glück.',
+              'NICHT ÜBERALL. Höchstens etwa die Hälfte der Aufgaben so; der Rest nennt die Zahl weiter geradeheraus. Sonst wird das Lesen zur Hürde statt das Rechnen, und Regel 16 (kurze Frage) geht dabei verloren. Der Zahlenraum aus Regel 15 gilt unverändert - auch die ausgeschriebene Menge bleibt darin.'
+            ] },
   leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 7,
             interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus.",
             // Leon am 09.09.2026 (Meldung c75z9z49k5): "Wenn ein Torwart mit Namen
