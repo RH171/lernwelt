@@ -179,6 +179,26 @@
   .tg-s{color:var(--muted);font-size:12px;margin-top:1px;}
   .tg-leer{text-align:center;color:var(--muted);font-size:14px;padding:24px 12px;line-height:1.55;}
 
+  /* ===== Markttafel am Stand (Pauls Wunsch, 12.09.2026, Meldung zjqgkp3xmg) =====
+     Paul: "Am Stand haengt eine Tafel, auf der steht, wie viele Kunden du schon
+     bedient hast und welche Gewichte du zuletzt genau getroffen hast, damit du
+     siehst, wie viel Uebung du schon gesammelt hast."
+     Sie haengt UNTER den beiden grossen Knoepfen, nicht ueber ihnen: auf Pauls
+     iPhone (375x640) liegt "Kunden bedienen" schon heute nur 22 px ueber der
+     Kante - eine Tafel darueber haette ihn unter den Rand geschoben. */
+  .tafel{background:linear-gradient(160deg,#33503c,#25392c);border:3px solid #8a6b45;
+    border-radius:16px;padding:11px 13px 12px;margin:10px 0 0;box-shadow:var(--shadow);color:#eaf3ec;}
+  .tafel-k{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+  .tafel-t{font-family:var(--round);font-weight:800;font-size:13px;letter-spacing:.08em;color:#b9d7c3;}
+  .tafel-z{display:flex;flex-wrap:wrap;gap:5px 15px;font-size:13px;font-weight:700;color:#d7e8dc;}
+  .tafel-z b{font-family:var(--round);font-size:17px;color:#fff;margin-right:2px;}
+  .tafel-l{font-size:12px;font-weight:700;color:#a4c3af;margin:10px 0 6px;letter-spacing:.02em;}
+  .tafel-g{display:flex;flex-wrap:wrap;gap:6px;}
+  .tafel-w{background:#e7d3ad;color:#4a3720;border:1px solid #b6975f;border-radius:9px;
+    padding:4px 10px;font-family:var(--round);font-weight:800;font-size:13.5px;}
+  .tafel-w.neu{background:linear-gradient(150deg,#fff4d6,#ffe6ad);border-color:#e0b463;}
+  .tafel-leer{font-size:12.5px;color:#a4c3af;font-weight:600;line-height:1.45;}
+
   canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60;}
   @media(max-width:420px){ .opt{font-size:17px;} .title{font-size:17px;} .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);} }
   @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
@@ -226,6 +246,7 @@
       <button class="big-btn" id="serveBtn">🛒 Kunden bedienen</button>
       <button class="big-btn shopBtn" id="shopBtn">🏪 Shop</button>
     </div>
+    <div class="tafel" id="tafel"></div>
     <button class="ghost-btn" id="diaryBtn">📓 Markt-Tagebuch</button>
   </section>
 
@@ -512,7 +533,7 @@
 
   /* ---- Rekorde und Tagebuch ---- */
   function loadRek(){
-    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0,kunden:0,eilig:0};
+    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0,kunden:0,eilig:0,kopf:0};
     try{ var s=JSON.parse(gi(LS.rekorde,"null"));
       if(s&&typeof s==="object") for(var k in d) if(typeof s[k]==="number") d[k]=s[k];
     }catch(e){}
@@ -588,7 +609,9 @@
     d.panL.setAttribute("transform","translate("+(160-88*cs).toFixed(1)+","+(62-88*sn).toFixed(1)+")");
     d.panR.setAttribute("transform","translate("+(160+88*cs).toFixed(1)+","+(62+88*sn).toFixed(1)+")");
     d.ware.textContent=cur.panLinks||"";
-    d.wunsch.textContent=cur.geheim?"?":(cur.panLabel||"");
+    /* panZeigt schlaegt panLabel: der Mitdenk-Kunde nennt seine Menge nur in
+       Worten, auf der Schale steht ein Denk-Gesicht statt der Zahl. */
+    d.wunsch.textContent=cur.geheim?"?":(cur.panZeigt!=null?cur.panZeigt:(cur.panLabel||""));
     d.stack.innerHTML=ivStackHTML(cur._legt);
 
     /* Gefragt, ob die Waage die Summe anzeigen soll, hat Paul am 08.09.2026
@@ -658,15 +681,21 @@
   function ivBuchen(){
     var n=cur._legt.length, dran=cur._abgenommen>0?1:0;
     rek.auftraege++; rek.gelegt+=n;
-    if(cur.bonus) rek.eilig++;
+    /* Nach der KUNDENART zaehlen, nicht nach dem Zuschlag: seit es die
+       Mitdenk-Kunden gibt, haben zwei Sorten einen Bonus, und "eilige Kunden
+       geschafft" im Tagebuch soll weiter nur die eiligen meinen. */
+    if(cur.kind==="eilig") rek.eilig++;
+    if(cur.kind==="kopf") rek.kopf++;
     if(cur.ziel>rek.schwer) rek.schwer=cur.ziel;
     if(n>rek.stuecke) rek.stuecke=n;
     if(dran) rek.dran++;
     saveRek();
     var d=loadDiary();
     d.push({d:heute(), t:cur.panLabel||gLabel(cur.ziel), g:cur.ziel, n:n, dran:dran,
-            eil:cur.bonus?1:0, e:cur.panLinks||"⚖️"});
+            eil:cur.kind==="eilig"?1:0, kop:cur.kind==="kopf"?1:0, e:cur.panLinks||"⚖️"});
     saveDiary(d);
+    /* Woran sich der naechste "200 g mehr als eben"-Kunde erinnert. */
+    letzteWiegung=cur.ziel;
   }
 
   /* ---- Eilige Kunden: halbe Kilos, Kilo und Gramm zusammendenken ----
