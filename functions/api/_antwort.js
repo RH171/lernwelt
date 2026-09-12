@@ -11,7 +11,15 @@
 // Kind, das niemand einlöst.
 
 const MODELL = "claude-opus-5";
-const MAX_ANTWORT = 700;
+
+// Warum so viel Luft fuer eine Antwort von hoechstens 120 Woertern:
+// Claude Opus 5 denkt von sich aus nach, wenn man nichts anderes sagt, und
+// dieses Nachdenken zaehlt auf dasselbe Konto wie der sichtbare Text. Mit den
+// alten 700 blieb fuer die Antwort zu wenig uebrig - Paul bekam am 12.09.2026
+// um 07:19 eine Rueckfrage, die mitten im Satz abbrach ("... oder das, was du
+// zuletzt"). Der Text bleibt kurz, weil die Regeln es sagen, nicht weil die
+// Grenze ihn abschneidet.
+const MAX_ANTWORT = 4000;
 
 const KINDER = {
   paul:   { name: "Paul",   alter: "10 Jahre, 4. Klasse Grundschule" },
@@ -118,6 +126,10 @@ export async function antwortErzeugen(env, { kind, text, bild, seite, geraet, ve
     });
     if (!a.ok) return null;
     const j = await a.json();
+    // Lieber gar keine Antwort als eine abgeschnittene: ein halber Satz ist
+    // fuer ein Kind schlimmer als die ehrliche Eingangsbestaetigung, die
+    // melden.js dann hinlegt. Dasselbe gilt, wenn das Modell abwinkt.
+    if (j.stop_reason === "max_tokens" || j.stop_reason === "refusal") return null;
     const stueck = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n").trim();
     return stueck || null;
   } catch (e) {
