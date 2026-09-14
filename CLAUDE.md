@@ -201,18 +201,33 @@ die Tagesgrenze des Freikontingents — **1000 Schreibvorgänge**, neu ab 00:00 
 (2 Uhr deutscher Sommerzeit). Das musste niemand raten und niemand im
 Cloudflare-Konto nachsehen.
 
-**Die Ursache war hausgemacht, und zwar nicht bei den Kindern.** `delete` ist im
-KV ein **Schreib**vorgang. `fehlversucheLoeschen()` in `_riegel.js` löschte nach
-*jeder* erfolgreichen Anmeldung den Fehlversuch-Zähler — auch wenn es gar keinen
-gab, was der Normalfall ist. Und angemeldet wird sich ständig, weil sich jedes
-Werkzeug auf Dennys Rechner pro Aufruf neu anmeldet: `werkstatt.sh` bei jedem
-Befehl, `antworten-nachreichen.sh` alle fünf Minuten je offener Antwort, dazu
-der Bau-Wächter alle 15 Minuten. Das kam allein auf rund 900 Schreibvorgänge am
-Tag. Dasselbe Muster steckte in `aktiv.js` beim `wunsch=0` nach jedem Ausrollen.
+**Behoben ist eine echte Verschwendung — sie erklärt aber nicht den 14.09.**
+`delete` ist im KV ein **Schreib**vorgang. `fehlversucheLoeschen()` in
+`_riegel.js` löschte nach *jeder* erfolgreichen Anmeldung den Fehlversuch-Zähler
+— auch wenn es gar keinen gab, was der Normalfall ist. Angemeldet wird sich
+ständig, weil sich jedes Werkzeug pro Aufruf neu anmeldet. `antworten-
+nachreichen.sh` allein (drei offene Antworten, alle fünf Minuten) käme so auf
+**~860 Schreibvorgänge am Tag** und hätte das Kontingent für sich verbraucht.
+Dasselbe Muster steckte in `aktiv.js` beim `wunsch=0` nach jedem Ausrollen.
+Beides ist gefixt.
 
-**Beides ist behoben — und daraus wird eine Regel:** Vor einem `delete` (und vor
-einem `put`, das denselben Wert schreibt) **erst `get`**. Lesen zählt praktisch
-nicht, Schreiben schon. Geprüft wird das mit `node pruefe-riegel.mjs`.
+**Ehrlich bleiben:** Nachgezählt lief vor 13:54 UTC nur wenig davon — 22
+Ausrollvorgänge und 2 Wächter-Läufe. Die ~1000 des 14.09. sind damit **nicht**
+erklärt. Wer hier weitersucht, fängt nicht wieder bei den Anmeldungen an.
+
+**Der nächste Verdacht — und er liegt in den gesperrten Dateien:**
+`paul-sync.js` hängt sich an `localStorage.setItem` und schickt **bei jeder
+Änderung** (1,5 s Sammelzeit) den **kompletten** Schnappschuss an
+`/api/progress` — `paket()` vergleicht nicht mit dem zuletzt Gesendeten. Jede
+gespeicherte Kleinigkeit in jedem Spiel ist damit ein voller KV-Schreibvorgang.
+Beim Spielen ist das der mit Abstand häufigste Schreiber. `paul-sync.js` und
+`functions/api/progress.js` tragen den Fortschritt aller drei Kinder — **nicht
+nachts allein umbauen, das gehört Denny.** Der Hebel wäre klein: den zuletzt
+gesendeten Text merken und bei Gleichheit nicht senden.
+
+**Daraus wird eine Regel:** Vor einem `delete` (und vor einem `put`, das
+denselben Wert schreibt) **erst `get`**. Lesen zählt praktisch nicht, Schreiben
+schon. Geprüft wird das mit `node pruefe-riegel.mjs`.
 
 **Was daraus folgt, wenn man etwas baut:** Schreibvorgänge sind hier die knappe
 Zahl, nicht der Platz. Zwei Zähler gehören in **einen** Schlüssel, nicht in
