@@ -140,6 +140,8 @@
       '.faden .wer{display:block;font-size:12px;color:#6b7280;margin-bottom:3px;font-weight:600}' +
       '.faden img{max-width:100%;border-radius:10px;margin-top:7px;display:block}' +
       '.faden-liste{max-height:44vh;overflow:auto;margin-bottom:12px}' +
+      '#melde-karte .sendefehler{margin:10px 0 0;padding:11px 13px;border-radius:12px;' +
+        'background:#fff4f3;border:1px solid #ffd9d4;color:#8a2c22;font-size:14.5px;line-height:1.5}' +
       // Mit offener Tastatur bleiben vom Handy nur noch rund 360 px Hoehe. Dann
       // sind 44vh Blasen zu viel: das Schreibfeld und "Abschicken" rutschen aus
       // dem Bild, und das Kind muesste erst in der Karte scrollen, um seine
@@ -779,6 +781,28 @@
     if (k && !meineFaeden.some(function (f) { return f.ungelesenKind; })) k.classList.remove("hat-neues");
   }
 
+  // Wenn das Abschicken nicht klappt, soll das Kind den Grund lesen koennen.
+  // Vorher wurde nur der Knopf zu "Nochmal versuchen" - warum, blieb offen.
+  // Am 14.09.2026 hat der Speicher stundenlang nichts mehr angenommen; wer in
+  // der Zeit geschrieben hat, sah eine nackte Fehlerseite und wusste nicht, ob
+  // seine Meldung angekommen ist. Der Text bleibt im Feld stehen, es geht also
+  // nichts verloren.
+  function sendeHaktAus(h, j) {
+    var knopf = h.querySelector("#melde-schicken");
+    if (knopf) { knopf.disabled = false; knopf.textContent = "Nochmal versuchen"; }
+    var satz = (j && j.fehler) ? String(j.fehler)
+      : "Das hat gerade nicht geklappt. Was du geschrieben hast, steht noch da \u2013 " +
+        "probier es gleich noch einmal.";
+    var kasten = h.querySelector("#melde-sendefehler");
+    if (!kasten && knopf) {
+      kasten = document.createElement("div");
+      kasten.id = "melde-sendefehler";
+      kasten.className = "sendefehler";
+      knopf.parentNode.insertBefore(kasten, knopf);
+    }
+    if (kasten) kasten.textContent = satz;
+  }
+
   function antwortSchicken(h, faden) {
     var text = h.querySelector("#melde-text").value.trim();
     if (!text && !bildDaten) { h.querySelector("#melde-text").focus(); return; }
@@ -789,9 +813,9 @@
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind: KIND, id: faden.id, text: text, bild: bildDaten, alsKind: true })
     })
-    .then(function (r) { return r.json(); })
+    .then(function (r) { return r.json().catch(function () { return null; }); })
     .then(function (j) {
-      if (!j || !j.ok) throw new Error("nein");
+      if (!j || !j.ok) { sendeHaktAus(h, j); return; }
       // Die Werkstatt hat schon geantwortet - dann gleich zeigen, statt das
       // Fenster zu schliessen und das Kind suchen zu lassen.
       if (j.faden) { h.remove(); meineFaeden = ersetzeFaden(j.faden); fadenZeigen(j.faden); return; }
@@ -800,7 +824,7 @@
         '<p class="u">Wir melden uns wieder.</p></div>';
       setTimeout(function () { h.remove(); nachAntwortenSehen(); }, 1700);
     })
-    .catch(function () { knopf.disabled = false; knopf.textContent = "Nochmal versuchen"; });
+    .catch(function () { sendeHaktAus(h, null); });
   }
 
   function entschaerfen(t) {
@@ -859,10 +883,10 @@
         geraet: geraet()
       })
     })
-    .then(function (r) { return r.json(); })
+    .then(function (r) { return r.json().catch(function () { return null; }); })
     .then(function (j) {
       clearInterval(uhr);
-      if (!j || !j.ok) throw new Error("nein");
+      if (!j || !j.ok) { sendeHaktAus(h, j); return; }
       // Antwort schon da? Dann direkt zeigen - so fuehlt es sich an wie ein
       // Gespraech und nicht wie ein Briefkasten.
       if (j.faden) { h.remove(); meineFaeden = ersetzeFaden(j.faden); fadenZeigen(j.faden); return; }
@@ -873,7 +897,7 @@
     })
     .catch(function () {
       clearInterval(uhr);
-      knopf.disabled = false; knopf.textContent = "Nochmal versuchen";
+      sendeHaktAus(h, null);
     });
   }
 

@@ -172,6 +172,10 @@ const MAX = 200;
 const MAX_BILD = 900 * 1024;
 
 export async function onRequestPost(context) {
+  return mitSpeicherwache(() => postVerarbeiten(context));
+}
+
+async function postVerarbeiten(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
 
@@ -368,6 +372,10 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestDelete(context) {
+  return mitSpeicherwache(() => loeschenVerarbeiten(context));
+}
+
+async function loeschenVerarbeiten(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
 
