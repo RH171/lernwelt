@@ -1047,7 +1047,13 @@
     // auch in einem ganz anderen Programm.
     if (document.hidden) { stopp(); return; }
     stopp();
-    var t = String(text).replace(/\s+/g, " ").trim();
+    // Lueckenstriche nicht mitsprechen. "ein Tor, viele ___ ." liest die
+    // Stimme sonst als "Unterstrich Unterstrich Unterstrich" vor - Leon hoert
+    // drei sinnlose Woerter statt der Luecke. Auf dem Schirm bleibt der Strich
+    // stehen, dort zeigt er ja genau das Richtige an. Regel D4 im Bauauftrag
+    // verbietet Unterstriche zwar, vier von Leons gespeicherten Aufgaben
+    // tragen sie trotzdem - die sind schon gebaut und aendern sich nicht mehr.
+    var t = String(text).replace(/_+/g, " ").replace(/\s+/g, " ").trim();
     if (!t) return;
     var u = new SpeechSynthesisUtterance(t);
     u.lang = "de-DE";
