@@ -98,6 +98,16 @@
         'color:#6b7280;font-size:13.5px}' +
       '#melde-karte .fz-undo{background:none;border:none;color:#7c5cff;font-weight:700;' +
         'font-size:13.5px;cursor:pointer;font-family:inherit;min-height:44px;padding:0 4px}' +
+      // Helena am 14.09.2026 (Meldung wjj9vuza7x) zum Kreuz: "das kreuz soll
+      // erst mal nachfragen, ob ich mir wirklich sicher bin, was kann seiner
+      // sich vertipp" - also gefragt wird VORHER, nicht hinterher.
+      '#melde-karte .fz-frage{flex:1;display:flex;align-items:center;gap:7px;flex-wrap:wrap;' +
+        'background:#fff6ea;border:1px solid #ffe2bd;border-radius:12px;padding:9px 11px;' +
+        'color:#8a5a12;font-size:13.5px;font-weight:700}' +
+      '#melde-karte .fz-ja,#melde-karte .fz-nein{border-radius:10px;padding:0 12px;min-height:44px;' +
+        'font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}' +
+      '#melde-karte .fz-ja{background:#ef4444;color:#fff;border:none}' +
+      '#melde-karte .fz-nein{background:#fff;color:#1b1c22;border:1px solid #e3e6ef}' +
       '#melde-karte .woran{margin:0 0 14px;padding:12px 14px;border-radius:13px;' +
         'background:#f3f0ff;border:1px solid #e0d9ff;color:#1b1c22;font-size:15px;' +
         'line-height:1.45;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}' +
@@ -354,16 +364,31 @@
       });
     });
 
-    // Wegraeumen mit kurzer Umkehr - versehentlich getippt ist schnell.
+    // Wegraeumen, aber erst nach einer Frage.
+    //
+    // Helena am 14.09.2026 (Meldung wjj9vuza7x): "das kreuz soll erst mal
+    // nachfragen, ob ich mir wirklich sicher bin, was kann seiner sich
+    // vertipp". Vorher war es umgekehrt: weggeraeumt wurde sofort, und fuenf
+    // Sekunden lang stand ein "Doch behalten" daneben. Wer das uebersah - auf
+    // einem 360 px breiten Handy leicht -, war seinen Faden los. Und weg heisst
+    // hier wirklich weg: der Server loescht den Faden samt Bildern, es gibt
+    // nichts zurueckzuholen. Deshalb wird jetzt vorher gefragt.
     Array.prototype.forEach.call(h.querySelectorAll(".fz-weg"), function (x) {
       x.addEventListener("click", function (e) {
         e.stopPropagation();
         var f = meineFaeden[Number(x.getAttribute("data-weg"))];
         if (!f) return;
         var reihe = x.parentNode;
-        reihe.innerHTML = '<div class="fz-zurueck">Weggeräumt. ' +
-          '<button type="button" class="fz-undo">Doch behalten</button></div>';
-        var uhr = setTimeout(function () {
+        reihe.innerHTML = '<div class="fz-frage"><span>Wirklich weg?</span>' +
+          '<button type="button" class="fz-nein">Nein, behalten</button>' +
+          '<button type="button" class="fz-ja">Ja, wegräumen</button></div>';
+        reihe.querySelector(".fz-nein").addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          h.remove(); listeZeigen();
+        });
+        reihe.querySelector(".fz-ja").addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          reihe.innerHTML = '<div class="fz-zurueck">Wird weggeräumt …</div>';
           fetch("/api/melden?id=" + encodeURIComponent(f.id) + "&kind=" + encodeURIComponent(KIND),
                 { method: "DELETE", credentials: "same-origin" })
             .then(function () {
@@ -371,11 +396,9 @@
               reihe.remove();
               if (!h.querySelectorAll(".fadenreihe").length) { h.remove(); dialogOeffnenNeu(); }
             })
-            .catch(function () {});
-        }, 5000);
-        reihe.querySelector(".fz-undo").addEventListener("click", function () {
-          clearTimeout(uhr);
-          h.remove(); listeZeigen();
+            .catch(function () {
+              reihe.innerHTML = '<div class="fz-zurueck">Das hat gerade nicht geklappt.</div>';
+            });
         });
       });
     });
@@ -567,12 +590,26 @@
         '</div>' +
         '<input type="file" id="melde-datei" accept="image/*" style="display:none">' +
         '<button type="button" class="schicken" id="melde-schicken">Abschicken</button>' +
+        // Helena am 14.09.2026 (Meldung wjj9vuza7x): "es waren quasi so
+        // verschiedene chats, wo ich reingehen konnte, an dem problem
+        // weiterschreiben konnte, wenn mir noch was eingefallen ist".
+        // Von hier aus fuehrte bisher kein Weg dorthin zurueck - wer einmal im
+        // Neu-Fenster stand, musste es schliessen und den Knopf noch einmal
+        // druecken, um seine Faeden wiederzufinden. Der Knopf steht nur da,
+        // wenn es auch etwas zu sehen gibt.
+        (meineFaeden.length
+          ? '<button type="button" class="zurueck" id="melde-zu-liste">◀ Deine Meldungen ('
+            + meineFaeden.length + ')</button>'
+          : "") +
         '<button type="button" class="abbrechen" id="melde-abbrechen">Doch nicht</button>' +
       '</div>';
     document.body.appendChild(h);
 
     h.addEventListener("click", function (e) { if (e.target === h) h.remove(); });
     h.querySelector("#melde-abbrechen").addEventListener("click", function () { h.remove(); });
+    if (meineFaeden.length) h.querySelector("#melde-zu-liste").addEventListener("click", function () {
+      h.remove(); listeZeigen();
+    });
     Array.prototype.forEach.call(h.querySelectorAll(".arten button"), function (b) {
       b.addEventListener("click", function () {
         var art = b.getAttribute("data-art");
