@@ -32,8 +32,23 @@ Kind auf, statt sich zu beschweren.
    Rückgabe 0 = alles sauber, 2 = es hakt. Das zweite Wort wählt die Geräte
    aus, auf denen dieses Kind wirklich spielt.
 
-   `sauber: true` heißt: kein Tippziel unter 44 px, kein Hauptknopf unter dem
-   Rand, nichts seitlich raus, keine Schrift unter 12 px.
+   `sauber: true` heißt: kein Tippziel unter dem Mindestmaß, kein Hauptknopf
+   unter dem Rand, nichts seitlich raus, keine Schrift unter 12 px.
+
+   **Das Mindestmaß hängt davon ab, womit gezielt wird** (seit 14.09.2026
+   abends): **44 px für den Finger, 24 px für die Maus** (WCAG 2.2, 2.5.8).
+   Vorher galten überall 44 — und weil `beruehrung.css` ausdrücklich nur bei
+   `pointer: coarse` greift, meldete jeder Laptop-Durchlauf lauter Knöpfe, die
+   dort völlig in Ordnung sind. Helenas Vokabeltrainer kam so auf 18 „Fehler"
+   je Etappe, alle unecht. Wer so eine Liste dreimal liest, liest sie beim
+   vierten Mal nicht mehr — und übersieht den echten Befund darin. Bei ihr war
+   das eine 16 px hohe Aufklappzeile („＋ Neue Einheit aus Foto"), genau der
+   Weg, den sie mit dem Buch in der Hand treffen soll.
+
+   **Der Bericht sagt jetzt auch, WO das Ding sitzt:** `× (button.loeschen)`
+   statt nur `×`. Ohne das steht man mit einem Kreuz da und sucht es in drei
+   Dateien — am 14.09.2026 zweimal erfolglos versucht. Es war ein 19 px breiter
+   Knopf in Pauls Werkstatt, der ein Spiel wegwirft.
 
    **Den Ruhezustand zu messen reicht nicht.** Eine Schritt-Datei sagt, wohin
    die Messung laufen soll — beim Wiege-Meister bis zu einem Waage-Kunden, zur
@@ -165,6 +180,39 @@ Rechenaufgaben, ein Grammatikfehler und eine dreifarbige Fußgängerampel.
 
 Nachbessern geht nur mit Eltern-Code; Foto, Herkunft und Spielstatistik bleiben.
 Was dabei auffällt, gehört zusätzlich als Regel in den Bauauftrag.
+
+### Der ganze Bestand lässt sich in einem Rutsch nachprüfen
+
+`pruefeSpiel` ist aus `spiel-bauen.js` exportiert. Ein Spiel, das vor einer
+neuen Regel gebaut wurde, kennt sie nicht — also einmal alles durchlassen:
+
+    ./werkstatt.sh spiele leon /tmp/spiele/leon      # holt die Liste
+    ./werkstatt.sh spiel-roh leon <id> > …           # je Spiel
+    # dann pruefeSpiel(spiel, "leon") darüberlaufen lassen
+
+Am 14.09.2026 abends kamen so vier Spiele heraus, die ein Kind nicht lösen
+kann: dreimal eine getippte Lösung, die ein Wort ist (`Ball`, `Tore`, `Pokal`)
+— **Leons Eingabefeld zeigt nur Ziffern**, er kommt dort gar nicht weiter —
+und einmal ein Deutsch-Spiel über das Prädikat mit vier Rechenaufgaben darin
+(`psu4ydv39g`, hieß außerdem „x"). Die Regel dagegen stand seit dem Morgen im
+Auftrag (D11) und hat nicht gereicht.
+
+**Daraus die Regel: Eine Bitte im Auftrag ist keine Prüfung.** Dieselbe Lehre
+wie bei den Namen (`namenRichten`). Seitdem findet `fachfremd()` in
+`spiel-bauen.js` Rechenaufgaben in Deutsch- und HSU-Spielen mechanisch —
+über das Merkmal (`zusammenzaehlen`, `verdoppeln`, `mengen zaehlen`, …), über
+eine Rechnung in der Frage und über `art: "teilschritte"`, die D1 für
+Leseanfänger ohnehin verbietet. **Nicht** über das nackte Wort „zählen":
+`silben zaehlen` und `buchstaben zaehlen` sind Deutsch und müssen bleiben.
+Geprüft mit `node pruefe-fachfremd.mjs`, und zwar in beide Richtungen —
+gefundene Treffer *und* das, was stehenbleiben muss.
+
+Gefunden wird beim Bauen, und dann wird **die einzelne Aufgabe entfernt, nicht
+das ganze Spiel weggeworfen**: erst der ohnehin vorhandene zweite Anlauf, und
+wenn der auch danebenliegt, fliegen nur die fachfremden Aufgaben raus. Ein
+Deutsch-Spiel mit neun Aufgaben ist besser als eine Fehlermeldung nach
+neunzig Sekunden Warten. Bleiben weniger als fünf übrig, ist es wieder ein
+Mangel — dann ist der ehrliche Fehler richtig.
 
 ## Wenn nichts mehr gespeichert wird: erst messen, dann suchen
 
