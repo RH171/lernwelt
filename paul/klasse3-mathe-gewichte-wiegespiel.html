@@ -1473,8 +1473,8 @@
     document.getElementById("repTaler").textContent=wallet;
     document.getElementById("repKunden").textContent=rek.kunden;
     document.getElementById("reportText").innerHTML = rek.kunden
-      ? "Du hast <b>"+wallet+" Taler</b> und hast bis jetzt <b>"+rek.kunden
-        +(rek.kunden===1?" Kunden":" Kunden")+"</b> bedient."
+      /* "1 Kunden bedient" ist richtig - im Satz steht der Wenfall. */
+      ? "Du hast <b>"+wallet+" Taler</b> und hast bis jetzt <b>"+rek.kunden+" Kunden</b> bedient."
       : "Dein Markt ist frisch aufgemacht – dein erster Kunde wartet schon. ⚖️";
     var b=document.getElementById("repBonus");
     if(brReif()){
