@@ -186,7 +186,12 @@
   .uhrrest{float:right; color:var(--muted); font-size:12.5px; font-weight:700;}
 
   .adder{margin-top:16px;}
-  .adder summary{cursor:pointer; color:var(--muted); font-size:13px; font-weight:700; list-style:none;}
+  /* Diese Zeile ist ein Tippziel und war nur 16 Pixel hoch - eine Schriftzeile,
+     sonst nichts. Fuer den Finger stand das Mindestmass schon in der
+     Handy-Regel weiter unten; am Laptop mit der Maus fehlte es, und dort
+     macht Helena ihre Foto-Einheiten. */
+  .adder summary{cursor:pointer; color:var(--muted); font-size:13px; font-weight:700; list-style:none;
+                 min-height:32px; display:flex; align-items:center;}
   .adder summary::-webkit-details-marker{display:none;}
   .adder textarea{width:100%; margin-top:10px; min-height:110px; font-family:ui-monospace,Menlo,monospace;
     font-size:13.5px; color:var(--ink); background:var(--surface); border:1px solid var(--line);
