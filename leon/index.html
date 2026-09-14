@@ -916,7 +916,11 @@
     ["Fast geschafft …", "Halt dich bereit!"]
   ];
 
-  $("los").addEventListener("click", bauen);
+  // Nicht "click", bauen" - dann bekommt bauen() das Klick-Ereignis als quelle
+  // und im gespeicherten Spiel steht "[object Object]" statt eines Schluessels
+  // oder eines leeren Feldes. Sieben von Leons Spielen tragen das schon.
+  // Pauls Werkstatt macht es seit jeher richtig (werkstatt.html).
+  $("los").addEventListener("click", function(){ bauen(""); });
 
   var baeuft = false;   // Solange gebaut wird, loest kein zweiter Tipp etwas aus.
 
