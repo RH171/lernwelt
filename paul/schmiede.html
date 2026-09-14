@@ -1067,7 +1067,9 @@
       // ohne dass es das sagt. Also pendelt sie zwischen dem ersten Ballon
       // und dem Tor hin und her, bis die Aufgabe geloest ist; gesprungen
       // wird weiter selbst.
-      if (station && !station.geloest){
+      // Nur vor Ballons pendeln. Am Raetsel-Tor muss die Figur ANSTOSSEN,
+      // sonst geht die Tafel nie auf - wer dort umkehrt, steht ewig davor.
+      if (station && !station.geloest && station.art === "ballons"){
         if (held.x + held.w >= station.torX - 2) rennRichtung = -1;
         if (held.x <= station.startX - 90) rennRichtung = 1;
       } else rennRichtung = 1;
