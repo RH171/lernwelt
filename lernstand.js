@@ -145,6 +145,9 @@
       // dem Bild, und das Kind muesste erst in der Karte scrollen, um seine
       // eigene Antwort abzuschicken. Kuerzere Listen, dafuer sichtbare Knoepfe.
       '@media (max-height:560px){' +
+        '#melde-karte{padding:14px}' +
+        '#melde-karte p.u{margin-bottom:8px}' +
+        '#melde-karte textarea{min-height:60px}' +
         '#melde-karte .faden-liste{max-height:30vh}' +
         '#melde-karte .fadenliste{max-height:34vh}}' +
       '#melde-karte .passt{width:100%;margin-top:8px;padding:13px;border:none;border-radius:13px;' +
