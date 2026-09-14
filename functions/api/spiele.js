@@ -36,7 +36,9 @@ export async function onRequestGet(context) {
     // Auch Spiele, die vor dem 14.09.2026 gebaut wurden, sollen Leon und Theo
     // im Tor haben. Gerichtet wird beim Ausliefern; der Speicher bleibt, wie
     // er ist - so geht nichts verloren, falls die Regel mal danebenliegt.
-    if (spiel.kind === "leon" || kindAus(request) === "leon") namenRichten(spiel);
+    // ?roh=1 zeigt den unveraenderten Speicher - zum Nachpruefen der Regel.
+    const roh1 = new URL(request.url).searchParams.get("roh") === "1";
+    if (!roh1 && (spiel.kind === "leon" || kindAus(request) === "leon")) namenRichten(spiel);
     return json(200, { ok: true, spiel });
   }
 
