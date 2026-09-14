@@ -7,7 +7,8 @@ function z(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
 function ablenker(r, extra){
   var k = (extra || []).concat([r + 1, r - 1, r + 2, r - 2, r + 10, r - 10]);
   var gut = [];
-  k.forEach(function(x){ if (x >= 0 && x !== r && gut.indexOf(x) < 0 && gut.length < 3) gut.push(x); });
+  // Negative Ablenker nur, wenn auch das Ergebnis negativ ist - sonst waeren es nur drei Antworten (gefunden beim Pruefen am 14.09.2026)
+  k.forEach(function(x){ if ((x >= 0 || r < 0) && x !== r && gut.indexOf(x) < 0 && gut.length < 3) gut.push(x); });
   return gut;
 }
 
