@@ -130,6 +130,20 @@ sofort an. Dem Kind also sagen, wie es ein frisches bekommt („Ein ganz neues
 Spiel dazu bauen" am Ende einer Runde), sonst sucht es die Änderung im alten
 Spiel und findet sie nicht.
 
+## Vorgebaute Spiele werden gelesen, nicht nur gezählt
+
+`pruefeSpiel` prüft die Form (Anzahl, Lösung in der Auswahl, Zahlentastatur).
+Ob eine Aufgabe fachlich stimmt und zum Fach gehört, prüft nur, wer sie liest.
+Am 14.09.2026 standen in sieben frisch gebauten Deutsch-/HSU-Spielen für Leon
+Rechenaufgaben, ein Grammatikfehler und eine dreifarbige Fußgängerampel.
+
+    ./werkstatt.sh spiele leon                  # Liste
+    ./werkstatt.sh spiel-roh leon <id>          # ein Spiel als JSON
+    ./werkstatt.sh spiel-ersetzen leon <datei>  # {"id":…,"aufgaben":[…]} zurückschreiben
+
+Nachbessern geht nur mit Eltern-Code; Foto, Herkunft und Spielstatistik bleiben.
+Was dabei auffällt, gehört zusätzlich als Regel in den Bauauftrag.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
