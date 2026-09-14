@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Leons Mathe</title>
+<title>Leons Lernwelt</title>
 <style>
   :root{
     --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
@@ -38,6 +38,16 @@
     cursor:pointer;padding:9px;
   }
   @media (max-width:340px){ .themen{grid-template-columns:1fr} }
+  /* Mathe oder Deutsch: zwei grosse Reiter ueber den Feldern. */
+  .faecher{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .fach{
+    display:flex;align-items:center;justify-content:center;gap:9px;min-height:54px;
+    border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);
+    font-family:var(--rund);font-size:18px;font-weight:700;cursor:pointer;
+  }
+  .fach .zeichen{font-size:24px;line-height:1}
+  .fach.an{border-color:var(--leon);background:#eefbf2;color:#067647}
+  .fach:active{transform:scale(.97)}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
@@ -275,7 +285,7 @@
 
   <header>
     <a class="zurueck" id="zurueck" href="/leon/">‹ Nochmal von vorn</a>
-    <h1>Leons Mathe</h1>
+    <h1 id="kopfzeile">Leons Mathe</h1>
   </header>
 
   <!-- 0. Anmelden -->
@@ -295,6 +305,10 @@
   <section id="sicht-aufnahme">
     <div class="karte">
       <div class="torstand verborgen" id="torstand"></div>
+      <div class="faecher" id="faecher" role="tablist">
+        <button class="fach an" data-fach="mathe" role="tab"><span class="zeichen">&#128290;</span>Mathe</button>
+        <button class="fach" data-fach="deutsch" role="tab"><span class="zeichen">&#128214;</span>Deutsch</button>
+      </div>
       <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was willst du üben?</div>
       <p class="unter">Tipp auf ein Feld – ich baue dir daraus ein Spiel.</p>
 
@@ -681,27 +695,63 @@
      jederzeit etwas anderes waehlen; die Wahl gehoert ihm. */
 
   var THEMEN = [
-    { schluessel:"plus20", stich:["bis 20"], bild:"\u2795", titel:"Plus und Minus bis 20", jetzt:true,
+    { fach:"mathe", schluessel:"plus20", stich:["bis 20"], bild:"\u2795", titel:"Plus und Minus bis 20", jetzt:true,
       wunsch:"Übe Plus- und Minusaufgaben im Zahlenraum bis 20. Das ist Wiederholung aus der ersten Klasse und soll sicher sitzen." },
-    { schluessel:"zahlen100", stich:["zahlenraum bis 100","zahlen bis 100"], bild:"\u{1F4AF}", titel:"Zahlen bis 100", jetzt:true,
+    { fach:"mathe", schluessel:"zahlen100", stich:["zahlenraum bis 100","zahlen bis 100"], bild:"\u{1F4AF}", titel:"Zahlen bis 100", jetzt:true,
       wunsch:"Übe den Zahlenraum bis 100: Zahlen ordnen und vergleichen, Nachbarzahlen, Zehner und Einer unterscheiden." },
-    { schluessel:"plus100", stich:["bis 100"], bild:"\u2796", titel:"Plus und Minus bis 100",
+    { fach:"mathe", schluessel:"plus100", stich:["bis 100"], bild:"\u2796", titel:"Plus und Minus bis 100",
       wunsch:"Übe Plus- und Minusaufgaben im Zahlenraum bis 100, auch mit Zehnerübergang." },
-    { schluessel:"doppelt", stich:["verdoppeln","halbieren"], bild:"\u{1F91D}", titel:"Verdoppeln und Halbieren",
+    { fach:"mathe", schluessel:"doppelt", stich:["verdoppeln","halbieren"], bild:"\u{1F91D}", titel:"Verdoppeln und Halbieren",
       wunsch:"Übe Verdoppeln und Halbieren im Zahlenraum bis 100." },
-    { schluessel:"einmaleins", stich:["einmaleins","reihe"], bild:"\u2716\uFE0F", titel:"Das Einmaleins",
+    { fach:"mathe", schluessel:"einmaleins", stich:["einmaleins","reihe"], bild:"\u2716\uFE0F", titel:"Das Einmaleins",
       wunsch:"Baue das Einmaleins auf. Beginne mit der 2er-, 5er- und 10er-Reihe." },
-    { schluessel:"geld", stich:["geld","münzen","einkauf"], bild:"\u{1F4B6}", titel:"Geld und Einkaufen",
+    { fach:"mathe", schluessel:"geld", stich:["geld","münzen","einkauf"], bild:"\u{1F4B6}", titel:"Geld und Einkaufen",
       wunsch:"Übe Geld: Münzen und Scheine erkennen, Beträge legen und wechseln, einkaufen und Rückgeld." },
-    { schluessel:"uhr", stich:["uhr","zeit"], bild:"\u{1F551}", titel:"Die Uhr",
+    { fach:"mathe", schluessel:"uhr", stich:["uhr","zeit"], bild:"\u{1F551}", titel:"Die Uhr",
       wunsch:"Übe die Uhrzeit: volle Stunden, halbe Stunden und Viertelstunden ablesen, und einfache Zeitspannen." },
-    { schluessel:"laengen", stich:["läng","meter","messen"], bild:"\u{1F4CF}", titel:"Längen messen",
+    { fach:"mathe", schluessel:"laengen", stich:["läng","meter","messen"], bild:"\u{1F4CF}", titel:"Längen messen",
       wunsch:"Übe Längen: Zentimeter und Meter, schätzen und messen, Längen vergleichen." },
-    { schluessel:"formen", stich:["form","körper","symmetrie"], bild:"\u{1F537}", titel:"Formen und Körper",
+    { fach:"mathe", schluessel:"formen", stich:["form","körper","symmetrie"], bild:"\u{1F537}", titel:"Formen und Körper",
       wunsch:"Übe Formen und Körper: Dreieck, Kreis, Viereck, Quadrat, Rechteck sowie Würfel, Quader, Kugel, Zylinder, Kegel erkennen und benennen. Dazu Symmetrie und Muster." },
-    { schluessel:"daten", stich:["tabelle","strichliste","zufall"], bild:"\u{1F4CA}", titel:"Tabellen und Zufall",
-      wunsch:"Übe Daten: Strichlisten und Tabellen lesen, und einschätzen, ob etwas sicher, möglich oder unmöglich ist." }
+    { fach:"mathe", schluessel:"daten", stich:["tabelle","strichliste","zufall"], bild:"\u{1F4CA}", titel:"Tabellen und Zufall",
+      wunsch:"Übe Daten: Strichlisten und Tabellen lesen, und einschätzen, ob etwas sicher, möglich oder unmöglich ist." },
+
+    /* Deutsch, seit 14.09.2026. Denny: "gerne Wiederholungen aus der ersten
+       Klasse". Die Reihenfolge folgt dem Lernpfad D1/2 (Buchstaben und Laute,
+       Silben, Nomen und Artikel). Alle drei sind Wiederholung und deshalb
+       "gerade dran". Wie es fuer einen Leseanfaenger gebaut wird, steht im
+       Bauauftrag unter DEUTSCH FUER LESEANFAENGER (spiel-bauen.js). */
+    { fach:"deutsch", schluessel:"d-laute", bild:"\u{1F524}", titel:"Laute und Buchstaben", jetzt:true,
+      wunsch:"Deutsch, Wiederholung aus der 1. Klasse: Laute und Buchstaben. Anlaut, Inlaut und Endlaut heraushören, die Selbstlaute a, e, i, o, u erkennen, großen und kleinen Buchstaben zuordnen, den fehlenden Buchstaben in einem kurzen Wort finden." },
+    { fach:"deutsch", schluessel:"d-silben", bild:"\u{1F44F}", titel:"Silben und Reime", jetzt:true,
+      wunsch:"Deutsch, Wiederholung aus der 1. Klasse: Silben und Reime. Silben klatschen und zählen, Wörter aus Silben zusammensetzen, Reimwörter finden, das Wort mit einer anderen Silbenzahl herausfinden." },
+    { fach:"deutsch", schluessel:"d-nomen", bild:"\u{1F4D6}", titel:"Der, die, das", jetzt:true,
+      wunsch:"Deutsch, Wiederholung aus der 1. Klasse: Namenwörter. Nomen erkennen, den richtigen Artikel der, die oder das wählen, Nomen und Satzanfänge schreibt man groß, Einzahl und Mehrzahl (ein Ball, viele Bälle)." }
   ];
+
+  // Welches Fach gerade offen ist. sessionStorage wie beim Spielstand: Der
+  // Sync fasst es nicht an, und beim naechsten Besuch beginnt es wieder bei
+  // Mathe - dort liegen die meisten Spiele.
+  var FACH_SCHLUESSEL = "leon-fach";
+  var fachJetzt = "mathe";
+  try { if (standLager && standLager.getItem(FACH_SCHLUESSEL) === "deutsch") fachJetzt = "deutsch"; } catch(e){}
+
+  function fachZeigen(){
+    Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(k){
+      var an = k.getAttribute("data-fach") === fachJetzt;
+      k.classList.toggle("an", an);
+      k.setAttribute("aria-selected", an ? "true" : "false");
+    });
+    $("kopfzeile").textContent = fachJetzt === "deutsch" ? "Leons Deutsch" : "Leons Mathe";
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(k){
+    k.addEventListener("click", function(){
+      fachJetzt = k.getAttribute("data-fach");
+      try { if (standLager) standLager.setItem(FACH_SCHLUESSEL, fachJetzt); } catch(e){}
+      fachZeigen();
+      malThemen();
+    });
+  });
 
   // Alle gebauten Spiele, damit die Themenfelder wissen, was schon bereitliegt.
   var SPIELE = [];
@@ -755,6 +805,7 @@
     var kasten = $("themen");
     kasten.innerHTML = "";
     THEMEN.forEach(function(th){
+      if ((th.fach || "mathe") !== fachJetzt) return;
       var fertig = fertigesSpiel(th);
       var stand = standHolen();
       var offen = (fertig && stand && stand.id === fertig.id) ? stand : null;
@@ -786,6 +837,7 @@
   }
 
   try { localStorage.removeItem(STAND_SCHLUESSEL); } catch(e){}   // Altlast aus dem Sync
+  fachZeigen();
   malThemen();
   torstandMalen();
 
@@ -834,6 +886,9 @@
     } else {
       SCHRITTE[0] = ["Ich schaue mir deine Seite an …", "Ich suche das Thema."];
     }
+    SCHRITTE[2] = fachJetzt === "deutsch"
+      ? ["Ich suche gute Wörter …", "Nicht zu leicht, nicht zu schwer."]
+      : ["Ich suche gute Zahlen …", "Nicht zu leicht, nicht zu schwer."];
     $("schritt").textContent = SCHRITTE[0][0];
     $("schritt-unter").textContent = SCHRITTE[0][1];
     var takt = setInterval(function(){
