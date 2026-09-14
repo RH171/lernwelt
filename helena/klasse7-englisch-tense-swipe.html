@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tense Swipe</title>
+<!--
+  Helenas erstes Spiel ausserhalb der Vokabeltrainer (14.09.2026, Denny:
+  "Gerne noch mehr Spiele - auch Helena wuerde sich freuen").
+
+  Englisch 7. Klasse Gymnasium (LehrplanPLUS): present perfect simple und
+  progressive, past perfect. Jede Karte ist ein Satz mit Luecke; nach links
+  oder rechts wischen waehlt eine der zwei Formen. Danach steht das
+  Signalwort markiert da und die Regel in einem Satz.
+
+  Die Saetze sind so gebaut, dass nur EINE Form stimmt. Wo im echten Englisch
+  beide gingen (z. B. "After she finished..." mit simple past), ist der Satz
+  nicht drin. "just" und "already" gelten wie im Schulbuch britisch.
+
+  Gebaut fuer Helenas Handy (360 x 643) und im Stil ihrer Trainer: dunkel,
+  kein Kinderlook. Kein Zeitdruck; die kniffligen Karten kommen am Ende nochmal.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740; --line:#2a3350;
+    --ink:#eef2fb; --muted:#8a92a8; --brand:#a78bfa; --ok:#49d6bd; --no:#ff7a6b; --gold:#ffce5c;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:radial-gradient(900px 500px at 85% -10%,rgba(167,139,250,.16),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed;-webkit-font-smoothing:antialiased;padding:14px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .wrap{max-width:560px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:800 14px/1 var(--round);color:var(--ink);text-decoration:none;min-height:44px}
+  h1{font:800 20px/1.1 var(--round);margin:0;flex:1}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+  .start h2{font:800 24px/1.2 var(--round);margin:0 0 6px}
+  .start p{color:var(--muted);font-size:15px;line-height:1.5;margin:0 0 14px}
+  .deck{display:block;width:100%;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:16px;
+    padding:14px 16px;margin-top:10px;color:var(--ink);cursor:pointer;min-height:64px}
+  .deck b{font:800 16px/1.3 var(--round);display:block}
+  .deck span{color:var(--muted);font-size:13.5px}
+  .deck:active{transform:scale(.99)}
+  .deck .stand{float:right;color:var(--ok);font:800 13px/1.3 var(--round)}
+
+  .fortschritt{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:0 0 12px}
+  .fortschritt i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#7c5cff);width:0;transition:width .3s}
+  .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;font-weight:700;margin-bottom:8px}
+
+  .stapel{position:relative;min-height:230px;touch-action:pan-y}
+  .karte{position:relative;background:linear-gradient(160deg,#232c47,#1a2138);border:1px solid var(--line);border-radius:22px;
+    padding:22px 18px;min-height:220px;display:flex;flex-direction:column;justify-content:center;gap:12px;
+    transition:transform .25s ease, background .25s, border-color .25s;user-select:none;-webkit-user-select:none;will-change:transform}
+  .karte.zieht{transition:none}
+  .karte .verb{color:var(--muted);font:700 14px/1 var(--round)}
+  .karte .satz{font:700 clamp(21px,5.6vw,26px)/1.4 var(--round)}
+  .luecke{display:inline-block;min-width:88px;border-bottom:3px solid var(--brand);color:var(--brand);text-align:center;padding:0 4px}
+  .karte.gut{border-color:var(--ok);background:linear-gradient(160deg,#153b3a,#14302f)}
+  .karte.falsch{border-color:var(--no);background:linear-gradient(160deg,#3d1f24,#2c181c)}
+  .karte .luecke.gefuellt{border-bottom-color:currentColor}
+  .karte.gut .luecke{color:var(--ok)} .karte.falsch .luecke{color:var(--no)}
+  mark{background:rgba(255,206,92,.22);color:var(--gold);border-radius:6px;padding:0 4px}
+  .schatten{position:absolute;top:50%;transform:translateY(-50%);font:800 15px/1.2 var(--round);opacity:0;transition:opacity .15s;pointer-events:none;max-width:45%}
+  .schatten.l{left:8px} .schatten.r{right:8px;text-align:right}
+
+  .wahl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .wahl button{background:var(--surface2);border:1px solid var(--line);border-radius:16px;color:var(--ink);cursor:pointer;
+    font:800 16px/1.25 var(--round);padding:12px 8px;min-height:62px}
+  .wahl button .pfeil{display:block;color:var(--muted);font-size:12px;font-weight:700;margin-bottom:3px}
+  .wahl button:active{transform:scale(.98)}
+  .wahl button[disabled]{opacity:.45}
+  .erkl{margin-top:12px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.5}
+  .erkl .kopf{font:800 15px/1.3 var(--round);margin-bottom:4px}
+  .erkl .kopf.gut{color:var(--ok)} .erkl .kopf.falsch{color:var(--no)}
+  .reihe{display:flex;gap:10px;margin-top:12px}
+  .btn{flex:1;border:none;border-radius:16px;background:linear-gradient(150deg,var(--brand),#7c5cff);color:#fff;font:800 17px/1 var(--round);padding:15px;cursor:pointer;min-height:54px}
+  .btn.grau{flex:0 0 54px;background:var(--surface2);border:1px solid var(--line);font-size:22px;padding:0}
+  .btn:active{transform:scale(.98)}
+
+  .ende{text-align:center}
+  .ende .gross{font:800 54px/1 var(--round);background:linear-gradient(150deg,var(--brand),#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ende h2{font:800 22px/1.2 var(--round);margin:8px 0}
+  .ende p{color:var(--muted);font-size:15px;line-height:1.5;margin:0 0 12px}
+  .regeln{text-align:left;background:var(--surface2);border-radius:16px;padding:12px 14px;font-size:14.5px;line-height:1.55;margin-bottom:12px}
+  .regeln b{color:var(--gold)}
+  .btn2{display:block;width:100%;margin-top:10px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;color:var(--ink);
+    font:800 16px/1 var(--round);padding:15px;cursor:pointer;min-height:52px;text-decoration:none;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="chip" href="spiele.html">‹ Spiele</a>
+    <h1>Tense Swipe</h1>
+  </header>
+
+  <section class="panel start" id="sicht-start">
+    <h2>Welche Zeitform passt?</h2>
+    <p>Wisch die Karte nach links oder rechts – oder tipp auf die Form. Achte auf das Signalwort. Die kniffligen Karten kommen am Ende nochmal.</p>
+    <div id="decks"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="meta"><span id="deckname"></span><span id="zaehler"></span></div>
+    <div class="fortschritt"><i id="balken"></i></div>
+    <div class="stapel" id="stapel">
+      <div class="schatten l" id="schatten-l"></div>
+      <div class="schatten r" id="schatten-r"></div>
+      <div class="karte" id="karte"><div class="verb" id="verb"></div><div class="satz" id="satz"></div></div>
+    </div>
+    <div class="wahl" id="wahl">
+      <button id="links"><span class="pfeil">← wischen</span><span id="links-text"></span></button>
+      <button id="rechts"><span class="pfeil">wischen →</span><span id="rechts-text"></span></button>
+    </div>
+    <div id="erkl"></div>
+  </section>
+
+  <section class="panel ende verborgen" id="sicht-ende">
+    <div class="gross" id="ende-zahl"></div>
+    <h2 id="ende-titel"></h2>
+    <p id="ende-text"></p>
+    <div class="regeln" id="regeln"></div>
+    <button class="btn" id="nochmal" style="width:100%">Nochmal dieses Deck</button>
+    <button class="btn2" id="andere">Anderes Deck</button>
+    <a class="btn2" href="spiele.html">Zurück zu den Spielen</a>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- Die Decks ----------
+     s: Satz mit ___ fuer die Luecke   v: Grundform   o: [links, rechts]   r: Index der richtigen
+     sig: Signalwort(e) im fertigen Satz (werden markiert)   w: warum, ein Satz auf Deutsch */
+  var DECKS = {
+    pp: {
+      name: "Simple past oder present perfect",
+      kurz: "yesterday · ago · since · already · ever",
+      regeln: "<b>Simple past</b>: abgeschlossen, mit Zeitpunkt – yesterday, last week, ago, in 2020, when?<br><b>Present perfect</b>: Bezug zur Gegenwart – already, just, ever, never, yet, since, for, so far, this week.",
+      karten: [
+        { s: "I ___ that film yesterday.", v: "see", o: ["saw", "have seen"], r: 0, sig: ["yesterday"], w: "Ein fester Zeitpunkt in der Vergangenheit – das verlangt das simple past." },
+        { s: "We ___ to London three times so far.", v: "be", o: ["were", "have been"], r: 1, sig: ["so far"], w: "„so far“ heißt „bis jetzt“ – die Zeitspanne reicht bis heute: present perfect." },
+        { s: "She ___ her homework an hour ago.", v: "finish", o: ["finished", "has finished"], r: 0, sig: ["ago"], w: "„ago“ nennt einen Zeitpunkt in der Vergangenheit: simple past." },
+        { s: "___ sushi?", v: "you / ever / try", o: ["Did you ever try", "Have you ever tried"], r: 1, sig: ["ever"], w: "„ever“ fragt nach dem ganzen Leben bis jetzt: present perfect (so steht es im britischen Englisch)." },
+        { s: "My parents ___ married in 2010.", v: "get", o: ["got", "have got"], r: 0, sig: ["in 2010"], w: "Eine Jahreszahl ist ein abgeschlossener Zeitpunkt: simple past." },
+        { s: "Tom ___ in Munich since 2019.", v: "live", o: ["lived", "has lived"], r: 1, sig: ["since"], w: "„since“ + Zeitpunkt: Es hat damals angefangen und dauert bis heute – present perfect." },
+        { s: "Last summer we ___ a lot of ice cream.", v: "eat", o: ["ate", "have eaten"], r: 0, sig: ["Last summer"], w: "„last summer“ ist vorbei: simple past." },
+        { s: "When ___ your new bike?", v: "you / get", o: ["did you get", "have you got"], r: 0, sig: ["When"], w: "Mit „When?“ fragst du nach einem Zeitpunkt – das geht nur mit dem simple past." },
+        { s: "I ___ a real kangaroo. Maybe one day!", v: "never / see", o: ["never saw", "have never seen"], r: 1, sig: ["never", "one day"], w: "„never“ bis heute, und es kann noch passieren: present perfect." },
+        { s: "Shakespeare ___ about 39 plays.", v: "write", o: ["wrote", "has written"], r: 0, sig: ["Shakespeare"], w: "Shakespeare lebt nicht mehr, sein Schaffen ist abgeschlossen: simple past." },
+        { s: "We ___ our project yet.", v: "not finish", o: ["didn't finish", "haven't finished"], r: 1, sig: ["yet"], w: "„yet“ (bis jetzt noch nicht) steht mit dem present perfect." },
+        { s: "Two days ago Helena ___ a new phone.", v: "buy", o: ["bought", "has bought"], r: 0, sig: ["Two days ago"], w: "„two days ago“ ist ein Zeitpunkt in der Vergangenheit: simple past." },
+        { s: "They ___ each other for five years – and they're still best friends.", v: "know", o: ["knew", "have known"], r: 1, sig: ["for five years", "still"], w: "„for“ + Zeitraum, der bis heute andauert: present perfect." },
+        { s: "In 1969 people ___ on the moon for the first time.", v: "walk", o: ["walked", "have walked"], r: 0, sig: ["In 1969"], w: "Jahreszahl, abgeschlossen: simple past." },
+        { s: "I ___ my room. Can I go out now?", v: "already / tidy", o: ["already tidied", "have already tidied"], r: 1, sig: ["already", "now"], w: "„already“ und das Ergebnis zählt jetzt (das Zimmer ist ordentlich): present perfect." },
+        { s: "What ___ last weekend?", v: "you / do", o: ["did you do", "have you done"], r: 0, sig: ["last weekend"], w: "„last weekend“ ist vorbei: simple past." },
+        { s: "She ___ three books this month.", v: "read", o: ["read", "has read"], r: 1, sig: ["this month"], w: "„this month“ ist noch nicht vorbei: present perfect." },
+        { s: "Oh no, I ___ my keys! I can't open the door.", v: "lose", o: ["lost", "have lost"], r: 1, sig: ["I can't open the door"], w: "Kein Zeitpunkt, aber eine Folge für jetzt (die Tür bleibt zu): present perfect." },
+        { s: "The film ___ at 8 o'clock, so we were late.", v: "start", o: ["started", "has started"], r: 0, sig: ["at 8 o'clock", "were"], w: "Uhrzeit in einer abgeschlossenen Geschichte: simple past." },
+        { s: "The bus ___. Let's get on!", v: "just / arrive", o: ["just arrived", "has just arrived"], r: 1, sig: ["just"], w: "„just“ (gerade eben) steht im britischen Englisch mit dem present perfect." }
+      ]
+    },
+    prog: {
+      name: "Present perfect simple oder progressive",
+      kurz: "Ergebnis & wie oft · oder · Dauer & Spuren",
+      regeln: "<b>Simple</b> (have done): das Ergebnis zählt – wie viele, wie oft, fertig. Zustandsverben (know, like, have) immer simple.<br><b>Progressive</b> (have been doing): die Tätigkeit selbst und wie lange – oft noch nicht fertig oder mit sichtbaren Spuren.",
+      karten: [
+        { s: "I ___ for the bus for twenty minutes!", v: "wait", o: ["have waited", "have been waiting"], r: 1, sig: ["for twenty minutes"], w: "Es geht um die Dauer einer Tätigkeit, die noch läuft: progressive." },
+        { s: "I ___ three emails this morning.", v: "write", o: ["have written", "have been writing"], r: 0, sig: ["three emails"], w: "Eine Anzahl ist ein Ergebnis: simple." },
+        { s: "Your hands are dirty. ___ in the garden?", v: "you / work", o: ["Have you worked", "Have you been working"], r: 1, sig: ["Your hands are dirty"], w: "Man sieht die Spuren einer Tätigkeit: progressive." },
+        { s: "She ___ the whole cake. There's nothing left!", v: "eat", o: ["has eaten", "has been eating"], r: 0, sig: ["the whole cake", "nothing left"], w: "Die Tätigkeit ist abgeschlossen, das Ergebnis zählt: simple." },
+        { s: "You look exhausted! What ___?", v: "you / do", o: ["have you done", "have you been doing"], r: 1, sig: ["You look exhausted"], w: "Man sieht die Folge einer Tätigkeit (erschöpft) – gefragt ist, was du die ganze Zeit gemacht hast: progressive." },
+        { s: "We ___ this song ten times today.", v: "sing", o: ["have sung", "have been singing"], r: 0, sig: ["ten times"], w: "„ten times“ – wie oft: simple." },
+        { s: "It ___ since this morning, and it still hasn't stopped.", v: "rain", o: ["has rained", "has been raining"], r: 1, sig: ["since this morning", "still hasn't stopped"], w: "Die Tätigkeit dauert noch an, die Dauer steht im Vordergrund: progressive." },
+        { s: "Look, I ___ my homework. It's done!", v: "finish", o: ["have finished", "have been finishing"], r: 0, sig: ["It's done"], w: "Fertig, Ergebnis: simple." },
+        { s: "He's tired because he ___ football for two hours.", v: "play", o: ["has played", "has been playing"], r: 1, sig: ["for two hours", "tired"], w: "Dauer und Folge (müde): progressive." },
+        { s: "They ___ each other since kindergarten.", v: "know", o: ["have known", "have been knowing"], r: 0, sig: ["know"], w: "„know“ ist ein Zustandsverb – das hat keine -ing-Form: simple." },
+        { s: "Paul ___ a new game all afternoon – he's still at it.", v: "build", o: ["has built", "has been building"], r: 1, sig: ["all afternoon", "still"], w: "Die Tätigkeit dauert noch an: progressive." },
+        { s: "How many pages ___?", v: "you / read", o: ["have you read", "have you been reading"], r: 0, sig: ["How many"], w: "„How many“ fragt nach einer Anzahl: simple." },
+        { s: "Sorry I'm so hot – I ___.", v: "run", o: ["have run", "have been running"], r: 1, sig: ["I'm so hot"], w: "Die Folge einer Tätigkeit ist spürbar: progressive." },
+        { s: "We ___ the kitchen. Doesn't it look great now?", v: "paint", o: ["have painted", "have been painting"], r: 0, sig: ["look great now"], w: "Fertig, das Ergebnis wird gezeigt: simple." },
+        { s: "We ___ the kitchen – that's why there's paint on my T-shirt.", v: "paint", o: ["have painted", "have been painting"], r: 1, sig: ["paint on my T-shirt"], w: "Sichtbare Spuren der Tätigkeit: progressive." },
+        { s: "I ___ this bike since I was eight.", v: "have", o: ["have had", "have been having"], r: 0, sig: ["have"], w: "„have“ im Sinn von „besitzen“ ist ein Zustand: simple." }
+      ]
+    },
+    past: {
+      name: "Past perfect oder simple past",
+      kurz: "Was war vorher? · had done",
+      regeln: "<b>Simple past</b>: das, was in der Geschichte passiert, der Reihe nach.<br><b>Past perfect</b> (had done): etwas war schon <i>vorher</i> passiert – already, by the time, never … before, because.",
+      karten: [
+        { s: "When we arrived at the cinema, the film ___.", v: "already / start", o: ["already started", "had already started"], r: 1, sig: ["already", "When we arrived"], w: "Der Film lief schon, bevor wir ankamen: past perfect." },
+        { s: "I ___ snow before I went to Canada.", v: "never / see", o: ["never saw", "had never seen"], r: 1, sig: ["never", "before"], w: "Vor der Reise, also vor einem anderen Vergangenheitspunkt: past perfect." },
+        { s: "By the time Dad got home, we ___ all the pizza.", v: "eat", o: ["ate", "had eaten"], r: 1, sig: ["By the time"], w: "„by the time“ – bis dahin war es schon passiert: past perfect." },
+        { s: "Helena was sad because she ___ her bag on the bus.", v: "leave", o: ["left", "had left"], r: 1, sig: ["because"], w: "Der Grund liegt vor dem Traurigsein: past perfect." },
+        { s: "Yesterday I ___ up at 7, had breakfast and went to school.", v: "get", o: ["got", "had got"], r: 0, sig: ["had breakfast and went"], w: "Die Ereignisse werden der Reihe nach erzählt: simple past." },
+        { s: "The streets were wet because it ___ in the night.", v: "rain", o: ["rained", "had rained"], r: 1, sig: ["because", "in the night"], w: "Der Regen kam vor dem Nasssein: past perfect." },
+        { s: "Last week we ___ a trip to Nuremberg.", v: "make", o: ["made", "had made"], r: 0, sig: ["Last week"], w: "Ein einfaches Ereignis in der Vergangenheit, kein „vorher“: simple past." },
+        { s: "He couldn't pay because he ___ his wallet at home.", v: "forget", o: ["forgot", "had forgotten"], r: 1, sig: ["because"], w: "Das Vergessen war vor dem Bezahlen: past perfect." },
+        { s: "When I ___ the door, the dog ran out.", v: "open", o: ["opened", "had opened"], r: 0, sig: ["ran out"], w: "Direkt nacheinander erzählt: simple past." },
+        { s: "She knew the ending because she ___ the book before.", v: "read", o: ["read", "had read"], r: 1, sig: ["before"], w: "Das Lesen lag vor dem Wissen: past perfect." },
+        { s: "The train ___ when we got to the station, so we took a taxi.", v: "already / leave", o: ["already left", "had already left"], r: 1, sig: ["already", "when we got"], w: "Der Zug war schon weg, als wir kamen: past perfect." },
+        { s: "In 2020 my family ___ to Fürth.", v: "move", o: ["moved", "had moved"], r: 0, sig: ["In 2020"], w: "Ein Ereignis mit Jahreszahl, kein „vorher“: simple past." },
+        { s: "I was nervous. I ___ on a stage before.", v: "never / stand", o: ["never stood", "had never stood"], r: 1, sig: ["never", "before"], w: "Bis zu jenem Moment noch nie: past perfect." }
+      ]
+    }
+  };
+
+  var SPEICHER = "helena-tenses";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t){
+    if (!kannSprechen || document.hidden) return;
+    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "en-GB"; u.rate = .95;
+      var alle = speechSynthesis.getVoices() || [];
+      var st = alle.filter(function(v){ return /^en-GB/i.test(v.lang); })[0] || alle.filter(function(v){ return /^en/i.test(v.lang); })[0];
+      if (st) u.voice = st; speechSynthesis.speak(u); } catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  function decksMalen(){
+    var d = lesen();
+    $("decks").innerHTML = Object.keys(DECKS).map(function(k){
+      var st = d[k] ? '<span class="stand">' + d[k].best + '/' + d[k].von + ' ✓</span>' : "";
+      return '<button class="deck" data-k="' + k + '">' + st + '<b>' + DECKS[k].name + '</b><span>' + DECKS[k].kurz + '</span></button>';
+    }).join("");
+    Array.prototype.forEach.call($("decks").children, function(b){ b.addEventListener("click", function(){ starten(b.getAttribute("data-k")); }); });
+  }
+  decksMalen();
+
+  var deck = "pp", liste = [], pos = 0, sauber = 0, runde = 0, verpasst = [], zweite = false, beantwortet = false, reihen = [];
+
+  function zeige(n){ ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); }); window.scrollTo(0, 0); }
+
+  function starten(k){
+    deck = k;
+    var karten = DECKS[k].karten.slice();
+    liste = mische(karten).slice(0, 12).map(function(c){
+      // Seiten zufaellig tauschen, damit "rechts" nicht immer present perfect ist
+      var tausch = Math.random() < .5;
+      return { c: c, o: tausch ? [c.o[1], c.o[0]] : c.o.slice(), r: tausch ? 1 - c.r : c.r };
+    });
+    runde = liste.length; pos = 0; sauber = 0; verpasst = []; zweite = false;
+    $("deckname").textContent = DECKS[k].name;
+    zeige("spiel");
+    karteZeigen();
+  }
+
+  function satzMit(c, text, klasse){
+    var gefuellt = text ? '<span class="luecke gefuellt ' + (klasse || "") + '">' + esc(text) + '</span>' : '<span class="luecke">&nbsp;</span>';
+    return esc(c.s).replace("___", gefuellt);
+  }
+
+  function karteZeigen(){
+    var k = liste[pos];
+    beantwortet = false;
+    var karte = $("karte");
+    karte.className = "karte"; karte.style.transform = "";
+    $("verb").textContent = "(" + k.c.v + ")";
+    $("satz").innerHTML = satzMit(k.c, "");
+    $("links-text").textContent = k.o[0];
+    $("rechts-text").textContent = k.o[1];
+    $("schatten-l").textContent = k.o[0]; $("schatten-r").textContent = k.o[1];
+    $("links").disabled = false; $("rechts").disabled = false;
+    $("erkl").innerHTML = "";
+    $("zaehler").textContent = zweite ? "Nochmal · " + (pos + 1) + "/" + liste.length : (pos + 1) + " / " + liste.length;
+    $("balken").style.width = (pos / liste.length * 100) + "%";
+  }
+
+  function fertigerSatz(k){
+    if (k.c.fertig) return k.c.fertig[0];
+    return k.c.s.replace("___", k.c.o[k.c.r]);
+  }
+
+  function markieren(html, sig){
+    (sig || []).forEach(function(s){
+      var e = esc(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      html = html.replace(new RegExp("(^|[^\\w>])(" + e + ")(?![\\w])", "i"), "$1<mark>$2</mark>");
+    });
+    return html;
+  }
+
+  function antworten(seite){
+    if (beantwortet) return;
+    beantwortet = true;
+    var k = liste[pos], stimmt = seite === k.r;
+    var karte = $("karte");
+    karte.style.transform = "";
+    karte.classList.add(stimmt ? "gut" : "falsch");
+    $("links").disabled = true; $("rechts").disabled = true;
+    // Satz mit der richtigen Form, Signalwort markiert
+    var richtigText = k.c.fertig ? null : k.c.o[k.c.r];
+    var satzHtml = k.c.fertig ? esc(k.c.fertig[0]) : satzMit(k.c, richtigText);
+    $("satz").innerHTML = markieren(satzHtml, k.c.sig);
+    try { window.lernstand && window.lernstand.antwort(stimmt, DECKS[deck].name.toLowerCase().slice(0, 40), k.o[seite], k.c.o[k.c.r]); } catch(e){}
+    if (!zweite){ if (stimmt) sauber++; else verpasst.push(k); }
+    $("erkl").innerHTML = '<div class="erkl"><div class="kopf ' + (stimmt ? "gut" : "falsch") + '">' +
+      (stimmt ? "✓ Richtig" : "✗ Nicht ganz – richtig ist „" + esc(k.c.o[k.c.r]) + "“") + '</div>' + esc(k.c.w) + '</div>' +
+      '<div class="reihe"><button class="btn grau" id="hoeren" aria-label="Vorlesen">🔊</button><button class="btn" id="weiter">Weiter</button></div>';
+    $("weiter").addEventListener("click", weiter);
+    $("hoeren").addEventListener("click", function(){ sprich(fertigerSatz(k)); });
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function weiter(){
+    pos++;
+    if (pos < liste.length){ karteZeigen(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if (!zweite && verpasst.length){
+      zweite = true; liste = mische(verpasst.slice()); pos = 0;
+      karteZeigen(); return;
+    }
+    ende();
+  }
+
+  function ende(){
+    var d = lesen(); var alt = d[deck] || { best: 0, von: runde, runden: 0 };
+    d[deck] = { best: Math.max(alt.best || 0, sauber), von: runde, runden: (alt.runden || 0) + 1 };
+    schreiben(d);
+    $("ende-zahl").textContent = sauber + "/" + runde;
+    $("ende-titel").textContent = sauber === runde ? "Alles beim ersten Wisch!" : "Beim ersten Versuch richtig";
+    $("ende-text").textContent = sauber === runde ? "Du erkennst die Signale sicher." :
+      (runde - sauber) + (runde - sauber === 1 ? " Karte hast du" : " Karten hast du") + " in der zweiten Runde nochmal gesehen – genau die bleiben so hängen.";
+    $("regeln").innerHTML = DECKS[deck].regeln;
+    zeige("ende"); decksMalen();
+  }
+
+  $("links").addEventListener("click", function(){ antworten(0); });
+  $("rechts").addEventListener("click", function(){ antworten(1); });
+  $("nochmal").addEventListener("click", function(){ starten(deck); });
+  $("andere").addEventListener("click", function(){ zeige("start"); });
+
+  /* ---------- Wischen ---------- */
+  (function(){
+    var karte = $("karte"), x0 = null, dx = 0, id = null;
+    karte.addEventListener("pointerdown", function(e){ if (beantwortet) return; x0 = e.clientX; dx = 0; id = e.pointerId; karte.classList.add("zieht"); try { karte.setPointerCapture(id); } catch(_){} });
+    karte.addEventListener("pointermove", function(e){
+      if (x0 === null) return;
+      dx = e.clientX - x0;
+      karte.style.transform = "translateX(" + dx + "px) rotate(" + (dx / 22) + "deg)";
+      $("schatten-l").style.opacity = dx < -30 ? Math.min(1, -dx / 110) : 0;
+      $("schatten-r").style.opacity = dx > 30 ? Math.min(1, dx / 110) : 0;
+    });
+    function los(){
+      if (x0 === null) return;
+      karte.classList.remove("zieht");
+      $("schatten-l").style.opacity = 0; $("schatten-r").style.opacity = 0;
+      var weit = Math.abs(dx) > Math.min(110, karte.clientWidth * .28);
+      x0 = null;
+      if (weit) antworten(dx < 0 ? 0 : 1); else karte.style.transform = "";
+    }
+    karte.addEventListener("pointerup", los);
+    karte.addEventListener("pointercancel", los);
+  })();
+
+  window.__tense = { DECKS: DECKS, starten: starten, antworte: antworten, zustand: function(){ return { pos: pos, liste: liste, zweite: zweite }; }, weiter: function(){ var w = $("weiter"); if (w) w.click(); } };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
