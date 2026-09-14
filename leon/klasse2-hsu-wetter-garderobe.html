@@ -62,7 +62,7 @@
   .teile{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
   .teil{border:2px solid var(--line);background:#fff;border-radius:14px;min-height:78px;cursor:pointer;padding:6px 4px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 13px/1.15 var(--font);color:var(--ink);text-align:center}
-  .teil .e{font-size:30px;line-height:1}
+  .teil .e{font-size:28px;line-height:1;white-space:nowrap}
   .teil.an{border-color:var(--leon);background:#ecfdf3;box-shadow:inset 0 0 0 2px var(--leon)}
   .teil.an::after{content:"✓ an";font-size:11px;color:var(--leon-dunkel)}
   .teil:active{transform:scale(.96)}
@@ -104,7 +104,7 @@
     <div class="buehne">
       <div class="oben">
         <div class="wetter" id="wetter"></div>
-        <div class="figurbox"><svg class="figur" id="figur" viewBox="0 0 200 300" aria-label="Leon"></svg></div>
+        <div class="figurbox"><svg class="figur" id="figur" viewBox="0 -44 200 344" aria-label="Leon"></svg></div>
       </div>
       <div class="karte schrank">
         <h3>Kleiderschrank</h3>
@@ -144,8 +144,8 @@
     schal:        { name: "Schal",          e: "🧣", platz: "hals" },
     tshirt:       { name: "T-Shirt",        e: "👕", platz: "oben" },
     pulli:        { name: "Pulli",          e: "👚", platz: "oben" },
-    regenjacke:   { name: "Regenjacke",     e: "🌂", platz: "jacke" },
-    winterjacke:  { name: "Winterjacke",    e: "🧥", platz: "jacke" },
+    regenjacke:   { name: "Regenjacke",     e: "🧥💧", platz: "jacke" },
+    winterjacke:  { name: "Winterjacke",    e: "🧥❄️", platz: "jacke" },
     handschuhe:   { name: "Handschuhe",     e: "🧤", platz: "haende" },
     kurzehose:    { name: "kurze Hose",     e: "🩳", platz: "beine" },
     langehose:    { name: "lange Hose",     e: "👖", platz: "beine" },
@@ -243,8 +243,8 @@
     var h = function(id){ return an.indexOf(id) >= 0; };
     // Schirm hinter der Figur
     if (h("schirm")){
-      el("path", { d: "M40 70 Q100 5 160 70 Z", fill: "#7c3aed", stroke: KONTUR, "stroke-width": 3 }, s);
-      el("line", { x1: 150, y1: 70, x2: 150, y2: 170, stroke: KONTUR, "stroke-width": 4 }, s);
+      el("path", { d: "M30 10 Q100 -70 170 10 Z", fill: "#7c3aed", stroke: KONTUR, "stroke-width": 3 }, s);
+      el("line", { x1: 158, y1: 10, x2: 158, y2: 180, stroke: KONTUR, "stroke-width": 4 }, s);
     }
     // Beine (Haut)
     el("rect", { x: 78, y: 180, width: 18, height: 90, rx: 8, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s);
