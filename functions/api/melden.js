@@ -414,8 +414,17 @@ async function loeschenVerarbeiten(context) {
   }
 
   await liste_speichern(env, liste.filter((m) => m.id !== id));
+  // Nur die Nachrichten anfassen, an denen wirklich ein Bild hing. Ein delete
+  // ist im KV ein SCHREIBvorgang und zaehlt gegen das Tageskontingent - auch
+  // dann, wenn der Schluessel gar nicht existiert. Vorher lief die Schleife
+  // ueber den ganzen Verlauf: Helenas Faden wjj9vuza7x haette 20 Schreibvorgaenge
+  // gekostet, obwohl daran kein einziges Bild hing. "hatBild" steht seit jeher
+  // an jeder Nachricht, ein Nachschauen im Speicher braucht es dafuer nicht.
   if (faden) for (let i = 0; i < (faden.verlauf || []).length; i++) {
-    try { await env.PAUL_KV.delete("meldung-bild:" + id + ":" + i); } catch (e) {}
+    const e = faden.verlauf[i];
+    if (!e || !e.hatBild) continue;
+    const nr = (e.nr === undefined || e.nr === null) ? i : e.nr;
+    try { await env.PAUL_KV.delete("meldung-bild:" + id + ":" + nr); } catch (e2) {}
   }
   return json(200, { ok: true });
 }
