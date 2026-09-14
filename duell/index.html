@@ -334,7 +334,7 @@
     if (entwurf.klasse == null){ $("profil-fehler").textContent = "In welche Klasse gehst du?"; return; }
     profil = { name: entwurf.name, avatar: entwurf.avatar, alter: entwurf.alter, klasse: entwurf.klasse };
     schreibe("duell-profil", profil);
-    if (nachProfil){ var f = nachProfil; nachProfil = null; f(); }
+    if (nachProfil){ var weiterMit = nachProfil; nachProfil = null; weiterMit(); }
     else if (ws && ws.readyState === 1){ hallo(); zeige("lobby"); }
     else zeige("start");
   });
@@ -403,7 +403,7 @@
   $("link-kopieren").addEventListener("click", function(){
     var link = location.origin + "/duell/?raum=" + raumCode;
     try { navigator.clipboard.writeText(link).then(function(){ $("link-kopieren").textContent = "✓ Kopiert"; setTimeout(function(){ $("link-kopieren").textContent = "🔗 Link kopieren"; }, 1800); }); }
-    catch(e){ prompt("Link zum Mitspielen:", link); }
+    catch(e){ window.prompt("Link zum Mitspielen:", link); }
   });
 
   /* ---------- Frage ---------- */
