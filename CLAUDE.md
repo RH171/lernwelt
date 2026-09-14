@@ -186,9 +186,33 @@ dort der einzige Schreibvorgang *nicht* in einem `try/catch` steckt — die
 meisten anderen schlucken den Fehler und melden trotzdem Erfolg
 (`./werkstatt.sh bauzettel` sagt dann "Zettel haengt", obwohl nichts ankam).
 
-**Verdächtig ist die Tagesgrenze für Schreibvorgänge im KV-Freikontingent**; sie
-beginnt um 00:00 UTC neu. Nachsehen lässt sich das nur im Cloudflare-Konto —
-also **nicht raten**, sondern Denny fragen.
+**Besser als der Test oben: den Server selbst fragen.** Er nennt den Grund im
+Klartext, statt nur "500" zu sagen:
+
+    ./werkstatt.sh speicher
+
+Dahinter steht `functions/api/speicher-pruefen.js` (Elternausweis nötig, damit
+niemand Fremdes darüber Schreibvorgänge verbrennt). Es versucht **einen**
+winzigen Schreibvorgang, fängt den Fehler und reicht die Meldung von Cloudflare
+unverändert durch.
+
+**Am 14.09.2026 war die Antwort:** `KV put() limit exceeded for the day.` Also
+die Tagesgrenze des Freikontingents — **1000 Schreibvorgänge**, neu ab 00:00 UTC
+(2 Uhr deutscher Sommerzeit). Das musste niemand raten und niemand im
+Cloudflare-Konto nachsehen.
+
+**Die Ursache war hausgemacht, und zwar nicht bei den Kindern.** `delete` ist im
+KV ein **Schreib**vorgang. `fehlversucheLoeschen()` in `_riegel.js` löschte nach
+*jeder* erfolgreichen Anmeldung den Fehlversuch-Zähler — auch wenn es gar keinen
+gab, was der Normalfall ist. Und angemeldet wird sich ständig, weil sich jedes
+Werkzeug auf Dennys Rechner pro Aufruf neu anmeldet: `werkstatt.sh` bei jedem
+Befehl, `antworten-nachreichen.sh` alle fünf Minuten je offener Antwort, dazu
+der Bau-Wächter alle 15 Minuten. Das kam allein auf rund 900 Schreibvorgänge am
+Tag. Dasselbe Muster steckte in `aktiv.js` beim `wunsch=0` nach jedem Ausrollen.
+
+**Beides ist behoben — und daraus wird eine Regel:** Vor einem `delete` (und vor
+einem `put`, das denselben Wert schreibt) **erst `get`**. Lesen zählt praktisch
+nicht, Schreiben schon. Geprüft wird das mit `node pruefe-riegel.mjs`.
 
 **Was daraus folgt, wenn man etwas baut:** Schreibvorgänge sind hier die knappe
 Zahl, nicht der Platz. Zwei Zähler gehören in **einen** Schlüssel, nicht in
