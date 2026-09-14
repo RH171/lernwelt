@@ -544,6 +544,157 @@
       .catch(function(){});
   }
 
+  /* ---------- Pauls Themenfelder ----------
+     Paul am 14.09.2026 (Meldung 8fcenvfnsh): "ich will auch in der Werkstatt so
+     ganz leichte spiele bauen bei leons lernwelt klappt das anscheinend bitt
+     gucke ob das bei in klappt und wenn es klappt setzte es auch bei mir um."
+     Auf die Rueckfrage, ob die gebauten Spiele in seinem Spiele-Ordner bleiben
+     sollen: "ja".
+
+     Bei Leon steht die Themenwahl seit dem 05.09.2026 und traegt; hier ist sie
+     dasselbe, nur mit Pauls Lehrplan. Der Foto- und der Schreibweg bleiben
+     unveraendert darunter stehen - Paul hat seine Werkstatt selbst mitgebaut,
+     und was er kennt, wird ihm nicht weggeraeumt.
+
+     Die Reihenfolge folgt dem LehrplanPLUS Bayern fuer die Jahrgangsstufen 3/4
+     (lehrplan/grundschule-3-4.json). Was gerade im Unterricht dran ist, steht
+     dort ausdruecklich NICHT - deshalb ist hier auch nichts als "gerade dran"
+     markiert. Lieber keine Marke als eine erfundene.
+
+     Der Schluessel wandert als "quelle" mit ins gespeicherte Spiel. Er darf
+     nie wieder umbenannt werden, sonst findet das Themenfeld seine schon
+     gebauten Spiele nicht mehr und laesst Paul 90 Sekunden umsonst warten. */
+
+  var THEMEN = [
+    /* --- Mathematik, Lernbereiche M3/4 1 bis 4 --- */
+    { fach:"mathe", schluessel:"m-million", bild:"\u{1F522}", titel:"Zahlen bis zur Million",
+      wunsch:"Mathematik, Lernbereich M3/4 1.1: Orientierung im Zahlenraum bis zur Million. Zahlen lesen, ordnen und vergleichen, Stellenwerte und Bündelung im Zehnersystem, Zahlen zerlegen, Vorgänger und Nachfolger, runden und schätzen." },
+    { fach:"mathe", schluessel:"m-plusminus", bild:"➕", titel:"Schriftlich plus und minus",
+      wunsch:"Mathematik, Lernbereich M3/4 1.2: schriftliche Addition und Subtraktion in großen Zahlenräumen, mit Übertrag und mit Entbündeln. Auch Ergebnisse auf Plausibilität prüfen und überschlagen." },
+    { fach:"mathe", schluessel:"m-mal", bild:"✖️", titel:"Schriftlich malnehmen",
+      wunsch:"Mathematik, Lernbereich M3/4 1.2: schriftliche Multiplikation, auch mit mehrstelligen Faktoren. Halbschriftliche Rechenwege und Rechenvorteile dürfen vorkommen; das kleine Einmaleins wird als bekannt vorausgesetzt." },
+    { fach:"mathe", schluessel:"m-geteilt", bild:"➗", titel:"Schriftlich teilen",
+      wunsch:"Mathematik, Lernbereich M3/4 1.2: schriftliche Division, auch mit Rest. Die Probe durch Malnehmen gehört dazu." },
+    { fach:"mathe", schluessel:"m-sach", bild:"\u{1F9E9}", titel:"Sachaufgaben Schritt für Schritt",
+      wunsch:"Mathematik, Lernbereich M3/4 1.3: mehrschrittige Sachaufgaben. Die wichtigen Angaben aus dem Text heraussuchen, überflüssige erkennen, den Rechenweg in Schritte zerlegen und das Ergebnis auf Sinn prüfen." },
+    { fach:"mathe", schluessel:"m-groessen", bild:"⚖️", titel:"Gewichte, Längen und Liter",
+      wunsch:"Mathematik, Lernbereiche M3/4 3.1 und 3.2: Größen messen, umwandeln und vergleichen. Millimeter, Zentimeter, Meter, Kilometer; Gramm, Kilogramm, Tonne; Milliliter und Liter. Schätzen mit Bezugsgrößen und einfache Bruchteile einer Größe (ein halbes Kilo, ein Viertelliter)." },
+    { fach:"mathe", schluessel:"m-zeit", bild:"\u{1F551}", titel:"Zeit und Zeitspannen",
+      wunsch:"Mathematik, Lernbereich M3/4 3.1: Zeitspannen berechnen, Anfangs- und Endzeitpunkte bestimmen, Sekunden, Minuten, Stunden und Tage umwandeln, Fahrpläne und Zeitangaben lesen." },
+    { fach:"mathe", schluessel:"m-geld", bild:"\u{1F4B6}", titel:"Geld und Überschlag",
+      wunsch:"Mathematik, Lernbereich M3/4 3.3: mit Geld rechnen. Euro und Cent, Preise vergleichen, Rückgeld, Angebote bewerten - und entscheiden, wann ein Überschlag reicht und wann es genau sein muss." },
+    { fach:"mathe", schluessel:"m-geo", bild:"\u{1F4D0}", titel:"Winkel, Würfel und Quader",
+      wunsch:"Mathematik, Lernbereich M3/4 2.2: geometrische Figuren und Körper. Den rechten Winkel erkennen, Würfel und Quader vergleichen, Kanten, Ecken und Flächen zählen, Würfel- und Quadernetze erkennen." },
+    { fach:"mathe", schluessel:"m-spiegel", bild:"\u{1FA9E}", titel:"Spiegeln, Muster und Maßstab",
+      wunsch:"Mathematik, Lernbereiche M3/4 2.3 und 2.4: Achsensymmetrie und Spiegelbilder, Verkleinern und Vergrößern mit Maßstab, Parkettierungen und Bandornamente und ihre Regeln." },
+    { fach:"mathe", schluessel:"m-daten", bild:"\u{1F4CA}", titel:"Tabellen, Diagramme und Zufall",
+      wunsch:"Mathematik, Lernbereiche M3/4 4.1 und 4.2: Daten aus Tabellen und Säulendiagrammen ablesen, zwischen Darstellungen übertragen, nicht ablesbare Angaben erschließen - und Gewinnchancen bei einfachen Zufallsversuchen vergleichen." },
+
+    /* --- Deutsch, Lernbereiche D3/4 2 und 4 --- */
+    { fach:"deutsch", schluessel:"d-wortarten", bild:"\u{1F3F7}️", titel:"Wortarten bestimmen",
+      wunsch:"Deutsch, Lernbereich D3/4 4.3: Wortarten bestimmen. Nomen, Verb, Adjektiv, Artikel, Pronomen und Präposition unterscheiden und im Satz wiederfinden." },
+    { fach:"deutsch", schluessel:"d-zeiten", bild:"⏳", titel:"Zeitformen der Verben",
+      wunsch:"Deutsch, Lernbereich D3/4 4.3: Zeitformen der Verben. Präsens, Präteritum, Perfekt, Plusquamperfekt und Futur erkennen und bilden, auch bei starken Verben." },
+    { fach:"deutsch", schluessel:"d-satzglieder", bild:"\u{1F517}", titel:"Satzglieder und Satzarten",
+      wunsch:"Deutsch, Lernbereich D3/4 4.3: Subjekt, Prädikat und Ergänzungen im Satz finden, Satzglieder umstellen, Aussage-, Frage- und Aufforderungssatz unterscheiden und Sätze mit Bindewörtern verknüpfen." },
+    { fach:"deutsch", schluessel:"d-rede", bild:"\u{1F4AC}", titel:"Wörtliche Rede",
+      wunsch:"Deutsch, Lernbereich D3/4 4.3: wörtliche Rede richtig schreiben. Anführungszeichen, Redebegleitsatz davor, dahinter und mittendrin, dazu die passenden Satzzeichen und abwechslungsreiche Verben des Sagens." },
+    { fach:"deutsch", schluessel:"d-gross", bild:"\u{1F170}️", titel:"Groß und klein schreiben",
+      wunsch:"Deutsch, Lernbereich D3/4 4.4: Großschreibung. Nomen am Begleiter erkennen, nominalisierte Verben und Adjektive (das Laufen, das Schönste), Satzanfänge, Eigennamen - und die Zeitangaben wie heute Morgen." },
+    { fach:"deutsch", schluessel:"d-wortstamm", bild:"\u{1F333}", titel:"Wortstamm und Wortfamilien",
+      wunsch:"Deutsch, Lernbereich D3/4 4.4: Wortfamilien und Wortbausteine. Den Wortstamm finden und auf verwandte Wörter übertragen (Wald - Wälder - waldig), zusammengesetzte Wörter zerlegen, Vorsilben und Nachsilben erkennen." },
+    { fach:"deutsch", schluessel:"d-schreibung", bild:"✍️", titel:"Richtig schreiben üben",
+      wunsch:"Deutsch, Lernbereich D3/4 4.4: Rechtschreibung. Lange und kurze Vokale, Dehnungs-h, doppelte Mitlaute, ck und tz, das und dass, Silbentrennung - jeweils mit der Regel dazu, nicht nur auswendig." },
+    { fach:"deutsch", schluessel:"d-lesen", bild:"\u{1F4DA}", titel:"Lesen und verstehen",
+      wunsch:"Deutsch, Lernbereich D3/4 2.3 und 2.4: einen kurzen Text sinnerschließend lesen und Fragen dazu beantworten. Zentrale Informationen finden, Zusammenhänge und Reihenfolgen erkennen, Redewendungen und bildhafte Ausdrücke deuten." },
+
+    /* --- Heimat- und Sachunterricht, Lernbereiche HSU3/4 1 bis 6 --- */
+    { fach:"hsu", schluessel:"h-strom", bild:"⚡", titel:"Strom und Stromkreise",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 3.2: Strom. Der einfache Stromkreis, Leiter und Nichtleiter, Reihen- und Parallelschaltung, Wirkungen elektrischer Energie - und die Sicherheitsregeln im Haushalt." },
+    { fach:"hsu", schluessel:"h-wasser", bild:"\u{1F4A7}", titel:"Wasser und Wetter",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 3.3: Wasser und Wetter. Der Wasserkreislauf, die drei Zustandsformen, Trinkwasser und Abwasser, Wetter beobachten und messen, Wasser schützen." },
+    { fach:"hsu", schluessel:"h-natur", bild:"\u{1F33F}", titel:"Tiere, Pflanzen, Lebensräume",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 3.1: Tiere und Pflanzen in ihren Lebensräumen. Angepasstheit an den Lebensraum, Nahrungsketten, Entwicklung von Tieren, Teile und Aufgaben einer Pflanze, Herkunft von Lebensmitteln." },
+    { fach:"hsu", schluessel:"h-karte", bild:"\u{1F5FA}️", titel:"Karten lesen und orientieren",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 5.1: sich orientieren. Himmelsrichtungen, Kompass, Legende und Maßstab einer Karte, Lagepläne lesen, Fürth und Bayern auf der Karte einordnen." },
+    { fach:"hsu", schluessel:"h-verkehr", bild:"\u{1F6B2}", titel:"Sicher im Verkehr",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 5.3: Mobilität und Verkehr. Verkehrszeichen, Vorfahrtsregeln, das verkehrssichere Fahrrad, der tote Winkel, Bremsweg, gut sichtbar sein." },
+    { fach:"hsu", schluessel:"h-gemeinde", bild:"\u{1F3DB}️", titel:"Zusammenleben und Gemeinde",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 1.1: Zusammenleben. Rechte und Pflichten, Kinderrechte, wie eine Wahl abläuft, was eine Gemeinde für ihre Leute tut, Konflikte fair lösen." },
+    { fach:"hsu", schluessel:"h-zeit", bild:"\u{1F570}️", titel:"Zeitleiste und Geschichte",
+      wunsch:"Heimat- und Sachunterricht, Lernbereiche HSU3/4 4.1 und 4.2: Zeitbewusstsein. Jahrzehnt, Jahrhundert und Zeitleiste, Ereignisse einordnen, was Quellen wert sind, wie sich technische Gegenstände über die Zeit verändert haben." },
+    { fach:"hsu", schluessel:"h-bauen", bild:"\u{1F309}", titel:"Bauen, Brücken, Erfindungen",
+      wunsch:"Heimat- und Sachunterricht, Lernbereiche HSU3/4 6.1 und 6.2: Technik und Bauen. Wie Brücken stabil werden, welche Form was aushält, vom Werkzeug zur Maschine, wichtige Erfindungen und wie eine Bauzeichnung zu lesen ist." },
+    { fach:"hsu", schluessel:"h-koerper", bild:"\u{1F441}️", titel:"Körper, Auge, Erste Hilfe",
+      wunsch:"Heimat- und Sachunterricht, Lernbereich HSU3/4 2.1: Körper und Gesundheit. Aufbau und Schutz des Auges, wie Sehen funktioniert, Erste Hilfe bei kleinen Unfällen, den Notruf richtig absetzen." }
+  ];
+
+  // Alle gebauten Spiele, damit die Themenfelder wissen, was schon bereitliegt.
+  var SPIELE = [];
+  var fachJetzt = "mathe";
+  try {
+    var gemerkt = sessionStorage.getItem("paul-werkstatt-fach");
+    if (gemerkt === "deutsch" || gemerkt === "hsu") fachJetzt = gemerkt;
+  } catch(e){}
+
+  // Nur die echte Herkunft zaehlt. Bei Leon hat ein Ratespiel ueber den
+  // Thementext einmal das falsche Spiel geliefert - das passiert hier nicht.
+  function fertigesSpiel(th){
+    var passende = SPIELE.filter(function(e){ return !!e.quelle && e.quelle === th.schluessel; });
+    if (!passende.length) return null;
+    // Das am laengsten nicht gespielte zuerst: so wiederholt sich nichts
+    // unnoetig, und die Abwechslung kommt von allein.
+    passende.sort(function(a, b){
+      return new Date(a.zuletztGespielt || 0).getTime() - new Date(b.zuletztGespielt || 0).getTime();
+    });
+    return passende[0];
+  }
+
+  function fachZeigen(){
+    Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(k){
+      k.classList.toggle("an", k.getAttribute("data-fach") === fachJetzt);
+    });
+  }
+
+  function malThemen(){
+    var kasten = $("themen");
+    if (!kasten) return;
+    kasten.innerHTML = "";
+    THEMEN.forEach(function(th){
+      if (th.fach !== fachJetzt) return;
+      var fertig = fertigesSpiel(th);
+      var feld = document.createElement("div");
+      feld.className = "thema" + (fertig ? " fertig" : "");
+      feld.innerHTML = '<span class="bild">' + th.bild + '</span><span class="tt"></span>'
+        + (fertig ? '<span class="bereit">▶ sofort spielen</span>' : '');
+      feld.querySelector(".tt").textContent = th.titel;
+      feld.addEventListener("click", function(){
+        var da = fertigesSpiel(th);
+        if (da){ spielHolen(da.id); return; }   // kein Warten, keine Kosten
+        // Was Paul selbst ins Wunschfeld geschrieben hat, geht nicht verloren:
+        // es faehrt mit und steht hinterher wieder da, wo es stand.
+        var eigen = $("wunsch").value.trim();
+        $("wunsch").value = th.wunsch + (eigen ? "\n\nUnd Paul wünscht sich dazu: " + eigen : "");
+        knopfPruefen();
+        bauen(th.schluessel);
+        $("wunsch").value = eigen;
+        knopfPruefen();
+      });
+      kasten.appendChild(feld);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(k){
+    k.addEventListener("click", function(){
+      fachJetzt = k.getAttribute("data-fach");
+      try { sessionStorage.setItem("paul-werkstatt-fach", fachJetzt); } catch(e){}
+      fachZeigen();
+      malThemen();
+    });
+  });
+  fachZeigen();
+  malThemen();
+
   /* ---------- Material aufnehmen ---------- */
 
   $("k-kamera").addEventListener("click", function(){ $("e-kamera").click(); });
