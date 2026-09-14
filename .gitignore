@@ -1,2 +1,6 @@
 .DS_Store
 .mac-upload-aktiv.txt
+
+# Lokale Testdaten des Duell-Dienstes (wrangler dev)
+duell-worker/.wrangler/
+duell-worker/node_modules/
