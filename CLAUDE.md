@@ -186,6 +186,12 @@ dort der einzige Schreibvorgang *nicht* in einem `try/catch` steckt — die
 meisten anderen schlucken den Fehler und melden trotzdem Erfolg
 (`./werkstatt.sh bauzettel` sagt dann "Zettel haengt", obwohl nichts ankam).
 
+**Seit dem 14.09.2026 abends ist dieser Test nicht mehr zuverlässig:** Der Puls
+schreibt nur noch, wenn der letzte länger als `PULS_MINDESTABSTAND` (90 s)
+zurückliegt. Hat dasselbe Kind gerade gepulst, kommt 200 zurück, ohne dass
+geschrieben wurde. Nimm `./werkstatt.sh speicher` — das ist ohnehin der bessere
+Weg, weil es den Grund im Klartext nennt.
+
 **Besser als der Test oben: den Server selbst fragen.** Er nennt den Grund im
 Klartext, statt nur "500" zu sagen:
 
@@ -214,6 +220,42 @@ Beides ist gefixt.
 **Ehrlich bleiben:** Nachgezählt lief vor 13:54 UTC nur wenig davon — 22
 Ausrollvorgänge und 2 Wächter-Läufe. Die ~1000 des 14.09. sind damit **nicht**
 erklärt. Wer hier weitersucht, fängt nicht wieder bei den Anmeldungen an.
+
+### Was in derselben Nacht noch dazukam — und was es gekostet hat
+
+Es gibt **nicht den einen Schuldigen**. Es sind viele kleine Schreiber, und drei
+davon lagen offen herum:
+
+1. **Der Bauzettel, jede Minute neu.** `ausrollen-frei.sh` ruft
+   `/api/aktiv?wunsch=1` **jede Minute**, solange ein Kind spielt und etwas zum
+   Ausrollen bereitliegt — und schrieb dabei jedes Mal denselben Satz neu.
+   Nachgezählt im `lernwelt-autosync.log` vom 14.09.: acht solcher Sperren vor
+   13:54 UTC, zusammen **rund 75 Minuten und damit 75 Schreibvorgänge** für eine
+   Frage, die sich kein einziges Mal geändert hat. Jetzt wird erst gelesen und
+   nur neu geschrieben, wenn sich der Satz ändert oder der Eintrag seinem Ablauf
+   nahekommt (`WUNSCH_AUFFRISCHEN`): aus 75 werden 2.
+
+2. **Jeder Seitenwechsel, zweimal.** `pagehide` meldete das Kind ab (ein
+   `delete`), die nächste Seite meldete es sofort wieder an (ein `put`) — zwei
+   Schreibvorgänge dafür, dass sich nichts geändert hat. Ein Kind, das sich
+   durch sein Spielemenü klickt, verbraucht so Dutzende. `lernstand.js` merkt
+   sich jetzt einen Klick auf einen Link **innerhalb** der Lernwelt und meldet
+   sich dann gar nicht erst ab; `aktiv.js` schreibt den Puls nur noch, wenn der
+   letzte über 90 s zurückliegt.
+
+3. **`delete` ohne vorheriges `get`** stand noch in `aktiv.js` (`weg`,
+   `updateOk`) — dieselbe Falle, die in `_riegel.js` schon behoben war.
+
+**Der grösste Schreiber ist damit immer noch nicht angefasst:** `paul-sync.js` →
+`functions/api/progress.js`. Am 14.09. haben die drei Kinder zusammen **406
+Aufgaben** beantwortet (Statistik: Paul 152, Leon 194, Helena 60), und jede
+gespeicherte Kleinigkeit schickt den **kompletten** Schnappschuss neu. Das ist
+die Grössenordnung, die neben allem anderen den Rest der 1000 erklärt. Die
+Dateien gehören Denny — **nicht nachts allein umbauen.**
+
+**Gezählt statt geschätzt:** `node pruefe-sparsam.mjs` fährt die häufigsten
+Abläufe durch ein mitzählendes KV und hält fest, was jeder kostet. Wer am Puls
+oder am Bauzettel dreht, sieht dort sofort, was er sich einhandelt.
 
 **Der nächste Verdacht — und er liegt in den gesperrten Dateien:**
 `paul-sync.js` hängt sich an `localStorage.setItem` und schickt **bei jeder
