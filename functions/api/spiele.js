@@ -50,6 +50,10 @@ export async function onRequestGet(context) {
 // Grundlage fürs verteilte Wiederholen: was länger her ist und schlechter
 // lief, wird zuerst wieder vorgeschlagen.
 export async function onRequestPost(context) {
+  return mitSpeicherwache(() => rundeMitschreiben(context));
+}
+
+async function rundeMitschreiben(context) {
   const { request, env } = context;
   const wache = await wacheOk(request, env);
   if (wache) return wache;
@@ -71,7 +75,7 @@ export async function onRequestPost(context) {
   // Feldes gebaut wurden - sonst wuerde die Themenwahl sie nie wiederfinden.
   if (typeof daten.quelle === "string" && daten.quelle) {
     eintrag.quelle = daten.quelle.slice(0, 40);
-    await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
+    await schreiben(env, LISTE(kind), JSON.stringify(liste));
     return json(200, { ok: true, spiele: liste });
   }
 
@@ -79,7 +83,7 @@ export async function onRequestPost(context) {
   eintrag.malGespielt = (eintrag.malGespielt || 0) + 1;
   if (gesamt > 0) eintrag.letzteQuote = Math.round((richtig / gesamt) * 100);
 
-  await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
+  await schreiben(env, LISTE(kind), JSON.stringify(liste));
   return json(200, { ok: true, spiele: liste });
 }
 
@@ -89,6 +93,10 @@ export async function onRequestPost(context) {
 // Leons ersten HSU-Spielen standen Rechenaufgaben und ein fachlicher Fehler).
 // Foto, Herkunft und Spielstatistik bleiben, wie sie sind.
 export async function onRequestPut(context) {
+  return mitSpeicherwache(() => spielNachbessern(context));
+}
+
+async function spielNachbessern(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
   const elternGeheim = geheimFuer(env, "eltern");
@@ -117,7 +125,7 @@ export async function onRequestPut(context) {
   if (typeof neu.titel === "string" && neu.titel.trim()) spiel.titel = neu.titel.trim();
   if (typeof neu.begruessung === "string") spiel.begruessung = neu.begruessung;
   spiel.nachgebessert = new Date().toISOString();
-  await env.PAUL_KV.put(SPIEL(id), JSON.stringify(spiel));
+  await schreiben(env, SPIEL(id), JSON.stringify(spiel));
 
   const kind = kindAus(request);
   const liste = await listeHolen(env, kind);
@@ -125,12 +133,16 @@ export async function onRequestPut(context) {
   if (eintrag) {
     eintrag.aufgaben = auf.length;
     eintrag.titel = spiel.titel;
-    await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
+    await schreiben(env, LISTE(kind), JSON.stringify(liste));
   }
   return json(200, { ok: true, id, aufgaben: auf.length });
 }
 
 export async function onRequestDelete(context) {
+  return mitSpeicherwache(() => spielWegwerfen(context));
+}
+
+async function spielWegwerfen(context) {
   const { request, env } = context;
   const wache = await wacheOk(request, env);
   if (wache) return wache;
@@ -139,9 +151,9 @@ export async function onRequestDelete(context) {
   if (!id) return json(400, { ok: false, fehler: "Welches Spiel denn?" });
 
   const kind = kindAus(request);
-  await env.PAUL_KV.delete(SPIEL(id));
+  await wegwerfen(env, SPIEL(id));
   const liste = (await listeHolen(env, kind)).filter((e) => e.id !== id);
-  await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
+  await schreiben(env, LISTE(kind), JSON.stringify(liste));
   return json(200, { ok: true, spiele: liste });
 }
 
@@ -220,6 +232,38 @@ export async function spielSichern(env, spiel, seiten, kind, quelle, verbrauch) 
   await env.PAUL_KV.put(LISTE(kind || "paul"), JSON.stringify(liste.slice(0, 200)));
 
   return id;
+}
+
+// Schreiben, ohne dass ein voller Speicher den Worker abwuergt.
+//
+// Am 14.09.2026 nahm der KV ab 13:54 UTC nichts mehr an. Jedes put hier warf,
+// und weil es ungefangen war, bekam das Kind die nackte Cloudflare-Seite
+// "error code: 1101" zu sehen - dieselbe Sackgasse, die Helena in wjj9vuza7x
+// gemeldet hat. Lesen ging die ganze Zeit weiter, das Spiel lief also
+// scheinbar normal und nur das Wegwerfen und das Mitschreiben brachen ab.
+//
+// Jetzt kommt ein ehrlicher Satz zurueck. Er sagt NICHT "gespeichert", denn
+// das waere gelogen - genau wie in melden.js.
+class SpeicherVoll extends Error {}
+
+async function schreiben(env, schluessel, wert) {
+  try { await env.PAUL_KV.put(schluessel, wert); }
+  catch (e) { throw new SpeicherVoll(String((e && e.message) || e)); }
+}
+
+async function wegwerfen(env, schluessel) {
+  try { await env.PAUL_KV.delete(schluessel); }
+  catch (e) { throw new SpeicherVoll(String((e && e.message) || e)); }
+}
+
+async function mitSpeicherwache(arbeit) {
+  try { return await arbeit(); }
+  catch (e) {
+    if (!(e instanceof SpeicherVoll)) throw e;
+    return json(503, { ok: false, speicherVoll: true,
+      fehler: "Der Speicher nimmt gerade nichts an. Das liegt an mir, nicht an " +
+              "dir. Dein Spiel ist nicht weg - probier es später noch einmal." });
+  }
 }
 
 function neueId() {
