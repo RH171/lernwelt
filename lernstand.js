@@ -150,6 +150,13 @@
         '#melde-karte textarea{min-height:60px}' +
         '#melde-karte .faden-liste{max-height:30vh}' +
         '#melde-karte .fadenliste{max-height:34vh}}' +
+      // Noch enger - das ist Helenas Handy mit offener Tastatur, also genau der
+      // Moment, in dem sie schreibt. Hier faellt der Erklaersatz weg: Sie tippt
+      // ja schon, sie hat ihn gelesen. Dafuer steht "Abschicken" im Bild,
+      // statt dass sie erst in der Karte nach unten scrollen muss.
+      '@media (max-height:420px){' +
+        '#melde-karte p.u{display:none}' +
+        '#melde-karte .faden-liste{max-height:26vh}}' +
       '#melde-karte .passt{width:100%;margin-top:8px;padding:13px;border:none;border-radius:13px;' +
         'background:#12a35f;color:#fff;font-size:16px;font-weight:700;cursor:pointer}' +
       '#melde-karte .zurueck{background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;' +
