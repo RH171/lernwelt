@@ -176,7 +176,7 @@
           text: "Die Oma geht auf dem Gehweg, schön weit weg von der Straße.",
           besser: "Auf dem Gehweg ist man sicher." }
       ],
-      leise: [ { x: 130, y: 430, zeichen: "🚙" }, { x: 360, y: 430, zeichen: "🚗" }, { x: 640, y: 300, zeichen: "🚕", spiegeln: true },
+      leise: [ { x: 130, y: 430, zeichen: "🚙" }, { x: 360, y: 430, zeichen: "🚗" }, { x: 290, y: 292, zeichen: "🚕", spiegeln: true },
                { x: 90, y: 120, zeichen: "🌳" }, { x: 600, y: 110, zeichen: "🏠" } ]
     },
     {
@@ -316,15 +316,15 @@
     var o = ORTE[ort], svg = $("szene");
     svg.innerHTML = "";
     strasseMalen(svg, o.art);
-    o.leise.forEach(function(d){ emoji(svg, d.x, d.y, d.zeichen, d.gross ? 150 : 88, d.spiegeln); });
+    o.leise.forEach(function(d){ emoji(svg, d.x, d.y, d.zeichen, d.gross ? 170 : 96, d.spiegeln); });
     o.dinge.forEach(function(d, i){
       var g = el("g", { "class": "ding", "data-i": i, role: "button", tabindex: "0",
                         "aria-label": d.name }, svg);
       g.style.transformOrigin = d.x + "px " + d.y + "px";
       el("circle", { cx: d.x, cy: d.y, r: 70, fill: "rgba(0,0,0,0)" }, g);             // Tippflaeche
       el("circle", { "class": "ring", cx: d.x, cy: d.y, r: 62 }, g);
-      emoji(g, d.x, d.y, d.zeichen, 78);
-      if (d.extra) emoji(g, d.x + d.extra.dx, d.y + d.extra.dy, d.extra.zeichen, d.extra.klein ? 40 : 58);
+      emoji(g, d.x, d.y, d.zeichen, 90);
+      if (d.extra) emoji(g, d.x + d.extra.dx, d.y + d.extra.dy, d.extra.zeichen, d.extra.klein ? 46 : 62);
       if (d.name && /^[A-ZÄÖÜ]/.test(d.name) && ["Fußball", "Skateboard", "Oma", "Polizistin"].indexOf(d.name) < 0){
         var breite = d.name.length * 15 + 22;
         el("rect", { x: d.x - breite / 2, y: d.y + 40, width: breite, height: 30, rx: 10, fill: "#fff", opacity: .95 }, g);
