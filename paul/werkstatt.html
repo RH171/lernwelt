@@ -45,6 +45,26 @@
   .knopf .zeichen{font-size:30px;line-height:1}
   .ablage.drueber{border-color:var(--paul);background:#f2f2ff}
 
+  /* Themenfelder: ein Fingertipp statt erst tippen zu muessen.
+     Paul am 14.09.2026 (Meldung 8fcenvfnsh): "ich will auch in der Werkstatt
+     so ganz leichte spiele bauen bei leons lernwelt klappt das anscheinend".
+     Gebaut wie Leons Themenwahl, nur mit Pauls Lehrplan und in seinen Farben. */
+  .faecher{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+  .fach{border:1px solid var(--line);background:#fbfcff;border-radius:999px;
+        padding:11px 17px;min-height:44px;font-family:var(--rund);font-size:15px;
+        font-weight:600;color:var(--ink);cursor:pointer}
+  .fach.an{background:var(--paul);border-color:var(--paul);color:#fff}
+  .themen{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:11px;margin-top:14px}
+  .thema{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+         text-align:center;border:2px solid var(--line);background:#fbfcff;border-radius:18px;
+         padding:16px 11px;min-height:116px;font-family:var(--rund);font-size:15px;font-weight:600;
+         color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+  .thema:active{transform:scale(.98)}
+  .thema:hover{border-color:var(--paul);background:#f7f7ff}
+  .thema.fertig{border-color:#c8eddb;background:#f5fdf9}
+  .thema .bild{font-size:29px;line-height:1}
+  .thema .bereit{font-size:12.5px;font-weight:600;color:var(--gut);line-height:1.3}
+
   .wunschfeld{margin-top:18px}
   .wunschfeld label{
     display:block;font-family:var(--rund);font-weight:600;font-size:16px;margin-bottom:7px;
@@ -651,7 +671,10 @@
 
   var baeuft = false;   // Solange gebaut wird, loest kein zweiter Klick etwas aus.
 
-  $("los").addEventListener("click", function(){
+  // quelle = aus welchem Themenfeld der Auftrag kommt (leer beim Foto- und
+  // Schreibweg). Sie wandert mit ins gespeicherte Spiel, damit das Themenfeld
+  // beim naechsten Mal weiss, dass schon etwas bereitliegt.
+  function bauen(quelle){
     if (baeuft) return;
     // Ein Wunsch allein genuegt - ein Foto ist nicht noetig.
     if (!seiten.length && !$("wunsch").value.trim()) return;
@@ -680,6 +703,7 @@
       headers: {"content-type":"application/json"},
       body: JSON.stringify({
         kind: "paul",
+        quelle: quelle || "",
         wunsch: $("wunsch").value.trim(),
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
@@ -707,7 +731,8 @@
       zeige("aufnahme");
       melde("Ich konnte den Server nicht erreichen. Bist du im Internet?", "fehler");
     });
-  });
+  }
+  $("los").addEventListener("click", function(){ bauen(""); });
 
   /* ---------- Spielen ---------- */
 
