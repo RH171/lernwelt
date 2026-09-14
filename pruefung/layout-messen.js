@@ -59,9 +59,20 @@ async function layoutMessen(opt) {
 
   var W = window.innerWidth, H = window.innerHeight;
   var doc = document.documentElement;
+  // Wo im Baum das Ding sitzt. Ohne das meldet die Messung "× · 34px hoch",
+  // und wer das abstellen will, sucht in drei Dateien nach einem Kreuz - am
+  // 14.09.2026 zweimal passiert, ohne es zu finden. Ein "button.weg" daneben
+  // beendet die Sucherei.
+  var wo = function (el) {
+    var s = el.tagName.toLowerCase();
+    if (el.id) return s + "#" + el.id;
+    var k = (el.getAttribute("class") || "").trim().split(/\s+/).filter(Boolean);
+    return k.length ? s + "." + k.slice(0, 2).join(".") : s;
+  };
   var text = function (el) {
-    return (el.getAttribute("aria-label") || el.textContent || el.id || el.tagName)
-             .trim().replace(/\s+/g, " ").slice(0, 32);
+    var t = (el.getAttribute("aria-label") || el.textContent || el.id || el.tagName)
+              .trim().replace(/\s+/g, " ").slice(0, 32);
+    return t + " (" + wo(el) + ")";
   };
   var sichtbar = function (el) {
     var s = getComputedStyle(el);

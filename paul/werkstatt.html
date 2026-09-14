@@ -26,6 +26,7 @@
     display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink);
     background:var(--card);border:1px solid var(--line);border-radius:999px;
     padding:11px 18px;font-weight:600;font-size:15px;box-shadow:var(--schatten);
+    min-height:44px;   /* mit der Maus waren es 42 px - zwei fehlten */
   }
   .zurueck:active{transform:scale(.97)}
   h1{font-family:var(--rund);font-size:27px;margin:0;letter-spacing:-.02em}
@@ -220,8 +221,14 @@
                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .eintrag .ts{font-size:13.5px;color:var(--muted);margin-top:2px;
                overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 44x44, und zwar auch mit der Maus. Der Knopf wirft ein Spiel weg und sitzt
+     direkt neben der Zeile, die es startet - vorher war er 19 px breit und
+     34 px hoch, also schmaler als der Abstand zum Nachbarn. Auf dem Finger
+     greift beruehrung.css, am Laptop (1440 px, Maus) aber nicht, und Paul
+     spielt auch dort. Ein Fehlgriff loescht hier etwas. */
   .eintrag .loeschen{flex:none;border:none;background:none;color:var(--muted);
-                     font-size:19px;cursor:pointer;padding:6px 4px;border-radius:8px}
+                     font-size:19px;cursor:pointer;border-radius:8px;
+                     width:44px;height:44px;display:grid;place-items:center}
   .eintrag .loeschen:hover{color:var(--schlecht);background:#fff1f0}
   .wiederholen{
     background:linear-gradient(135deg,#eef1ff,#f6f1ff);
