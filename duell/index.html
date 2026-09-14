@@ -334,7 +334,7 @@
     if (entwurf.klasse == null){ $("profil-fehler").textContent = "In welche Klasse gehst du?"; return; }
     profil = { name: entwurf.name, avatar: entwurf.avatar, alter: entwurf.alter, klasse: entwurf.klasse };
     schreibe("duell-profil", profil);
-    if (nachProfil){ var weiterMit = nachProfil; nachProfil = null; weiterMit(); }
+    if (nachProfil){ nachProfil = null; verbinden(); }
     else if (ws && ws.readyState === 1){ hallo(); zeige("lobby"); }
     else zeige("start");
   });
