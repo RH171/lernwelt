@@ -547,8 +547,16 @@
     if (!window.confirm('"' + (titel || "Dieses Spiel") + '" wirklich wegwerfen?')) return;
     fetch("/api/spiele?id=" + encodeURIComponent(id), {method:"DELETE", credentials:"same-origin"})
       .then(function(r){ return r.json(); })
-      .then(function(a){ if (a && a.ok) malSammlung(a.spiele || []); })
-      .catch(function(){});
+      .then(function(a){
+        if (a && a.ok){ melde(""); malSammlung(a.spiele || []); return; }
+        // Vorher passierte hier gar nichts: Paul tippte auf das Kreuz, sagte
+        // "ja", und das Spiel blieb wortlos stehen. Wer das sieht, tippt
+        // nochmal - und weiss immer noch nicht, woran es liegt.
+        melde((a && a.fehler) || "Das Wegwerfen hat gerade nicht geklappt. Dein Spiel ist noch da.", "fehler");
+      })
+      .catch(function(){
+        melde("Ich komme gerade nicht an den Speicher. Dein Spiel ist noch da - probier es später nochmal.", "fehler");
+      });
   }
 
   /* ---------- Pauls Themenfelder ----------
