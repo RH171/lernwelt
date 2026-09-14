@@ -124,6 +124,28 @@ Beim Schreiben eines Wunsches gehört dazu:
 - **Auf die Regeln verweisen**, gegen die der Wunsch sonst läuft (Zahlenraum,
   keine erfundenen echten Personen), damit der Baumeister nicht raten muss.
 
+## Themenfelder haben Paul und Leon, und ihre Schlüssel sind fest
+
+Seit dem 05.09.2026 bei Leon, seit dem 14.09.2026 (Meldung `8fcenvfnsh`) auch
+bei Paul in `paul/werkstatt.html`: grosse Felder, ein Fingertipp baut ein Spiel
+zum Thema. Der `schluessel` des Feldes wandert als `quelle` mit ins gespeicherte
+Spiel; daran erkennt das Feld beim nächsten Mal, dass schon etwas bereitliegt,
+und startet es sofort statt 90 Sekunden zu bauen.
+
+**Ein einmal vergebener Schlüssel wird nie wieder umbenannt.** Sonst findet das
+Feld seine gebauten Spiele nicht mehr und das Kind wartet umsonst. Und erkannt
+wird **nur** über `quelle` — bei Leon hat ein Raten über den Thementext einmal
+das falsche Spiel geliefert.
+
+Ein Feld vorfüllen oder eines zum Prüfen bauen geht von hier aus, mit dem
+Eltern-Code und für echtes Geld (rund 0,07 $):
+
+    ./werkstatt.sh bauen paul m-mal "Mathematik, Lernbereich M3/4 1.2: …"
+
+Gemessen wird Pauls Werkstatt mit `mess-schritte-paul-werkstatt.js` — die Datei
+schiebt der Seite über `__vorLaden` eine Anmeldung und drei Spiele unter, sonst
+stünde dort nur der Anmeldeschirm.
+
 Ein Wunsch wirkt erst im **nächsten gebauten** Spiel. Fertige Spiele bleiben
 liegen, wie sie sind — die Themenfelder spielen sie ohne Warten und ohne Kosten
 sofort an. Dem Kind also sagen, wie es ein frisches bekommt („Ein ganz neues
