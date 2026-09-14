@@ -124,10 +124,16 @@
   .klasse select{
     font-family:var(--round);font-weight:700;font-size:15px;color:var(--ink);
     border:none;background:transparent;outline:none;cursor:pointer;
-    /* Mit der Maus sind 24 px das Mindestmass (WCAG 2.2, 2.5.8). Das Feld
-       war 20 px hoch - der Rahmen drumherum ist zwar groesser, getroffen
-       werden muss aber das Feld selbst. */
-    min-height:26px;
+  }
+  /* Mit der Maus sind 24 px das Mindestmass (WCAG 2.2, 2.5.8); das Feld war
+     20 px hoch. Der Rahmen drumherum ist zwar groesser, getroffen werden
+     muss aber das Feld selbst.
+     Ausdruecklich NUR fuer die Maus: mit dem Finger gelten 44 px, und die
+     setzt beruehrung.css. Als schlichtes ".klasse select" hat diese Zeile
+     die 44 px ueberstimmt und das Feld auf dem iPad kleiner gemacht als
+     vorher - schlimmer als der Befund, den sie beheben sollte. */
+  @media (pointer: fine){
+    .klasse select{ min-height:26px; }
   }
   .iconbtn{
     border:1px solid var(--line);background:var(--card);border-radius:14px;
@@ -288,7 +294,8 @@
     border-radius:16px;padding:11px 15px;box-shadow:var(--shadow);margin:0 0 18px;}
   .searchbar svg{flex:none;}
   .searchbar input{border:none;outline:none;background:transparent;font-family:var(--font);
-    font-size:15px;color:var(--ink);width:100%;min-height:26px;}
+    font-size:15px;color:var(--ink);width:100%;}
+  @media (pointer: fine){ .searchbar input{ min-height:26px; } }
   .searchbar input::placeholder{color:var(--muted);}
   .nores{text-align:center;color:var(--muted);font-size:14px;padding:26px;}
 
