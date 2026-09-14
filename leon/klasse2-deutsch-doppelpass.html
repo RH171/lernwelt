@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Silben-Doppelpass</title>
+<!--
+  Leons Deutsch-Spiel zum Anfassen (14.09.2026, Denny: "interaktiv ... nicht
+  die gleichen wie Paul ... sei kreativ").
+
+  Die Silben (oder Buchstaben) eines Wortes stehen als Spieler auf dem Platz.
+  Leon spielt den Ball in der richtigen Reihenfolge von Spieler zu Spieler -
+  der letzte Pass geht ins Tor, und das Wort ist fertig.
+
+  Warum so: Silben schwingen und Woerter aus Lauten zusammensetzen ist der
+  Kern der 1. Klasse. Beim Antippen in der richtigen Reihenfolge muss Leon
+  das Wort innerlich durchsprechen - genau das ist die Uebung. Die
+  Silbenboegen unter dem fertigen Wort kennt er aus dem Unterricht.
+
+  Die Vorlesestimme spricht ganze Woerter und Silben, aber NIE einzelne
+  Buchstaben: Sie sagt "Ha" statt des Lauts /h/ - das waere genau die
+  Verwechslung von Buchstabe und Laut, die der Unterricht vermeidet.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef6f0; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --schlecht:#f04438;
+    --rasen:#3fae5a; --rasen2:#379e51;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .huelle{max-width:900px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+
+  /* Start */
+  .start{text-align:center}
+  .start h2{font-family:var(--rund);font-size:26px;margin:4px 0 6px}
+  .start p{color:var(--muted);margin:0 0 18px;font-size:16px;line-height:1.5}
+  .arten{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .art{border:2px solid #d6f0de;background:#f6fdf8;border-radius:20px;padding:18px 10px;cursor:pointer;color:var(--ink);
+    font:700 20px/1.2 var(--rund);display:flex;flex-direction:column;align-items:center;gap:6px;min-height:130px;justify-content:center}
+  .art .gross{font-size:38px}
+  .art .klein{font:600 14px/1.3 var(--font);color:var(--muted)}
+  .art:active{transform:scale(.97)}
+  .rueckblick{margin-top:16px;color:var(--leon-dunkel);font-weight:700;font-size:15px}
+
+  /* Oben: Bild und Luecken */
+  .wortkarte{display:flex;align-items:center;gap:16px;padding:14px 18px}
+  .bild{font-size:clamp(56px,9vw,78px);line-height:1;width:1.2em;text-align:center}
+  .rechts{flex:1;min-width:0}
+  .hinweis{color:var(--muted);font-size:15px;font-weight:600;margin-bottom:8px}
+  .luecken{display:flex;flex-wrap:wrap;gap:8px}
+  .luecke{min-width:52px;height:56px;border-radius:14px;border:3px dashed #c5cbd5;display:flex;align-items:center;justify-content:center;
+    font:800 28px/1 var(--rund);padding:0 10px;background:#fafbfc;transition:all .2s}
+  .luecke.voll{border-style:solid;border-color:var(--leon);background:#eefbf2}
+  .luecke.naechste{border-color:var(--leon)}
+  .luecke.leuchtet{animation:leuchten 1s 2}
+  @keyframes leuchten{50%{background:#d1fadf;transform:scale(1.08)}}
+  .hoeren{width:56px;height:56px;border-radius:50%;border:none;background:#f2f4f7;font-size:26px;cursor:pointer;flex:none}
+
+  /* Der Platz */
+  .platz{position:relative;margin-top:10px;border-radius:22px;overflow:hidden;
+    background:repeating-linear-gradient(90deg,var(--rasen) 0 60px,var(--rasen2) 60px 120px);
+    height:min(46vh,360px);min-height:250px;user-select:none;-webkit-user-select:none}
+  .mittellinie{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:rgba(255,255,255,.6)}
+  .mittelkreis{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px;border:4px solid rgba(255,255,255,.6);border-radius:50%}
+  .kasten{position:absolute;right:0;top:25%;height:50%;width:9%;border:4px solid rgba(255,255,255,.8);border-right:none}
+  .tor{position:absolute;right:0;top:36%;height:28%;width:22px;background:
+      repeating-linear-gradient(0deg,rgba(255,255,255,.6) 0 2px,transparent 2px 8px),rgba(0,0,0,.2);
+    border:5px solid #fff;border-right:none}
+  .tor.jubel{animation:netz .5s 2}
+  @keyframes netz{50%{transform:scaleX(1.5)}}
+  .spieler{position:absolute;width:86px;height:86px;margin:-43px;border-radius:50%;border:4px solid #fff;cursor:pointer;
+    font:800 26px/1 var(--rund);color:#fff;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 5px 0 rgba(0,0,0,.25);transition:transform .2s,opacity .3s;padding:0 4px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .spieler:active{transform:scale(.94)}
+  .spieler.gespielt{opacity:.35;pointer-events:none;transform:scale(.8)}
+  .spieler.wackelt{animation:wackeln .4s}
+  @keyframes wackeln{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(5px)}}
+  .spieler.lang{font-size:21px}
+  .ball{position:absolute;width:40px;height:40px;margin:-20px;font-size:34px;line-height:40px;text-align:center;
+    transition:left .45s cubic-bezier(.3,.8,.4,1),top .45s cubic-bezier(.3,.8,.4,1);z-index:5;pointer-events:none}
+  .ruf{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;z-index:7;pointer-events:none;
+    font:800 clamp(34px,7vw,54px)/1 var(--rund);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.35);transition:all .3s;white-space:nowrap}
+  .ruf.zeigen{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+  .unten{display:flex;align-items:center;gap:10px;margin:10px 2px 0;color:var(--muted);font-weight:600;font-size:15px;flex-wrap:wrap}
+  .punkte{display:flex;gap:5px}
+  .punkte i{width:14px;height:14px;border-radius:50%;background:#d0d5dd;display:block}
+  .punkte i.g{background:var(--gut)} .punkte i.t{background:#fdb022} .punkte i.n{outline:3px solid var(--leon);outline-offset:1px}
+  .nachspiel{background:#fff7e6;color:#93370d;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px}
+
+  /* Nach dem Tor: das Wort mit Silbenboegen */
+  .fertig{margin-top:10px;text-align:center}
+  .fertig .wort{display:inline-flex;gap:2px;font:800 clamp(34px,6vw,48px)/1.2 var(--rund);margin:6px 0 2px}
+  .fertig .silbe{padding:0 3px 12px;position:relative}
+  .fertig .silbe::after{content:"";position:absolute;left:4px;right:4px;bottom:0;height:12px;border:3px solid var(--leon);border-top:none;border-radius:0 0 40px 40px}
+  .fertig .silbe:nth-child(2n)::after{border-color:#3b82f6}
+  .fertig .satz{color:var(--muted);font-size:16px;margin:6px 0 0}
+  .weiter{display:block;width:100%;margin-top:12px;border:none;border-radius:16px;background:var(--leon);color:#fff;
+    font:700 19px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px}
+  .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#f2f4f7;color:var(--ink);
+    font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
+  .ende{text-align:center}
+  .ende .gross{font-size:60px}
+  .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
+  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 16px}
+  .gesammelt{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;font-size:34px;margin:4px 0 12px}
+
+  @media (max-width:520px){
+    .spieler{width:70px;height:70px;margin:-35px;font-size:22px}
+    .spieler.lang{font-size:17px}
+    .luecke{min-width:44px;height:50px;font-size:24px}
+  }
+  @media (max-height:760px) and (orientation:landscape){
+    .platz{height:min(44vh,320px);min-height:230px}
+    .wortkarte{padding:10px 16px}
+  }
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <h1>Silben-Doppelpass</h1>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:54px">⚽👏</div>
+    <h2>Spiel dir das Wort zusammen!</h2>
+    <p>Auf dem Platz stehen Spieler mit Wortteilen. Tipp sie in der richtigen Reihenfolge an – der letzte Pass geht ins Tor.</p>
+    <div class="arten">
+      <button class="art" data-art="silben"><span class="gross">👏</span>Silben<span class="klein">To – ma – te</span></button>
+      <button class="art" data-art="buchstaben"><span class="gross">🔤</span>Buchstaben<span class="klein">H – o – s – e</span></button>
+    </div>
+    <div class="rueckblick verborgen" id="rueckblick"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="karte wortkarte">
+      <div class="bild" id="bild" aria-hidden="true"></div>
+      <div class="rechts">
+        <div class="hinweis" id="hinweis"></div>
+        <div class="luecken" id="luecken"></div>
+      </div>
+      <button class="hoeren" id="hoeren" aria-label="Wort anhören">🔊</button>
+    </div>
+    <div class="platz" id="platz">
+      <div class="mittellinie"></div><div class="mittelkreis"></div><div class="kasten"></div><div class="tor" id="tor"></div>
+      <div class="ball" id="ball">⚽</div>
+      <div class="ruf" id="ruf"></div>
+    </div>
+    <div class="unten">
+      <div class="punkte" id="punkte"></div>
+      <span class="nachspiel verborgen" id="nachspiel"></span>
+    </div>
+    <div class="karte fertig verborgen" id="fertig"></div>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div class="gross">🏆</div>
+    <h2 id="ende-titel"></h2>
+    <div class="gesammelt" id="gesammelt"></div>
+    <p id="ende-text"></p>
+    <button class="weiter" id="nochmal">Nochmal spielen</button>
+    <button class="knopf2" id="andere">Silben oder Buchstaben wählen</button>
+    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- Woerter ----------
+     Silben so getrennt, wie man sie in der 1. Klasse schwingt.
+     Bei den Buchstaben nur lautgetreue Woerter: kein ie, kein Dehnungs-h,
+     kein ß, kein sch - jeder Buchstabe ist ein hoerbarer Laut.
+     Nur Emojis, die auch auf aelteren iPads erscheinen. */
+  var SILBEN = [
+    ["🚗", "Au-to"], ["☀️", "Son-ne"], ["🐱", "Kat-ze"], ["🦆", "En-te"], ["🐰", "Ha-se"],
+    ["🍎", "Ap-fel"], ["🌷", "Blu-me"], ["🧀", "Kä-se"], ["⚽", "Fuß-ball"], ["🥁", "Trom-mel"],
+    ["🍅", "To-ma-te"], ["🍌", "Ba-na-ne"], ["🚀", "Ra-ke-te"], ["🍋", "Zi-tro-ne"], ["🥕", "Ka-rot-te"],
+    ["🦒", "Gi-raf-fe"], ["🎸", "Gi-tar-re"], ["🍉", "Me-lo-ne"], ["🐧", "Pin-gu-in"], ["🐊", "Kro-ko-dil"],
+    ["🐘", "E-le-fant"], ["🎈", "Luft-bal-lon"], ["🦋", "Schmet-ter-ling"], ["🐢", "Schild-krö-te"],
+    ["🍫", "Scho-ko-la-de"]
+  ];
+  var BUCHSTABEN = [
+    ["👵", "Oma"], ["👴", "Opa"], ["🐋", "Wal"], ["🎩", "Hut"], ["🥅", "Tor"],
+    ["👖", "Hose"], ["👃", "Nase"], ["🌹", "Rose"], ["🚗", "Auto"], ["🦆", "Ente"], ["🌙", "Mond"],
+    ["🐭", "Maus"], ["🍞", "Brot"], ["🦔", "Igel"], ["🍄", "Pilz"], ["🌳", "Baum"], ["🛋️", "Sofa"],
+    ["🥗", "Salat"], ["🐫", "Kamel"], ["☁️", "Wolke"], ["🍅", "Tomate"], ["🍌", "Banane"], ["🚀", "Rakete"]
+  ];
+  var FALSCHE_SILBEN = ["mo", "ki", "sa", "lu", "ri", "po", "fu", "le", "da", "wi", "nu", "be"];
+  var FALSCHE_BUCHSTABEN = ["m", "l", "r", "n", "s", "t", "u", "i", "e", "a", "o", "d", "b", "k"];
+
+  var FARBEN = ["#16a34a", "#0ea5e9", "#f97316", "#8b5cf6", "#e11d48", "#0d9488", "#ca8a04", "#2563eb"];
+
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+
+  /* ---------- Speicher: Rueckschau ---------- */
+  var SPEICHER = "leon-doppelpass";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  function rueckblickMalen(){
+    var d = lesen();
+    if (d.woerter){ $("rueckblick").textContent = "⚽ Schon " + d.woerter + " Wörter ins Tor gespielt."; $("rueckblick").classList.remove("verborgen"); }
+  }
+  rueckblickMalen();
+
+  /* ---------- Vorlesen ---------- */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t, tempo){
+    if (!kannSprechen || document.hidden) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = tempo || .85;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
+      if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  if (!kannSprechen) $("hoeren").classList.add("verborgen");
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  /* ---------- Ablauf ---------- */
+  var RUNDE = 8, listeDerRunde = [];
+  var art = "silben", liste = [], pos = 0, teile = [], schritt = 0, fehlerImWort = 0;
+  var sauber = 0, aufgeholt = 0, verpasst = [], nachspielzeit = false, ergebnis = [], gesperrt = false;
+
+  function zeige(n){
+    ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    window.scrollTo(0, 0);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".art"), function(k){
+    k.addEventListener("click", function(){ art = k.getAttribute("data-art"); rundeStarten(); });
+  });
+
+  function rundeStarten(){
+    var vorrat = art === "silben" ? SILBEN : BUCHSTABEN;
+    // Kurze Woerter zuerst - zum Reinkommen -, dann laengere.
+    var laenge = function(w){ return art === "silben" ? w[1].split("-").length : w[1].length; };
+    liste = mische(vorrat.slice()).slice(0, RUNDE).sort(function(a, b){ return laenge(a) - laenge(b); });
+    pos = 0; sauber = 0; aufgeholt = 0; verpasst = []; nachspielzeit = false;
+    ergebnis = liste.map(function(){ return ""; });
+    listeDerRunde = liste.slice();
+    $("nachspiel").classList.add("verborgen");
+    zeige("spiel");
+    wortStarten();
+  }
+
+  function punkteMalen(){
+    $("punkte").innerHTML = (nachspielzeit ? [] : ergebnis).map(function(e, i){
+      return '<i class="' + e + (i === pos ? " n" : "") + '"></i>';
+    }).join("");
+  }
+
+  function wortStarten(){
+    var w = liste[pos];
+    gesperrt = false; schritt = 0; fehlerImWort = 0;
+    teile = art === "silben" ? w[1].split("-") : w[1].split("");
+    $("bild").textContent = w[0];
+    $("hinweis").textContent = art === "silben"
+      ? "Wie heißt das? " + teile.length + " Silben."
+      : "Wie schreibt man das? " + teile.length + " Buchstaben.";
+    $("luecken").innerHTML = teile.map(function(_, i){ return '<div class="luecke' + (i === 0 ? " naechste" : "") + '"></div>'; }).join("");
+    $("fertig").classList.add("verborgen");
+    $("ruf").className = "ruf";
+    punkteMalen();
+    spielerAufstellen(w);
+    setTimeout(function(){ sprich(w[1].replace(/-/g, "")); }, 350);
+  }
+
+  function spielerAufstellen(w){
+    var platz = $("platz");
+    Array.prototype.forEach.call(platz.querySelectorAll(".spieler"), function(s){ s.remove(); });
+    var echte = teile.slice();
+    var falsche = (art === "silben" ? FALSCHE_SILBEN : FALSCHE_BUCHSTABEN).filter(function(f){
+      return echte.map(function(t){ return t.toLowerCase(); }).indexOf(f) < 0;
+    });
+    var anzahlFalsch = art === "silben" ? 1 : (echte.length <= 4 ? 1 : 2);
+    var alle = echte.concat(mische(falsche).slice(0, anzahlFalsch));
+
+    // Feste Raster-Plaetze in der linken 85 % des Platzes, dann gemischt:
+    // nichts ueberlappt, und das Tor rechts bleibt frei.
+    var spalten = alle.length > 6 ? 4 : 3, zeilen = 2, plaetze = [];
+    for (var z = 0; z < zeilen; z++) for (var s = 0; s < spalten; s++) plaetze.push([s, z]);
+    mische(plaetze);
+    var breite = platz.clientWidth, hoehe = platz.clientHeight;
+    var links = 70, nutzbar = breite * .84 - links;
+    mische(alle).forEach(function(text, i){
+      var p = plaetze[i % plaetze.length];
+      var x = links + (p[0] + .5) * nutzbar / spalten + (Math.random() - .5) * 18;
+      var y = (p[1] + .5) * hoehe / zeilen + (Math.random() - .5) * 20;
+      var b = document.createElement("button");
+      b.className = "spieler" + (text.length >= 4 ? " lang" : "");
+      b.style.left = (x / breite * 100) + "%";
+      b.style.top = (y / hoehe * 100) + "%";
+      b.style.background = FARBEN[i % FARBEN.length];
+      b.textContent = text;
+      b.setAttribute("aria-label", art === "silben" ? "Silbe " + text : "Buchstabe " + text);
+      b.addEventListener("click", function(){ tippen(b, text); });
+      platz.appendChild(b);
+    });
+    var ball = $("ball");
+    ball.style.transition = "none";
+    ball.style.left = "36px"; ball.style.top = "50%";
+    void ball.offsetWidth;
+    ball.style.transition = "";
+  }
+
+  function tippen(knopf, text){
+    if (gesperrt) return;
+    var soll = teile[schritt];
+    // Doppelte Buchstaben (Banane) - es zaehlt der Buchstabe, nicht der Knopf.
+    if (text === soll){
+      knopf.classList.add("gespielt");
+      $("ball").style.left = knopf.style.left;
+      $("ball").style.top = knopf.style.top;
+      var l = $("luecken").children;
+      l[schritt].textContent = text; l[schritt].className = "luecke voll";
+      if (art === "silben") sprich(text, 1);
+      schritt++;
+      if (schritt < teile.length){ l[schritt].classList.add("naechste"); }
+      else { gesperrt = true; setTimeout(tor, 480); }
+    } else {
+      fehlerImWort++;
+      knopf.classList.remove("wackelt"); void knopf.offsetWidth; knopf.classList.add("wackelt");
+      // Zweiter Fehlgriff: das Wort nochmal langsam hoeren, die Luecke leuchtet.
+      if (fehlerImWort >= 2){
+        var w = liste[pos];
+        sprich(art === "silben" ? w[1].split("-").join(" – ") : w[1].replace(/-/g, ""), .7);
+        var luecke = $("luecken").children[schritt];
+        luecke.classList.remove("leuchtet"); void luecke.offsetWidth; luecke.classList.add("leuchtet");
+      }
+    }
+  }
+
+  function tor(){
+    var w = liste[pos], wort = w[1].replace(/-/g, "");
+    var stimmt = fehlerImWort === 0;
+    $("ball").style.left = "calc(100% - 14px)";
+    $("ball").style.top = "50%";
+    setTimeout(function(){
+      $("tor").classList.add("jubel"); setTimeout(function(){ $("tor").classList.remove("jubel"); }, 1000);
+      $("ruf").textContent = "Toooor!"; $("ruf").classList.add("zeigen");
+      konfetti(false);
+      sprich(wort, .9);
+    }, 420);
+
+    try { window.lernstand && window.lernstand.antwort(stimmt, art === "silben" ? "silben zusammensetzen" : "laute zu wort", stimmt ? "" : fehlerImWort + " fehlgriffe", wort); } catch(e){}
+    if (nachspielzeit){ if (stimmt) aufgeholt++; }
+    else { ergebnis[pos] = stimmt ? "g" : "t"; if (stimmt) sauber++; else verpasst.push(w); }
+    punkteMalen();
+
+    // Das fertige Wort mit Silbenboegen - auch bei den Buchstaben, damit Leon sieht,
+    // wie beides zusammenhaengt.
+    var silben = art === "silben" ? w[1].split("-") : silbenFuer(wort);
+    var h = '<div class="wort">' + silben.map(function(s){ return '<span class="silbe">' + s + '</span>'; }).join("") + '</div>';
+    h += '<p class="satz">' + (stimmt ? (nachspielzeit ? "Jetzt sitzt es!" : "Sauber durchgespielt!") :
+         (nachspielzeit ? "Geschafft! Beim nächsten Mal geht es schon leichter." : "Geschafft! Das Wort kommt in der Nachspielzeit nochmal.")) + '</p>';
+    h += '<button class="weiter" id="weiter">Nächstes Wort ›</button>';
+    $("fertig").innerHTML = h;
+    setTimeout(function(){
+      $("fertig").classList.remove("verborgen");
+      $("weiter").addEventListener("click", weiter);
+      try { $("fertig").scrollIntoView({behavior:"smooth", block:"nearest"}); } catch(e){}
+    }, 700);
+  }
+
+  // Silben der Buchstaben-Woerter, damit auch dort Boegen erscheinen koennen.
+  var SILBEN_VON = { Oma:"O-ma", Opa:"O-pa", Hose:"Ho-se", Nase:"Na-se", Rose:"Ro-se", Auto:"Au-to", Ente:"En-te",
+    Igel:"I-gel", Sofa:"So-fa", Salat:"Sa-lat", Kamel:"Ka-mel", Wolke:"Wol-ke", Tomate:"To-ma-te", Banane:"Ba-na-ne", Rakete:"Ra-ke-te" };
+  function silbenFuer(wort){ return (SILBEN_VON[wort] || wort).split("-"); }
+
+  function weiter(){
+    pos++;
+    if (pos < liste.length){ wortStarten(); window.scrollTo({top:0, behavior:"smooth"}); return; }
+    if (!nachspielzeit && verpasst.length){
+      nachspielzeit = true; liste = mische(verpasst.slice()); pos = 0;
+      $("nachspiel").textContent = "⏱️ Nachspielzeit · " + (liste.length === 1 ? "ein Wort" : liste.length + " Wörter") + " nochmal";
+      $("nachspiel").classList.remove("verborgen");
+      wortStarten(); window.scrollTo({top:0, behavior:"smooth"});
+      return;
+    }
+    ende();
+  }
+
+  function ende(){
+    var d = lesen(); d.woerter = (d.woerter || 0) + RUNDE; d.runden = (d.runden || 0) + 1; schreiben(d);
+    var alle = sauber + aufgeholt;
+    $("ende-titel").textContent = RUNDE + " Wörter ins Tor gespielt!";
+    $("gesammelt").textContent = listeDerRunde.map(function(w){ return w[0]; }).join(" ");
+    $("ende-text").textContent = sauber === RUNDE
+      ? "Jedes Wort ohne einen Fehlpass. Du hörst ganz genau hin!"
+      : alle === RUNDE
+        ? "Am Ende saß jedes Wort – " + aufgeholt + " davon in der Nachspielzeit. So wird man besser."
+        : "Gut gespielt! Die kniffligen Wörter werden beim nächsten Mal leichter.";
+    zeige("ende"); rueckblickMalen(); konfetti(true);
+  }
+
+  $("hoeren").addEventListener("click", function(){
+    var w = liste[pos]; if (!w) return;
+    sprich(art === "silben" ? w[1].split("-").join(" – ") : w[1].replace(/-/g, ""), art === "silben" ? .7 : .8);
+  });
+  $("nochmal").addEventListener("click", function(){ rundeStarten(); });
+  $("andere").addEventListener("click", function(){ zeige("start"); });
+
+  // Neu aufstellen, wenn das iPad gedreht wird - sonst stehen Spieler neben dem Platz.
+  var drehUhr = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(drehUhr);
+    drehUhr = setTimeout(function(){
+      if ($("sicht-spiel").classList.contains("verborgen") || gesperrt) return;
+      var gespielt = schritt;
+      spielerAufstellen(liste[pos]);
+      // bereits gespielte Teile wieder ausgrauen
+      var rest = teile.slice(0, gespielt);
+      Array.prototype.forEach.call($("platz").querySelectorAll(".spieler"), function(s){
+        var i = rest.indexOf(s.textContent); if (i >= 0){ s.classList.add("gespielt"); rest.splice(i, 1); }
+      });
+    }, 250);
+  });
+
+  /* ---------- Konfetti ---------- */
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(gross){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (gross ? 120 : 30); i++) stuecke.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
+      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#10b981","#16a34a","#ffffff","#f79009","#3b82f6"][i%5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  window.__doppelpass = {
+    SILBEN: SILBEN, BUCHSTABEN: BUCHSTABEN,
+    starten: function(a){ art = a; rundeStarten(); },
+    zustand: function(){ return { pos: pos, teile: teile, schritt: schritt, liste: liste, nachspielzeit: nachspielzeit }; },
+    tippe: function(text){ var k = Array.prototype.filter.call($("platz").querySelectorAll(".spieler:not(.gespielt)"), function(s){ return s.textContent === text; })[0]; if (k) k.click(); return !!k; }
+  };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
