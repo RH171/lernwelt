@@ -118,8 +118,10 @@
       '#melde-karte .schicken{width:100%;margin-top:15px;padding:15px;border:none;border-radius:14px;' +
         'background:#4f46e5;color:#fff;font-size:17px;font-weight:700;cursor:pointer}' +
       '#melde-karte .schicken:disabled{opacity:.5}' +
+      // min-height wie bei .zurueck: beruehrung.css hebt Knoepfe nur auf
+      // Tippgeraeten an, mit der Maus war "Doch nicht" nur 41 px hoch.
       '#melde-karte .abbrechen{width:100%;margin-top:8px;padding:12px;border:none;border-radius:12px;' +
-        'background:#f2f3f8;color:#1b1c22;font-size:15px;cursor:pointer}' +
+        'min-height:44px;background:#f2f3f8;color:#1b1c22;font-size:15px;cursor:pointer}' +
       '#melde-karte .fertig{text-align:center;padding:14px 0}' +
       '#melde-karte .fertig .haken{font-size:44px}' +
       '#melde-punkt{position:absolute;top:-3px;right:-3px;width:17px;height:17px;border-radius:50%;' +
