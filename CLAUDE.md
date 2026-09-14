@@ -166,6 +166,42 @@ Rechenaufgaben, ein Grammatikfehler und eine dreifarbige Fußgängerampel.
 Nachbessern geht nur mit Eltern-Code; Foto, Herkunft und Spielstatistik bleiben.
 Was dabei auffällt, gehört zusätzlich als Regel in den Bauauftrag.
 
+## Wenn nichts mehr gespeichert wird: erst messen, dann suchen
+
+Am 14.09.2026 gegen 14 Uhr UTC hat der KV-Speicher aufgehört, Schreibvorgänge
+anzunehmen. **Lesen ging die ganze Zeit weiter** — deshalb sah die Lernwelt von
+außen gesund aus, während in Wahrheit keine Meldung, keine Runde und kein
+Fortschritt mehr ankam. Wer da an der falschen Stelle sucht, verliert Stunden.
+
+**Der Test dauert zehn Sekunden:**
+
+    curl -s -o /dev/null -w "lesen  %{http_code}\n" "https://lernwelt.rh171.de/api/aktiv"
+    curl -s -o /dev/null -w "schreiben %{http_code}\n" -X POST \
+      "https://lernwelt.rh171.de/api/aktiv" -H "content-type: application/json" \
+      -d '{"kind":"helena"}'
+
+Lesen 200 und Schreiben 500 heißt: Der Speicher nimmt nichts an, und **kein
+Fehler im eigenen Code** ist die Ursache. `/api/aktiv` eignet sich dafür, weil
+dort der einzige Schreibvorgang *nicht* in einem `try/catch` steckt — die
+meisten anderen schlucken den Fehler und melden trotzdem Erfolg
+(`./werkstatt.sh bauzettel` sagt dann "Zettel haengt", obwohl nichts ankam).
+
+**Verdächtig ist die Tagesgrenze für Schreibvorgänge im KV-Freikontingent**; sie
+beginnt um 00:00 UTC neu. Nachsehen lässt sich das nur im Cloudflare-Konto —
+also **nicht raten**, sondern Denny fragen.
+
+**Was daraus folgt, wenn man etwas baut:** Schreibvorgänge sind hier die knappe
+Zahl, nicht der Platz. Zwei Zähler gehören in **einen** Schlüssel, nicht in
+zwei. Und jeder Weg, den ein Kind anfasst, braucht eine ehrliche Antwort für
+den Fall, dass der Speicher streikt — vorher bekam es die nackte
+Cloudflare-Seite "error code: 1101" zu sehen und wusste nicht, ob seine Meldung
+angekommen ist.
+
+**Fertige Antworten gehen nicht verloren:** `antworten-offen/<id>.txt` ablegen
+und `./antworten-nachreichen.sh &` starten. Das Skript versucht es alle fünf
+Minuten weiter und schiebt jede Antwort nach dem Absenden nach
+`antworten-gesendet/` — jede geht also höchstens einmal raus.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
