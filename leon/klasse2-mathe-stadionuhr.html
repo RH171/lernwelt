@@ -89,7 +89,7 @@
 <body>
 <div class="huelle">
   <header>
-    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a>
     <h1>Die Stadionuhr</h1>
   </header>
 
@@ -122,7 +122,7 @@
     <p id="ende-text"></p>
     <button class="knopf" id="nochmal" style="width:100%">Nochmal</button>
     <button class="knopf2" id="andere">Andere Stufe wählen</button>
-    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+    <a class="knopf2" href="/leon/#anfassen">Zurück zu Leons Spielen</a>
   </section>
 </div>
 <canvas class="konfetti" id="konfetti"></canvas>
@@ -466,6 +466,7 @@
     weiter: function(){ var w = $("weiter"); if (w) w.click(); } };
 })();
 </script>
+<script src="/spiel-navi.js" defer></script>
 <script src="/lernstand.js" defer></script>
 </body>
 </html>

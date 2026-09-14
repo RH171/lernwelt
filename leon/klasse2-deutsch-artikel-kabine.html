@@ -91,7 +91,7 @@
 <body>
 <div class="huelle">
   <header>
-    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a>
     <h1>Der-die-das-Kabine</h1>
     <div class="zaehler verborgen" id="zaehler"></div>
   </header>
@@ -127,7 +127,7 @@
     <p id="ende-text"></p>
     <div class="rueckschau" id="rueckschau"></div>
     <button class="los" id="nochmal">Neue Mannschaft</button>
-    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+    <a class="knopf2" href="/leon/#anfassen">Zurück zu Leons Spielen</a>
   </section>
 </div>
 <canvas class="konfetti" id="konfetti"></canvas>
@@ -306,6 +306,7 @@
     tippe: function(a){ var k = document.querySelector('.kabine[data-a="' + a + '"]'); if (k) tippen(k); } };
 })();
 </script>
+<script src="/spiel-navi.js" defer></script>
 <script src="/lernstand.js" defer></script>
 </body>
 </html>

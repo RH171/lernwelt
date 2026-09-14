@@ -29,7 +29,7 @@
   var app = $("elfmeter");
   app.className = "huelle";
   app.innerHTML =
-    '<header><a class="zurueck" href="/leon/">‹ Zurück</a><h1>' + esc(K.titel) + '</h1><div class="punkte verborgen" id="punkte">🧤 0</div></header>' +
+    '<header><a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a><h1>' + esc(K.titel) + '</h1><div class="punkte verborgen" id="punkte">🧤 0</div></header>' +
     '<section class="karte start" id="sicht-start">' +
       '<div style="text-align:center;font-size:54px">' + (K.startbild || "🧤⚽") + '</div>' +
       '<h2>Du stehst im Tor!</h2><p>' + esc(K.einleitung) + '</p>' +
@@ -55,7 +55,7 @@
       '<div class="gross">🏆</div><h2 id="ende-titel"></h2><p id="ende-text"></p>' +
       '<button class="weiter" id="nochmal">Nochmal ins Tor</button>' +
       '<button class="knopf2" id="andere">' + esc(K.andereText || "Andere Stufe wählen") + '</button>' +
-      '<a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>' +
+      '<a class="knopf2" href="/leon/#anfassen">Zurück zu Leons Spielen</a>' +
     '</section>';
   var leinwand = document.createElement("canvas"); leinwand.className = "konfetti"; leinwand.id = "konfetti";
   document.body.appendChild(leinwand);

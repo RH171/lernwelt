@@ -96,7 +96,7 @@
 <body>
 <div class="huelle">
   <header>
-    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a>
     <h1>Schulweg-Detektiv</h1>
   </header>
 
@@ -132,7 +132,7 @@
       ⚽ Rollt der Ball auf die Straße: stehen bleiben.
     </div>
     <button class="los" id="nochmal">Nochmal auf Streife</button>
-    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+    <a class="knopf2" href="/leon/#anfassen">Zurück zu Leons Spielen</a>
   </section>
 </div>
 <canvas class="konfetti" id="konfetti"></canvas>
@@ -458,6 +458,7 @@
   window.__schulweg = { ORTE: ORTE, starten: starten, tippe: function(i){ var g = document.querySelector('.ding[data-i="' + i + '"]'); if (g) tippen(i, g); }, weiter: function(){ if ($("weiter")) $("weiter").click(); }, zustand: function(){ return { ort: ort, gefunden: gefunden, gesamt: gesamtGefunden }; } };
 })();
 </script>
+<script src="/spiel-navi.js" defer></script>
 <script src="/lernstand.js" defer></script>
 </body>
 </html>

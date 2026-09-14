@@ -295,7 +295,9 @@
 <div class="huelle">
 
   <header>
-    <a class="zurueck" id="zurueck" href="/leon/">‹ Nochmal von vorn</a>
+    <!-- 14.09.2026: Aus Leons Bereich fuehrte kein Weg zur Lernwelt-Startseite (und damit zum Quiz-Duell). -->
+    <a class="zurueck" href="/" aria-label="Zur Lernwelt-Startseite">🏠</a>
+    <a class="zurueck" id="zurueck" href="/leon/">‹ Zur Auswahl</a>
     <h1 id="kopfzeile">Leons Mathe</h1>
   </header>
 
@@ -350,7 +352,7 @@
       <button class="los verborgen" id="los" disabled>Spiel bauen</button>
     </div>
 
-    <div class="karte anfassen">
+    <div class="karte anfassen" id="anfassen">
       <h2>&#9917; Spiele zum Anfassen</h2>
       <p class="unter">Die sind sofort da – einfach reintippen.</p>
       <div class="anfassen-liste">
@@ -1691,7 +1693,7 @@
   });
 
   $("ende-zurueck").addEventListener("click", function(){
-    window.location.href = $("zurueck").getAttribute("href");
+    window.location.href = "/";
   });
 
   function mische(feld){
