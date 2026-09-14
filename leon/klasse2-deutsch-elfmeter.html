@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elfmeter Deutsch</title>
+<!--
+  Leon, 14.09.2026, nach dem Mathe-Elfmeter: "Sehr viel Spass! Kannst du so eins
+  auch fuer Deutsch und eins fuer HSU machen?"
+
+  Dieselbe Maschine (elfmeter.js), andere Fragen. Vier Stufen aus der
+  1./2. Klasse: der/die/das, Anfangslaut, Silben, Reime.
+
+  Weil Leon noch nicht sicher liest, spricht die Seite jede Frage von selbst
+  vor (vorlesenVonSelbst). Beim Anfangslaut steht das Wort deshalb gar nicht
+  da - nur das Bild, und die Stimme sagt es. Sonst saehe man den ersten
+  Buchstaben und muesste nicht hinhoeren. Die Stimme sagt nur ganze Woerter,
+  nie einzelne Buchstaben ("Ha" statt /h/ waere genau die Verwechslung von
+  Laut und Buchstabe, die der Unterricht vermeidet).
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="elfmeter.css">
+</head>
+<body>
+<div id="elfmeter"></div>
+
+<script>
+(function(){
+  "use strict";
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  /* ---------- der, die, das ---------- */
+  var ARTIKEL = [
+    ["🥅","Tor","das"], ["🏆","Pokal","der"], ["👕","Trikot","das"], ["☀️","Sonne","die"], ["🌙","Mond","der"],
+    ["🚗","Auto","das"], ["🌷","Blume","die"], ["🌳","Baum","der"], ["🏠","Haus","das"], ["🐱","Katze","die"],
+    ["🐶","Hund","der"], ["🐭","Maus","die"], ["🍎","Apfel","der"], ["🍌","Banane","die"], ["🍞","Brot","das"],
+    ["⭐","Stern","der"], ["❤️","Herz","das"], ["📖","Buch","das"], ["✂️","Schere","die"], ["🐟","Fisch","der"],
+    ["🦆","Ente","die"], ["🐷","Schwein","das"], ["🦁","Löwe","der"], ["🚲","Fahrrad","das"], ["🚀","Rakete","die"],
+    ["☕","Tasse","die"], ["🍰","Kuchen","der"], ["🚪","Tür","die"], ["🎁","Geschenk","das"], ["🐸","Frosch","der"],
+    ["🥚","Ei","das"], ["🍓","Erdbeere","die"], ["🔑","Schlüssel","der"], ["🛏️","Bett","das"]
+  ];
+
+  /* ---------- Anfangslaut ----------
+     Bild und Wort muessen eindeutig zusammengehoeren - die Stimme sagt das Wort.
+     Ablenker sind aehnlich klingende Laute (B/P/D, G/K, M/N, F/W ...). */
+  var ANLAUT = [
+    ["🍎","Apfel","A",["O","E"]], ["🐻","Bär","B",["P","D"]], ["🦕","Dino","D",["T","B"]], ["🦆","Ente","E",["I","A"]],
+    ["🐟","Fisch","F",["W","V"]], ["🍴","Gabel","G",["K","D"]], ["🎩","Hut","H",["A","K"]], ["🦔","Igel","I",["E","Ü"]],
+    ["🐮","Kuh","K",["G","T"]], ["🦁","Löwe","L",["R","N"]], ["🐭","Maus","M",["N","W"]], ["👃","Nase","N",["M","L"]],
+    ["👵","Oma","O",["U","A"]], ["🍄","Pilz","P",["B","T"]], ["🚀","Rakete","R",["L","K"]], ["☀️","Sonne","S",["Z","Sch"]],
+    ["🥅","Tor","T",["D","K"]], ["🕐","Uhr","U",["O","Ü"]], ["🐋","Wal","W",["F","V"]], ["🦓","Zebra","Z",["S","Sch"]],
+    ["🐑","Schaf","Sch",["S","Z"]], ["🌙","Mond","M",["N","B"]], ["🚗","Auto","Au",["A","O"]]
+  ];
+
+  /* ---------- Silben ---------- */
+  var SILBEN = [
+    ["⚽","Ball"], ["🐶","Hund"], ["🐭","Maus"], ["⭐","Stern"], ["🌳","Baum"], ["🐟","Fisch"], ["🥅","Tor"],
+    ["🚗","Au-to"], ["☀️","Son-ne"], ["🐱","Kat-ze"], ["🦆","En-te"], ["🍎","Ap-fel"], ["🌷","Blu-me"], ["🧀","Kä-se"], ["🥁","Trom-mel"],
+    ["🍅","To-ma-te"], ["🍌","Ba-na-ne"], ["🚀","Ra-ke-te"], ["🍋","Zi-tro-ne"], ["🦒","Gi-raf-fe"], ["🍉","Me-lo-ne"], ["🐧","Pin-gu-in"],
+    ["🐘","E-le-fant"], ["🦋","Schmet-ter-ling"], ["🐊","Kro-ko-dil"],
+    ["🍫","Scho-ko-la-de"], ["🐢","Schild-krö-te"], ["🧤","Tor-wart-hand-schuh"]
+  ];
+
+  /* ---------- Reime ---------- */
+  var REIME = [
+    ["🐭","Maus","Haus",["Hose","Mond"]], ["🥅","Tor","Ohr",["Tür","Bär"]], ["🌹","Rose","Hose",["Rabe","Nase"]],
+    ["🐶","Hund","Mund",["Hand","Hut"]], ["🐟","Fisch","Tisch",["Fuchs","Tasche"]], ["👃","Nase","Hase",["Nest","Nuss"]],
+    ["🦵","Bein","Stein",["Bus","Ball"]], ["🌳","Baum","Traum",["Bett","Blatt"]], ["🍲","Topf","Kopf",["Tor","Hose"]],
+    ["✋","Hand","Sand",["Hund","Hut"]], ["🐱","Katze","Tatze",["Kette","Kasse"]], ["☀️","Sonne","Tonne",["Sofa","Sahne"]],
+    ["🍀","Klee","Schnee",["Klo","Knie"]], ["🐴","Pferd","Herd",["Pilz","Park"]], ["🐭","Maus","Laus",["Mais","Mut"]],
+    ["⭐","Stern","Kern",["Stein","Sturm"]], ["🎩","Hut","Mut",["Hund","Haut"]], ["🐝","Biene","Schiene",["Birne","Bohne"]]
+  ];
+  // Ablenker pruefen: Sie duerfen sich NICHT reimen (erst stand bei "Nase" die "Vase").
+
+  function sprechenSilben(w){ return w.replace(/-/g, ""); }
+
+  function aufgaben(stufe, n){
+    var l = [];
+    if (stufe === "artikel"){
+      mische(ARTIKEL.slice()).slice(0, n).forEach(function(w){
+        l.push({ frage: "der, die oder das?", bild: w[0], text: w[1], sprechen: w[1], ecken: ["der", "die", "das"], r: w[2], merkmal: "artikel",
+          sprechenLoesung: w[2] + " " + w[1],
+          diagnose: function(g){ return "Sag es laut: „" + g + " " + w[1] + "“ – klingt das richtig? Probier die anderen auch."; },
+          erklaerung: function(){ return '<div class="weg">Es heißt: <b>' + w[2] + ' ' + esc(w[1]) + '</b>.</div>'; } });
+      });
+    }
+    if (stufe === "anlaut"){
+      mische(ANLAUT.slice()).slice(0, n).forEach(function(w){
+        l.push({ frage: "Mit welchem Laut fängt es an?", bild: w[0], text: "", sprechen: w[1], ecken: mische([w[2]].concat(w[3])), r: w[2], merkmal: "anlaut",
+          sprechenLoesung: w[1],
+          diagnose: function(g){ return "Sprich ganz langsam und hör auf den allerersten Laut: " + w[1] + "."; },
+          erklaerung: function(){ return '<div class="weg">' + w[0] + ' <b>' + esc(w[1]) + '</b> fängt mit <b>' + esc(w[2]) + '</b> an.</div>'; } });
+      });
+    }
+    if (stufe === "silben"){
+      // Gemischt: ein paar kurze, ein paar lange - nicht zufaellig nur Dreier
+      var nach = [[], [], [], [], []];
+      SILBEN.forEach(function(w){ nach[Math.min(4, w[1].split("-").length)].push(w); });
+      var pool = mische(nach[1].slice()).slice(0, 2).concat(mische(nach[2].slice()).slice(0, 3), mische(nach[3].slice()).slice(0, 3), mische(nach[4].slice()).slice(0, 2));
+      mische(pool).slice(0, n).forEach(function(w){
+        var teile = w[1].split("-"), k = teile.length;
+        var ecken = k === 1 ? [1, 2, 3] : k === 4 ? [2, 3, 4] : [k - 1, k, k + 1];
+        l.push({ frage: "Wie viele Silben?", bild: w[0], text: sprechenSilben(w[1]), sprechen: sprechenSilben(w[1]), ecken: ecken, r: k, merkmal: "silben zaehlen",
+          sprechenLoesung: teile.join(" – "),
+          diagnose: function(g){ return g > k ? "Da hast du einmal zu oft geklatscht." : "Da fehlt noch ein Klatscher."; },
+          erklaerung: function(){ return '<div class="silbenwort">' + teile.map(function(t){ return "<span>" + esc(t) + "</span>"; }).join("") + '</div>' +
+            '<div class="weg">' + k + (k === 1 ? " Silbe – einmal klatschen." : " Silben – " + k + "-mal klatschen.") + '</div>'; } });
+      });
+    }
+    if (stufe === "reime"){
+      mische(REIME.slice()).slice(0, n).forEach(function(w){
+        l.push({ frage: "Was reimt sich darauf?", bild: w[0], text: w[1], sprechen: "Was reimt sich auf " + w[1] + "?", ecken: mische([w[2]].concat(w[3].slice(0, 2))), r: w[2], merkmal: "reime",
+          sprechenLoesung: w[1] + " – " + w[2],
+          diagnose: function(g){ return "„" + g + "“ klingt am Ende anders. Beim Reim hörst du auf das Ende."; },
+          erklaerung: function(){ return '<div class="weg"><b>' + esc(w[1]) + '</b> und <b>' + esc(w[2]) + '</b> klingen am Ende gleich.</div>'; } });
+      });
+    }
+    return l;
+  }
+
+  window.ELFMETER = {
+    speicher: "leon-elfmeter-deutsch",
+    titel: "Elfmeter Deutsch",
+    startbild: "🧤📖",
+    einleitung: "Auf dem Ball steht die Frage – ich lese sie dir auch vor. Spring in die Ecke mit der richtigen Antwort.",
+    vorlesenVonSelbst: true,
+    stufen: [
+      { id: "anlaut",  gross: "🔤", name: "Anfangslaut", klein: "Hör genau hin", jetzt: true },
+      { id: "artikel", gross: "🚪", name: "der, die, das", klein: "Welcher passt?", jetzt: true },
+      { id: "silben",  gross: "👏", name: "Silben", klein: "Klatsch mit" },
+      { id: "reime",   gross: "🎵", name: "Reime", klein: "Maus – Haus" }
+    ],
+    aufgaben: aufgaben
+  };
+  window.__deutschDaten = { ARTIKEL: ARTIKEL, ANLAUT: ANLAUT, SILBEN: SILBEN, REIME: REIME };
+})();
+</script>
+<script src="elfmeter.js"></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
