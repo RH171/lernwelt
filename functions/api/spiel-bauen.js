@@ -13,6 +13,7 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { spielSichern } from "./spiele.js";
 import { namenRichten } from "./_namen.js";
+import { rechenfehler } from "./_rechnung.js";
 
 // Entscheidung vom 06.09.2026 nach einem Vergleich an denselben Themen:
 // Es bleibt bei Opus 5. Sonnet 5 war zwar schneller und guenstiger, riss aber
@@ -235,8 +236,10 @@ export async function onRequestPost(context) {
   // Deutsch-Spiel mit neun Deutsch-Aufgaben ist besser als eine Fehlermeldung
   // nach neunzig Sekunden Warten - und deutlich besser als zwölf Aufgaben,
   // von denen vier Mathe sind.
-  if (maengel.length && maengel.every((m) => m.startsWith(FACHFREMD_MARKE))) {
+  if (maengel.length && maengel.every((m) => m.startsWith(FACHFREMD_MARKE) ||
+                                               m.startsWith(RECHENFEHLER_MARKE))) {
     fachfremdeEntfernen(spiel, kind);
+    falschGerechneteEntfernen(spiel);
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
@@ -312,12 +315,33 @@ export function fachfremd(a, spiel, kind) {
   return "";
 }
 
+// Rechenfehler in der Loesung oder im Rechenweg. Dieselbe Bauart wie
+// FACHFREMD_MARKE: markiert, damit die einzelne Aufgabe rausfliegen kann,
+// statt das ganze Spiel wegzuwerfen.
+//
+// Am 15.09.2026 lag in Pauls Regal "Ein Marktbroetchen kostet 1,20 €. Was
+// kosten 6 Broetchen?" mit der Loesung 7 und dem Rechenweg "120 ct = 1 €".
+// Der Auftrag bittet den Baumeister seit jeher, richtig zu rechnen - eine
+// Bitte im Auftrag ist eben keine Pruefung.
+const RECHENFEHLER_MARKE = "rechnet falsch: ";
+
 // Die fachfremden Aufgaben aus dem Spiel nehmen. Gibt zurueck, was rausflog -
 // zum Mitschreiben, nicht zum Anzeigen.
 export function fachfremdeEntfernen(spiel, kind) {
   const raus = [];
   spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
     const grund = fachfremd(a, spiel, kind);
+    if (grund) { raus.push(grund); return false; }
+    return true;
+  });
+  return raus;
+}
+
+// Dasselbe fuer Aufgaben, bei denen die Zahl nicht stimmt.
+export function falschGerechneteEntfernen(spiel) {
+  const raus = [];
+  spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
+    const grund = rechenfehler(a);
     if (grund) { raus.push(grund); return false; }
     return true;
   });
@@ -337,6 +361,8 @@ export function pruefeSpiel(spiel, kind) {
     const nr = i + 1;
     const fremd = fachfremd(a, spiel, kind);
     if (fremd) m.push(`${FACHFREMD_MARKE}Aufgabe ${nr} ${fremd}`);
+    const krumm = rechenfehler(a);
+    if (krumm) m.push(`${RECHENFEHLER_MARKE}Aufgabe ${nr}: ${krumm}`);
     if (!a.frage || !String(a.frage).trim()) m.push(`Aufgabe ${nr} ohne Frage`);
     if (a.richtig === undefined || a.richtig === null || String(a.richtig).trim() === "")
       m.push(`Aufgabe ${nr} ohne Lösung`);

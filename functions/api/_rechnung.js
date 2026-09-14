@@ -191,26 +191,6 @@ function teilschritteEnde(a, melden) {
     melden(`Der letzte Teilschritt endet auf ${letzte}, die Loesung sagt ${ganz}.`);
 }
 
-// ---------------------------------------------------------------- Durchlauf
-
-export function spielPruefen(spiel) {
-  const funde = [];
-  (spiel.aufgaben || []).forEach((a, i) => {
-    const melden = (was) => funde.push({ nr: i + 1, frage: String(a.frage || "").slice(0, 90), was });
-    const frage = String(a.frage || "");
-    // Manche Aufgaben ZEIGEN mit Absicht eine falsche Rechnung: "Was ist bei
-    // 246 · 3 = 638 schiefgegangen?" Die darf niemand "richtigstellen".
-    if (/schiefgegangen|falsch gerechnet|Fehler|was ist passiert|stimmt (hier )?nicht|richtigstellen/i.test(frage)) return;
-    const texte = [frage, String(a.erklaerung || ""), String(a.merke || "")]
-      .concat((a.teilschritte || []).map((t) => String(t.frage || "") + " = " + String(t.richtig == null ? "" : t.richtig)));
-    for (const t of texte) { einheitenPruefen(t, melden); zeilenPruefen(t, melden); }
-    preisMalAnzahl(frage, a.richtig, melden);
-    jeMal(frage, a.richtig, melden);
-    teilschritteEnde(a, melden);
-  });
-  return funde;
-}
-
 // ------------------------------------------------------------- Nach aussen
 
 // Alle Funde einer Aufgabe, als Saetze. Leer = nichts gefunden.
