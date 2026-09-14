@@ -24,6 +24,13 @@ const SCHLUESSEL = (kind) => "aktiv:" + kind;
 const WUNSCH = "ausrollen:wunsch";
 const WUNSCH_GILT = 900;          // 15 Minuten, dann verfaellt die Frage
 
+// Erst nach so vielen Sekunden wird die Frage neu hingeschrieben.
+// ausrollen-frei.sh ruft ?wunsch=1 JEDE MINUTE auf, solange ein Kind spielt
+// und etwas zum Ausrollen bereitliegt - am 14.09.2026 waren das 75 Minuten
+// und damit 75 Schreibvorgaenge fuer einen Satz, der sich in der ganzen Zeit
+// kein einziges Mal geaendert hat. Nachschauen ist umsonst, schreiben nicht.
+const WUNSCH_AUFFRISCHEN = 600;
+
 // Woran gerade gebaut wird - Pauls Meldung 5z785gdjxc vom 08.09.2026: "wenn das
 // Fenster aufplatzt ... da will ich gerne wissen, was du da überhaupt machst",
 // und auf die Rückfrage, ob ein grober Satz reicht: "Ich will was genaueres".
@@ -64,6 +71,17 @@ async function wunschLesen(env) {
 // Pulsabstände, damit ein verschlucktes Signal niemanden verschwinden lässt.
 const STILLE_BIS_WEG = 480;
 
+// So dicht dürfen zwei Pulse hintereinander wirklich in den Speicher.
+// Der Takt in lernstand.js ist 180 Sekunden - dazwischen liegt aber JEDER
+// Seitenwechsel und jeder Wechsel zurück in den Tab, und beide melden sich
+// sofort wieder an. Ein Kind, das sich durch sein Spielemenü klickt, hat so in
+// einer Minute fünf Schreibvorgänge verbraucht, obwohl der Eintrag danach
+// dasselbe sagt wie vorher: "ist da". Steht der letzte Puls noch keine 90
+// Sekunden zurück, bleibt er stehen. Sein Verfallsdatum reicht (STILLE_BIS_WEG
+// + 120) weit über den nächsten regulären Puls hinaus, es geht also nichts
+// verloren.
+const PULS_MINDESTABSTAND = 90;
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
@@ -82,14 +100,19 @@ export async function onRequestPost(context) {
 
   if (daten.weg) {
     // Sauber abgemeldet - dann muss niemand die volle Stille abwarten.
-    try { await env.PAUL_KV.delete(SCHLUESSEL(kind)); } catch (e) {}
+    // Erst nachschauen: Ein delete ist im KV ein SCHREIBvorgang, ein get nicht.
+    // Steht gar nichts da (zweite Abmeldung, abgelaufener Eintrag), gibt es
+    // auch nichts zu löschen.
+    try {
+      if (await env.PAUL_KV.get(SCHLUESSEL(kind))) await env.PAUL_KV.delete(SCHLUESSEL(kind));
+    } catch (e) {}
     return json(200, { ok: true });
   }
 
   // Das Kind hat zugestimmt, dass jetzt aktualisiert werden darf.
   if (daten.updateOk) {
     try {
-      await env.PAUL_KV.delete(SCHLUESSEL(kind));
+      if (await env.PAUL_KV.get(SCHLUESSEL(kind))) await env.PAUL_KV.delete(SCHLUESSEL(kind));
       // Kurze Schonzeit, damit der Puls nicht sofort wieder anspringt und
       // das Ausrollen erneut blockiert.
       await env.PAUL_KV.put("pause:" + kind, "1", { expirationTtl: 180 });
@@ -101,8 +124,13 @@ export async function onRequestPost(context) {
   try { if (await env.PAUL_KV.get("pause:" + kind)) return json(200, { ok: true, pausiert: true }); }
   catch (e) {}
 
-  await env.PAUL_KV.put(SCHLUESSEL(kind), String(Date.now()),
-                        { expirationTtl: STILLE_BIS_WEG + 120 });
+  // Nachschauen kostet nichts, schreiben schon.
+  let letzter = 0;
+  try { letzter = Number(await env.PAUL_KV.get(SCHLUESSEL(kind))) || 0; } catch (e) {}
+  if (!letzter || (Date.now() - letzter) / 1000 >= PULS_MINDESTABSTAND) {
+    await env.PAUL_KV.put(SCHLUESSEL(kind), String(Date.now()),
+                          { expirationTtl: STILLE_BIS_WEG + 120 });
+  }
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
@@ -127,8 +155,22 @@ export async function onRequestGet(context) {
       if (geheim && (await ausweisGueltig(request, geheim, env))) was = roh;
     }
     try {
-      await env.PAUL_KV.put(WUNSCH, JSON.stringify({ t: Date.now(), was }),
-                            { expirationTtl: WUNSCH_GILT });
+      // Steht dieselbe Frage schon da und ist sie noch frisch, bleibt sie
+      // einfach stehen. Geschrieben wird nur, wenn sich der Satz aendert oder
+      // der Eintrag seinem Ablauf naher kommt.
+      let schreiben = true;
+      const alt = await env.PAUL_KV.get(WUNSCH);
+      if (alt) {
+        try {
+          const d = JSON.parse(alt);
+          const alterSek = (Date.now() - (Number(d && d.t) || 0)) / 1000;
+          if (wasSaeubern(d && d.was) === was && alterSek >= 0 && alterSek < WUNSCH_AUFFRISCHEN)
+            schreiben = false;
+        } catch (e) {}
+      }
+      if (schreiben)
+        await env.PAUL_KV.put(WUNSCH, JSON.stringify({ t: Date.now(), was }),
+                              { expirationTtl: WUNSCH_GILT });
     } catch (e) {}
   } else if (url.searchParams.get("wunsch") === "0") {
     // Erst nachschauen, dann erst loeschen. Ein delete ist im KV ein
