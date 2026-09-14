@@ -83,6 +83,53 @@ export async function onRequestPost(context) {
   return json(200, { ok: true, spiele: liste });
 }
 
+// PUT /api/spiele?kind=leon&id=...  { aufgaben: [...], titel?, begruessung? }
+// Nur mit Eltern-Code. Zum Nachbessern einzelner Aufgaben, die beim Durchsehen
+// aufgefallen sind - ohne das ganze Spiel neu bauen zu lassen (14.09.2026: in
+// Leons ersten HSU-Spielen standen Rechenaufgaben und ein fachlicher Fehler).
+// Foto, Herkunft und Spielstatistik bleiben, wie sie sind.
+export async function onRequestPut(context) {
+  const { request, env } = context;
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+  const elternGeheim = geheimFuer(env, "eltern");
+  if (!elternGeheim || !(await ausweisGueltig(request, elternGeheim, env)))
+    return json(401, { ok: false, fehler: "Nachbessern geht nur mit dem Eltern-Code." });
+
+  const id = new URL(request.url).searchParams.get("id");
+  if (!id) return json(400, { ok: false, fehler: "Welches Spiel denn?" });
+  const roh = await env.PAUL_KV.get(SPIEL(id));
+  if (!roh) return json(404, { ok: false, fehler: "Das Spiel gibt es nicht mehr." });
+
+  let neu = {};
+  try { neu = await request.json(); } catch (e) {}
+  const auf = Array.isArray(neu.aufgaben) ? neu.aufgaben : null;
+  if (!auf || auf.length < 5) return json(400, { ok: false, fehler: "Mindestens fünf Aufgaben." });
+  for (let i = 0; i < auf.length; i++) {
+    const a = auf[i] || {};
+    if (!String(a.frage || "").trim() || String(a.richtig == null ? "" : a.richtig).trim() === "")
+      return json(400, { ok: false, fehler: `Aufgabe ${i + 1} ohne Frage oder Lösung.` });
+    if ((a.art || "wahl") === "wahl" && (!Array.isArray(a.antworten) || a.antworten.indexOf(a.richtig) < 0))
+      return json(400, { ok: false, fehler: `Bei Aufgabe ${i + 1} fehlt die Lösung in der Auswahl.` });
+  }
+
+  const spiel = JSON.parse(roh);
+  spiel.aufgaben = auf;
+  if (typeof neu.titel === "string" && neu.titel.trim()) spiel.titel = neu.titel.trim();
+  if (typeof neu.begruessung === "string") spiel.begruessung = neu.begruessung;
+  spiel.nachgebessert = new Date().toISOString();
+  await env.PAUL_KV.put(SPIEL(id), JSON.stringify(spiel));
+
+  const kind = kindAus(request);
+  const liste = await listeHolen(env, kind);
+  const eintrag = liste.find((e) => e.id === id);
+  if (eintrag) {
+    eintrag.aufgaben = auf.length;
+    eintrag.titel = spiel.titel;
+    await env.PAUL_KV.put(LISTE(kind), JSON.stringify(liste));
+  }
+  return json(200, { ok: true, id, aufgaben: auf.length });
+}
+
 export async function onRequestDelete(context) {
   const { request, env } = context;
   const wache = await wacheOk(request, env);
