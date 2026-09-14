@@ -123,9 +123,29 @@ export async function fehlversuchZaehlen(request, env) {
   } catch (e) { return 0; }
 }
 
+// Nach einer richtigen Eingabe ist die Bremse wieder gelöst.
+//
+// Erst nachschauen, dann erst löschen: Ein delete ist im KV ein SCHREIBvorgang
+// und zählt gegen das Tageskontingent, ein get dagegen praktisch nicht. Ohne
+// diese Abfrage hat JEDE erfolgreiche Anmeldung einen Schreibvorgang gekostet -
+// auch die weitaus häufigste, bei der es überhaupt keinen Fehlversuch zu
+// löschen gab.
+//
+// Das war teuer, weil sich jedes Werkzeug auf Dennys Rechner bei jedem Aufruf
+// neu anmeldet: werkstatt.sh bei jedem Befehl, antworten-nachreichen.sh alle
+// fünf Minuten für jede offene Antwort, dazu der Bau-Wächter. Das allein kam
+// auf rund 900 Schreibvorgänge am Tag - bei einem Kontingent von 1000. Am
+// 14.09.2026 war es um 13:54 UTC aufgebraucht, und danach ging für die Kinder
+// nichts mehr: keine Meldung, keine Runde, kein Fortschritt (siehe
+// /api/speicher-pruefen).
 export async function fehlversucheLoeschen(request, env) {
   const wer = request.headers.get("cf-connecting-ip") || "unbekannt";
-  try { if (env.PAUL_KV) await env.PAUL_KV.delete("fehlversuche:" + wer); } catch (e) {}
+  try {
+    if (!env.PAUL_KV) return;
+    const k = "fehlversuche:" + wer;
+    if (!(await env.PAUL_KV.get(k))) return;   // nichts da - nichts zu löschen
+    await env.PAUL_KV.delete(k);
+  } catch (e) {}
 }
 
 
