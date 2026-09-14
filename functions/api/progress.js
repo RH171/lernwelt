@@ -85,17 +85,28 @@ export async function onRequestPost(context) {
   // Hat das Gerät den Stand aus der Cloud bekommen, kennt es ihn vollständig -
   // dann darf es ihn ERSETZEN, und Weggeworfenes bleibt weg. Sonst wird nur
   // ZUSAMMENGEFÜHRT: lieber ein Schlüssel zu viel als ein Stand zu wenig.
-  let fertig = neu;
-  if (!vollstaendig) {
-    let alt = {};
-    try {
-      const roh = await env.PAUL_KV.get(SCHLUESSEL(kind));
-      if (roh) alt = JSON.parse(roh) || {};
-    } catch (e) {}
-    fertig = Object.assign(alt, neu);
+  let alt = null;
+  try {
+    const roh = await env.PAUL_KV.get(SCHLUESSEL(kind));
+    if (roh) alt = JSON.parse(roh) || null;
+  } catch (e) {}
+  const fertig = vollstaendig ? neu : Object.assign({}, alt || {}, neu);
+
+  // Nichts geaendert? Dann nicht schreiben. Seit 14.09.2026: Das KV erlaubt
+  // 1000 Schreibvorgaenge am Tag, Lesen kostet praktisch nichts - und viele
+  // Geraete schicken beim Verlassen einer Seite denselben Stand noch einmal
+  // (auch aeltere paul-sync.js-Fassungen, die noch im Browser liegen).
+  if (alt && typeof alt === "object" && gleicheWerte(alt, fertig)) {
+    return json(200, { ok: true, unveraendert: true });
   }
   await env.PAUL_KV.put(SCHLUESSEL(kind), JSON.stringify(fertig));
   return json(200, { ok: true, ersetzt: vollstaendig });
+}
+
+function gleicheWerte(a, b) {
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && b[k] === a[k]);
 }
 
 function json(status, daten) {
