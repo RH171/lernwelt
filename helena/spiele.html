@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Helenas Spiele</title>
+<!--
+  Helenas Spieleseite (14.09.2026). Denny: "Gerne noch mehr Spiele - auch
+  Helena wuerde sich freuen." Neben den beiden Vokabeltrainern gibt es hier
+  Spiele zu Grammatik und Mathe - im Stil der Trainer, fuer ihr Handy gebaut.
+  Die Seite selbst zaehlt keine Lernzeit (LERNSTAND_SCHREIBT_SELBST).
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740; --line:#2a3350;
+    --ink:#eef2fb; --muted:#8a92a8; --brand:#a78bfa;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:radial-gradient(900px 500px at 85% -10%,rgba(167,139,250,.16),transparent 60%),radial-gradient(800px 460px at -10% 0%,rgba(73,214,189,.10),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed;-webkit-font-smoothing:antialiased;padding:18px 16px 40px}
+  .wrap{max-width:640px;margin:0 auto}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:18px}
+  .logo{display:flex;align-items:center;gap:12px;flex:1;min-width:220px}
+  .mark{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:23px;background:linear-gradient(150deg,var(--brand),#7c5cff);box-shadow:0 8px 22px rgba(124,92,255,.45)}
+  h1{font:800 20px/1.1 var(--round);margin:0}
+  .logo p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:10px 13px;font:800 13.5px/1 var(--round);color:var(--ink);text-decoration:none;min-height:44px}
+  .spiel{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px;
+    text-decoration:none;color:var(--ink);box-shadow:0 18px 40px rgba(0,0,0,.3)}
+  .spiel:active{transform:scale(.99)}
+  .spiel .icon{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-size:30px;flex:none}
+  .spiel b{font:800 17px/1.25 var(--round);display:block}
+  .spiel span{color:var(--muted);font-size:13.5px;line-height:1.4;display:block;margin-top:3px}
+  .spiel .fach{color:var(--brand);font:800 11px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}
+  .hinweis{color:var(--muted);font-size:13px;text-align:center;margin-top:18px;line-height:1.5}
+</style>
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="mark">🎮</div>
+      <div><h1>Helenas Spiele</h1><p>Grammatik und Mathe · 7. Klasse</p></div>
+    </div>
+    <div class="chips">
+      <a class="chip" href="../" title="Zur Lernwelt-Startseite">🏠</a>
+      <a class="chip" href="index.html">🇬🇧 Vokabeln</a>
+      <a class="chip" href="franzoesisch.html">🇫🇷 Vokabeln</a>
+    </div>
+  </header>
+
+  <a class="spiel" href="klasse7-englisch-tense-swipe.html">
+    <div class="icon" style="background:linear-gradient(150deg,#a78bfa,#7c5cff)">👉</div>
+    <div><p class="fach">Englisch</p><b>Tense Swipe</b><span>Simple past, present perfect, progressive, past perfect – wisch dich durch die Signalwörter.</span></div>
+  </a>
+  <a class="spiel" href="klasse7-franzoesisch-passe-compose.html">
+    <div class="icon" style="background:linear-gradient(150deg,#60a5fa,#3b82f6)">🧱</div>
+    <div><p class="fach">Französisch</p><b>Passé-composé-Baustelle</b><span>avoir oder être? Welches participe? Und die Angleichung nicht vergessen.</span></div>
+  </a>
+  <a class="spiel" href="klasse7-mathe-winkel.html">
+    <div class="icon" style="background:linear-gradient(150deg,#34d399,#10b981)">📐</div>
+    <div><p class="fach">Mathe</p><b>Winkel-Werkstatt</b><span>Winkel schätzen, mit dem Finger einstellen und fehlende Winkel berechnen.</span></div>
+  </a>
+
+  <p class="hinweis">Fehlt dir ein Spiel oder hakt etwas? Tipp unten rechts auf 💬 – ich lese mit.</p>
+</div>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
