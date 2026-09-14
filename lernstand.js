@@ -80,7 +80,12 @@
       '#melde-karte .ideenlader span:nth-child(2){animation-delay:.15s}' +
       '#melde-karte .ideenlader span:nth-child(3){animation-delay:.3s}' +
       '@keyframes mldenk{0%,80%,100%{opacity:.35;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}' +
-      '#melde-karte .fadenliste{display:grid;gap:8px;margin-bottom:14px}' +
+      // Die Liste scrollt fuer sich, damit "Etwas Neues melden" nicht mit
+      // jedem neuen Faden weiter nach unten rutscht. Gemessen am 15.09.2026:
+      // ab dem vierten Faden stand der Knopf auf Helenas Handy (360x643) unter
+      // dem Rand - und sie hatte zeitweise deutlich mehr als vier.
+      '#melde-karte .fadenliste{display:grid;gap:8px;margin-bottom:14px;' +
+        'max-height:46vh;overflow:auto}' +
       '#melde-karte .fadenreihe{display:flex;align-items:stretch;gap:6px}' +
       '#melde-karte .fadenzeile{display:block;flex:1;min-width:0;text-align:left;background:#f4f6fa;' +
         'border:1px solid #e3e6ef;border-radius:12px;padding:11px 13px;cursor:pointer;' +
@@ -135,6 +140,13 @@
       '.faden .wer{display:block;font-size:12px;color:#6b7280;margin-bottom:3px;font-weight:600}' +
       '.faden img{max-width:100%;border-radius:10px;margin-top:7px;display:block}' +
       '.faden-liste{max-height:44vh;overflow:auto;margin-bottom:12px}' +
+      // Mit offener Tastatur bleiben vom Handy nur noch rund 360 px Hoehe. Dann
+      // sind 44vh Blasen zu viel: das Schreibfeld und "Abschicken" rutschen aus
+      // dem Bild, und das Kind muesste erst in der Karte scrollen, um seine
+      // eigene Antwort abzuschicken. Kuerzere Listen, dafuer sichtbare Knoepfe.
+      '@media (max-height:560px){' +
+        '#melde-karte .faden-liste{max-height:30vh}' +
+        '#melde-karte .fadenliste{max-height:34vh}}' +
       '#melde-karte .passt{width:100%;margin-top:8px;padding:13px;border:none;border-radius:13px;' +
         'background:#12a35f;color:#fff;font-size:16px;font-weight:700;cursor:pointer}' +
       '#melde-karte .zurueck{background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;' +
