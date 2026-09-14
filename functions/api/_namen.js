@@ -82,7 +82,7 @@ function felder(a) {
   return f.filter(([o, k]) => typeof o[k] === "string");
 }
 
-function richteGruppe(liste, protokoll, wo) {
+function richteGruppe(liste, protokoll, wo, nurTor) {
   const text = liste.map(([o, k]) => o[k]).join("\n");
   const plan = [];
   const belegt = new Set([...TORHUETER, ...JUNGEN_FELD, ...MAEDCHEN_FELD]
@@ -97,6 +97,9 @@ function richteGruppe(liste, protokoll, wo) {
 
   for (const [n, geschlecht] of fremde) {
     const tor = istTorwart(text, n);
+    // In Deutsch-Aufgaben kann ein Name selbst der Stoff sein ("Welcher Name
+    // beginnt mit T?"). Dort wird nur der Torwart gerichtet, sonst nichts.
+    if (nurTor && !tor) continue;
     const vorrat = tor ? TORHUETER : (geschlecht === "w" ? MAEDCHEN_FELD : JUNGEN_FELD);
     const nach = vorrat.find((x) => !belegt.has(x));
     if (!nach) { protokoll.push({ wo, von: n, nach: null, torwart: tor }); continue; }
@@ -116,8 +119,9 @@ function richteGruppe(liste, protokoll, wo) {
 export function namenRichten(spiel) {
   const protokoll = [];
   if (!spiel || typeof spiel !== "object") return protokoll;
-  (spiel.aufgaben || []).forEach((a, i) => { if (a) richteGruppe(felder(a), protokoll, "Aufgabe " + (i + 1)); });
+  const nurTor = String(spiel.fach || "").toLowerCase() === "deutsch";
+  (spiel.aufgaben || []).forEach((a, i) => { if (a) richteGruppe(felder(a), protokoll, "Aufgabe " + (i + 1), nurTor); });
   const kopf = ["titel", "begruessung"].filter((k) => typeof spiel[k] === "string").map((k) => [spiel, k]);
-  if (kopf.length) richteGruppe(kopf, protokoll, "Kopf");
+  if (kopf.length) richteGruppe(kopf, protokoll, "Kopf", nurTor);
   return protokoll;
 }

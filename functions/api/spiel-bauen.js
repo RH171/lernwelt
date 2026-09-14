@@ -120,7 +120,11 @@ export async function onRequestPost(context) {
 
   // Erst jetzt pruefen: jedes Kind hat sein eigenes Geheimnis. Bis Denny fuer
   // ein Kind einen eigenen Code hinterlegt, gilt PAUL_CODE (siehe _riegel.js).
-  if (!(await ausweisGueltig(request, geheimFuer(env, kind), env))) {
+  // Denny darf mit dem Eltern-Code fuer ein Kind vorbauen (14.09.2026: Leons
+  // erste Deutsch-Spiele sollten bereitliegen, bevor er das Feld antippt).
+  const alsEltern = !!geheimFuer(env, "eltern") &&
+    (await ausweisGueltig(request, geheimFuer(env, "eltern"), env));
+  if (!alsEltern && !(await ausweisGueltig(request, geheimFuer(env, kind), env))) {
     return fehler(401, "Hier darfst du nur mit deinem Code bauen. Bitte melde dich an.");
   }
   const seiten = Array.isArray(auftrag.seiten) ? auftrag.seiten : [];
@@ -212,7 +216,7 @@ export async function onRequestPost(context) {
   // Bevor irgendetwas gespeichert oder ausgeliefert wird: Taugt das Spiel?
   // Am 06.09.2026 kam ein Spiel mit einer einzigen Aufgabe zurueck - fuer ein
   // Kind ist das kein Spiel. Lieber ein ehrlicher Fehler als Murks im Regal.
-  let maengel = pruefeSpiel(spiel);
+  let maengel = pruefeSpiel(spiel, kind);
   if (maengel.length) {
     // Einmal nachfassen. Diese Aussetzer sind sporadisch, und ein Kind soll
     // nicht mit einer Fehlermeldung dastehen, wenn ein zweiter Anlauf reicht.
@@ -220,7 +224,7 @@ export async function onRequestPost(context) {
     if (zweite.ok) {
       const d2 = await zweite.json();
       const b2 = (d2.content || []).find((c) => c.type === "tool_use");
-      if (b2 && b2.input && !pruefeSpiel(b2.input).length) {
+      if (b2 && b2.input && !pruefeSpiel(b2.input, kind).length) {
         Object.assign(spiel, b2.input);
         maengel = [];
       }
@@ -262,7 +266,7 @@ const MIN_AUFGABEN = 5;
 // Ueberschrift vergessen.
 const TITEL_MURKS = /^(platzhalter|titel|spiel|unbenannt|todo|beispiel|test|neues spiel|lernspiel)\.?$/i;
 
-function pruefeSpiel(spiel) {
+function pruefeSpiel(spiel, kind) {
   const m = [];
   const auf = (spiel && spiel.aufgaben) || [];
   const t = String((spiel && spiel.titel) || "").trim();
@@ -281,6 +285,10 @@ function pruefeSpiel(spiel) {
       if (antw.length < 2) m.push(`Aufgabe ${nr} hat zu wenige Antworten`);
       else if (antw.indexOf(a.richtig) < 0) m.push(`bei Aufgabe ${nr} fehlt die richtige Antwort in der Auswahl`);
     }
+    // Leons Eingabefeld zeigt nur die Zahlentastatur. Ein Wort als Loesung
+    // koennte er dort gar nicht eintippen - bei Deutsch-Aufgaben naheliegend.
+    if (kind === "leon" && (a.art || "") === "eingabe" && !/^\s*\d+\s*$/.test(String(a.richtig)))
+      m.push(`Aufgabe ${nr}: "${a.richtig}" lässt sich auf Leons Zahlentastatur nicht eintippen`);
     if ((a.art || "") === "teilschritte" && !(a.teilschritte || []).length)
       m.push(`Aufgabe ${nr} ist eine Schrittkette ohne Schritte`);
 
@@ -365,7 +373,19 @@ eigenen Idee vor - das Kind erkennt sofort, ob du zugehört hast.
 ${k.wuensche.map((w, i) => `W${i + 1}. ${w}`).join("\n")}
 ` : ""}
 
-DER LEHRPLAN (LehrplanPLUS Bayern)
+${k.alter <= 8 ? `DEUTSCH FÜR LESEANFÄNGER - gilt, sobald das Spiel Deutsch übt
+Das Kind liest noch nicht sicher. Frage UND Antworten werden vorgelesen.
+D1. NUR ANTIPPEN. Nimm "wahl". "eingabe" nur, wenn die Lösung eine Zahl ist (Silben zählen, Buchstaben zählen) - das Eingabefeld hat nur Ziffern. Keine "teilschritte".
+D2. KURZE ANTWORTEN. Drei oder vier, jede ein einzelner Buchstabe, Laut oder ein Wort. Beim Artikel genau drei: der, die, das.
+D3. BEKANNTE WÖRTER. Nur Wörter, die ein Kind in der 1. und 2. Klasse kennt: Ball, Tor, Hose, Sofa, Maus, Oma, Tomate. Bei Laut-Aufgaben lautgetreue Wörter, die man schreibt, wie man sie spricht - kein ie, kein Dehnungs-h, kein ß.
+D4. DAS ZIELWORT IN ANFÜHRUNGSZEICHEN: Mit welchem Laut beginnt „Mond"? Keine Unterstriche und keine Emojis in der Frage - die Vorlesestimme spricht sie als Wörter aus und verrät oder verwirrt.
+D5. NICHTS, WAS DAS VORLESEN VERRÄT. Steht die Lösung wörtlich und allein in der Frage, hört das Kind sie nur heraus. Rechtschreib-Auswahl wie „Hund" gegen „Hunt" ist dagegen gut - beides klingt gleich, das Kind muss hinschauen.
+D6. LAUT UND BUCHSTABE NICHT VERWECHSELN. „Schuh" beginnt mit dem Laut „Sch", nicht mit „S". Antworten, die nur wegen dieser Verwechslung falsch sind, gehören nicht in die Auswahl.
+D7. MERKMALE: anlaut, inlaut, endlaut, selbstlaute, buchstaben gross klein, silben zaehlen, silben zusammensetzen, reime, nomen erkennen, artikel, grossschreibung nomen, satzanfang gross, einzahl mehrzahl.
+D8. KEINE AUFGABE HÄNGT AN EINEM NAMEN. Kommt ein Kind vor, heißt es Leon, Theo, Paul, Helena oder Xaver - und die Lösung darf nie davon abhängen, wie der Name geschrieben wird.
+D9. BILDER meist leer. "menge" nur, wenn wirklich gezählt wird.
+
+` : ""}DER LEHRPLAN (LehrplanPLUS Bayern)
 ${faecher}
 
 DEINE REGELN
