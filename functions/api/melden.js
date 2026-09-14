@@ -16,18 +16,109 @@ import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { antwortErzeugen } from "./_antwort.js";
 
 // Damit ein offener Bereich nicht zur Kostenfalle wird: hoechstens so viele
-// sofortige Antworten je Kind und Stunde. Danach bleibt die Meldung normal
-// liegen - nur ohne Sofortantwort.
-const ANTWORTEN_PRO_STUNDE = 12;
+// sofortige Antworten je Kind. Danach bleibt die Meldung normal liegen - nur
+// ohne Sofortantwort.
+//
+// Helena am 14.09.2026 (v4534cdwsc): "Bitte repariere die Seite, sodass nicht
+// immer nur die gleiche Antwort kommt." Sie hatte recht, und die Ursache stand
+// genau hier: Am 14.09. zwischen 13:22 und 13:43 hat sie ein echtes Gespraech
+// gefuehrt - zwoelf Fragen, zwoelf Antworten - und ab 13:44 lief sie gegen die
+// Stundengrenze. Fuenfmal hintereinander kam derselbe Satz, wortgleich, in
+// derselben Sekunde. Fuer sie sah das aus wie eine kaputte Seite.
+//
+// Zwoelf ist fuer ein Gespraech zu wenig. Die Stundengrenze steht darum auf 25;
+// dafuer gibt es jetzt zusaetzlich eine TAGESGRENZE, die es vorher gar nicht
+// gab. Unterm Strich kann ein Kind damit weniger Antworten am Tag ausloesen als
+// vorher (80 statt 12*24), das Gespraech reisst aber nicht mehr mittendrin ab.
+const ANTWORTEN_PRO_STUNDE = 25;
+const ANTWORTEN_PRO_TAG = 80;
 
+// Gibt zurueck, WARUM nicht - der Unterschied ist fuer das Kind wichtig.
+// "ok" | "stunde" | "tag"
 async function darfAntworten(env, kind) {
-  const stunde = new Date().toISOString().slice(0, 13);
-  const schluessel = "antwortzaehler:" + kind + ":" + stunde;
-  let n = 0;
-  try { n = Number(await env.PAUL_KV.get(schluessel)) || 0; } catch (e) {}
-  if (n >= ANTWORTEN_PRO_STUNDE) return false;
-  try { await env.PAUL_KV.put(schluessel, String(n + 1), { expirationTtl: 7200 }); } catch (e) {}
-  return true;
+  const jetzt = new Date();
+  const stunde = jetzt.toISOString().slice(0, 13);
+  const tag = jetzt.toISOString().slice(0, 10);
+  const sS = "antwortzaehler:" + kind + ":" + stunde;
+  const sT = "antwortzaehler-tag:" + kind + ":" + tag;
+  let n = 0, m = 0;
+  try { n = Number(await env.PAUL_KV.get(sS)) || 0; } catch (e) {}
+  try { m = Number(await env.PAUL_KV.get(sT)) || 0; } catch (e) {}
+  if (m >= ANTWORTEN_PRO_TAG) return "tag";
+  if (n >= ANTWORTEN_PRO_STUNDE) return "stunde";
+  try { await env.PAUL_KV.put(sS, String(n + 1), { expirationTtl: 7200 }); } catch (e) {}
+  try { await env.PAUL_KV.put(sT, String(m + 1), { expirationTtl: 172800 }); } catch (e) {}
+  return "ok";
+}
+
+// Wie viele Minuten noch, bis die Stundengrenze weiterzaehlt? Bewusst als
+// Minuten und nicht als Uhrzeit: der Zaehler laeuft nach UTC, eine Uhrzeit
+// waere auf dem Handy der Kinder um zwei Stunden falsch. Minuten stimmen immer.
+function minutenBisZurNaechstenStunde() {
+  const j = new Date();
+  return Math.max(1, 60 - j.getUTCMinutes());
+}
+
+// Wenn keine echte Antwort zustande kam, darf wenigstens nicht zweimal
+// dasselbe dastehen. Das Kind soll sehen: da ist etwas passiert, und zwar
+// etwas anderes als beim letzten Mal.
+function ersatzText(grund, faden) {
+  // Wie viele Ersatzantworten stehen AM STUECK am Ende des Fadens? Danach
+  // richtet sich die Wortwahl - beim zweiten Mal wird sie deutlicher als beim
+  // ersten. Gezaehlt wird nur die laufende Serie, nicht der ganze Faden: kam
+  // dazwischen eine richtige Antwort, faengt die Zaehlung wieder bei null an.
+  let schon = 0;
+  const v = faden.verlauf || [];
+  for (let i = v.length - 1; i >= 0; i--) {
+    if (v[i].von !== "werkstatt") continue;
+    if (!v[i].automatisch) break;
+    schon++;
+  }
+
+  if (grund === "stunde") {
+    const min = minutenBisZurNaechstenStunde();
+    const wann = min === 1 ? "In einer Minute" : "In etwa " + min + " Minuten";
+    const varianten = [
+      "Ich muss kurz Luft holen. \u23f3\n\n" +
+        "Wir haben in dieser Stunde schon richtig viel hin und her geschrieben, " +
+        "und mehr Antworten am Stueck schafft die Werkstatt gerade nicht. " +
+        wann + " kann ich dir wieder richtig antworten.\n\n" +
+        "Deine Nachricht ist da und geht nicht verloren. Schreib ruhig weiter \u2013 " +
+        "ich lese alles, sobald es wieder geht.",
+      "Immer noch Pause, tut mir leid. \ud83d\ude14\n\n" +
+        "Das liegt nicht an dir und auch nicht an deiner Nachricht: Ich darf pro " +
+        "Stunde nur eine bestimmte Zahl Antworten schreiben, und die ist gerade " +
+        "aufgebraucht. " + wann + " geht es weiter.\n\n" +
+        "Alles, was du bis dahin schreibst, steht nachher trotzdem hier.",
+      "Ich bin noch in der Zwangspause. \u23f3 " + wann + " bin ich wieder da.\n\n" +
+        "Du musst nichts noch einmal schreiben \u2013 dein Faden ist vollstaendig, " +
+        "ich lese ihn von oben, wenn es weitergeht.",
+    ];
+    return varianten[Math.min(schon, varianten.length - 1)];
+  }
+
+  if (grund === "tag") {
+    return "Fuer heute ist mein Antwort-Vorrat leer. \ud83c\udf19\n\n" +
+      "Wir haben heute wirklich viel geschrieben. Morgen kann ich dir wieder " +
+      "antworten \u2013 und deine Nachricht liegt bis dahin sicher in der " +
+      "Werkstatt, sie geht nicht verloren.";
+  }
+
+  // Kein Zaehler, sondern wirklich eine Stoerung.
+  const varianten = [
+    "Angekommen! \u2705 Deine Meldung liegt in der Werkstatt.\n\n" +
+      "Gerade ist bei mir etwas schiefgegangen, darum kann ich dir nicht " +
+      "gleich richtig antworten. Deine Nachricht ist trotzdem da. " +
+      "Schau spaeter nochmal in diesen Faden.",
+    "Schon wieder ich mit derselben Panne \u2013 entschuldige. \ud83d\udd27\n\n" +
+      "Bei mir hakt etwas, und ich bekomme keine richtige Antwort zusammen. " +
+      "Das ist mein Fehler, nicht deiner. Deine Nachrichten sind alle da und " +
+      "werden gelesen.",
+    "Es hakt immer noch bei mir. \ud83d\udd27\n\n" +
+      "Schreib bitte nicht noch einmal dasselbe \u2013 alles ist angekommen. " +
+      "Sobald es wieder laeuft, findest du die Antwort hier im Faden.",
+  ];
+  return varianten[Math.min(schon, varianten.length - 1)];
 }
 
 // Die Werkstatt antwortet selbst - im selben Aufruf, damit das Kind die
@@ -36,7 +127,8 @@ async function darfAntworten(env, kind) {
 async function sofortAntworten(env, faden, kind, text, bild) {
   const nr = faden.verlauf.length;
   let antwort = null;
-  if (await darfAntworten(env, kind)) {
+  const grund = await darfAntworten(env, kind);
+  if (grund === "ok") {
     antwort = await antwortErzeugen(env, {
       kind, text, bild, seite: faden.seite, geraet: faden.geraet,
       verlauf: faden.verlauf.slice(0, -1),
@@ -46,10 +138,8 @@ async function sofortAntworten(env, faden, kind, text, bild) {
     ? { von: "werkstatt", text: antwort, zeit: new Date().toISOString(),
         hatBild: false, nr, vonKi: true }
     : { von: "werkstatt", nr, hatBild: false, zeit: new Date().toISOString(),
-        automatisch: true,
-        text: "Angekommen! \u2705 Deine Meldung liegt in der Werkstatt.\n\n" +
-              "Gerade konnte ich dir nicht gleich richtig antworten \u2013 aber sie ist da " +
-              "und geht nicht verloren. Schau spaeter nochmal in diesen Faden." };
+        automatisch: true, grund: grund === "ok" ? "stoerung" : grund,
+        text: ersatzText(grund === "ok" ? "stoerung" : grund, faden) };
   faden.verlauf.push(eintrag);
   faden.status = "beantwortet";
   faden.ungelesenKind = false;   // das Kind sieht die Antwort ja sofort
@@ -109,13 +199,22 @@ export async function onRequestPost(context) {
       return json(200, { ok: true, faden });
     }
 
-    const text = String(daten.text || "").trim().slice(0, 1500);
+    // Eltern/Werkstatt antworten als "werkstatt", das Kind unter seinem Namen.
+    const von = alsKind && (!alsEltern || daten.alsKind) ? kind : "werkstatt";
+
+    // Warum die Grenze vom Absender abhaengt: Eine Kindernachricht ist ein paar
+    // Saetze lang, 1500 Zeichen reichen dafuer dreimal. Ein Baubericht der
+    // Werkstatt ist laenger - und der wurde hier bis zum 14.09.2026 mitten im
+    // Wort abgeschnitten. Helena hat genau das gemeldet (wjj9vuza7x): "Deine
+    // Antworten brechen mitten im Satz ab." Ihr Bericht endete auf "Vorher war
+    // es ander", Pauls auf "Dein Foto-Knopf und dein". Die Sofortantwort der
+    // KI war nie betroffen, die laeuft an dieser Stelle vorbei - deshalb sah es
+    // so willkuerlich aus.
+    const text = kuerzen(String(daten.text || "").trim(), von === "werkstatt" ? 6000 : 1500);
     const bild = typeof daten.bild === "string" ? daten.bild : "";
     if (!text && !bild) return json(400, { ok: false, fehler: "Die Nachricht war leer." });
     if (bild.length > MAX_BILD) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
 
-    // Eltern/Werkstatt antworten als "werkstatt", das Kind unter seinem Namen.
-    const von = alsKind && (!alsEltern || daten.alsKind) ? kind : "werkstatt";
     const nr = faden.verlauf.length;
     if (bild) await env.PAUL_KV.put("meldung-bild:" + faden.id + ":" + nr, bild);
 
@@ -138,7 +237,7 @@ export async function onRequestPost(context) {
   /* --- Ein neuer Faden --- */
   if (!alsKind) return json(401, { ok: false, fehler: "Nur die Kinder melden." });
 
-  const text = String(daten.text || "").trim().slice(0, 1500);
+  const text = kuerzen(String(daten.text || "").trim(), 1500);
   const bild = typeof daten.bild === "string" ? daten.bild : "";
   if (!text && !bild) return json(400, { ok: false, fehler: "Die Meldung war leer." });
   if (bild.length > MAX_BILD) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
@@ -253,6 +352,16 @@ async function listeHolen(env) {
 
 async function liste_speichern(env, liste) {
   await env.PAUL_KV.put(LISTE, JSON.stringify(liste.slice(0, MAX)));
+}
+
+// Kuerzt am Wortende, nicht mitten im Wort - und sagt dazu, dass gekuerzt
+// wurde. Ein Text, der einfach aufhoert, liest sich fuer ein Kind wie ein
+// Fehler; ein Text mit "(gekuerzt)" liest sich wie eine Ansage.
+function kuerzen(t, grenze) {
+  if (t.length <= grenze) return t;
+  const stumpf = t.slice(0, grenze - 14);
+  const luecke = stumpf.lastIndexOf(" ");
+  return (luecke > grenze * 0.6 ? stumpf.slice(0, luecke) : stumpf) + " … (gekuerzt)";
 }
 
 function neueId() {
