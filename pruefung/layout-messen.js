@@ -16,7 +16,8 @@
  *
  * Gemessen wird, was ein Kind merkt:
  *  - muss es scrollen, um weiterzukommen?
- *  - trifft der Finger die Knöpfe? (44 Pixel, Apple- und Google-Richtwert)
+ *  - trifft der Finger die Knöpfe? (44 Pixel, Apple- und Google-Richtwert -
+ *    mit der Maus reichen 24, siehe MINDEST weiter unten)
  *  - rutscht etwas seitlich aus dem Bild?
  *  - ist Schrift zu klein zum Lesen?
  */
@@ -83,6 +84,24 @@ async function layoutMessen(opt) {
 
   var zuKlein = [], unterDemRand = [], zuSchmal = [], winzigeSchrift = [];
 
+  // Wie gross ein Tippziel mindestens sein muss - und das haengt davon ab,
+  // womit gezielt wird.
+  //
+  // 44 px sind der Richtwert fuer den FINGER (Apple, Google), und genau dafuer
+  // ist beruehrung.css gemacht: "Am Laptop mit Maus ist das unnötig, deshalb
+  // greift alles hier ausschliesslich bei (pointer: coarse)." Die Messung hat
+  // trotzdem ueberall 44 verlangt - und meldete am Laptop reihenweise Knoepfe,
+  // die dort voellig in Ordnung sind. Helenas Vokabeltrainer kam so auf
+  // 18 "Fehler" in jeder Etappe, alle unecht. Wer so eine Liste dreimal liest,
+  // liest sie beim vierten Mal nicht mehr - und uebersieht den echten Befund
+  // darin (bei ihr: eine 16 px hohe Aufklappzeile).
+  //
+  // Mit der Maus gilt darum der Zeigegeraet-Wert aus WCAG 2.2 (Target Size
+  // Minimum, 2.5.8): 24 px. Darunter wird auch mit der Maus danebengeklickt -
+  // und in Pauls Werkstatt sass genau dort ein 19 px breites Kreuz, das ein
+  // Spiel wegwirft.
+  var MINDEST = opt.beruehrung ? 44 : 24;
+
   // Was das Kind drücken MUSS, um weiterzukommen.
   var HAUPTKNOPF = ".next, .start, .schicken, .weiter, #weiter, #startBtn, #chk, #again," +
                    " [type='submit'], button.primaer, .cta";
@@ -92,8 +111,8 @@ async function layoutMessen(opt) {
   Array.prototype.forEach.call(tippbar, function (el) {
     if (!sichtbar(el)) return;
     var r = el.getBoundingClientRect();
-    if (r.height < 44) zuKlein.push(text(el) + " · " + Math.round(r.height) + "px hoch");
-    if (r.width  < 44 && r.height < 44) zuSchmal.push(text(el) + " · " + Math.round(r.width) + "px breit");
+    if (r.height < MINDEST) zuKlein.push(text(el) + " · " + Math.round(r.height) + "px hoch");
+    if (r.width  < MINDEST && r.height < 44) zuSchmal.push(text(el) + " · " + Math.round(r.width) + "px breit");
     // Nur die HAUPTknöpfe zählen. Dass eine Spieleliste weiterscrollt, ist
     // normal; dass "Weiter" oder "Los geht's" unter dem Rand liegt, nicht.
     if (r.top >= H && el.matches(HAUPTKNOPF))
