@@ -974,7 +974,8 @@
 
   /* Pauls Wuensche kommen doppelt in den Topf - er hat ausdruecklich danach
      gefragt. Zweimal derselbe Kunde hintereinander aber nicht.
-     genKopf seit 12.09.2026 (Meldung zjqgkp3xmg). */
+     genKopf seit 12.09.2026 (Meldung zjqgkp3xmg),
+     genUmentscheider seit 14.09.2026 (Meldung 4gq38rd3ts). */
   var GENS=[genErwiegen,genWunsch,genEilig,genKopf,genUmentscheider,
             genWaage,genUmrechnen,genOrdnen,genUeberschlag,
             genErwiegen,genWunsch,genEilig,genKopf,genUmentscheider];
@@ -1183,6 +1184,7 @@
     start:document.getElementById("startScreen"), market:document.getElementById("marketScreen"),
     shop:document.getElementById("shopScreen"), play:document.getElementById("playScreen"),
     end:document.getElementById("endScreen"), diary:document.getElementById("diaryScreen"),
+    bonus:document.getElementById("bonusScreen"),
     rankEmj:document.getElementById("rankEmj"), rankName:document.getElementById("rankName"),
     rankSub:document.getElementById("rankSub"), xpFill:document.getElementById("xpFill"),
     streak:document.getElementById("streakVal"), earn:document.getElementById("earnVal"),
@@ -1192,7 +1194,95 @@
     fb:document.getElementById("fb"), next:document.getElementById("nextBtn"),
     pTaler:document.getElementById("pTaler")
   };
-  function show(elm){ [el.start,el.market,el.shop,el.play,el.end,el.diary].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
+  function show(elm){ [el.start,el.market,el.shop,el.play,el.end,el.diary,el.bonus].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
+
+  /* ================= Bonusrunde (Paul, 14.09.2026, Meldung 4gq38rd3ts) =========
+     Paul: "das bei jeden 100 kunde eine bonus runde kommt und man in 2 minuten
+     ganz viele taler bekommt bei denn talern soll es das doppelte sein wie
+     sonst immer und es soll NICHT nur 12 aufgaben sein sondern undendlich viele"
+
+     Also: Bei jedem 100. bedienten Kunden kommt eine Runde ueber zwei Minuten,
+     ohne feste Kundenzahl - es geht weiter, solange die Zeit laeuft - und jeder
+     Kunde zahlt das Doppelte.
+
+     Paul hatte ich gefragt, was ein Verrechnen kosten soll. Gebaut ist die
+     Antwort, die zu den Bauregeln passt: gar nichts. Es geht einfach zum
+     naechsten Kunden, und waehrend die Erklaerung dasteht, HAELT DIE UHR AN -
+     Lesen und Verstehen darf nie Zeit kosten. Es gibt nichts zu verlieren,
+     nur etwas zu gewinnen; Druck ueber Verlustangst gehoert nicht ins Spiel.
+
+     Die faellige Runde merkt sich rek.bonusStufe. Damit geht sie auch dann
+     nicht verloren, wenn der 100. Kunde beim Fehlerueben faellt oder Paul die
+     Seite zumacht - sie kommt dann beim naechsten Markttag. */
+  var BRUNDE_MS=120000, BRUNDE_ALLE=100;
+  var brAktiv=false, brVorbei=false, brRest=0, brUhr=null, brKunden=0, brTaler=0;
+  var brDanach=null, brKnopf=null;
+
+  function brReif(){ return Math.floor(rek.kunden/BRUNDE_ALLE) > (rek.bonusStufe||0); }
+  function brMalen(){
+    var bar=document.getElementById("bonusBar");
+    if(!brAktiv){ bar.className="bonusbar hidden"; return; }
+    bar.className="bonusbar";
+    var sek=Math.ceil(brRest/1000), min=Math.floor(sek/60);
+    document.getElementById("bonusUhr").textContent=brVorbei?"Zeit um":(min+":"+zwei(sek-min*60));
+    document.getElementById("bonusInfo").textContent=brVorbei
+      ? "Diesen Kunden machst du noch fertig ✓"
+      : "doppelte Taler \ud83e\ude99\ud83e\ude99";
+  }
+  function brUhrAn(){
+    if(brUhr||brVorbei) return;
+    var zuletzt=Date.now();
+    brUhr=setInterval(function(){
+      var jetzt=Date.now(); brRest-=(jetzt-zuletzt); zuletzt=jetzt;
+      if(brRest<=0){ brRest=0; brVorbei=true; brUhrAus(); tone(523,.16,0,"triangle",.12); }
+      brMalen();
+    },250);
+    brMalen();
+  }
+  function brUhrAus(){ if(brUhr){ clearInterval(brUhr); brUhr=null; } }
+
+  function brAnsagen(danach){
+    brDanach=danach;
+    var n=Math.floor(rek.kunden/BRUNDE_ALLE)*BRUNDE_ALLE;
+    document.getElementById("bonusHero").textContent="\ud83d\udcaf";
+    document.getElementById("bonusTitle").textContent="Dein "+n+". Kunde!";
+    document.getElementById("bonusText").innerHTML=
+      "Der ganze Markt jubelt dir zu \u2013 jetzt kommt deine <b>Bonusrunde</b>:<br>"
+      +"<b>2 Minuten</b> lang so viele Kunden, wie du schaffst. Keine 8, keine 12 \u2013 "
+      +"es h\u00f6rt erst auf, wenn die Zeit um ist.<br>"
+      +"Und jeder Kunde zahlt <b>doppelt so viele Taler</b> wie sonst. \ud83e\ude99\ud83e\ude99<br>"
+      +"Verlieren kannst du nichts: Verrechnest du dich, geht es einfach weiter \u2013 "
+      +"und solange eine Erkl\u00e4rung dasteht, wartet die Uhr auf dich.";
+    document.getElementById("bonusSummary").className="summary hidden";
+    document.getElementById("bonusBtn").textContent="Los geht\u2019s! \ud83c\udf89";
+    brKnopf=brStarten;
+    show(el.bonus); window.scrollTo(0,0); confetti(200);
+    sBuy();
+  }
+  function brStarten(){
+    rek.bonusStufe=Math.floor(rek.kunden/BRUNDE_ALLE); saveRek();
+    brAktiv=true; brVorbei=false; brKunden=0; brTaler=0; brRest=BRUNDE_MS;
+    streak=0;
+    brUhrAn();
+    cur=newQuestion(); renderQuestion(); show(el.play); window.scrollTo(0,0);
+  }
+  function brBeenden(){
+    brUhrAus(); brAktiv=false; brVorbei=false; brMalen();
+    document.getElementById("bonusHero").textContent=brKunden>=6?"\ud83c\udfc6":"\ud83c\udf89";
+    document.getElementById("bonusTitle").textContent="Bonusrunde vorbei!";
+    document.getElementById("bonusText").innerHTML= brKunden
+      ? "In zwei Minuten <b>"+brKunden+" Kunden</b> bedient \u2013 und jeder hat doppelt gezahlt. "
+        +"So flink im Kopf mit Kilo und Gramm: stark! \ud83d\udcaa"
+      : "Diesmal hat die Zeit nicht gereicht \u2013 macht gar nichts. "
+        +"Die n\u00e4chste Bonusrunde kommt bestimmt. \ud83d\ude42";
+    document.getElementById("bonusKundenV").textContent=brKunden;
+    document.getElementById("bonusTalerV").textContent="+"+brTaler;
+    document.getElementById("bonusSummary").className="summary";
+    document.getElementById("bonusBtn").textContent="Weiter am Stand \u2192";
+    brKnopf=function(){ var f=brDanach; brDanach=null; if(f) f(); };
+    show(el.bonus); window.scrollTo(0,0); confetti(brKunden>=6?220:140);
+  }
+  document.getElementById("bonusBtn").addEventListener("click",function(){ sClick(); if(brKnopf) brKnopf(); });
 
   function paintRank(){
     var xp=num(LS.xp),rk=rankFor(xp);
