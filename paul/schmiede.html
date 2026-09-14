@@ -939,48 +939,88 @@
       var items = mische(moeglich).map(function(text){
         return { text:String(text), korrekt: String(text) === String(a.richtig), weg:false, wack:Math.random()*6 };
       });
-      var hoehen = mische([100, 155, 210, 140, 185]).slice(0, items.length);
-      var x = worldX;
-      ctx.font = "600 18px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
-      items.forEach(function(it, i){
-        var maxB = Math.min(230, Math.max(150, W * 0.55));
-        it.zeilen = umbrechen(it.text, maxB - 26);
-        var breiteste = 0;
-        it.zeilen.forEach(function(z){ breiteste = Math.max(breiteste, ctx.measureText(z).width); });
-        it.w = Math.min(maxB, Math.max(74, breiteste + 26));
-        it.h = 40 + (it.zeilen.length - 1) * 21;
-        it.x = x;
-        it.y = bodenY - hoehen[i] - it.h;
-        x += it.w + 58;
-      });
       station = { art:"ballons", items:items, aufgabe:a, geloest:false,
-                  startX: worldX, torX: x + 90 };
+                  startX: worldX, torX: worldX + 400 };
+      // Erst die Frage hinschreiben, dann die Ballons setzen: Wie weit die
+      // Fragekarte oben herunterreicht, haengt an der Laenge der Frage - und
+      // ein Ballon, der dahinter verschwindet, ist fuer das Kind nicht da.
+      frageZeigen();
+      ballonsAusrichten(worldX);
     } else {
       // Aufgaben zum Eintippen kann man nicht anspringen. Sie werden zu
       // einem Tor, das aufgeht, wenn die Zahl stimmt.
       station = { art:"tor", items:[], aufgabe:a, geloest:false,
                   startX: worldX, torX: worldX + 120, offen:false, gefragt:false };
+      frageZeigen();
     }
-    frageZeigen();
     anzeigenAuffrischen();
   }
 
-  function umbrechen(text, maxB){
-    var worte = String(text).split(/\s+/), zeilen = [], jetzt = "";
+  function ballonsAusrichten(worldX){
+    var items = station.items;
+    var hoehen = mische([100, 155, 210, 140, 185]).slice(0, items.length);
+    var kopf = $("kopf");
+    var unten = kopf ? kopf.getBoundingClientRect().bottom + 10 : 150;
+    var x = worldX;
+    items.forEach(function(it, i){
+      beschriften(it, Math.min(230, Math.max(150, W * 0.55)));
+      it.x = x;
+      // Nach unten ausweichen, nie nach oben: weiter oben kaeme die Figur
+      // auch mit Doppelsprung nicht mehr hin.
+      it.y = Math.max(unten, bodenY - hoehen[i] - it.h);
+      x += it.w + 58;
+    });
+    station.torX = x + 90;
+  }
+
+  /* Wie viel Text auf einen Ballon passt, haengt vom Spiel ab: In Mathe steht
+     dort "42", in Deutsch "gestreckter Winkel" oder ein halber Satz. Zwei
+     Antworten, die beide hinten abgeschnitten werden, sehen gleich aus - dann
+     raet das Kind, statt zu lesen. Deshalb wird erst die Schrift kleiner und
+     nur im aeussersten Fall gekuerzt. Unter 13 px geht es nicht: Was man nicht
+     lesen kann, hilft auch nicht. */
+  var SCHRIFTEN = [ {px:18, zeilen:2}, {px:15, zeilen:3}, {px:13, zeilen:3} ];
+
+  function beschriften(it, maxB){
+    var innen = maxB - 26;
+    for (var s=0; s<SCHRIFTEN.length; s++){
+      var stufe = SCHRIFTEN[s];
+      ctx.font = "600 " + stufe.px + "px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+      var umbruch = umbrechen(it.text, innen, stufe.zeilen);
+      if (!umbruch.passt && s < SCHRIFTEN.length - 1) continue;
+      it.zeilen = umbruch.passt ? umbruch.liste : kuerzen(umbruch.liste, innen);
+      it.schrift = stufe.px;
+      it.abstand = Math.round(stufe.px * 1.18);
+      var breiteste = 0;
+      it.zeilen.forEach(function(z){ breiteste = Math.max(breiteste, ctx.measureText(z).width); });
+      it.w = Math.min(maxB, Math.max(74, breiteste + 26));
+      it.h = Math.max(40, stufe.px + 22) + (it.zeilen.length - 1) * it.abstand;
+      return;
+    }
+  }
+
+  // Bricht den Text um und sagt dazu, ob er in die erlaubten Zeilen gepasst hat.
+  function umbrechen(text, maxB, maxZeilen){
+    var worte = String(text).split(/\s+/), liste = [], jetzt = "";
     for (var i=0;i<worte.length;i++){
       var probe = jetzt ? jetzt + " " + worte[i] : worte[i];
-      if (ctx.measureText(probe).width > maxB && jetzt){ zeilen.push(jetzt); jetzt = worte[i]; }
+      if (ctx.measureText(probe).width > maxB && jetzt){ liste.push(jetzt); jetzt = worte[i]; }
       else jetzt = probe;
-      if (zeilen.length >= 2) break;
     }
-    if (jetzt) zeilen.push(jetzt);
-    if (zeilen.length > 2) zeilen = zeilen.slice(0, 2);
-    // Passt es immer noch nicht, lieber abschneiden als ueberlaufen.
-    if (zeilen.length === 2 && ctx.measureText(zeilen[1]).width > maxB){
-      while (zeilen[1].length > 3 && ctx.measureText(zeilen[1] + "…").width > maxB) zeilen[1] = zeilen[1].slice(0,-1);
-      zeilen[1] += "…";
+    if (jetzt) liste.push(jetzt);
+    var passt = liste.length <= maxZeilen;
+    liste.forEach(function(z){ if (ctx.measureText(z).width > maxB) passt = false; });
+    return { liste: liste.slice(0, Math.max(1, maxZeilen)), passt: passt };
+  }
+
+  // Letzte Rettung: lieber abschneiden als ueber den Ballon hinauslaufen.
+  function kuerzen(liste, maxB){
+    var i = liste.length - 1;
+    while (liste[i].length > 3 && ctx.measureText(liste[i] + "…").width > maxB){
+      liste[i] = liste[i].slice(0, -1);
     }
-    return zeilen;
+    liste[i] += "…";
+    return liste;
   }
 
   function frageZeigen(){
@@ -1407,10 +1447,10 @@
         ctx.beginPath(); ctx.moveTo(sx + it.w/2, by + it.h); ctx.lineTo(sx + it.w/2, by + it.h + 26); ctx.stroke();
         pille(sx, by, it.w, it.h, "rgba(255,255,255,.96)", "#4f46e5");
         ctx.fillStyle = "#1e293b";
-        ctx.font = "600 18px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
+        ctx.font = "600 " + it.schrift + "px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        var oben = by + it.h/2 - (it.zeilen.length-1)*10.5;
-        for (var z=0; z<it.zeilen.length; z++) ctx.fillText(it.zeilen[z], sx + it.w/2, oben + z*21);
+        var oben = by + it.h/2 - (it.zeilen.length-1)*it.abstand/2;
+        for (var z=0; z<it.zeilen.length; z++) ctx.fillText(it.zeilen[z], sx + it.w/2, oben + z*it.abstand);
         ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
       }
     }
