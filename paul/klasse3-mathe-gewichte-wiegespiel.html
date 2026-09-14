@@ -199,6 +199,24 @@
   .tafel-w.neu{background:linear-gradient(150deg,#fff4d6,#ffe6ad);border-color:#e0b463;}
   .tafel-leer{font-size:12.5px;color:#a4c3af;font-weight:600;line-height:1.45;}
 
+  /* ===== Bonusrunde (Pauls Wunsch, 14.09.2026, Meldung 4gq38rd3ts) =====
+     Paul: "das bei jeden 100 kunde eine bonus runde kommt und man in 2 minuten
+     ganz viele taler bekommt ... es soll NICHT nur 12 aufgaben sein sondern
+     undendlich viele"
+     Die Uhr hier schenkt nur: zwei Minuten lang doppelte Taler. Sie nimmt
+     nichts weg, und ein Fehler kostet keine Sekunde - beim Lesen der
+     Erklaerung haelt sie sogar an. Ein Countdown, an dem etwas verfaellt,
+     gehoert nach den Bauregeln nicht in dieses Spiel. */
+  .bonusbar{display:flex;align-items:center;gap:9px;background:linear-gradient(150deg,#fff6df,#ffe1ad);
+    border:2px solid #f2c877;border-radius:16px;padding:9px 13px;margin-bottom:11px;box-shadow:var(--shadow);}
+  .bonusbar.hidden{display:none;}
+  .bb-e{font-size:22px;line-height:1;flex:none;}
+  .bb-t{flex:1;min-width:0;}
+  .bb-n{font-family:var(--round);font-weight:800;font-size:14px;color:#8a5b12;letter-spacing:.05em;}
+  .bb-i{font-size:12px;font-weight:700;color:#a2741f;margin-top:1px;}
+  .bb-u{font-family:var(--round);font-weight:800;font-size:21px;color:#8a5b12;background:#fff;
+    border:1px solid #f2d488;border-radius:12px;padding:6px 11px;min-width:76px;text-align:center;flex:none;}
+
   canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60;}
   @media(max-width:420px){ .opt{font-size:17px;} .title{font-size:17px;} .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);} }
   @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
@@ -286,6 +304,11 @@
       </div>
       <div class="xpbar"><div class="xpfill" id="xpFill"></div></div>
     </div>
+    <div class="bonusbar hidden" id="bonusBar">
+      <div class="bb-e">🎉</div>
+      <div class="bb-t"><div class="bb-n">BONUSRUNDE</div><div class="bb-i" id="bonusInfo">doppelte Taler 🪙🪙</div></div>
+      <div class="bb-u" id="bonusUhr">2:00</div>
+    </div>
     <div class="chips">
       <div class="chip"><div class="big" id="streakVal">0</div><div class="lbl">🔥 Serie</div></div>
       <div class="chip"><div class="big" id="earnVal">+0</div><div class="lbl">🪙 heute</div></div>
@@ -316,6 +339,17 @@
     <button class="big-btn" id="toMarketBtn">🏪 Zurück zum Markt</button>
     <button class="ghost-btn" id="againBtn">🛒 Gleich weiter bedienen</button>
     <button class="ghost-btn" id="trainBtn">🔁 Fehler üben (<span id="mistCount">0</span>)</button>
+  </section>
+
+  <section id="bonusScreen" class="hidden panel">
+    <div class="hero" id="bonusHero">💯</div>
+    <h2 id="bonusTitle">Deine Bonusrunde!</h2>
+    <p id="bonusText"></p>
+    <div class="summary hidden" id="bonusSummary">
+      <div class="sbox"><div class="sv" id="bonusKundenV">0</div><div class="sl">👥 Kunden</div></div>
+      <div class="sbox"><div class="sv" id="bonusTalerV">+0</div><div class="sl">🪙 verdient</div></div>
+    </div>
+    <button class="big-btn" id="bonusBtn">Los geht’s! 🎉</button>
   </section>
 </div>
 
@@ -533,7 +567,8 @@
 
   /* ---- Rekorde und Tagebuch ---- */
   function loadRek(){
-    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0,kunden:0,eilig:0,kopf:0};
+    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0,kunden:0,eilig:0,kopf:0,
+           um:0,bonusStufe:0};
     try{ var s=JSON.parse(gi(LS.rekorde,"null"));
       if(s&&typeof s==="object") for(var k in d) if(typeof s[k]==="number") d[k]=s[k];
     }catch(e){}
@@ -672,6 +707,9 @@
   function ivFertig(){
     if(cur._fertig) return;
     if(summe(cur._legt)!==cur.ziel||!cur._legt.length) return;   /* Knopf ist sonst aus */
+    /* Der Umentscheider meldet sich genau jetzt - im Moment, in dem Paul
+       glaubt, fertig zu sein. Genau das hat er sich gewuenscht. */
+    if(cur.um&&!cur._umDurch){ ivUmentscheiden(); return; }
     cur._fertig=true; ivRender();
     try{ window.lernstand && window.lernstand.antwort(true, "gewichte legen"); }catch(e){}
     ivBuchen(); onCorrect();
@@ -679,20 +717,26 @@
   /* "Nicht aufgegeben" heisst hier: es ging nicht auf Anhieb auf, ein Stueck
      musste wieder runter - und Paul ist trotzdem drangeblieben. */
   function ivBuchen(){
-    var n=cur._legt.length, dran=cur._abgenommen>0?1:0;
+    /* "Drangeblieben" heisst: es ging nicht auf Anhieb auf. Beim Umentscheider
+       zaehlt darum nur, was VOR seinem Sinneswandel passiert ist - hinterher
+       muss bei "250 g weniger" ja jeder etwas abnehmen. */
+    var n=cur._legt.length;
+    var dran=(cur._umDurch ? (cur._dranSchon?1:0) : (cur._abgenommen>0?1:0));
     rek.auftraege++; rek.gelegt+=n;
     /* Nach der KUNDENART zaehlen, nicht nach dem Zuschlag: seit es die
        Mitdenk-Kunden gibt, haben zwei Sorten einen Bonus, und "eilige Kunden
        geschafft" im Tagebuch soll weiter nur die eiligen meinen. */
     if(cur.kind==="eilig") rek.eilig++;
     if(cur.kind==="kopf") rek.kopf++;
+    if(cur.kind==="umdenk") rek.um++;
     if(cur.ziel>rek.schwer) rek.schwer=cur.ziel;
     if(n>rek.stuecke) rek.stuecke=n;
     if(dran) rek.dran++;
     saveRek();
     var d=loadDiary();
     d.push({d:heute(), t:cur.panLabel||gLabel(cur.ziel), g:cur.ziel, n:n, dran:dran,
-            eil:cur.kind==="eilig"?1:0, kop:cur.kind==="kopf"?1:0, e:cur.panLinks||"⚖️"});
+            eil:cur.kind==="eilig"?1:0, kop:cur.kind==="kopf"?1:0,
+            um:cur.kind==="umdenk"?1:0, e:cur.panLinks||"⚖️"});
     saveDiary(d);
     /* Woran sich der naechste "200 g mehr als eben"-Kunde erinnert. */
     letzteWiegung=cur.ziel;
@@ -802,10 +846,10 @@
      unter 20 g, nicht ueber 2500 g, auf 5 g glatt und mit den vorhandenen
      Stuecken zu schaffen. Sonst faellt der Kunde auf eine Wort-Bestellung
      zurueck - lieber eine leichtere Aufgabe als eine, die nicht aufgeht. */
-  function vergleichTaugt(v,vor){
-    var z=v.f(vor);
+  function zielTaugt(z){
     return z===Math.round(z) && z>=20 && z<=2500 && z%5===0 && zerlegen(z).length<=MAXST;
   }
+  function vergleichTaugt(v,vor){ return zielTaugt(v.f(vor)); }
   function genKopf(){
     var g=pick(GOODS);
     if(letzteWiegung){
@@ -828,6 +872,71 @@
       explain:"<b>"+m.w+"</b> sind <b>"+m.g+" g</b> \u2013 zum Beispiel "+zerlegen(m.g).map(gLabel).join(" + ")+"."};
   }
 
+  /* ====== Kunden, die sich umentscheiden (Paul, 14.09.2026, Meldung 4gq38rd3ts) ===
+     Paul: "Ein Kunde sagt 'Ach, mach doch lieber 250g mehr!' - dann musst du
+     dein Gewicht schnell anpassen, und das macht dich richtig flink im
+     Kopfrechnen mit Kilo und Gramm."
+
+     Er bestellt erst ganz normal. Erst wenn die Waage steht und Paul auf
+     "Passt! Kunde bedienen" tippt, faellt ihm etwas anderes ein. Die Stuecke
+     bleiben liegen - angepasst wird von dem, was schon drauf ist, und genau
+     darin steckt das Rechnen: von 800 g auf "250 g mehr" sind 1050 g.
+
+     Auf der Waagschale steht danach die AENDERUNG ("250 g mehr"), nie das
+     neue Gewicht - sonst waere es wieder nur Ablesen. Schiefstehen darf die
+     Waage weiter sichtbar. Verlieren kann man auch hier nichts: keine Uhr,
+     kein Abzug, der Zuschlag kommt hinterher obendrauf.
+
+     Grenze: nur einmal pro Kunde umentscheiden, und nur, wenn das neue
+     Gewicht auch wirklich legbar ist (zielTaugt). */
+  var UM_ZUSCHLAG=3;
+  var UM_START=[200,250,300,400,500,600,750,800,900,1000,1200,1250,1500];
+  var UMDENK=[
+    {kurz:"250 g mehr",   s:"Ach, mach doch lieber 250 g mehr!",                 f:function(a){return a+250;}},
+    {kurz:"200 g mehr",   s:"Halt, halt – leg lieber 200 g mehr drauf!",     f:function(a){return a+200;}},
+    {kurz:"100 g mehr",   s:"Oh, weißt du was: 100 g mehr bitte!",           f:function(a){return a+100;}},
+    {kurz:"50 g mehr",    s:"Ein klitzekleines bisschen mehr – 50 g mehr!",  f:function(a){return a+50;}},
+    {kurz:"500 g mehr",   s:"Ach, mach doch gleich ein halbes Kilo mehr draus!",  f:function(a){return a+500;}},
+    {kurz:"250 g weniger",s:"Moment – 250 g weniger reichen mir doch!",      f:function(a){return a-250;}},
+    {kurz:"100 g weniger",s:"Oje, das ist mir zu viel. Nimm 100 g weniger!",      f:function(a){return a-100;}},
+    {kurz:"50 g weniger", s:"Ein bisschen weniger bitte – 50 g weniger!",    f:function(a){return a-50;}},
+    {kurz:"das Doppelte", s:"Weißt du was? Nimm gleich das Doppelte!",       f:function(a){return a*2;}},
+    {kurz:"die Hälfte",s:"Oh, das ist zu viel für mich – nur die Hälfte, bitte!", f:function(a){return a/2;}},
+    {kurz:"aufs volle Kilo", s:"Mach doch bitte volle Kilo daraus – runde auf!",
+     f:function(a){ return Math.ceil((a+1)/1000)*1000; }}
+  ];
+  function genUmentscheider(){
+    var g=pick(GOODS), start=pick(UM_START);
+    var moeglich=UMDENK.filter(function(u){ return zielTaugt(u.f(start)); });
+    if(!moeglich.length) return genWunsch();       /* faellt nie an, aber sicher ist sicher */
+    var u=pick(moeglich), neu=u.f(start), txt=gLabel(start);
+    return {kind:"umdenk", mode:"waage", ziel:start, panLinks:g, panLabel:txt, geheim:false, work:"",
+      bonus:UM_ZUSCHLAG, bonusText:"Umentscheid-Zuschlag 🔄",
+      um:{kurz:u.kurz, s:u.s, ziel:neu, vorher:start},
+      bubble:"Ich hätte gern "+txt+" "+g+", bitte!",
+      speak:"Ich hätte gern "+txt+".",
+      explain:"<b>"+txt+"</b> sind "+start+" g – zum Beispiel "+zerlegen(start).map(gLabel).join(" + ")+"."};
+  }
+  function ivUmentscheiden(){
+    var u=cur.um;
+    cur._umDurch=true;
+    cur._dranSchon=cur._abgenommen>0;      /* was VOR dem Sinneswandel war */
+    cur.ziel=u.ziel;
+    cur.panZeigt=u.kurz;                   /* die Aenderung, nie das neue Gewicht */
+    cur.panLabel=gLabel(u.ziel);           /* nur fuers Tagebuch */
+    cur.bubble="🔄 "+u.s;
+    cur.speak=u.s;
+    cur.explain="Du hattest <b>"+gLabel(u.vorher)+"</b> liegen. <b>"+u.kurz+"</b> sind <b>"
+      +gLabel(u.ziel)+"</b> – zum Beispiel "+zerlegen(u.ziel).map(gLabel).join(" + ")+".";
+    el.bubble.textContent=cur.bubble;
+    el.fb.className="fb ok show";
+    el.fb.innerHTML="<b>Der Kunde überlegt es sich anders!</b> "+esc(u.s)
+      +" Rechne um und pass dein Gewicht an – was schon draufliegt, darf liegen bleiben.";
+    tone(523,.1,0,"triangle",.13); tone(660,.14,.1,"triangle",.13);
+    ivRender();
+    window.scrollTo(0,0);
+  }
+
   /* ---- Markt-Tagebuch ---- */
   function tgCard(v,c){ return '<div class="tg-card"><div class="tg-v">'+esc(v)+'</div><div class="tg-c">'+c+'</div></div>'; }
   function renderDiary(){
@@ -844,6 +953,7 @@
       +tgCard(rek.stuecke||"–","🔢 meiste Gewichtsstücke auf einmal")
       +tgCard(rek.eilig,"⏱️ eilige Kunden geschafft")
       +tgCard(rek.kopf,"🧠 selbst mitgedacht")
+      +tgCard(rek.um,"🔄 Kunden umentschieden")
       +tgCard(num(LS.best),"🔥 längste Serie")
       +'</div>';
     h+='<div class="ivlbl">📓 Deine letzten Wiege-Aufträge</div>';
@@ -853,7 +963,7 @@
     } else {
       for(var i=0;i<d.length&&i<15;i++){ var e=d[i], n=e.n||0;
         h+='<div class="tg-e"><div class="tg-emj">'+esc(e.e||"⚖️")+'</div><div class="tg-b">'
-          +'<div class="tg-t">'+esc(e.t)+(e.dran?" 💪":"")+(e.eil?" ⏱️":"")+(e.kop?" 🧠":"")+'</div>'
+          +'<div class="tg-t">'+esc(e.t)+(e.dran?" 💪":"")+(e.eil?" ⏱️":"")+(e.kop?" 🧠":"")+(e.um?" 🔄":"")+'</div>'
           +'<div class="tg-s">'+esc(e.d)+' · '+n+' Gewichtsstück'+(n===1?"":"e")+(e.dran?' · drangeblieben':'')+'</div>'
           +'</div></div>';
       }
@@ -865,8 +975,9 @@
   /* Pauls Wuensche kommen doppelt in den Topf - er hat ausdruecklich danach
      gefragt. Zweimal derselbe Kunde hintereinander aber nicht.
      genKopf seit 12.09.2026 (Meldung zjqgkp3xmg). */
-  var GENS=[genErwiegen,genWunsch,genEilig,genKopf,genWaage,genUmrechnen,genOrdnen,genUeberschlag,
-            genErwiegen,genWunsch,genEilig,genKopf];
+  var GENS=[genErwiegen,genWunsch,genEilig,genKopf,genUmentscheider,
+            genWaage,genUmrechnen,genOrdnen,genUeberschlag,
+            genErwiegen,genWunsch,genEilig,genKopf,genUmentscheider];
   var letzterGen=null;
   function newQuestion(){
     var g=pick(GENS),schutz=0;
@@ -978,6 +1089,7 @@
       +'<span><b>'+rek.auftraege+'</b> mal gewogen</span>'
       +(rek.dran?'<span><b>'+rek.dran+'</b> mal drangeblieben \ud83d\udcaa</span>':'')
       +(rek.kopf?'<span><b>'+rek.kopf+'</b> mal mitgedacht \ud83e\udde0</span>':'')
+      +(rek.um?'<span><b>'+rek.um+'</b> mal umgestellt \ud83d\udd04</span>':'')
       +'</div>'
       +'<div class="tafel-l">ZULETZT GENAU GETROFFEN</div>';
     var d=loadDiary().slice(-6).reverse();
