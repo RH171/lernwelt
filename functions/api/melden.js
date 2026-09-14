@@ -64,17 +64,22 @@ function minutenBisZurNaechstenStunde() {
 // dasselbe dastehen. Das Kind soll sehen: da ist etwas passiert, und zwar
 // etwas anderes als beim letzten Mal.
 function ersatzText(grund, faden) {
-  // Wie viele Ersatzantworten stehen AM STUECK am Ende des Fadens? Danach
-  // richtet sich die Wortwahl - beim zweiten Mal wird sie deutlicher als beim
-  // ersten. Gezaehlt wird nur die laufende Serie, nicht der ganze Faden: kam
-  // dazwischen eine richtige Antwort, faengt die Zaehlung wieder bei null an.
+  // Wie viele Ersatzantworten AUS DEMSELBEN GRUND stehen am Stueck am Ende des
+  // Fadens? Danach richtet sich die Wortwahl. Gezaehlt wird nur die laufende
+  // Serie: kam dazwischen eine richtige Antwort oder ein anderer Grund, faengt
+  // die Zaehlung wieder bei null an - sonst bliebe bei einem langen Faden immer
+  // dieselbe letzte Variante stehen, und genau das war ja Helenas Beschwerde.
   let schon = 0;
   const v = faden.verlauf || [];
   for (let i = v.length - 1; i >= 0; i--) {
     if (v[i].von !== "werkstatt") continue;
-    if (!v[i].automatisch) break;
+    if (!v[i].automatisch || v[i].grund !== grund) break;
     schon++;
   }
+  // Umlaufend, nicht anhaltend: nach der letzten Variante geht es wieder bei
+  // der ersten los. Zweimal hintereinander derselbe Satz kann so nicht mehr
+  // vorkommen, egal wie lange es hakt.
+  const wahl = (f) => f[schon % f.length];
 
   if (grund === "stunde") {
     const min = minutenBisZurNaechstenStunde();
@@ -95,7 +100,7 @@ function ersatzText(grund, faden) {
         "Du musst nichts noch einmal schreiben \u2013 dein Faden ist vollstaendig, " +
         "ich lese ihn von oben, wenn es weitergeht.",
     ];
-    return varianten[Math.min(schon, varianten.length - 1)];
+    return wahl(varianten);
   }
 
   if (grund === "tag") {
@@ -119,7 +124,7 @@ function ersatzText(grund, faden) {
       "Schreib bitte nicht noch einmal dasselbe \u2013 alles ist angekommen. " +
       "Sobald es wieder laeuft, findest du die Antwort hier im Faden.",
   ];
-  return varianten[Math.min(schon, varianten.length - 1)];
+  return wahl(varianten);
 }
 
 // Die Werkstatt antwortet selbst - im selben Aufruf, damit das Kind die
