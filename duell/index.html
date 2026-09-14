@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz-Duell</title>
+<!--
+  Das Quiz-Duell (14.09.2026) - eine eigene Kachel auf der Startseite, bei
+  keinem Kind verankert. Denny: "wo mehrere Kinder auch gegeneinander spielen
+  koennen. Sie geben ihr Alter und Klasse ein. Somit weisst du, was gefragt
+  werden kann." Und: "gemischte Aufgaben (aber die gleichen), was auch
+  2.-Klaessler beantworten kann ... lustige Fragen wie bei Toggo Radio".
+
+  Die Seite ist nur Anzeige und Knoepfe. Welche Frage kommt, wann die
+  Antworten freigegeben werden, wer zuerst war und wie viele Punkte es gibt,
+  entscheidet der Spielraum (duell-worker, ueber /api/duell) - fuer alle
+  Geraete gleich.
+
+  Das Profil (Spitzname, Alter, Klasse, Bild) bleibt nur auf diesem Geraet.
+  Diese Seite liegt ausserhalb der Kinderbereiche; der Sync fasst sie nicht an.
+  lernstand.js ist bewusst NICHT eingebunden: Es wuerde das Duell einem Kind
+  zuschreiben, obwohl hier mehrere gleichzeitig spielen.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#1e1b4b; --bg2:#312e81; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e4e7ec;
+    --gelb:#fbbf24; --gruen:#16a34a; --rot:#e11d48; --blau:#2563eb;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:radial-gradient(900px 500px at 80% -10%,rgba(251,191,36,.25),transparent 60%),radial-gradient(800px 500px at 0% 100%,rgba(236,72,153,.22),transparent 60%),linear-gradient(160deg,var(--bg),var(--bg2));
+    background-attachment:fixed;padding:14px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:760px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px;color:#fff}
+  header a,.kopfknopf{display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14);color:#fff;text-decoration:none;border:none;
+    border-radius:999px;padding:10px 14px;font:700 15px/1 var(--font);min-height:44px;min-width:44px;cursor:pointer}
+  header h1{font:800 22px/1.1 var(--rund);margin:0;flex:1;letter-spacing:-.01em}
+  .karte{background:var(--card);border-radius:24px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);margin-bottom:14px}
+  h2{font:800 26px/1.2 var(--rund);margin:0 0 6px}
+  .unter{color:var(--muted);font-size:16px;line-height:1.5;margin:0 0 16px}
+  .gross-knopf{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:none;border-radius:18px;cursor:pointer;
+    font:800 20px/1.2 var(--rund);padding:18px;min-height:64px;margin-top:10px;color:#fff;background:linear-gradient(150deg,#f59e0b,#ea580c);box-shadow:0 6px 0 #9a3412}
+  .gross-knopf.blau{background:linear-gradient(150deg,#6366f1,#4338ca);box-shadow:0 6px 0 #312e81}
+  .gross-knopf.grau{background:#f2f4f7;color:var(--ink);box-shadow:0 4px 0 #d0d5dd}
+  .gross-knopf:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.3)}
+  .gross-knopf[disabled]{opacity:.45;pointer-events:none}
+  label.feld{display:block;font:700 13px/1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px}
+  input.text{width:100%;font:700 22px/1.2 var(--rund);padding:14px 16px;border:2px solid var(--line);border-radius:14px;outline:none;color:var(--ink)}
+  input.text:focus{border-color:#6366f1}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:2px solid var(--line);background:#fff;border-radius:14px;min-width:52px;min-height:48px;padding:8px 12px;font:700 17px/1 var(--rund);cursor:pointer;color:var(--ink)}
+  .chip.an{border-color:#6366f1;background:#eef2ff;color:#3730a3}
+  .avatare .chip{font-size:28px;padding:6px 10px}
+  .codeeingabe{font:800 44px/1 var(--rund);letter-spacing:.3em;text-align:center}
+  .fehler{color:var(--rot);font-weight:700;margin-top:10px;min-height:22px}
+
+  /* Lobby */
+  .code{font:800 64px/1 var(--rund);letter-spacing:.14em;text-align:center;color:#3730a3;margin:4px 0}
+  .teilen{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .spielerliste{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
+  .sp{background:#f8fafc;border:2px solid var(--line);border-radius:16px;padding:10px;text-align:center;position:relative}
+  .sp .av{font-size:40px;line-height:1.1}
+  .sp .nm{font:800 17px/1.2 var(--rund);overflow-wrap:anywhere}
+  .sp .kl{color:var(--muted);font-size:13px;font-weight:600}
+  .sp.weg{opacity:.45}
+  .sp .krone{position:absolute;top:-10px;right:-6px;font-size:22px}
+  .hinweis{background:#fef3c7;border-radius:14px;padding:10px 14px;font-size:15px;line-height:1.45;margin-top:14px;color:#78350f}
+
+  /* Frage */
+  .kopfzeile{display:flex;align-items:center;justify-content:space-between;color:#fff;font:700 15px/1 var(--font);margin:0 2px 8px}
+  .kat{border-radius:999px;padding:6px 12px;color:#fff;font:800 14px/1 var(--rund)}
+  .zeitbalken{height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin-bottom:12px}
+  .zeitbalken i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#fbbf24,#f97316);transform-origin:left;transition:transform .2s linear}
+  .fragekarte{text-align:center}
+  .fragekarte .bild{font-size:clamp(54px,11vw,80px);line-height:1.1}
+  .fragekarte .text{font:800 clamp(22px,4.6vw,32px)/1.3 var(--rund);margin:6px 0 4px}
+  .lesen{color:var(--muted);font-weight:700;font-size:15px;min-height:22px}
+  .antworten{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  .antwort{border:none;border-radius:18px;min-height:78px;padding:12px;cursor:pointer;color:#fff;font:800 clamp(18px,3.6vw,24px)/1.2 var(--rund);
+    box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .1s,opacity .2s,filter .2s;overflow-wrap:anywhere}
+  .antwort:nth-child(1){background:#e11d48} .antwort:nth-child(2){background:#2563eb} .antwort:nth-child(3){background:#ca8a04} .antwort:nth-child(4){background:#16a34a}
+  .antwort:active{transform:translateY(3px)}
+  .antwort[disabled]{cursor:default}
+  .antworten.gesperrt .antwort{filter:saturate(.35) brightness(1.1);opacity:.6}
+  .antwort.gewaehlt{outline:5px solid #fff;outline-offset:-5px;filter:none!important;opacity:1!important}
+  .antwort.richtig{filter:none!important;opacity:1!important;outline:6px solid #86efac;outline-offset:-6px;transform:scale(1.03)}
+  .antwort.falsch{opacity:.35!important}
+  .reihe-spieler{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+  .mini{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:6px 12px 6px 6px;font:700 15px/1 var(--rund)}
+  .mini .av{font-size:24px;line-height:1;background:rgba(255,255,255,.2);border-radius:50%;width:34px;height:34px;display:grid;place-items:center}
+  .mini.fertig .av{background:#86efac}
+  .mini .plus{color:#fde68a}
+  .banner{text-align:center;color:#fff;font:800 20px/1.3 var(--rund);min-height:28px;margin-top:10px}
+  .info{background:#eef2ff;border-radius:16px;padding:12px 14px;margin-top:14px;font-size:17px;line-height:1.5;text-align:left}
+  .info b{color:#3730a3}
+  .schnellster{font:800 22px/1.3 var(--rund);margin-top:10px}
+
+  /* Ende */
+  .podest{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .platz{display:flex;align-items:center;gap:12px;background:#f8fafc;border-radius:16px;padding:12px 14px;font:800 20px/1.2 var(--rund)}
+  .platz .med{font-size:30px;width:40px;text-align:center}
+  .platz .av{font-size:34px}
+  .platz .nm{flex:1}
+  .platz.eins{background:linear-gradient(90deg,#fef3c7,#fff)}
+  .laden{color:#fff;text-align:center;font:700 18px/1.4 var(--rund);padding:30px}
+  @media (max-width:430px){ .code{font-size:52px} .antwort{min-height:70px} .karte{padding:18px} }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a href="/" aria-label="Zur Lernwelt">🏠</a>
+    <h1>⚡ Quiz-Duell</h1>
+    <button class="kopfknopf" id="ton" aria-label="Vorlesen an oder aus">🔊</button>
+  </header>
+
+  <!-- Start -->
+  <section id="sicht-start">
+    <div class="karte" style="text-align:center">
+      <div style="font-size:64px">🧠⚡🏆</div>
+      <h2>Wer ist am schnellsten?</h2>
+      <p class="unter">Alle bekommen dieselbe Frage – Rechnen, Tiere, Weltall, Fußball und lustiges Wissen. Wer zuerst richtig tippt, holt die meisten Punkte.</p>
+      <button class="gross-knopf" id="neu">🎲 Neues Spiel starten</button>
+      <button class="gross-knopf blau" id="mit">🙋 Bei einem Spiel mitmachen</button>
+    </div>
+  </section>
+
+  <!-- Code eingeben -->
+  <section id="sicht-code" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <h2>Wie heißt der Raum?</h2>
+      <p class="unter">Der Code steht bei dem, der das Spiel gestartet hat.</p>
+      <input class="text codeeingabe" id="code" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····" aria-label="Raumcode">
+      <div class="fehler" id="code-fehler"></div>
+      <button class="gross-knopf blau" id="code-los" disabled>Rein da!</button>
+      <button class="gross-knopf grau" id="code-zurueck">Zurück</button>
+    </div>
+  </section>
+
+  <!-- Profil -->
+  <section id="sicht-profil" class="verborgen">
+    <div class="karte">
+      <h2>Wer spielt?</h2>
+      <p class="unter">Damit ich weiß, welche Fragen für alle passen. Das bleibt nur auf diesem Gerät.</p>
+      <label class="feld" for="name">Spitzname</label>
+      <input class="text" id="name" maxlength="14" autocomplete="off" placeholder="z. B. Torwart Leon">
+      <label class="feld">Bild</label>
+      <div class="chips avatare" id="avatare"></div>
+      <label class="feld">Alter</label>
+      <div class="chips" id="alter"></div>
+      <label class="feld">Klasse</label>
+      <div class="chips" id="klasse"></div>
+      <div class="fehler" id="profil-fehler"></div>
+      <button class="gross-knopf" id="profil-los">Weiter</button>
+    </div>
+  </section>
+
+  <!-- Lobby -->
+  <section id="sicht-lobby" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <p class="unter" style="margin:0">Raumcode – sag ihn den anderen:</p>
+      <div class="code" id="lobby-code"></div>
+      <div class="teilen"><button class="chip" id="link-kopieren">🔗 Link kopieren</button><button class="chip" id="profil-aendern">✏️ Mein Profil</button></div>
+      <div class="spielerliste" id="spielerliste"></div>
+      <div class="hinweis" id="stufen-hinweis"></div>
+      <div id="host-bereich">
+        <label class="feld" style="text-align:left">Wie viele Fragen?</label>
+        <div class="chips" id="anzahl" style="justify-content:center"></div>
+        <button class="gross-knopf" id="starten">🚀 Los geht's!</button>
+      </div>
+      <p class="unter" id="warte-text" style="margin:14px 0 0"></p>
+    </div>
+  </section>
+
+  <!-- Frage -->
+  <section id="sicht-frage" class="verborgen">
+    <div class="kopfzeile"><span id="frage-nr"></span><span class="kat" id="frage-kat"></span></div>
+    <div class="zeitbalken"><i id="zeit"></i></div>
+    <div class="karte fragekarte">
+      <div class="bild" id="frage-bild"></div>
+      <div class="text" id="frage-text"></div>
+      <div class="lesen" id="lesen"></div>
+      <div class="antworten gesperrt" id="antworten"></div>
+      <div id="aufloesung"></div>
+    </div>
+    <div class="banner" id="banner"></div>
+    <div class="reihe-spieler" id="reihe"></div>
+  </section>
+
+  <!-- Ende -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <div style="font-size:60px">🏆</div>
+      <h2 id="ende-titel"></h2>
+      <div class="podest" id="podest"></div>
+      <button class="gross-knopf" id="nochmal">🔁 Nochmal spielen</button>
+      <p class="unter" id="ende-warte" style="margin:12px 0 0"></p>
+      <a class="gross-knopf grau" href="/" style="text-decoration:none">Zurück zur Lernwelt</a>
+    </div>
+  </section>
+
+  <div class="laden verborgen" id="verbindung">Verbinde … 📡</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(t){ return String(t == null ? "" : t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function lese(k, d){ try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function schreibe(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  var KATEGORIEN = { tiere:["Tiere","#16a34a"], natur:["Natur & Weltall","#0ea5e9"], welt:["Welt & Länder","#f97316"], sport:["Sport","#e11d48"],
+    koerper:["Körper","#db2777"], kurios:["Kurios","#8b5cf6"], sprache:["Sprache","#ca8a04"], maerchen:["Filme & Märchen","#9333ea"],
+    wissen:["Erfinder & Geschichte","#0f766e"], rechnen:["Rechnen","#2563eb"] };
+  var AVATARE = ["🦁","🐯","🦊","🐼","🐸","🦄","🐙","🦖","🚀","⚽","🧤","🎸","🌟","🐬","🦅","🍀"];
+  var KLASSEN = [[0,"Kiga"],[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"],[8,"8"],[9,"9"],[10,"10+"]];
+
+  // Eine feste Kennung je Geraet, damit man nach einem Verbindungsabbruch mit
+  // seinen Punkten zurueckkommt. Keine Namen darin.
+  var ich = lese("duell-id", null);
+  if (!ich){ ich = "s" + Math.random().toString(36).slice(2, 12); schreibe("duell-id", ich); }
+  var profil = lese("duell-profil", null);
+  var tonAn = lese("duell-ton", true);
+
+  var raumCode = null, ws = null, zustand = null, frage = null, meineWahl = null, uhrTakt = null, wiederVerbinden = null, absichtlichZu = false;
+
+  function zeige(n){
+    ["start", "code", "profil", "lobby", "frage", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    $("verbindung").classList.add("verborgen");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Vorlesen ---------- */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t){
+    if (!tonAn || !kannSprechen || document.hidden || !t) return;
+    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = .95;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0]; if (st) u.voice = st;
+      speechSynthesis.speak(u); } catch(e){}
+  }
+  function tonMalen(){ $("ton").textContent = tonAn ? "🔊" : "🔇"; }
+  if (!kannSprechen) $("ton").classList.add("verborgen");
+  $("ton").addEventListener("click", function(){ tonAn = !tonAn; schreibe("duell-ton", tonAn); tonMalen(); if (!tonAn) try { speechSynthesis.cancel(); } catch(e){} });
+  tonMalen();
+
+  /* ---------- Adressen ---------- */
+  function wsAdresse(code){
+    var test = new URLSearchParams(location.search).get("ws");   // nur fuer lokale Tests
+    if (test) return test + (test.indexOf("?") < 0 ? "?" : "&") + "raum=" + code;
+    return (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/api/duell?raum=" + code;
+  }
+  function infoAdresse(code){
+    var test = new URLSearchParams(location.search).get("ws");
+    if (test) return test.replace(/^ws/, "http") + (test.indexOf("?") < 0 ? "?" : "&") + "raum=" + code;
+    return "/api/duell?raum=" + code;
+  }
+  function info(code){
+    return fetch(infoAdresse(code), { cache: "no-store" }).then(function(r){
+      return r.json().catch(function(){ return { ok: false }; }).then(function(j){ j.status = r.status; return j; });
+    });
+  }
+
+  /* ---------- Start ---------- */
+  var nachProfil = null;
+  $("neu").addEventListener("click", function(){
+    $("neu").disabled = true;
+    (function versuche(n){
+      var code = String(1000 + Math.floor(Math.random() * 9000));
+      info(code).then(function(j){
+        if (j.status === 503){ $("neu").disabled = false; alert("Das Duell wird gerade noch eingerichtet. Gleich nochmal probieren!"); return; }
+        if (j.ok && j.spieler > 0 && n < 6) return versuche(n + 1);
+        $("neu").disabled = false;
+        betreten(code);
+      }).catch(function(){ $("neu").disabled = false; alert("Keine Verbindung. Bist du im Internet?"); });
+    })(0);
+  });
+  $("mit").addEventListener("click", function(){ zeige("code"); $("code").value = ""; $("code-fehler").textContent = ""; $("code").focus(); });
+  $("code-zurueck").addEventListener("click", function(){ zeige("start"); });
+  $("code").addEventListener("input", function(){
+    $("code").value = $("code").value.replace(/\D/g, "").slice(0, 4);
+    $("code-los").disabled = $("code").value.length !== 4;
+    if ($("code").value.length === 4) $("code-los").focus();
+  });
+  $("code").addEventListener("keydown", function(e){ if (e.key === "Enter" && $("code").value.length === 4) $("code-los").click(); });
+  $("code-los").addEventListener("click", function(){
+    var code = $("code").value;
+    $("code-fehler").textContent = "";
+    info(code).then(function(j){
+      if (j.status === 503){ $("code-fehler").textContent = "Das Duell wird gerade noch eingerichtet."; return; }
+      if (!j.ok || !j.spieler){ $("code-fehler").textContent = "Diesen Raum gibt es nicht. Stimmt der Code?"; return; }
+      betreten(code);
+    }).catch(function(){ $("code-fehler").textContent = "Keine Verbindung. Bist du im Internet?"; });
+  });
+
+  function betreten(code){
+    raumCode = code;
+    try { history.replaceState(null, "", location.pathname + "?raum=" + code + (new URLSearchParams(location.search).get("ws") ? "&ws=" + encodeURIComponent(new URLSearchParams(location.search).get("ws")) : "")); } catch(e){}
+    if (!profil){ nachProfil = verbinden; profilZeigen(); return; }
+    verbinden();
+  }
+
+  /* ---------- Profil ---------- */
+  var entwurf = {};
+  function chipsMalen(box, liste, feld, schluessel, text){
+    box.innerHTML = "";
+    liste.forEach(function(w){
+      var b = document.createElement("button");
+      b.className = "chip" + (entwurf[feld] === schluessel(w) ? " an" : "");
+      b.textContent = text(w);
+      b.addEventListener("click", function(){ entwurf[feld] = schluessel(w); Array.prototype.forEach.call(box.children, function(c){ c.classList.remove("an"); }); b.classList.add("an"); });
+      box.appendChild(b);
+    });
+  }
+  function profilZeigen(){
+    entwurf = Object.assign({ avatar: AVATARE[Math.floor(Math.random() * AVATARE.length)] }, profil || {});
+    $("name").value = entwurf.name || "";
+    chipsMalen($("avatare"), AVATARE, "avatar", function(a){ return a; }, function(a){ return a; });
+    var alter = []; for (var i = 5; i <= 16; i++) alter.push(i);
+    chipsMalen($("alter"), alter, "alter", function(a){ return a; }, function(a){ return a === 16 ? "16+" : String(a); });
+    chipsMalen($("klasse"), KLASSEN, "klasse", function(k){ return k[0]; }, function(k){ return k[1]; });
+    $("profil-fehler").textContent = "";
+    zeige("profil");
+  }
+  $("profil-los").addEventListener("click", function(){
+    entwurf.name = $("name").value.replace(/[<>"']/g, "").trim().slice(0, 14);
+    if (!entwurf.name){ $("profil-fehler").textContent = "Wie sollen die anderen dich nennen?"; return; }
+    if (entwurf.alter == null){ $("profil-fehler").textContent = "Wie alt bist du?"; return; }
+    if (entwurf.klasse == null){ $("profil-fehler").textContent = "In welche Klasse gehst du?"; return; }
+    profil = { name: entwurf.name, avatar: entwurf.avatar, alter: entwurf.alter, klasse: entwurf.klasse };
+    schreibe("duell-profil", profil);
+    if (nachProfil){ var f = nachProfil; nachProfil = null; f(); }
+    else if (ws && ws.readyState === 1){ hallo(); zeige("lobby"); }
+    else zeige("start");
+  });
+  $("profil-aendern").addEventListener("click", function(){ nachProfil = null; profilZeigen(); });
+
+  /* ---------- Verbindung ---------- */
+  function hallo(){
+    ws.send(JSON.stringify({ t: "hallo", id: ich, name: profil.name, avatar: profil.avatar, alter: profil.alter, klasse: profil.klasse, gesehen: lese("duell-gesehen", []) }));
+  }
+  function verbinden(){
+    clearTimeout(wiederVerbinden);
+    $("verbindung").classList.remove("verborgen");
+    absichtlichZu = false;
+    try { ws = new WebSocket(wsAdresse(raumCode)); } catch(e){ return spaeterNochmal(); }
+    ws.onopen = function(){ hallo(); };
+    ws.onmessage = function(e){ var m; try { m = JSON.parse(e.data); } catch(_){ return; } empfangen(m); };
+    ws.onclose = function(){ if (!absichtlichZu) spaeterNochmal(); };
+    ws.onerror = function(){};
+  }
+  function spaeterNochmal(){
+    $("verbindung").textContent = "Verbindung weg – ich versuche es gleich wieder … 📡";
+    $("verbindung").classList.remove("verborgen");
+    wiederVerbinden = setTimeout(verbinden, 2000);
+  }
+  function senden(obj){ if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+  document.addEventListener("visibilitychange", function(){
+    if (!document.hidden && raumCode && (!ws || ws.readyState > 1)) verbinden();
+  });
+
+  function empfangen(m){
+    $("verbindung").classList.add("verborgen");
+    if (m.t === "fehler"){ absichtlichZu = true; alert(m.text); zeige("start"); return; }
+    if (m.t === "raum"){ zustand = m; if (m.phase === "lobby") lobbyMalen(); else if (m.phase === "ende") endeKnoepfe(); reiheMalen(); return; }
+    if (m.t === "frage") return frageZeigen(m);
+    if (m.t === "stand") return standZeigen(m);
+    if (m.t === "aufloesung") return aufloesungZeigen(m);
+    if (m.t === "ende") return endeZeigen(m);
+  }
+
+  function spielerVon(id){ return (zustand && zustand.spieler || []).filter(function(s){ return s.id === id; })[0] || { name: "?", avatar: "🙂" }; }
+  function klassenText(k){ return k === 0 ? "Kindergarten" : k >= 10 ? "10. Klasse+" : k + ". Klasse"; }
+
+  /* ---------- Lobby ---------- */
+  function lobbyMalen(){
+    zeige("lobby");
+    $("lobby-code").textContent = zustand.code;
+    $("spielerliste").innerHTML = zustand.spieler.map(function(s){
+      return '<div class="sp' + (s.online ? "" : " weg") + '">' + (s.id === zustand.host ? '<span class="krone">👑</span>' : "") +
+        '<div class="av">' + esc(s.avatar) + '</div><div class="nm">' + esc(s.name) + (s.id === ich ? " (du)" : "") + '</div>' +
+        '<div class="kl">' + esc(klassenText(s.klasse)) + ' · ' + esc(s.alter) + ' J.</div></div>';
+    }).join("");
+    var alleine = zustand.spieler.filter(function(s){ return s.online; }).length < 2;
+    $("stufen-hinweis").innerHTML = "🎯 Die Fragen passen für die <b>" + esc(klassenText(zustand.stufe)) + "</b> – so kann jeder mitspielen." +
+      (alleine ? "<br>Warte auf Mitspieler oder spiel schon mal allein zur Probe." : "");
+    var istHost = zustand.host === ich;
+    $("host-bereich").classList.toggle("verborgen", !istHost);
+    $("warte-text").textContent = istHost ? "" : "Warte, bis " + spielerVon(zustand.host).name + " das Spiel startet …";
+    var box = $("anzahl"); box.innerHTML = "";
+    [5, 10, 15].forEach(function(n){
+      var b = document.createElement("button"); b.className = "chip" + (zustand.anzahl === n ? " an" : ""); b.textContent = n + " Fragen";
+      b.addEventListener("click", function(){ senden({ t: "einstellung", anzahl: n }); });
+      box.appendChild(b);
+    });
+  }
+  $("starten").addEventListener("click", function(){ senden({ t: "start" }); });
+  $("link-kopieren").addEventListener("click", function(){
+    var link = location.origin + "/duell/?raum=" + raumCode;
+    try { navigator.clipboard.writeText(link).then(function(){ $("link-kopieren").textContent = "✓ Kopiert"; setTimeout(function(){ $("link-kopieren").textContent = "🔗 Link kopieren"; }, 1800); }); }
+    catch(e){ prompt("Link zum Mitspielen:", link); }
+  });
+
+  /* ---------- Frage ---------- */
+  function reiheMalen(beantwortet, plus){
+    if (!zustand) return;
+    beantwortet = beantwortet || (frage && frage.beantwortet) || [];
+    $("reihe").innerHTML = zustand.spieler.filter(function(s){ return s.online; }).map(function(s){
+      var p = plus && plus[s.id] ? '<span class="plus">+' + plus[s.id] + '</span>' : "";
+      return '<span class="mini' + (beantwortet.indexOf(s.id) >= 0 ? " fertig" : "") + '"><span class="av">' + esc(s.avatar) + '</span>' + esc(s.name) + ' · ' + s.punkte + p + '</span>';
+    }).join("");
+  }
+
+  function frageZeigen(m){
+    frage = m; meineWahl = null;
+    zeige("frage");
+    var kat = KATEGORIEN[m.kat] || ["Wissen", "#6366f1"];
+    $("frage-nr").textContent = "Frage " + m.n + " von " + m.von;
+    $("frage-kat").textContent = kat[0]; $("frage-kat").style.background = kat[1];
+    $("frage-bild").textContent = m.bild;
+    $("frage-text").textContent = m.text;
+    $("aufloesung").innerHTML = "";
+    $("banner").textContent = "";
+    var box = $("antworten"); box.innerHTML = ""; box.classList.add("gesperrt");
+    m.antworten.forEach(function(a, i){
+      var b = document.createElement("button"); b.className = "antwort"; b.textContent = a; b.disabled = true;
+      b.addEventListener("click", function(){ waehlen(i); });
+      box.appendChild(b);
+    });
+    reiheMalen(m.beantwortet);
+    sprich(m.sprechen + " " + m.antworten.join(", ") + "?");
+    var freiUm = Date.now() + m.freiIn, bisUm = freiUm + (m.zeit - m.freiIn), dauer = Math.max(1, m.zeit - m.freiIn);
+    clearInterval(uhrTakt);
+    function tick(){
+      var jetzt = Date.now();
+      if (jetzt < freiUm){
+        $("lesen").textContent = "Lies mit … " + Math.ceil((freiUm - jetzt) / 1000);
+        $("zeit").style.transform = "scaleX(1)";
+      } else {
+        if (box.classList.contains("gesperrt") && meineWahl === null){
+          box.classList.remove("gesperrt");
+          Array.prototype.forEach.call(box.children, function(b){ b.disabled = false; });
+          $("lesen").textContent = "Jetzt tippen!";
+        }
+        $("zeit").style.transform = "scaleX(" + Math.max(0, (bisUm - jetzt) / dauer) + ")";
+      }
+    }
+    tick(); uhrTakt = setInterval(tick, 150);
+  }
+
+  function waehlen(i){
+    if (meineWahl !== null || !frage) return;
+    meineWahl = i;
+    senden({ t: "antwort", n: frage.n, wahl: i });
+    var box = $("antworten");
+    box.classList.add("gesperrt");
+    Array.prototype.forEach.call(box.children, function(b, j){ b.disabled = true; if (j === i) b.classList.add("gewaehlt"); });
+    $("lesen").textContent = "Eingeloggt! Warte auf die anderen …";
+  }
+
+  function standZeigen(m){
+    if (!frage) return;
+    frage.beantwortet = m.beantwortet;
+    reiheMalen(m.beantwortet);
+    if (m.ersterDa) $("banner").textContent = "⚡ Jemand hat es richtig! Noch " + Math.ceil((m.schlussIn || 0) / 1000) + " Sekunden …";
+  }
+
+  function aufloesungZeigen(m){
+    clearInterval(uhrTakt);
+    if (!frage || frage.n !== m.n){ frage = { n: m.n, antworten: [], beantwortet: [] }; }
+    zeige("frage");
+    var box = $("antworten");
+    box.classList.remove("gesperrt");
+    Array.prototype.forEach.call(box.children, function(b, j){
+      b.disabled = true;
+      if (j === m.richtig) b.classList.add("richtig"); else b.classList.add("falsch");
+    });
+    $("zeit").style.transform = "scaleX(0)";
+    var plus = {};
+    m.antworten.forEach(function(a){ if (a.richtig) plus[a.id] = a.id === m.erster ? 3 : 1; });
+    Object.keys(m.punkte).forEach(function(id){ var s = spielerVon(id); s.punkte = m.punkte[id]; });
+    reiheMalen(m.antworten.map(function(a){ return a.id; }), plus);
+    var meine = m.antworten.filter(function(a){ return a.id === ich; })[0];
+    var h = "";
+    if (m.erster){
+      var e = spielerVon(m.erster), ea = m.antworten.filter(function(a){ return a.id === m.erster; })[0];
+      h += '<div class="schnellster">⚡ ' + esc(e.avatar) + ' ' + esc(e.name) + ' war am schnellsten' + (ea ? " – " + (ea.ms / 1000).toFixed(1).replace(".", ",") + " s" : "") + '!</div>';
+    } else {
+      h += '<div class="schnellster">😮 Diesmal hat es keiner gewusst.</div>';
+    }
+    $("lesen").textContent = meine ? (meine.richtig ? (m.erster === ich ? "Du warst Erster! +3" : "Richtig! +1") : "Knapp daneben – jetzt weißt du es!") : "Du hast diesmal nicht getippt.";
+    if (m.info) h += '<div class="info"><b>Wusstest du?</b> ' + esc(m.info) + '</div>';
+    $("aufloesung").innerHTML = h;
+    $("banner").textContent = m.n < m.von ? "Nächste Frage kommt gleich …" : "Gleich kommt die Siegerehrung …";
+    if (m.info) sprich("Wusstest du? " + m.info);
+  }
+
+  /* ---------- Ende ---------- */
+  function endeZeigen(m){
+    clearInterval(uhrTakt);
+    if (m.gesehen && m.gesehen.length){
+      var alt = lese("duell-gesehen", []);
+      schreibe("duell-gesehen", alt.concat(m.gesehen).filter(function(x, i, a){ return a.indexOf(x) === i; }).slice(-80));
+    }
+    zeige("ende");
+    var med = ["🥇", "🥈", "🥉"];
+    var t = m.tabelle;
+    $("ende-titel").textContent = t.length && t[0].punkte > 0 ? t[0].name + " gewinnt!" : "Geschafft!";
+    // Gleich viele Punkte = gleicher Platz
+    var platz = 0, vorher = null;
+    $("podest").innerHTML = t.map(function(s, i){
+      if (s.punkte !== vorher){ platz = i; vorher = s.punkte; }
+      return '<div class="platz' + (platz === 0 ? " eins" : "") + '"><span class="med">' + (med[platz] || (platz + 1) + ".") + '</span><span class="av">' + esc(s.avatar) +
+        '</span><span class="nm">' + esc(s.name) + (s.id === ich ? " (du)" : "") + '</span><span>' + s.punkte + ' P.</span></div>';
+    }).join("");
+    endeKnoepfe();
+    if (t.length) sprich((t[0].punkte > 0 ? t[0].name + " gewinnt! " : "") + "Toll gespielt, alle zusammen!");
+  }
+  function endeKnoepfe(){
+    if (!zustand) return;
+    var istHost = zustand.host === ich;
+    $("nochmal").classList.toggle("verborgen", !istHost);
+    $("ende-warte").textContent = istHost ? "" : "Wenn " + spielerVon(zustand.host).name + " auf „Nochmal“ tippt, geht es weiter.";
+  }
+  $("nochmal").addEventListener("click", function(){ senden({ t: "start" }); });
+
+  /* ---------- Einstieg ueber Link ---------- */
+  var ausLink = (new URLSearchParams(location.search).get("raum") || "").replace(/\D/g, "");
+  if (ausLink.length === 4){
+    info(ausLink).then(function(j){
+      if (j.ok && j.spieler) betreten(ausLink);
+      else { zeige("code"); $("code").value = ausLink; $("code-fehler").textContent = j.status === 503 ? "Das Duell wird gerade noch eingerichtet." : "Diesen Raum gibt es nicht mehr."; }
+    }).catch(function(){ zeige("start"); });
+  } else zeige("start");
+
+  window.__duell = { zustand: function(){ return { zustand: zustand, frage: frage, ich: ich }; }, waehlen: waehlen };
+})();
+</script>
+</body>
+</html>

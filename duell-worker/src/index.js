@@ -65,7 +65,7 @@ export class DuellRaum {
       // Kurzinfo fuer "gibt es den Raum schon?" - ohne Namen
       const sockets = this.ctx.getWebSockets().length;
       return Response.json({ ok: true, phase: this.s.phase, spieler: Object.keys(this.s.spieler).length, verbunden: sockets },
-        { headers: { "cache-control": "no-store" } });
+        { headers: { "cache-control": "no-store", "access-control-allow-origin": "*" } });
     }
     if (this.ctx.getWebSockets().length >= MAX_SPIELER * 2) return new Response("Raum voll", { status: 429 });
 
