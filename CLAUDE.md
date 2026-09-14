@@ -331,6 +331,18 @@ und `./antworten-nachreichen.sh &` starten. Das Skript versucht es alle fünf
 Minuten weiter und schiebt jede Antwort nach dem Absenden nach
 `antworten-gesendet/` — jede geht also höchstens einmal raus.
 
+Dasselbe für nachgebesserte Spiele: `spiele-nachbessern/<spiel-id>.json` ablegen
+und `./spiele-nachbessern.sh &` starten. Auch hier wandert jede Datei nach dem
+Absenden weiter (`spiele-nachgebessert/`), geht also höchstens einmal raus.
+
+**Und: `/api/spiele` wirft bei vollem Speicher nicht mehr den Worker ab.** Bis
+zum 14.09.2026 abends standen dort drei ungefangene Schreibvorgänge — beim
+Wegwerfen eines Spiels, beim Mitschreiben einer Runde und beim Nachbessern. Das
+Kind bekam die nackte Seite „error code: 1101" zu sehen; in Pauls Werkstatt
+passierte sogar gar nichts, weil die Oberfläche nur den Erfolgsfall auswertete.
+Jetzt kommt 503 mit einem ehrlichen Satz, und der sagt NICHT „gespeichert".
+Geprüft mit `node pruefe-spiele-speicher.mjs`.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
