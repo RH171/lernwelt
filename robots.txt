@@ -1,0 +1,19 @@
+# Diese Seite ist fuer drei Kinder gemacht, nicht fuer Suchmaschinen.
+#
+# Angelegt am 14.09.2026, nachdem beim Gegenpruefen des Ausrollens auffiel,
+# dass es hier gar kein robots.txt gab: Der Aufruf fiel auf die Startseite
+# durch und lieferte 200 mit HTML. Eine Suchmaschine bekam damit keinerlei
+# Anweisung.
+#
+# Die Bereiche der Kinder liegen hinter dem Riegel (401), aber die Dateien,
+# die zusammen mit ihnen hochgeladen werden, nicht: /CLAUDE.md nennt die
+# Namen, das Alter, den Wohnort, den Verein und die Geraete der drei; auch
+# /README.md und die pruefe-*-Dateien stehen offen. Das gehoert nicht in
+# einen Suchindex.
+#
+# robots.txt ist eine Bitte, keine Sperre. Wer die Adresse kennt, kommt
+# weiterhin an diese Dateien - das gehoert noch abgestellt (siehe Bericht
+# vom 14.09.2026).
+
+User-agent: *
+Disallow: /
