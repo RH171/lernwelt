@@ -1184,18 +1184,52 @@
     pulsUhr = setInterval(function () { pulsSchicken(false); }, PULS_TAKT);
   }
 
-  function pulsAus() {
+  // sanft = nur die Uhr anhalten, NICHT abmelden.
+  function pulsAus(sanft) {
     if (pulsUhr) { clearInterval(pulsUhr); pulsUhr = null; }
+    if (sanft) return;
     // Sauber abmelden, damit der Wächter nicht acht Minuten Stille abwartet.
     if (binGemeldet) { binGemeldet = false; pulsSchicken(true); }
   }
 
+  /* Ein Klick auf einen Link INNERHALB der Lernwelt ist kein Weggehen: Die
+     nächste Seite lädt lernstand.js gleich wieder und meldet sich sofort neu
+     an. Sich dazwischen abzumelden kostet zwei Schreibvorgänge - einen fürs
+     Abmelden, einen fürs Anmelden - und davon gibt es im Speicher nur 1000 am
+     Tag. Am 14.09.2026 waren sie um 13:54 UTC aufgebraucht, und danach ging
+     für die Kinder stundenlang nichts mehr: keine Meldung, keine Runde, kein
+     Fortschritt. Ein Kind, das sich durch sein Spielemenü klickt, hat davon
+     allein Dutzende verbraucht.
+
+     Merkt sich die Seite dagegen nichts und das Kind schliesst den Tab
+     wirklich, gilt es nach STILLE_BIS_WEG (acht Minuten) ohnehin als weg -
+     schlimmstenfalls wartet ein Update also ein paar Minuten länger. Das ist
+     die harmlosere Seite des Irrtums. */
+  var gehtNurWoandersHin = false;
+
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a) return;
+    if (a.target && a.target !== "_self") return;      // neuer Tab: diese Seite bleibt
+    if (a.hasAttribute("download")) return;
+    try {
+      var z = new URL(a.getAttribute("href"), location.href);
+      if (z.origin !== location.origin) return;        // raus aus der Lernwelt
+      if (z.href.split("#")[0] === location.href.split("#")[0]) return;  // nur ein Sprungziel
+      gehtNurWoandersHin = true;
+      // Kommt der Seitenwechsel wider Erwarten nicht, gilt wieder das Normale.
+      setTimeout(function () { gehtNurWoandersHin = false; }, 5000);
+    } catch (err) {}
+  }, true);
+
   if (!document.hidden) pulsAn();
   document.addEventListener("visibilitychange", function () {
-    if (document.hidden) pulsAus(); else pulsAn();
+    if (document.hidden) pulsAus(gehtNurWoandersHin); else pulsAn();
   });
 
-  window.addEventListener("pagehide", function () { uhrAnhalten(); senden(); pulsAus(); });
+  window.addEventListener("pagehide", function () {
+    uhrAnhalten(); senden(); pulsAus(gehtNurWoandersHin);
+  });
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) { uhrAnhalten(); senden(); } else { regung(); }
   });
