@@ -59,7 +59,8 @@
   .tasten{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
   .taste{background:var(--surface2);border:1px solid var(--line);border-radius:12px;color:var(--ink);font:800 21px/1 var(--round);min-height:48px;cursor:pointer}
   .taste:active{transform:scale(.96)}
-  .taste.ok{background:linear-gradient(150deg,var(--brand),var(--brand2));border:none;color:#06281d;grid-row:span 2}
+  .taste.ok{background:linear-gradient(150deg,var(--brand),var(--brand2));border:none;color:#06281d;grid-column:4;grid-row:1 / span 3}
+  .taste.null{grid-column:span 2}
   .taste[disabled]{opacity:.45}
   .btn{flex:1;border:none;border-radius:16px;background:linear-gradient(150deg,var(--brand),var(--brand2));color:#06281d;font:800 17px/1 var(--round);padding:15px;cursor:pointer;min-height:54px}
   .reihe{display:flex;gap:10px;margin-top:10px}
@@ -195,11 +196,13 @@
 
   function tastenfeld(){
     var h = '<div class="eingabe"><div class="anzeige leer" id="anzeige">Grad eintippen</div></div><div class="tasten">';
-    ["7", "8", "9", "⌫", "4", "5", "6", "OK", "1", "2", "3", "0"].forEach(function(t){
+    // OK steht rechts oben und reicht ueber drei Zeilen. Die Ecke rechts unten bleibt
+    // frei: Dort sitzt der Meldeknopf aus lernstand.js und haette die Taste verdeckt.
+    ["7", "8", "9", "OK", "4", "5", "6", "1", "2", "3", "⌫", "0"].forEach(function(t){
       if (t === "OK") h += '<button class="taste ok" data-t="OK">OK</button>';
+      else if (t === "0") h += '<button class="taste null" data-t="0">0</button>';
       else h += '<button class="taste" data-t="' + t + '">' + t + '</button>';
     });
-    // Reihenfolge im Raster: 7 8 9 ⌫ / 4 5 6 OK / 1 2 3 (OK geht ueber zwei Zeilen) / 0 in der letzten Reihe
     return h + '</div>';
   }
   function tastenAn(beiOk){
@@ -371,8 +374,10 @@
     var e1 = pt(P[0], P[1], 260, neig), e0 = pt(P[0], P[1], -80, neig);
     el("line", { x1: e0[0], y1: e0[1], x2: e1[0], y2: e1[1], stroke: "#eef2fb", "stroke-width": 3 }, g);
     ["▸", "▸"].forEach(function(z, i){ var tt = el("text", { x: 330, y: i ? y2 - 8 : y1 - 8, fill: "#8a92a8", "font-size": 14 }, g); tt.textContent = "∥"; });
-    // alpha oben rechts oberhalb der Querlinie (zwischen Parallele nach rechts und Querlinie nach oben)
-    bogen(g, Q[0], Q[1], 0, neig, 26, blau, "α = " + x.a + "°");
+    // alpha oben an der oberen Parallele. Bei Nachbarwinkeln liegen beide ZWISCHEN den
+    // Parallelen auf derselben Seite der Querlinie (E-Figur) - sonst waere es kein Nachbarwinkel.
+    if (x.art === "nachbar") bogen(g, Q[0], Q[1], 180, neig, 26, blau, "α = " + x.a + "°");
+    else bogen(g, Q[0], Q[1], 0, neig, 26, blau, "α = " + x.a + "°");
     if (x.art === "stufen") bogen(g, P[0], P[1], 0, neig, 26, gelb, "β = ?");
     if (x.art === "wechsel") bogen(g, P[0], P[1], 180, neig, 26, gelb, "β = ?");        // unten links: Z-Figur
     if (x.art === "nachbar") bogen(g, P[0], P[1], neig, 180 - neig, 22, gelb, "β = ?"); // oben links an der unteren Parallele
