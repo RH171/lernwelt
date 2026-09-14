@@ -855,7 +855,7 @@
   var TASTE = { links:false, rechts:false, hoch:false };
   var kamera = 0, punkte = 0, herzen = 3, geloest = 0, ruettel = 0;
   var sterne = [], gegner = [], partikel = [], schmuck = [];
-  var naechsteWeltX = 0;
+  var naechsteWeltX = 0, rennRichtung = 1;
   var aufgaben = [], aufgabeNr = 0, station = null, protokoll = [], aufgabeBegonnen = 0;
   var G = 0.9, SPRUNGKRAFT = -15, LAUFTEMPO = 3.7;
 
@@ -885,7 +885,7 @@
     G = w.G; SPRUNGKRAFT = w.sprung;
     punkte = 0; herzen = 3; geloest = 0; ruettel = 0;
     sterne = []; gegner = []; partikel = [];
-    kamera = 0; naechsteWeltX = 0;
+    kamera = 0; naechsteWeltX = 0; rennRichtung = 1;
     aufgabeNr = 0; station = null; protokoll = [];
     held.x = 110; held.y = bodenY - held.h; held.vx = 0; held.vy = 0;
     held.amBoden = true; held.spruenge = 0; held.unverwundbar = 0; held.blickRechts = true;
@@ -953,12 +953,13 @@
         it.y = bodenY - hoehen[i] - it.h;
         x += it.w + 58;
       });
-      station = { art:"ballons", items:items, aufgabe:a, geloest:false, torX: x + 90 };
+      station = { art:"ballons", items:items, aufgabe:a, geloest:false,
+                  startX: worldX, torX: x + 90 };
     } else {
       // Aufgaben zum Eintippen kann man nicht anspringen. Sie werden zu
       // einem Tor, das aufgeht, wenn die Zahl stimmt.
       station = { art:"tor", items:[], aufgabe:a, geloest:false,
-                  torX: worldX + 120, offen:false, gefragt:false };
+                  startX: worldX, torX: worldX + 120, offen:false, gefragt:false };
     }
     frageZeigen();
     anzeigenAuffrischen();
@@ -1060,7 +1061,18 @@
     if (zustand !== "spielt") return;
 
     if (wahl.steuerung === "rennen"){
-      held.vx = LAUFTEMPO; held.blickRechts = true;
+      // Wer von allein rennt, kann nicht umkehren - und genau das braeuchte
+      // er: Das Tor haelt ihn vorne fest, die Antwort-Ballons haengen hinter
+      // ihm. Ohne das hier steht die Figur am Tor und das Spiel ist zu Ende,
+      // ohne dass es das sagt. Also pendelt sie zwischen dem ersten Ballon
+      // und dem Tor hin und her, bis die Aufgabe geloest ist; gesprungen
+      // wird weiter selbst.
+      if (station && !station.geloest){
+        if (held.x + held.w >= station.torX - 2) rennRichtung = -1;
+        if (held.x <= station.startX - 90) rennRichtung = 1;
+      } else rennRichtung = 1;
+      held.vx = LAUFTEMPO * rennRichtung;
+      held.blickRechts = rennRichtung > 0;
     } else {
       held.vx = 0;
       if (TASTE.links){ held.vx = -LAUFTEMPO; held.blickRechts = false; }
