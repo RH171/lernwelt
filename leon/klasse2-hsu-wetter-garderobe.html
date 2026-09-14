@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Was zieht Leon an?</title>
+<!--
+  Leons zweites HSU-Spiel zum Anfassen (14.09.2026).
+
+  Leon geht zum Training - aber draussen ist mal Hitze, mal Regen, mal Schnee.
+  Er zieht seine Figur selbst an: antippen heisst anziehen, nochmal antippen
+  heisst ausziehen. Dann "Los zum Training!" - und die Rueckmeldung sagt
+  genau, was fehlt oder was zu viel ist, mit dem Grund.
+
+  Lehrplan HSU 1/2: Jahreszeiten, Wetter, Koerper und Gesundheit. Es gibt
+  nicht die EINE richtige Kombination - erlaubt ist, was zum Wetter passt.
+  Falsch ist nur, was nicht passt (Handschuhe bei 30 Grad), und fehlen darf
+  nur, was man wirklich braucht.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1000px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .start{text-align:center;max-width:720px;margin:0 auto;padding:22px}
+  .start h2{font-family:var(--rund);font-size:26px;margin:4px 0 6px}
+  .start p{color:var(--muted);margin:0 0 18px;font-size:16px;line-height:1.5}
+  .los{display:block;width:100%;border:none;border-radius:16px;background:var(--leon);color:#fff;font:700 20px/1 var(--rund);padding:18px;cursor:pointer;min-height:58px}
+  .los:active{transform:scale(.98)}
+  .rueckblick{margin-top:14px;color:var(--leon-dunkel);font-weight:700;font-size:15px}
+
+  .buehne{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (orientation:landscape) and (min-width:760px){ .buehne{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:start} }
+  .oben{display:flex;gap:12px;align-items:stretch}
+  .wetter{flex:1;border-radius:18px;padding:12px;color:#fff;display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:120px;position:relative;overflow:hidden}
+  .wetter .symbol{font-size:54px;line-height:1}
+  .wetter .grad{font:800 32px/1 var(--rund)}
+  .wetter .text{font-weight:700;font-size:16px;line-height:1.3}
+  .figurbox{width:42%;min-width:150px;background:linear-gradient(180deg,#f8fafc,#eef2f7);border-radius:18px;display:flex;align-items:flex-end;justify-content:center;padding:6px}
+  svg.figur{width:100%;max-height:270px;height:auto}
+  @media (orientation:landscape) and (min-width:760px){
+    .oben{flex-direction:column}
+    .figurbox{width:100%}
+    svg.figur{max-height:calc(100vh - 330px);min-height:200px}
+  }
+  .schrank h3{font:700 16px/1.2 var(--rund);margin:0 0 8px;color:var(--muted)}
+  .teile{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+  .teil{border:2px solid var(--line);background:#fff;border-radius:14px;min-height:78px;cursor:pointer;padding:6px 4px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 13px/1.15 var(--font);color:var(--ink);text-align:center}
+  .teil .e{font-size:30px;line-height:1}
+  .teil.an{border-color:var(--leon);background:#ecfdf3;box-shadow:inset 0 0 0 2px var(--leon)}
+  .teil.an::after{content:"✓ an";font-size:11px;color:var(--leon-dunkel)}
+  .teil:active{transform:scale(.96)}
+  .reihe{display:flex;gap:10px;margin-top:12px}
+  .knopf{flex:1;border:none;border-radius:16px;background:var(--leon);color:#fff;font:700 19px/1 var(--rund);padding:16px;cursor:pointer;min-height:56px}
+  .knopf.grau{flex:0 0 56px;background:#f2f4f7;color:var(--ink);padding:0;font-size:24px}
+  .rueck{margin-top:12px;border-radius:16px;padding:12px 14px;font-size:17px;line-height:1.5}
+  .rueck.gut{background:#ecfdf3} .rueck.schlecht{background:#fff4ed}
+  .rueck ul{margin:6px 0 0;padding-left:20px}
+  .rueck b{font-family:var(--rund)}
+  .fortschritt{display:flex;gap:6px;align-items:center;color:var(--muted);font-weight:700;margin-top:10px}
+  .fortschritt i{width:14px;height:14px;border-radius:50%;background:#d0d5dd;display:block}
+  .fortschritt i.g{background:var(--gut)} .fortschritt i.t{background:#fdb022} .fortschritt i.n{outline:3px solid var(--leon);outline-offset:1px}
+  .ende{text-align:center;max-width:720px;margin:0 auto;padding:22px}
+  .ende .gross{font-size:60px}
+  .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
+  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 16px}
+  .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#f2f4f7;color:var(--ink);
+    font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <h1>Was zieht Leon an?</h1>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:56px">☀️🌧️❄️</div>
+    <h2>Gleich ist Training!</h2>
+    <p>Schau aus dem Fenster: Wie ist das Wetter? Tipp an, was Leon anziehen soll. Nochmal tippen zieht es wieder aus.</p>
+    <button class="los" id="los">Zum Kleiderschrank</button>
+    <div class="rueckblick verborgen" id="rueckblick"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="buehne">
+      <div class="oben">
+        <div class="wetter" id="wetter"></div>
+        <div class="figurbox"><svg class="figur" id="figur" viewBox="0 0 200 300" aria-label="Leon"></svg></div>
+      </div>
+      <div class="karte schrank">
+        <h3>Kleiderschrank</h3>
+        <div class="teile" id="teile"></div>
+        <div class="reihe">
+          <button class="knopf grau" id="hoeren" aria-label="Vorlesen">🔊</button>
+          <button class="knopf" id="pruefen">Los zum Training!</button>
+        </div>
+        <div id="rueck"></div>
+        <div class="fortschritt" id="fortschritt"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div class="gross">🧥🏅</div>
+    <h2>Immer passend angezogen!</h2>
+    <p id="ende-text"></p>
+    <button class="los" id="nochmal">Nochmal</button>
+    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+
+  /* ---------- Kleidung ----------
+     platz: wo es sitzt - pro Platz ist nur eines an (zwei Hosen gehen nicht). */
+  var TEILE = {
+    kappe:        { name: "Kappe",          e: "🧢", platz: "kopf" },
+    muetze:       { name: "Wollmütze",      e: "🧶", platz: "kopf" },
+    sonnenbrille: { name: "Sonnenbrille",   e: "🕶️", platz: "augen" },
+    schal:        { name: "Schal",          e: "🧣", platz: "hals" },
+    tshirt:       { name: "T-Shirt",        e: "👕", platz: "oben" },
+    pulli:        { name: "Pulli",          e: "👚", platz: "oben" },
+    regenjacke:   { name: "Regenjacke",     e: "🌂", platz: "jacke" },
+    winterjacke:  { name: "Winterjacke",    e: "🧥", platz: "jacke" },
+    handschuhe:   { name: "Handschuhe",     e: "🧤", platz: "haende" },
+    kurzehose:    { name: "kurze Hose",     e: "🩳", platz: "beine" },
+    langehose:    { name: "lange Hose",     e: "👖", platz: "beine" },
+    badehose:     { name: "Badehose",       e: "🩲", platz: "beine" },
+    sandalen:     { name: "Sandalen",       e: "🩴", platz: "fuesse" },
+    turnschuhe:   { name: "Turnschuhe",     e: "👟", platz: "fuesse" },
+    gummistiefel: { name: "Gummistiefel",   e: "👢", platz: "fuesse" },
+    winterstiefel:{ name: "Winterstiefel",  e: "🥾", platz: "fuesse" },
+    schirm:       { name: "Regenschirm",    e: "☂️", platz: "schirm" },
+    sonnencreme:  { name: "Sonnencreme",    e: "🧴", platz: "creme" }
+  };
+
+  /* ---------- Wetterlagen ----------
+     brauchtEins: aus jeder Gruppe muss mindestens eines an sein.
+     falsch: was nicht passt, mit Grund. Alles andere ist erlaubt. */
+  var WETTER = [
+    { name: "Hitze im Sommer", jahreszeit: "Sommer", grad: 30, symbol: "☀️", farbe: "linear-gradient(160deg,#f59e0b,#f97316)",
+      text: "30 Grad, keine Wolke",
+      brauchtEins: [ ["tshirt"], ["kurzehose"], ["sandalen", "turnschuhe"], ["kappe"], ["sonnencreme"] ],
+      gruende: { kappe: "Die Sonne knallt auf den Kopf – eine Kappe schützt vor Sonnenstich.", sonnencreme: "Bei so viel Sonne braucht die Haut Sonnencreme.",
+                 tshirt: "Oben herum fehlt noch etwas Luftiges.", kurzehose: "Bei 30 Grad ist eine kurze Hose genau richtig.", sandalen: "An die Füße gehört noch etwas." },
+      falsch: { muetze: "Eine Wollmütze bei 30 Grad? Da schwitzt Leon wie in der Sauna.", schal: "Einen Schal braucht bei Hitze niemand.",
+                pulli: "Im Pulli wird es viel zu heiß.", winterjacke: "Die Winterjacke bleibt im Sommer im Schrank.", regenjacke: "Es regnet nicht – die Regenjacke ist zu warm.",
+                handschuhe: "Handschuhe bei Hitze? Die Hände werden ganz nass geschwitzt.", langehose: "Eine lange Hose ist bei 30 Grad zu warm.",
+                gummistiefel: "In Gummistiefeln kochen die Füße.", winterstiefel: "Winterstiefel sind für Schnee, nicht für Sommer.",
+                schirm: "Es regnet nicht. Einen Schirm braucht Leon heute nicht.", badehose: "Zum Training geht man nicht in der Badehose." } },
+    { name: "Regen im Herbst", jahreszeit: "Herbst", grad: 11, symbol: "🌧️", farbe: "linear-gradient(160deg,#475569,#64748b)",
+      text: "11 Grad, es schüttet",
+      brauchtEins: [ ["regenjacke"], ["langehose"], ["gummistiefel"], ["tshirt", "pulli"] ],
+      gruende: { regenjacke: "Ohne Regenjacke ist Leon in einer Minute klatschnass.", langehose: "Bei 11 Grad frieren die Beine ohne lange Hose.",
+                 gummistiefel: "Die Füße brauchen etwas, das die Pfützen aushält.", tshirt: "Unter die Jacke gehört noch ein Oberteil." },
+      falsch: { kurzehose: "Bei 11 Grad und Regen friert Leon in der kurzen Hose.", sandalen: "In Sandalen stehen die Zehen im kalten Wasser.",
+                badehose: "Die Badehose ist fürs Schwimmbad, nicht für den Regen.", sonnenbrille: "Bei dunklen Regenwolken braucht man keine Sonnenbrille.",
+                sonnencreme: "Die Sonne ist hinter den Wolken – Sonnencreme ist heute nicht nötig.", turnschuhe: "Turnschuhe saugen sich im Regen voll – Gummistiefel sind besser.",
+                winterstiefel: "Winterstiefel sind zu warm – Gummistiefel halten die Pfützen besser aus." } },
+    { name: "Schnee im Winter", jahreszeit: "Winter", grad: -4, symbol: "❄️", farbe: "linear-gradient(160deg,#60a5fa,#1e3a8a)",
+      text: "minus 4 Grad, es schneit",
+      brauchtEins: [ ["winterjacke"], ["muetze"], ["handschuhe"], ["langehose"], ["winterstiefel"], ["schal"], ["pulli", "tshirt"] ],
+      gruende: { winterjacke: "Bei minus 4 Grad braucht Leon eine warme Winterjacke.", muetze: "Über den Kopf geht viel Wärme verloren – eine Wollmütze muss her.",
+                 handschuhe: "Ohne Handschuhe werden die Finger eiskalt.", langehose: "Die Beine brauchen eine lange Hose.",
+                 winterstiefel: "Im Schnee braucht man warme, dichte Winterstiefel.", schal: "Der Hals friert – ein Schal hält warm.", pulli: "Unter die Jacke gehört noch ein Oberteil." },
+      falsch: { kappe: "Eine Kappe hält die Ohren nicht warm – die Wollmütze schon.", kurzehose: "Kurze Hose im Schnee? Brrr, viel zu kalt!",
+                sandalen: "In Sandalen frieren die Zehen sofort ein.", badehose: "Die Badehose passt nicht in den Schnee.",
+                turnschuhe: "Turnschuhe werden im Schnee nass und kalt.", gummistiefel: "Gummistiefel halten im Schnee nicht warm – Winterstiefel schon.",
+                regenjacke: "Die Regenjacke ist zu dünn für minus 4 Grad.", sonnencreme: "Im Winter braucht Leon zum Training keine Sonnencreme.",
+                schirm: "Es schneit – da hilft die Mütze mehr als ein Schirm." } },
+    { name: "Frühling", jahreszeit: "Frühling", grad: 16, symbol: "🌤️", farbe: "linear-gradient(160deg,#34d399,#0ea5e9)",
+      text: "16 Grad, Sonne und Wolken",
+      brauchtEins: [ ["pulli", "tshirt"], ["langehose"], ["turnschuhe"] ],
+      gruende: { pulli: "Oben herum fehlt noch etwas.", langehose: "Bei 16 Grad ist eine lange Hose gut – morgens ist es noch frisch.", turnschuhe: "Für das Training braucht Leon Turnschuhe." },
+      falsch: { winterjacke: "Die Winterjacke ist bei 16 Grad zu warm.", muetze: "Eine Wollmütze ist im Frühling zu warm.", handschuhe: "Handschuhe braucht man im Frühling nicht mehr.",
+                schal: "Ein dicker Schal ist bei 16 Grad zu viel.", winterstiefel: "Winterstiefel sind im Frühling zu warm.", badehose: "Zum Training nicht in der Badehose.",
+                sandalen: "Mit Sandalen kann man nicht gut Fußball spielen.", gummistiefel: "Es regnet nicht – mit Gummistiefeln kann man nicht kicken." } },
+    { name: "Wind im Herbst", jahreszeit: "Herbst", grad: 8, symbol: "🍂", farbe: "linear-gradient(160deg,#b45309,#78350f)",
+      text: "8 Grad, stürmischer Wind",
+      brauchtEins: [ ["pulli"], ["langehose"], ["turnschuhe", "gummistiefel", "winterstiefel"], ["regenjacke", "winterjacke"] ],
+      gruende: { pulli: "Bei 8 Grad reicht ein T-Shirt allein nicht – ein Pulli wärmt.", langehose: "Die Beine frieren ohne lange Hose.",
+                 turnschuhe: "An die Füße gehören feste Schuhe.", regenjacke: "Der Wind ist kalt – eine Jacke gehört drüber." },
+      falsch: { kurzehose: "Bei 8 Grad ist die kurze Hose zu kalt.", sandalen: "In Sandalen werden die Füße bei 8 Grad kalt.", badehose: "Die Badehose passt nicht zum Herbst.",
+                schirm: "Bei Sturm klappt der Schirm um – lieber eine Jacke mit Kapuze.", sonnenbrille: "Heute braucht Leon keine Sonnenbrille.", sonnencreme: "Im stürmischen Herbst braucht man keine Sonnencreme." } },
+    { name: "Freibad im Sommer", jahreszeit: "Sommer", grad: 28, symbol: "🏊", farbe: "linear-gradient(160deg,#06b6d4,#2563eb)",
+      text: "28 Grad – heute ist Training im Freibad!",
+      brauchtEins: [ ["badehose"], ["sonnencreme"], ["kappe"], ["sandalen"] ],
+      gruende: { badehose: "Ins Wasser geht es in der Badehose.", sonnencreme: "Im Wasser und in der Sonne braucht die Haut Sonnencreme.",
+                 kappe: "Auf der Liegewiese schützt eine Kappe vor Sonnenstich.", sandalen: "Auf den heißen Platten brennen die Füße – Badelatschen an!" },
+      falsch: { langehose: "Mit langer Hose springt man nicht ins Becken.", kurzehose: "Fürs Schwimmen braucht Leon die Badehose, keine kurze Hose.",
+                pulli: "Den Pulli braucht bei 28 Grad niemand.", winterjacke: "Die Winterjacke im Freibad? Das wäre lustig, aber viel zu heiß.",
+                regenjacke: "Es regnet nicht.", muetze: "Die Wollmütze ist viel zu warm.", schal: "Ein Schal im Freibad? Zu warm!", handschuhe: "Handschuhe braucht man im Freibad nicht.",
+                gummistiefel: "Gummistiefel im Freibad? Da kochen die Füße.", winterstiefel: "Winterstiefel passen nicht ins Freibad.", turnschuhe: "Ins Freibad gehören Badelatschen, keine Turnschuhe.",
+                schirm: "Es regnet nicht." } }
+  ];
+  // Die "Sandalen" heissen im Freibad Badelatschen - der Knopf bleibt derselbe (siehe lage()).
+
+  var SPEICHER = "leon-garderobe";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  function rueckblickMalen(){ var d = lesen(); if (d.angezogen){ $("rueckblick").textContent = "🧥 Schon " + d.angezogen + "-mal passend angezogen."; $("rueckblick").classList.remove("verborgen"); } }
+  rueckblickMalen();
+
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t){
+    if (!kannSprechen || document.hidden) return;
+    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = .92;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0]; if (st) u.voice = st;
+      speechSynthesis.speak(u); } catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  /* ---------- Die Figur ---------- */
+  function el(n, a, p){ var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+  var HAUT = "#f2c7a0", KONTUR = "#1b1c22";
+
+  function figurMalen(an){
+    var s = $("figur"); s.innerHTML = "";
+    var h = function(id){ return an.indexOf(id) >= 0; };
+    // Schirm hinter der Figur
+    if (h("schirm")){
+      el("path", { d: "M40 70 Q100 5 160 70 Z", fill: "#7c3aed", stroke: KONTUR, "stroke-width": 3 }, s);
+      el("line", { x1: 150, y1: 70, x2: 150, y2: 170, stroke: KONTUR, "stroke-width": 4 }, s);
+    }
+    // Beine (Haut)
+    el("rect", { x: 78, y: 180, width: 18, height: 90, rx: 8, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s);
+    el("rect", { x: 104, y: 180, width: 18, height: 90, rx: 8, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s);
+    // Arme (Haut)
+    el("rect", { x: 46, y: 104, width: 18, height: 78, rx: 8, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s);
+    el("rect", { x: 136, y: 104, width: 18, height: 78, rx: 8, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s);
+    // Unterhemd
+    el("rect", { x: 64, y: 100, width: 72, height: 86, rx: 12, fill: "#f8fafc", stroke: KONTUR, "stroke-width": 2.5 }, s);
+    // Hosen
+    if (h("langehose")) { el("rect", { x: 74, y: 176, width: 26, height: 88, rx: 6, fill: "#1e40af", stroke: KONTUR, "stroke-width": 2.5 }, s); el("rect", { x: 100, y: 176, width: 26, height: 88, rx: 6, fill: "#1e40af", stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    if (h("kurzehose")) { el("rect", { x: 72, y: 174, width: 56, height: 40, rx: 6, fill: "#111827", stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    if (h("badehose"))  { el("rect", { x: 74, y: 174, width: 52, height: 24, rx: 6, fill: "#06b6d4", stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    // Oberteile
+    if (h("tshirt")) { el("path", { d: "M62 100 L40 118 L50 136 L64 128 L64 186 L136 186 L136 128 L150 136 L160 118 L138 100 Z", fill: "#16a34a", stroke: KONTUR, "stroke-width": 2.5 }, s);
+                       el("text", { x: 100, y: 150, "text-anchor": "middle", "font-size": 22, "font-weight": 800, fill: "#fff", "font-family": "system-ui" }, s).textContent = "1"; }
+    if (h("pulli"))  { el("path", { d: "M62 100 L42 110 L42 186 L62 186 L64 140 L64 190 L136 190 L136 140 L138 186 L158 186 L158 110 L138 100 Z", fill: "#dc2626", stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    if (h("winterjacke")) { el("path", { d: "M60 98 L38 110 L38 190 L62 190 L62 150 L62 200 L138 200 L138 150 L138 190 L162 190 L162 110 L140 98 Z", fill: "#1d4ed8", stroke: KONTUR, "stroke-width": 3 }, s);
+                            el("line", { x1: 100, y1: 102, x2: 100, y2: 198, stroke: "#93c5fd", "stroke-width": 3 }, s);
+                            for (var q = 120; q < 200; q += 22) el("line", { x1: 62, y1: q, x2: 138, y2: q, stroke: "#1e3a8a", "stroke-width": 2 }, s); }
+    if (h("regenjacke"))  { el("path", { d: "M60 98 L40 110 L40 190 L62 190 L62 150 L62 200 L138 200 L138 150 L138 190 L160 190 L160 110 L140 98 Z", fill: "#facc15", stroke: KONTUR, "stroke-width": 3 }, s);
+                            el("line", { x1: 100, y1: 102, x2: 100, y2: 198, stroke: KONTUR, "stroke-width": 2 }, s); }
+    // Haende
+    if (h("handschuhe")) { el("circle", { cx: 52, cy: 192, r: 13, fill: "#dc2626", stroke: KONTUR, "stroke-width": 2.5 }, s); el("circle", { cx: 148, cy: 192, r: 13, fill: "#dc2626", stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    else { el("circle", { cx: 55, cy: 186, r: 10, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s); el("circle", { cx: 145, cy: 186, r: 10, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    // Fuesse
+    var schuh = h("sandalen") ? ["#a16207", 8] : h("turnschuhe") ? ["#ffffff", 14] : h("gummistiefel") ? ["#eab308", 34] : h("winterstiefel") ? ["#78350f", 30] : null;
+    [[70, 262], [104, 262]].forEach(function(p){
+      if (!schuh){ el("ellipse", { cx: p[0] + 13, cy: p[1] + 12, rx: 15, ry: 8, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s); return; }
+      el("rect", { x: p[0] - 4, y: p[1] + 14 - schuh[1], width: 34, height: schuh[1] + 6, rx: 6, fill: schuh[0], stroke: KONTUR, "stroke-width": 2.5 }, s);
+    });
+    // Hals, Kopf
+    el("rect", { x: 91, y: 84, width: 18, height: 20, fill: HAUT, stroke: KONTUR, "stroke-width": 2.5 }, s);
+    if (h("schal")) { el("rect", { x: 80, y: 88, width: 42, height: 16, rx: 7, fill: "#f59e0b", stroke: KONTUR, "stroke-width": 2.5 }, s); el("rect", { x: 106, y: 96, width: 12, height: 40, rx: 5, fill: "#f59e0b", stroke: KONTUR, "stroke-width": 2.5 }, s); }
+    el("circle", { cx: 100, cy: 58, r: 30, fill: HAUT, stroke: KONTUR, "stroke-width": 3 }, s);
+    el("path", { d: "M72 50 Q100 18 128 50 Q112 38 100 40 Q86 38 72 50 Z", fill: "#7c4a1e", stroke: KONTUR, "stroke-width": 2 }, s);
+    if (h("sonnenbrille")) { el("rect", { x: 80, y: 52, width: 18, height: 12, rx: 4, fill: "#111827" }, s); el("rect", { x: 102, y: 52, width: 18, height: 12, rx: 4, fill: "#111827" }, s); el("line", { x1: 98, y1: 57, x2: 102, y2: 57, stroke: "#111827", "stroke-width": 3 }, s); }
+    else { el("circle", { cx: 89, cy: 58, r: 3.5, fill: KONTUR }, s); el("circle", { cx: 111, cy: 58, r: 3.5, fill: KONTUR }, s); }
+    el("path", { d: "M90 72 Q100 80 110 72", fill: "none", stroke: KONTUR, "stroke-width": 3, "stroke-linecap": "round" }, s);
+    if (h("kappe"))  { el("path", { d: "M70 44 Q100 10 130 44 Z", fill: "#16a34a", stroke: KONTUR, "stroke-width": 2.5 }, s); el("rect", { x: 118, y: 38, width: 30, height: 8, rx: 4, fill: "#15803d", stroke: KONTUR, "stroke-width": 2 }, s); }
+    if (h("muetze")) { el("path", { d: "M68 50 Q100 0 132 50 Z", fill: "#dc2626", stroke: KONTUR, "stroke-width": 2.5 }, s); el("rect", { x: 66, y: 44, width: 68, height: 12, rx: 6, fill: "#fff", stroke: KONTUR, "stroke-width": 2 }, s); el("circle", { cx: 100, cy: 14, r: 9, fill: "#fff", stroke: KONTUR, "stroke-width": 2 }, s); }
+    if (h("sonnencreme")) { el("rect", { x: 160, y: 236, width: 18, height: 36, rx: 5, fill: "#fb923c", stroke: KONTUR, "stroke-width": 2 }, s); el("rect", { x: 164, y: 228, width: 10, height: 10, fill: "#fff", stroke: KONTUR, "stroke-width": 2 }, s); }
+  }
+
+  /* ---------- Ablauf ---------- */
+  var liste = [], pos = 0, an = [], versuch = 0, ergebnis = [], sauber = 0;
+
+  function zeige(n){ ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); }); window.scrollTo(0, 0); }
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+
+  function starten(){
+    liste = mische(WETTER.slice()); pos = 0; sauber = 0; ergebnis = liste.map(function(){ return ""; });
+    zeige("spiel"); lage();
+  }
+
+  function fortschrittMalen(){
+    $("fortschritt").innerHTML = ergebnis.map(function(e, i){ return '<i class="' + e + (i === pos ? " n" : "") + '"></i>'; }).join("") +
+      '<span style="margin-left:6px">' + (pos + 1) + ' von ' + liste.length + '</span>';
+  }
+
+  function lage(){
+    var w = liste[pos];
+    an = []; versuch = 0;
+    var box = $("wetter");
+    box.style.background = w.farbe;
+    box.innerHTML = '<span class="symbol">' + w.symbol + '</span><span class="grad">' + (w.grad < 0 ? "−" + Math.abs(w.grad) : w.grad) + ' °C</span><span class="text">' + w.text + '</span>';
+    var t = $("teile"); t.innerHTML = "";
+    Object.keys(TEILE).forEach(function(id){
+      var b = document.createElement("button");
+      b.className = "teil"; b.setAttribute("data-id", id);
+      var name = (id === "sandalen" && w.name === "Freibad im Sommer") ? "Badelatschen" : TEILE[id].name;
+      b.innerHTML = '<span class="e">' + TEILE[id].e + '</span>' + name;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function(){ umziehen(id); });
+      t.appendChild(b);
+    });
+    $("rueck").innerHTML = "";
+    $("pruefen").disabled = false;
+    figurMalen(an); fortschrittMalen();
+    sprich(w.name + ". " + w.text.replace("−", "minus ") + ". Was zieht Leon an?");
+  }
+
+  function umziehen(id){
+    var i = an.indexOf(id);
+    if (i >= 0) an.splice(i, 1);
+    else {
+      // Auf demselben Platz kann nur eines sitzen - das alte kommt aus
+      an = an.filter(function(x){ return TEILE[x].platz !== TEILE[id].platz; });
+      an.push(id);
+    }
+    Array.prototype.forEach.call($("teile").children, function(b){
+      var drin = an.indexOf(b.getAttribute("data-id")) >= 0;
+      b.classList.toggle("an", drin); b.setAttribute("aria-pressed", drin ? "true" : "false");
+    });
+    figurMalen(an);
+    if ($("rueck").innerHTML) $("rueck").innerHTML = "";
+  }
+
+  function pruefen(){
+    var w = liste[pos];
+    var zuViel = an.filter(function(id){ return w.falsch[id]; });
+    var fehlt = w.brauchtEins.filter(function(gruppe){ return !gruppe.some(function(id){ return an.indexOf(id) >= 0; }); });
+    var stimmt = !zuViel.length && !fehlt.length;
+    if (stimmt){
+      var erster = versuch === 0;
+      try { window.lernstand && window.lernstand.antwort(erster, "kleidung und wetter", "", w.name); } catch(e){}
+      if (erster) { sauber++; ergebnis[pos] = "g"; } else ergebnis[pos] = "t";
+      $("pruefen").disabled = true;
+      $("rueck").innerHTML = '<div class="rueck gut"><b>Perfekt angezogen!</b> So kann Leon bei ' + w.text.replace(/ –.*/, "") + ' trainieren.<br>' +
+        'Das Wetter passt zur Jahreszeit <b>' + w.jahreszeit + '</b>.</div>' +
+        '<div class="reihe"><button class="knopf" id="weiter">' + (pos < liste.length - 1 ? "Nächstes Wetter ›" : "Fertig ›") + '</button></div>';
+      $("weiter").addEventListener("click", weiter);
+      sprich("Perfekt angezogen!");
+      fortschrittMalen(); konfetti(false);
+      return;
+    }
+    if (versuch === 0){ try { window.lernstand && window.lernstand.antwort(false, "kleidung und wetter", zuViel.concat(fehlt.map(function(g){ return "ohne " + g[0]; })).join(","), w.name); } catch(e){} }
+    versuch++;
+    var punkte = zuViel.map(function(id){ return "<li>" + w.falsch[id] + "</li>"; })
+      .concat(fehlt.map(function(g){ return "<li>" + (w.gruende[g[0]] || ("Es fehlt noch: " + TEILE[g[0]].name + ".")) + "</li>"; }));
+    $("rueck").innerHTML = '<div class="rueck schlecht"><b>Fast! Schau nochmal:</b><ul>' + punkte.join("") + '</ul></div>';
+    sprich("Fast! " + $("rueck").innerText.replace("Fast! Schau nochmal:", ""));
+    try { $("rueck").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function weiter(){
+    pos++;
+    if (pos < liste.length){ lage(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    var d = lesen(); d.angezogen = (d.angezogen || 0) + liste.length; d.runden = (d.runden || 0) + 1; schreiben(d);
+    $("ende-text").textContent = sauber === liste.length ? "Bei jedem Wetter gleich beim ersten Mal richtig – du weißt genau, was man bei Hitze, Regen und Schnee braucht."
+      : "Beim ersten Mal passte es " + sauber + "-mal, und am Ende war Leon immer richtig angezogen. Genau so lernt man es.";
+    zeige("ende"); rueckblickMalen(); konfetti(true);
+  }
+
+  $("pruefen").addEventListener("click", pruefen);
+  $("hoeren").addEventListener("click", function(){ var w = liste[pos]; if (w) sprich(w.name + ". " + w.text.replace("−", "minus ") + ". Was zieht Leon an?"); });
+  $("los").addEventListener("click", starten);
+  $("nochmal").addEventListener("click", starten);
+
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(g){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (g ? 120 : 30); i++) stuecke.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
+      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#10b981","#16a34a","#ffffff","#f79009","#3b82f6"][i%5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  window.__garderobe = { TEILE: TEILE, WETTER: WETTER, starten: starten, zieheAn: function(ids){ ids.forEach(umziehen); }, pruefe: pruefen,
+    zustand: function(){ return { pos: pos, lage: liste[pos] && liste[pos].name, an: an.slice() }; }, weiter: function(){ var w = $("weiter"); if (w) w.click(); } };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
