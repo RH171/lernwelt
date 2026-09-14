@@ -275,7 +275,56 @@ const MIN_AUFGABEN = 5;
 // Ueberschrift vergessen.
 const TITEL_MURKS = /^(platzhalter|titel|spiel|unbenannt|todo|beispiel|test|neues spiel|lernspiel)\.?$/i;
 
-function pruefeSpiel(spiel, kind) {
+// ---- Rechnen, das sich in ein Deutsch- oder HSU-Spiel verirrt hat ----------
+//
+// Regel D11 im Auftrag sagt es seit dem 14.09.2026 ausdruecklich ("KEIN RECHNEN
+// UND KEIN ABZÄHLEN in Deutsch und HSU"), und trotzdem stand in Leons Spiel
+// psu4ydv39g ueber das Praedikat: "Leon haelt 6 Baelle, Theo haelt 4 Baelle.
+// Wie viele sind das zusammen?" Eine Bitte im Auftrag ist eben keine Pruefung -
+// dieselbe Lehre wie bei den Namen (namenRichten in _namen.js).
+//
+// Woher das kommt, ist kein Zufall: Leons Eingabefeld hat nur Ziffern, eine
+// getippte Loesung MUSS also eine Zahl sein. Wer in einem Deutsch-Spiel eine
+// "eingabe"-Aufgabe bauen will, landet darum schnell beim Rechnen. Erlaubt
+// bleibt nur, was aus dem Fach selbst kommt: Silben, Buchstaben, Nomen im Satz,
+// die fuenf Sinne, die vier Jahreszeiten.
+const FACHFREMD_MARKE = "fachfremd: ";
+
+// Merkmale, die eine Rechenfertigkeit benennen. Bewusst NICHT das nackte
+// "zaehlen": "silben zaehlen" und "buchstaben zaehlen" sind Deutsch und sollen
+// bleiben, "mengen zaehlen" ist Mathe.
+const RECHEN_MERKMAL = /(zusammenzaehlen|zusammenzählen|verdoppeln|halbieren|abziehen|zehneruebergang|zehnerübergang|einmaleins|er-reihe|rueckgeld|rückgeld|muenzen|münzen|nachbarzahlen|zahlen zerlegen|mengen zaehlen|mengen zählen|plus|minus|malnehmen|addieren|subtrahieren|rechnen)/i;
+
+// Eine Rechnung, die in der Frage selbst steht: "3 + 5", "12 : 4".
+const RECHEN_FRAGE = /\d+\s*(?:\+|-|−|·|×|\*|:)\s*\d+/;
+
+// Gilt nur fuer Leseanfaenger - fuer sie steht D1/D10/D11 ueberhaupt im
+// Auftrag. Bei Paul kann eine Schrittkette in Deutsch sinnvoll sein
+// (Satzglieder der Reihe nach), bei Leon nicht.
+export function fachfremd(a, spiel, kind) {
+  const k = KINDER[kind];
+  if (!k || k.alter > 8) return "";
+  const fach = String((spiel && spiel.fach) || "").toLowerCase();
+  if (fach !== "deutsch" && fach !== "hsu") return "";
+  if ((a.art || "") === "teilschritte") return "ist eine Rechen-Schrittkette";
+  if (RECHEN_MERKMAL.test(String(a.merkmal || ""))) return `übt "${a.merkmal}" statt ${fach === "hsu" ? "HSU" : "Deutsch"}`;
+  if (RECHEN_FRAGE.test(String(a.frage || ""))) return "rechnet mitten in der Frage";
+  return "";
+}
+
+// Die fachfremden Aufgaben aus dem Spiel nehmen. Gibt zurueck, was rausflog -
+// zum Mitschreiben, nicht zum Anzeigen.
+export function fachfremdeEntfernen(spiel, kind) {
+  const raus = [];
+  spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
+    const grund = fachfremd(a, spiel, kind);
+    if (grund) { raus.push(grund); return false; }
+    return true;
+  });
+  return raus;
+}
+
+export function pruefeSpiel(spiel, kind) {
   const m = [];
   const auf = (spiel && spiel.aufgaben) || [];
   const t = String((spiel && spiel.titel) || "").trim();
@@ -286,6 +335,8 @@ function pruefeSpiel(spiel, kind) {
   }
   auf.forEach((a, i) => {
     const nr = i + 1;
+    const fremd = fachfremd(a, spiel, kind);
+    if (fremd) m.push(`${FACHFREMD_MARKE}Aufgabe ${nr} ${fremd}`);
     if (!a.frage || !String(a.frage).trim()) m.push(`Aufgabe ${nr} ohne Frage`);
     if (a.richtig === undefined || a.richtig === null || String(a.richtig).trim() === "")
       m.push(`Aufgabe ${nr} ohne Lösung`);
