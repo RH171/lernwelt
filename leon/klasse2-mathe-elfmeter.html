@@ -19,226 +19,17 @@
   Nachspielzeit nochmal.
 -->
 <link rel="stylesheet" href="/beruehrung.css">
-<style>
-  :root{
-    --bg:#eef6f0; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
-    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --schlecht:#f04438;
-    --rasen:#3fae5a; --rasen2:#379e51;
-    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
-    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0}
-  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
-       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
-  .huelle{max-width:900px;margin:0 auto}
-  .verborgen{display:none!important}
-
-  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
-  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
-    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
-  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;letter-spacing:-.01em}
-  .punkte{font-family:var(--rund);font-weight:700;font-size:17px;background:#fff;border:1px solid var(--line);
-    border-radius:999px;padding:10px 14px;white-space:nowrap}
-  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;
-    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
-
-  /* ---------- Start ---------- */
-  .start h2{font-family:var(--rund);font-size:26px;margin:4px 0 6px;text-align:center}
-  .start p{color:var(--muted);text-align:center;margin:0 0 18px;font-size:16px;line-height:1.5}
-  .stufen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .stufe{border:2px solid #d6f0de;background:#f6fdf8;border-radius:20px;padding:18px 8px;cursor:pointer;
-    font-family:var(--rund);font-size:19px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px;
-    color:var(--ink);min-height:120px;justify-content:center}
-  .stufe .gross{font-size:34px}
-  .stufe .klein{font-family:var(--font);font-size:13px;font-weight:600;color:var(--muted)}
-  .stufe.jetzt{border-color:var(--leon);background:#eefbf2}
-  .stufe:active{transform:scale(.97)}
-  .rueckblick{margin-top:16px;text-align:center;color:var(--leon-dunkel);font-weight:700;font-size:15px}
-  @media (max-width:520px){ .stufen{grid-template-columns:1fr} .stufe{min-height:80px;flex-direction:row;gap:12px} }
-
-  /* ---------- Spielfeld ---------- */
-  .feld{position:relative;border-radius:22px;overflow:hidden;
-    background:repeating-linear-gradient(90deg,var(--rasen) 0 60px,var(--rasen2) 60px 120px);
-    height:min(56vh,440px);min-height:300px;user-select:none;-webkit-user-select:none}
-  .tor{position:absolute;left:6%;right:6%;top:6%;height:52%;
-    border:9px solid #fff;border-bottom:none;border-radius:6px 6px 0 0;
-    background:
-      repeating-linear-gradient(0deg,rgba(255,255,255,.28) 0 2px,transparent 2px 16px),
-      repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 2px,transparent 2px 16px),
-      rgba(10,40,20,.25);
-    display:grid;grid-template-columns:repeat(3,1fr)}
-  .tor.wackelt{animation:netz .45s}
-  @keyframes netz{25%{transform:scaleY(1.03)}60%{transform:scaleY(.985)}}
-  .ecke{border:none;background:transparent;cursor:pointer;display:flex;align-items:flex-start;justify-content:center;
-    padding-top:10px;font-family:var(--rund);font-weight:800;color:var(--ink);min-height:44px}
-  .ecke span{background:#fff;border-radius:16px;min-width:74px;padding:8px 12px;font-size:clamp(28px,5vw,40px);
-    box-shadow:0 4px 0 rgba(0,0,0,.18);line-height:1.1}
-  .ecke:active span{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
-  .ecke[disabled]{cursor:default}
-  .ecke.richtig span{background:#d1fadf;outline:4px solid var(--gut)}
-  .ecke.falsch span{background:#fee4e2;outline:4px solid var(--schlecht)}
-  .linie{position:absolute;left:0;right:0;top:calc(6% + 52%);height:4px;background:rgba(255,255,255,.8)}
-  .strafraum{position:absolute;left:18%;right:18%;top:calc(6% + 52%);height:22%;border:4px solid rgba(255,255,255,.8);border-top:none}
-
-  /* Leon im Tor - aus Formen gebaut, damit er auf jedem Geraet gleich aussieht */
-  .keeper{position:absolute;left:50%;top:calc(6% + 52% - 118px);width:80px;height:118px;margin-left:-40px;
-    transition:transform .45s cubic-bezier(.3,1.4,.5,1);transform-origin:50% 90%;z-index:3;pointer-events:none}
-  .keeper .kopf{position:absolute;left:25px;top:0;width:30px;height:30px;border-radius:50%;background:#f2c7a0;border:3px solid #1b1c22}
-  .keeper .koerper{position:absolute;left:14px;top:30px;width:52px;height:52px;border-radius:14px 14px 8px 8px;
-    background:#16a34a;border:3px solid #1b1c22;color:#fff;font:800 22px/46px var(--rund);text-align:center}
-  .keeper .arm{position:absolute;top:30px;width:14px;height:44px;background:#16a34a;border:3px solid #1b1c22;border-radius:8px}
-  .keeper .arm.l{left:0;transform:rotate(28deg)} .keeper .arm.r{right:0;transform:rotate(-28deg)}
-  .keeper .hand{position:absolute;top:18px;font-size:22px}
-  .keeper .hand.l{left:-12px} .keeper .hand.r{right:-12px}
-  .keeper .bein{position:absolute;top:80px;width:14px;height:36px;background:#1b1c22;border-radius:6px}
-  .keeper .bein.l{left:22px} .keeper .bein.r{right:22px}
-  .keeper .name{position:absolute;left:50%;top:-24px;transform:translateX(-50%);background:#fff;border-radius:8px;
-    padding:1px 8px;font:700 13px/20px var(--font);white-space:nowrap}
-
-  .ball{position:absolute;left:50%;top:78%;width:54px;height:54px;margin:-27px 0 0 -27px;font-size:46px;line-height:54px;
-    text-align:center;z-index:4;pointer-events:none;transition:transform .5s cubic-bezier(.2,.8,.3,1)}
-  .aufgabe{position:absolute;left:50%;top:78%;transform:translate(-50%,-112%);background:#fff;border-radius:18px;
-    padding:8px 18px;font:800 clamp(30px,5.4vw,42px)/1.1 var(--rund);box-shadow:0 5px 0 rgba(0,0,0,.2);white-space:nowrap;z-index:5}
-  .schuetze{position:absolute;right:14%;top:70%;text-align:center;z-index:2;pointer-events:none}
-  .schuetze .figur{font-size:48px;line-height:1;transform:scaleX(-1);display:block}
-  .schuetze .wer{background:rgba(255,255,255,.92);border-radius:8px;padding:1px 8px;font:700 13px/20px var(--font)}
-  .vorlesen{position:absolute;left:12px;bottom:12px;width:52px;height:52px;border-radius:50%;border:none;background:#fff;
-    font-size:24px;cursor:pointer;z-index:6;box-shadow:0 3px 0 rgba(0,0,0,.18)}
-  .ruf{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);opacity:0;z-index:7;
-    font:800 clamp(30px,6vw,46px)/1 var(--rund);color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.35);white-space:nowrap;
-    transition:all .3s;pointer-events:none}
-  .ruf.zeigen{opacity:1;transform:translate(-50%,-50%) scale(1)}
-
-  .leiste{display:flex;align-items:center;gap:10px;margin:10px 2px 0;color:var(--muted);font-weight:600;font-size:15px}
-  .baelle{display:flex;gap:5px;flex-wrap:wrap}
-  .baelle i{width:14px;height:14px;border-radius:50%;background:#d0d5dd;display:block}
-  .baelle i.g{background:var(--gut)} .baelle i.t{background:var(--schlecht)} .baelle i.n{outline:3px solid var(--leon);outline-offset:1px}
-  .nachspiel{background:#fff7e6;color:#93370d;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px}
-
-  /* ---------- Rueckmeldung ---------- */
-  .rueck{margin-top:10px}
-  .rueck .satz{font-family:var(--rund);font-size:20px;font-weight:700;margin:0 0 6px}
-  .rueck .satz.gut{color:var(--leon-dunkel)} .rueck .satz.schlecht{color:#b42318}
-  .rueck .diagnose{background:#fff4ed;border-radius:12px;padding:10px 12px;margin:6px 0;font-size:16px;line-height:1.45}
-  .rueck .weg{font-size:17px;line-height:1.6;margin:6px 0}
-  .zwanzig{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;max-width:420px;margin:8px 0}
-  .zwanzig i{aspect-ratio:1;border-radius:50%;border:2px solid #d0d5dd;display:block;position:relative}
-  .zwanzig i:nth-child(5n){margin-right:6px}
-  .zwanzig i.a{background:#ef4444;border-color:#ef4444} .zwanzig i.b{background:#3b82f6;border-color:#3b82f6}
-  .zwanzig i.weg{background:#fff;border-color:#ef4444}
-  .zwanzig i.weg::after{content:"";position:absolute;left:-2px;right:-2px;top:45%;height:3px;background:#1b1c22;transform:rotate(-45deg)}
-  .stangen{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;margin:8px 0}
-  .stangen .z{width:12px;height:80px;border-radius:3px;background:repeating-linear-gradient(0deg,#ef4444 0 7px,#fff 7px 8px);border:1px solid #b91c1c}
-  .stangen .e{width:12px;height:12px;border-radius:3px;background:#3b82f6}
-  .stangen .z.neu{background:repeating-linear-gradient(0deg,#3b82f6 0 7px,#fff 7px 8px);border-color:#1d4ed8}
-  .stangen .e.neu{background:#93c5fd}
-  .stangen .luecke{width:14px}
-  .weiter{display:block;width:100%;margin-top:12px;border:none;border-radius:16px;background:var(--leon);color:#fff;
-    font:700 19px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px}
-  .weiter:active{transform:scale(.98)}
-
-  /* ---------- Ende ---------- */
-  .ende{text-align:center}
-  .ende .gross{font-size:60px}
-  .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
-  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 16px}
-  .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#f2f4f7;color:var(--ink);
-    font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none}
-
-  /* iPad quer ist niedrig: das Feld darf nicht alles fressen */
-  @media (max-height:760px) and (orientation:landscape){
-    .feld{height:min(52vh,380px);min-height:280px}
-    header{margin-bottom:6px}
-  }
-  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
-</style>
+<link rel="stylesheet" href="elfmeter.css">
 </head>
 <body>
-<div class="huelle">
-  <header>
-    <a class="zurueck" href="/leon/">‹ Zurück</a>
-    <h1>Leon hält den Elfer</h1>
-    <div class="punkte verborgen" id="punkte">🧤 0</div>
-  </header>
-
-  <!-- Start -->
-  <section class="karte start" id="sicht-start">
-    <div style="text-align:center;font-size:54px">🧤⚽</div>
-    <h2>Du stehst im Tor!</h2>
-    <p>Auf dem Ball steht eine Rechnung. Spring in die Ecke mit dem richtigen Ergebnis – dann hältst du den Elfer.</p>
-    <div class="stufen">
-      <button class="stufe" data-stufe="10"><span class="gross">🥅</span>Bis 10<span class="klein">zum Warmwerden</span></button>
-      <button class="stufe jetzt" data-stufe="20"><span class="gross">⚽</span>Bis 20<span class="klein">über die 10</span></button>
-      <button class="stufe" data-stufe="100"><span class="gross">🏟️</span>Bis 100<span class="klein">Zehner und Einer</span></button>
-    </div>
-    <div class="rueckblick verborgen" id="rueckblick"></div>
-  </section>
-
-  <!-- Spiel -->
-  <section class="verborgen" id="sicht-spiel">
-    <div class="feld" id="feld">
-      <div class="tor" id="tor">
-        <button class="ecke" data-ecke="0"><span></span></button>
-        <button class="ecke" data-ecke="1"><span></span></button>
-        <button class="ecke" data-ecke="2"><span></span></button>
-      </div>
-      <div class="linie"></div>
-      <div class="strafraum"></div>
-      <div class="keeper" id="keeper">
-        <div class="name">Leon</div>
-        <div class="arm l"></div><div class="arm r"></div>
-        <div class="hand l">🧤</div><div class="hand r">🧤</div>
-        <div class="kopf"></div>
-        <div class="koerper">1</div>
-        <div class="bein l"></div><div class="bein r"></div>
-      </div>
-      <div class="aufgabe" id="aufgabe"></div>
-      <div class="ball" id="ball">⚽</div>
-      <div class="schuetze"><span class="figur">🏃</span><span class="wer" id="schuetze"></span></div>
-      <button class="vorlesen" id="vorlesen" aria-label="Vorlesen">🔊</button>
-      <div class="ruf" id="ruf"></div>
-    </div>
-    <div class="leiste">
-      <div class="baelle" id="baelle"></div>
-      <span class="nachspiel verborgen" id="nachspiel">⏱️ Nachspielzeit</span>
-    </div>
-    <div class="karte rueck verborgen" id="rueck"></div>
-  </section>
-
-  <!-- Ende -->
-  <section class="karte ende verborgen" id="sicht-ende">
-    <div class="gross">🏆</div>
-    <h2 id="ende-titel"></h2>
-    <p id="ende-text"></p>
-    <button class="weiter" id="nochmal">Nochmal ins Tor</button>
-    <button class="knopf2" id="andere">Andere Stufe wählen</button>
-    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
-  </section>
-</div>
-<canvas class="konfetti" id="konfetti"></canvas>
+<div id="elfmeter"></div>
 
 <script>
+/* Mathe fuer die Elfmeter-Maschine (elfmeter.js). Rechnungen, Ablenker und
+   Rechenweg sind dieselben wie in der ersten Fassung vom 14.09.2026 - nur die
+   Spielmechanik ist in die gemeinsame Datei gezogen. */
 (function(){
   "use strict";
-  var $ = function(id){ return document.getElementById(id); };
-
-  /* ---------- Speicher: nur Rueckschau, nichts, was man verlieren kann ---------- */
-  // Schluessel beginnt mit "leon-", damit der Sync ihn Leon zuordnet.
-  var SPEICHER = "leon-elfmeter";
-  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
-  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
-
-  function rueckblickMalen(){
-    var d = lesen();
-    if (d.gehalten){
-      $("rueckblick").textContent = "🧤 Du hast schon " + d.gehalten + " Elfer gehalten.";
-      $("rueckblick").classList.remove("verborgen");
-    }
-  }
-  rueckblickMalen();
-
-  /* ---------- Aufgaben ---------- */
   function zufall(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
   function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
 
@@ -346,202 +137,39 @@
     return s + '<div class="weg">Erst die Zehner: ' + zl + '<br>Dann die Einer: ' + el + '<br>Zusammen: <b>' + r + '</b></div>';
   }
 
-  /* ---------- Vorlesen ---------- */
-  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
-  function sprich(t){
-    if (!kannSprechen || document.hidden) return;
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = .9;
-      var st = (window.speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
-      if (st) u.voice = st;
-      window.speechSynthesis.speak(u);
-    } catch(e){}
-  }
-  if (!kannSprechen) $("vorlesen").classList.add("verborgen");
-  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
 
-  /* ---------- Spielablauf ---------- */
-  var RUNDE = 10;
-  var SCHUETZEN = ["Paul", "Xaver", "Helena"];
-  var stufe = 20, liste = [], pos = 0, gehalten = 0, aufgeholt = 0, verpasst = [], nachspielzeit = false, ergebnis = [], gesperrt = false;
-
-  function zeige(welche){
-    ["start", "spiel", "ende"].forEach(function(n){ $("sicht-" + n).classList.toggle("verborgen", n !== welche); });
-    $("punkte").classList.toggle("verborgen", welche !== "spiel");
-    window.scrollTo(0, 0);
+  function aufgabe(stufe, nr){
+    var auf = aufgabeBauen(stufe, nr);
+    var zeichen = auf.plus ? " + " : " − ";
+    auf.text = auf.a + zeichen + auf.b;
+    auf.sprechen = auf.a + (auf.plus ? " plus " : " minus ") + auf.b;
+    auf.diagnose = function(g){ return diagnose(auf, g); };
+    auf.erklaerung = function(g, stimmt){
+      if (stimmt){
+        var h = '<div class="weg"><b>' + auf.a + zeichen + auf.b + ' = ' + auf.r + '</b></div>';
+        if (stufe === 20 && /zehneruebergang/.test(auf.merkmal)) h += wegHtml(auf);
+        return h;
+      }
+      return wegHtml(auf);
+    };
+    return auf;
   }
 
-  Array.prototype.forEach.call(document.querySelectorAll(".stufe"), function(k){
-    k.addEventListener("click", function(){ stufe = +k.getAttribute("data-stufe"); rundeStarten(); });
-  });
-
-  function rundeStarten(){
-    liste = []; for (var i = 0; i < RUNDE; i++) liste.push(aufgabeBauen(stufe, i));
-    pos = 0; gehalten = 0; aufgeholt = 0; verpasst = []; nachspielzeit = false;
-    ergebnis = liste.map(function(){ return ""; });
-    $("nachspiel").classList.add("verborgen");
-    zeige("spiel");
-    elfer();
-  }
-
-  function baelleMalen(){
-    $("baelle").innerHTML = liste.map(function(_, i){
-      var k = nachspielzeit ? "g" : (ergebnis[i] || "");
-      if (!nachspielzeit && i === pos) k += " n";
-      return '<i class="' + k + '"></i>';
-    }).join("");
-    $("punkte").textContent = "🧤 " + (gehalten + aufgeholt);
-  }
-
-  function sprechText(auf){ return auf.a + (auf.plus ? " plus " : " minus ") + auf.b; }
-
-  function elfer(){
-    var auf = liste[pos];
-    gesperrt = false;
-    $("aufgabe").textContent = auf.a + (auf.plus ? " + " : " − ") + auf.b;
-    $("schuetze").textContent = SCHUETZEN[pos % SCHUETZEN.length] + " schießt";
-    $("keeper").style.transform = "";
-    $("ball").style.transform = "";
-    $("ball").style.opacity = "1";
-    $("aufgabe").style.opacity = "1";
-    $("ruf").className = "ruf";
-    $("rueck").classList.add("verborgen");
-    Array.prototype.forEach.call(document.querySelectorAll(".ecke"), function(e, i){
-      e.disabled = false; e.className = "ecke";
-      e.querySelector("span").textContent = auf.ecken[i];
-      e.setAttribute("aria-label", "Ecke mit " + auf.ecken[i]);
-    });
-    baelleMalen();
-  }
-
-  $("vorlesen").addEventListener("click", function(){
-    var auf = liste[pos]; if (!auf) return;
-    sprich(sprechText(auf) + ". Wo springst du hin: " + auf.ecken.join(", ") + "?");
-  });
-
-  Array.prototype.forEach.call(document.querySelectorAll(".ecke"), function(e){
-    e.addEventListener("click", function(){ if (!gesperrt) schuss(+e.getAttribute("data-ecke")); });
-  });
-
-  function mitte(el, bezug){
-    var r = el.getBoundingClientRect(), b = bezug.getBoundingClientRect();
-    return { x: r.left + r.width / 2 - b.left, y: r.top + r.height / 2 - b.top };
-  }
-
-  function schuss(ecke){
-    gesperrt = true;
-    var auf = liste[pos];
-    var ziel = auf.ecken.indexOf(auf.r);
-    var stimmt = ecke === ziel;
-    var feld = $("feld"), ecken = document.querySelectorAll(".ecke");
-    Array.prototype.forEach.call(ecken, function(x){ x.disabled = true; });
-
-    // Leon hechtet
-    var kp = mitte($("keeper"), feld), zielEcke = mitte(ecken[ecke], feld);
-    var dx = zielEcke.x - kp.x, dreh = ecke === 1 ? 0 : (ecke === 0 ? -55 : 55);
-    $("keeper").style.transform = "translate(" + dx + "px," + (ecke === 1 ? -10 : 18) + "px) rotate(" + dreh + "deg)";
-
-    // Der Ball fliegt dorthin, wo die richtige Zahl steht
-    var bp = mitte($("ball"), feld), zb = mitte(ecken[ziel], feld);
-    $("aufgabe").style.opacity = "0";
-    setTimeout(function(){
-      $("ball").style.transform = "translate(" + (zb.x - bp.x) + "px," + (zb.y - bp.y + 30) + "px) scale(.62)";
-    }, 120);
-
-    setTimeout(function(){
-      ecken[ziel].classList.add("richtig");
-      if (!stimmt) { ecken[ecke].classList.add("falsch"); $("tor").classList.add("wackelt"); setTimeout(function(){ $("tor").classList.remove("wackelt"); }, 500); }
-      $("ruf").textContent = stimmt ? "Gehalten! 🧤" : "Tor für " + SCHUETZEN[pos % SCHUETZEN.length];
-      $("ruf").classList.add("zeigen");
-      if (stimmt) konfetti(false);
-      auswerten(auf, stimmt, auf.ecken[ecke]);
-    }, 650);
-  }
-
-  function auswerten(auf, stimmt, gewaehlt){
-    try { window.lernstand && window.lernstand.antwort(stimmt, auf.merkmal, gewaehlt, auf.r); } catch(e){}
-    var r = $("rueck"), h = "";
-    if (nachspielzeit){
-      if (stimmt) aufgeholt++;
-    } else {
-      ergebnis[pos] = stimmt ? "g" : "t";
-      if (stimmt) gehalten++; else verpasst.push(auf);
-    }
-    baelleMalen();
-    if (stimmt){
-      h += '<p class="satz gut">' + (nachspielzeit ? "Jetzt sitzt es!" : "Stark gehalten!") + ' ' + auf.a + (auf.plus ? " + " : " − ") + auf.b + ' = ' + auf.r + '</p>';
-      if (stufe === 20 && /zehneruebergang/.test(auf.merkmal)) h += wegHtml(auf);
-    } else {
-      var d = diagnose(auf, gewaehlt);
-      h += '<p class="satz schlecht">Der war schwer. Die Lösung ist ' + auf.r + '.</p>';
-      if (d) h += '<div class="diagnose">' + d + '</div>';
-      h += wegHtml(auf);
-      if (!nachspielzeit) h += '<div class="weg">Den Elfer bekommst du in der Nachspielzeit nochmal.</div>';
-    }
-    h += '<button class="weiter" id="weiter">Nächster Elfer ›</button>';
-    r.innerHTML = h;
-    r.classList.remove("verborgen");
-    $("weiter").addEventListener("click", weiter);
-    setTimeout(function(){ try { r.scrollIntoView({behavior:"smooth", block:"nearest"}); } catch(e){} }, 200);
-  }
-
-  function weiter(){
-    pos++;
-    if (pos < liste.length){ elfer(); window.scrollTo({top:0, behavior:"smooth"}); return; }
-    if (!nachspielzeit && verpasst.length){
-      nachspielzeit = true;
-      liste = mische(verpasst.map(function(a){ a.ecken = mische(a.ecken.slice()); return a; }));
-      pos = 0;
-      $("nachspiel").textContent = "⏱️ Nachspielzeit · " + (liste.length === 1 ? "ein Elfer" : liste.length + " Elfer") + " nochmal";
-      $("nachspiel").classList.remove("verborgen");
-      elfer(); window.scrollTo({top:0, behavior:"smooth"});
-      return;
-    }
-    ende();
-  }
-
-  function ende(){
-    var alle = gehalten + aufgeholt;
-    var d = lesen();
-    d.gehalten = (d.gehalten || 0) + alle;
-    d.runden = (d.runden || 0) + 1;
-    schreiben(d);
-    $("ende-titel").textContent = alle + " von " + RUNDE + " Elfern gehalten";
-    $("ende-text").textContent = alle === RUNDE && !aufgeholt
-      ? "Alle gehalten – und das beim ersten Sprung. Was für ein Torwart!"
-      : alle === RUNDE
-        ? "Am Ende alle gehalten – " + aufgeholt + " davon in der Nachspielzeit. Genau so wird man besser: dranbleiben."
-        : aufgeholt
-          ? "In der Nachspielzeit hast du noch " + aufgeholt + " gehalten. Weiter so!"
-          : "Gut gekämpft. Spiel gleich nochmal – beim zweiten Mal sitzt es schon besser.";
-    zeige("ende");
-    rueckblickMalen();
-    konfetti(true);
-  }
-
-  $("nochmal").addEventListener("click", rundeStarten);
-  $("andere").addEventListener("click", function(){ zeige("start"); });
-
-  /* ---------- Konfetti ---------- */
-  var fl = $("konfetti"), st = fl.getContext("2d"), teile = [], laeuft = false;
-  function konfetti(gross){
-    fl.width = innerWidth; fl.height = innerHeight;
-    for (var i = 0; i < (gross ? 120 : 30); i++) teile.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
-      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#10b981","#16a34a","#ffffff","#f79009","#3b82f6"][i%5] });
-    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
-  }
-  function male(){
-    st.clearRect(0, 0, fl.width, fl.height);
-    teile = teile.filter(function(s){ return s.y < fl.height + 30; });
-    teile.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
-    if (teile.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
-  }
-
-  // Zum Nachpruefen ohne Klicken (Messung, Tests)
-  window.__elfer = { aufgabeBauen: aufgabeBauen, diagnose: diagnose, starten: function(s){ stufe = s; rundeStarten(); }, schuss: function(e){ schuss(e); }, zustand: function(){ return { pos: pos, liste: liste, nachspielzeit: nachspielzeit, gehalten: gehalten }; } };
+  window.ELFMETER = {
+    speicher: "leon-elfmeter",
+    titel: "Leon hält den Elfer",
+    einleitung: "Auf dem Ball steht eine Rechnung. Spring in die Ecke mit dem richtigen Ergebnis – dann hältst du den Elfer.",
+    stufen: [
+      { id: 10,  gross: "🥅", name: "Bis 10",  klein: "zum Warmwerden" },
+      { id: 20,  gross: "⚽", name: "Bis 20",  klein: "über die 10", jetzt: true },
+      { id: 100, gross: "🏟️", name: "Bis 100", klein: "Zehner und Einer" }
+    ],
+    aufgabe: aufgabe,
+    aufgaben: function(stufe, n){ var l = []; for (var i = 0; i < n; i++) l.push(aufgabe(stufe, i)); return l; }
+  };
 })();
 </script>
+<script src="elfmeter.js"></script>
 <script src="/lernstand.js" defer></script>
 </body>
 </html>

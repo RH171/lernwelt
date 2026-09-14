@@ -133,8 +133,9 @@
     var auf = liste[pos];
     gesperrt = false;
     var chip = $("aufgabe");
-    chip.innerHTML = (auf.bild ? '<span class="bildchen">' + auf.bild + '</span>' : "") + esc(auf.text);
-    chip.classList.toggle("lang", String(auf.text).length > 12);
+    chip.innerHTML = (auf.frage ? '<small>' + esc(auf.frage) + '</small>' : "") +
+      (auf.bild ? '<span class="bildchen">' + auf.bild + '</span>' : "") + esc(auf.text || "");
+    chip.classList.toggle("lang", String(auf.text || "").length > 12);
     $("schuetze").textContent = SCHUETZEN[pos % SCHUETZEN.length] + " schießt";
     $("keeper").style.transform = "";
     $("ball").style.transform = "";
