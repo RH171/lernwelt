@@ -183,12 +183,13 @@ Was dabei auffällt, gehört zusätzlich als Regel in den Bauauftrag.
 
 ### Der ganze Bestand lässt sich in einem Rutsch nachprüfen
 
-`pruefeSpiel` ist aus `spiel-bauen.js` exportiert. Ein Spiel, das vor einer
-neuen Regel gebaut wurde, kennt sie nicht — also einmal alles durchlassen:
+    ./pruefe-bestand.sh            # leon und paul, 0 = sauber, 1 = es hakt
 
-    ./werkstatt.sh spiele leon /tmp/spiele/leon      # holt die Liste
-    ./werkstatt.sh spiel-roh leon <id> > …           # je Spiel
-    # dann pruefeSpiel(spiel, "leon") darüberlaufen lassen
+`pruefeSpiel` läuft nur beim **Bauen**. Ein Spiel, das im September gebaut
+wurde, kennt die Regel vom Oktober nie — es liegt im Regal und wird nicht
+wieder angeschaut. Deshalb ist die Funktion aus `spiel-bauen.js` exportiert,
+und `../pruefe-bestand.sh` hält jedes gespeicherte Spiel noch einmal dagegen.
+Es liest nur: kein Schreibvorgang, kein Geld.
 
 Am 14.09.2026 abends kamen so vier Spiele heraus, die ein Kind nicht lösen
 kann: dreimal eine getippte Lösung, die ein Wort ist (`Ball`, `Tore`, `Pokal`)
