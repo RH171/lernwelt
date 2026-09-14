@@ -128,6 +128,10 @@
   #steuerung{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;
              padding:14px 16px calc(18px + env(safe-area-inset-bottom));pointer-events:none}
   .knopfgruppe{display:flex;gap:14px;pointer-events:auto}
+  /* In der Steuerung "von allein rennen" gibt es die linke Gruppe nicht.
+     Ohne das hier rutscht der Sprungknopf dann in die linke Ecke - dorthin,
+     wo sonst "nach links" liegt. */
+  .knopfgruppe.rechts{margin-left:auto}
   .knopf{width:72px;height:72px;min-width:44px;min-height:44px;border-radius:50%;border:none;
          background:rgba(255,255,255,.86);box-shadow:0 5px 0 rgba(0,0,0,.20);font-size:32px;color:#1e293b;
          display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none;
@@ -272,7 +276,7 @@
       <button class="knopf" id="knopf-links" aria-label="Nach links">◀</button>
       <button class="knopf" id="knopf-rechts" aria-label="Nach rechts">▶</button>
     </div>
-    <div class="knopfgruppe">
+    <div class="knopfgruppe rechts">
       <button class="knopf" id="knopf-sprung" aria-label="Springen">SPRUNG</button>
     </div>
   </div>
@@ -1162,7 +1166,17 @@
       for (i=0;i<gegner.length;i++){ g = gegner[i];
         if (g.weg) continue;
         if (rechteck(held.x,held.y,held.w,held.h, g.x,g.y,g.w,g.h)){
-          g.weg = true; herzVerlieren(); funken(g.x+g.w/2, g.y, "#ef4444", 10);
+          // Ein Zusammenstoss kostet Sterne und schubst zurueck - aber KEIN
+          // Herz. Herzen gibt es nur fuer Antworten. Wer von allein rennt,
+          // kann einem Gegner kaum ausweichen; ein Spiel, das dafuer bestraft,
+          // macht Angst statt Lust. Geuebt wird das Rechnen, nicht das
+          // Ausweichen.
+          g.weg = true;
+          punkte = Math.max(0, punkte - 5);
+          held.vy = SPRUNGKRAFT * 0.45; held.amBoden = false;
+          held.unverwundbar = 60; ruettel = 10;
+          sndFalsch(); funken(g.x+g.w/2, g.y, "#ef4444", 10);
+          anzeigenAuffrischen();
         }
       }
     }
@@ -1329,7 +1343,9 @@
   function spielEnde(){
     zustand = "ende";
     var geschafft = herzen > 0;
-    $("ende-titel").textContent = geschafft ? "Geschafft! 🎉" : "Alle Herzen weg 💔";
+    var alles = geloest >= aufgaben.length;
+    $("ende-titel").textContent = !geschafft ? "Alle Herzen weg 💔"
+                               : alles ? "Alles richtig! 🎉" : "Durch! 💪";
     $("ende-text").textContent = geschafft
       ? ("Du hast " + geloest + " von " + aufgaben.length + " Aufgaben gelöst.")
       : ("Du bist bis Aufgabe " + Math.min(aufgabeNr+1, aufgaben.length) + " gekommen. Nochmal?");
