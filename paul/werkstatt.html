@@ -263,6 +263,20 @@
 
   <!-- 1. Material sammeln -->
   <section id="sicht-aufnahme">
+
+    <!-- Themenfelder (Paul, 14.09.2026, Meldung 8fcenvfnsh) -->
+    <div class="karte">
+      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Worauf hast du Lust?</div>
+      <p class="unter">Tipp ein Feld an – dann baue ich dir ein Spiel dazu. Was schon fertig ist,
+      geht sofort los, ganz ohne Warten.</p>
+      <div class="faecher" id="faecher">
+        <button class="fach an" type="button" data-fach="mathe">🔢 Mathe</button>
+        <button class="fach" type="button" data-fach="deutsch">📖 Deutsch</button>
+        <button class="fach" type="button" data-fach="hsu">🌍 HSU</button>
+      </div>
+      <div class="themen" id="themen"></div>
+    </div>
+
     <div class="karte">
       <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was hast du heute gelernt?</div>
       <p class="unter">Fotografier deinen Hefteintrag oder dein Arbeitsblatt – ich bau dir ein Spiel daraus.
@@ -479,6 +493,8 @@
 
   function malSammlung(spiele){
     var kasten = $("liste");
+    SPIELE = spiele;
+    malThemen();
     $("sammlung").classList.toggle("verborgen", spiele.length === 0);
     wiederholungVorschlagen(spiele);
     kasten.innerHTML = "";
