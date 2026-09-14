@@ -157,7 +157,17 @@
       // ja schon, sie hat ihn gelesen. Dafuer steht "Abschicken" im Bild,
       // statt dass sie erst in der Karte nach unten scrollen muss.
       '@media (max-height:420px){' +
+        '#melde-karte{padding:11px}' +
+        '#melde-karte h3{font-size:17px}' +
         '#melde-karte p.u{display:none}' +
+        '#melde-karte .arten{margin-bottom:8px}' +
+        '#melde-karte .arten button{padding:8px}' +
+        '#melde-karte textarea{min-height:44px}' +
+        '#melde-karte .bildreihe{margin-top:6px}' +
+        // Der Grund bleibt lesbar, kostet aber nur zwei Zeilen Hoehe - sonst
+        // schoebe er "Nochmal versuchen" aus dem Bild, und das Kind saehe zwar,
+        // was los ist, koennte es aber nicht noch einmal versuchen.
+        '#melde-karte .sendefehler{max-height:58px;overflow:auto;padding:8px 10px;font-size:13.5px}' +
         '#melde-karte .faden-liste{max-height:26vh}}' +
       '#melde-karte .passt{width:100%;margin-top:8px;padding:13px;border:none;border-radius:13px;' +
         'background:#12a35f;color:#fff;font-size:16px;font-weight:700;cursor:pointer}' +
