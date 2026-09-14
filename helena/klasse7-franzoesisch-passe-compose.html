@@ -157,18 +157,18 @@
     { s: "Mes sœurs", rest: "le petit-déjeuner.", inf: "préparer", aux: ["ont", "sont"], part: ["préparé", "préparées", "préparés"], typ: "avoir" },
     // être
     { s: "Léa", rest: "au cinéma.", inf: "aller", aux: ["est", "a"], part: ["allée", "allé", "allés"], typ: "etre", wer: "f" },
-    { s: "Mes copains", rest: "à la fête.", inf: "venir", aux: ["sont", "ont"], part: ["venus", "venu", "venues"], typ: "etre", wer: "mpl", irr: true },
+    { s: "Mes copains", rest: "à la fête.", inf: "venir", aux: ["sont", "ont"], part: ["venus", "venu", "venues"], typ: "etre", wer: "mpl", irr: true, pp: "venu" },
     { s: "Tom", rest: "de vélo.", inf: "tomber", aux: ["est", "a"], part: ["tombé", "tombée", "tombés"], typ: "etre", wer: "m" },
     { s: "Léa et Emma", rest: "à huit heures.", inf: "partir", aux: ["sont", "ont"], part: ["parties", "partis", "parti"], typ: "etre", wer: "fpl" },
     { s: "Le train", rest: "en retard.", inf: "arriver", aux: ["est", "a"], part: ["arrivé", "arrivée", "arrivés"], typ: "etre", wer: "m" },
     { s: "Mes grands-parents", rest: "à la maison.", inf: "rester", aux: ["sont", "ont"], part: ["restés", "resté", "restées"], typ: "etre", wer: "mpl" },
-    { s: "Ma cousine", rest: "en 2013.", inf: "naître", aux: ["est", "a"], part: ["née", "né", "naît"], typ: "etre", wer: "f", irr: true },
+    { s: "Ma cousine", rest: "en 2013.", inf: "naître", aux: ["est", "a"], part: ["née", "né", "naît"], typ: "etre", wer: "f", irr: true, pp: "né" },
     { s: "Les filles", rest: "dans la classe.", inf: "entrer", aux: ["sont", "ont"], part: ["entrées", "entrés", "entré"], typ: "etre", wer: "fpl" },
-    { s: "Paul", rest: "du bus.", inf: "descendre", aux: ["est", "a"], part: ["descendu", "descendue", "descendi"], typ: "etre", wer: "m", irr: true },
-    { s: "Helena, tu", rest: "à Paris ?", inf: "aller", aux: ["es", "as"], part: ["allée", "allé", "allées"], typ: "etre", wer: "f" },
-    { s: "Paul et Leon, vous", rest: "tard !", inf: "rentrer", aux: ["êtes", "avez"], part: ["rentrés", "rentré", "rentrées"], typ: "etre", wer: "mpl" },
+    { s: "Paul", rest: "du bus.", inf: "descendre", aux: ["est", "a"], part: ["descendu", "descendue", "descendi"], typ: "etre", wer: "m", irr: true, pp: "descendu" },
+    { s: "Helena, tu", rest: "à Paris ?", inf: "aller", aux: ["es", "as"], part: ["allée", "allé", "allées"], typ: "etre", wer: "f", bezug: "tu (Helena)" },
+    { s: "Paul et Leon, vous", rest: "tard !", inf: "rentrer", aux: ["êtes", "avez"], part: ["rentrés", "rentré", "rentrées"], typ: "etre", wer: "mpl", bezug: "vous (Paul und Leon)" },
     { s: "Emma", rest: "dans le bus.", inf: "monter", aux: ["est", "a"], part: ["montée", "monté", "montés"], typ: "etre", wer: "f" },
-    { s: "Nos voisins", rest: "hier soir.", inf: "sortir", aux: ["sont", "ont"], part: ["sortis", "sorti", "sorties"], typ: "etre", wer: "mpl", irr: true },
+    { s: "Nos voisins", rest: "hier soir.", inf: "sortir", aux: ["sont", "ont"], part: ["sortis", "sorti", "sorties"], typ: "etre", wer: "mpl" },
     // reflexiv
     { s: "Léa", rest: "à sept heures.", inf: "se lever", aux: ["s'est", "a"], part: ["levée", "levé", "levés"], typ: "reflexiv", wer: "f" },
     { s: "Tom", rest: "tôt.", inf: "se coucher", aux: ["s'est", "a"], part: ["couché", "couchée", "couchés"], typ: "reflexiv", wer: "m" },
@@ -216,8 +216,9 @@
     if (x.typ === "avoir") t.push("„" + x.inf + "“ bildet das passé composé mit <b>avoir</b> – wie die meisten Verben. Mit avoir wird nicht an das Subjekt angeglichen.");
     if (x.typ === "etre") t.push("„" + x.inf + "“ wohnt in der <b>Maison d'être</b> → Hilfsverb être.");
     if (x.typ === "reflexiv") t.push("„" + x.inf + "“ ist reflexiv – reflexive Verben nehmen immer <b>être</b>.");
-    if (x.irr) t.push("Das participe passé von „" + x.inf.replace(/^s'|^se /, "") + "“ ist unregelmäßig: <b>" + esc(x.part[0].replace(/e?s?$/, function(m){ return x.typ === "avoir" ? m : ""; })) + "</b>.");
-    if (x.wer) t.push("Mit être wird angeglichen: „" + esc(x.s.replace(/^.*, /, "")) + "“ ist " + WER[x.wer] + " → " + ENDUNG[x.wer] + " → <b>" + esc(x.part[0]) + "</b>.");
+    // pp = Grundform des participe, wenn die richtige Loesung schon angeglichen ist (venus -> venu)
+    if (x.irr) t.push("Das participe passé von „" + x.inf + "“ ist unregelmäßig: <b>" + esc(x.pp || x.part[0]) + "</b>.");
+    if (x.wer) t.push("Mit être wird angeglichen: „" + esc(x.bezug || x.s) + "“ ist " + WER[x.wer] + " → " + ENDUNG[x.wer] + " → <b>" + esc(x.part[0]) + "</b>.");
     return t.map(function(z){ return "<p>" + z + "</p>"; }).join("");
   }
 
