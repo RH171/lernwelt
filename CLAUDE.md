@@ -167,6 +167,60 @@ sofort an. Dem Kind also sagen, wie es ein frisches bekommt („Ein ganz neues
 Spiel dazu bauen" am Ende einer Runde), sonst sucht es die Änderung im alten
 Spiel und findet sie nicht.
 
+## Pauls Spiel-Schmiede: derselbe Lernstoff, ein anderer Darsteller
+
+Paul am 14.09.2026 (Meldung `8fcenvfnsh`), nachdem er dreimal richtiggestellt
+hat, was er meint: *„Ich rede mit dir gerade die ganze Zeit darüber, dass ich in
+der Lernwerkstatt selber ein Spiel bauen kann, ein größeres."* Und auf die
+Frage, wie er gefragt werden will: *„Schritt für Schritt, bitte."*
+
+`paul/schmiede.html` fragt ihn fünf Dinge — Welt, Figur, Steuerung, Töne,
+Thema — und spielt die Aufgaben dann als Jump-'n'-Run statt als Quiz. Erreichbar
+aus `paul/werkstatt.html` (Kachel unter den Themenfeldern) und aus dem Fenster
+„Lust auf ein eigenes Spiel?" in `paul/index.html`, das ihn bis dahin an Denny
+verwiesen hatte — genau dieses Fenster hatte er fotografiert.
+
+**Es wird kein Programmtext erzeugt und ausgeführt.** Der Motor steht fertig in
+der Datei, Paul stellt ihn ein. Das ist der Unterschied zwischen „ein Kind baut
+sich ein Spiel" und „eine Seite führt aus, was ihr jemand hinschreibt" — und der
+Grund, warum das überhaupt unbeaufsichtigt gebaut werden durfte.
+
+**Der Lernstoff kommt aus demselben Weg wie in der Werkstatt** (`/api/spiel-bauen`),
+und **die Themenschlüssel sind dieselben**. Liegt zu einem Thema schon ein Spiel
+im Regal, spielt die Schmiede es sofort an: kein Warten, keine Kosten. Wer einen
+Schlüssel in einer der beiden Dateien ändert, trennt die zwei Regale
+voneinander — siehe den Abschnitt über die Themenfelder.
+
+**Was der Motor kann und was nicht:** Aufgaben mit `art: "wahl"` werden zu
+Ballons zum Anspringen. Alles andere (`eingabe`, `teilschritte`) wird zu einem
+Rätsel-Tor mit Eingabefeld — anspringen kann man eine Zahl nicht, die man
+tippen muss. **3D kann er nicht**, und das steht auch so in Pauls Antwort;
+sein eigener Prädikat-Springer 3D bringt Three.js mit, der Motor hier nicht.
+
+**Gemessen wird mit `mess-schritte-schmiede.js`** — und zwar nicht nur der
+Ruhezustand, sondern das laufende Spiel mit allen drei Tafeln:
+
+    node geraete-messen.js /paul/schmiede.html paul mess-schritte-schmiede.js
+    node geraete-messen.js /paul/ paul mess-schritte-paul-hub.js
+
+Zwei Dinge, die dabei gelernt wurden und beim nächsten Spielmotor wieder
+gelten:
+
+- **Der Messbrowser schafft nur rund 23 Bilder je Sekunde**, nicht 60. Eine
+  Figur, die auf dem echten Gerät in zweieinhalb Sekunden am Ziel ist, braucht
+  dort das Dreifache. Wer zu knapp wartet, misst den falschen Zustand — und
+  bekommt trotzdem „alles sauber" gemeldet.
+- **Deshalb wirft die Schritt-Datei, wenn eine Etappe nicht wirklich erreicht
+  wurde.** „Sauber gemessen" heißt sonst nur „das Standbild war in Ordnung",
+  nicht „das Spiel läuft". Genau so ist der erste Durchlauf grün gewesen,
+  obwohl die Figur am Tor stand und nicht weiterkam.
+
+Der Fehler, den diese Prüfung gefunden hat: In der Steuerung „von allein
+rennen" hält das Tor die Figur vorne fest, während die Antwort-Ballons hinter
+ihr liegen — und umkehren kann sie nicht. Sie pendelt jetzt zwischen erstem
+Ballon und Tor, bis die Aufgabe gelöst ist. Am Rätsel-Tor **nicht** pendeln:
+dort muss sie anstoßen, sonst geht die Tafel nie auf.
+
 ## Vorgebaute Spiele werden gelesen, nicht nur gezählt
 
 `pruefeSpiel` prüft die Form (Anzahl, Lösung in der Auswahl, Zahlentastatur).
