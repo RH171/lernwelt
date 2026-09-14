@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Stadionuhr</title>
+<!--
+  Leons zweites Mathe-Spiel zum Anfassen (14.09.2026, Denny: "Gerne noch mehr
+  Spiele").
+
+  Die Uhr im Ronhof ist kaputt - Leon stellt sie selbst. Er zieht den grossen
+  Zeiger, und der kleine laeuft mit wie bei einer echten Uhr. Genau das ist
+  die Huerde in der 2. Klasse: Bei "halb 4" steht der kleine Zeiger NICHT auf
+  der 4, sondern dazwischen. Wer den grossen Zeiger dreht, sieht es.
+
+  Abwechselnd: Uhr stellen und Uhr ablesen. Drei Stufen - volle Stunden,
+  halbe Stunden, Viertelstunden. Kein Zeitdruck, Nachspielzeit statt Strafe.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef6f0; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --schlecht:#f04438;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .huelle{max-width:960px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .start{text-align:center;max-width:720px;margin:0 auto}
+  .start h2{font-family:var(--rund);font-size:26px;margin:4px 0 6px}
+  .start p{color:var(--muted);margin:0 0 18px;font-size:16px;line-height:1.5}
+  .stufen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stufe{border:2px solid #d6f0de;background:#f6fdf8;border-radius:20px;padding:16px 8px;cursor:pointer;color:var(--ink);
+    font:700 18px/1.2 var(--rund);display:flex;flex-direction:column;align-items:center;gap:6px;min-height:118px;justify-content:center}
+  .stufe .gross{font-size:32px}
+  .stufe .klein{font:600 13px/1.3 var(--font);color:var(--muted)}
+  .stufe.jetzt{border-color:var(--leon);background:#eefbf2}
+  .stufe:active{transform:scale(.97)}
+  @media (max-width:520px){ .stufen{grid-template-columns:1fr} .stufe{min-height:74px;flex-direction:row;gap:12px} }
+  .rueckblick{margin-top:14px;color:var(--leon-dunkel);font-weight:700;font-size:15px}
+
+  .spielfeld{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (orientation:landscape) and (min-width:760px){
+    .spielfeld{grid-template-columns:minmax(0,1fr) minmax(300px,1fr);align-items:start}
+  }
+  .uhrkarte{padding:12px;display:flex;justify-content:center;background:linear-gradient(180deg,#1f5132,#16623a)}
+  svg.uhr{width:min(100%,calc(100vh - 150px),440px);height:auto;touch-action:none;user-select:none;-webkit-user-select:none;display:block}
+  .zeiger{cursor:grab}
+  .zeiger:active{cursor:grabbing}
+  .aufgabe .szene{color:var(--muted);font-weight:700;font-size:15px;margin:0 0 4px}
+  .aufgabe .frage{font:800 clamp(22px,3.4vw,28px)/1.25 var(--rund);margin:0 0 10px}
+  .aufgabe .hilfe{color:var(--muted);font-size:15px;line-height:1.45;margin:0 0 12px}
+  .wahl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .wahl button{border:2px solid var(--line);background:#fff;border-radius:16px;min-height:60px;cursor:pointer;
+    font:700 20px/1.2 var(--rund);color:var(--ink);padding:8px}
+  .wahl button.gut{border-color:var(--gut);background:#ecfdf3}
+  .wahl button.falsch{border-color:var(--schlecht);background:#fef3f2}
+  .reihe{display:flex;gap:10px;margin-top:12px;align-items:center}
+  .knopf{border:none;border-radius:16px;background:var(--leon);color:#fff;font:700 19px/1 var(--rund);padding:16px;cursor:pointer;min-height:56px;flex:1}
+  .knopf.grau{background:#f2f4f7;color:var(--ink);flex:0 0 auto;width:56px;padding:0;font-size:24px}
+  .knopf:active{transform:scale(.98)}
+  .rueck{margin-top:12px;border-radius:16px;padding:12px 14px;font-size:17px;line-height:1.5}
+  .rueck.gut{background:#ecfdf3} .rueck.schlecht{background:#fff4ed}
+  .rueck b{font-family:var(--rund)}
+  .unten{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .punkte{display:flex;gap:5px}
+  .punkte i{width:14px;height:14px;border-radius:50%;background:#d0d5dd;display:block}
+  .punkte i.g{background:var(--gut)} .punkte i.t{background:#fdb022} .punkte i.n{outline:3px solid var(--leon);outline-offset:1px}
+  .nachspiel{background:#fff7e6;color:#93370d;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px}
+  .ende{text-align:center;max-width:720px;margin:0 auto}
+  .ende .gross{font-size:60px}
+  .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
+  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 16px}
+  .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#f2f4f7;color:var(--ink);
+    font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <h1>Die Stadionuhr</h1>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:56px">🕒🏟️</div>
+    <h2>Die Uhr im Ronhof spinnt!</h2>
+    <p>Stell sie richtig – zieh den großen Zeiger. Der kleine läuft mit, wie bei einer echten Uhr.</p>
+    <div class="stufen">
+      <button class="stufe" data-stufe="60"><span class="gross">🕐</span>Volle Stunden<span class="klein">3 Uhr</span></button>
+      <button class="stufe jetzt" data-stufe="30"><span class="gross">🕜</span>Halbe Stunden<span class="klein">halb 4</span></button>
+      <button class="stufe" data-stufe="15"><span class="gross">🕞</span>Viertelstunden<span class="klein">Viertel nach 3</span></button>
+    </div>
+    <div class="rueckblick verborgen" id="rueckblick"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="spielfeld">
+      <div class="karte uhrkarte"><svg class="uhr" id="uhr" viewBox="0 0 400 400" aria-label="Stadionuhr"></svg></div>
+      <div class="karte aufgabe" id="aufgabe"></div>
+    </div>
+    <div class="unten">
+      <div class="punkte" id="punkte"></div>
+      <span class="nachspiel verborgen" id="nachspiel"></span>
+    </div>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div class="gross">🏆</div>
+    <h2 id="ende-titel"></h2>
+    <p id="ende-text"></p>
+    <button class="knopf" id="nochmal" style="width:100%">Nochmal</button>
+    <button class="knopf2" id="andere">Andere Stufe wählen</button>
+    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+
+  /* ---------- Zeit in Worten ---------- */
+  var ZAHLWORT = ["zwölf","eins","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf"];
+  function h12(h){ h = h % 12; return h === 0 ? 12 : h; }
+  // So sagt man es in der 2. Klasse: "halb 4", "Viertel nach 3", "Viertel vor 4".
+  function inWorten(gesamt){
+    var h = Math.floor(gesamt / 60) % 12, m = gesamt % 60;
+    if (m === 0)  return h12(h) + " Uhr";
+    if (m === 15) return "Viertel nach " + h12(h);
+    if (m === 30) return "halb " + h12(h + 1);
+    if (m === 45) return "Viertel vor " + h12(h + 1);
+    return h12(h) + ":" + (m < 10 ? "0" : "") + m;
+  }
+  function zumSprechen(gesamt){
+    return inWorten(gesamt).replace(/\d+/g, function(z){ return ZAHLWORT[+z]; });
+  }
+
+  var SZENEN = [
+    ["⚽", "Anpfiff ist um"], ["🎟️", "Einlass ist um"], ["🌭", "Der Würstchenstand öffnet um"],
+    ["🧤", "Leon geht zum Aufwärmen um"], ["🚌", "Der Fanbus fährt um"], ["📣", "Der Stadionsprecher begrüßt alle um"],
+    ["🏁", "Abpfiff ist um"], ["☕", "Halbzeitpause ist um"]
+  ];
+
+  /* ---------- Speicher ---------- */
+  var SPEICHER = "leon-stadionuhr";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  function rueckblickMalen(){
+    var d = lesen();
+    if (d.gestellt){ $("rueckblick").textContent = "🕒 Schon " + d.gestellt + " Uhren gestellt."; $("rueckblick").classList.remove("verborgen"); }
+  }
+  rueckblickMalen();
+
+  /* ---------- Vorlesen ---------- */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t){
+    if (!kannSprechen || document.hidden) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = .9;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
+      if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  /* ---------- Die Uhr ---------- */
+  var uhr = $("uhr"), gross, klein, zeit = 0, fest = false;
+  function el(n, a, p){ var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+
+  function uhrBauen(){
+    uhr.innerHTML = "";
+    el("circle", { cx: 200, cy: 200, r: 190, fill: "#fff", stroke: "#15171f", "stroke-width": 10 }, uhr);
+    el("circle", { cx: 200, cy: 200, r: 178, fill: "none", stroke: "#10b981", "stroke-width": 6 }, uhr);
+    for (var i = 0; i < 60; i++){
+      var w = i * 6 * Math.PI / 180, lang = i % 5 === 0;
+      el("line", { x1: 200 + Math.sin(w) * (lang ? 150 : 160), y1: 200 - Math.cos(w) * (lang ? 150 : 160),
+                   x2: 200 + Math.sin(w) * 170, y2: 200 - Math.cos(w) * 170,
+                   stroke: "#15171f", "stroke-width": lang ? 6 : 2, "stroke-linecap": "round" }, uhr);
+    }
+    for (var z = 1; z <= 12; z++){
+      var wz = z * 30 * Math.PI / 180;
+      var t = el("text", { x: 200 + Math.sin(wz) * 122, y: 200 - Math.cos(wz) * 122, "text-anchor": "middle", "dominant-baseline": "central",
+                           "font-size": 36, "font-weight": 800, fill: "#15171f", "font-family": "ui-rounded,-apple-system,system-ui,sans-serif" }, uhr);
+      t.textContent = z;
+    }
+    // Viertel-Hilfen: dezent, damit "Viertel" einen Ort bekommt
+    var kuchen = el("g", { opacity: 0 }, uhr); kuchen.id = "kuchen";
+    klein = el("g", { "class": "zeiger", id: "klein" }, uhr);
+    el("line", { x1: 200, y1: 215, x2: 200, y2: 105, stroke: "#dc2626", "stroke-width": 16, "stroke-linecap": "round" }, klein);
+    el("circle", { cx: 200, cy: 150, r: 46, fill: "rgba(0,0,0,0)" }, klein);            // Greifflaeche
+    gross = el("g", { "class": "zeiger", id: "gross" }, uhr);
+    el("line", { x1: 200, y1: 222, x2: 200, y2: 48, stroke: "#1d4ed8", "stroke-width": 10, "stroke-linecap": "round" }, gross);
+    el("circle", { cx: 200, cy: 70, r: 40, fill: "rgba(0,0,0,0)" }, gross);             // Greifflaeche
+    el("circle", { cx: 200, cy: 200, r: 14, fill: "#15171f" }, uhr);
+    zeichnen();
+    greifen();
+  }
+
+  function zeichnen(){
+    var m = zeit % 60, h = (zeit / 60) % 12;
+    gross.setAttribute("transform", "rotate(" + (m * 6) + " 200 200)");
+    klein.setAttribute("transform", "rotate(" + (h * 30) + " 200 200)");
+  }
+
+  function winkel(ev){
+    var r = uhr.getBoundingClientRect();
+    var x = (ev.clientX - r.left) / r.width * 400 - 200, y = (ev.clientY - r.top) / r.height * 400 - 200;
+    var w = Math.atan2(x, -y) * 180 / Math.PI;
+    return (w + 360) % 360;
+  }
+
+  function greifen(){
+    var welcher = null;
+    function runter(ev){
+      if (fest) return;
+      var ziel = ev.target.closest && ev.target.closest(".zeiger");
+      if (!ziel) {
+        // Irgendwo aufs Zifferblatt: der naechste Zeiger nach Winkel
+        var w = winkel(ev), mw = (zeit % 60) * 6, hw = ((zeit / 60) % 12) * 30;
+        var abst = function(a, b){ var d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
+        ziel = abst(w, mw) <= abst(w, hw) ? gross : klein;
+      }
+      welcher = ziel.id;
+      try { uhr.setPointerCapture(ev.pointerId); } catch(e){}
+      bewegen(ev);
+      ev.preventDefault();
+    }
+    function bewegen(ev){
+      if (!welcher || fest) return;
+      var w = winkel(ev);
+      if (welcher === "gross"){
+        var neu = Math.round(w / 6) % 60;              // minutengenau ziehen, einrasten beim Loslassen
+        var alt = zeit % 60, d = neu - alt;
+        if (d > 30) d -= 60; if (d < -30) d += 60;
+        zeit = (zeit + d + 720) % 720;
+      } else {
+        var stunde = Math.floor(w / 30) % 12;
+        zeit = stunde * 60 + zeit % 60;
+      }
+      zeichnen();
+    }
+    function hoch(){
+      if (!welcher) return;
+      welcher = null;
+      // Auf die Stufe einrasten: bei "halbe Stunden" nur :00 und :30
+      var schritt = Math.min(stufe, 15);
+      zeit = (Math.round(zeit / schritt) * schritt) % 720;
+      zeichnen();
+    }
+    uhr.addEventListener("pointerdown", runter);
+    uhr.addEventListener("pointermove", bewegen);
+    uhr.addEventListener("pointerup", hoch);
+    uhr.addEventListener("pointercancel", hoch);
+  }
+
+  function zeigerAnimieren(ziel, fertig){
+    var start = zeit, diff = ((ziel - start) % 720 + 720) % 720;
+    if (diff > 360) diff -= 720;
+    var t0 = null;
+    function schritt(ts){
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / 900), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      zeit = ((start + diff * e) % 720 + 720) % 720;
+      zeichnen();
+      if (p < 1) requestAnimationFrame(schritt); else { zeit = ziel; zeichnen(); if (fertig) fertig(); }
+    }
+    requestAnimationFrame(schritt);
+  }
+
+  /* ---------- Aufgaben ---------- */
+  var RUNDE = 8, stufe = 30, liste = [], pos = 0, sauber = 0, aufgeholt = 0, verpasst = [], nachspielzeit = false, ergebnis = [], versuch = 0;
+
+  function zufallsZeit(s){
+    var h = 1 + Math.floor(Math.random() * 12);
+    var moeglich = s === 60 ? [0] : s === 30 ? [0, 30, 30] : [0, 15, 30, 45, 15, 45];
+    return (h % 12) * 60 + moeglich[Math.floor(Math.random() * moeglich.length)];
+  }
+
+  function rundeBauen(){
+    liste = []; var schon = {};
+    for (var i = 0; liste.length < RUNDE && i < 200; i++){
+      var z = zufallsZeit(stufe); if (schon[z]) continue; schon[z] = 1;
+      liste.push({ zeit: z, art: liste.length % 2 === 0 ? "stellen" : "lesen", szene: SZENEN[liste.length % SZENEN.length] });
+    }
+  }
+
+  function zeige(n){
+    ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    window.scrollTo(0, 0);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".stufe"), function(k){
+    k.addEventListener("click", function(){ stufe = +k.getAttribute("data-stufe"); rundeStarten(); });
+  });
+
+  function rundeStarten(){
+    rundeBauen();
+    pos = 0; sauber = 0; aufgeholt = 0; verpasst = []; nachspielzeit = false;
+    ergebnis = liste.map(function(){ return ""; });
+    $("nachspiel").classList.add("verborgen");
+    zeige("spiel");
+    uhrBauen();
+    aufgabeZeigen();
+  }
+
+  function punkteMalen(){
+    $("punkte").innerHTML = (nachspielzeit ? [] : ergebnis).map(function(e, i){ return '<i class="' + e + (i === pos ? " n" : "") + '"></i>'; }).join("");
+  }
+
+  function aufgabeZeigen(){
+    var a = liste[pos];
+    versuch = 0; fest = false;
+    punkteMalen();
+    var k = $("aufgabe");
+    if (a.art === "stellen"){
+      // Startstellung weit weg von der Loesung, damit wirklich gedreht wird
+      zeit = (a.zeit + 60 * (3 + Math.floor(Math.random() * 5)) + (stufe === 60 ? 0 : 15 * (Math.random() < .5 ? 1 : 3))) % 720;
+      zeit = (Math.round(zeit / 15) * 15) % 720;
+      if (zeit === a.zeit) zeit = (zeit + 180) % 720;
+      zeichnen();
+      k.innerHTML = '<p class="szene">' + a.szene[0] + ' ' + a.szene[1] + ' …</p>' +
+        '<p class="frage">' + inWorten(a.zeit) + '</p>' +
+        '<p class="hilfe">Zieh den <b style="color:#1d4ed8">großen blauen Zeiger</b>. Der <b style="color:#dc2626">kleine rote</b> läuft mit.</p>' +
+        '<div class="reihe"><button class="knopf grau" id="hoeren" aria-label="Vorlesen">🔊</button><button class="knopf" id="pruefen">Uhr ist gestellt ✓</button></div>' +
+        '<div id="rueck"></div>';
+      $("pruefen").addEventListener("click", stellenPruefen);
+      $("hoeren").addEventListener("click", function(){ sprich(a.szene[1] + " " + zumSprechen(a.zeit) + ". Stell die Uhr."); });
+    } else {
+      zeit = a.zeit; zeichnen(); fest = true;
+      var falsch = ablenker(a.zeit);
+      var alle = mische([a.zeit].concat(falsch));
+      k.innerHTML = '<p class="szene">' + a.szene[0] + ' ' + a.szene[1] + ' …</p>' +
+        '<p class="frage">Wie spät ist es?</p>' +
+        '<div class="wahl" id="wahl">' + alle.map(function(z){ return '<button data-z="' + z + '">' + inWorten(z) + '</button>'; }).join("") + '</div>' +
+        '<div class="reihe"><button class="knopf grau" id="hoeren" aria-label="Vorlesen">🔊</button></div>' +
+        '<div id="rueck"></div>';
+      Array.prototype.forEach.call($("wahl").children, function(b){ b.addEventListener("click", function(){ lesenPruefen(b); }); });
+      $("hoeren").addEventListener("click", function(){ sprich("Wie spät ist es? " + alle.map(zumSprechen).join(", oder ") + "?"); });
+    }
+  }
+
+  // Typische Verwechslungen: kleiner Zeiger falsch gelesen (halb 4 statt halb 3),
+  // Zeiger vertauscht, Viertel nach/vor verwechselt.
+  function ablenker(z){
+    var h = Math.floor(z / 60), m = z % 60, k = [];
+    if (m === 30){ k.push((h + 1) % 12 * 60 + 30, (h + 11) % 12 * 60 + 30, (h + 1) % 12 * 60); }   // halb 5, halb 3, 4 Uhr statt halb 4
+    else if (m === 15){ k.push(h * 60 + 45, (h + 1) % 12 * 60 + 15, h * 60 + 30); }
+    else if (m === 45){ k.push(h * 60 + 15, (h + 1) % 12 * 60 + 45, (h + 1) % 12 * 60); }
+    else { k.push(((h + 1) % 12) * 60, ((h + 11) % 12) * 60, stufe === 60 ? ((h + 6) % 12) * 60 : h * 60 + 30); }
+    // Zeiger vertauscht bei vollen Stunden: 12 Uhr <-> 3 Uhr ergibt keinen Sinn - nur eindeutige behalten
+    var gut = [];
+    k.forEach(function(x){ x = (x + 720) % 720; if (x !== z && gut.indexOf(x) < 0) gut.push(x); });
+    while (gut.length < 3){ var r = zufallsZeit(stufe); if (r !== z && gut.indexOf(r) < 0) gut.push(r); }
+    return gut.slice(0, 3);
+  }
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+
+  function erklaerung(z){
+    var m = z % 60, h = Math.floor(z / 60) % 12;
+    var gross = m === 0 ? "Der große Zeiger steht auf der 12." : m === 30 ? "Der große Zeiger steht auf der 6 – das ist halb." :
+                m === 15 ? "Der große Zeiger steht auf der 3 – eine Viertelstunde ist vorbei." : "Der große Zeiger steht auf der 9 – noch eine Viertelstunde bis zur vollen Stunde.";
+    var klein = m === 0 ? "Der kleine Zeiger zeigt genau auf die " + h12(h) + "." :
+                "Der kleine Zeiger steht zwischen der " + h12(h) + " und der " + h12(h + 1) + ".";
+    return gross + "<br>" + klein + "<br>Also: <b>" + inWorten(z) + "</b>.";
+  }
+
+  function stellenPruefen(){
+    var a = liste[pos];
+    var stimmt = zeit === a.zeit;
+    if (!stimmt && versuch === 0){
+      versuch++;
+      var tipp = (zeit % 60) !== (a.zeit % 60)
+        ? "Schau zuerst auf den <b>großen Zeiger</b>: Wo muss er für „" + inWorten(a.zeit) + "“ stehen?"
+        : "Der große Zeiger stimmt! Jetzt der <b>kleine</b>: Welche Stunde ist gemeint?";
+      $("rueck").innerHTML = '<div class="rueck schlecht"><b>Noch nicht ganz.</b><br>' + tipp + '</div>';
+      return;
+    }
+    fest = true;
+    $("pruefen").disabled = true;
+    if (stimmt) auswerten(true, "");
+    else {
+      var gestellt = zeit;
+      zeigerAnimieren(a.zeit, function(){ auswerten(false, inWorten(gestellt)); });
+    }
+  }
+
+  function lesenPruefen(b){
+    var a = liste[pos], z = +b.getAttribute("data-z");
+    Array.prototype.forEach.call($("wahl").children, function(x){ x.disabled = true; if (+x.getAttribute("data-z") === a.zeit) x.classList.add("gut"); });
+    if (z !== a.zeit) b.classList.add("falsch");
+    auswerten(z === a.zeit, inWorten(z));
+  }
+
+  function auswerten(stimmt, gegeben){
+    var a = liste[pos];
+    var merkmal = (a.zeit % 60 === 0) ? "volle stunden" : (a.zeit % 60 === 30) ? "halbe stunden" : "viertelstunden";
+    try { window.lernstand && window.lernstand.antwort(stimmt, merkmal + (a.art === "stellen" ? " stellen" : " ablesen"), gegeben, inWorten(a.zeit)); } catch(e){}
+    if (nachspielzeit){ if (stimmt) aufgeholt++; }
+    else { ergebnis[pos] = stimmt ? "g" : "t"; if (stimmt) sauber++; else verpasst.push(a); }
+    punkteMalen();
+    $("rueck").innerHTML = '<div class="rueck ' + (stimmt ? "gut" : "schlecht") + '"><b>' +
+      (stimmt ? (nachspielzeit ? "Jetzt sitzt es!" : "Genau richtig!") : (a.art === "stellen" ? "So steht die Uhr richtig:" : "Schau genau hin:")) + '</b><br>' +
+      erklaerung(a.zeit) + (!stimmt && !nachspielzeit ? "<br>Die Uhr kommt in der Nachspielzeit nochmal." : "") + '</div>' +
+      '<div class="reihe"><button class="knopf" id="weiter">Weiter ›</button></div>';
+    $("weiter").addEventListener("click", weiter);
+    if (stimmt) konfetti(false);
+    sprich((stimmt ? "Richtig! " : "") + zumSprechen(a.zeit));
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function weiter(){
+    pos++;
+    if (pos < liste.length){ aufgabeZeigen(); return; }
+    if (!nachspielzeit && verpasst.length){
+      nachspielzeit = true; liste = mische(verpasst.slice()); pos = 0;
+      $("nachspiel").textContent = "⏱️ Nachspielzeit · " + (liste.length === 1 ? "eine Uhr" : liste.length + " Uhren") + " nochmal";
+      $("nachspiel").classList.remove("verborgen");
+      aufgabeZeigen(); return;
+    }
+    var d = lesen(); d.gestellt = (d.gestellt || 0) + RUNDE; d.runden = (d.runden || 0) + 1; schreiben(d);
+    $("ende-titel").textContent = (sauber + aufgeholt) + " von " + RUNDE + " Uhren richtig";
+    $("ende-text").textContent = sauber === RUNDE ? "Jede Uhr beim ersten Mal – der Ronhof kann pünktlich anpfeifen!"
+      : aufgeholt ? "In der Nachspielzeit hast du " + (aufgeholt === 1 ? "eine" : aufgeholt) + " noch geschafft. Dranbleiben lohnt sich."
+      : "Gut geübt! Mit jeder Runde wird die Uhr leichter.";
+    zeige("ende"); rueckblickMalen(); konfetti(true);
+  }
+
+  $("nochmal").addEventListener("click", rundeStarten);
+  $("andere").addEventListener("click", function(){ zeige("start"); });
+
+  /* ---------- Konfetti ---------- */
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(g){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (g ? 120 : 30); i++) stuecke.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
+      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#10b981","#16a34a","#ffffff","#f79009","#3b82f6"][i%5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  window.__uhr = { inWorten: inWorten, ablenker: function(z, s){ stufe = s; return ablenker(z); }, starten: function(s){ stufe = s; rundeStarten(); },
+    zustand: function(){ return { pos: pos, liste: liste, zeit: zeit, nachspielzeit: nachspielzeit }; },
+    setze: function(z){ zeit = z; zeichnen(); }, pruefe: function(){ var p = $("pruefen"); if (p) p.click(); },
+    waehle: function(z){ var b = document.querySelector('#wahl button[data-z="' + z + '"]'); if (b) b.click(); return !!b; },
+    weiter: function(){ var w = $("weiter"); if (w) w.click(); } };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
