@@ -131,7 +131,12 @@ export async function onRequestGet(context) {
                             { expirationTtl: WUNSCH_GILT });
     } catch (e) {}
   } else if (url.searchParams.get("wunsch") === "0") {
-    try { await env.PAUL_KV.delete(WUNSCH); } catch (e) {}
+    // Erst nachschauen, dann erst loeschen. Ein delete ist im KV ein
+    // SCHREIBvorgang und zaehlt gegen das Tageskontingent, ein get nicht.
+    // Diese Zeile laeuft nach JEDEM Ausrollen - und ausgerollt wird, sobald
+    // sich eine Datei geaendert hat, an einem Bastelabend also im Minutentakt.
+    // Fast immer liegt dann gar keine Frage vor, die zurueckzunehmen waere.
+    try { if (await env.PAUL_KV.get(WUNSCH)) await env.PAUL_KV.delete(WUNSCH); } catch (e) {}
   }
 
   let juengste = 0;
