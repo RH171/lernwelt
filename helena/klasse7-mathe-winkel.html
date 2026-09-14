@@ -270,6 +270,7 @@
       '</div><div class="reihe"><button class="btn" id="weiter">Weiter</button></div>';
     $("bedienung").innerHTML = "";
     $("weiter").addEventListener("click", weiter);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
   }
 
   /* ---------- Einstellen ---------- */
@@ -320,6 +321,7 @@
       '</div><div class="reihe"><button class="btn" id="weiter">Weiter</button></div>';
     $("bedienung").innerHTML = "";
     $("weiter").addEventListener("click", weiter);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
   }
 
   /* ---------- Berechnen ---------- */
@@ -405,6 +407,7 @@
       '</div><div class="reihe"><button class="btn" id="weiter">Weiter</button></div>';
     $("bedienung").innerHTML = "";
     $("weiter").addEventListener("click", weiter);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
   }
 
   function weiter(){
