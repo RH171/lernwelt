@@ -95,6 +95,11 @@
   .sbox{flex:1;background:#f6f9fc;border:1px solid var(--line);border-radius:16px;padding:13px 6px;}
   .sbox .sv{font-family:var(--round);font-weight:800;font-size:22px;}
   .sbox .sl{color:var(--muted);font-size:12px;margin-top:3px;}
+  /* Zeile im Marktbericht, die auf die naechste Bonusrunde zeigt
+     (Paul, 14.09.2026, Meldung 4gq38rd3ts). */
+  .repbonus{background:linear-gradient(150deg,#fff6df,#ffe1ad);border:1px solid #f0cf95;
+    border-radius:16px;padding:12px 14px;margin:0 0 18px;font-size:14px;line-height:1.45;color:#7a5a1c;}
+  .repbonus b{font-family:var(--round);font-weight:800;}
   .hidden{display:none;}
 
   /* MARKT (begehbar, 11x7) */
@@ -238,6 +243,19 @@
     <p>Bediene Kunden, verdiene <b>Taler</b> 🪙 und bau dir deinen eigenen Markt:<br>größere Kasse, Mitarbeiter, neue Stände und Deko!</p>
     <button class="big-btn" id="openBtn">Markt betreten 🏪</button>
     <div id="startRank" class="orderhint" style="margin-top:16px;"></div>
+  </section>
+
+  <!-- Marktbericht beim Oeffnen (Paul, 14.09.2026, Meldung 4gq38rd3ts) -->
+  <section id="reportScreen" class="hidden panel">
+    <div class="hero">📋</div>
+    <h2>Dein Marktbericht</h2>
+    <p id="reportText"></p>
+    <div class="summary">
+      <div class="sbox"><div class="sv" id="repTaler">0</div><div class="sl">🪙 Taler</div></div>
+      <div class="sbox"><div class="sv" id="repKunden">0</div><div class="sl">👥 Kunden bedient</div></div>
+    </div>
+    <div class="repbonus" id="repBonus"></div>
+    <button class="big-btn" id="reportBtn">Los geht’s! 🏪</button>
   </section>
 
   <section id="marketScreen" class="hidden">
@@ -1184,6 +1202,7 @@
     shop:document.getElementById("shopScreen"), play:document.getElementById("playScreen"),
     end:document.getElementById("endScreen"), diary:document.getElementById("diaryScreen"),
     bonus:document.getElementById("bonusScreen"),
+    report:document.getElementById("reportScreen"),
     rankEmj:document.getElementById("rankEmj"), rankName:document.getElementById("rankName"),
     rankSub:document.getElementById("rankSub"), xpFill:document.getElementById("xpFill"),
     streak:document.getElementById("streakVal"), earn:document.getElementById("earnVal"),
@@ -1193,7 +1212,7 @@
     fb:document.getElementById("fb"), next:document.getElementById("nextBtn"),
     pTaler:document.getElementById("pTaler")
   };
-  function show(elm){ [el.start,el.market,el.shop,el.play,el.end,el.diary,el.bonus].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
+  function show(elm){ [el.start,el.market,el.shop,el.play,el.end,el.diary,el.bonus,el.report].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
 
   /* ================= Bonusrunde (Paul, 14.09.2026, Meldung 4gq38rd3ts) =========
      Paul: "das bei jeden 100 kunde eine bonus runde kommt und man in 2 minuten
@@ -1436,7 +1455,40 @@
   }
 
   function goMarket(){ renderMarket(); show(el.market); window.scrollTo(0,0); }
-  document.getElementById("openBtn").addEventListener("click",function(){ sClick(); goMarket(); });
+
+  /* ===== Marktbericht beim Oeffnen (Paul, 14.09.2026, Meldung 4gq38rd3ts) =====
+     Paul: "ich will das du bevor ich in meinen markt komme einen kleinen
+     bericht bekomme zum beispiel du hast noch 142 taler und hast bis jetzt 167
+     kunden bedient". Auf die Frage, ob er von allein kommt oder auf Knopfdruck:
+     "wenn ich den markt öfnne". Auf die Frage, ob auch dastehen soll, wie weit
+     es bis zur naechsten Bonusrunde ist: "ja".
+
+     Reine Rueckschau: hier steht, was Paul geschafft HAT. Auch die Bonuszeile
+     ist ein Wegweiser und kein Ziel, das verfallen koennte - es geht nichts
+     verloren, wenn er heute aufhoert.
+
+     Nur beim Betreten von aussen, nicht bei jeder Rueckkehr aus Shop, Tagebuch
+     oder Markttag: sonst staende Paul nach jeder Runde wieder davor. */
+  function berichtZeigen(){
+    document.getElementById("repTaler").textContent=wallet;
+    document.getElementById("repKunden").textContent=rek.kunden;
+    document.getElementById("reportText").innerHTML = rek.kunden
+      ? "Du hast <b>"+wallet+" Taler</b> und hast bis jetzt <b>"+rek.kunden
+        +(rek.kunden===1?" Kunden":" Kunden")+"</b> bedient."
+      : "Dein Markt ist frisch aufgemacht – dein erster Kunde wartet schon. ⚖️";
+    var b=document.getElementById("repBonus");
+    if(brReif()){
+      b.innerHTML="🎉 <b>Deine Bonusrunde wartet auf dich!</b> Sie geht los, "
+        +"sobald du das nächste Mal Kunden bedienst.";
+    } else {
+      var fehlt=BRUNDE_ALLE-(rek.kunden%BRUNDE_ALLE);
+      b.innerHTML="💯 Noch <b>"+fehlt+(fehlt===1?" Kunde":" Kunden")
+        +"</b> bis zu deiner nächsten Bonusrunde.";
+    }
+    show(el.report); window.scrollTo(0,0);
+  }
+  document.getElementById("reportBtn").addEventListener("click",function(){ sClick(); goMarket(); });
+  document.getElementById("openBtn").addEventListener("click",function(){ sClick(); berichtZeigen(); });
   document.getElementById("serveBtn").addEventListener("click",function(){ sClick(); startDay(); });
   document.getElementById("shopBtn").addEventListener("click",function(){ sClick(); renderShop(); show(el.shop); window.scrollTo(0,0); });
   document.getElementById("backToMarket").addEventListener("click",function(){ sClick(); goMarket(); });
