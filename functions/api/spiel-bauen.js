@@ -230,6 +230,15 @@ export async function onRequestPost(context) {
       }
     }
   }
+  // Letzter Ausweg vor der Fehlermeldung: Sind es NUR fachfremde Aufgaben,
+  // dann wirf die einzelnen raus, statt das ganze Spiel wegzuwerfen. Ein
+  // Deutsch-Spiel mit neun Deutsch-Aufgaben ist besser als eine Fehlermeldung
+  // nach neunzig Sekunden Warten - und deutlich besser als zwölf Aufgaben,
+  // von denen vier Mathe sind.
+  if (maengel.length && maengel.every((m) => m.startsWith(FACHFREMD_MARKE))) {
+    fachfremdeEntfernen(spiel, kind);
+    maengel = pruefeSpiel(spiel, kind);
+  }
   if (maengel.length) {
     return fehler(502, "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen.");
   }
