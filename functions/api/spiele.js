@@ -8,6 +8,7 @@
 // "werkstatt:" - der Fortschritt unter "paul-blob" wird nicht berührt.
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { namenRichten } from "./_namen.js";
 
 // Jedes Kind hat seine eigene Liste. Pauls Liste heisst weiterhin
 // "werkstatt:liste:paul" - seine gebauten Spiele bleiben also da, wo sie sind.
@@ -21,7 +22,9 @@ function kindAus(request) {
 
 export async function onRequestGet(context) {
   const { request, env } = context;
-  const wache = await wacheOk(request, env);
+  // Lesen darf auch Denny mit dem Eltern-Code - so lassen sich die Spiele
+  // der Kinder pruefen, ohne ihren Code zu kennen. Aendern bleibt beim Kind.
+  const wache = await wacheOk(request, env, true);
   if (wache) return wache;
 
   const id = new URL(request.url).searchParams.get("id");
@@ -29,7 +32,12 @@ export async function onRequestGet(context) {
   if (id) {
     const roh = await env.PAUL_KV.get(SPIEL(id));
     if (!roh) return json(404, { ok: false, fehler: "Das Spiel gibt es nicht mehr." });
-    return json(200, { ok: true, spiel: JSON.parse(roh) });
+    const spiel = JSON.parse(roh);
+    // Auch Spiele, die vor dem 14.09.2026 gebaut wurden, sollen Leon und Theo
+    // im Tor haben. Gerichtet wird beim Ausliefern; der Speicher bleibt, wie
+    // er ist - so geht nichts verloren, falls die Regel mal danebenliegt.
+    if (spiel.kind === "leon" || kindAus(request) === "leon") namenRichten(spiel);
+    return json(200, { ok: true, spiel });
   }
 
   return json(200, { ok: true, spiele: await listeHolen(env, kindAus(request)) });
@@ -95,9 +103,11 @@ async function listeHolen(env, kind) {
   } catch (e) { return []; }
 }
 
-async function wacheOk(request, env) {
+async function wacheOk(request, env, elternDuerfen) {
   if (!env.PAUL_CODE) return json(500, { ok: false, fehler: "Auf dem Server fehlt der Zugangscode." });
   if (!env.PAUL_KV)   return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+  const elternGeheim = elternDuerfen ? geheimFuer(env, "eltern") : null;
+  if (elternGeheim && (await ausweisGueltig(request, elternGeheim, env))) return null;
   if (!(await ausweisGueltig(request, geheimFuer(env, kindAus(request)), env)))
     return json(401, { ok: false, fehler: "Bitte melde dich mit deinem Code an." });
   return null;

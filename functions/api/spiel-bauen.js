@@ -12,6 +12,7 @@
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { spielSichern } from "./spiele.js";
+import { namenRichten } from "./_namen.js";
 
 // Entscheidung vom 06.09.2026 nach einem Vergleich an denselben Themen:
 // Es bleibt bei Opus 5. Sonnet 5 war zwar schneller und guenstiger, riss aber
@@ -61,7 +62,11 @@ const KINDER = {
               'TORWART HEISST LEON. Bekommt ein Torwart in einer Aufgabe einen Namen, dann heißt er Leon - nie anders. Leon steht selbst im Tor und soll sich wiedererkennen. Das ist keine erfundene Person im Sinn von Regel 13, sondern das Kind selbst. Kommt in einem Spiel nur ein einziger Torwart vor, ist es immer Leon: Er will hauptsächlich selbst im Tor stehen.',
               'DER ZWEITE TORWART HEISST THEO. Stehen zwei Torhüter auf dem Platz, weil zwei Mannschaften spielen, heißt der andere Theo - Leons bester Freund. Mehr als diese beiden benannten Torhüter gibt es nicht. Theo ist IMMER Torwart und nie Stürmer, Verteidiger oder Feldspieler; er hütet das andere Tor. Und Leon kommt öfter vor als Theo - über ein ganzes Spiel gesehen ist Leon meistens dabei, Theo ab und zu.',
               'SAG, WIE VIELE BÄLLE SIE GEHALTEN HABEN. Kommen Leon und Theo zusammen vor, dann steht in der Aufgabe, wie viele Bälle jeder gehalten hat, und genau mit diesen Zahlen wird gerechnet - zusammenzählen, abziehen, vergleichen. So: "Leon hält 7 Bälle, Theo hält 5. Wie viele sind das zusammen?" Die Zahlen bleiben im Zahlenraum aus Regel 15.',
-              'NUR WENN EIN TORWART VORKOMMT. Erzwinge dafür keine Fußball-Aufgabe. Eine Tiefsee- oder Werkstatt-Welt bleibt eine Tiefsee- oder Werkstatt-Welt; Abwechslung ist weiter erwünscht (Regel 13, letzter Absatz).'
+              'NUR WENN EIN TORWART VORKOMMT. Erzwinge dafür keine Fußball-Aufgabe. Eine Tiefsee- oder Werkstatt-Welt bleibt eine Tiefsee- oder Werkstatt-Welt; Abwechslung ist weiter erwünscht (Regel 13, letzter Absatz).',
+              // Denny am 14.09.2026, nachdem Leon wieder "Tom" im Tor fand:
+              // Paul, Helena und Xaver sollen mitspielen. Durchgesetzt wird das
+              // zusaetzlich in _namen.js - diese Zeile allein hat nicht gereicht.
+              'ANDERE KINDER HEISSEN PAUL, HELENA ODER XAVER. Braucht eine Aufgabe weitere Kinder, nimm nur diese drei: Paul ist Leons großer Bruder, Helena seine große Schwester, Xaver der Nachbarsjunge. Sie dürfen schießen, mitspielen, zuschauen, einkaufen - alles außer im Tor stehen, das Tor gehört Leon und Theo. Erfinde KEINE anderen Kindernamen: kein Tom, Max, Ben, Finn, keine Mia oder Lena. Reichen drei nicht, sag "ein Mitspieler" oder "die Nummer 9". Erwachsene dürfen wie bisher ausgedachte Namen tragen ("Trainer Bodo").'
             ] },
   helena: { datei: "gymnasium-7.json",     stufe: "7. Klasse Gymnasium",   alter: 12 },
 };
@@ -220,6 +225,10 @@ export async function onRequestPost(context) {
 
   // Bilder, die die Oberflaeche nicht zeichnen kann, gar nicht erst aufheben.
   bilderAufraeumen(spiel);
+
+  // Leons Torhueter heissen Leon und Theo, die anderen Kinder Paul, Helena,
+  // Xaver. Die Bitte im Auftrag reicht nicht - hier wird es sicher.
+  if (kind === "leon") namenRichten(spiel);
 
   spiel.erzeugt = new Date().toISOString();
   spiel.kind = kind;

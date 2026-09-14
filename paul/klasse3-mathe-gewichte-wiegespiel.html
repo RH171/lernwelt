@@ -934,7 +934,6 @@
       +" Rechne um und pass dein Gewicht an – was schon draufliegt, darf liegen bleiben.";
     tone(523,.1,0,"triangle",.13); tone(660,.14,.1,"triangle",.13);
     ivRender();
-    window.scrollTo(0,0);
   }
 
   /* ---- Markt-Tagebuch ---- */
@@ -1216,7 +1215,7 @@
      Seite zumacht - sie kommt dann beim naechsten Markttag. */
   var BRUNDE_MS=120000, BRUNDE_ALLE=100;
   var brAktiv=false, brVorbei=false, brRest=0, brUhr=null, brKunden=0, brTaler=0;
-  var brDanach=null, brKnopf=null;
+  var brDanach=null, brSchirm="";   /* brSchirm: was der grosse Knopf gerade tut */
 
   function brReif(){ return Math.floor(rek.kunden/BRUNDE_ALLE) > (rek.bonusStufe||0); }
   function brMalen(){
@@ -1255,14 +1254,13 @@
       +"und solange eine Erkl\u00e4rung dasteht, wartet die Uhr auf dich.";
     document.getElementById("bonusSummary").className="summary hidden";
     document.getElementById("bonusBtn").textContent="Los geht\u2019s! \ud83c\udf89";
-    brKnopf=brStarten;
+    brSchirm="ansage";
     show(el.bonus); window.scrollTo(0,0); confetti(200);
     sBuy();
   }
   function brStarten(){
     rek.bonusStufe=Math.floor(rek.kunden/BRUNDE_ALLE); saveRek();
     brAktiv=true; brVorbei=false; brKunden=0; brTaler=0; brRest=BRUNDE_MS;
-    streak=0;
     brUhrAn();
     cur=newQuestion(); renderQuestion(); show(el.play); window.scrollTo(0,0);
   }
@@ -1279,10 +1277,15 @@
     document.getElementById("bonusTalerV").textContent="+"+brTaler;
     document.getElementById("bonusSummary").className="summary";
     document.getElementById("bonusBtn").textContent="Weiter am Stand \u2192";
-    brKnopf=function(){ var f=brDanach; brDanach=null; if(f) f(); };
+    brSchirm="ende";
     show(el.bonus); window.scrollTo(0,0); confetti(brKunden>=6?220:140);
   }
-  document.getElementById("bonusBtn").addEventListener("click",function(){ sClick(); if(brKnopf) brKnopf(); });
+  function brKnopfGedrueckt(){
+    if(brSchirm==="ansage"){ brSchirm=""; brStarten(); return; }
+    brSchirm=""; var f=brDanach; brDanach=null; if(f) f();
+  }
+  document.getElementById("bonusBtn").addEventListener("click",function(){
+    if(!brSchirm) return; sClick(); brKnopfGedrueckt(); });
 
   function paintRank(){
     var xp=num(LS.xp),rk=rankFor(xp);
