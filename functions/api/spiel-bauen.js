@@ -43,7 +43,14 @@ const KINDER = {
             wuensche: [
               'NICHT JEDE MENGE ALS ZAHL HINSCHREIBEN. Paul will mitdenken statt ablesen. Nenne in einem Teil der Aufgaben die Menge in Worten ("ein halbes Kilo", "dreihundert Gramm", "anderthalb Liter") oder im Vergleich zu etwas, das in derselben Aufgabe schon dasteht ("200 g mehr als der erste Sack"). Dann ist der erste Schritt das Umrechnen und nicht das Abschreiben.',
               'DER VERGLEICH MUSS EINDEUTIG SEIN. Sagt eine Aufgabe "200 g mehr als eben", dann steht in derselben Aufgabe, WORAUF sich das bezieht - beim Namen genannt, nicht aus der Aufgabe davor zu erraten. Eine Aufgabe, bei der Paul raten muss, was gemeint war, prüft nicht das Rechnen, sondern das Glück.',
-              'NICHT ÜBERALL. Höchstens etwa die Hälfte der Aufgaben so; der Rest nennt die Zahl weiter geradeheraus. Sonst wird das Lesen zur Hürde statt das Rechnen, und Regel 16 (kurze Frage) geht dabei verloren. Der Zahlenraum aus Regel 15 gilt unverändert - auch die ausgeschriebene Menge bleibt darin.'
+              'NICHT ÜBERALL. Höchstens etwa die Hälfte der Aufgaben so; der Rest nennt die Zahl weiter geradeheraus. Sonst wird das Lesen zur Hürde statt das Rechnen, und Regel 16 (kurze Frage) geht dabei verloren. Der Zahlenraum aus Regel 15 gilt unverändert - auch die ausgeschriebene Menge bleibt darin.',
+              // Paul am 14.09.2026 (Meldung 4gq38rd3ts) zum Wiege-Meister: "Ein
+              // Kunde sagt 'Ach, mach doch lieber 250g mehr!' - dann musst du dein
+              // Gewicht schnell anpassen, und das macht dich richtig flink im
+              // Kopfrechnen mit Kilo und Gramm." Im Spiel ist es gebaut; hier
+              // steht es, weil es fuer jedes Spiel gilt, das er sich bauen laesst.
+              'DIE ANGABE DARF SICH NOCH EINMAL ÄNDERN. Paul mag Aufgaben, in denen die Zahl mittendrin umgeworfen wird: "Zuerst wollte der Kunde 800 g. Jetzt sagt er: lieber 250 g mehr. Wie viel wiegt er ab?" Dafür ist "teilschritte" gemacht - Schritt 1 die erste Menge, Schritt 2 die geänderte. Er nennt das selbst "flink im Kopfrechnen werden".',
+              'DIE ÄNDERUNG MUSS DASTEHEN, NICHT ZU ERRATEN SEIN. Wie bei W2: In der Aufgabe steht ausdrücklich, worauf sich die Änderung bezieht ("250 g mehr als die erste Bestellung"), und beide Zahlen bleiben im Zahlenraum aus Regel 15 - auch die geänderte. Ein Ergebnis unter null oder eine krumme Zwischenzahl darf dabei nicht herauskommen. Höchstens ein paar Aufgaben je Spiel so, sonst wird aus der Abwechslung eine Masche.'
             ] },
   leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 7,
             interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus.",
