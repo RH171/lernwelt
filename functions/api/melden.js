@@ -148,6 +148,7 @@ async function sofortAntworten(env, faden, kind, text, bild) {
 
 const KINDER = ["paul", "leon", "helena"];
 const LISTE = "meldungen";
+const PAPIERKORB = "meldung-papierkorb:";
 const MAX = 200;
 const MAX_BILD = 900 * 1024;
 
@@ -177,6 +178,20 @@ export async function onRequestPost(context) {
   if (!alsEltern && !alsKind) return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
   let liste = await listeHolen(env);
+
+  /* --- Einen geloeschten Faden zurueckholen (nur Eltern) --- */
+  if (daten.zurueckholen) {
+    if (!alsEltern) return json(401, { ok: false, fehler: "Das darf nur der Elternzugang." });
+    const roh = await env.PAUL_KV.get(PAPIERKORB + String(daten.zurueckholen));
+    if (!roh) return json(404, { ok: false, fehler: "Im Papierkorb liegt dazu nichts (mehr)." });
+    const gerettet = JSON.parse(roh).faden;
+    if (liste.some((m) => m.id === gerettet.id))
+      return json(409, { ok: false, fehler: "Der Faden ist schon wieder da." });
+    liste.unshift(gerettet);
+    await liste_speichern(env, liste);
+    try { await env.PAUL_KV.delete(PAPIERKORB + gerettet.id); } catch (e) {}
+    return json(200, { ok: true, faden: gerettet });
+  }
 
   /* --- Antwort in einem bestehenden Faden --- */
   if (daten.id) {
@@ -306,6 +321,30 @@ export async function onRequestGet(context) {
     if (!d) return json(404, { ok: false, fehler: "Kein Bild dabei." });
     return json(200, { ok: true, bild: d });
   }
+
+  // Was im Papierkorb liegt. Nur mit Elternausweis, und bewusst NICHT in der
+  // normalen Liste: Fuer die Kinder soll ein weggeraeumter Faden weg bleiben.
+  if (url.searchParams.get("papierkorb") === "1") {
+    const gefunden = [];
+    let cursor;
+    do {
+      const s = await env.PAUL_KV.list({ prefix: PAPIERKORB, cursor });
+      for (const k of s.keys) {
+        const roh = await env.PAUL_KV.get(k.name);
+        if (!roh) continue;
+        try {
+          const e = JSON.parse(roh);
+          gefunden.push({ id: e.faden.id, kind: e.faden.kind, zeit: e.faden.zeit,
+                          geloescht: e.geloescht, von: e.von,
+                          nachrichten: (e.faden.verlauf || []).length, faden: e.faden });
+        } catch (err) {}
+      }
+      cursor = s.list_complete ? null : s.cursor;
+    } while (cursor);
+    gefunden.sort((a, b) => String(b.geloescht).localeCompare(String(a.geloescht)));
+    return json(200, { ok: true, papierkorb: gefunden });
+  }
+
   return json(200, { ok: true, meldungen: await listeHolen(env) });
 }
 
@@ -330,6 +369,23 @@ export async function onRequestDelete(context) {
 
   if (!alsKindSelbst && !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env)))
     return json(401, { ok: false, fehler: "Das darfst du nicht loeschen." });
+
+  // Erst in den Papierkorb, dann aus der Liste. Zweimal ist ein Faden schon
+  // endgueltig verschwunden - Pauls drei am 07.09.2026, Helenas am 14.09.2026 -
+  // und beide Male gab es nichts zum Zurueckholen. Helena dazu: "Ich will
+  // nicht, dass so was noch mal passiert." Das hier ist das Netz darunter: der
+  // Text bleibt 90 Tage liegen, unsichtbar fuer die Kinder, lesbar nur mit dem
+  // Elternausweis. Die Bilder werden weiter geloescht - sie sind zu gross, um
+  // sie doppelt zu halten, und der Text ist das, was verloren wehtut.
+  if (faden) {
+    try {
+      await env.PAUL_KV.put(PAPIERKORB + id,
+        JSON.stringify({ faden, geloescht: new Date().toISOString(),
+                         von: alsKindSelbst ? meins : "eltern" }),
+        { expirationTtl: 60 * 60 * 24 * 90 });
+    } catch (e) {}
+  }
+
   await liste_speichern(env, liste.filter((m) => m.id !== id));
   if (faden) for (let i = 0; i < (faden.verlauf || []).length; i++) {
     try { await env.PAUL_KV.delete("meldung-bild:" + id + ":" + i); } catch (e) {}
