@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elfmeter HSU</title>
+<!--
+  Leon, 14.09.2026: "Kannst du so eins auch fuer Deutsch und eins fuer HSU
+  machen?" - Dieselbe Maschine wie Mathe und Deutsch (elfmeter.js).
+
+  Vier Themen aus HSU 1/2: Jahreszeiten und Wetter, Koerper und Sinne,
+  sicher unterwegs, Tiere und Pflanzen. Antworten sind kurz (sie muessen in
+  eine Torecke passen) und die Frage wird von selbst vorgelesen.
+
+  Fachlich wie im Bauauftrag (D13, Regel 19): aus der Sicht eines
+  Siebenjaehrigen, nichts verharmlost - die Fussgaengerampel hat zwei Farben,
+  zwischen parkenden Autos geht man nicht ueber die Strasse.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="elfmeter.css">
+</head>
+<body>
+<div id="elfmeter"></div>
+
+<script>
+(function(){
+  "use strict";
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  // [Bild, Frage, richtige Antwort, [zwei falsche], Erklaerung]
+  var THEMEN = {
+    jahreszeiten: [
+      ["❄️", "Es schneit. Welche Jahreszeit?", "Winter", ["Sommer", "Frühling"], "Schnee gibt es bei uns im Winter, wenn es richtig kalt ist."],
+      ["🌷", "Die ersten Blumen blühen.", "Frühling", ["Herbst", "Winter"], "Im Frühling wird es wärmer, und die ersten Blumen kommen heraus."],
+      ["🍂", "Bunte Blätter fallen.", "Herbst", ["Frühling", "Sommer"], "Im Herbst färben sich die Blätter und fallen von den Bäumen."],
+      ["🏊", "30 Grad – ab ins Freibad!", "Sommer", ["Winter", "Herbst"], "Im Sommer ist es am heißesten."],
+      ["🎄", "Wann ist Weihnachten?", "Winter", ["Sommer", "Herbst"], "Weihnachten ist im Dezember – das ist Winter."],
+      ["🐣", "Wann ist Ostern?", "Frühling", ["Herbst", "Winter"], "Ostern ist im März oder April – im Frühling."],
+      ["🎃", "Kürbisse werden geerntet.", "Herbst", ["Frühling", "Winter"], "Im Herbst wird geerntet: Kürbisse, Äpfel, Kartoffeln."],
+      ["🌞", "Was kommt nach dem Frühling?", "Sommer", ["Winter", "Herbst"], "Frühling, Sommer, Herbst, Winter – dann geht es von vorn los."],
+      ["🍁", "Was kommt nach dem Sommer?", "Herbst", ["Frühling", "Winter"], "Nach dem Sommer kommt der Herbst."],
+      ["📅", "Wie viele Jahreszeiten gibt es?", "4", ["7", "12"], "Frühling, Sommer, Herbst und Winter – das sind 4. Sieben Tage hat die Woche, zwölf Monate das Jahr."],
+      ["🗓️", "Wie viele Monate hat ein Jahr?", "12", ["4", "7"], "Von Januar bis Dezember sind es 12 Monate."],
+      ["☔", "Es regnet. Was ziehst du an?", "Regenjacke", ["Badehose", "Sandalen"], "Bei Regen hält dich eine Regenjacke trocken."],
+      ["⛄", "Was brauchst du im Schnee?", "Handschuhe", ["Sonnenhut", "Badehose"], "Im Schnee werden die Finger kalt – Handschuhe halten sie warm."],
+      ["📆", "Welcher Tag kommt nach Montag?", "Dienstag", ["Sonntag", "Freitag"], "Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag."]
+    ],
+    koerper: [
+      ["👂", "Womit hörst du den Pfiff?", "Ohr", ["Nase", "Auge"], "Geräusche hörst du mit den Ohren."],
+      ["👃", "Womit riechst du die Bratwurst?", "Nase", ["Ohr", "Zunge"], "Gerüche nimmst du mit der Nase wahr."],
+      ["👅", "Womit schmeckst du, dass es süß ist?", "Zunge", ["Haut", "Auge"], "Süß, sauer, salzig, bitter – das schmeckt die Zunge."],
+      ["👀", "Womit siehst du den Ball?", "Augen", ["Ohren", "Nase"], "Sehen ist ein Sinn – dafür hast du die Augen."],
+      ["🔥", "Womit merkst du, dass etwas heiß ist?", "Haut", ["Ohr", "Nase"], "Warm, kalt, weich, rau: Das fühlst du mit der Haut."],
+      ["🖐️", "Wie viele Sinne hast du?", "5", ["3", "10"], "Sehen, Hören, Riechen, Schmecken, Fühlen – fünf Sinne, so viele wie Finger an einer Hand."],
+      ["🪥", "Wie oft putzt du die Zähne?", "2-mal am Tag", ["1-mal pro Woche", "nie"], "Morgens und abends – zweimal am Tag."],
+      ["🥤", "Was trinkst du am besten?", "Wasser", ["Cola", "Limo"], "Wasser löscht den Durst und hat keinen Zucker."],
+      ["🧼", "Was machst du vor dem Essen?", "Hände waschen", ["Schuhe putzen", "Fernsehen"], "An den Händen sind Keime – vor dem Essen werden sie mit Seife gewaschen."],
+      ["🍎", "Was ist ein gesunder Snack?", "Apfel", ["Chips", "Gummibärchen"], "Obst macht satt und gibt Kraft. Süßes nur ab und zu."],
+      ["🦵", "Was ist zwischen Fuß und Hüfte?", "Knie", ["Ellenbogen", "Schulter"], "Am Bein gibt es das Knie, am Arm den Ellenbogen."],
+      ["😴", "Wann wächst dein Körper am meisten?", "im Schlaf", ["beim Essen", "beim Fernsehen"], "Im Schlaf erholt sich der Körper und wächst. Darum ist genug Schlaf so wichtig."]
+    ],
+    verkehr: [
+      ["🚦", "Die Fußgängerampel ist rot.", "stehen bleiben", ["schnell rennen", "losgehen"], "Rot heißt stehen. Erst bei Grün gehen – und auch dann kurz schauen."],
+      ["👀", "Wohin schaust du zuerst?", "nach links", ["nach oben", "nach hinten"], "Links, rechts, links – von links kommen die Autos zuerst auf deiner Seite."],
+      ["🦓", "Wo gehst du über die Straße?", "Zebrastreifen", ["zwischen Autos", "in der Kurve"], "Am Zebrastreifen sehen dich die Autofahrer. Warte, bis das Auto wirklich hält."],
+      ["⚽", "Dein Ball rollt auf die Straße.", "stehen bleiben", ["hinterher", "schnell holen"], "Bleib stehen und hol einen Erwachsenen. Ein Ball ist nicht so wichtig wie du."],
+      ["🚲", "Was gehört beim Radfahren auf den Kopf?", "Helm", ["Mütze", "Kappe"], "Nur ein Helm schützt deinen Kopf, wenn du stürzt."],
+      ["🌙", "Es ist dunkel. Was hilft dir?", "Reflektoren", ["schwarze Jacke", "Sonnenbrille"], "Reflektoren leuchten im Autolicht – so sieht man dich früh."],
+      ["🟢", "Das grüne Männchen leuchtet.", "schauen, gehen", ["stehen bleiben", "umdrehen"], "Grün heißt gehen – vorher kurz schauen, ob ein Auto abbiegt."],
+      ["🚌", "Du steigst aus dem Bus.", "warten", ["vorne rüber", "hinten rüber"], "Warte, bis der Bus weggefahren ist. Vor oder hinter dem Bus sehen dich die Autos nicht."],
+      ["🚶", "Wo gehst du zum Ronhof?", "Gehweg", ["Straße", "Radweg"], "Der Gehweg ist für dich da – möglichst weit weg von der Straße."],
+      ["🛴", "Wo fährst du mit dem Roller?", "Gehweg", ["Straße", "Autobahn"], "Mit dem Roller bleibst du auf dem Gehweg."],
+      ["🚗", "Zwischen parkenden Autos …", "nicht rübergehen", ["schnell rennen", "kurz warten"], "Zwischen parkenden Autos sieht dich niemand. Such einen Zebrastreifen oder eine Ampel."],
+      ["🚦", "Welche Farben hat die Fußgängerampel?", "Rot und Grün", ["Blau und Gelb", "nur Rot"], "Die Ampel für Fußgänger hat zwei Farben: rot für stehen, grün für gehen."]
+    ],
+    tiere: [
+      ["🦔", "Wer hält Winterschlaf?", "Igel", ["Amsel", "Fuchs"], "Der Igel rollt sich im Laub ein und schläft bis zum Frühling."],
+      ["🌱", "Womit trinkt eine Pflanze?", "Wurzel", ["Blüte", "Blatt"], "Die Wurzel steckt in der Erde und saugt Wasser auf."],
+      ["🐿️", "Was sammelt das Eichhörnchen?", "Nüsse", ["Steine", "Federn"], "Im Herbst versteckt das Eichhörnchen Nüsse für den Winter."],
+      ["🕊️", "Wer fliegt im Herbst in den Süden?", "Storch", ["Spatz", "Amsel"], "Der Storch ist ein Zugvogel – im Winter findet er hier kein Futter."],
+      ["🐹", "Welches Tier ist ein Haustier?", "Hamster", ["Fuchs", "Reh"], "Ein Haustier lebt bei uns und wird von uns versorgt."],
+      ["🐰", "Was frisst ein Kaninchen gern?", "Karotten", ["Wurst", "Chips"], "Kaninchen fressen Pflanzen: Heu, Gras, Karotten."],
+      ["🐛", "Was wird aus der Raupe?", "Schmetterling", ["Käfer", "Spinne"], "Die Raupe verpuppt sich – und heraus kommt ein Schmetterling."],
+      ["🐸", "Was wird aus der Kaulquappe?", "Frosch", ["Fisch", "Ente"], "Die Kaulquappe bekommt Beine und wird ein Frosch."],
+      ["🐔", "Was legt das Huhn?", "Eier", ["Milch", "Nüsse"], "Hühner legen Eier. Milch gibt die Kuh."],
+      ["🐝", "Was sammelt die Biene?", "Nektar", ["Sand", "Blätter"], "Aus dem Nektar der Blüten machen Bienen Honig."],
+      ["🌻", "Was braucht eine Pflanze zum Wachsen?", "Wasser und Licht", ["Cola", "Dunkelheit"], "Pflanzen brauchen Wasser, Licht und Erde."],
+      ["🐄", "Was gibt uns die Kuh?", "Milch", ["Eier", "Wolle"], "Die Kuh gibt Milch. Wolle kommt vom Schaf."]
+    ]
+  };
+
+  function aufgaben(stufe, n){
+    return mische(THEMEN[stufe].slice()).slice(0, n).map(function(t){
+      return { bild: t[0], text: t[1], sprechen: t[1].replace(/…/, ""), ecken: mische([t[2]].concat(t[3])), r: t[2],
+        merkmal: { jahreszeiten: "jahreszeiten", koerper: "sinne und koerper", verkehr: "verkehr", tiere: "tiere und pflanzen" }[stufe],
+        sprechenLoesung: t[4],
+        erklaerung: function(){ return '<div class="weg">' + t[0] + ' ' + esc(t[4]) + '</div>'; } };
+    });
+  }
+
+  window.ELFMETER = {
+    speicher: "leon-elfmeter-hsu",
+    titel: "Elfmeter HSU",
+    startbild: "🧤🌍",
+    einleitung: "Auf dem Ball steht die Frage – ich lese sie dir vor. Spring in die Ecke mit der richtigen Antwort.",
+    vorlesenVonSelbst: true,
+    stufen: [
+      { id: "jahreszeiten", gross: "🍂", name: "Jahreszeiten", klein: "Wetter und Monate", jetzt: true },
+      { id: "verkehr",      gross: "🚦", name: "Sicher unterwegs", klein: "Ampel, Straße, Bus", jetzt: true },
+      { id: "koerper",      gross: "👀", name: "Körper und Sinne", klein: "Hören, Sehen, gesund" },
+      { id: "tiere",        gross: "🐞", name: "Tiere und Pflanzen", klein: "Winterschlaf, Wurzel" }
+    ],
+    aufgaben: aufgaben
+  };
+  window.__hsuDaten = THEMEN;
+})();
+</script>
+<script src="elfmeter.js"></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
