@@ -39,12 +39,23 @@
   }
   @media (max-width:340px){ .themen{grid-template-columns:1fr} }
   /* Mathe oder Deutsch: zwei grosse Reiter ueber den Feldern. */
-  .faecher{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .faecher{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
   .fach{
     display:flex;align-items:center;justify-content:center;gap:9px;min-height:54px;
     border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);
-    font-family:var(--rund);font-size:18px;font-weight:700;cursor:pointer;
+    font-family:var(--rund);font-size:18px;font-weight:700;cursor:pointer;padding:0 6px;
   }
+  @media (max-width:420px){ .fach{font-size:16px;gap:5px} .fach .zeichen{font-size:20px} }
+  /* Die Spiele zum Anfassen: eigene Seiten, sofort da, ohne Bauen. */
+  .anfassen h2{font-family:var(--rund);font-size:20px;margin:0 0 4px}
+  .anfassen-liste{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:14px}
+  @media (max-width:640px){ .anfassen-liste{grid-template-columns:1fr} }
+  .anfass{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink);
+    background:linear-gradient(160deg,#ecfdf3,#e0f2fe);border:2px solid #b7e4c7;border-radius:20px;padding:16px 10px;min-height:118px;
+    font-family:var(--rund);font-size:17px;font-weight:700;text-align:center;line-height:1.25}
+  .anfass .bild{font-size:36px;line-height:1}
+  .anfass .fachname{font-family:var(--font);font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+  .anfass:active{transform:scale(.97)}
   .fach .zeichen{font-size:24px;line-height:1}
   .fach.an{border-color:var(--leon);background:#eefbf2;color:#067647}
   .fach:active{transform:scale(.97)}
@@ -308,6 +319,7 @@
       <div class="faecher" id="faecher" role="tablist">
         <button class="fach an" data-fach="mathe" role="tab"><span class="zeichen">&#128290;</span>Mathe</button>
         <button class="fach" data-fach="deutsch" role="tab"><span class="zeichen">&#128214;</span>Deutsch</button>
+        <button class="fach" data-fach="hsu" role="tab"><span class="zeichen">&#127757;</span>HSU</button>
       </div>
       <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was willst du üben?</div>
       <p class="unter">Tipp auf ein Feld – ich baue dir daraus ein Spiel.</p>
@@ -336,6 +348,16 @@
       <div id="meldung"></div>
 
       <button class="los verborgen" id="los" disabled>Spiel bauen</button>
+    </div>
+
+    <div class="karte anfassen">
+      <h2>&#9917; Spiele zum Anfassen</h2>
+      <p class="unter">Die sind sofort da – einfach reintippen.</p>
+      <div class="anfassen-liste">
+        <a class="anfass" href="klasse2-mathe-elfmeter.html"><span class="bild">&#129508;</span>Leon hält den Elfer<span class="fachname">Mathe</span></a>
+        <a class="anfass" href="klasse2-deutsch-doppelpass.html"><span class="bild">&#128079;</span>Silben-Doppelpass<span class="fachname">Deutsch</span></a>
+        <a class="anfass" href="klasse2-hsu-schulweg-detektiv.html"><span class="bild">&#128269;</span>Schulweg-Detektiv<span class="fachname">HSU</span></a>
+      </div>
     </div>
 
     <div class="wiederholen verborgen" id="wiederholen">
@@ -726,7 +748,19 @@
     { fach:"deutsch", schluessel:"d-silben", bild:"\u{1F44F}", titel:"Silben und Reime", jetzt:true,
       wunsch:"Deutsch, Wiederholung aus der 1. Klasse: Silben und Reime. Silben klatschen und zählen, Wörter aus Silben zusammensetzen, Reimwörter finden, das Wort mit einer anderen Silbenzahl herausfinden." },
     { fach:"deutsch", schluessel:"d-nomen", bild:"\u{1F4D6}", titel:"Der, die, das", jetzt:true,
-      wunsch:"Deutsch, Wiederholung aus der 1. Klasse: Namenwörter. Nomen erkennen, den richtigen Artikel der, die oder das wählen, Nomen und Satzanfänge schreibt man groß, Einzahl und Mehrzahl (ein Ball, viele Bälle)." }
+      wunsch:"Deutsch, Wiederholung aus der 1. Klasse: Namenwörter. Nomen erkennen, den richtigen Artikel der, die oder das wählen, Nomen und Satzanfänge schreibt man groß, Einzahl und Mehrzahl (ein Ball, viele Bälle)." },
+
+    /* HSU, seit 14.09.2026. Denny: "HSU hat Leon auch in der ersten Klasse
+       schon gehabt." Lernpfad HSU 1/2; im September passen Schulweg und
+       Herbst, deshalb sind diese beiden "gerade dran". */
+    { fach:"hsu", schluessel:"h-verkehr", bild:"\u{1F6A6}", titel:"Sicher unterwegs", jetzt:true,
+      wunsch:"Heimat- und Sachunterricht, Wiederholung aus der 1. Klasse: der sichere Schulweg. Ampel und Zebrastreifen, links-rechts-links schauen, Gefahren zwischen parkenden Autos und an der Bushaltestelle, im Dunkeln gut sichtbar sein." },
+    { fach:"hsu", schluessel:"h-jahreszeiten", bild:"\u{1F342}", titel:"Jahreszeiten und Feste", jetzt:true,
+      wunsch:"Heimat- und Sachunterricht, Wiederholung aus der 1. Klasse: die vier Jahreszeiten, Wochentage und Monate in der richtigen Reihenfolge, was man in jeder Jahreszeit in der Natur sieht, passende Kleidung, Feste im Jahreslauf." },
+    { fach:"hsu", schluessel:"h-koerper", bild:"\u{1F440}", titel:"Körper und Sinne",
+      wunsch:"Heimat- und Sachunterricht, Wiederholung aus der 1. Klasse: die fünf Sinne und ihre Sinnesorgane, Körperteile benennen, gesund essen und trinken, Zähne putzen und Hände waschen." },
+    { fach:"hsu", schluessel:"h-tiere", bild:"\u{1F41E}", titel:"Tiere und Pflanzen",
+      wunsch:"Heimat- und Sachunterricht, 1. und 2. Klasse: Tiere und Pflanzen im Jahreslauf. Welche Tiere Winterschlaf halten oder in den Süden ziehen, die Teile einer Pflanze (Wurzel, Stängel, Blatt, Blüte), Haustiere richtig versorgen." }
   ];
 
   // Welches Fach gerade offen ist. sessionStorage wie beim Spielstand: Der
@@ -734,7 +768,7 @@
   // Mathe - dort liegen die meisten Spiele.
   var FACH_SCHLUESSEL = "leon-fach";
   var fachJetzt = "mathe";
-  try { if (standLager && standLager.getItem(FACH_SCHLUESSEL) === "deutsch") fachJetzt = "deutsch"; } catch(e){}
+  try { var gemerkt = standLager && standLager.getItem(FACH_SCHLUESSEL); if (gemerkt === "deutsch" || gemerkt === "hsu") fachJetzt = gemerkt; } catch(e){}
 
   function fachZeigen(){
     Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(k){
@@ -742,7 +776,7 @@
       k.classList.toggle("an", an);
       k.setAttribute("aria-selected", an ? "true" : "false");
     });
-    $("kopfzeile").textContent = fachJetzt === "deutsch" ? "Leons Deutsch" : "Leons Mathe";
+    $("kopfzeile").textContent = fachJetzt === "deutsch" ? "Leons Deutsch" : fachJetzt === "hsu" ? "Leons HSU" : "Leons Mathe";
   }
   Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(k){
     k.addEventListener("click", function(){
@@ -888,7 +922,9 @@
     }
     SCHRITTE[2] = fachJetzt === "deutsch"
       ? ["Ich suche gute Wörter …", "Nicht zu leicht, nicht zu schwer."]
-      : ["Ich suche gute Zahlen …", "Nicht zu leicht, nicht zu schwer."];
+      : fachJetzt === "hsu"
+        ? ["Ich suche spannende Fragen …", "Nicht zu leicht, nicht zu schwer."]
+        : ["Ich suche gute Zahlen …", "Nicht zu leicht, nicht zu schwer."];
     $("schritt").textContent = SCHRITTE[0][0];
     $("schritt-unter").textContent = SCHRITTE[0][1];
     var takt = setInterval(function(){

@@ -409,7 +409,7 @@
     $("ende-text").textContent = sauber === RUNDE
       ? "Jedes Wort ohne einen Fehlpass. Du hörst ganz genau hin!"
       : alle === RUNDE
-        ? "Am Ende saß jedes Wort – " + aufgeholt + " davon in der Nachspielzeit. So wird man besser."
+        ? "Am Ende saß jedes Wort – " + (aufgeholt === 1 ? "eines" : aufgeholt) + " davon in der Nachspielzeit. So wird man besser."
         : "Gut gespielt! Die kniffligen Wörter werden beim nächsten Mal leichter.";
     zeige("ende"); rueckblickMalen(); konfetti(true);
   }

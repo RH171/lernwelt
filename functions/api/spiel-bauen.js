@@ -384,6 +384,7 @@ D6. LAUT UND BUCHSTABE NICHT VERWECHSELN. „Schuh" beginnt mit dem Laut „Sch"
 D7. MERKMALE: anlaut, inlaut, endlaut, selbstlaute, buchstaben gross klein, silben zaehlen, silben zusammensetzen, reime, nomen erkennen, artikel, grossschreibung nomen, satzanfang gross, einzahl mehrzahl.
 D8. KEINE AUFGABE HÄNGT AN EINEM NAMEN. Kommt ein Kind vor, heißt es Leon, Theo, Paul, Helena oder Xaver - und die Lösung darf nie davon abhängen, wie der Name geschrieben wird.
 D9. BILDER meist leer. "menge" nur, wenn wirklich gezählt wird.
+D10. HEIMAT- UND SACHUNTERRICHT: Dort gelten D1, D2, D4, D5, D8 und D9 genauso. Antworten sind kurze Wörter ("Winter", "Ohr", "bei Grün"), keine Sätze. Beim Verkehr immer das sichere Verhalten als richtige Antwort, nie verharmlosen. Merkmale z. B.: verkehr ampel, verkehr zebrastreifen, verkehr gefahren, jahreszeiten, monate reihenfolge, wochentage, sinne, koerperteile, gesunde ernaehrung, tiere im winter, pflanzenteile, haustiere.
 
 ` : ""}DER LEHRPLAN (LehrplanPLUS Bayern)
 ${faecher}
