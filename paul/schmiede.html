@@ -132,6 +132,12 @@
      Ohne das hier rutscht der Sprungknopf dann in die linke Ecke - dorthin,
      wo sonst "nach links" liegt. */
   .knopfgruppe.rechts{margin-left:auto}
+  /* Unten rechts sitzt der Melde-Knopf aus lernstand.js ("Hier stimmt was
+     nicht"), 52 px, fest an der Ecke. Genau dort lag der Sprungknopf - wer
+     springen wollte, hat eine Meldung aufgemacht. Also Platz lassen.
+     Der Knopf selbst bleibt, wo er ist: Er muss auch mitten im Spiel zu
+     erreichen sein, gerade dann. */
+  #steuerung{padding-right:82px}
   .knopf{width:72px;height:72px;min-width:44px;min-height:44px;border-radius:50%;border:none;
          background:rgba(255,255,255,.86);box-shadow:0 5px 0 rgba(0,0,0,.20);font-size:32px;color:#1e293b;
          display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none;
