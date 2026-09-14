@@ -269,6 +269,49 @@ Deutsch-Spiel mit neun Aufgaben ist besser als eine Fehlermeldung nach
 neunzig Sekunden Warten. Bleiben weniger als fünf übrig, ist es wieder ein
 Mangel — dann ist der ehrliche Fehler richtig.
 
+### Die Form stimmt noch lange nicht die Zahl
+
+`pruefeSpiel` sagt, ob die Lösung **in der Auswahl steht** — nicht, ob sie
+**stimmt**. In Pauls „Marktbude am Hafen" stand seit dem 13.09.2026:
+
+> Ein Marktbrötchen kostet 1,20 €. Was kosten 6 Brötchen? → **7**
+
+und im Rechenweg der Satz **„120 ct = 1 €"**. Richtig sind 7,20 € und 1,20 €.
+Zwölf Aufgaben, elf davon einwandfrei, und die zwölfte bringt einem
+Viertklässler bei, dass 120 Cent ein Euro sind. Gefunden hat sie niemand, weil
+niemand nachgerechnet hat — der Auftrag *bittet* den Baumeister seit jeher,
+richtig zu rechnen. **Eine Bitte im Auftrag ist keine Prüfung**, dieselbe Lehre
+wie bei den Namen und beim Fachfremden.
+
+`functions/api/_rechnung.js` rechnet deshalb mechanisch nach:
+
+- **Einheiten-Gleichungen** im Text (`120 ct = 1 €`, `1 kg = 100 g`),
+- **ausgerechnete Zeilen** im Rechenweg (`6 · 5 + 4 = 54`),
+- „**kostet P €, was kosten N Stück**" gegen die Lösung,
+- „**N … mit je M …**" gegen die Lösung,
+- der **letzte Teilschritt** gegen die Gesamtlösung.
+
+Es läuft an **beiden** Enden: beim Bauen in `pruefeSpiel` (Marke
+`rechnet falsch: `, die einzelne Aufgabe fliegt raus wie eine fachfremde, das
+Spiel bleibt) und über den Bestand:
+
+    node lernwelt/pruefe-rechnung.mjs --selbsttest
+    ./pruefe-bestand.sh                 # ruft es als zweiten Teil mit auf
+
+**Warum es so wenig prüft, und warum das richtig ist.** Ein Fehlalarm wirft
+hier eine *richtige* Aufgabe aus einem fertigen Spiel — der kostet mehr als
+eine Lücke. Gemeldet wird darum nur, was eindeutig ist. Der erste Entwurf war
+großzügiger und meldete 26 Fälle, davon **25 unecht**: der deutsche Doppelpunkt
+als Geteiltzeichen gelesen (`Zerlege die 6 in 3 und 3: 7 + 3 = 10`), Gleichungen
+über einen Zeilenumbruch hinweg (`4 · 5 = 5 + 5 + 5 + 5\n= 20`), abgeschnittenes
+Weiterrechnen (`8 · 50 = 4 · 100`), zusammengesetzte Lösungen (`88 und 90`,
+`5 Euro 70 Cent`) und „je"-Aufgaben mit einem zweiten Schritt (`4 Reihen mit je
+10 Schrauben und nimmt danach 7 weg`). Aufgaben, die mit Absicht eine falsche
+Rechnung **zeigen** („Was ist bei 246 · 3 = 638 schiefgegangen?"), sind
+ausgenommen. Seitdem: **52 Spiele, ein Treffer, und der war echt.** Wer die
+Prüfung erweitert, misst sich an dieser Zahl und am Selbsttest — der prüft in
+beide Richtungen, gefundene Fehler *und* das, was stehenbleiben muss.
+
 ## Wenn nichts mehr gespeichert wird: erst messen, dann suchen
 
 Am 14.09.2026 gegen 14 Uhr UTC hat der KV-Speicher aufgehört, Schreibvorgänge
