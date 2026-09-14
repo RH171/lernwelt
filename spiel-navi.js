@@ -13,6 +13,17 @@
  */
 (function () {
   "use strict";
+  // Auf dem Handy wird die Kopfzeile sonst zu voll (Titel, Zurueck, Auswahl, Punkte):
+  // Titel in eine eigene Zeile, die Knoepfe darunter, nichts bricht mitten im Wort.
+  (function () {
+    if (document.getElementById("spiel-navi-stil")) return;
+    var st = document.createElement("style");
+    st.id = "spiel-navi-stil";
+    st.textContent = "@media (max-width:560px){header{flex-wrap:wrap!important;row-gap:8px!important}" +
+      "header h1{flex:1 1 100%!important;order:-1}header a,header button,#punkte,#zaehler{white-space:nowrap}}";
+    document.head.appendChild(st);
+  })();
+
   function los() {
     var start = document.getElementById("sicht-start");
     var kopf = document.querySelector("header");
