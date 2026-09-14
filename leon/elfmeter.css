@@ -66,7 +66,9 @@ h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;letter-spacing:-.01em}
 
 /* Leon im Tor - aus Formen gebaut, damit er auf jedem Geraet gleich aussieht */
 .keeper{position:absolute;left:50%;top:calc(50% - 118px);width:80px;height:118px;margin-left:-40px;
-  transition:transform .45s cubic-bezier(.3,1.4,.5,1);transform-origin:50% 90%;z-index:3;pointer-events:none}
+  transition:transform .45s cubic-bezier(.3,1.4,.5,1);transform-origin:50% 90%;z-index:3;pointer-events:none;
+  /* etwas kleiner, sonst verdeckt der Kopf die Antwort in der mittleren Ecke (scale wirkt zusaetzlich zum Hechtsprung) */
+  scale:.8}
 .keeper .kopf{position:absolute;left:25px;top:0;width:30px;height:30px;border-radius:50%;background:#f2c7a0;border:3px solid #1b1c22}
 .keeper .koerper{position:absolute;left:14px;top:30px;width:52px;height:52px;border-radius:14px 14px 8px 8px;
   background:#16a34a;border:3px solid #1b1c22;color:#fff;font:800 22px/46px var(--rund);text-align:center}
