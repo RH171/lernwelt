@@ -1,0 +1,16 @@
+# Spielraeume fuer das Quiz-Duell der Lernwelt (14.09.2026).
+# Eigener kleiner Dienst, weil ein Live-Spiel fuer mehrere Geraete gleichzeitig
+# einen Ort braucht, der sich den Stand merkt - das koennen Pages-Funktionen
+# allein nicht. Das Lernwelt-Projekt spricht ihn ueber das Binding DUELL an
+# (functions/api/duell.js). Kostenloser Tarif: SQLite-basierte Durable Objects.
+name = "lernwelt-duell"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[[durable_objects.bindings]]
+name = "DUELL"
+class_name = "DuellRaum"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DuellRaum"]

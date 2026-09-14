@@ -36,19 +36,32 @@ const ANTWORTEN_PRO_TAG = 80;
 
 // Gibt zurueck, WARUM nicht - der Unterschied ist fuer das Kind wichtig.
 // "ok" | "stunde" | "tag"
+//
+// Beide Zaehler stehen ABSICHTLICH in EINEM Schluessel. Im KV ist nicht der
+// Platz knapp, sondern die Zahl der Schreibvorgaenge am Tag - und die sind am
+// 14.09.2026 tatsaechlich ausgegangen, danach nahm der Speicher stundenlang
+// nichts mehr an. Zwei Schluessel waeren zwei Schreibvorgaenge je Nachricht
+// gewesen; so bleibt es bei einem, genau wie vor der Tagesgrenze.
+const ZAEHLER = (kind) => "antwortzaehler:" + kind;
+
 async function darfAntworten(env, kind) {
   const jetzt = new Date();
   const stunde = jetzt.toISOString().slice(0, 13);
   const tag = jetzt.toISOString().slice(0, 10);
-  const sS = "antwortzaehler:" + kind + ":" + stunde;
-  const sT = "antwortzaehler-tag:" + kind + ":" + tag;
-  let n = 0, m = 0;
-  try { n = Number(await env.PAUL_KV.get(sS)) || 0; } catch (e) {}
-  try { m = Number(await env.PAUL_KV.get(sT)) || 0; } catch (e) {}
-  if (m >= ANTWORTEN_PRO_TAG) return "tag";
-  if (n >= ANTWORTEN_PRO_STUNDE) return "stunde";
-  try { await env.PAUL_KV.put(sS, String(n + 1), { expirationTtl: 7200 }); } catch (e) {}
-  try { await env.PAUL_KV.put(sT, String(m + 1), { expirationTtl: 172800 }); } catch (e) {}
+
+  let z = {};
+  try { z = JSON.parse((await env.PAUL_KV.get(ZAEHLER(kind))) || "{}") || {}; } catch (e) {}
+  const inDerStunde = z.stunde === stunde ? Number(z.n) || 0 : 0;
+  const amTag = z.tag === tag ? Number(z.m) || 0 : 0;
+
+  if (amTag >= ANTWORTEN_PRO_TAG) return "tag";
+  if (inDerStunde >= ANTWORTEN_PRO_STUNDE) return "stunde";
+
+  try {
+    await env.PAUL_KV.put(ZAEHLER(kind),
+      JSON.stringify({ stunde, n: inDerStunde + 1, tag, m: amTag + 1 }),
+      { expirationTtl: 172800 });
+  } catch (e) {}
   return "ok";
 }
 
@@ -412,8 +425,32 @@ async function listeHolen(env) {
   } catch (e) { return []; }
 }
 
+// Fliegt der Schreibvorgang, war das bisher ein abgestuerzter Worker: Das Kind
+// bekam die nackte Cloudflare-Seite "error code: 1101" zu sehen und wusste
+// nicht, ob seine Meldung angekommen ist. Am 14.09.2026 ab etwa 14 Uhr UTC nahm
+// der Speicher stundenlang nichts mehr an - GET ging weiter, jedes put warf.
+// Seitdem gibt es hier einen ehrlichen Satz statt eines Absturzes. Wichtig:
+// Er sagt NICHT "angekommen", denn das waere gelogen.
+class SpeicherVoll extends Error {}
+
 async function liste_speichern(env, liste) {
-  await env.PAUL_KV.put(LISTE, JSON.stringify(liste.slice(0, MAX)));
+  try {
+    await env.PAUL_KV.put(LISTE, JSON.stringify(liste.slice(0, MAX)));
+  } catch (e) {
+    throw new SpeicherVoll(String((e && e.message) || e));
+  }
+}
+
+// Nimmt einen Handler und faengt genau diesen einen Fall ab.
+async function mitSpeicherwache(arbeit) {
+  try { return await arbeit(); }
+  catch (e) {
+    if (!(e instanceof SpeicherVoll)) throw e;
+    return json(503, { ok: false, speicherVoll: true,
+      fehler: "Ich kann deine Nachricht gerade nicht ablegen – der Speicher " +
+              "nimmt nichts an. Das liegt an mir, nicht an dir. Bitte schick sie " +
+              "später noch einmal, dann ist sie da." });
+  }
 }
 
 // Kuerzt am Wortende, nicht mitten im Wort - und sagt dazu, dass gekuerzt
