@@ -101,11 +101,15 @@
       // Helena am 14.09.2026 (Meldung wjj9vuza7x) zum Kreuz: "das kreuz soll
       // erst mal nachfragen, ob ich mir wirklich sicher bin, was kann seiner
       // sich vertipp" - also gefragt wird VORHER, nicht hinterher.
-      '#melde-karte .fz-frage{flex:1;display:flex;align-items:center;gap:7px;flex-wrap:wrap;' +
-        'background:#fff6ea;border:1px solid #ffe2bd;border-radius:12px;padding:9px 11px;' +
-        'color:#8a5a12;font-size:13.5px;font-weight:700}' +
-      '#melde-karte .fz-ja,#melde-karte .fz-nein{border-radius:10px;padding:0 12px;min-height:44px;' +
-        'font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}' +
+      // Eine Zeile, nie umbrechend: Auf 360 px mit offener Tastatur schiebt jede
+      // zusaetzliche Zeile den Knopf darunter weiter aus dem Bild.
+      '#melde-karte .fz-frage{flex:1;display:flex;align-items:center;gap:6px;' +
+        'background:#fff6ea;border:1px solid #ffe2bd;border-radius:12px;padding:6px 9px;' +
+        'color:#8a5a12;font-size:13px;font-weight:700}' +
+      '#melde-karte .fz-frage>span{flex:none}' +
+      '#melde-karte .fz-ja,#melde-karte .fz-nein{flex:1;border-radius:10px;padding:0 6px;' +
+        'min-height:44px;white-space:nowrap;' +
+        'font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}' +
       '#melde-karte .fz-ja{background:#ef4444;color:#fff;border:none}' +
       '#melde-karte .fz-nein{background:#fff;color:#1b1c22;border:1px solid #e3e6ef}' +
       '#melde-karte .woran{margin:0 0 14px;padding:12px 14px;border-radius:13px;' +
@@ -380,8 +384,8 @@
         if (!f) return;
         var reihe = x.parentNode;
         reihe.innerHTML = '<div class="fz-frage"><span>Wirklich weg?</span>' +
-          '<button type="button" class="fz-nein">Nein, behalten</button>' +
-          '<button type="button" class="fz-ja">Ja, wegräumen</button></div>';
+          '<button type="button" class="fz-nein">Behalten</button>' +
+          '<button type="button" class="fz-ja">Ja, weg</button></div>';
         reihe.querySelector(".fz-nein").addEventListener("click", function (ev) {
           ev.stopPropagation();
           h.remove(); listeZeigen();
