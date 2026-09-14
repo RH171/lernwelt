@@ -26,7 +26,7 @@ const JUNGEN = ("Tom Tim Timo Max Ben Finn Fynn Jonas Lukas Luca Luka Noah Elias
 const MAEDCHEN = ("Mia Emma Lena Anna Hannah Hanna Lea Leonie Marie Sophie Sofia Lina Ella " +
   "Clara Klara Ida Emilia Lara Laura Lisa Sarah Sara Julia Nele Paula Frieda Greta Maja Mila " +
   "Luisa Johanna Amelie Charlotte Pia Lotta Ronja Jana Nina Zoe Lilly Lilli Mathilda Emely " +
-  "Marlene Merle Finja Carla Luna Elif Selin Alina Tina Katja Svenja").split(" ");
+  "Marlene Merle Finja Carla Luna Elif Selin Alina Tina Katja Svenja Kim").split(" ");
 
 const VOR_ERWACHSEN = /(Trainer|Trainerin|Schiedsrichter|Schiedsrichterin|Coach|Herr|Frau|Opa|Oma|Onkel|Tante|Papa|Mama|Kapitän|Kapitänin|Zeugwart|Platzwart)\s+$/;
 
