@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Passé-composé-Baustelle</title>
+<!--
+  Helenas Franzoesisch-Spiel (14.09.2026). Lehrplan Franzoesisch 2. Lernjahr
+  (7. Klasse): passé composé mit avoir und être, participe passé, Angleichung.
+
+  Jeder Satz hat zwei Bausteine: das Hilfsverb und das participe passé. Helena
+  setzt beide ein - dabei stecken genau die drei typischen Fehler in der
+  Auswahl: falsches Hilfsverb, falsches participe (prendu statt pris) und
+  fehlende oder falsche Angleichung (allé statt allée).
+
+  Bewusst ohne "je": "J'ai" gegen "Je suis" wuerde die Wahl schon am Subjekt
+  verraten. Die Saetze sind eigene, kein Lehrwerkstext.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740; --line:#2a3350;
+    --ink:#eef2fb; --muted:#8a92a8; --brand:#60a5fa; --brand2:#3b82f6; --ok:#49d6bd; --no:#ff7a6b; --gold:#ffce5c;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:radial-gradient(900px 500px at 85% -10%,rgba(96,165,250,.16),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed;-webkit-font-smoothing:antialiased;padding:14px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .wrap{max-width:560px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:800 14px/1 var(--round);color:var(--ink);text-decoration:none;min-height:44px}
+  h1{font:800 20px/1.1 var(--round);margin:0;flex:1}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+  .start h2{font:800 24px/1.2 var(--round);margin:0 0 6px}
+  .start p{color:var(--muted);font-size:15px;line-height:1.5;margin:0 0 12px}
+  .deck{display:block;width:100%;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:16px;
+    padding:14px 16px;margin-top:10px;color:var(--ink);cursor:pointer;min-height:64px}
+  .deck b{font:800 16px/1.3 var(--round);display:block}
+  .deck span{color:var(--muted);font-size:13.5px}
+  .deck .stand{float:right;color:var(--ok);font:800 13px/1.3 var(--round)}
+  details.haus{margin-top:14px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:0 14px}
+  details.haus summary{cursor:pointer;padding:14px 0;font:800 15px/1.2 var(--round);list-style:none;min-height:44px}
+  details.haus summary::-webkit-details-marker{display:none}
+  details.haus .inhalt{padding:0 0 14px;color:var(--muted);font-size:14.5px;line-height:1.65}
+  details.haus .inhalt b{color:var(--ink)}
+
+  .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;font-weight:700;margin-bottom:8px}
+  .fortschritt{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:0 0 12px}
+  .fortschritt i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0;transition:width .3s}
+
+  .satzkarte{background:linear-gradient(160deg,#1e2a47,#18203a);border:1px solid var(--line);border-radius:22px;padding:20px 16px}
+  .satzkarte .inf{color:var(--muted);font:700 14px/1 var(--round);margin-bottom:10px}
+  .satzkarte .satz{font:700 clamp(21px,5.8vw,26px)/1.7 var(--round)}
+  .slot{display:inline-block;min-width:74px;border-bottom:3px solid var(--brand);color:var(--brand);text-align:center;padding:0 6px;margin:0 2px;line-height:1.3}
+  .slot.leer{color:transparent}
+  .slot.gut{color:var(--ok);border-bottom-color:var(--ok)}
+  .slot.falsch{color:var(--no);border-bottom-color:var(--no)}
+  .korrektur{display:block;font-size:14px;color:var(--ok);line-height:1.2;margin-top:2px}
+
+  .gruppe{margin-top:12px}
+  .gruppe .titel{color:var(--muted);font:700 12px/1 var(--font);text-transform:uppercase;letter-spacing:.07em;margin:0 0 7px}
+  .bausteine{display:flex;flex-wrap:wrap;gap:8px}
+  .baustein{background:var(--surface2);border:1px solid var(--line);border-radius:14px;color:var(--ink);cursor:pointer;
+    font:800 18px/1 var(--round);padding:12px 16px;min-height:50px;min-width:70px}
+  .baustein.gewaehlt{border-color:var(--brand);background:rgba(96,165,250,.18);color:#fff}
+  .baustein:active{transform:scale(.97)}
+  .baustein[disabled]{opacity:.5}
+  .reihe{display:flex;gap:10px;margin-top:14px}
+  .btn{flex:1;border:none;border-radius:16px;background:linear-gradient(150deg,var(--brand),var(--brand2));color:#fff;font:800 17px/1 var(--round);padding:15px;cursor:pointer;min-height:54px}
+  .btn[disabled]{opacity:.4}
+  .btn.grau{flex:0 0 54px;background:var(--surface2);border:1px solid var(--line);font-size:22px;padding:0}
+  .erkl{margin-top:12px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.55}
+  .erkl .kopf{font:800 15px/1.3 var(--round);margin-bottom:4px}
+  .erkl .kopf.gut{color:var(--ok)} .erkl .kopf.falsch{color:var(--no)}
+  .erkl p{margin:4px 0 0}
+
+  .ende{text-align:center}
+  .ende .gross{font:800 54px/1 var(--round);background:linear-gradient(150deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ende h2{font:800 22px/1.2 var(--round);margin:8px 0}
+  .ende p{color:var(--muted);font-size:15px;line-height:1.5;margin:0 0 12px}
+  .btn2{display:block;width:100%;margin-top:10px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;color:var(--ink);
+    font:800 16px/1 var(--round);padding:15px;cursor:pointer;min-height:52px;text-decoration:none;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="chip" href="spiele.html">‹ Spiele</a>
+    <h1>Passé-composé-Baustelle</h1>
+  </header>
+
+  <section class="panel start" id="sicht-start">
+    <h2>Bau den Satz fertig</h2>
+    <p>Setz zwei Bausteine ein: das Hilfsverb (avoir oder être) und das participe passé. Achtung – mit être wird angeglichen!</p>
+    <div id="decks"></div>
+    <details class="haus">
+      <summary>🏠 Maison d'être – welche Verben nehmen être?</summary>
+      <div class="inhalt">
+        <b>aller</b> / <b>venir</b> (revenir, devenir) · <b>arriver</b> / <b>partir</b> · <b>entrer</b> / <b>sortir</b> · <b>monter</b> / <b>descendre</b> ·
+        <b>naître</b> / <b>mourir</b> · <b>rester</b> · <b>tomber</b> · <b>rentrer</b> · <b>retourner</b> · <b>passer</b> (vorbeigehen)<br>
+        Dazu <b>alle reflexiven Verben</b>: se lever, se coucher, se promener …<br>
+        Mit être richtet sich das participe nach dem Subjekt: <b>elle est allée</b>, <b>ils sont allés</b>, <b>elles sont allées</b>.
+      </div>
+    </details>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="meta"><span id="deckname"></span><span id="zaehler"></span></div>
+    <div class="fortschritt"><i id="balken"></i></div>
+    <div class="satzkarte"><div class="inf" id="inf"></div><div class="satz" id="satz"></div></div>
+    <div class="gruppe"><p class="titel">Hilfsverb</p><div class="bausteine" id="aux"></div></div>
+    <div class="gruppe"><p class="titel">Participe passé</p><div class="bausteine" id="part"></div></div>
+    <div class="reihe" id="knoepfe"><button class="btn" id="pruefen" disabled>Prüfen</button></div>
+    <div id="erkl"></div>
+  </section>
+
+  <section class="panel ende verborgen" id="sicht-ende">
+    <div class="gross" id="ende-zahl"></div>
+    <h2 id="ende-titel"></h2>
+    <p id="ende-text"></p>
+    <button class="btn" id="nochmal" style="width:100%">Nochmal</button>
+    <button class="btn2" id="andere">Anderes Deck</button>
+    <a class="btn2" href="spiele.html">Zurück zu den Spielen</a>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- Saetze ----------
+     s: Subjekt   rest: was nach dem Verb kommt   inf: Infinitiv
+     aux / part: jeweils die RICHTIGE zuerst, dann die Ablenker
+     typ: avoir | etre | reflexiv   irr: participe unregelmaessig
+     wer: fuer die Angleichung (m, f, mpl, fpl) */
+  var SAETZE = [
+    // avoir
+    { s: "Tu", rest: "tes devoirs ?", inf: "faire", aux: ["as", "es"], part: ["fait", "faite", "fais"], typ: "avoir", irr: true },
+    { s: "Nous", rest: "un film au cinéma.", inf: "voir", aux: ["avons", "sommes"], part: ["vu", "voyé", "vus"], typ: "avoir", irr: true },
+    { s: "Léa", rest: "un croissant.", inf: "prendre", aux: ["a", "est"], part: ["pris", "prendu", "prise"], typ: "avoir", irr: true },
+    { s: "Mes parents", rest: "une lettre à la mairie.", inf: "écrire", aux: ["ont", "sont"], part: ["écrit", "écrivé", "écrits"], typ: "avoir", irr: true },
+    { s: "Vous", rest: "du jus d'orange ?", inf: "boire", aux: ["avez", "êtes"], part: ["bu", "buvé", "bois"], typ: "avoir", irr: true },
+    { s: "Tom", rest: "un livre sur Paris.", inf: "lire", aux: ["a", "est"], part: ["lu", "lisé", "lue"], typ: "avoir", irr: true },
+    { s: "Elles", rest: "« bonjour » au prof.", inf: "dire", aux: ["ont", "sont"], part: ["dit", "disé", "dites"], typ: "avoir", irr: true },
+    { s: "Tu", rest: "ton pull rouge ?", inf: "mettre", aux: ["as", "es"], part: ["mis", "metté", "mise"], typ: "avoir", irr: true },
+    { s: "Nous", rest: "de la chance.", inf: "avoir", aux: ["avons", "sommes"], part: ["eu", "avu", "eue"], typ: "avoir", irr: true },
+    { s: "Léa", rest: "malade la semaine dernière.", inf: "être", aux: ["a", "est"], part: ["été", "étée", "êté"], typ: "avoir", irr: true },
+    { s: "Les garçons", rest: "au foot après l'école.", inf: "jouer", aux: ["ont", "sont"], part: ["joué", "joués", "jouer"], typ: "avoir" },
+    { s: "Vous", rest: "la fenêtre ?", inf: "ouvrir", aux: ["avez", "êtes"], part: ["ouvert", "ouvri", "ouverte"], typ: "avoir", irr: true },
+    { s: "Emma", rest: "ses copines au parc.", inf: "retrouver", aux: ["a", "est"], part: ["retrouvé", "retrouvée", "retrouver"], typ: "avoir" },
+    { s: "Mes sœurs", rest: "le petit-déjeuner.", inf: "préparer", aux: ["ont", "sont"], part: ["préparé", "préparées", "préparés"], typ: "avoir" },
+    // être
+    { s: "Léa", rest: "au cinéma.", inf: "aller", aux: ["est", "a"], part: ["allée", "allé", "allés"], typ: "etre", wer: "f" },
+    { s: "Mes copains", rest: "à la fête.", inf: "venir", aux: ["sont", "ont"], part: ["venus", "venu", "venues"], typ: "etre", wer: "mpl", irr: true },
+    { s: "Tom", rest: "de vélo.", inf: "tomber", aux: ["est", "a"], part: ["tombé", "tombée", "tombés"], typ: "etre", wer: "m" },
+    { s: "Léa et Emma", rest: "à huit heures.", inf: "partir", aux: ["sont", "ont"], part: ["parties", "partis", "parti"], typ: "etre", wer: "fpl" },
+    { s: "Le train", rest: "en retard.", inf: "arriver", aux: ["est", "a"], part: ["arrivé", "arrivée", "arrivés"], typ: "etre", wer: "m" },
+    { s: "Mes grands-parents", rest: "à la maison.", inf: "rester", aux: ["sont", "ont"], part: ["restés", "resté", "restées"], typ: "etre", wer: "mpl" },
+    { s: "Ma cousine", rest: "en 2013.", inf: "naître", aux: ["est", "a"], part: ["née", "né", "naît"], typ: "etre", wer: "f", irr: true },
+    { s: "Les filles", rest: "dans la classe.", inf: "entrer", aux: ["sont", "ont"], part: ["entrées", "entrés", "entré"], typ: "etre", wer: "fpl" },
+    { s: "Paul", rest: "du bus.", inf: "descendre", aux: ["est", "a"], part: ["descendu", "descendue", "descendi"], typ: "etre", wer: "m", irr: true },
+    { s: "Helena, tu", rest: "à Paris ?", inf: "aller", aux: ["es", "as"], part: ["allée", "allé", "allées"], typ: "etre", wer: "f" },
+    { s: "Paul et Leon, vous", rest: "tard !", inf: "rentrer", aux: ["êtes", "avez"], part: ["rentrés", "rentré", "rentrées"], typ: "etre", wer: "mpl" },
+    { s: "Emma", rest: "dans le bus.", inf: "monter", aux: ["est", "a"], part: ["montée", "monté", "montés"], typ: "etre", wer: "f" },
+    { s: "Nos voisins", rest: "hier soir.", inf: "sortir", aux: ["sont", "ont"], part: ["sortis", "sorti", "sorties"], typ: "etre", wer: "mpl", irr: true },
+    // reflexiv
+    { s: "Léa", rest: "à sept heures.", inf: "se lever", aux: ["s'est", "a"], part: ["levée", "levé", "levés"], typ: "reflexiv", wer: "f" },
+    { s: "Tom", rest: "tôt.", inf: "se coucher", aux: ["s'est", "a"], part: ["couché", "couchée", "couchés"], typ: "reflexiv", wer: "m" },
+    { s: "Mes sœurs", rest: "au bord de la mer.", inf: "se promener", aux: ["se sont", "ont"], part: ["promenées", "promenés", "promené"], typ: "reflexiv", wer: "fpl" },
+    { s: "Les garçons", rest: "à la fête.", inf: "s'amuser", aux: ["se sont", "ont"], part: ["amusés", "amusé", "amusées"], typ: "reflexiv", wer: "mpl" }
+  ];
+
+  var DECKS = {
+    avoir: { name: "Mit avoir", kurz: "fait, vu, pris, écrit … – unregelmäßige participes", filter: function(x){ return x.typ === "avoir"; } },
+    etre:  { name: "Mit être", kurz: "Maison d'être und Angleichung: allé, allée, allés", filter: function(x){ return x.typ !== "avoir"; } },
+    mix:   { name: "Gemischt", kurz: "avoir oder être? Erst entscheiden, dann angleichen", filter: function(){ return true; } }
+  };
+
+  var SPEICHER = "helena-passe-compose";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t){
+    if (!kannSprechen || document.hidden) return;
+    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "fr-FR"; u.rate = .9;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^fr/i.test(v.lang); })[0];
+      if (st) u.voice = st; speechSynthesis.speak(u); } catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  function decksMalen(){
+    var d = lesen();
+    $("decks").innerHTML = Object.keys(DECKS).map(function(k){
+      var st = d[k] ? '<span class="stand">' + d[k].best + '/' + d[k].von + ' ✓</span>' : "";
+      return '<button class="deck" data-k="' + k + '">' + st + '<b>' + DECKS[k].name + '</b><span>' + DECKS[k].kurz + '</span></button>';
+    }).join("");
+    Array.prototype.forEach.call($("decks").children, function(b){ b.addEventListener("click", function(){ starten(b.getAttribute("data-k")); }); });
+  }
+  decksMalen();
+
+  var WER = { m: "männlich, Einzahl", f: "weiblich, Einzahl", mpl: "männlich oder gemischt, Mehrzahl", fpl: "weiblich, Mehrzahl" };
+  var ENDUNG = { m: "keine Endung", f: "+ e", mpl: "+ s", fpl: "+ es" };
+
+  function erklaerung(x){
+    var t = [];
+    if (x.typ === "avoir") t.push("„" + x.inf + "“ bildet das passé composé mit <b>avoir</b> – wie die meisten Verben. Mit avoir wird nicht an das Subjekt angeglichen.");
+    if (x.typ === "etre") t.push("„" + x.inf + "“ wohnt in der <b>Maison d'être</b> → Hilfsverb être.");
+    if (x.typ === "reflexiv") t.push("„" + x.inf + "“ ist reflexiv – reflexive Verben nehmen immer <b>être</b>.");
+    if (x.irr) t.push("Das participe passé von „" + x.inf.replace(/^s'|^se /, "") + "“ ist unregelmäßig: <b>" + esc(x.part[0].replace(/e?s?$/, function(m){ return x.typ === "avoir" ? m : ""; })) + "</b>.");
+    if (x.wer) t.push("Mit être wird angeglichen: „" + esc(x.s.replace(/^.*, /, "")) + "“ ist " + WER[x.wer] + " → " + ENDUNG[x.wer] + " → <b>" + esc(x.part[0]) + "</b>.");
+    return t.map(function(z){ return "<p>" + z + "</p>"; }).join("");
+  }
+
+  var deck = "mix", liste = [], pos = 0, sauber = 0, runde = 0, verpasst = [], zweite = false, wahlAux = null, wahlPart = null, fertig = false;
+
+  function zeige(n){ ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); }); window.scrollTo(0, 0); }
+
+  function starten(k){
+    deck = k;
+    var pool = mische(SAETZE.filter(DECKS[k].filter));
+    if (k === "mix"){
+      var a = pool.filter(function(x){ return x.typ === "avoir"; }), e = pool.filter(function(x){ return x.typ !== "avoir"; });
+      pool = mische(a.slice(0, 5).concat(e.slice(0, 5)));
+    }
+    liste = pool.slice(0, 10);
+    runde = liste.length; pos = 0; sauber = 0; verpasst = []; zweite = false;
+    $("deckname").textContent = DECKS[k].name;
+    zeige("spiel"); satzZeigen();
+  }
+
+  function satzMalen(auxKlasse, partKlasse){
+    var x = liste[pos];
+    var a = wahlAux ? esc(wahlAux) : "&nbsp;", p = wahlPart ? esc(wahlPart) : "&nbsp;";
+    var html = esc(x.s) + ' <span class="slot ' + (wahlAux ? "" : "leer ") + (auxKlasse || "") + '">' + a + '</span>' +
+               '<span class="slot ' + (wahlPart ? "" : "leer ") + (partKlasse || "") + '">' + p + '</span> ' + esc(x.rest);
+    $("satz").innerHTML = html;
+  }
+
+  function satzZeigen(){
+    var x = liste[pos];
+    wahlAux = null; wahlPart = null; fertig = false;
+    $("inf").textContent = "(" + x.inf + ")";
+    satzMalen();
+    ["aux", "part"].forEach(function(feld){
+      var box = $(feld); box.innerHTML = "";
+      mische(x[feld].slice()).forEach(function(w){
+        var b = document.createElement("button");
+        b.className = "baustein"; b.textContent = w;
+        b.addEventListener("click", function(){
+          if (fertig) return;
+          if (feld === "aux") wahlAux = w; else wahlPart = w;
+          Array.prototype.forEach.call(box.children, function(c){ c.classList.toggle("gewaehlt", c === b); });
+          satzMalen();
+          $("pruefen").disabled = !(wahlAux && wahlPart);
+        });
+        box.appendChild(b);
+      });
+    });
+    $("knoepfe").innerHTML = '<button class="btn" id="pruefen" disabled>Prüfen</button>';
+    $("pruefen").addEventListener("click", pruefen);
+    $("erkl").innerHTML = "";
+    $("zaehler").textContent = zweite ? "Nochmal · " + (pos + 1) + "/" + liste.length : (pos + 1) + " / " + liste.length;
+    $("balken").style.width = (pos / liste.length * 100) + "%";
+  }
+
+  function pruefen(){
+    if (fertig || !wahlAux || !wahlPart) return;
+    fertig = true;
+    var x = liste[pos];
+    var auxOk = wahlAux === x.aux[0], partOk = wahlPart === x.part[0], stimmt = auxOk && partOk;
+    satzMalen(auxOk ? "gut" : "falsch", partOk ? "gut" : "falsch");
+    Array.prototype.forEach.call(document.querySelectorAll(".baustein"), function(b){ b.disabled = true; });
+    var merkmal = x.typ === "avoir" ? (x.irr ? "participe unregelmaessig" : "passe compose avoir") : (auxOk && !partOk ? "angleichung mit etre" : "hilfsverb etre");
+    try { window.lernstand && window.lernstand.antwort(stimmt, merkmal, wahlAux + " " + wahlPart, x.aux[0] + " " + x.part[0]); } catch(e){}
+    if (!zweite){ if (stimmt) sauber++; else verpasst.push(x); }
+    var ganz = x.s + " " + x.aux[0] + " " + x.part[0] + " " + x.rest;
+    var fehler = [];
+    if (!auxOk) fehler.push("Hilfsverb: <b>" + esc(x.aux[0]) + "</b>");
+    if (!partOk) fehler.push("participe: <b>" + esc(x.part[0]) + "</b>");
+    $("erkl").innerHTML = '<div class="erkl"><div class="kopf ' + (stimmt ? "gut" : "falsch") + '">' +
+      (stimmt ? "✓ Parfait !" : "✗ Richtig ist: " + fehler.join(" · ")) + '</div>' +
+      '<p style="color:var(--ink);font-weight:700">' + esc(ganz) + '</p>' + erklaerung(x) + '</div>';
+    $("knoepfe").innerHTML = '<button class="btn grau" id="hoeren" aria-label="Vorlesen">🔊</button><button class="btn" id="weiter">Weiter</button>';
+    $("weiter").addEventListener("click", weiter);
+    $("hoeren").addEventListener("click", function(){ sprich(ganz); });
+    try { $("erkl").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function weiter(){
+    pos++;
+    if (pos < liste.length){ satzZeigen(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if (!zweite && verpasst.length){ zweite = true; liste = mische(verpasst.slice()); pos = 0; satzZeigen(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    var d = lesen(); var alt = d[deck] || {};
+    d[deck] = { best: Math.max(alt.best || 0, sauber), von: runde, runden: (alt.runden || 0) + 1 }; schreiben(d);
+    $("ende-zahl").textContent = sauber + "/" + runde;
+    $("ende-titel").textContent = sauber === runde ? "Tout est parfait !" : "Beim ersten Versuch richtig";
+    $("ende-text").textContent = sauber === runde ? "Hilfsverb, participe und Angleichung – alles sitzt."
+      : "Die " + (runde - sauber) + " kniffligen Sätze hast du in der zweiten Runde nochmal gebaut. Tipp: Bei être immer zuerst aufs Subjekt schauen.";
+    zeige("ende"); decksMalen();
+  }
+
+  $("nochmal").addEventListener("click", function(){ starten(deck); });
+  $("andere").addEventListener("click", function(){ zeige("start"); });
+
+  window.__pc = { SAETZE: SAETZE, starten: starten, erklaerung: erklaerung, zustand: function(){ return { pos: pos, liste: liste, zweite: zweite }; },
+    waehle: function(text){ var b = Array.prototype.filter.call(document.querySelectorAll(".baustein"), function(x){ return x.textContent === text; }); b.forEach(function(x){ x.click(); }); return b.length; },
+    pruefe: function(){ pruefen(); }, weiter: function(){ var w = $("weiter"); if (w) w.click(); } };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
