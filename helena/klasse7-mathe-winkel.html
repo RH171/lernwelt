@@ -51,9 +51,9 @@
   .fortschritt i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0;transition:width .3s}
   .frage{font:800 18px/1.35 var(--round);margin:0 0 8px}
   .zeichnung{background:#0b1222;border:1px solid var(--line);border-radius:18px;overflow:hidden}
-  svg.fig{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;max-height:40vh}
+  svg.fig{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;max-height:32vh}
   .eingabe{display:flex;align-items:center;gap:10px;margin-top:10px}
-  .anzeige{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;min-height:54px;display:flex;align-items:center;justify-content:center;
+  .anzeige{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;min-height:48px;display:flex;align-items:center;justify-content:center;
     font:800 28px/1 var(--round);letter-spacing:.02em}
   .anzeige.leer{color:var(--muted);font-size:17px}
   .tasten{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
@@ -337,20 +337,27 @@
     var gelb = "#ffce5c", blau = "#60a5fa";
     if (x.art === "dreieck"){
       $("frage").textContent = "Wie groß ist der Winkel γ im Dreieck?";
-      // Ecken aus den Winkeln bauen: A links, B rechts, C oben
-      var A = [50, 220], B = [310, 220], L = 260;
+      // Echte Form aus den Winkeln bauen (A=(0,0), B=(1,0)) und dann ohne Verzerrung
+      // in den Rahmen einpassen - auch stumpfe Dreiecke bleiben ganz im Bild.
       var ta = Math.tan(x.a * Math.PI / 180), tb = Math.tan(x.b * Math.PI / 180);
-      var cxp = L * tb / (ta + tb), cyp = cxp * ta;
-      var s = Math.min(1, 190 / cyp);                 // flache Dreiecke passen, spitze werden gestaucht
-      var C = [A[0] + cxp, A[1] - cyp * s];
-      if (s < 1){ /* nur optisch gestaucht - die Zahlen bleiben die Wahrheit */ }
-      el("polygon", { points: [A, B, C].map(String).join(" "), fill: "rgba(96,165,250,.08)", stroke: "#eef2fb", "stroke-width": 3, "stroke-linejoin": "round" }, g);
-      var winkelA = Math.atan2(A[1] - C[1], C[0] - A[0]) * 180 / Math.PI, winkelB = Math.atan2(B[1] - C[1], C[0] - B[0]) * 180 / Math.PI;
-      bogen(g, A[0], A[1], 0, winkelA, 30, blau, "α = " + x.a + "°");
-      bogen(g, B[0], B[1], winkelB, 180 - winkelB, 30, blau, "β = " + x.b + "°");
-      var r1 = Math.atan2(C[1] - A[1], A[0] - C[0]) * 180 / Math.PI, r2 = Math.atan2(C[1] - B[1], B[0] - C[0]) * 180 / Math.PI;
-      var start = ((r2 % 360) + 360) % 360, ende = ((r1 % 360) + 360) % 360, spann = ((ende - start) + 360) % 360;
-      bogen(g, C[0], C[1], start, spann, 26, gelb, "γ = ?");
+      var ux = tb / (ta + tb), uy = ux * ta;
+      var roh = [[0, 0], [1, 0], [ux, uy]];
+      var minX = Math.min(0, ux), maxX = Math.max(1, ux), maxY = uy;
+      var mass = Math.min(290 / (maxX - minX), 180 / maxY);
+      var ox = 180 - (minX + maxX) / 2 * mass, oy = 130 + maxY * mass / 2;
+      var P = roh.map(function(q){ return [ox + q[0] * mass, oy - q[1] * mass]; });
+      var A = P[0], B = P[1], C = P[2];
+      el("polygon", { points: P.map(String).join(" "), fill: "rgba(96,165,250,.08)", stroke: "#eef2fb", "stroke-width": 3, "stroke-linejoin": "round" }, g);
+      var richtung = function(von, nach){ return ((Math.atan2(von[1] - nach[1], nach[0] - von[0]) * 180 / Math.PI) + 360) % 360; };
+      // Innenwinkel: vom einen Schenkel gegen den Uhrzeigersinn zum anderen, immer die kleinere Seite
+      var innen = function(ecke, p1, p2, r, farbe, text){
+        var w1 = richtung(ecke, p1), w2 = richtung(ecke, p2), spann = (w2 - w1 + 360) % 360;
+        if (spann > 180){ var t = w1; w1 = w2; w2 = t; spann = 360 - spann; }
+        bogen(g, ecke[0], ecke[1], w1, spann, r, farbe, text);
+      };
+      innen(A, B, C, 28, blau, x.a + "°");
+      innen(B, C, A, 28, blau, x.b + "°");
+      innen(C, A, B, 24, gelb, "γ = ?");
       return;
     }
     var cx = 180, cy = 130, d = x.dreh;
