@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Schulweg-Detektiv</title>
+<!--
+  Leons HSU-Spiel zum Anfassen (14.09.2026). Denny: "HSU hat Leon auch in der
+  ersten Klasse schon gehabt ... interaktiv ... sei kreativ."
+
+  Ein Wimmelbild: Auf dem Weg zum Ronhof passieren Dinge, die gefaehrlich
+  sind - und Dinge, die genau richtig sind. Leon sucht die Gefahren. Tippt er
+  auf etwas Richtiges, ist das kein Fehler, sondern die zweite Haelfte der
+  Lektion: "Leon wartet am Bordstein - genau so."
+
+  Lehrplan: HSU 1/2, Lernbereich 5.3 Mobilitaet im Raum (sicherer Schulweg).
+  Fachlich bewusst einfach und alltagsnah (Prompt-Regel 19): Tretroller
+  gehoeren auf den Gehweg, bei Rot wird gewartet, hinter dem Bus nicht
+  hervorlaufen. Nichts davon wird verharmlost.
+
+  Die Figuren heissen Leon, Paul, Helena und Xaver (Denny, 14.09.2026).
+  Theo kommt nicht vor - der steht laut Leon immer im Tor.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --gefahr:#f04438;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+
+  .start{text-align:center;max-width:720px;margin:0 auto}
+  .start h2{font-family:var(--rund);font-size:27px;margin:4px 0 6px}
+  .start p{color:var(--muted);margin:0 0 18px;font-size:17px;line-height:1.5}
+  .los{display:block;width:100%;border:none;border-radius:16px;background:var(--leon);color:#fff;
+    font:700 20px/1 var(--rund);padding:18px;cursor:pointer;min-height:58px}
+  .los:active{transform:scale(.98)}
+  .rueckblick{margin-top:14px;color:var(--leon-dunkel);font-weight:700;font-size:15px}
+
+  .bereich{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (orientation:landscape) and (min-width:900px){
+    .bereich{grid-template-columns:minmax(0,1.9fr) minmax(260px,1fr);align-items:start}
+  }
+  .bildkarte{padding:10px;position:relative}
+  .kopfzeile{display:flex;align-items:center;gap:10px;padding:4px 6px 10px;flex-wrap:wrap}
+  .ortsname{font:700 19px/1.2 var(--rund);flex:1;min-width:150px}
+  .lupen{display:flex;gap:4px;font-size:24px}
+  .lupen span{opacity:.25;filter:grayscale(1);transition:all .3s}
+  .lupen span.an{opacity:1;filter:none;transform:scale(1.15)}
+  svg.szene{display:block;width:100%;height:auto;border-radius:16px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+  .ding{cursor:pointer}
+  .ring{fill:none;stroke-width:9;opacity:0;transition:opacity .25s}
+  .ding.gefunden .ring{opacity:1;stroke:var(--gefahr)}
+  .ding.sicher .ring{opacity:1;stroke:var(--gut)}
+  .ding.tipp .ring{opacity:1;stroke:#fdb022;animation:puls 1s infinite}
+  @keyframes puls{50%{stroke-width:15;opacity:.5}}
+  .ding.wackelt{animation:hops .35s}
+  @keyframes hops{50%{transform:translateY(-8px)}}
+
+  .erklaerung{min-height:150px}
+  .erklaerung .leer{color:var(--muted);font-size:17px;line-height:1.5}
+  .erklaerung .titel{font:800 21px/1.25 var(--rund);margin:0 0 8px;display:flex;gap:8px;align-items:center}
+  .erklaerung .titel.gefahr{color:#b42318} .erklaerung .titel.gut{color:var(--leon-dunkel)}
+  .erklaerung .text{font-size:18px;line-height:1.5;margin:0 0 8px}
+  .erklaerung .besser{background:#ecfdf3;border-radius:14px;padding:10px 12px;font-size:17px;line-height:1.45}
+  .erklaerung .besser b{color:var(--leon-dunkel)}
+  .reihe{display:flex;gap:8px;margin-top:12px}
+  .knopf{flex:1;border:none;border-radius:14px;background:#f2f4f7;color:var(--ink);font:700 16px/1.2 var(--rund);
+    padding:12px;cursor:pointer;min-height:50px}
+  .knopf.gruen{background:var(--leon);color:#fff}
+  .knopf:active{transform:scale(.97)}
+
+  .ende{text-align:center;max-width:720px;margin:0 auto}
+  .ende .gross{font-size:64px}
+  .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
+  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 16px}
+  .merkliste{text-align:left;background:#f6fdf8;border-radius:16px;padding:12px 16px;margin:0 0 16px;font-size:17px;line-height:1.7}
+  .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#f2f4f7;color:var(--ink);
+    font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <h1>Schulweg-Detektiv</h1>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:58px">🔍🚦</div>
+    <h2>Auf dem Weg zum Ronhof</h2>
+    <p>Auf der Straße passieren gefährliche Sachen. Findest du sie? Tipp alles an, was dir komisch vorkommt – ich sage dir, ob es gefährlich ist.</p>
+    <button class="los" id="los">Los geht's, Detektiv!</button>
+    <div class="rueckblick verborgen" id="rueckblick"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="bereich">
+      <div class="karte bildkarte">
+        <div class="kopfzeile">
+          <div class="ortsname" id="ortsname"></div>
+          <div class="lupen" id="lupen" aria-label="Gefundene Gefahren"></div>
+        </div>
+        <svg class="szene" id="szene" viewBox="0 0 1000 600" role="img" aria-label="Wimmelbild"></svg>
+      </div>
+      <div class="karte erklaerung" id="erklaerung"></div>
+    </div>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div class="gross">🕵️🏅</div>
+    <h2 id="ende-titel"></h2>
+    <p id="ende-text"></p>
+    <div class="merkliste">
+      🚦 Bei Rot stehen, bei Grün gehen.<br>
+      👀 Am Bordstein halten: links, rechts, links schauen.<br>
+      🚌 Hinter dem Bus nicht vorlaufen – warten, bis er weg ist.<br>
+      ⚽ Rollt der Ball auf die Straße: stehen bleiben.
+    </div>
+    <button class="los" id="nochmal">Nochmal auf Streife</button>
+    <a class="knopf2" href="/leon/">Zurück zu Leons Lernwelt</a>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+
+  /* ---------- Die drei Orte ----------
+     x/y im 1000x600-Bild. gefahr:true wird gesucht; gefahr:false ist ein
+     Beispiel fuer richtiges Verhalten und wird beim Antippen gelobt.
+     "leise" sind Deko ohne Bedeutung (nicht antippbar). */
+  var ORTE = [
+    {
+      name: "Am Zebrastreifen", art: "zebra",
+      dinge: [
+        { x: 245, y: 395, zeichen: "🏃", name: "Paul", gefahr: true,
+          titel: "Zwischen parkenden Autos",
+          text: "Paul läuft zwischen den parkenden Autos auf die Straße. Die Autofahrer können ihn dort nicht sehen.",
+          besser: "Zum Zebrastreifen gehen. Dort sehen ihn alle." },
+        { x: 720, y: 395, zeichen: "🏃", name: "Xaver", extra: { dx: -95, dy: -62, zeichen: "⚽" }, gefahr: true,
+          titel: "Dem Ball hinterher",
+          text: "Der Ball rollt auf die Straße – und Xaver rennt einfach hinterher, ohne zu schauen.",
+          besser: "Stehen bleiben und den Ball rollen lassen. Einen Erwachsenen um Hilfe bitten." },
+        { x: 490, y: 318, zeichen: "🚶", name: "Helena", extra: { dx: 34, dy: -40, zeichen: "📱", klein: true }, gefahr: true,
+          titel: "Aufs Handy geschaut",
+          text: "Helena schaut beim Überqueren aufs Handy. So sieht sie die Autos nicht.",
+          besser: "Das Handy wegstecken. Erst schauen, dann gehen." },
+        { x: 880, y: 300, zeichen: "🛴", name: "ein Kind", gefahr: true,
+          titel: "Roller auf der Fahrbahn",
+          text: "Ein Kind fährt mit dem Roller mitten auf der Straße. Dort fahren die Autos.",
+          besser: "Mit dem Roller bleibt man auf dem Gehweg." },
+        { x: 470, y: 505, zeichen: "🧍", name: "Leon", gefahr: false,
+          titel: "Leon wartet am Bordstein",
+          text: "Leon bleibt am Bordstein stehen und schaut: links, rechts, links. Erst wenn alles frei ist oder die Autos halten, geht er.",
+          besser: "Genau so macht es ein Profi." },
+        { x: 820, y: 150, zeichen: "👵", name: "Oma", gefahr: false,
+          titel: "Die Oma auf dem Gehweg",
+          text: "Die Oma geht auf dem Gehweg, schön weit weg von der Straße.",
+          besser: "Auf dem Gehweg ist man sicher." }
+      ],
+      leise: [ { x: 130, y: 430, zeichen: "🚙" }, { x: 360, y: 430, zeichen: "🚗" }, { x: 640, y: 300, zeichen: "🚕", spiegeln: true },
+               { x: 90, y: 120, zeichen: "🌳" }, { x: 600, y: 110, zeichen: "🏠" } ]
+    },
+    {
+      name: "An der Ampel", art: "ampel",
+      dinge: [
+        { x: 520, y: 330, zeichen: "🚶", name: "Paul", gefahr: true,
+          titel: "Bei Rot losgegangen",
+          text: "Die Ampel für Fußgänger ist rot – aber Paul geht einfach los.",
+          besser: "Bei Rot stehen, bei Grün gehen. Und auch bei Grün kurz schauen." },
+        { x: 250, y: 455, zeichen: "🤸", name: "Xaver", gefahr: true,
+          titel: "Auf der Bordsteinkante",
+          text: "Xaver turnt auf der Bordsteinkante herum. Er kann auf die Straße fallen.",
+          besser: "Einen großen Schritt Abstand vom Bordstein halten." },
+        { x: 830, y: 340, zeichen: "🏃", name: "ein Kind", gefahr: true,
+          titel: "Neben der Ampel rüber",
+          text: "Ein Kind rennt neben der Ampel quer über die Straße, weil es schneller gehen soll.",
+          besser: "Den kleinen Umweg zur Ampel gehen. Der ist sicherer." },
+        { x: 660, y: 470, zeichen: "🚶", name: "Helena", extra: { dx: 30, dy: -46, zeichen: "🎧", klein: true }, gefahr: true,
+          titel: "Mit Kopfhörern",
+          text: "Helena hat laute Musik auf den Ohren und will losgehen. Die Autos hört sie nicht.",
+          besser: "Am Straßenrand die Kopfhörer abnehmen und genau hinhören." },
+        { x: 420, y: 505, zeichen: "🧍", name: "Leon", gefahr: false,
+          titel: "Leon wartet bei Rot",
+          text: "Leon wartet, bis das grüne Männchen leuchtet – auch wenn gerade kein Auto kommt.",
+          besser: "Richtig! Kleine Kinder schauen zu und machen es nach." },
+        { x: 130, y: 150, zeichen: "👩", name: "eine Frau", extra: { dx: 55, dy: 8, zeichen: "🐕" }, gefahr: false,
+          titel: "Mit dem Hund an der Leine",
+          text: "Die Frau hat ihren Hund an der Leine und wartet auf dem Gehweg.",
+          besser: "So kann der Hund nicht auf die Straße laufen." }
+      ],
+      leise: [ { x: 300, y: 300, zeichen: "🚌", spiegeln: true }, { x: 760, y: 430, zeichen: "🚗" }, { x: 900, y: 110, zeichen: "🌳" }, { x: 560, y: 110, zeichen: "🏪" } ]
+    },
+    {
+      name: "An der Bushaltestelle vor dem Ronhof", art: "bus",
+      dinge: [
+        { x: 640, y: 350, zeichen: "🏃", name: "Paul", gefahr: true,
+          titel: "Vor dem Bus über die Straße",
+          text: "Paul ist ausgestiegen und läuft direkt vor dem Bus über die Straße. Die Autos sehen ihn hinter dem Bus nicht.",
+          besser: "Warten, bis der Bus weggefahren ist. Dann schauen und gehen." },
+        { x: 250, y: 470, zeichen: "🧒", name: "Xaver", extra: { dx: 50, dy: -10, zeichen: "💨", klein: true }, gefahr: true,
+          titel: "Gedrängelt",
+          text: "Xaver drängelt und schubst ganz vorne am Bordstein, als der Bus kommt.",
+          besser: "Hinter der Linie warten. Wer schubst, bringt andere in Gefahr." },
+        { x: 860, y: 480, zeichen: "⚽", name: "Fußball", gefahr: true,
+          titel: "Ball spielen an der Straße",
+          text: "Direkt neben der Straße wird Fußball gespielt. Ein Ball rollt schnell auf die Fahrbahn.",
+          besser: "Fußball gehört auf den Bolzplatz – oder in den Ronhof." },
+        { x: 120, y: 330, zeichen: "🛹", name: "Skateboard", gefahr: true,
+          titel: "Skateboard auf der Straße",
+          text: "Mitten auf der Fahrbahn liegt ein Skateboard. Darüber kann jemand stolpern, und ein Auto muss plötzlich ausweichen.",
+          besser: "Skateboard mitnehmen und auf dem Gehweg tragen." },
+        { x: 470, y: 505, zeichen: "🧍", name: "Leon", gefahr: false,
+          titel: "Leon wartet mit Abstand",
+          text: "Leon wartet hinter der Linie, bis der Bus ganz steht und die Türen aufgehen.",
+          besser: "So geht das. Dann ist Anpfiff im Ronhof!" },
+        { x: 560, y: 150, zeichen: "👮", name: "Polizistin", gefahr: false,
+          titel: "Die Polizistin passt auf",
+          text: "Vor dem Spiel regelt eine Polizistin den Verkehr. Wenn sie winkt, dürfen die Fans gehen.",
+          besser: "Auf ihre Zeichen hören – sie hilft allen." }
+      ],
+      leise: [ { x: 400, y: 330, zeichen: "🚌", spiegeln: true, gross: true }, { x: 90, y: 130, zeichen: "🚏" }, { x: 820, y: 120, zeichen: "🏟️" } ]
+    }
+  ];
+
+  /* ---------- Speicher: Rueckschau ---------- */
+  var SPEICHER = "leon-schulweg";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  function rueckblickMalen(){
+    var d = lesen();
+    if (d.gefunden){ $("rueckblick").textContent = "🔍 Schon " + d.gefunden + " Gefahren entdeckt."; $("rueckblick").classList.remove("verborgen"); }
+  }
+  rueckblickMalen();
+
+  /* ---------- Vorlesen ---------- */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  var zuletztGesagt = "";
+  function sprich(t){
+    zuletztGesagt = t;
+    if (!kannSprechen || document.hidden) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = .92;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
+      if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  /* ---------- Zeichnen ---------- */
+  function el(name, attr, eltern){
+    var e = document.createElementNS(NS, name);
+    for (var k in attr) e.setAttribute(k, attr[k]);
+    if (eltern) eltern.appendChild(e);
+    return e;
+  }
+  function emoji(g, x, y, zeichen, groesse, spiegeln){
+    var t = el("text", { x: x, y: y, "font-size": groesse, "text-anchor": "middle", "dominant-baseline": "central" }, g);
+    if (spiegeln) t.setAttribute("transform", "translate(" + (2 * x) + ",0) scale(-1,1)");
+    t.textContent = zeichen;
+    return t;
+  }
+
+  function strasseMalen(svg, art){
+    el("rect", { x: 0, y: 0, width: 1000, height: 600, fill: "#dff0d8" }, svg);          // Wiese oben
+    el("rect", { x: 0, y: 200, width: 1000, height: 44, fill: "#d9d4cc" }, svg);          // Gehweg oben
+    el("rect", { x: 0, y: 244, width: 1000, height: 212, fill: "#5b6270" }, svg);         // Fahrbahn
+    el("rect", { x: 0, y: 456, width: 1000, height: 144, fill: "#d9d4cc" }, svg);         // Gehweg unten
+    el("rect", { x: 0, y: 452, width: 1000, height: 8, fill: "#9aa0a8" }, svg);           // Bordstein
+    el("rect", { x: 0, y: 240, width: 1000, height: 8, fill: "#9aa0a8" }, svg);
+    for (var x = 20; x < 1000; x += 90) el("rect", { x: x, y: 346, width: 50, height: 8, fill: "#fff", opacity: .85 }, svg);
+    if (art === "zebra" || art === "ampel"){
+      el("rect", { x: 420, y: 250, width: 140, height: 200, fill: "#5b6270" }, svg);
+      for (var y = 254; y < 450; y += 36) el("rect", { x: 425, y: y, width: 130, height: 20, fill: "#fff" }, svg);
+    }
+    if (art === "ampel"){
+      // Fussgaengerampel: rot leuchtet
+      el("rect", { x: 586, y: 470, width: 10, height: 110, fill: "#374151" }, svg);
+      el("rect", { x: 566, y: 468, width: 50, height: 88, rx: 10, fill: "#1f2937" }, svg);
+      el("circle", { cx: 591, cy: 492, r: 16, fill: "#ef4444" }, svg);
+      el("circle", { cx: 591, cy: 532, r: 16, fill: "#14532d", opacity: .6 }, svg);
+      el("rect", { x: 586, y: 106, width: 10, height: 110, fill: "#374151" }, svg);
+      el("rect", { x: 566, y: 100, width: 50, height: 88, rx: 10, fill: "#1f2937" }, svg);
+      el("circle", { cx: 591, cy: 124, r: 16, fill: "#ef4444" }, svg);
+      el("circle", { cx: 591, cy: 164, r: 16, fill: "#14532d", opacity: .6 }, svg);
+    }
+    if (art === "bus"){
+      el("rect", { x: 170, y: 456, width: 260, height: 8, fill: "#fbbf24" }, svg);         // Wartelinie
+      el("rect", { x: 180, y: 540, width: 240, height: 6, fill: "#fbbf24" }, svg);
+    }
+  }
+
+  var ort = 0, gefunden = 0, tippsGenutzt = 0, fehltipps = 0, gesamtGefunden = 0;
+
+  function ortMalen(){
+    var o = ORTE[ort], svg = $("szene");
+    svg.innerHTML = "";
+    strasseMalen(svg, o.art);
+    o.leise.forEach(function(d){ emoji(svg, d.x, d.y, d.zeichen, d.gross ? 150 : 88, d.spiegeln); });
+    o.dinge.forEach(function(d, i){
+      var g = el("g", { "class": "ding", "data-i": i, role: "button", tabindex: "0",
+                        "aria-label": d.name }, svg);
+      g.style.transformOrigin = d.x + "px " + d.y + "px";
+      el("circle", { cx: d.x, cy: d.y, r: 70, fill: "rgba(0,0,0,0)" }, g);             // Tippflaeche
+      el("circle", { "class": "ring", cx: d.x, cy: d.y, r: 62 }, g);
+      emoji(g, d.x, d.y, d.zeichen, 78);
+      if (d.extra) emoji(g, d.x + d.extra.dx, d.y + d.extra.dy, d.extra.zeichen, d.extra.klein ? 40 : 58);
+      if (d.name && /^[A-ZÄÖÜ]/.test(d.name) && ["Fußball", "Skateboard", "Oma", "Polizistin"].indexOf(d.name) < 0){
+        var breite = d.name.length * 15 + 22;
+        el("rect", { x: d.x - breite / 2, y: d.y + 40, width: breite, height: 30, rx: 10, fill: "#fff", opacity: .95 }, g);
+        var t = el("text", { x: d.x, y: d.y + 56, "font-size": 22, "font-weight": 700, "text-anchor": "middle",
+                             "dominant-baseline": "central", fill: "#15171f", "font-family": "-apple-system,system-ui,sans-serif" }, g);
+        t.textContent = d.name;
+      }
+      g.addEventListener("click", function(){ tippen(i, g); });
+      g.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); tippen(i, g); } });
+    });
+    $("ortsname").textContent = "📍 " + o.name;
+    gefunden = 0;
+    lupenMalen();
+    erklaerungLeer();
+  }
+
+  function anzahlGefahren(){ return ORTE[ort].dinge.filter(function(d){ return d.gefahr; }).length; }
+
+  function lupenMalen(){
+    var n = anzahlGefahren(), h = "";
+    for (var i = 0; i < n; i++) h += '<span class="' + (i < gefunden ? "an" : "") + '">🔍</span>';
+    $("lupen").innerHTML = h;
+  }
+
+  function erklaerungLeer(){
+    var n = anzahlGefahren() - gefunden;
+    $("erklaerung").innerHTML =
+      '<p class="leer">Hier stecken noch <b>' + n + ' Gefahren</b>. Tipp auf alles, was dir komisch vorkommt.</p>' +
+      '<div class="reihe"><button class="knopf" id="tipp">💡 Tipp</button>' +
+      (kannSprechen ? '<button class="knopf" id="nochmal-hoeren">🔊 Vorlesen</button>' : '') + '</div>';
+    $("tipp").addEventListener("click", tippGeben);
+    if ($("nochmal-hoeren")) $("nochmal-hoeren").addEventListener("click", function(){ sprich("Hier stecken noch " + n + " Gefahren. Tipp auf alles, was dir komisch vorkommt."); });
+  }
+
+  function tippGeben(){
+    var o = ORTE[ort];
+    var offen = Array.prototype.filter.call(document.querySelectorAll(".ding"), function(g){
+      var d = o.dinge[+g.getAttribute("data-i")];
+      return d.gefahr && !g.classList.contains("gefunden");
+    });
+    if (!offen.length) return;
+    tippsGenutzt++;
+    offen[0].classList.add("tipp");
+    setTimeout(function(){ offen[0].classList.remove("tipp"); }, 2600);
+  }
+
+  function tippen(i, g){
+    var o = ORTE[ort], d = o.dinge[i];
+    g.classList.remove("wackelt"); void g.getBBox(); g.classList.add("wackelt");
+    var schonDa = g.classList.contains("gefunden") || g.classList.contains("sicher");
+    if (d.gefahr){
+      if (!schonDa){
+        g.classList.add("gefunden"); gefunden++; gesamtGefunden++;
+        try { window.lernstand && window.lernstand.antwort(true, "gefahren im verkehr", "", d.titel); } catch(e){}
+        lupenMalen();
+      }
+    } else if (!schonDa){
+      g.classList.add("sicher");
+      fehltipps++;
+      // Kein Fehler im Spiel - aber fuer die Eltern ehrlich: hier wurde
+      // richtiges Verhalten fuer gefaehrlich gehalten.
+      try { window.lernstand && window.lernstand.antwort(false, "sicheres verhalten erkennen", d.titel, "sicher"); } catch(e){}
+    }
+    zeigErklaerung(d);
+  }
+
+  function zeigErklaerung(d){
+    var fertig = gefunden === anzahlGefahren();
+    var h = '<p class="titel ' + (d.gefahr ? "gefahr" : "gut") + '">' + (d.gefahr ? "⚠️ " : "✅ ") + d.titel + '</p>' +
+            '<p class="text">' + d.text + '</p>' +
+            '<div class="besser"><b>' + (d.gefahr ? "Besser: " : "") + '</b>' + d.besser + '</div>';
+    if (fertig){
+      h += '<p class="text" style="margin-top:12px"><b>Alle Gefahren gefunden!</b></p>' +
+           '<div class="reihe"><button class="knopf gruen" id="weiter">' + (ort < ORTE.length - 1 ? "Weiter zum nächsten Ort ›" : "Fertig ›") + '</button></div>';
+    } else {
+      h += '<div class="reihe"><button class="knopf" id="tipp">💡 Tipp</button>' +
+           (kannSprechen ? '<button class="knopf" id="nochmal-hoeren">🔊 Nochmal</button>' : '') + '</div>';
+    }
+    $("erklaerung").innerHTML = h;
+    sprich((d.gefahr ? "Gefahr! " : "Das ist richtig so. ") + d.text + " " + (d.gefahr ? "Besser: " : "") + d.besser);
+    if ($("tipp")) $("tipp").addEventListener("click", tippGeben);
+    if ($("nochmal-hoeren")) $("nochmal-hoeren").addEventListener("click", function(){ sprich(zuletztGesagt); });
+    if ($("weiter")) $("weiter").addEventListener("click", weiter);
+    if (fertig) konfetti(false);
+    // Auf dem hohen iPad steht die Erklaerung unter dem Bild - dann dorthin blicken.
+    if (window.matchMedia && !window.matchMedia("(orientation:landscape) and (min-width:900px)").matches){
+      try { $("erklaerung").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+    }
+  }
+
+  function weiter(){
+    ort++;
+    if (ort < ORTE.length){ ortMalen(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    var d = lesen(); d.gefunden = (d.gefunden || 0) + gesamtGefunden; d.runden = (d.runden || 0) + 1; schreiben(d);
+    $("ende-titel").textContent = gesamtGefunden + " Gefahren entdeckt!";
+    $("ende-text").textContent = tippsGenutzt === 0
+      ? "Ganz ohne Tipp – du hast richtig scharfe Detektiv-Augen. Das hier merkst du dir:"
+      : "Super aufgepasst! Das hier merkst du dir für deinen Weg:";
+    ["spiel", "start"].forEach(function(x){ $("sicht-" + x).classList.add("verborgen"); });
+    $("sicht-ende").classList.remove("verborgen");
+    window.scrollTo(0, 0);
+    rueckblickMalen();
+    konfetti(true);
+  }
+
+  function starten(){
+    ort = 0; gesamtGefunden = 0; tippsGenutzt = 0; fehltipps = 0;
+    ["start", "ende"].forEach(function(x){ $("sicht-" + x).classList.add("verborgen"); });
+    $("sicht-spiel").classList.remove("verborgen");
+    ortMalen();
+    sprich("Auf dem Weg zum Ronhof. Finde die Gefahren!");
+  }
+  $("los").addEventListener("click", starten);
+  $("nochmal").addEventListener("click", starten);
+
+  /* ---------- Konfetti ---------- */
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(gross){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (gross ? 120 : 30); i++) stuecke.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
+      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#10b981","#16a34a","#ffffff","#f79009","#3b82f6"][i%5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  window.__schulweg = { ORTE: ORTE, starten: starten, tippe: function(i){ var g = document.querySelector('.ding[data-i="' + i + '"]'); if (g) tippen(i, g); }, weiter: function(){ if ($("weiter")) $("weiter").click(); }, zustand: function(){ return { ort: ort, gefunden: gefunden, gesamt: gesamtGefunden }; } };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
