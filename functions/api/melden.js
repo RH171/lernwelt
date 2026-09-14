@@ -22,9 +22,10 @@ import { antwortErzeugen } from "./_antwort.js";
 // Helena am 14.09.2026 (v4534cdwsc): "Bitte repariere die Seite, sodass nicht
 // immer nur die gleiche Antwort kommt." Sie hatte recht, und die Ursache stand
 // genau hier: Am 14.09. zwischen 13:22 und 13:43 hat sie ein echtes Gespraech
-// gefuehrt - zwoelf Fragen, zwoelf Antworten - und ab 13:44 lief sie gegen die
-// Stundengrenze. Fuenfmal hintereinander kam derselbe Satz, wortgleich, in
-// derselben Sekunde. Fuer sie sah das aus wie eine kaputte Seite.
+// gefuehrt - Frage, Antwort, Nachfrage, zehn Runden lang - und ab 13:44 stand
+// der Stundenzaehler auf zwoelf. Danach kam fuenfmal hintereinander derselbe
+// Satz, wortgleich, jedes Mal in derselben Sekunde wie ihre Nachricht. Fuer sie
+// sah das aus wie eine kaputte Seite, und das war es aus ihrer Sicht auch.
 //
 // Zwoelf ist fuer ein Gespraech zu wenig. Die Stundengrenze steht darum auf 25;
 // dafuer gibt es jetzt zusaetzlich eine TAGESGRENZE, die es vorher gar nicht
