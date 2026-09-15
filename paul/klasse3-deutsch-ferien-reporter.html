@@ -91,6 +91,33 @@
   .chip.an{border-color:var(--farbe);background:var(--hell)}
   .tipp{background:#eff6ff;border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.5;color:#1e3a8a;margin-top:8px}
 
+  /* ---------- Kuerzer machen ----------
+     Pauls Wunsch vom 15.09.2026 (Meldung st3sqbq8tc). Er tippt seine eigenen
+     Woerter weg - es wird ihm nichts umgeschrieben, siehe Kopf der Datei. */
+  .kurz-knopf{flex:0 0 auto;border:2px solid var(--line);background:#fff;border-radius:14px;
+    padding:10px 14px;min-height:44px;font:700 15px/1.2 var(--font);color:var(--ink);cursor:pointer}
+  .kurz-knopf:active{transform:scale(.97)}
+  .kuerzen{margin-top:14px;border:2px dashed var(--farbe);border-radius:18px;padding:14px 16px;background:#fff}
+  .kuerzen h3{margin:0;font:800 20px/1.2 var(--rund)}
+  .kuerzen .hinweis{margin:6px 0 12px;color:#9a3412;font-size:15px;line-height:1.5}
+  .fuell-bsp{border-bottom:2px dashed #f59e0b}
+  .kuerzen .ziel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .kuerzen .ziel .titel{font:700 13px/1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0}
+  .stand{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#fef3c7;color:#8a5a12;font:800 18px/1.35 var(--rund)}
+  .stand.geschafft{background:#f0fdf4;color:#166534}
+  .satzkasten{border-top:2px solid var(--line);padding-top:8px;margin-bottom:10px}
+  .satzkopf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .satzkopf .nr{flex:1;min-width:120px;font:700 13.5px/1.3 var(--font);color:var(--muted)}
+  .satzkopf .chip{font-size:14.5px;padding:8px 10px}
+  .wortreihe{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .wort{border:2px solid transparent;background:#fff;border-radius:10px;padding:6px 8px;cursor:pointer;
+    font:400 20px/1.3 var(--schreib);color:var(--ink)}
+  .wort:hover{border-color:var(--line)}
+  .wort.fuell{border-bottom-color:#f59e0b;border-bottom-style:dashed}
+  .wort.weg{text-decoration:line-through;color:#c4c8d4;background:#f4f6fa}
+  .wort .satzz{color:var(--muted)}
+  .kuerzen .nav{margin-top:14px}
+
   /* Drei Worte */
   .drei{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
   .drei input{width:100%;font:700 22px/1.2 var(--schreib);padding:12px;border:2px solid var(--line);border-radius:14px;text-align:center;outline:none;min-height:54px}
@@ -131,6 +158,9 @@
     textarea{min-height:120px;font-size:19px;margin-top:10px}
     textarea.klein{min-height:84px}
     .nav .los{padding:14px;min-height:54px}
+    .kuerzen{padding:12px}
+    .wort{font-size:18px;padding:5px 7px}
+    .stand{font-size:16px}
   }
 
   /* ---------- Fertiges Blatt ---------- */
@@ -217,7 +247,7 @@
   /* ---------- Speicher ---------- */
   var SCHLUESSEL = "ferien-reporter";
   var leer = { name: "", bilder: [{e:"",t:""},{e:"",t:""},{e:"",t:""},{e:"",t:""}], worte: ["","",""],
-               bestes: "", tag: "", ort: "", passiertWort: "", passiert: "", nie: "", station: 0 };
+               bestes: "", tag: "", ort: "", passiertWort: "", passiert: "", nie: "", station: 0, kuerzenZiel: 20 };
   var d;
   try { d = JSON.parse(localStorage.getItem(SCHLUESSEL) || "null"); } catch(e){ d = null; }
   if (!d || typeof d !== "object") d = JSON.parse(JSON.stringify(leer));
@@ -305,13 +335,18 @@
     });
   }
 
-  function woerter(t){ return String(t || "").trim().split(/\s+/).filter(Boolean).length; }
+  // Ein Doppelpunkt allein ist kein Wort. Sonst stimmt "20 Woerter" nicht,
+  // und genau darum geht es beim Kuerzen.
+  function woerter(t){
+    return (String(t || "").match(/\S+/g) || []).filter(function(w){ return /[0-9A-Za-z\u00C0-\u024F]/.test(w); }).length;
+  }
   function saetze(t){ return (String(t || "").match(/[.!?](\s|$)/g) || []).length || (String(t || "").trim() ? 1 : 0); }
 
   var aktuell = 0, aktivesFeld = null;
 
   function stationZeigen(nr){
     aktuell = nr; d.station = nr;
+    kurz = null; langerText = null;      // gehoert zum Text der alten Station
     var st = STATIONEN[nr];
     schritteMalen(nr);
     var h = '<div class="reporter"><div class="mikro">🎙️</div><div class="blase"><p class="frage">' + esc(st.frage) + '</p><p class="denk">' + esc(st.denk) + '</p></div></div>';
@@ -332,7 +367,9 @@
       }
       var start = st.id === "nie" ? "" : "";
       h += '<textarea id="text" class="' + (st.gross ? "" : "klein") + '" placeholder="' + esc(st.ueber) + '" spellcheck="true" lang="de">' + esc(d[st.id] || start) + '</textarea>' +
-        '<div class="zeile"><span class="zaehler" id="zaehler"></span></div>';
+        '<div class="zeile"><span class="zaehler" id="zaehler"></span>' +
+          '<button class="kurz-knopf verborgen" id="kuerzen">✂️ Kürzer machen</button>' +
+          '<button class="kurz-knopf verborgen" id="lang-zurueck">↩ doch wieder lang</button></div>';
     }
 
     // Die Knoepfe stehen direkt unter dem Schreibfeld, das Werkzeug darunter -
@@ -340,6 +377,7 @@
     var nav = '<div class="nav">' + (nr > 0 ? '<button class="los grau zurueck" id="zurueck-station">‹</button>' : "") +
          '<button class="los" id="weiter">' + (nr < STATIONEN.length - 1 ? "Nächste Frage ›" : "📄 Mein Blatt ansehen") + '</button></div>';
     if (h.indexOf("@@NAV@@") >= 0) h = h.replace("@@NAV@@", nav); else h += nav;
+    if (st.ziel) h += '<div class="kuerzen verborgen" id="kuerzen-kasten"></div>';
 
     if (st.ziel){
       h += '<details class="helfer"' + (window.innerWidth > 800 ? " open" : "") + '><summary>Werkzeugkiste</summary>' +
