@@ -232,6 +232,75 @@ ihr liegen — und umkehren kann sie nicht. Sie pendelt jetzt zwischen erstem
 Ballon und Tor, bis die Aufgabe gelöst ist. Am Rätsel-Tor **nicht** pendeln:
 dort muss sie anstoßen, sonst geht die Tafel nie auf.
 
+## Der Ferien-Reporter schreibt nicht für Paul — auch nicht beim Kürzen
+
+Oben in `paul/klasse3-deutsch-ferien-reporter.html` steht seit dem 15.09.2026:
+*„Hier schreibt NIEMAND für Paul. Keine KI, kein Vorschlagstext."* Am selben
+Tag kam Meldung `st3sqbq8tc`: *„ich will das du mir denn satz kürzer in 20
+wörter umwandelst"*, mit einem Foto seines Schweiz-Textes.
+
+Der naheliegende Knopf — Text an `/api/spiel-bauen` schicken, gekürzte Fassung
+zurück — wäre genau das gewesen, was die Zeile verbietet. Und zwar an der
+schlechtesten Stelle: **Kürzen ist der Lernstoff**, nicht das Drumherum
+(LehrplanPLUS D4 4.4, „Texte überarbeiten"). Ein Knopf, der es abnimmt, nimmt
+ihm die Übung und lässt ihm nur das Abschreiben. Das ist dieselbe Regel wie
+„der Wert liegt darin, dass er die Spiele **baut**".
+
+Gebaut wurde deshalb ein **Werkzeug**: Der Text wird in Sätze und Wörter
+zerlegt, jedes Wort ist ein Knopf zum Wegtippen, ganze Sätze gehen auf einmal,
+ein Zähler sagt „noch 28 zu viel", und die Füllwörter (`FUELLWOERTER`) sind
+gestrichelt markiert. Das Ziel ist einstellbar (20/50/100, Voreinstellung 20,
+gemerkt in `d.kuerzenZiel`). **Was herauskommt, sind ausschließlich Pauls
+eigene Wörter in seiner Reihenfolge** — nur weniger davon.
+
+Drei Dinge, an denen so ein Werkzeug sonst heimlich doch zum Schreiber wird,
+und wie es hier gelöst ist:
+
+- **Keinen Punkt dazusetzen, den er nicht geschrieben hat.** Nur ein Satzende,
+  das an einem weggetippten Wort klebte, wird gerettet.
+- **Großschreibung nur zurechtrücken, wenn erst das Wegtippen sie zerstört
+  hat** — begann der Satz im Original groß und fängt er jetzt klein an, wird
+  der erste Buchstabe groß. Sonst nichts. Seine eigene Schreibweise (er
+  schreibt „der tag wo ich…") bleibt, wie sie ist; sie zu korrigieren wäre
+  Aufgabe seiner Lehrerin, und für ihn wäre sein Fehler unsichtbar geworden.
+- **Rückweg lassen.** Nach dem Übernehmen steht „↩ doch wieder lang" da.
+
+### Ein Punkt ist nicht immer ein Satzende
+
+In Pauls Text stand „**ca. 600.000 bis 700.000 Liter**". Der erste Entwurf
+machte daraus **sechs Sätze**, und beim Zusammenbauen stand hinterher
+„600. 000" da — sein Text wäre kaputtgegangen, ohne dass er etwas falsch
+gemacht hätte. `zerlegen()` sperrt darum Punkte hinter Ziffern, hinter
+Einzelbuchstaben (`z. B.`) und hinter einer Liste von Abkürzungen weg, trennt
+erst dann und holt sie danach zurück. **Wer am Trennen dreht, prüft mit
+`/tmp`-Proben gegen genau diesen Satz.**
+
+### Beim Schreiben steht die Tastatur offen — das ist der Maßstab
+
+`pruefung-geraete.json` hat seit dem 15.09.2026 „**Pauls iPhone mit offener
+Tastatur**" (375×360). Der Ferien-Reporter ist seine einzige Seite zum
+Schreiben; dort ist das kein Ausnahmefall, sondern der Normalzustand. Beim
+ersten Lauf lag „Nächste Frage" **229 px unter dem Rand** — er hätte nach
+jedem Feld hochscrollen müssen, und das war schon vorher so, nur ungemessen.
+
+Repariert mit `@media (max-height:520px)`: Der Denk-Hinweis tritt zurück (er
+ist wieder da, sobald die Tastatur zugeht), Mikro, Kartenränder und Schreibfeld
+werden flacher, und der Filmstreifen steht vierspaltig in **einer** Reihe statt
+zweispaltig in zwei — das allein sind rund 100 px, und es sieht dem echten
+Arbeitsblatt sogar ähnlicher. **Kein Knopf wurde dabei verschoben oder
+festgeklebt**; eine klebende Knopfzeile hätte im offenen Kürzen-Kasten
+„So übernehmen" verdeckt.
+
+### Was `geraete-messen.js` hier nicht sieht
+
+Es prüft gegen das **Fenster**. Der Kürzen-Kasten ist aber schmaler als das
+Fenster, und seine zwei Knöpfe hingen auf dem iPhone 8 px aus seinem eigenen
+Rand heraus — gemeldet hat das niemand. `mess-schritte-ferien.js` misst deshalb
+zusätzlich jedes Kind-Element gegen den Kasten. **Wer einen Kasten in einem
+Kasten baut, misst ihn gegen den inneren Rand, nicht gegen den Bildschirm.**
+Dieselbe Etappe prüft auch fachlich nach (48 Wörter, 3 Sätze, „28 zu viel",
+`600.000` heil), nicht nur das Aussehen.
+
 ## Vorgebaute Spiele werden gelesen, nicht nur gezählt
 
 `pruefeSpiel` prüft die Form (Anzahl, Lösung in der Auswahl, Zahlentastatur).
