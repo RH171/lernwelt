@@ -111,6 +111,28 @@
   /* Das ___, das mir passiert ist */
   .luecke-wahl{margin-top:12px}
 
+  /* Pauls iPhone (375 x 640): alles Wichtige ohne Scrollen */
+  @media (max-width:520px){
+    body{padding:10px}
+    h1{font-size:20px}
+    .karte{padding:14px}
+    .reporter{gap:8px}
+    .reporter .mikro{font-size:32px}
+    .blase{padding:10px 12px}
+    .blase .frage{font-size:18px}
+    .blase .denk{font-size:14px;line-height:1.4}
+    .schritt{font-size:17px;flex:1 1 40px}
+    .rahmen{padding:5px}
+    .rahmen .bild{height:58px;font-size:34px}
+    .rahmen input{font-size:15px;min-height:32px}
+    .rahmen-reihe{gap:8px;margin-top:10px}
+    #luecke{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+    #luecke .chip{flex:none}
+    textarea{min-height:120px;font-size:19px;margin-top:10px}
+    textarea.klein{min-height:84px}
+    .nav .los{padding:14px;min-height:54px}
+  }
+
   /* ---------- Fertiges Blatt ---------- */
   .blatt{background:#fff;border:2px solid #111827;border-radius:6px;padding:16px;font-family:var(--schreib);color:#111827;max-width:780px;margin:0 auto}
   .blatt .kopf{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:2px solid #111827;padding-bottom:10px}
@@ -299,7 +321,7 @@
         var inhalt = fotos[i] ? '<img src="' + fotos[i] + '" alt="">' : (b.e || '<span style="font-size:15px;color:#9ca3af;font-family:var(--font)">Bild wählen</span>');
         return '<div class="rahmen" data-i="' + i + '"><button class="bild" data-i="' + i + '" aria-label="Bild ' + (i + 1) + ' auswählen">' + inhalt + '</button>' +
           '<input data-i="' + i + '" maxlength="40" placeholder="Was zeigt das Bild?" value="' + esc(b.t) + '"></div>';
-      }).join("") + '</div>' +
+      }).join("") + '</div>' + '@@NAV@@' +
       '<div class="kiste"><p class="titel">Bild für <span id="rahmen-nr">Rahmen 1</span></p><div class="chips" id="sticker"></div></div>';
     } else if (st.id === "worte"){
       h += '<div class="drei">' + d.worte.map(function(w, i){ return '<input data-i="' + i + '" maxlength="20" placeholder="' + (i + 1) + '. Wort" value="' + esc(w) + '">'; }).join("") + '</div>';
@@ -313,8 +335,11 @@
         '<div class="zeile"><span class="zaehler" id="zaehler"></span></div>';
     }
 
-    h += '<div class="nav">' + (nr > 0 ? '<button class="los grau zurueck" id="zurueck-station">‹</button>' : "") +
+    // Die Knoepfe stehen direkt unter dem Schreibfeld, das Werkzeug darunter -
+    // auf Pauls iPhone lag "Naechste Frage" sonst eine ganze Seite tief.
+    var nav = '<div class="nav">' + (nr > 0 ? '<button class="los grau zurueck" id="zurueck-station">‹</button>' : "") +
          '<button class="los" id="weiter">' + (nr < STATIONEN.length - 1 ? "Nächste Frage ›" : "📄 Mein Blatt ansehen") + '</button></div>';
+    if (h.indexOf("@@NAV@@") >= 0) h = h.replace("@@NAV@@", nav); else h += nav;
 
     if (st.ziel){
       h += '<details class="helfer"' + (window.innerWidth > 800 ? " open" : "") + '><summary>Werkzeugkiste</summary>' +
