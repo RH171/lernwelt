@@ -344,6 +344,124 @@
 
   var aktuell = 0, aktivesFeld = null;
 
+  /* ---------- Kuerzer machen ----------
+     Paul am 15.09.2026, Meldung st3sqbq8tc: "ich will das du mir denn satz
+     kuerzer in 20 woerter umwandelst".
+
+     Gebaut als WERKZEUG, nicht als Schreiber. Oben in dieser Datei steht:
+     hier schreibt niemand fuer Paul. Ein Knopf, der seinen Text von einer KI
+     neu formulieren laesst, waere genau das - und ausgerechnet beim Kuerzen:
+     "Texte ueberarbeiten, straffen" ist der Lernstoff der 4. Klasse, nicht
+     das Drumherum. Also zerlegt das Werkzeug seinen Text in Woerter, zeigt
+     ihm, wie viele zu viel sind, und markiert die Fuellwoerter, die fast
+     immer gehen koennen. Wegtippen muss er selbst. Was uebrig bleibt, sind
+     ausschliesslich seine eigenen Woerter in seiner eigenen Reihenfolge -
+     nur weniger davon. */
+  var FUELLWOERTER = ["dann", "danach", "auch", "so", "ganz", "sehr", "halt", "eigentlich",
+                      "wirklich", "irgendwie", "total", "mal", "noch", "schon", "immer",
+                      "echt", "voll", "eben", "gefühlt", "quasi", "etwa", "ungefähr", "ca."];
+  var ZIELE = [20, 50, 100];
+  var kurz = null;          // { saetze: [...], ziel: 20 } solange der Kasten offen ist
+  var langerText = null;    // der Text von vor dem Kuerzen, fuer "doch wieder lang"
+
+  function istWort(t){ return /[0-9A-Za-zÀ-ɏ]/.test(String(t || "")); }
+
+  // Text -> Saetze -> Woerter. Satzzeichen bleiben an ihrem Wort kleben,
+  // damit ein weggetipptes Wort sein Komma mitnimmt.
+  function zerlegen(text){
+    var roh = String(text || "").match(/[^.!?…]+[.!?…]*/g) || [];
+    var saetze = [];
+    roh.forEach(function(stueck){
+      var teile = [];
+      (stueck.match(/\S+/g) || []).forEach(function(t){
+        var m = /^(.*?)([.,;:!?…"»«)\]]*)$/.exec(t);
+        var neu = { wort: m[1], schluss: m[2], weg: false };
+        // Ein Zeichen ohne Wort (Pauls " : ") gehoert ans Wort davor.
+        if (!istWort(neu.wort)){
+          if (teile.length) teile[teile.length - 1].schluss += neu.wort + neu.schluss;
+          return;
+        }
+        teile.push(neu);
+      });
+      if (teile.length) saetze.push({ teile: teile, gross: /^[A-ZÄÖÜ]/.test(teile[0].wort) });
+    });
+    return saetze;
+  }
+
+  function kurzZaehlen(){
+    var n = 0;
+    kurz.saetze.forEach(function(s){ s.teile.forEach(function(t){ if (!t.weg) n++; }); });
+    return n;
+  }
+
+  // Aus dem, was stehengeblieben ist, wieder einen Text machen.
+  function kurzText(){
+    var raus = [];
+    kurz.saetze.forEach(function(s){
+      var bleibt = s.teile.filter(function(t){ return !t.weg; });
+      if (!bleibt.length) return;
+      // Der Punkt haengt vielleicht an einem Wort, das er weggetippt hat.
+      var ende = (/[.!?…]+$/.exec(s.teile[s.teile.length - 1].schluss) || ["."])[0];
+      var satz = bleibt.map(function(t){ return t.wort + t.schluss.replace(/[.!?…]+$/, ""); }).join(" ");
+      satz = satz.replace(/[,;:\s]+$/, "");
+      // Grossschreibung nur zurechtruecken, wenn erst das Wegtippen sie
+      // zerstoert hat - seine eigene Schreibweise wird nicht korrigiert.
+      if (s.gross && /^[a-zäöü]/.test(satz)) satz = satz.charAt(0).toUpperCase() + satz.slice(1);
+      raus.push(satz + ende);
+    });
+    return raus.join(" ");
+  }
+
+  function kurzMalen(){
+    var kasten = $("kuerzen-kasten");
+    if (!kurz || !kasten) return;
+    var da = kurzZaehlen(), zuviel = da - kurz.ziel, geschafft = da > 0 && zuviel <= 0;
+    var h = '<h3>✂️ Kürzer machen</h3>' +
+      '<p class="hinweis">Tipp die Wörter weg, die nicht sein müssen – übrig bleibt dein eigener Text, nur kürzer. ' +
+        'Die <span class="fuell-bsp">gestrichelten</span> kann man fast immer weglassen.</p>' +
+      '<div class="ziel"><p class="titel">Wie kurz?</p><div class="chips">' +
+        ZIELE.map(function(z){ return '<button class="chip' + (z === kurz.ziel ? " an" : "") + '" data-ziel="' + z + '">' + z + ' Wörter</button>'; }).join("") +
+      '</div></div>' +
+      '<p class="stand' + (geschafft ? " geschafft" : "") + '">' +
+        (da === 0 ? "Da bleibt ja nichts übrig – hol dir ein paar Wörter zurück."
+         : geschafft ? "🎉 " + da + " Wörter – dein Ziel von " + kurz.ziel + " ist geschafft!"
+         : da + " Wörter · noch " + zuviel + " zu viel") + '</p>';
+
+    kurz.saetze.forEach(function(s, i){
+      var n = s.teile.filter(function(t){ return !t.weg; }).length;
+      var allesWeg = n === 0;
+      h += '<div class="satzkasten"><div class="satzkopf">' +
+        '<span class="nr">Satz ' + (i + 1) + ' · ' + n + (n === 1 ? " Wort" : " Wörter") + '</span>' +
+        '<button class="chip" data-satz="' + i + '">' + (allesWeg ? "↩ Satz zurückholen" : "✂️ ganzer Satz weg") + '</button>' +
+        '</div><div class="wortreihe">' +
+        s.teile.map(function(t, j){
+          var fuell = FUELLWOERTER.indexOf(t.wort.toLowerCase()) >= 0;
+          return '<button class="wort' + (fuell ? " fuell" : "") + (t.weg ? " weg" : "") + '" data-s="' + i + '" data-t="' + j + '" ' +
+            'aria-pressed="' + (t.weg ? "true" : "false") + '">' + esc(t.wort) +
+            (t.schluss ? '<span class="satzz">' + esc(t.schluss) + '</span>' : "") + '</button>';
+        }).join("") + '</div></div>';
+    });
+
+    h += '<div class="nav"><button class="los grau zurueck" id="kurz-zurueck">↩ Alle zurück</button>' +
+         '<button class="los" id="kurz-uebernehmen">✅ So übernehmen</button></div>';
+    kasten.innerHTML = h;
+  }
+
+  function kurzOeffnen(){
+    var ta = $("text");
+    if (!ta) return;
+    kurz = { saetze: zerlegen(ta.value), ziel: d.kuerzenZiel || 20 };
+    $("kuerzen-kasten").classList.remove("verborgen");
+    kurzMalen();
+    try { $("kuerzen-kasten").scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e){}
+  }
+
+  function kurzSchliessen(){
+    kurz = null;
+    var kasten = $("kuerzen-kasten");
+    if (kasten){ kasten.innerHTML = ""; kasten.classList.add("verborgen"); }
+  }
+
   function stationZeigen(nr){
     aktuell = nr; d.station = nr;
     kurz = null; langerText = null;      // gehoert zum Text der alten Station
@@ -478,11 +596,53 @@
       $("zaehler").innerHTML = n === 0 ? "Schreib los – es gibt kein Falsch." :
         n + (n === 1 ? " Wort" : " Wörter") + " · " + s + (s === 1 ? " Satz" : " Sätze") +
         (s >= st.ziel ? " · <b>Super, das reicht fürs Blatt!</b>" : "");
+      // Erst ab ein paar Woertern gibt es ueberhaupt etwas zu kuerzen.
+      $("kuerzen").classList.toggle("verborgen", n < 8);
+      $("lang-zurueck").classList.toggle("verborgen", !langerText);
       d[st.id] = ta.value;
     }
-    ta.addEventListener("input", zaehlen);
+    // Tippt er weiter, passt der offene Kuerzen-Kasten nicht mehr zum Text.
+    ta.addEventListener("input", function(){ if (kurz) kurzSchliessen(); zaehlen(); });
     ta.addEventListener("blur", function(){ schritteMalen(aktuell); });
     zaehlen();
+
+    $("kuerzen").addEventListener("click", function(){ if (kurz) kurzSchliessen(); else kurzOeffnen(); });
+    $("lang-zurueck").addEventListener("click", function(){
+      if (!langerText) return;
+      ta.value = langerText; langerText = null; kurzSchliessen(); zaehlen();
+    });
+    $("kuerzen-kasten").addEventListener("click", function(e){
+      var b = e.target && e.target.closest ? e.target.closest("button") : null;
+      if (!b || !kurz) return;
+      if (b.hasAttribute("data-ziel")){
+        kurz.ziel = +b.getAttribute("data-ziel"); d.kuerzenZiel = kurz.ziel; speichern(); kurzMalen(); return;
+      }
+      if (b.hasAttribute("data-satz")){
+        var satz = kurz.saetze[+b.getAttribute("data-satz")];
+        var allesWeg = satz.teile.every(function(t){ return t.weg; });
+        satz.teile.forEach(function(t){ t.weg = !allesWeg; });
+        kurzMalen(); return;
+      }
+      if (b.hasAttribute("data-t")){
+        var teil = kurz.saetze[+b.getAttribute("data-s")].teile[+b.getAttribute("data-t")];
+        teil.weg = !teil.weg; kurzMalen(); return;
+      }
+      if (b.id === "kurz-zurueck"){
+        kurz.saetze.forEach(function(x){ x.teile.forEach(function(t){ t.weg = false; }); });
+        kurzMalen(); return;
+      }
+      if (b.id === "kurz-uebernehmen"){
+        var neu = kurzText();
+        if (!neu.trim()) return;            // alles weggetippt - dann lieber gar nichts tun
+        var vorher = ta.value;
+        langerText = vorher; ta.value = neu;
+        kurzSchliessen(); zaehlen();
+        $("zaehler").innerHTML = "✂️ Aus " + woerter(vorher) + " Wörtern sind <b>" + woerter(neu) + "</b> geworden – alles deine.";
+        try { ta.scrollIntoView({ behavior: "smooth", block: "center" }); } catch(e){}
+        return;
+      }
+    });
+
     Array.prototype.forEach.call(document.querySelectorAll("[data-einfuegen]"), function(b){
       // mousedown statt click: sonst verliert das Textfeld vorher den Fokus und die Einfuegestelle
       b.addEventListener("pointerdown", function(e){ e.preventDefault(); });
@@ -552,7 +712,8 @@
   $("bearbeiten").addEventListener("click", function(){ zeige("interview"); stationZeigen(STATIONEN.findIndex(function(st){ return !fertig(st); }) >= 0 ? STATIONEN.findIndex(function(st){ return !fertig(st); }) : 0); });
   $("drucken").addEventListener("click", function(){ window.print(); });
 
-  window.__ferien = { daten: function(){ return d; }, station: function(n){ zeige("interview"); stationZeigen(n); }, blatt: blattZeigen, STATIONEN: STATIONEN };
+  window.__ferien = { daten: function(){ return d; }, station: function(n){ zeige("interview"); stationZeigen(n); },
+                      blatt: blattZeigen, kuerzen: kurzOeffnen, STATIONEN: STATIONEN };
 })();
 </script>
 <script src="/lernstand.js" defer></script>
