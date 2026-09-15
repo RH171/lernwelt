@@ -209,14 +209,14 @@
       regel: "Beim Steigern: schön – schöner – am schönsten. Nach „das“ ohne Namenwort dahinter wird es selbst zum Namenwort und groß geschrieben: das Lustigste.",
       merke: "<b>🥇 Steigern:</b> lustig – lustiger – am lustigsten. Vor einem Namenwort klein: der schönste Tag. Ohne Namenwort danach groß: Das Lustigste war … Achtung bei gut – besser – am besten und hoch – höher – am höchsten.",
       saetze: [
-        { v: "Das ", a: "___ (lustig)", n: ", das mir passiert ist: Papa fiel in den See.", r: "Lustigste", f: { "lustigste": "Nach „Das“ steht hier kein Namenwort mehr – also wird das Wort selbst eins und groß geschrieben.", "Lustigster": "Es heißt „das“, deshalb endet es auf -e: das Lustigste.", "Lustigte": "Beim Steigern kommt -st- dazu: lustig – am lustigsten." } },
+        { v: "Das ", a: "___ (lustig)", n: " in den Ferien: Papa fiel in den See.", r: "Lustigste", f: { "lustigste": "Nach „Das“ steht hier kein Namenwort mehr – also wird das Wort selbst eins und groß geschrieben.", "Lustigster": "Es heißt „das“, deshalb endet es auf -e: das Lustigste.", "Lustigte": "Beim Steigern kommt -st- dazu: lustig – am lustigsten." } },
         { v: "Mein ", a: "___ (schön)", n: " Tag war der Ausflug zum Wasserfall.", r: "schönster", f: { "schönste": "„Tag“ ist männlich: mein schönster Tag.", "Schönster": "Vor dem Namenwort „Tag“ bleibt das Wiewort klein.", "schöner": "Das ist nur die erste Stufe. Der beste von allen ist der schönste." } },
-        { v: "Das war der ", a: "___ (hoch)", n: " Berg, auf dem ich je war.", r: "höchste", f: { "hochste": "Beim Steigern wird aus o ein ö: hoch – höher – am höchsten.", "hohste": "Das h fällt weg: der höchste Berg.", "höchster": "Nach „der“ endet es auf -e: der höchste Berg." } },
+        { v: "Das war der ", a: "___ (hoch)", n: " Berg, auf dem ich je war.", r: "höchste", f: { "hochste": "Beim Steigern wird aus o ein ö: hoch – höher – am höchsten.", "hohste": "Aus h wird ch: hoch – am höchsten.", "höchster": "Nach „der“ endet es auf -e: der höchste Berg." } },
         { v: "Die ", a: "___ (gut)", n: " Pommes gab es am Kiosk.", r: "besten", f: { "gutesten": "„Gut“ ist unregelmäßig: gut – besser – am besten.", "bessten": "Am besten schreibt man mit einem s vor dem t.", "beste": "„Pommes“ sind viele – deshalb: die besten Pommes." } },
         { v: "Am ", a: "___ (gut)", n: " hat mir das Baden gefallen.", r: "besten", f: { "Besten": "„Am besten“ wird klein geschrieben.", "guten": "„Gut“ ist unregelmäßig: gut – besser – am besten.", "bestem": "Nach „am“ endet es auf -en: am besten." } },
         { v: "Das ist meine ", a: "___ (schön)", n: " Erinnerung an die Ferien.", r: "schönste", f: { "schönster": "„Erinnerung“ ist weiblich: meine schönste Erinnerung.", "schönsten": "Nach „meine“ bei einem Namenwort in der Einzahl: schönste.", "Schönste": "Vor dem Namenwort „Erinnerung“ bleibt das Wiewort klein." } },
         { v: "Es war der ", a: "___ (heiß)", n: " Tag des ganzen Sommers.", r: "heißeste", f: { "heißte": "Beim Steigern kommt -est- dazu: heiß – am heißesten.", "heißste": "Nach ß kommt ein e dazwischen: heißeste.", "heißester": "Nach „der“ endet es auf -e: der heißeste Tag." } },
-        { v: "Das ", a: "___ (niedlich)", n: ", das ich gesehen habe, war ein Murmeltier.", r: "Niedlichste", f: { "niedlichste": "Nach „Das“ steht hier kein Namenwort – also groß: das Niedlichste.", "Niedlichster": "Es heißt „das“, deshalb endet es auf -e.", "niedlichte": "Beim Steigern kommt -st- dazu: niedlich – am niedlichsten." } }
+        { v: "Das ", a: "___ (niedlich)", n: " auf der Wanderung war ein Murmeltier.", r: "Niedlichste", f: { "niedlichste": "Nach „Das“ steht hier kein Namenwort – also groß: das Niedlichste.", "Niedlichster": "Es heißt „das“, deshalb endet es auf -e.", "niedlichte": "Beim Steigern kommt -st- dazu: niedlich – am niedlichsten." } }
       ] }
   ];
 
@@ -291,7 +291,8 @@
       var ersterVersuch = versuch === 0;
       ergebnis[pos] = ersterVersuch ? "g" : "t";
       if (ersterVersuch) gesamt++;
-      try { window.lernstand && window.lernstand.antwort(ersterVersuch, ressort.merkmal, "", s.r); } catch(e){}
+      // Gezaehlt wird nur der erste Versuch - ein Fehlversuch wurde schon gemeldet.
+      if (ersterVersuch) try { window.lernstand && window.lernstand.antwort(true, ressort.merkmal, "", s.r); } catch(e){}
       b.classList.add("richtig");
       Array.prototype.forEach.call(document.querySelectorAll(".option"), function(x){ x.disabled = true; });
       $("artikel").innerHTML = artikelHtml(false);
