@@ -210,11 +210,15 @@
     .nav{margin-top:8px}
     .nav .los{padding:12px;min-height:48px;font-size:17px}
     .helfer{margin-top:8px}
-    .rahmen-reihe{margin-top:8px;gap:6px}
+    /* Die vier Rahmen nebeneinander statt zwei mal zwei - das spart die
+       ganze zweite Reihe und ist genau der Filmstreifen vom Arbeitsblatt. */
+    .rahmen-reihe{margin-top:8px;gap:6px;grid-template-columns:repeat(4,1fr)}
     .rahmen{padding:4px;gap:4px}
-    .rahmen .bild{height:44px;font-size:24px}
+    .rahmen .bild{height:40px;font-size:22px}
+    .rahmen input{font-size:14px}
     .kiste .titel{margin:6px 0 5px}
-    .luecke-wahl{margin-top:8px}
+    .luecke-wahl{margin-top:8px;margin-bottom:0}
+    .luecke-wahl .titel{margin-top:0}
   }
 
   @media print{
