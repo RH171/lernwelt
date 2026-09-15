@@ -99,6 +99,17 @@
   .ende .lob{text-align:center;color:var(--muted);font-size:17px;line-height:1.5;margin:0 0 12px}
   .merkzettel{background:var(--hell);border-radius:14px;padding:12px 16px;margin:12px 0;font-size:16px;line-height:1.55}
   .merkzettel b{font-family:var(--rund)}
+  /* Pauls iPhone: der ganze Artikel schob die Antworten unter den Rand. Im Spiel
+     steht dort nur der Satz, um den es geht - ganz lesen kann er ihn am Ende. */
+  @media (max-width:600px){
+    #artikel .satz:not(.jetzt):not(.frisch){display:none}
+    #artikel .satz{display:block}
+    .zeitung{padding:12px 14px}
+    .zeitung .name{font-size:20px}
+    .zeitung h3{font-size:17px;margin-bottom:4px}
+    .aufgabe .frage{font-size:18px}
+    .option{min-height:54px;font-size:18px}
+  }
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
 </style>
 </head>

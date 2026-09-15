@@ -232,6 +232,47 @@ ihr liegen — und umkehren kann sie nicht. Sie pendelt jetzt zwischen erstem
 Ballon und Tor, bis die Aufgabe gelöst ist. Am Rätsel-Tor **nicht** pendeln:
 dort muss sie anstoßen, sonst geht die Tafel nie auf.
 
+## Eine Grid-Spalte ist so breit wie ihr breitester Inhalt
+
+Paul am 15.09.2026 (Meldung `jjrd622c6f`, mit Foto): *„ich will das es nicht
+aus der zeile raus geht sondern das es halt dan zwei zeilen sind"*. Auf dem
+Bild standen seine Spiele-Zeilen rechts aus ihrer Liste heraus, dahinter grauer
+Hintergrund und unten eine waagrechte Bildlaufleiste.
+
+In `paul/werkstatt.html` stand `.liste{display:grid}` und in den Zeilen
+`white-space:nowrap`. **Eine Grid-Spalte ohne `grid-template-columns` ist so
+breit wie der breiteste Inhalt** — und bei `nowrap` ist das die volle
+Textlänge. Nachgemessen mit Pauls echten 17 Spielen: Liste 706 px breit,
+jede Zeile 947 px, also **241 px heraus**.
+
+Derselbe Fehler zeigt sich in **zwei Gestalten**, je nachdem, wie voll das
+Regal ist — und beide Male sind es dieselben 241 px:
+
+- **Viele Spiele:** die Spalte wird breiter als ihr Kasten, die Zeilen stehen
+  heraus, die Seite lässt sich seitlich schieben. Das hat Paul fotografiert.
+- **Wenige Spiele:** die Spalte bleibt im Rahmen, dafür schneidet
+  `text-overflow:ellipsis` den Text ab. Nichts steht heraus — es fehlt nur
+  Text, und das fällt kaum auf.
+
+Repariert mit `grid-template-columns:minmax(0,1fr)` (deckelt die Spalte auf
+die Kastenbreite), `min-width:0` an `.eintrag` und — Pauls eigentlichem
+Wunsch — `line-clamp:2` statt `nowrap`: **höchstens zwei Zeilen, dann erst
+die Pünktchen.**
+
+**Der Probebestand in `mess-schritte-paul-werkstatt.js` hatte drei kurze
+Titel** — damit war jede Messung grün, während es bei Paul seit Tagen
+herausstand. Jetzt liegt dort als viertes sein längstes echtes Spiel („Die
+Schreibwerkstatt von Meister Kuno", 103 Zeichen Thema), und die Etappe
+„Spieleliste" misst drei Dinge nach: nichts steht aus der Liste heraus, nichts
+braucht mehr als zwei Zeilen, nichts wird seitlich abgeschnitten. **In beide
+Richtungen belegt** — mit dem alten CSS meldet sie „ts wird um 241px
+abgeschnitten statt umzubrechen", mit dem neuen ist sie still.
+
+**Die Lehre fürs nächste Mal: Probedaten müssen den Extremfall enthalten.**
+Drei kurze Titel messen nur, dass kurze Titel passen. Dasselbe Muster wie bei
+den vorgebauten Spielen: eine Prüfung, die den Fehler nicht erreichen kann,
+ist keine Prüfung.
+
 ## Der Ferien-Reporter schreibt nicht für Paul — auch nicht beim Kürzen
 
 Oben in `paul/klasse3-deutsch-ferien-reporter.html` steht seit dem 15.09.2026:
