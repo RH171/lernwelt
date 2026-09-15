@@ -214,6 +214,17 @@ gelten:
   wurde.** „Sauber gemessen" heißt sonst nur „das Standbild war in Ordnung",
   nicht „das Spiel läuft". Genau so ist der erste Durchlauf grün gewesen,
   obwohl die Figur am Tor stand und nicht weiterkam.
+- **Das Fenster ist auf dem iPad keine feste Größe.** Safaris Leiste fährt
+  beim Spielen ein und aus; `window.innerHeight` springt dabei um bis zu 80 px.
+  Wer eine Welt einmal in absoluten Bildpunkten hinstellt und den Boden später
+  neu berechnet, reißt beides auseinander. Der Figur fällt es nie auf — sie
+  wird in jedem Bild neu auf den Boden gesetzt —, allen anderen schon. So
+  steckten Pauls Gegner im Boden (Meldung `9ytvhx394e`, 15.09.2026).
+  `weltMitnehmen(dy)` in `paul/schmiede.html` nimmt jetzt bei jeder
+  Größenänderung alles um dieselbe Strecke mit. **Gemessen wird das nicht von
+  `geraete-messen.js`**: Das fährt jede Größe einzeln an und ändert sie nie
+  *während* gespielt wird — genau dort lag der Fehler. Wer einen Spielmotor
+  baut, ändert beim Prüfen einmal mitten im Spiel die Fenstergröße.
 
 Der Fehler, den diese Prüfung gefunden hat: In der Steuerung „von allein
 rennen" hält das Tor die Figur vorne fest, während die Antwort-Ballons hinter
