@@ -186,6 +186,37 @@
   .lob{text-align:center;font:800 20px/1.4 var(--rund);color:#9a3412;margin:0 0 12px}
   .hinweis-papier{background:#fef3c7;border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.5;margin:12px auto 0;max-width:780px}
 
+  /* Tastatur offen: vom Schirm bleiben rund 360 Pixel uebrig, und darin muss
+     "Naechste Frage" noch sichtbar sein. Gemessen am 15.09.2026 lag der Knopf
+     auf Pauls iPhone bis zu 229 Pixel unter dem Rand - er haette nach jedem
+     Feld erst hochscrollen muessen. Also wird alles Beiwerk flacher: der
+     Denk-Hinweis tritt zurueck (er steht wieder da, sobald die Tastatur zu
+     ist), Mikro und Rahmen werden kleiner. Kein Knopf wandert dabei. */
+  @media (max-height:520px){
+    body{padding:7px}
+    header{margin-bottom:7px}
+    h1{font-size:18px}
+    .karte{padding:10px;border-radius:16px;margin-bottom:8px}
+    .schritte{margin-bottom:7px;gap:4px}
+    .schritt{font-size:15px}
+    .reporter{gap:7px}
+    .reporter .mikro{font-size:26px}
+    .blase{padding:7px 10px}
+    .blase .frage{font-size:16px}
+    .blase .denk{display:none}
+    textarea{min-height:66px;margin-top:8px;font-size:17px}
+    textarea.klein{min-height:56px}
+    .zeile{margin-top:7px}
+    .nav{margin-top:8px}
+    .nav .los{padding:12px;min-height:48px;font-size:17px}
+    .helfer{margin-top:8px}
+    .rahmen-reihe{margin-top:8px;gap:6px}
+    .rahmen{padding:4px;gap:4px}
+    .rahmen .bild{height:44px;font-size:24px}
+    .kiste .titel{margin:6px 0 5px}
+    .luecke-wahl{margin-top:8px}
+  }
+
   @media print{
     body{background:#fff;padding:0}
     header,.schritte,.nav-ende,.lob,.hinweis-papier,#melde-knopf,#melde-huelle{display:none!important}
