@@ -116,7 +116,11 @@
   .wort.fuell{border-bottom-color:#f59e0b;border-bottom-style:dashed}
   .wort.weg{text-decoration:line-through;color:#c4c8d4;background:#f4f6fa}
   .wort .satzz{color:var(--muted)}
-  .kuerzen .nav{margin-top:14px}
+  /* Die beiden Knoepfe muessen schrumpfen duerfen - "Alle zurueck" ist
+     sonst unschrumpfbar breit und schob auf Pauls iPhone beide 8 px aus
+     dem Kasten heraus. */
+  .kuerzen .nav{margin-top:14px;flex-wrap:wrap}
+  .kuerzen .nav .los{flex:1 1 150px;width:auto;min-width:0;padding:16px 12px;font-size:18px}
 
   /* Drei Worte */
   .drei{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
