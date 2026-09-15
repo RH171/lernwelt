@@ -366,16 +366,27 @@
 
   function istWort(t){ return /[0-9A-Za-zÀ-ɏ]/.test(String(t || "")); }
 
+  // Nicht jeder Punkt ist ein Satzende. In Pauls Schweiz-Text stand
+  // "ca. 600.000 bis 700.000 Liter" - daraus wurden sechs Saetze, und beim
+  // Zusammenbauen stand hinterher "600. 000" da. Solche Punkte werden vor
+  // dem Trennen weggesperrt und danach zurueckgeholt.
+  var PUNKT_WEG = "\u0001";
+  function punktZurueck(t){ return String(t).split(PUNKT_WEG).join("."); }
+
   // Text -> Saetze -> Woerter. Satzzeichen bleiben an ihrem Wort kleben,
   // damit ein weggetipptes Wort sein Komma mitnimmt.
   function zerlegen(text){
-    var roh = String(text || "").match(/[^.!?…]+[.!?…]*/g) || [];
+    var sicher = String(text || "")
+      .replace(/(\d)\./g, "$1" + PUNKT_WEG)                                // 600.000 und "am 3."
+      .replace(/\b([a-zA-ZäöüÄÖÜ])\./g, "$1" + PUNKT_WEG)   // z. B., d. h.
+      .replace(/\b(ca|bzw|usw|evtl|ggf|inkl|Nr|Str|vgl|sog)\./gi, "$1" + PUNKT_WEG);
+    var roh = sicher.match(/[^.!?…]+[.!?…]*/g) || [];
     var saetze = [];
     roh.forEach(function(stueck){
       var teile = [];
       (stueck.match(/\S+/g) || []).forEach(function(t){
         var m = /^(.*?)([.,;:!?…"»«)\]]*)$/.exec(t);
-        var neu = { wort: m[1], schluss: m[2], weg: false };
+        var neu = { wort: punktZurueck(m[1]), schluss: punktZurueck(m[2]), weg: false };
         // Ein Zeichen ohne Wort (Pauls " : ") gehoert ans Wort davor.
         if (!istWort(neu.wort)){
           if (teile.length) teile[teile.length - 1].schluss += neu.wort + neu.schluss;
