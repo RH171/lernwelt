@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ferien-Reporter</title>
+<!--
+  Pauls Hausaufgabe vom 15.09.2026: das Blatt "Meine Ferien" (Schnappschuesse,
+  drei Worte, das Beste, schoenster Tag, ein Ort, "Das ____, das mir passiert
+  ist", "Ich werde nie vergessen"). Denny: "Koenntest du das in seine Lernwelt
+  bauen als Spiel?" - entschieden fuer den Ferien-Reporter.
+
+  WICHTIG: Hier schreibt NIEMAND fuer Paul. Keine KI, kein Vorschlagstext.
+  Der Reporter stellt Fragen, die beim Erinnern helfen, und gibt Werkzeug:
+  Satzanfaenge, Wiewoerter, Vergangenheitsformen. Die Saetze sind Pauls.
+  Am Ende steht sein Text im Aufbau des Blattes - zum Abschreiben aufs
+  Papier oder zum Ausdrucken.
+
+  Speicher: nur Pauls Text, unter "ferien-reporter", und nur beim Blaettern
+  (nicht bei jedem Tastendruck - jede Aenderung ist ein Schreibvorgang im
+  Cloud-Speicher, davon gibt es 1000 am Tag). Fotos werden NICHT gespeichert:
+  Sie bleiben nur, solange die Seite offen ist, und gehen nie ins Netz.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#fff7ed; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+    --farbe:#ea580c; --farbe2:#f97316; --hell:#ffedd5; --gut:#16a34a;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --schreib:"Chalkboard SE","Comic Sans MS","Segoe Print",ui-rounded,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+    background-image:radial-gradient(900px 400px at 90% -10%,rgba(251,146,60,.25),transparent 60%);
+    padding:14px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:900px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .knopf-klein{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:700 15px/1 var(--font);color:var(--ink);cursor:pointer;min-height:44px;text-decoration:none}
+  h1{font:800 24px/1.1 var(--rund);margin:0;flex:1}
+  .karte{background:var(--card);border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 14px 34px rgba(124,45,18,.1);margin-bottom:14px}
+
+  /* ---------- Start ---------- */
+  .start{text-align:center}
+  .start .gross{font-size:62px;line-height:1}
+  .start h2{font:800 28px/1.2 var(--rund);margin:8px 0 6px}
+  .start p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 auto 16px;max-width:560px}
+  .los{display:block;width:100%;border:none;border-radius:18px;background:linear-gradient(150deg,var(--farbe2),var(--farbe));color:#fff;
+    font:800 20px/1.2 var(--rund);padding:18px;min-height:60px;cursor:pointer;box-shadow:0 5px 0 #9a3412;margin-top:10px}
+  .los:active{transform:translateY(3px);box-shadow:0 2px 0 #9a3412}
+  .los.grau{background:#f3f4f6;color:var(--ink);box-shadow:0 4px 0 #d1d5db}
+  input.name{width:100%;max-width:360px;font:700 22px/1.2 var(--schreib);padding:12px 16px;border:2px solid var(--line);border-radius:14px;text-align:center;margin:4px auto 0;display:block}
+
+  /* ---------- Fortschritt ---------- */
+  .schritte{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+  .schritt{flex:1 1 60px;min-width:44px;min-height:44px;border:2px solid var(--line);background:#fff;border-radius:12px;font-size:20px;cursor:pointer;position:relative}
+  .schritt.fertig{border-color:#86efac;background:#f0fdf4}
+  .schritt.fertig::after{content:"✓";position:absolute;right:4px;bottom:1px;font:800 11px/1 var(--font);color:var(--gut)}
+  .schritt.jetzt{border-color:var(--farbe);background:var(--hell)}
+
+  /* ---------- Reporter ---------- */
+  .reporter{display:flex;gap:12px;align-items:flex-start}
+  .reporter .mikro{font-size:46px;line-height:1;flex:none}
+  .blase{background:var(--hell);border-radius:6px 20px 20px 20px;padding:12px 16px;flex:1}
+  .blase .frage{font:800 21px/1.3 var(--rund);margin:0}
+  .blase .denk{color:#9a3412;font-size:15.5px;line-height:1.5;margin:6px 0 0}
+  textarea{width:100%;min-height:150px;margin-top:14px;font:400 21px/1.55 var(--schreib);color:var(--ink);padding:14px 16px;border:2px solid var(--line);
+    border-radius:16px;resize:vertical;outline:none;background:
+    repeating-linear-gradient(transparent,transparent 31.5px,#eef2ff 31.5px,#eef2ff 32.5px) 0 12px/100% 32.5px local,#fff}
+  textarea:focus{border-color:var(--farbe)}
+  textarea.klein{min-height:96px}
+  .zeile{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .zaehler{color:var(--muted);font-weight:700;font-size:15px;flex:1;min-width:160px}
+  .zaehler b{color:var(--gut)}
+  .nav{display:flex;gap:10px;margin-top:12px}
+  .nav .los{margin-top:0}
+  .nav .zurueck{flex:0 0 auto;width:auto;padding:18px 20px}
+
+  .helfer{margin-top:14px}
+  .helfer summary{cursor:pointer;font:800 16px/1.2 var(--rund);padding:10px 0;min-height:44px;list-style:none;color:#9a3412}
+  .helfer summary::-webkit-details-marker{display:none}
+  .helfer summary::before{content:"🧰 "}
+  .kiste{margin:4px 0 12px}
+  .kiste .titel{font:700 13px/1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 7px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;min-height:44px;font:700 16px/1.2 var(--font);color:var(--ink);cursor:pointer}
+  .chip:active{transform:scale(.96)}
+  .chip.an{border-color:var(--farbe);background:var(--hell)}
+  .tipp{background:#eff6ff;border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.5;color:#1e3a8a;margin-top:8px}
+
+  /* ---------- Kuerzer machen ----------
+     Pauls Wunsch vom 15.09.2026 (Meldung st3sqbq8tc). Er tippt seine eigenen
+     Woerter weg - es wird ihm nichts umgeschrieben, siehe Kopf der Datei. */
+  .kurz-knopf{flex:0 0 auto;border:2px solid var(--line);background:#fff;border-radius:14px;
+    padding:10px 14px;min-height:44px;font:700 15px/1.2 var(--font);color:var(--ink);cursor:pointer}
+  .kurz-knopf:active{transform:scale(.97)}
+  .kuerzen{margin-top:14px;border:2px dashed var(--farbe);border-radius:18px;padding:14px 16px;background:#fff}
+  .kuerzen h3{margin:0;font:800 20px/1.2 var(--rund)}
+  .kuerzen .hinweis{margin:6px 0 12px;color:#9a3412;font-size:15px;line-height:1.5}
+  .fuell-bsp{border-bottom:2px dashed #f59e0b}
+  .kuerzen .ziel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .kuerzen .ziel .titel{font:700 13px/1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0}
+  .stand{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#fef3c7;color:#8a5a12;font:800 18px/1.35 var(--rund)}
+  .stand.geschafft{background:#f0fdf4;color:#166534}
+  .satzkasten{border-top:2px solid var(--line);padding-top:8px;margin-bottom:10px}
+  .satzkopf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .satzkopf .nr{flex:1;min-width:120px;font:700 13.5px/1.3 var(--font);color:var(--muted)}
+  .satzkopf .chip{font-size:14.5px;padding:8px 10px}
+  .wortreihe{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .wort{border:2px solid transparent;background:#fff;border-radius:10px;padding:6px 8px;cursor:pointer;
+    font:400 20px/1.3 var(--schreib);color:var(--ink)}
+  .wort:hover{border-color:var(--line)}
+  .wort.fuell{border-bottom-color:#f59e0b;border-bottom-style:dashed}
+  .wort.weg{text-decoration:line-through;color:#c4c8d4;background:#f4f6fa}
+  .wort .satzz{color:var(--muted)}
+  .kuerzen .nav{margin-top:14px}
+
+  /* Drei Worte */
+  .drei{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .drei input{width:100%;font:700 22px/1.2 var(--schreib);padding:12px;border:2px solid var(--line);border-radius:14px;text-align:center;outline:none;min-height:54px}
+  .drei input:focus{border-color:var(--farbe)}
+  @media (max-width:560px){ .drei{grid-template-columns:1fr} }
+
+  /* Schnappschuesse */
+  .rahmen-reihe{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  @media (max-width:700px){ .rahmen-reihe{grid-template-columns:repeat(2,1fr)} }
+  .rahmen{border:3px solid #111827;border-radius:10px;background:#fff;padding:8px;display:flex;flex-direction:column;gap:6px;position:relative}
+  .rahmen.aktiv{border-color:var(--farbe);box-shadow:0 0 0 3px var(--hell)}
+  .rahmen .bild{height:92px;border-radius:8px;background:#f9fafb;display:grid;place-items:center;font-size:48px;overflow:hidden;cursor:pointer;border:none;width:100%}
+  .rahmen .bild img{width:100%;height:100%;object-fit:cover}
+  .rahmen input{width:100%;font:400 16px/1.3 var(--schreib);border:none;border-bottom:2px dashed var(--line);padding:4px 2px;outline:none;min-height:36px}
+  .sticker{font-size:30px;min-width:52px}
+  .foto-knopf{border:2px dashed #fdba74;background:#fff7ed}
+
+  /* Das ___, das mir passiert ist */
+  .luecke-wahl{margin-top:12px}
+
+  /* Pauls iPhone (375 x 640): alles Wichtige ohne Scrollen */
+  @media (max-width:520px){
+    body{padding:10px}
+    h1{font-size:20px}
+    .karte{padding:14px}
+    .reporter{gap:8px}
+    .reporter .mikro{font-size:32px}
+    .blase{padding:10px 12px}
+    .blase .frage{font-size:18px}
+    .blase .denk{font-size:14px;line-height:1.4}
+    .schritt{font-size:17px;flex:1 1 40px}
+    .rahmen{padding:5px}
+    .rahmen .bild{height:58px;font-size:34px}
+    .rahmen input{font-size:15px;min-height:32px}
+    .rahmen-reihe{gap:8px;margin-top:10px}
+    #luecke{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+    #luecke .chip{flex:none}
+    textarea{min-height:120px;font-size:19px;margin-top:10px}
+    textarea.klein{min-height:84px}
+    .nav .los{padding:14px;min-height:54px}
+    .kuerzen{padding:12px}
+    .wort{font-size:18px;padding:5px 7px}
+    .stand{font-size:16px}
+  }
+
+  /* ---------- Fertiges Blatt ---------- */
+  .blatt{background:#fff;border:2px solid #111827;border-radius:6px;padding:16px;font-family:var(--schreib);color:#111827;max-width:780px;margin:0 auto}
+  .blatt .kopf{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:2px solid #111827;padding-bottom:10px}
+  .blatt .titel{font:900 34px/1 var(--rund);letter-spacing:.04em;-webkit-text-stroke:1px #111827;flex:1}
+  .blatt .namebox{border:2px solid #111827;padding:6px 12px;font-size:18px}
+  .blatt .film{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;padding:14px 8px;border-radius:6px;
+    background:repeating-linear-gradient(90deg,#111827 0 14px,#fff 14px 26px) top/100% 10px no-repeat,repeating-linear-gradient(90deg,#111827 0 14px,#fff 14px 26px) bottom/100% 10px no-repeat,#374151}
+  .blatt .foto{background:#fff;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;text-align:center;font-size:14px;line-height:1.3}
+  .blatt .foto .e{font-size:44px;line-height:1.1}
+  .blatt .foto img{width:100%;height:80px;object-fit:cover}
+  .blatt .raster{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+  .blatt .box{border:2px solid #111827;padding:10px 12px;min-height:80px;white-space:pre-wrap;font-size:17px;line-height:1.5}
+  .blatt .box .ueber{display:block;font:600 14px/1.3 var(--font);color:#374151;margin-bottom:4px}
+  .blatt .voll{grid-column:1/-1}
+  .blatt .leer{color:#9ca3af;font-style:italic}
+  @media (max-width:620px){ .blatt .raster{grid-template-columns:1fr} .blatt .film{grid-template-columns:repeat(2,1fr)} .blatt .titel{font-size:26px} }
+  .lob{text-align:center;font:800 20px/1.4 var(--rund);color:#9a3412;margin:0 0 12px}
+  .hinweis-papier{background:#fef3c7;border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.5;margin:12px auto 0;max-width:780px}
+
+  @media print{
+    body{background:#fff;padding:0}
+    header,.schritte,.nav-ende,.lob,.hinweis-papier,#melde-knopf,#melde-huelle{display:none!important}
+    .karte{box-shadow:none;padding:0;margin:0}
+    .blatt{border:none;max-width:none}
+    .blatt .raster{grid-template-columns:2fr 1fr!important}
+    .blatt .film{grid-template-columns:repeat(4,1fr)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{size:A4;margin:12mm}
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <button class="knopf-klein" id="zurueck">‹ Lernwelt</button>
+    <h1>🎙️ Ferien-Reporter</h1>
+    <button class="knopf-klein verborgen" id="zum-blatt">📄 Mein Blatt</button>
+  </header>
+
+  <!-- Start -->
+  <section class="karte start" id="sicht-start">
+    <div class="gross">🎙️📸</div>
+    <h2>Achtung, Interview!</h2>
+    <p>Ich bin der Ferien-Reporter und will alles über deine Ferien wissen. Ich stelle Fragen, du schreibst die Antworten – in deinen eigenen Worten. Am Ende hast du dein Ferien-Blatt fertig zum Abschreiben.</p>
+    <label for="name" style="font-weight:700;color:#6b7280">Wie heißt du?</label>
+    <input class="name" id="name" maxlength="30" autocomplete="off" placeholder="Dein Name">
+    <button class="los" id="los">Los geht's!</button>
+    <p id="weiter-hinweis" class="verborgen" style="margin-top:12px"></p>
+  </section>
+
+  <!-- Interview -->
+  <section class="verborgen" id="sicht-interview">
+    <div class="schritte" id="schritte"></div>
+    <div class="karte" id="station"></div>
+  </section>
+
+  <!-- Fertiges Blatt -->
+  <section class="verborgen" id="sicht-blatt">
+    <p class="lob" id="lob"></p>
+    <div class="karte"><div class="blatt" id="blatt"></div></div>
+    <div class="hinweis-papier">✏️ <b>Tipp:</b> Schreib deine Sätze jetzt mit der Hand aufs Blatt – schön ordentlich. Wenn du beim Abschreiben noch eine bessere Idee hast, darfst du sie natürlich nehmen!</div>
+    <div class="nav nav-ende" style="max-width:780px;margin:14px auto 0">
+      <button class="los grau zurueck" id="bearbeiten">✏️ Weiter bearbeiten</button>
+      <button class="los" id="drucken">🖨️ Drucken</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(t){ return String(t == null ? "" : t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  /* ---------- Zurueck in Pauls Lernwelt ---------- */
+  $("zurueck").addEventListener("click", function(){
+    var hub = "index.html";
+    try { var s = localStorage.getItem("hub-url"); if (s) hub = s; } catch(e){}
+    speichern();
+    location.href = hub;
+  });
+
+  /* ---------- Speicher ---------- */
+  var SCHLUESSEL = "ferien-reporter";
+  var leer = { name: "", bilder: [{e:"",t:""},{e:"",t:""},{e:"",t:""},{e:"",t:""}], worte: ["","",""],
+               bestes: "", tag: "", ort: "", passiertWort: "", passiert: "", nie: "", station: 0, kuerzenZiel: 20 };
+  var d;
+  try { d = JSON.parse(localStorage.getItem(SCHLUESSEL) || "null"); } catch(e){ d = null; }
+  if (!d || typeof d !== "object") d = JSON.parse(JSON.stringify(leer));
+  Object.keys(leer).forEach(function(k){ if (d[k] === undefined) d[k] = JSON.parse(JSON.stringify(leer[k])); });
+  var fotos = [null, null, null, null];     // nur im Speicher dieser Seite - nie gespeichert, nie gesendet
+  var zuletztGespeichert = JSON.stringify(d);
+
+  // Nur schreiben, wenn sich wirklich etwas geaendert hat - jede Aenderung ist
+  // ein Schreibvorgang in der Cloud.
+  function speichern(){
+    var text = JSON.stringify(d);
+    if (text === zuletztGespeichert) return;
+    try { localStorage.setItem(SCHLUESSEL, text); zuletztGespeichert = text; } catch(e){}
+  }
+  window.addEventListener("pagehide", speichern);
+  document.addEventListener("visibilitychange", function(){ if (document.hidden) speichern(); });
+
+  /* ---------- Werkzeug ---------- */
+  var SATZANFAENGE = {
+    zeit: ["Am ersten Tag", "Am Morgen", "Mittags", "Am Abend", "Danach", "Später", "Plötzlich", "Zum Schluss"],
+    gefuehl: ["Am meisten gefreut habe ich mich, als", "Das war so", "Ich fand es toll, dass", "Am liebsten"],
+    ort: ["Wir waren in", "Dort gab es", "Besonders gefallen hat mir", "Man konnte dort"]
+  };
+  var WIEWOERTER = ["aufregend", "lustig", "spannend", "gemütlich", "sonnig", "heiß", "nass", "wild", "entspannt", "abenteuerlich",
+                    "lecker", "laut", "ruhig", "riesig", "wunderschön", "verrückt", "cool", "gruselig", "sportlich", "fröhlich"];
+  var VERGANGENHEIT = ["ich bin gefahren", "wir sind geschwommen", "ich habe gespielt", "wir haben gebaut", "ich habe gesehen",
+                       "wir sind gewandert", "ich habe gegessen", "wir haben besucht", "ich bin geklettert", "wir haben gelacht"];
+
+  // Die Stationen folgen dem Blatt von oben nach unten.
+  var STATIONEN = [
+    { id: "bilder", icon: "📸", frage: "Welche Schnappschüsse gehören auf deinen Filmstreifen?",
+      denk: "Denk an vier Momente: Wo warst du? Mit wem? Was hast du gegessen, gesehen, gespielt? Such dir für jeden ein Bild aus und schreib dazu, was es zeigt." },
+    { id: "worte", icon: "3️⃣", frage: "Beschreib deine Ferien in drei Worten!",
+      denk: "Nur drei Wörter – wie waren deine Ferien? Wiewörter passen super: aufregend, gemütlich, sonnig …" },
+    { id: "bestes", icon: "⭐", frage: "Was war das Beste in deinen Ferien?", ueber: "Das Beste in den Ferien war …",
+      denk: "Was fällt dir als Erstes ein? Warum war es so toll? Erzähl es in ein oder zwei Sätzen.", ziel: 2, anfang: "gefuehl" },
+    { id: "tag", icon: "🌞", frage: "Erzähl mir von deinem schönsten Tag!", ueber: "Mein schönster Tag in den Ferien:",
+      denk: "Wie hat der Tag angefangen? Was ist dann passiert? Wer war dabei? Wie hat er aufgehört? Das ist das größte Feld – hier darfst du richtig erzählen.", ziel: 4, anfang: "zeit", gross: true },
+    { id: "ort", icon: "📍", frage: "Wo warst du in den Ferien?", ueber: "Ein Ort, an dem ich in den Ferien war …",
+      denk: "Das kann weit weg sein oder ganz nah – ein Schwimmbad, bei Oma, ein Spielplatz, eine Stadt. Wie sah es dort aus? Was hast du dort gemacht?", ziel: 2, anfang: "ort" },
+    { id: "passiert", icon: "😂", frage: "Was ist dir Besonderes passiert?", ueber: "Das ____, das mir in den Ferien passiert ist …",
+      denk: "Such dir zuerst ein Wort für die Lücke aus. Dann erzähl, was passiert ist.", ziel: 2, anfang: "zeit" },
+    { id: "nie", icon: "💭", frage: "Was wirst du nie vergessen?", ueber: "Ich werde nie vergessen, …",
+      denk: "Ein Moment, an den du noch denkst, wenn du groß bist. Der Satz fängt schon an – schreib ihn weiter: „…, dass …“ oder „…, wie …“.", ziel: 1, anfang: "gefuehl" }
+  ];
+  var LUECKEN_WOERTER = ["Lustigste", "Spannendste", "Schönste", "Verrückteste", "Aufregendste", "Peinlichste", "Gruseligste", "Ekligste"];
+  var STICKER = ["🏖️","🏊","⛺","🏔️","🚗","✈️","🚂","🚲","⚽","🎢","🍦","🍕","🐶","🐴","🌞","🌧️","🏰","🎡","🎣","🧗","🎮","📚","👵","🎂","🌳","🦆","🏕️","🛶"];
+
+  /* ---------- Start ---------- */
+  $("name").value = d.name || "";
+  var begonnen = d.bestes || d.tag || d.ort || d.passiert || d.nie || d.worte.some(Boolean) || d.bilder.some(function(b){ return b.e || b.t; });
+  if (begonnen){
+    $("los").textContent = "Weiter geht's!";
+    $("weiter-hinweis").textContent = "Du hast schon angefangen – ich habe alles aufgehoben.";
+    $("weiter-hinweis").classList.remove("verborgen");
+  }
+  $("los").addEventListener("click", function(){
+    d.name = $("name").value.trim().slice(0, 30);
+    speichern();
+    zeige("interview");
+    stationZeigen(Math.min(d.station || 0, STATIONEN.length - 1));
+  });
+  $("name").addEventListener("keydown", function(e){ if (e.key === "Enter") $("los").click(); });
+
+  function zeige(n){
+    ["start", "interview", "blatt"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    $("zum-blatt").classList.toggle("verborgen", n !== "interview");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Stationen ---------- */
+  function fertig(st){
+    if (st.id === "bilder") return d.bilder.filter(function(b){ return b.e || b.t; }).length >= 2;
+    if (st.id === "worte") return d.worte.filter(function(w){ return w.trim(); }).length === 3;
+    if (st.id === "passiert") return !!(d.passiertWort && d.passiert.trim());
+    return !!String(d[st.id] || "").trim();
+  }
+
+  function schritteMalen(nr){
+    $("schritte").innerHTML = STATIONEN.map(function(st, i){
+      return '<button class="schritt' + (fertig(st) ? " fertig" : "") + (i === nr ? " jetzt" : "") + '" data-i="' + i + '" aria-label="' + esc(st.frage) + '">' + st.icon + '</button>';
+    }).join("");
+    Array.prototype.forEach.call($("schritte").children, function(b){
+      b.addEventListener("click", function(){ uebernehmen(); stationZeigen(+b.getAttribute("data-i")); });
+    });
+  }
+
+  // Ein Doppelpunkt allein ist kein Wort. Sonst stimmt "20 Woerter" nicht,
+  // und genau darum geht es beim Kuerzen.
+  function woerter(t){
+    return (String(t || "").match(/\S+/g) || []).filter(function(w){ return /[0-9A-Za-z\u00C0-\u024F]/.test(w); }).length;
+  }
+  function saetze(t){ return (String(t || "").match(/[.!?](\s|$)/g) || []).length || (String(t || "").trim() ? 1 : 0); }
+
+  var aktuell = 0, aktivesFeld = null;
+
+  /* ---------- Kuerzer machen ----------
+     Paul am 15.09.2026, Meldung st3sqbq8tc: "ich will das du mir denn satz
+     kuerzer in 20 woerter umwandelst".
+
+     Gebaut als WERKZEUG, nicht als Schreiber. Oben in dieser Datei steht:
+     hier schreibt niemand fuer Paul. Ein Knopf, der seinen Text von einer KI
+     neu formulieren laesst, waere genau das - und ausgerechnet beim Kuerzen:
+     "Texte ueberarbeiten, straffen" ist der Lernstoff der 4. Klasse, nicht
+     das Drumherum. Also zerlegt das Werkzeug seinen Text in Woerter, zeigt
+     ihm, wie viele zu viel sind, und markiert die Fuellwoerter, die fast
+     immer gehen koennen. Wegtippen muss er selbst. Was uebrig bleibt, sind
+     ausschliesslich seine eigenen Woerter in seiner eigenen Reihenfolge -
+     nur weniger davon. */
+  var FUELLWOERTER = ["dann", "danach", "auch", "so", "ganz", "sehr", "halt", "eigentlich",
+                      "wirklich", "irgendwie", "total", "mal", "noch", "schon", "immer",
+                      "echt", "voll", "eben", "gefühlt", "quasi", "etwa", "ungefähr", "ca."];
+  var ZIELE = [20, 50, 100];
+  var kurz = null;          // { saetze: [...], ziel: 20 } solange der Kasten offen ist
+  var langerText = null;    // der Text von vor dem Kuerzen, fuer "doch wieder lang"
+
+  function istWort(t){ return /[0-9A-Za-zÀ-ɏ]/.test(String(t || "")); }
+
+  // Nicht jeder Punkt ist ein Satzende. In Pauls Schweiz-Text stand
+  // "ca. 600.000 bis 700.000 Liter" - daraus wurden sechs Saetze, und beim
+  // Zusammenbauen stand hinterher "600. 000" da. Solche Punkte werden vor
+  // dem Trennen weggesperrt und danach zurueckgeholt.
+  var PUNKT_WEG = "\u0001";
+  function punktZurueck(t){ return String(t).split(PUNKT_WEG).join("."); }
+
+  // Text -> Saetze -> Woerter. Satzzeichen bleiben an ihrem Wort kleben,
+  // damit ein weggetipptes Wort sein Komma mitnimmt.
+  function zerlegen(text){
+    var sicher = String(text || "")
+      .replace(/(\d)\./g, "$1" + PUNKT_WEG)                                // 600.000 und "am 3."
+      .replace(/\b([a-zA-ZäöüÄÖÜ])\./g, "$1" + PUNKT_WEG)   // z. B., d. h.
+      .replace(/\b(ca|bzw|usw|evtl|ggf|inkl|Nr|Str|vgl|sog)\./gi, "$1" + PUNKT_WEG);
+    var roh = sicher.match(/[^.!?…]+[.!?…]*/g) || [];
+    var saetze = [];
+    roh.forEach(function(stueck){
+      var teile = [];
+      (stueck.match(/\S+/g) || []).forEach(function(t){
+        var m = /^(.*?)([.,;:!?…"»«)\]]*)$/.exec(t);
+        var neu = { wort: punktZurueck(m[1]), schluss: punktZurueck(m[2]), weg: false };
+        // Ein Zeichen ohne Wort (Pauls " : ") gehoert ans Wort davor.
+        if (!istWort(neu.wort)){
+          if (teile.length) teile[teile.length - 1].schluss += neu.wort + neu.schluss;
+          return;
+        }
+        teile.push(neu);
+      });
+      if (teile.length) saetze.push({ teile: teile, gross: /^[A-ZÄÖÜ]/.test(teile[0].wort) });
+    });
+    return saetze;
+  }
+
+  function kurzZaehlen(){
+    var n = 0;
+    kurz.saetze.forEach(function(s){ s.teile.forEach(function(t){ if (!t.weg) n++; }); });
+    return n;
+  }
+
+  // Aus dem, was stehengeblieben ist, wieder einen Text machen.
+  function kurzText(){
+    var raus = [];
+    kurz.saetze.forEach(function(s){
+      var bleibt = s.teile.filter(function(t){ return !t.weg; });
+      if (!bleibt.length) return;
+      // Der Punkt haengt vielleicht an einem Wort, das er weggetippt hat -
+      // dann wird er gerettet. Einen Punkt, den Paul nie geschrieben hat,
+      // setzt das Werkzeug aber nicht dazu: es korrigiert ihn nicht.
+      var ende = (/[.!?…]+$/.exec(s.teile[s.teile.length - 1].schluss) || [""])[0];
+      var satz = bleibt.map(function(t){ return t.wort + t.schluss.replace(/[.!?…]+$/, ""); }).join(" ");
+      satz = satz.replace(/[,;:\s]+$/, "");
+      // Grossschreibung nur zurechtruecken, wenn erst das Wegtippen sie
+      // zerstoert hat - seine eigene Schreibweise wird nicht korrigiert.
+      if (s.gross && /^[a-zäöü]/.test(satz)) satz = satz.charAt(0).toUpperCase() + satz.slice(1);
+      raus.push(satz + ende);
+    });
+    return raus.join(" ");
+  }
+
+  function kurzMalen(){
+    var kasten = $("kuerzen-kasten");
+    if (!kurz || !kasten) return;
+    var da = kurzZaehlen(), zuviel = da - kurz.ziel, geschafft = da > 0 && zuviel <= 0;
+    var h = '<h3>✂️ Kürzer machen</h3>' +
+      '<p class="hinweis">Tipp die Wörter weg, die nicht sein müssen – übrig bleibt dein eigener Text, nur kürzer. ' +
+        'Die <span class="fuell-bsp">gestrichelten</span> kann man fast immer weglassen.</p>' +
+      '<div class="ziel"><p class="titel">Wie kurz?</p><div class="chips">' +
+        ZIELE.map(function(z){ return '<button class="chip' + (z === kurz.ziel ? " an" : "") + '" data-ziel="' + z + '">' + z + ' Wörter</button>'; }).join("") +
+      '</div></div>' +
+      '<p class="stand' + (geschafft ? " geschafft" : "") + '">' +
+        (da === 0 ? "Da bleibt ja nichts übrig – hol dir ein paar Wörter zurück."
+         : geschafft ? "🎉 " + da + " Wörter – dein Ziel von " + kurz.ziel + " ist geschafft!"
+         : da + " Wörter · noch " + zuviel + " zu viel") + '</p>';
+
+    kurz.saetze.forEach(function(s, i){
+      var n = s.teile.filter(function(t){ return !t.weg; }).length;
+      var allesWeg = n === 0;
+      h += '<div class="satzkasten"><div class="satzkopf">' +
+        '<span class="nr">Satz ' + (i + 1) + ' · ' + n + (n === 1 ? " Wort" : " Wörter") + '</span>' +
+        '<button class="chip" data-satz="' + i + '">' + (allesWeg ? "↩ Satz zurückholen" : "✂️ ganzer Satz weg") + '</button>' +
+        '</div><div class="wortreihe">' +
+        s.teile.map(function(t, j){
+          var fuell = FUELLWOERTER.indexOf(t.wort.toLowerCase()) >= 0;
+          return '<button class="wort' + (fuell ? " fuell" : "") + (t.weg ? " weg" : "") + '" data-s="' + i + '" data-t="' + j + '" ' +
+            'aria-pressed="' + (t.weg ? "true" : "false") + '">' + esc(t.wort) +
+            (t.schluss ? '<span class="satzz">' + esc(t.schluss) + '</span>' : "") + '</button>';
+        }).join("") + '</div></div>';
+    });
+
+    h += '<div class="nav"><button class="los grau zurueck" id="kurz-zurueck">↩ Alle zurück</button>' +
+         '<button class="los" id="kurz-uebernehmen">✅ So übernehmen</button></div>';
+    kasten.innerHTML = h;
+  }
+
+  function kurzOeffnen(){
+    var ta = $("text");
+    if (!ta) return;
+    kurz = { saetze: zerlegen(ta.value), ziel: d.kuerzenZiel || 20 };
+    $("kuerzen-kasten").classList.remove("verborgen");
+    kurzMalen();
+    try { $("kuerzen-kasten").scrollIntoView({ behavior: "smooth", block: "start" }); } catch(e){}
+  }
+
+  function kurzSchliessen(){
+    kurz = null;
+    var kasten = $("kuerzen-kasten");
+    if (kasten){ kasten.innerHTML = ""; kasten.classList.add("verborgen"); }
+  }
+
+  function stationZeigen(nr){
+    aktuell = nr; d.station = nr;
+    kurz = null; langerText = null;      // gehoert zum Text der alten Station
+    var st = STATIONEN[nr];
+    schritteMalen(nr);
+    var h = '<div class="reporter"><div class="mikro">🎙️</div><div class="blase"><p class="frage">' + esc(st.frage) + '</p><p class="denk">' + esc(st.denk) + '</p></div></div>';
+
+    if (st.id === "bilder"){
+      h += '<div class="rahmen-reihe">' + d.bilder.map(function(b, i){
+        var inhalt = fotos[i] ? '<img src="' + fotos[i] + '" alt="">' : (b.e || '<span style="font-size:15px;color:#9ca3af;font-family:var(--font)">Bild wählen</span>');
+        return '<div class="rahmen" data-i="' + i + '"><button class="bild" data-i="' + i + '" aria-label="Bild ' + (i + 1) + ' auswählen">' + inhalt + '</button>' +
+          '<input data-i="' + i + '" maxlength="40" placeholder="Was zeigt das Bild?" value="' + esc(b.t) + '"></div>';
+      }).join("") + '</div>' + '@@NAV@@' +
+      '<div class="kiste"><p class="titel">Bild für <span id="rahmen-nr">Rahmen 1</span></p><div class="chips" id="sticker"></div></div>';
+    } else if (st.id === "worte"){
+      h += '<div class="drei">' + d.worte.map(function(w, i){ return '<input data-i="' + i + '" maxlength="20" placeholder="' + (i + 1) + '. Wort" value="' + esc(w) + '">'; }).join("") + '</div>';
+    } else {
+      if (st.id === "passiert"){
+        h += '<div class="kiste luecke-wahl"><p class="titel">Das … , das mir in den Ferien passiert ist</p><div class="chips" id="luecke">' +
+          LUECKEN_WOERTER.map(function(w){ return '<button class="chip' + (d.passiertWort === w ? " an" : "") + '" data-w="' + w + '">' + w + '</button>'; }).join("") + '</div></div>';
+      }
+      var start = st.id === "nie" ? "" : "";
+      h += '<textarea id="text" class="' + (st.gross ? "" : "klein") + '" placeholder="' + esc(st.ueber) + '" spellcheck="true" lang="de">' + esc(d[st.id] || start) + '</textarea>' +
+        '<div class="zeile"><span class="zaehler" id="zaehler"></span>' +
+          '<button class="kurz-knopf verborgen" id="kuerzen">✂️ Kürzer machen</button>' +
+          '<button class="kurz-knopf verborgen" id="lang-zurueck">↩ doch wieder lang</button></div>';
+    }
+
+    // Die Knoepfe stehen direkt unter dem Schreibfeld, das Werkzeug darunter -
+    // auf Pauls iPhone lag "Naechste Frage" sonst eine ganze Seite tief.
+    var nav = '<div class="nav">' + (nr > 0 ? '<button class="los grau zurueck" id="zurueck-station">‹</button>' : "") +
+         '<button class="los" id="weiter">' + (nr < STATIONEN.length - 1 ? "Nächste Frage ›" : "📄 Mein Blatt ansehen") + '</button></div>';
+    if (h.indexOf("@@NAV@@") >= 0) h = h.replace("@@NAV@@", nav); else h += nav;
+    if (st.ziel) h += '<div class="kuerzen verborgen" id="kuerzen-kasten"></div>';
+
+    if (st.ziel){
+      h += '<details class="helfer"' + (window.innerWidth > 800 ? " open" : "") + '><summary>Werkzeugkiste</summary>' +
+        '<div class="kiste"><p class="titel">Satzanfänge – tipp drauf</p><div class="chips" data-art="anfang">' +
+          SATZANFAENGE[st.anfang].map(function(s){ return '<button class="chip" data-einfuegen="' + esc(s) + ' ">' + esc(s) + ' …</button>'; }).join("") + '</div></div>' +
+        '<div class="kiste"><p class="titel">Wiewörter</p><div class="chips">' +
+          WIEWOERTER.map(function(w){ return '<button class="chip" data-einfuegen="' + w + ' ">' + w + '</button>'; }).join("") + '</div></div>' +
+        '<div class="kiste"><p class="titel">So klingt Vergangenheit</p><div class="chips">' +
+          VERGANGENHEIT.map(function(w){ return '<button class="chip" data-einfuegen="' + w + ' ">' + w + '</button>'; }).join("") + '</div>' +
+          '<div class="tipp">Ferien sind vorbei – deshalb erzählst du in der <b>Vergangenheit</b>: „Wir <b>sind</b> ans Meer <b>gefahren</b>“, nicht „Wir fahren ans Meer“. Und fang nicht jeden Satz mit „Dann“ an!</div></div>' +
+        '</details>';
+    } else if (st.id === "worte"){
+      h += '<div class="kiste"><p class="titel">Ideen – tipp drauf</p><div class="chips">' +
+        WIEWOERTER.map(function(w){ return '<button class="chip" data-wort="' + w + '">' + w + '</button>'; }).join("") + '</div></div>';
+    }
+
+    $("station").innerHTML = h;
+    anbinden(st);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  var aktiverRahmen = 0;
+  function anbinden(st){
+    if ($("weiter")) $("weiter").addEventListener("click", function(){
+      uebernehmen();
+      if (aktuell < STATIONEN.length - 1) stationZeigen(aktuell + 1); else blattZeigen();
+    });
+    if ($("zurueck-station")) $("zurueck-station").addEventListener("click", function(){ uebernehmen(); stationZeigen(aktuell - 1); });
+
+    if (st.id === "bilder"){
+      function stickerMalen(){
+        $("rahmen-nr").textContent = "Rahmen " + (aktiverRahmen + 1);
+        Array.prototype.forEach.call(document.querySelectorAll(".rahmen"), function(r, i){ r.classList.toggle("aktiv", i === aktiverRahmen); });
+        $("sticker").innerHTML = STICKER.map(function(s){ return '<button class="chip sticker' + (d.bilder[aktiverRahmen].e === s && !fotos[aktiverRahmen] ? " an" : "") + '" data-s="' + s + '">' + s + '</button>'; }).join("") +
+          '<button class="chip foto-knopf" id="foto">📷 Eigenes Foto</button>';
+        Array.prototype.forEach.call($("sticker").querySelectorAll("[data-s]"), function(b){
+          b.addEventListener("click", function(){
+            d.bilder[aktiverRahmen].e = b.getAttribute("data-s"); fotos[aktiverRahmen] = null;
+            document.querySelector('.bild[data-i="' + aktiverRahmen + '"]').textContent = d.bilder[aktiverRahmen].e;
+            stickerMalen(); schritteMalen(aktuell);
+          });
+        });
+        $("foto").addEventListener("click", function(){ $("datei").click(); });
+      }
+      var datei = document.createElement("input");
+      datei.type = "file"; datei.accept = "image/*"; datei.id = "datei"; datei.className = "verborgen";
+      $("station").appendChild(datei);
+      datei.addEventListener("change", function(){
+        var f = datei.files && datei.files[0]; if (!f) return;
+        // Verkleinern, nur fuer die Anzeige - das Foto bleibt in dieser Seite und wird nirgends gespeichert.
+        var bild = new Image(), url = URL.createObjectURL(f);
+        bild.onload = function(){
+          var c = document.createElement("canvas"), s = Math.min(1, 480 / Math.max(bild.width, bild.height));
+          c.width = Math.round(bild.width * s); c.height = Math.round(bild.height * s);
+          c.getContext("2d").drawImage(bild, 0, 0, c.width, c.height);
+          fotos[aktiverRahmen] = c.toDataURL("image/jpeg", .8);
+          URL.revokeObjectURL(url);
+          document.querySelector('.bild[data-i="' + aktiverRahmen + '"]').innerHTML = '<img src="' + fotos[aktiverRahmen] + '" alt="">';
+          if (!d.bilder[aktiverRahmen].e) d.bilder[aktiverRahmen].e = "📷";
+          stickerMalen(); schritteMalen(aktuell);
+        };
+        bild.src = url; datei.value = "";
+      });
+      Array.prototype.forEach.call(document.querySelectorAll(".rahmen .bild"), function(b){
+        b.addEventListener("click", function(){ aktiverRahmen = +b.getAttribute("data-i"); stickerMalen(); });
+      });
+      Array.prototype.forEach.call(document.querySelectorAll(".rahmen input"), function(inp){
+        inp.addEventListener("focus", function(){ aktiverRahmen = +inp.getAttribute("data-i"); stickerMalen(); });
+        inp.addEventListener("input", function(){ d.bilder[+inp.getAttribute("data-i")].t = inp.value; });
+        inp.addEventListener("blur", function(){ schritteMalen(aktuell); });
+      });
+      stickerMalen();
+      return;
+    }
+
+    if (st.id === "worte"){
+      var felder = document.querySelectorAll(".drei input");
+      Array.prototype.forEach.call(felder, function(inp){
+        inp.addEventListener("input", function(){ d.worte[+inp.getAttribute("data-i")] = inp.value.trim().split(/\s+/)[0] || ""; });
+        inp.addEventListener("blur", function(){ inp.value = d.worte[+inp.getAttribute("data-i")]; schritteMalen(aktuell); });
+      });
+      Array.prototype.forEach.call(document.querySelectorAll("[data-wort]"), function(b){
+        b.addEventListener("click", function(){
+          var w = b.getAttribute("data-wort");
+          if (d.worte.indexOf(w) >= 0) return;
+          var i = d.worte.findIndex(function(x){ return !x.trim(); });
+          if (i < 0) i = 2;
+          d.worte[i] = w; felder[i].value = w; schritteMalen(aktuell);
+        });
+      });
+      return;
+    }
+
+    var ta = $("text");
+    aktivesFeld = ta;
+    function zaehlen(){
+      var n = woerter(ta.value), s = saetze(ta.value);
+      $("zaehler").innerHTML = n === 0 ? "Schreib los – es gibt kein Falsch." :
+        n + (n === 1 ? " Wort" : " Wörter") + " · " + s + (s === 1 ? " Satz" : " Sätze") +
+        (s >= st.ziel ? " · <b>Super, das reicht fürs Blatt!</b>" : "");
+      // Erst ab ein paar Woertern gibt es ueberhaupt etwas zu kuerzen.
+      $("kuerzen").classList.toggle("verborgen", n < 8);
+      $("lang-zurueck").classList.toggle("verborgen", !langerText);
+      d[st.id] = ta.value;
+    }
+    // Tippt er weiter, passt der offene Kuerzen-Kasten nicht mehr zum Text.
+    ta.addEventListener("input", function(){ if (kurz) kurzSchliessen(); zaehlen(); });
+    ta.addEventListener("blur", function(){ schritteMalen(aktuell); });
+    zaehlen();
+
+    $("kuerzen").addEventListener("click", function(){ if (kurz) kurzSchliessen(); else kurzOeffnen(); });
+    $("lang-zurueck").addEventListener("click", function(){
+      if (!langerText) return;
+      ta.value = langerText; langerText = null; kurzSchliessen(); zaehlen();
+    });
+    $("kuerzen-kasten").addEventListener("click", function(e){
+      var b = e.target && e.target.closest ? e.target.closest("button") : null;
+      if (!b || !kurz) return;
+      if (b.hasAttribute("data-ziel")){
+        kurz.ziel = +b.getAttribute("data-ziel"); d.kuerzenZiel = kurz.ziel; speichern(); kurzMalen(); return;
+      }
+      if (b.hasAttribute("data-satz")){
+        var satz = kurz.saetze[+b.getAttribute("data-satz")];
+        var allesWeg = satz.teile.every(function(t){ return t.weg; });
+        satz.teile.forEach(function(t){ t.weg = !allesWeg; });
+        kurzMalen(); return;
+      }
+      if (b.hasAttribute("data-t")){
+        var teil = kurz.saetze[+b.getAttribute("data-s")].teile[+b.getAttribute("data-t")];
+        teil.weg = !teil.weg; kurzMalen(); return;
+      }
+      if (b.id === "kurz-zurueck"){
+        kurz.saetze.forEach(function(x){ x.teile.forEach(function(t){ t.weg = false; }); });
+        kurzMalen(); return;
+      }
+      if (b.id === "kurz-uebernehmen"){
+        var neu = kurzText();
+        if (!neu.trim()) return;            // alles weggetippt - dann lieber gar nichts tun
+        var vorher = ta.value;
+        langerText = vorher; ta.value = neu;
+        kurzSchliessen(); zaehlen();
+        $("zaehler").innerHTML = "✂️ Aus " + woerter(vorher) + " Wörtern sind <b>" + woerter(neu) + "</b> geworden – alles deine.";
+        try { ta.scrollIntoView({ behavior: "smooth", block: "center" }); } catch(e){}
+        return;
+      }
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-einfuegen]"), function(b){
+      // mousedown statt click: sonst verliert das Textfeld vorher den Fokus und die Einfuegestelle
+      b.addEventListener("pointerdown", function(e){ e.preventDefault(); });
+      b.addEventListener("click", function(){
+        var t = b.getAttribute("data-einfuegen");
+        var a = ta.selectionStart != null ? ta.selectionStart : ta.value.length, z = ta.selectionEnd != null ? ta.selectionEnd : a;
+        var vor = ta.value.slice(0, a);
+        if (vor && !/\s$/.test(vor)) t = " " + t;
+        ta.value = vor + t + ta.value.slice(z);
+        var pos = (vor + t).length;
+        ta.focus(); try { ta.setSelectionRange(pos, pos); } catch(e){}
+        zaehlen();
+      });
+    });
+    if (st.id === "passiert"){
+      Array.prototype.forEach.call($("luecke").children, function(b){
+        b.addEventListener("click", function(){
+          d.passiertWort = b.getAttribute("data-w");
+          Array.prototype.forEach.call($("luecke").children, function(c){ c.classList.toggle("an", c === b); });
+          ta.placeholder = "Das " + d.passiertWort + ", das mir in den Ferien passiert ist …";
+          schritteMalen(aktuell);
+        });
+      });
+      if (d.passiertWort) ta.placeholder = "Das " + d.passiertWort + ", das mir in den Ferien passiert ist …";
+    }
+  }
+
+  function uebernehmen(){
+    var st = STATIONEN[aktuell];
+    if ($("text") && st.ziel) d[st.id] = $("text").value;
+    speichern();
+  }
+
+  $("zum-blatt").addEventListener("click", function(){ uebernehmen(); blattZeigen(); });
+
+  /* ---------- Das fertige Blatt ---------- */
+  function box(ueber, text, klasse){
+    var t = String(text || "").trim();
+    return '<div class="box ' + (klasse || "") + '"><span class="ueber">' + esc(ueber) + '</span>' + (t ? esc(t) : '<span class="leer">noch leer</span>') + '</div>';
+  }
+  function blattZeigen(){
+    speichern();
+    var film = d.bilder.map(function(b, i){
+      return '<div class="foto">' + (fotos[i] ? '<img src="' + fotos[i] + '" alt="">' : '<span class="e">' + esc(b.e || "") + '</span>') + '<span>' + esc(b.t || "") + '</span></div>';
+    }).join("");
+    var drei = d.worte.map(function(w){ return esc(w || "…"); }).join("<br>");
+    $("blatt").innerHTML =
+      '<div class="kopf"><div class="titel">MEINE FERIEN</div><div class="namebox">Name: ' + esc(d.name || "………………") + '</div></div>' +
+      '<div style="font-size:14px;margin-top:8px;font-family:var(--font)">Schnappschüsse aus meinen Ferien:</div>' +
+      '<div class="film">' + film + '</div>' +
+      '<div class="raster">' +
+        box("Das Beste in den Ferien war …", d.bestes) +
+        '<div class="box"><span class="ueber">Meine Ferien in drei Worten:</span><div style="font-size:20px;line-height:1.6">' + drei + '</div></div>' +
+        box("Mein schönster Tag in den Ferien:", d.tag, "voll") +
+        box("Ein Ort, an dem ich in den Ferien war …", d.ort) +
+        box("Das " + (d.passiertWort || "______") + ", das mir in den Ferien passiert ist …", d.passiert) +
+        box("Ich werde nie vergessen, …", d.nie, "voll") +
+      '</div>';
+    var alle = woerter(d.bestes) + woerter(d.tag) + woerter(d.ort) + woerter(d.passiert) + woerter(d.nie) + d.worte.filter(Boolean).length +
+               d.bilder.reduce(function(s, b){ return s + woerter(b.t); }, 0);
+    var offen = STATIONEN.filter(function(st){ return !fertig(st); }).length;
+    $("lob").textContent = offen === 0
+      ? "🎉 " + alle + " Wörter – alles selbst geschrieben. Dein Blatt ist komplett!"
+      : "📝 Schon " + alle + " Wörter geschrieben! Noch " + offen + (offen === 1 ? " Feld" : " Felder") + " frei – tipp auf „Weiter bearbeiten“.";
+    zeige("blatt");
+  }
+  $("bearbeiten").addEventListener("click", function(){ zeige("interview"); stationZeigen(STATIONEN.findIndex(function(st){ return !fertig(st); }) >= 0 ? STATIONEN.findIndex(function(st){ return !fertig(st); }) : 0); });
+  $("drucken").addEventListener("click", function(){ window.print(); });
+
+  window.__ferien = { daten: function(){ return d; }, station: function(n){ zeige("interview"); stationZeigen(n); },
+                      blatt: blattZeigen, kuerzen: kurzOeffnen, STATIONEN: STATIONEN };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+<script>
+window.addEventListener("load", function(){
+  var F = window.__ferien;
+  F.station(3);
+  var t = document.getElementById("text");
+  t.value = "der tag wo ich in der Schweiz war : wir sind mit den Camper hingefahren und wir haben da gef\u00fchlt das teuerste essen auch planet erde gegessen. Dan waren wir an gr\u00f6\u00dften Wasserfall Europas vorbeigefahren. so viel Wasser pro Sekunde spuckt er er aus ca. 600.000 bis 700.000 Liter.";
+  t.dispatchEvent(new Event("input"));
+  document.getElementById("kuerzen").click();
+  // ein paar W\u00f6rter wegtippen, damit man den Zustand sieht
+  document.querySelectorAll('.wort')[17].click();
+  document.querySelectorAll('.wort')[22].click();
+  document.querySelector('[data-satz="0"]').click();
+  window.scrollTo(0, document.getElementById("kuerzen-kasten").offsetTop - 10);
+});
+</script>
+</body>
+</html>
