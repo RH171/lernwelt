@@ -217,9 +217,14 @@
   .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
   .sammlung{margin-top:16px}
   .sammlung h3{font-family:var(--rund);font-size:19px;margin:0 0 4px}
-  .liste{display:grid;gap:10px;margin-top:14px}
+  /* minmax(0,1fr) statt der Voreinstellung: Eine Grid-Spalte ist von sich aus
+     so breit wie ihr breitester Inhalt. Mit nowrap in den Zeilen war das die
+     volle Textlaenge - die Zeilen standen 241 px rechts aus der Liste heraus
+     und die Seite liess sich seitlich schieben. Gemessen am 15.09.2026 mit
+     Pauls echten 17 Spielen (Meldung jjrd622c6f). */
+  .liste{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:14px}
   .eintrag{
-    display:flex;align-items:center;gap:13px;text-align:left;width:100%;
+    display:flex;align-items:center;gap:13px;text-align:left;width:100%;min-width:0;
     border:1px solid var(--line);background:#fbfcff;border-radius:16px;
     padding:14px 15px;cursor:pointer;font-family:var(--font);color:var(--ink);
     transition:border-color .12s,transform .1s;
@@ -229,10 +234,16 @@
   .eintrag .em{font-size:24px;flex:none;width:44px;height:44px;border-radius:13px;
                display:grid;place-items:center;background:#f1f2fa}
   .eintrag .txt{flex:1;min-width:0}
-  .eintrag .tt{font-family:var(--rund);font-weight:600;font-size:16px;
-               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .eintrag .ts{font-size:13.5px;color:var(--muted);margin-top:2px;
-               overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Paul am 15.09.2026 (Meldung jjrd622c6f): "ich will das es nicht aus der
+     zeile raus geht sondern das es halt dan zwei zeilen sind". Vorher stand
+     hier nowrap - der Text brach nie um. Jetzt hoechstens zwei Zeilen, und
+     erst danach die drei Puenktchen. */
+  .eintrag .tt{font-family:var(--rund);font-weight:600;font-size:16px;line-height:1.3;
+               display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+               overflow:hidden;overflow-wrap:break-word}
+  .eintrag .ts{font-size:13.5px;color:var(--muted);margin-top:3px;line-height:1.4;
+               display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+               overflow:hidden;overflow-wrap:break-word}
   /* 44x44, und zwar auch mit der Maus. Der Knopf wirft ein Spiel weg und sitzt
      direkt neben der Zeile, die es startet - vorher war er 19 px breit und
      34 px hoch, also schmaler als der Abstand zum Nachbarn. Auf dem Finger
