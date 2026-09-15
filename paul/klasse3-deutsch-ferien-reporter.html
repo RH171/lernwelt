@@ -411,8 +411,10 @@
     kurz.saetze.forEach(function(s){
       var bleibt = s.teile.filter(function(t){ return !t.weg; });
       if (!bleibt.length) return;
-      // Der Punkt haengt vielleicht an einem Wort, das er weggetippt hat.
-      var ende = (/[.!?…]+$/.exec(s.teile[s.teile.length - 1].schluss) || ["."])[0];
+      // Der Punkt haengt vielleicht an einem Wort, das er weggetippt hat -
+      // dann wird er gerettet. Einen Punkt, den Paul nie geschrieben hat,
+      // setzt das Werkzeug aber nicht dazu: es korrigiert ihn nicht.
+      var ende = (/[.!?…]+$/.exec(s.teile[s.teile.length - 1].schluss) || [""])[0];
       var satz = bleibt.map(function(t){ return t.wort + t.schluss.replace(/[.!?…]+$/, ""); }).join(" ");
       satz = satz.replace(/[,;:\s]+$/, "");
       // Grossschreibung nur zurechtruecken, wenn erst das Wegtippen sie
