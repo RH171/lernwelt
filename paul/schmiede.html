@@ -826,8 +826,39 @@
     ctx.setTransform(dpr,0,0,dpr,0,0);
     // Unter dem Boden liegen die Steuerknoepfe. Mit dem Finger sind sie
     // groesser, also braucht der Boden dort mehr Abstand nach unten.
+    var alterBoden = bodenY;
     bodenY = H - (istTouch ? 132 : 104);
     horizY = bodenY - 64;
+    if (alterBoden) weltMitnehmen(bodenY - alterBoden);
+  }
+
+  /* Auf dem iPad faehrt Safaris Leiste beim Spielen ein und aus. Das Fenster
+     wird dabei um bis zu 80 px hoeher oder niedriger, und der Boden wandert
+     mit. Wer schon in der Welt steht, wanderte bisher NICHT mit: Die Gegner
+     blieben auf ihrer alten Hoehe stehen und steckten danach bis zur Haelfte
+     im Boden - genau das hat Paul am 15.09.2026 fotografiert (Meldung
+     9ytvhx394e). Der Figur faellt es nicht auf, weil sie in jedem Bild neu
+     auf den Boden gesetzt wird; allem anderen schon. Am schlimmsten trifft es
+     die Antwort-Ballons: einer, der im Boden verschwindet, ist nicht mehr
+     anzuspringen, und die Aufgabe waere nicht mehr zu loesen.
+     Also alles, was am Boden haengt, um dieselbe Strecke mitnehmen. */
+  function weltMitnehmen(dy){
+    if (!dy) return;
+    var i;
+    for (i=0;i<gegner.length;i++)   gegner[i].y   += dy;
+    for (i=0;i<sterne.length;i++)   sterne[i].y   += dy;
+    for (i=0;i<schmuck.length;i++)  schmuck[i].y  += dy;
+    for (i=0;i<partikel.length;i++) partikel[i].y += dy;
+    held.y += dy;
+    if (station && station.items){
+      // Nach unten ausweichen, nie hinter die Fragekarte - dieselbe Grenze
+      // wie beim Setzen in ballonsAusrichten().
+      var kopf = $("kopf");
+      var unten = kopf ? kopf.getBoundingClientRect().bottom + 10 : 150;
+      for (i=0;i<station.items.length;i++){
+        station.items[i].y = Math.max(unten, station.items[i].y + dy);
+      }
+    }
   }
 
   /* ---- Ton ---- */
