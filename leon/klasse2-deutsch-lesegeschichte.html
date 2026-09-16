@@ -73,7 +73,7 @@
   /* ---- Lesen ---- */
   .buch{display:grid;grid-template-columns:1fr;gap:12px}
   @media (orientation:landscape) and (min-width:900px){
-    .buch{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:stretch}
+    .buch{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);align-items:stretch}
   }
   .werkzeug{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
   .werkzeug .titel{flex:1;font:700 18px/1.2 var(--rund);min-width:140px}
@@ -118,7 +118,7 @@
   .ort-nacht .figur .koerper{filter:drop-shadow(0 0 10px rgba(255,255,255,.35))}
 
   .seite{display:flex;flex-direction:column;min-height:100%}
-  .text{flex:1;font-family:"Andika","Comic Neue",var(--rund);font-size:clamp(23px,3.1vmax,31px);line-height:1.75;
+  .text{flex:1;font-family:"Andika","Comic Neue",var(--rund);font-size:clamp(22px,min(3.1vmax,4.3vh),31px);line-height:1.65;
     letter-spacing:.015em;word-spacing:.12em;margin:0;padding:4px 2px 10px}
   .text .zeile{display:block;margin:0 0 .25em}
   .text .wort{white-space:nowrap}
@@ -126,7 +126,8 @@
   /* Der Blätter-Knopf klebt unten: Auf dem Handy steht der Text länger als
      das Fenster, und Leon soll nicht erst suchen müssen, wie es weitergeht. */
   .blaettern{display:flex;gap:10px;align-items:center;margin-top:8px;position:sticky;bottom:0;z-index:3;
-    background:linear-gradient(rgba(255,255,255,0),#fff 14px);padding:14px 0 calc(6px + env(safe-area-inset-bottom))}
+    background:linear-gradient(rgba(255,255,255,0),#fff 14px);padding:14px 62px calc(6px + env(safe-area-inset-bottom)) 0}
+  /* 62px rechts: Dort sitzt der runde Melde-Knopf und lag sonst auf "Weiter". */
   .blaettern .knopf.hell{flex:0 0 auto;min-width:64px}
   .blaettern .knopf.vor{flex:1}
   .punkte{display:flex;gap:6px;justify-content:center;margin:10px 0 0}
@@ -333,11 +334,14 @@
     "Papa": ["👨", "#0f766e"], "Mama": ["👩", "#e11d48"], "Elisabeth": ["👩", "#9333ea"],
     "Herr Celis": ["👨‍🏫", "#475569"]
   };
+  // Deko gehoert zum Ort, nicht zur Geschichte - und darf deshalb nie eine
+  // Antwort verraten. Ein Baum auf dem Pausenhof hat "Wo steht Leo? Am Baum"
+  // vorgesagt, ein Sichelmond "Wie sieht der Mond aus? Rund" widersprochen.
   var DEKO = {
     platz: [["🥅", "left:6%;top:30%"]], stadion: [], klasse: [["🕰️", "right:8%;top:10%"]],
-    pausenhof: [["🌳", "left:4%;top:18%"]], zimmer: [["🪟", "left:6%;top:10%"]], kueche: [],
+    pausenhof: [["🏫", "left:4%;top:16%"]], zimmer: [["🪟", "left:6%;top:10%"]], kueche: [],
     garten: [["🌻", "left:5%;top:36%"]], strasse: [["🏠", "left:4%;top:14%"], ["🏡", "left:22%;top:18%"]],
-    park: [["🌳", "left:3%;top:14%"], ["🌳", "left:18%;top:22%"]], buecherei: [], nacht: [["🌙", "left:8%;top:8%"], ["⭐", "left:30%;top:14%"]]
+    park: [["🌳", "left:3%;top:14%"], ["🌳", "left:18%;top:22%"]], buecherei: [], nacht: [["⭐", "left:8%;top:8%"], ["✨", "left:30%;top:14%"]]
   };
 
   function szeneMalen(sz){
