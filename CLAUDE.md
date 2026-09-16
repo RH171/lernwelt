@@ -605,6 +605,54 @@ passierte sogar gar nichts, weil die Oberfläche nur den Erfolgsfall auswertete.
 Jetzt kommt 503 mit einem ehrlichen Satz, und der sagt NICHT „gespeichert".
 Geprüft mit `node pruefe-spiele-speicher.mjs`.
 
+## Pauls Knopf „Meine Hausaufgabe": üben, nicht lösen
+
+Seit 16.09.2026 gibt es in Pauls Lernwelt die Kachel „Meine Hausaufgabe" →
+`werkstatt.html?hausaufgabe=1`. Ein Tipp auf „Übungsspiel bauen" löst **zwei
+Wege** aus:
+
+1. **Sofort:** `/api/spiel-bauen` mit `hausaufgabe: true` – ein Übungsspiel wie
+   beim normalen Foto, gespeichert mit `quelle: "hausaufgabe"`.
+2. **Gemeinsam:** `/api/melden` mit `art: "hausaufgabe"` und bis zu vier Seiten
+   (weitere Seiten als Einträge `Seite 2 …` im Verlauf, abrufbar mit
+   `werkstatt.sh bild <id>:<nr>`). Die Sofortantwort fragt, was Paul braucht; sie
+   erscheint schon auf dem Ladeschirm. Der Bau-Wächter baut danach die eigene Übung
+   (Auftrag in `bau-waechter.sh`, Abschnitt HAUSAUFGABEN).
+
+**Die Grenze hat Denny gezogen: üben, nicht lösen.** Keine Aufgabe vom Blatt mit
+ihrer Lösung – nicht im Spiel, nicht in der Sofortantwort, nicht im Faden. Nichts
+Eingetragenes prüfen oder verbessern. Durchgesetzt an drei Stellen, weil eine Bitte
+im Auftrag keine Prüfung ist:
+- `spiel-bauen.js`: Das Modell nennt in `blatt_aufgaben`, was auf dem Blatt steht;
+  `vomBlatt()` vergleicht Rechnungen und Sätze ab vier Wörtern und wirft Treffer
+  raus (Gegenprobe: `134 + 27` ist nicht `34 + 27`).
+- `_antwort.js`: Zusatzregeln `HAUSAUFGABE`, sobald der Faden diese Art hat.
+- `bau-waechter.sh`: eigener Abschnitt im Auftrag.
+
+Messung: `mess-schritte-hausaufgabe.js` prüft auch, dass BEIDE Anfragen rausgehen.
+
+## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
+
+Seit 16.09.2026: `leon/klasse2-deutsch-lesegeschichte.html`, Kachel ganz oben in
+Leons Lernwelt. Leon liest allein (8 Seiten, ein Satz pro Zeile, Silben
+einfärbbar), danach 5 Fragen als Lesebeweis. Falsche Antwort → „Seite X ansehen",
+Nachschlagen ist Lesen. Der Weiter-Knopf wacht erst nach etwa 0,25 s je Wort auf.
+
+- **Die Geschichten liegen in `leon/geschichten.js`** und kommen mit echten Menschen
+  aus Leons Umfeld vor. Darum nur hinter dem Riegel unter `/leon/` – **nie** Namen,
+  Familienverhältnisse oder Schule in diese offene Datei hier schreiben.
+- Reihenfolge = Reihenfolge im Array. Jeden Tag die erste ungelesene; sind alle
+  gelesen, die am längsten her ist. **Neue hinten anhängen, nie eine `id` ändern** –
+  `leon-lesepass` merkt sich die ids.
+- Stand 16.09.2026: 21 Geschichten, also Vorrat bis etwa 06.10.2026. Nachschub nach
+  demselben Format (8 Seiten, 3–5 Zeilen, ≤ 9 Wörter je Satz, 220–320 Wörter,
+  Silbenstriche `|`, 5 Fragen mit `seite`), vorher selbst gegenlesen.
+- Bild-Deko gehört zum Ort und darf nie eine Antwort verraten (ein Baum auf dem
+  Pausenhof hat „Am Baum" vorgesagt).
+- An die Eltern: `lernstand.antwort(…, "lesebeweis", …)` je Frage, erster Versuch.
+
+Messung: `mess-schritte-lesegeschichte.js`.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
