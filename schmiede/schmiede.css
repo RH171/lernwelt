@@ -180,3 +180,5 @@
   .punktegross{font-family:var(--rund);font-weight:700;font-size:clamp(38px,10vw,58px);color:var(--paul);line-height:1}
   .rekord{font-size:15px;color:#64748b;margin-top:4px}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+  /* Vorlese-Knopf in der Fragekarte (Leon) */
+  #fragekarte #vorleseknopf{position:static;float:right;margin:-4px -6px 4px 10px;box-shadow:0 2px 0 rgba(0,0,0,.12);background:#eef2ff}
