@@ -29,9 +29,15 @@ export function rechenFrage(klasse){
     else if (art < .75){ b = z(2, 9); r = z(2, 9); a = b * r; text = a + " : " + b; sprich = a + " geteilt durch " + b; extra = [r + 1, a - b]; info = "Umkehraufgabe: " + r + " × " + b + " = " + a + "."; }
     else { a = z(21, 68); b = z(11, 99 - a); r = a + b; text = a + " + " + b; sprich = a + " plus " + b; extra = [r + 10, r - 10]; info = "Erst die Zehner, dann die Einer."; }
   } else if (k === 4){
-    if (art < .4){ a = z(6, 12); b = z(6, 12); r = a * b; text = a + " × " + b; sprich = a + " mal " + b; extra = [r + a, r - b]; info = a + " × " + b + " = " + r + "."; }
+    // 4. Klasse: kleines Einmaleins mit den schweren Reihen - kein "11 mal 12",
+    // das steht nicht im LehrplanPLUS 3/4 (Pruefung vom 16.09.2026).
+    if (art < .4){ a = z(6, 9); b = z(6, 10); r = a * b; text = a + " × " + b; sprich = a + " mal " + b; extra = [r + a, r - b]; info = a + " × " + b + " = " + r + "."; }
     else if (art < .7){ a = z(12, 48) * 10; b = z(11, 45) * 10; r = a + b; text = a + " + " + b; sprich = a + " plus " + b; extra = [r + 100, r - 100]; info = "Mit Zehnern rechnen wie mit Einern."; }
     else { a = z(2, 9); b = [10, 100][z(0, 1)]; r = a * b * z(1, 9); a = r / b; text = a + " × " + b; sprich = a + " mal " + b; extra = [r * 10, r / 10 | 0]; info = "Mal " + b + ": " + (b === 10 ? "eine Null" : "zwei Nullen") + " anhängen."; }
+  } else if (k === 5) {
+    // 5. Klasse (Gymnasium/Realschule): ganze Zahlen und Quadratzahlen. Prozent kommt erst ab Klasse 6.
+    if (art < .5){ a = z(-9, -1); b = z(2, 12); r = a + b; text = "(" + a + ") + " + b; sprich = "minus " + (-a) + " plus " + b; extra = [-(r), b - a]; info = "Auf dem Zahlenstrahl von " + a + " um " + b + " nach rechts."; }
+    else { a = z(11, 15); r = a * a; text = a + "²"; sprich = a + " hoch 2"; extra = [a * 2, r + a]; info = a + "² = " + a + " × " + a + "."; }
   } else {
     if (art < .35){ a = [50, 25, 10][z(0, 2)]; b = z(2, 20) * (a === 25 ? 4 : a === 10 ? 10 : 2); r = b * a / 100; text = a + " % von " + b; sprich = a + " Prozent von " + b; extra = [b - r, r * 2]; info = a + " % sind " + (a === 50 ? "die Hälfte" : a === 25 ? "ein Viertel" : "ein Zehntel") + "."; }
     else if (art < .7){ a = z(-9, -1); b = z(2, 12); r = a + b; text = "(" + a + ") + " + b; sprich = "minus " + (-a) + " plus " + b; extra = [-(r), b - a]; info = "Auf dem Zahlenstrahl von " + a + " um " + b + " nach rechts."; }
