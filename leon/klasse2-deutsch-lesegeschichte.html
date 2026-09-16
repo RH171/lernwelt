@@ -86,6 +86,7 @@
     border:1px solid var(--line);isolation:isolate}
   @media (orientation:landscape) and (min-width:900px){ .szene{aspect-ratio:auto;height:100%;min-height:300px} }
   @media (orientation:portrait), (max-width:899px){ .szene{aspect-ratio:auto;height:min(34vh,300px)} }
+  @media (max-width:600px){ .szene{height:min(26vh,210px)} }
   .szene .deko{position:absolute;font-size:clamp(34px,7vmin,64px);line-height:1;z-index:0;opacity:.95}
   .szene .dinge{position:absolute;top:8%;right:6%;display:flex;gap:4%;z-index:1;font-size:clamp(38px,9vmin,78px);line-height:1;
     filter:drop-shadow(0 4px 6px rgba(0,0,0,.15))}
@@ -122,7 +123,10 @@
   .text .zeile{display:block;margin:0 0 .25em}
   .text .wort{white-space:nowrap}
   .text.silben .s0{color:var(--silbe-a)} .text.silben .s1{color:var(--silbe-b)}
-  .blaettern{display:flex;gap:10px;align-items:center;margin-top:8px}
+  /* Der Blätter-Knopf klebt unten: Auf dem Handy steht der Text länger als
+     das Fenster, und Leon soll nicht erst suchen müssen, wie es weitergeht. */
+  .blaettern{display:flex;gap:10px;align-items:center;margin-top:8px;position:sticky;bottom:0;z-index:3;
+    background:linear-gradient(rgba(255,255,255,0),#fff 14px);padding:14px 0 calc(6px + env(safe-area-inset-bottom))}
   .blaettern .knopf.hell{flex:0 0 auto;min-width:64px}
   .blaettern .knopf.vor{flex:1}
   .punkte{display:flex;gap:6px;justify-content:center;margin:10px 0 0}
