@@ -75,6 +75,7 @@
   .zielkarte{display:inline-block;background:var(--bank-hell);color:#134e4a;border-radius:14px;padding:10px 16px;
     font:800 26px/1.2 var(--rund);margin:4px 0 10px}
 
+  @media (max-width:600px){ .tresen{min-height:0} }
   .tresen{position:relative;background:linear-gradient(#fdfaf3,#f6efe0);border:3px solid #e2d3b5;border-radius:18px;
     min-height:250px;padding:14px;display:flex;flex-direction:column;gap:12px}
   .tresen .gruppe{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
@@ -127,6 +128,12 @@
   .rueck{min-height:28px;margin:12px 0 0;font:700 17px/1.45 var(--rund)}
   .rueck.gut{color:var(--gut)} .rueck.hm{color:var(--hm)}
   .weiter{width:100%;margin-top:10px}
+  /* Pruefen, Rueckmeldung und Weiter kleben unten: Auf dem Handy steht der
+     Tresen ueber der Eingabe, und der Knopf laege sonst weit unter dem Rand.
+     Rechts bleibt Platz fuer den runden Melde-Knopf. */
+  .aktion{position:sticky;bottom:0;z-index:5;background:linear-gradient(rgba(255,255,255,0),#fff 12px);
+    padding:12px 62px calc(4px + env(safe-area-inset-bottom)) 0;margin:0 -2px}
+  .aktion .rueck{margin-top:0}
 
   .ende{text-align:center}
   .ende .gross{font-size:60px}
@@ -402,9 +409,9 @@
       '<button class="feld" data-f="z"></button>Z +<button class="feld" data-f="e"></button>E</div>' +
       '<div class="alszahl">als Zahl <button class="feld zahl" data-f="zahl"></button></div>' +
       '<div class="tasten" id="tasten"></div>' +
+      '<div class="aktion"><div class="rueck" id="rueck"></div>' +
       '<button class="knopf haupt weiter" id="pruefen">Prüfen</button>' +
-      '<div class="rueck" id="rueck"></div>' +
-      '<button class="knopf haupt weiter verborgen" id="weiter"></button>';
+      '<button class="knopf haupt weiter verborgen" id="weiter"></button></div>';
     var werte = { t: "", h: "", z: "", e: "", zahl: "" }, aktiv = "h";
     var felder = e.querySelectorAll(".feld");
     function malen(){
@@ -495,9 +502,9 @@
     var e = $("eingabe");
     e.innerHTML = '<div class="auftrag">Material holen</div><div class="leger" id="leger"></div>' +
       '<div class="tresen-fuss" id="leg-wechsel"></div>' +
+      '<div class="aktion"><div class="rueck" id="rueck"></div>' +
       '<button class="knopf haupt weiter" id="pruefen">Fertig gelegt</button>' +
-      '<div class="rueck" id="rueck"></div>' +
-      '<button class="knopf haupt weiter verborgen" id="weiter"></button>';
+      '<button class="knopf haupt weiter verborgen" id="weiter"></button></div>';
     ["t", "h", "z", "e"].forEach(function(key){
       var r = document.createElement("div"); r.className = "reihe";
       r.innerHTML = '<button class="pm" type="button" aria-label="weniger">−</button><span><span class="name"></span><br><span class="anzahl">0</span></span><button class="pm" type="button" aria-label="mehr">+</button>';
@@ -553,7 +560,7 @@
     var k = document.createElement("div"); k.className = "zielkarte" + (a.symbole ? " symbole" : "");
     k.textContent = a.zeig; $("ziel").appendChild(k);
     var e = $("eingabe");
-    e.innerHTML = '<div class="wahl" id="wahl"></div><div class="rueck" id="rueck"></div><button class="knopf haupt weiter verborgen" id="weiter"></button>';
+    e.innerHTML = '<div class="wahl" id="wahl"></div><div class="aktion"><div class="rueck" id="rueck"></div><button class="knopf haupt weiter verborgen" id="weiter"></button></div>';
     a.optionen.forEach(function(o){
       var b = document.createElement("button"); b.type = "button"; b.textContent = o;
       b.addEventListener("click", function(){
