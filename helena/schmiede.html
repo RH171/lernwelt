@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Helenas Spiel-Schmiede</title>
+<link rel="stylesheet" href="/schmiede/schmiede.css">
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  /* Helenas Farbe */
+  :root{ --paul:#db2777; }
+</style>
+</head>
+<body>
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<!--
+  Helenas Spiel-Schmiede (16.09.2026). Denny: "Bitte setze das auch gleich fuer
+  Helena um."
+
+  Derselbe Motor wie bei Paul und Leon (/schmiede/motor.js). Fuer eine
+  Siebtklaesslerin am Gymnasium: ihre Faecher nach LehrplanPLUS 7 (Mathe,
+  Englisch, Franzoesisch, Deutsch, dazu Geschichte/Geographie/NuT als
+  "Wissen"), und am Raetsel-Tor darf die Antwort ein Wort sein ("went",
+  "la maison") - Gross-/Kleinschreibung zaehlt dort nicht.
+
+  Anmeldung: Helenas Vokabeltrainer sind offen, das Bauen nicht - jeder Bau
+  kostet echtes Geld. Denny hat am 16.09.2026 entschieden: eigener Code
+  (Cloudflare-Secret HELENA_CODE). Bis er gesetzt ist, gilt serverseitig
+  PAUL_CODE (_riegel.js), Helena kommt also erst mit ihrem Code hinein.
+
+  Themenschluessel beginnen mit g7-/e7-/f7-/d7-/w7- und werden nie umbenannt.
+-->
+<script>
+window.SCHMIEDE = {
+  kind: "helena", name: "Helena", titel: "Spiel-Schmiede", speicher: "helena-schmiede",
+  zurueck: { href: "spiele.html", text: "‹ Spiele", endeText: "Zurück zu den Spielen" },
+  faecher: [ { id: "mathe", label: "📐 Mathe" }, { id: "englisch", label: "🇬🇧 Englisch" }, { id: "franzoesisch", label: "🇫🇷 Französisch" },
+             { id: "deutsch", label: "📖 Deutsch" }, { id: "wissen", label: "🌍 Wissen" } ],
+  wunschBeispiel: "Zum Beispiel: Unregelmäßige Verben aus Unit 2 – oder Vokabeln, die ich morgen im Test brauche.",
+  torLabel: "Am Tor tippst du die Antwort ein",
+  raetselHinweis: "Stimmt die Antwort, geht das Tor auf.",
+  eingabeModus: "text", textAntworten: true,
+  wahl: { welt: "weltraum", figur: "astronaut", steuerung: "laufen", toene: "leise" },
+  figuren: [
+    { schluessel: "astronaut", bild: "🧑‍🚀", titel: "Astronautin" },
+    { schluessel: "einhorn",   bild: "🦄", titel: "Einhorn" },
+    { schluessel: "ninja",     bild: "🥷", titel: "Ninja" },
+    { schluessel: "katze",     bild: "🐱", titel: "Katze" },
+    { schluessel: "fuchs",     bild: "🦊", titel: "Fuchs" },
+    { schluessel: "drache",    bild: "🐉", titel: "Drache" },
+    { schluessel: "roboter",   bild: "🤖", titel: "Roboter" },
+    { schluessel: "pinguin",   bild: "🐧", titel: "Pinguin" }
+  ],
+  themen: [
+    { fach:"mathe", schluessel:"g7-terme", bild:"🔣", titel:"Terme aufstellen und umformen",
+      wunsch:"Mathematik 7. Klasse Gymnasium (LehrplanPLUS): Terme aufstellen und deuten, Terme vereinfachen, ausmultiplizieren und ausklammern." },
+    { fach:"mathe", schluessel:"g7-gleichungen", bild:"⚖️", titel:"Lineare Gleichungen",
+      wunsch:"Mathematik 7. Klasse Gymnasium: lineare Gleichungen durch Äquivalenzumformungen lösen, Sachaufgaben mit Gleichungen lösen." },
+    { fach:"mathe", schluessel:"g7-prozent", bild:"💯", titel:"Prozentrechnung",
+      wunsch:"Mathematik 7. Klasse Gymnasium: Prozentwert, Grundwert und Prozentsatz berechnen, Rabatte und Preiserhöhungen." },
+    { fach:"mathe", schluessel:"g7-winkel", bild:"📐", titel:"Winkel und Winkelsummen",
+      wunsch:"Mathematik 7. Klasse Gymnasium: Neben-, Scheitel-, Stufen- und Wechselwinkel, Winkelsumme im Dreieck und Viereck." },
+    { fach:"mathe", schluessel:"g7-dreiecke", bild:"🔺", titel:"Kongruenz und Dreiecke",
+      wunsch:"Mathematik 7. Klasse Gymnasium: Kongruenzsätze, besondere Dreiecke (gleichschenklig, gleichseitig, rechtwinklig), Dreieckskonstruktion." },
+    { fach:"mathe", schluessel:"g7-daten", bild:"📊", titel:"Median, Quartile, Boxplot",
+      wunsch:"Mathematik 7. Klasse Gymnasium: Daten auswerten mit Median, Quartilen, Spannweite und Boxplot." },
+
+    { fach:"englisch", schluessel:"e7-perfect", bild:"⏳", titel:"Present perfect simple & progressive",
+      wunsch:"Englisch 7. Klasse Gymnasium: present perfect simple und present perfect progressive, Abgrenzung zum simple past, Signalwörter (since, for, already, yet, just)." },
+    { fach:"englisch", schluessel:"e7-pastperfect", bild:"⏪", titel:"Past perfect",
+      wunsch:"Englisch 7. Klasse Gymnasium: past perfect simple, Vorzeitigkeit in der Vergangenheit, Signalwörter (before, after, by the time, already)." },
+    { fach:"englisch", schluessel:"e7-conditionals", bild:"🔀", titel:"If-Sätze (Conditional II und III)",
+      wunsch:"Englisch 7. Klasse Gymnasium: conditional sentences type II und III, Bildung und Bedeutung." },
+    { fach:"englisch", schluessel:"e7-adverbs", bild:"🏃‍♀️", titel:"Adverbien und Steigerung",
+      wunsch:"Englisch 7. Klasse Gymnasium: Adverbien bilden (quickly, well), Adjektiv oder Adverb, Steigerung und Vergleiche." },
+    { fach:"englisch", schluessel:"e7-reflexiv", bild:"🪞", titel:"Reflexive pronouns",
+      wunsch:"Englisch 7. Klasse Gymnasium: reflexive pronouns (myself, themselves) und each other." },
+    { fach:"englisch", schluessel:"e7-usa", bild:"🗽", titel:"USA: Leben und Feste",
+      wunsch:"Englisch 7. Klasse Gymnasium, Landeskunde: Lebenswelt Jugendlicher in den USA, Feiertage wie Thanksgiving und Independence Day, Regionen wie Wales und der Desert Southwest – mit passendem Wortschatz auf Englisch." },
+
+    { fach:"franzoesisch", schluessel:"f7-passe", bild:"🧱", titel:"Passé composé mit avoir und être",
+      wunsch:"Französisch 2. Lernjahr (7. Klasse Gymnasium): passé composé mit avoir und être, participe passé regelmäßiger und wichtiger unregelmäßiger Verben, Angleichung bei être." },
+    { fach:"franzoesisch", schluessel:"f7-imparfait", bild:"🎞️", titel:"Imparfait oder passé composé",
+      wunsch:"Französisch 2. Lernjahr: Bildung des imparfait und Unterscheidung imparfait / passé composé (Hintergrund und Handlung)." },
+    { fach:"franzoesisch", schluessel:"f7-relatif", bild:"🔗", titel:"Relativpronomen qui, que, où",
+      wunsch:"Französisch 2. Lernjahr: Relativsätze mit qui, que und où." },
+    { fach:"franzoesisch", schluessel:"f7-partitif", bild:"🥖", titel:"Teilungsartikel und Mengen",
+      wunsch:"Französisch 2. Lernjahr: Teilungsartikel (du, de la, des) und Mengenangaben mit de (beaucoup de, un kilo de)." },
+    { fach:"franzoesisch", schluessel:"f7-reflexiv", bild:"🪥", titel:"Reflexive Verben",
+      wunsch:"Französisch 2. Lernjahr: reflexive Verben im Präsens und im passé composé (se lever, se coucher)." },
+    { fach:"franzoesisch", schluessel:"f7-vokabeln", bild:"🗣️", titel:"Alltagswortschatz",
+      wunsch:"Französisch 2. Lernjahr: Wortschatz zu Freizeit, Kleidung, Wetter, Körper und Einkaufen, Französisch – Deutsch und umgekehrt, Nomen immer mit Artikel." },
+
+    { fach:"deutsch", schluessel:"d7-konjunktiv", bild:"💬", titel:"Konjunktiv und indirekte Rede",
+      wunsch:"Deutsch 7. Klasse Gymnasium: Konjunktiv I und II bilden, indirekte Rede, Ersatzform mit würde." },
+    { fach:"deutsch", schluessel:"d7-satzglieder", bild:"🧩", titel:"Satzglieder und Satzgefüge",
+      wunsch:"Deutsch 7. Klasse Gymnasium: Satzglieder bestimmen (Subjekt, Prädikat, Objekte, Adverbiale), Haupt- und Nebensätze, Satzgefüge." },
+    { fach:"deutsch", schluessel:"d7-komma", bild:"✒️", titel:"Kommas setzen",
+      wunsch:"Deutsch 7. Klasse Gymnasium: Kommasetzung bei Satzgefügen, Relativsätzen, Infinitivgruppen und Aufzählungen." },
+    { fach:"deutsch", schluessel:"d7-ballade", bild:"📜", titel:"Balladen",
+      wunsch:"Deutsch 7. Klasse Gymnasium: Merkmale der Ballade, bekannte Balladen (z. B. Der Erlkönig, Der Zauberlehrling), Strophe, Vers, Reim." },
+
+    { fach:"wissen", schluessel:"w7-mittelalter", bild:"🏰", titel:"Leben im Mittelalter",
+      wunsch:"Geschichte 7. Klasse Gymnasium: Herrschaft im Mittelalter (König, Lehnswesen), Leben auf Burg, Land und in der Stadt, Kirche und Klöster." },
+    { fach:"wissen", schluessel:"w7-entdeckungen", bild:"⛵", titel:"Entdeckungen und Reformation",
+      wunsch:"Geschichte 7. Klasse Gymnasium: Kreuzzüge, Renaissance, Entdeckungsfahrten, Buchdruck, Reformation und Dreißigjähriger Krieg im Überblick." },
+    { fach:"wissen", schluessel:"w7-europa", bild:"🇪🇺", titel:"Europa: Länder und Naturraum",
+      wunsch:"Geographie 7. Klasse Gymnasium: Staaten und Hauptstädte Europas, Großlandschaften und Flüsse, die europäische Idee." },
+    { fach:"wissen", schluessel:"w7-vulkane", bild:"🌋", titel:"Vulkane und Erdbeben",
+      wunsch:"Geographie 7. Klasse Gymnasium: Aufbau der Erde, Plattentektonik, Vulkane und Erdbeben in Europa." },
+    { fach:"wissen", schluessel:"w7-licht", bild:"🌗", titel:"Licht, Schatten, Mondphasen",
+      wunsch:"Natur und Technik 7. Klasse Gymnasium: Lichtausbreitung, Schatten, Mondphasen und Finsternisse." },
+    { fach:"wissen", schluessel:"w7-internet", bild:"🌐", titel:"Internet und digitale Kommunikation",
+      wunsch:"Natur und Technik 7. Klasse Gymnasium: wie das Internet funktioniert, Datenschutz, Chancen und Risiken digitaler Kommunikation." }
+  ]
+};
+</script>
+<div id="schmiede"></div>
+<script src="/lernstand.js"></script>
+<script src="/schmiede/motor.js"></script>
+</body>
+</html>
