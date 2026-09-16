@@ -41,6 +41,13 @@
   <!-- 1. Schritt für Schritt -->
   <section id="sicht-schritte" class="verborgen">
     <div class="karte">
+      <!-- Spielstand (Leon, 16.09.2026, Bild vom iPad): "keine Spielstände
+           speichern". Wer mitten im Spiel raus ist, macht hier weiter. -->
+      <div class="weiterspielen verborgen" id="weiterspielen">
+        <div class="ws-text"><b>▶️ Weiterspielen</b><span id="ws-info"></span></div>
+        <button class="los" id="ws-los" type="button">Weiterspielen</button>
+      </div>
+
       <div class="wegweiser" id="wegweiser"></div>
       <div class="schrittfrage" id="schrittfrage"></div>
       <p class="unter" id="schrittunter"></p>
@@ -292,6 +299,47 @@
     } catch(e){}
   }
 
+  /* ---------------------------------------------------------------
+     Der Spielstand. Leon am 16.09.2026 (Bild vom iPad, mitten im Spiel):
+     er kann "keine Spielstände speichern". Stimmt - gemerkt wurden nur
+     Einstellungen und Rekord; wer "Raus" tippte oder das iPad weglegte,
+     fing wieder bei Aufgabe 1 an.
+
+     Ein Platz je Kind: welches Spiel, welche Aufgabe, Sterne, Herzen.
+     Geschrieben wird NUR beim Verlassen (Raus, Seite weg, iPad zu) und
+     beim Ende geloescht - nicht nach jeder Aufgabe. Jeder Schreibvorgang
+     geht ueber den Sync in den Speicher, und davon gibt es 1000 am Tag.
+     Die Welt selbst wird beim Weiterspielen neu gewuerfelt; sie ist ohnehin
+     jedes Mal anders. Der Schluessel beginnt mit dem Kind, damit der Sync
+     ihn mitnimmt und der Stand auch auf dem anderen Geraet da ist.
+     --------------------------------------------------------------- */
+  var STAND = SPEICHER + "-stand";
+  function standLesen(){
+    try { var d = JSON.parse(localStorage.getItem(STAND) || "null"); return (d && d.spielId) ? d : null; }
+    catch(e){ return null; }
+  }
+  function standMerken(){
+    try {
+      if (!spiel || !spiel.id || !aufgaben.length || herzen <= 0) return;
+      if (zustand !== "spielt" && zustand !== "pause") return;
+      // Steht die Loesung schon da, ist diese Aufgabe erledigt.
+      var nr = aufgabeNr + (station && station.geloest ? 1 : 0);
+      if (nr >= aufgaben.length) return;
+      var neu = JSON.stringify({ spielId: spiel.id, titel: spiel.titel || "", aufgabeNr: nr,
+        gesamt: aufgaben.length, punkte: punkte, herzen: herzen, geloest: geloest });
+      if (neu !== localStorage.getItem(STAND)) localStorage.setItem(STAND, neu);
+    } catch(e){}
+  }
+  function standWeg(){ try { if (localStorage.getItem(STAND) !== null) localStorage.removeItem(STAND); } catch(e){} }
+  function weiterspielenZeigen(){
+    var st = standLesen();
+    zeigen($("weiterspielen"), !!st && schrittNr === 0);
+    if (!st) return;
+    $("ws-info").textContent = (st.titel ? "„" + st.titel + "“ – " : "") + "Aufgabe " + (st.aufgabeNr + 1) +
+      " von " + st.gesamt + " · ⭐ " + st.punkte + " · " + "❤️".repeat(Math.max(1, Math.min(3, st.herzen)));
+  }
+  var fortsetzen = null;
+
   function welt(){ return WELTEN.filter(function(w){ return w.schluessel === wahl.welt; })[0] || WELTEN[0]; }
   function figur(){ return FIGUREN.filter(function(f){ return f.schluessel === wahl.figur; })[0] || FIGUREN[0]; }
 
@@ -406,6 +454,7 @@
     zeigen($("wunschfeld"), s.feld === "thema");
     zeigen($("schritt-zurueck"), schrittNr > 0);
     zeigen($("zettel"), schrittNr > 0);
+    weiterspielenZeigen();
     $("schritt-weiter").textContent = (schrittNr === SCHRITTE.length - 1) ? "Spiel schmieden 🔨" : "Weiter";
     zettelMalen();
     felderMalen();
@@ -575,6 +624,13 @@
     });
   }
 
+  $("ws-los").addEventListener("click", function(){
+    var st = standLesen();
+    if (!st) { weiterspielenZeigen(); return; }
+    fortsetzen = st;
+    spielHolen(st.spielId);
+  });
+
   function spielHolen(id){
     sicht("laden");
     $("lade-titel").textContent = "Ich hole dein Spiel aus dem Regal …";
@@ -583,6 +639,7 @@
       .then(function(r){ return r.json(); })
       .then(function(j){
         if (!j || !j.ok || !j.spiel){
+          if (fortsetzen){ fortsetzen = null; standWeg(); weiterspielenZeigen(); }
           sicht("schritte");
           melde((j && j.fehler) ? j.fehler : "Das Spiel war nicht mehr da. Ich baue dir ein neues.");
           return;
@@ -709,11 +766,12 @@
     $("knopf-sprung").textContent = (wahl.steuerung === "fliegen") ? "FLIEGEN" : "SPRUNG";
     $("tonknopf").textContent = (wahl.toene === "aus") ? "🔇" : "🔊";
     tonAn = (wahl.toene !== "aus");
-    neuStart();
+    neuStart(fortsetzen);
+    fortsetzen = null;
     if (!laeuft){ laeuft = true; requestAnimationFrame(schleife); }
   }
 
-  function neuStart(){
+  function neuStart(st){
     passeGroesse();
     var w = welt();
     G = w.G; SPRUNGKRAFT = w.sprung;
@@ -721,6 +779,13 @@
     sterne = []; gegner = []; partikel = [];
     kamera = 0; naechsteWeltX = 0; rennRichtung = 1;
     aufgabeNr = 0; station = null; protokoll = [];
+    // Weiterspielen: nur uebernehmen, was zu DIESEM Spiel passt.
+    if (st && spiel && st.spielId === spiel.id && st.aufgabeNr < aufgaben.length){
+      aufgabeNr = Math.max(0, st.aufgabeNr | 0);
+      punkte = Math.max(0, st.punkte | 0);
+      herzen = Math.max(1, Math.min(3, st.herzen | 0));
+      geloest = Math.max(0, Math.min(aufgabeNr, st.geloest | 0));
+    }
     held.x = 110; held.y = bodenY - held.h; held.vx = 0; held.vy = 0;
     held.amBoden = true; held.spruenge = 0; held.unverwundbar = 0; held.blickRechts = true;
     schmuckSetzen();
@@ -945,6 +1010,7 @@
   $("rausknopf").addEventListener("click", function(){ spielVerlassen(); });
 
   function spielVerlassen(){
+    standMerken();
     lernstandSenden();
     zustand = "aus";
     document.body.classList.remove("spielt");
@@ -1204,6 +1270,7 @@
 
   function spielEnde(){
     zustand = "ende";
+    standWeg();
     var geschafft = herzen > 0;
     var alles = geloest >= aufgaben.length;
     $("ende-titel").textContent = !geschafft ? "Alle Herzen weg 💔"
@@ -1531,8 +1598,12 @@
   }
 
   window.addEventListener("pagehide", function(){
+    standMerken();
     if (imSpiel) lernstandSenden(); else bauzeitMelden();
   });
+  // Auf dem iPad kommt "pagehide" beim Weglegen oft gar nicht - die Seite
+  // wird nur unsichtbar und spaeter still beendet.
+  document.addEventListener("visibilitychange", function(){ if (document.hidden) standMerken(); });
 
   /* ---- Los ---- */
   try {

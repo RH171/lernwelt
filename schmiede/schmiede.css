@@ -100,6 +100,12 @@
   @keyframes dreh{to{transform:rotate(360deg)}}
   .schritt{font-family:var(--rund);font-size:18px;font-weight:600}
 
+  /* Weiterspielen (Leon, 16.09.2026): ganz oben, damit er es sofort sieht. */
+  .weiterspielen{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 16px;padding:14px 16px;
+    border-radius:18px;background:#ecfdf3;border:2px solid #abefc6}
+  .weiterspielen .ws-text{flex:1 1 220px;display:flex;flex-direction:column;gap:3px;font-size:15px;line-height:1.4}
+  .weiterspielen .ws-text b{font-size:19px}
+  .weiterspielen .los{flex:0 0 auto;margin:0;width:auto;min-width:180px}
   .zettel{margin-top:16px;border:1px dashed #d8d5fb;background:#f8f7ff;border-radius:18px;padding:16px 18px}
   .zettel .kopf{font-family:var(--rund);font-weight:700;font-size:16px;margin-bottom:6px}
   .zettel .zeile{font-size:14.5px;color:#4a4f63;line-height:1.7}
