@@ -353,6 +353,7 @@
         <button class="fach an" type="button" data-brauch="ueben">🔁 Ich will das üben</button>
         <button class="fach" type="button" data-brauch="verstehen">🤔 Ich versteh's noch nicht</button>
         <button class="fach" type="button" data-brauch="spiel">🎮 Mach ein Spiel draus</button>
+        <button class="fach" type="button" data-brauch="pruefen">✅ Fertig – schau drüber</button>
       </div>
 
       <div class="wunschfeld">
@@ -917,7 +918,11 @@
   var BRAUCH = {
     ueben: "Ich will das üben.",
     verstehen: "Ich verstehe das noch nicht richtig.",
-    spiel: "Mach mir ein Spiel dazu."
+    spiel: "Mach mir ein Spiel dazu.",
+    // Denny am 16.09.2026: Paul loest das Blatt allein und schickt es DANACH.
+    // Die Werkstatt zeigt nur, wo er noch mal hinschauen soll - nicht, was
+    // richtig ist (_antwort.js, Abschnitt "WENN DAS KIND SAGT, DASS ES FERTIG IST").
+    pruefen: "Ich habe das Blatt fertig gelöst. Schau bitte drüber, wo ich noch mal hinschauen soll."
   };
   var brauch = "ueben";
   var hausaufgabeGeschickt = false;

@@ -52,7 +52,19 @@ DEINE ANTWORT:
 - Willst du etwas erklären, nimm ein EIGENES Beispiel mit anderen Zahlen oder Wörtern.
 - Bittet das Kind um die Lösung: freundlich sagen, dass es das Blatt selbst schafft,
   und dass ihr an ähnlichen Aufgaben übt, bis es sitzt. Das ist Absicht von Papa und
-  der Werkstatt, keine Strenge.`;
+  der Werkstatt, keine Strenge.
+
+WENN DAS KIND SAGT, DASS ES FERTIG IST ("schau drüber"):
+Papa hat das am 16.09.2026 erlaubt - aber nur als Zeigen, nicht als Verbessern.
+- Prüfe jede Aufgabe gründlich selbst: nachzählen, nachrechnen, jede Seite. Lies die
+  Handschrift genau; bei Verbesserungen gilt, was zuletzt dasteht.
+- Nenne nur, WO das Kind noch einmal hinschauen soll: "Aufgabe 5", "das dritte Bild
+  in der zweiten Reihe". Dazu höchstens, WORAUF es achten soll ("Passt die Zahl zu
+  deiner Zerlegung?", "Zähl die Einer noch einmal"). NIE die richtige Lösung, nie
+  "es müsste 914 heißen", nie "zu groß" oder "zu klein".
+- Kannst du etwas nicht sicher lesen, sag das ehrlich und frag nach, statt zu raten.
+- Stimmt alles, sag das klar und nenne etwas Konkretes, das gut gelungen ist.
+- Mehrere Stellen: alle nennen, kurz, als Liste in einzelnen Zeilen.`;
 
 const REGELN = `Du bist "die Werkstatt" in einer Lern-App, die ein Vater für seine drei Kinder gebaut hat.
 Ein Kind hat gerade auf den Melde-Knopf gedrückt und dir geschrieben. Antworte SOFORT und PERSÖNLICH.
@@ -110,7 +122,7 @@ das jetzt reicht und in die Werkstatt geht.
 Antworte NUR mit dem Text für das Kind. Keine Anrede-Zeile wie "Antwort:",
 keine Erklärung an mich, keine Aufzählungszeichen am Zeilenanfang.`;
 
-export async function antwortErzeugen(env, { kind, text, bild, seite, geraet, verlauf, art }) {
+export async function antwortErzeugen(env, { kind, text, bild, bilder, seite, geraet, verlauf, art }) {
   if (!env.ANTHROPIC_API_KEY) return null;
 
   const k = KINDER[kind] || { name: kind, alter: "Schulkind" };
@@ -130,11 +142,15 @@ export async function antwortErzeugen(env, { kind, text, bild, seite, geraet, ve
 
   // Das Bild ist oft die eigentliche Information - ein Screenshat sagt mehr
   // als die Beschreibung, besonders bei jüngeren Kindern.
-  if (bild && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(bild)) {
-    const [kopf, daten] = bild.split(",", 2);
-    const typ = kopf.slice(5, kopf.indexOf(";"));
-    inhalt.push({ type: "image", source: { type: "base64", media_type: typ, data: daten } });
-  }
+  // Eine Hausaufgabe hat oft mehrere Seiten - zum Drueberschauen braucht die
+  // Antwort alle, nicht nur die erste.
+  [bild].concat(Array.isArray(bilder) ? bilder : []).forEach((b) => {
+    if (b && /^data:image\/(png|jpe?g|webp|gif);base64,/.test(b)) {
+      const [kopf, daten] = b.split(",", 2);
+      const typ = kopf.slice(5, kopf.indexOf(";"));
+      inhalt.push({ type: "image", source: { type: "base64", media_type: typ, data: daten } });
+    }
+  });
 
   try {
     const a = await fetch("https://api.anthropic.com/v1/messages", {

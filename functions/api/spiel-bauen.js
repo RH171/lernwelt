@@ -175,7 +175,8 @@ export async function onRequestPost(context) {
     inhalt.push({ type: "text", text: "Das ist meine HAUSAUFGABE. Bitte löse sie nicht und verrate keine Lösung davon. " +
       "Bau mir ein Übungsspiel zum selben Stoff mit ANDEREN Aufgaben - andere Zahlen, andere Wörter, andere Sätze -, " +
       "damit ich die Hausaufgabe danach selbst schaffe. Die Erklärungen zeigen den Weg an deinen eigenen Beispielen. " +
-      "Trag jede Aufgabe, die du auf dem Blatt siehst, kurz in blatt_aufgaben ein." +
+      "Trag jede Aufgabe, die du auf dem Blatt siehst, kurz in blatt_aufgaben ein. " +
+      "Ist das Blatt schon ausgefüllt, übe gezielt das, was dort noch nicht sitzt - ohne zu verraten, welche Antwort auf dem Blatt falsch ist." +
       (wunsch ? ` Was ich brauche: ${wunsch}` : "") });
   } else if (seiten.length && wunsch) {
     inhalt.push({ type: "text", text: `Das ist mein Schulstoff. Dazu mein Wunsch: ${wunsch}` });

@@ -143,13 +143,13 @@ function ersatzText(grund, faden) {
 // Die Werkstatt antwortet selbst - im selben Aufruf, damit das Kind die
 // Antwort sofort sieht. Schlaegt es fehl (kein Schluessel, Modell nicht
 // erreichbar, Grenze erreicht), bleibt wenigstens die Eingangsbestaetigung.
-async function sofortAntworten(env, faden, kind, text, bild) {
+async function sofortAntworten(env, faden, kind, text, bild, bilder) {
   const nr = faden.verlauf.length;
   let antwort = null;
   const grund = await darfAntworten(env, kind);
   if (grund === "ok") {
     antwort = await antwortErzeugen(env, {
-      kind, text, bild, seite: faden.seite, geraet: faden.geraet, art: faden.art,
+      kind, text, bild, bilder, seite: faden.seite, geraet: faden.geraet, art: faden.art,
       verlauf: faden.verlauf.slice(0, -1),
     });
   }
@@ -310,7 +310,7 @@ async function postVerarbeiten(context) {
   // Sofort antworten - noch in diesem Aufruf, damit das Kind die Antwort
   // direkt im Fenster sieht und nicht warten muss.
   const neuerFaden = liste[0];
-  const antwort = await sofortAntworten(env, neuerFaden, kind, text, bild);
+  const antwort = await sofortAntworten(env, neuerFaden, kind, text, bild, weitere);
   await liste_speichern(env, liste);
   return json(200, { ok: true, id, antwort, faden: neuerFaden });
 }
