@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Wechselstube</title>
+<!--
+  Pauls Wiederholungsspiel zur Zahldarstellung bis 1000 (16.09.2026).
+
+  Anlass: das Blatt "Wiederholungshelden 4 (Zahldarstellung)" von
+  ideenreise-blog.de. Paul hat es selbst gelöst; Denny hat es gescannt und
+  gefragt, ob daraus ein Lernspiel zur Wiederholung werden kann. Das Blatt
+  war fast fehlerfrei. Zwei Dinge wackelten, und genau die übt dieses Spiel:
+    - Zerlegung und Zahl passen nicht zusammen (Zerlegung verbessert, Zahl
+      nicht nachgezogen),
+    - die Null als Platzhalter (Einer beim Tausenderwürfel).
+  Dazu das, was das Blatt verlangt: "Manchmal musst du wechseln!"
+
+  Üben, nicht lösen: KEINE Zahl vom Blatt kommt hier vor (siehe BLATT unten).
+
+  Drei Stationen, je 6 Aufgaben:
+    1. Was liegt auf dem Tresen? - Material ablesen, wenn nötig wechseln,
+       T/H/Z/E und die Zahl eintragen. Teile antippen zählt sie mit.
+    2. Leg die Zahl! - aus Zahlwort oder Zerlegung Material legen, Nullen
+       inklusive, selbst wechseln.
+    3. Vier Gesichter - Zahl, Zahlwort, Zerlegung, Symbole einander zuordnen.
+  Kein Zeitdruck, kein Herzverlust. Gezählt wird der erste Versuch; danach
+  gibt es einen gezielten Hinweis und einen zweiten Versuch.
+
+  Liegt als "klasse3-" im Ordner, weil games.json nur diese Dateien findet;
+  die Klasse (4, Wiederholung) steht in paul/index.html unter OVERRIDES.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef2f7; --karte:#fff; --ink:#172033; --muted:#64748b; --line:#dfe5ee;
+    --bank:#0f766e; --bank-hell:#ccfbf1; --gold:#d97706; --gut:#15803d; --hm:#b45309;
+    --platte:#f59e0b; --stange:#3b82f6; --wuerfel:#ef4444; --tausend:#7c3aed;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .knopf-klein{display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:700 15px/1 var(--font);color:var(--ink);cursor:pointer;min-height:44px}
+  h1{font:800 22px/1.1 var(--rund);margin:0;flex:1;min-width:150px}
+  .zaehler{font:800 15px/1 var(--rund);background:#fff;border:1px solid var(--line);border-radius:999px;padding:13px 14px;white-space:nowrap}
+  .karte{background:var(--karte);border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 12px 30px rgba(15,40,70,.09);margin-bottom:12px}
+
+  /* ---- Start ---- */
+  .start{text-align:center}
+  .start .gross{font-size:56px;line-height:1}
+  .start h2{font:800 28px/1.2 var(--rund);margin:8px 0 6px}
+  .start p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 auto 16px;max-width:640px}
+  .stationen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:left}
+  @media (max-width:760px){ .stationen{grid-template-columns:1fr} }
+  .station{border:2px solid var(--line);background:#fbfdff;border-radius:18px;padding:14px;cursor:pointer;display:flex;
+    flex-direction:column;gap:6px;min-height:120px;color:var(--ink);font:inherit;text-align:left}
+  .station:active{transform:scale(.98)}
+  .station .ic{font-size:32px}
+  .station b{font:800 18px/1.2 var(--rund)}
+  .station span{color:var(--muted);font-size:14.5px;line-height:1.4}
+  .station .stand{color:var(--gut);font-weight:800}
+
+  /* ---- Spiel ---- */
+  .spielflaeche{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (min-width:900px){ .spielflaeche{grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);align-items:start} }
+  .auftrag{font:800 21px/1.3 var(--rund);margin:0 0 4px}
+  .unterzeile{color:var(--muted);font-size:15px;line-height:1.45;margin:0 0 10px}
+  .zielkarte{display:inline-block;background:var(--bank-hell);color:#134e4a;border-radius:14px;padding:10px 16px;
+    font:800 26px/1.2 var(--rund);margin:4px 0 10px}
+
+  .tresen{position:relative;background:linear-gradient(#fdfaf3,#f6efe0);border:3px solid #e2d3b5;border-radius:18px;
+    min-height:250px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .tresen .gruppe{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+  .tresen .gruppe:empty{display:none}
+  .teil{position:relative;cursor:pointer;border:none;background:none;padding:0;line-height:0}
+  /* Einer und Zehner sind klein gezeichnet, getippt wird aber mit dem Finger:
+     die Trefferflaeche waechst unsichtbar auf 44 px. */
+  .gruppe[data-art="e"] .teil{padding:10px}
+  .gruppe[data-art="z"] .teil{padding:0 14px}
+  .gruppe[data-art="e"], .gruppe[data-art="z"]{gap:0}
+  .teil svg{display:block}
+  .teil.gezaehlt::after{content:attr(data-nr);position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:11px;
+    background:var(--ink);color:#fff;font:800 12px/22px var(--rund);text-align:center;padding:0 5px}
+  .teil.markiert svg{filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 6px #f59e0b)}
+  .teil.neu{animation:plopp .6s ease-out}
+  @keyframes plopp{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
+  .tresen-fuss{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .knopf{border:none;border-radius:14px;padding:12px 16px;min-height:48px;font:800 16px/1.1 var(--rund);cursor:pointer;
+    background:#e2e8f0;color:var(--ink)}
+  .knopf:active{transform:scale(.97)}
+  .knopf.haupt{background:var(--bank);color:#fff}
+  .knopf.gold{background:#fef3c7;color:#92400e}
+  .knopf[disabled]{opacity:.4;cursor:default}
+
+  /* Eintragen wie auf dem Blatt: ___T + ___H + ___Z + ___E, darunter "als Zahl". */
+  .zerlegung{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:800 22px/1 var(--rund);margin:4px 0 10px}
+  .feld{min-width:52px;height:56px;border:3px solid var(--line);border-radius:12px;background:#fff;
+    font:800 28px/50px var(--rund);text-align:center;cursor:pointer;color:var(--ink);padding:0 6px}
+  .feld.an{border-color:var(--bank);box-shadow:0 0 0 4px var(--bank-hell)}
+  .feld.zahl{min-width:120px}
+  .feld.leer{color:#cbd5e1}
+  .alszahl{display:flex;align-items:center;gap:10px;font:700 17px/1 var(--rund);margin-bottom:12px}
+  .tasten{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;max-width:420px}
+  .tasten button{min-height:52px;border:none;border-radius:12px;background:#f1f5f9;font:800 22px/1 var(--rund);color:var(--ink);cursor:pointer}
+  .tasten button:active{background:#e2e8f0}
+
+  .leger{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:6px 0 12px}
+  .leger .reihe{display:flex;align-items:center;justify-content:space-between;gap:6px;border:2px solid var(--line);border-radius:14px;padding:6px 8px}
+  .leger .name{font:800 15px/1.2 var(--rund)}
+  .leger .anzahl{font:800 22px/1 var(--rund);min-width:28px;text-align:center}
+  .leger .pm{width:44px;height:44px;border:none;border-radius:12px;background:#f1f5f9;font:800 24px/1 var(--rund);cursor:pointer;color:var(--ink)}
+
+  .wahl{display:grid;gap:9px}
+  .wahl button{border:3px solid var(--line);background:#fff;border-radius:16px;padding:12px 16px;min-height:60px;text-align:left;
+    font:800 20px/1.3 var(--rund);color:var(--ink);cursor:pointer}
+  .wahl button.richtig{border-color:var(--gut);background:#f0fdf4}
+  .wahl button.daneben{border-color:#fca5a5;background:#fef2f2;color:#94a3b8}
+  .symbole{font:800 28px/1.4 var(--rund);letter-spacing:.08em;word-break:break-all}
+
+  .rueck{min-height:28px;margin:12px 0 0;font:700 17px/1.45 var(--rund)}
+  .rueck.gut{color:var(--gut)} .rueck.hm{color:var(--hm)}
+  .weiter{width:100%;margin-top:10px}
+
+  .ende{text-align:center}
+  .ende .gross{font-size:60px}
+  .ende h2{font:800 26px/1.2 var(--rund);margin:6px 0}
+  .ende p{font-size:18px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <button class="knopf-klein" id="zurueck">‹ Lernwelt</button>
+    <h1>🏦 Die Wechselstube</h1>
+    <div class="zaehler verborgen" id="zaehler"></div>
+  </header>
+
+  <section id="sicht-start">
+    <div class="karte start">
+      <div class="gross">🏦</div>
+      <h2>Willkommen in der Wechselstube!</h2>
+      <p>Hier wird gezählt, gelegt und <b>gewechselt</b>: 10 Einer sind 1 Zehner, 10 Zehner sind 1 Hunderter,
+        10 Hunderter sind 1 Tausender. Such dir eine Station aus.</p>
+      <div class="stationen" id="stationen"></div>
+    </div>
+  </section>
+
+  <section id="sicht-spiel" class="verborgen">
+    <div class="spielflaeche">
+      <div class="karte">
+        <div class="auftrag" id="auftrag"></div>
+        <p class="unterzeile" id="unterzeile"></p>
+        <div id="ziel"></div>
+        <div class="tresen" id="tresen" aria-label="Tresen mit Material"></div>
+        <div class="tresen-fuss" id="tresen-fuss"></div>
+      </div>
+      <div class="karte" id="eingabe"></div>
+    </div>
+  </section>
+
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte ende">
+      <div class="gross">🏆</div>
+      <h2 id="ende-titel"></h2>
+      <p id="ende-text"></p>
+      <button class="knopf haupt weiter" id="ende-start">Zu den Stationen</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t = f[i]; f[i] = f[j]; f[j] = t; } return f; }
+  function z(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+  function LS(){ return window.lernstand || null; }
+
+  $("zurueck").addEventListener("click", function(){
+    var hub = "index.html";
+    try { var s = localStorage.getItem("hub-url"); if (s) hub = s; } catch(e){}
+    location.href = hub;
+  });
+
+  // Üben, nicht lösen: Diese Zahlen stehen auf Pauls Blatt und kommen hier nie vor.
+  // Nur die 1000 bleibt erlaubt - es gibt sie nur einmal, und "10 Hunderter sind
+  // 1 Tausender" ist der Kern des Wechselns, keine Lösung vom Blatt.
+  var BLATT = [655, 868, 231, 914, 941, 311, 484, 555, 481, 251, 326, 503, 482, 737];
+  var benutzt = {};
+  function frei(n){ return BLATT.indexOf(n) < 0 && !benutzt[n]; }
+
+  /* ---------- Zahlwörter ---------- */
+  var EINER = ["", "ein", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun"];
+  var KLEIN = ["", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf",
+               "dreizehn", "vierzehn", "fünfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn"];
+  var ZEHNER = ["", "", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig"];
+  function zahlwort(n){
+    if (n === 1000) return "eintausend";
+    var h = Math.floor(n / 100), rest = n % 100, w = h ? EINER[h] + "hundert" : "";
+    if (!rest) return w || "null";
+    if (rest < 20) return w + KLEIN[rest];
+    var e = rest % 10, zz = Math.floor(rest / 10);
+    return w + (e ? EINER[e] + "und" : "") + ZEHNER[zz];
+  }
+  function stellen(n){ return { t: Math.floor(n/1000), h: Math.floor(n/100) % 10, z: Math.floor(n/10) % 10, e: n % 10 }; }
+  function zerlegungText(s, reihe){
+    var teile = { t: s.t + "T", h: s.h + "H", z: s.z + "Z", e: s.e + "E" };
+    return (reihe || ["h", "z", "e"]).map(function(k){ return teile[k]; }).join(" + ");
+  }
+  function symbole(s){ return "□".repeat(s.h) + " " + "|".repeat(s.z) + " " + "•".repeat(s.e); }
+
+  /* ---------- Material zeichnen ---------- */
+  var SVG = "http://www.w3.org/2000/svg";
+  function svgTeil(art){
+    var s = document.createElementNS(SVG, "svg"), gr, i, j;
+    function r(x, y, w, h, fill){ var e = document.createElementNS(SVG, "rect"); e.setAttribute("x", x); e.setAttribute("y", y);
+      e.setAttribute("width", w); e.setAttribute("height", h); e.setAttribute("fill", fill); e.setAttribute("stroke", "#1f2937");
+      e.setAttribute("stroke-width", "1"); s.appendChild(e); }
+    if (art === "e"){ gr = 24; s.setAttribute("width", gr); s.setAttribute("height", gr); r(1, 1, gr-2, gr-2, "#fca5a5"); }
+    if (art === "z"){ s.setAttribute("width", 16); s.setAttribute("height", 102); for (i = 0; i < 10; i++) r(1, 1 + i*10, 14, 10, "#93c5fd"); }
+    if (art === "h"){ s.setAttribute("width", 82); s.setAttribute("height", 82); for (i = 0; i < 10; i++) for (j = 0; j < 10; j++) r(1 + i*8, 1 + j*8, 8, 8, "#fcd34d"); }
+    if (art === "t"){
+      s.setAttribute("width", 110); s.setAttribute("height", 110);
+      var p = function(pts, fill){ var e = document.createElementNS(SVG, "polygon"); e.setAttribute("points", pts); e.setAttribute("fill", fill);
+        e.setAttribute("stroke", "#1f2937"); e.setAttribute("stroke-width", "1.5"); s.appendChild(e); };
+      p("10,30 80,30 80,100 10,100", "#c4b5fd"); p("10,30 30,10 100,10 80,30", "#ddd6fe"); p("80,30 100,10 100,80 80,100", "#a78bfa");
+      for (i = 1; i < 10; i++){ var l = document.createElementNS(SVG, "line"); l.setAttribute("x1", 10 + i*7); l.setAttribute("y1", 30);
+        l.setAttribute("x2", 10 + i*7); l.setAttribute("y2", 100); l.setAttribute("stroke", "#6d28d9"); l.setAttribute("stroke-width", ".6"); s.appendChild(l);
+        var q = l.cloneNode(); q.setAttribute("x1", 10); q.setAttribute("y1", 30 + i*7); q.setAttribute("x2", 80); q.setAttribute("y2", 30 + i*7); s.appendChild(q); }
+    }
+    return s;
+  }
+  var NAMEN = { t: "Tausender", h: "Hunderter", z: "Zehner", e: "Einer" };
+
+  // menge = {t,h,z,e} - so viele Teile liegen WIRKLICH da (auch mehr als 9)
+  var zaehlNr = 0;
+  function tresenMalen(menge, neu){
+    var t = $("tresen"); t.innerHTML = ""; zaehlNr = 0;
+    ["t", "h", "z", "e"].forEach(function(k){
+      var g = document.createElement("div"); g.className = "gruppe"; g.setAttribute("data-art", k);
+      for (var i = 0; i < (menge[k] || 0); i++){
+        var b = document.createElement("button"); b.type = "button"; b.className = "teil";
+        b.setAttribute("aria-label", NAMEN[k]);
+        if (neu && neu[k] && i >= menge[k] - neu[k]) b.classList.add("neu");
+        b.appendChild(svgTeil(k));
+        // Antippen zaehlt mit - wie der Finger auf dem Blatt.
+        b.addEventListener("click", function(){
+          if (this.classList.contains("gezaehlt")) return;
+          zaehlNr++; this.setAttribute("data-nr", zaehlNr); this.classList.add("gezaehlt");
+        });
+        g.appendChild(b);
+      }
+      t.appendChild(g);
+    });
+  }
+
+  /* ---------- Speicher: nur Rückschau ---------- */
+  var SPEICHER = "paul-wechselstube";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function merken(station, richtig, gesamt){
+    try { var d = lesen(); d[station] = { richtig: richtig, gesamt: gesamt }; localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){}
+  }
+
+  var STATIONEN = [
+    { id: "tresen", ic: "🧮", titel: "Was liegt auf dem Tresen?", text: "Zähle das Material, wechsle, wenn nötig, und schreib T, H, Z, E und die Zahl auf." },
+    { id: "legen",  ic: "🧱", titel: "Leg die Zahl!", text: "Aus Zahlwort oder Zerlegung wird Material. Achtung bei den Nullen!" },
+    { id: "gesichter", ic: "🎭", titel: "Vier Gesichter einer Zahl", text: "Zahl, Zahlwort, Zerlegung und Symbole – was gehört zusammen?" }
+  ];
+
+  function startMalen(){
+    var d = lesen(), box = $("stationen"); box.innerHTML = "";
+    STATIONEN.forEach(function(st){
+      var b = document.createElement("button"); b.className = "station"; b.type = "button";
+      b.innerHTML = '<span class="ic"></span><b></b><span class="txt"></span><span class="stand"></span>';
+      b.querySelector(".ic").textContent = st.ic;
+      b.querySelector("b").textContent = st.titel;
+      b.querySelector(".txt").textContent = st.text;
+      b.querySelector(".stand").textContent = d[st.id] ? "Zuletzt: " + d[st.id].richtig + " von " + d[st.id].gesamt + " gleich richtig" : "";
+      b.addEventListener("click", function(){ stationStarten(st); });
+      box.appendChild(b);
+    });
+  }
+  function zeige(welche){
+    ["start", "spiel", "ende"].forEach(function(s){ $("sicht-" + s).classList.toggle("verborgen", s !== welche); });
+    $("zaehler").classList.toggle("verborgen", welche !== "spiel");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Aufgaben erzeugen ---------- */
+  // Station 1: Material, das manchmal gewechselt werden muss. Jede zweite Aufgabe
+  // braucht einen Wechsel - wie auf dem Blatt.
+  function aufgabeTresen(i){
+    for (var v = 0; v < 200; v++){
+      var m = { t: 0, h: z(1, 8), z: z(0, 9), e: z(0, 9) };
+      if (i % 2 === 1){ if (Math.random() < .6) m.e = z(10, 15); else m.z = z(10, 13); }
+      if (i === 5 && Math.random() < .5){ m = { t: 0, h: 9, z: z(9, 10), e: 10 }; }
+      var wert = m.h*100 + m.z*10 + m.e;
+      if (wert <= 1000 && frei(wert) && (i % 2 === 0 || m.e > 9 || m.z > 9)){ benutzt[wert] = 1; return { art: "tresen", menge: m, wert: wert }; }
+    }
+    return { art: "tresen", menge: { t:0, h:3, z:4, e:12 }, wert: 352 };
+  }
+  // Station 2: Zahlen mit Nullen gehören dazu.
+  function aufgabeLegen(i){
+    for (var v = 0; v < 200; v++){
+      var n;
+      if (i === 5) n = 1000;
+      else if (i % 3 === 1) n = z(1, 9)*100 + z(1, 9);          // Zehner fehlen
+      else if (i % 3 === 2) n = z(1, 9)*100 + z(1, 9)*10;       // Einer fehlen
+      else n = z(101, 989);
+      if (frei(n)){ benutzt[n] = 1; return { art: "legen", wert: n, zeig: (i % 2 === 0 || n === 1000) ? "wort" : "zerlegung" }; }
+    }
+    return { art: "legen", wert: 607, zeig: "wort" };
+  }
+  // Station 3: Die falschen Antworten sind die typischen Verwechsler.
+  function verwechsler(n){
+    var s = stellen(n), f = [];
+    f.push(s.h*100 + s.e*10 + s.z);                  // Zehner und Einer vertauscht (914 / 941)
+    f.push(s.z*100 + s.h*10 + s.e);                  // Hunderter und Zehner vertauscht
+    if (s.z === 0) f.push(s.h*10 + s.e);             // die Null vergessen (503 -> 53)
+    if (s.e === 0) f.push(s.h*10 + s.z);
+    f.push(n + (Math.random() < .5 ? 10 : -10));
+    f.push(n + (Math.random() < .5 ? 100 : -100));
+    var ok = []; f.forEach(function(x){ if (x !== n && x > 0 && x <= 1000 && ok.indexOf(x) < 0) ok.push(x); });
+    return mische(ok).slice(0, 3);
+  }
+  function aufgabeGesichter(i){
+    var n;
+    for (var v = 0; v < 200; v++){
+      n = (i === 2) ? z(1, 9)*100 + z(1, 9) : (i === 4 ? z(1, 9)*100 + z(1, 9)*10 + z(1, 9) : z(102, 998));
+      if (frei(n) && stellen(n).z !== stellen(n).e) break;
+    }
+    benutzt[n] = 1;
+    var s = stellen(n), falsch = verwechsler(n);
+    var typen = ["zahl-wort", "wort-zahl", "zerlegung-zahl", "symbole-zahl", "zahl-zerlegung", "wort-zahl"];
+    var typ = typen[i % typen.length], frage, zeig, richtig, opts;
+    if (typ === "zahl-wort"){ frage = "Welches Zahlwort passt?"; zeig = String(n); richtig = zahlwort(n); opts = falsch.map(zahlwort); }
+    if (typ === "wort-zahl"){ frage = "Welche Zahl ist das?"; zeig = zahlwort(n); richtig = String(n); opts = falsch.map(String); }
+    if (typ === "zerlegung-zahl"){
+      // Durcheinander, wie es Lehrerinnen gern machen - die Stelle zählt, nicht die Reihenfolge.
+      frage = "Welche Zahl ist das? Schau genau auf die Buchstaben!"; zeig = zerlegungText(s, mische(["h", "z", "e"])); richtig = String(n); opts = falsch.map(String);
+    }
+    if (typ === "symbole-zahl"){ frage = "□ ist ein Hunderter, | ein Zehner, • ein Einer. Welche Zahl ist das?"; zeig = symbole(s); richtig = String(n); opts = falsch.map(String); }
+    if (typ === "zahl-zerlegung"){ frage = "Welche Zerlegung passt?"; zeig = String(n); richtig = zerlegungText(s);
+      opts = falsch.map(function(x){ return zerlegungText(stellen(x)); }); }
+    return { art: "wahl", wert: n, frage: frage, zeig: zeig, richtig: richtig, optionen: mische([richtig].concat(opts.slice(0, 3))),
+             symbole: typ === "symbole-zahl", merkmal: typ === "symbole-zahl" ? "symbole zahl" : (typ.indexOf("wort") >= 0 ? "zahlwort zahl" : "zerlegung zahl") };
+  }
+
+  /* ---------- Ablauf ---------- */
+  var station = null, aufgaben = [], nr = 0, gleichRichtig = 0, ersterVersuch = true;
+
+  function stationStarten(st){
+    station = st; benutzt = {}; nr = 0; gleichRichtig = 0;
+    aufgaben = [];
+    for (var i = 0; i < 6; i++) aufgaben.push(st.id === "tresen" ? aufgabeTresen(i) : st.id === "legen" ? aufgabeLegen(i) : aufgabeGesichter(i));
+    document.title = "Die Wechselstube: " + st.titel;
+    zeige("spiel");
+    aufgabeZeigen();
+  }
+
+  function rueck(text, art){ var r = $("rueck"); if (!r) return; r.textContent = text; r.className = "rueck " + (art || ""); }
+  function weiterKnopf(){
+    var w = $("weiter"); w.classList.remove("verborgen");
+    w.textContent = nr === aufgaben.length - 1 ? "Station abschließen ›" : "Nächste Aufgabe ›";
+  }
+  function gewertet(stimmt, merkmal, gegeben, richtig){
+    if (!ersterVersuch) return;
+    ersterVersuch = false;
+    if (stimmt) gleichRichtig++;
+    try { LS() && LS().antwort(stimmt, merkmal, gegeben, richtig); } catch(e){}
+  }
+
+  function aufgabeZeigen(){
+    var a = aufgaben[nr];
+    ersterVersuch = true;
+    $("zaehler").textContent = "Aufgabe " + (nr + 1) + " / " + aufgaben.length;
+    $("ziel").innerHTML = ""; $("tresen-fuss").innerHTML = "";
+    $("tresen").classList.remove("verborgen");
+    if (a.art === "tresen") tresenAufgabe(a);
+    if (a.art === "legen") legenAufgabe(a);
+    if (a.art === "wahl") wahlAufgabe(a);
+    window.scrollTo(0, 0);
+  }
+
+  /* ---- Station 1 ---- */
+  function tresenAufgabe(a){
+    var menge = { t: a.menge.t, h: a.menge.h, z: a.menge.z, e: a.menge.e };
+    $("auftrag").textContent = "Welche Zahl liegt auf dem Tresen?";
+    $("unterzeile").textContent = "Tipp die Teile an, dann zählen sie mit. Mehr als 9 von einer Sorte? Dann musst du wechseln!";
+    tresenMalen(menge);
+
+    var e = $("eingabe");
+    e.innerHTML = '<div class="auftrag">Trag ein</div>' +
+      '<div class="zerlegung"><button class="feld" data-f="t"></button>T +<button class="feld" data-f="h"></button>H +' +
+      '<button class="feld" data-f="z"></button>Z +<button class="feld" data-f="e"></button>E</div>' +
+      '<div class="alszahl">als Zahl <button class="feld zahl" data-f="zahl"></button></div>' +
+      '<div class="tasten" id="tasten"></div>' +
+      '<button class="knopf haupt weiter" id="pruefen">Prüfen</button>' +
+      '<div class="rueck" id="rueck"></div>' +
+      '<button class="knopf haupt weiter verborgen" id="weiter"></button>';
+    var werte = { t: "", h: "", z: "", e: "", zahl: "" }, aktiv = "h";
+    var felder = e.querySelectorAll(".feld");
+    function malen(){
+      Array.prototype.forEach.call(felder, function(f){
+        var k = f.getAttribute("data-f");
+        f.textContent = werte[k] === "" ? "?" : werte[k];
+        f.classList.toggle("leer", werte[k] === "");
+        f.classList.toggle("an", k === aktiv);
+      });
+    }
+    Array.prototype.forEach.call(felder, function(f){ f.addEventListener("click", function(){ aktiv = f.getAttribute("data-f"); malen(); }); });
+    var reihe = ["t", "h", "z", "e", "zahl"];
+    function taste(t){
+      if (t === "⌫"){ werte[aktiv] = werte[aktiv].slice(0, -1); }
+      else if (aktiv === "zahl"){ if (werte.zahl.length < 4) werte.zahl += t; }
+      else { werte[aktiv] = t; var i = reihe.indexOf(aktiv); aktiv = reihe[Math.min(i + 1, reihe.length - 1)]; }
+      malen();
+    }
+    ["1","2","3","4","5","6","7","8","9","0"].concat(["⌫"]).forEach(function(t){
+      var b = document.createElement("button"); b.type = "button"; b.textContent = t;
+      b.addEventListener("click", function(){ taste(t); }); $("tasten").appendChild(b);
+    });
+    $("tasten").style.gridTemplateColumns = "repeat(6,1fr)";
+    malen();
+
+    var wechselKnopf = null;
+    function wechselAnbieten(){
+      if (wechselKnopf) return;
+      wechselKnopf = document.createElement("button"); wechselKnopf.className = "knopf gold"; wechselKnopf.type = "button";
+      wechselKnopf.textContent = "🔁 Zeig mir das Wechseln";
+      wechselKnopf.addEventListener("click", function(){
+        var neu = {};
+        if (menge.e > 9){ menge.e -= 10; menge.z += 1; neu.z = 1; }
+        else if (menge.z > 9){ menge.z -= 10; menge.h += 1; neu.h = 1; }
+        else if (menge.h > 9){ menge.h -= 10; menge.t += 1; neu.t = 1; }
+        tresenMalen(menge, neu);
+        if (menge.e <= 9 && menge.z <= 9 && menge.h <= 9){ wechselKnopf.disabled = true; wechselKnopf.textContent = "✔ Alles gewechselt"; }
+      });
+      $("tresen-fuss").appendChild(wechselKnopf);
+    }
+
+    $("pruefen").addEventListener("click", function(){
+      var s = stellen(a.wert);
+      var num = function(x){ return x === "" ? 0 : parseInt(x, 10); };
+      if (werte.zahl === ""){ rueck("Schreib auch die Zahl auf – unten bei „als Zahl“.", "hm"); return; }
+      var zerlegungOk = num(werte.t) === s.t && num(werte.h) === s.h && num(werte.z) === s.z && num(werte.e) === s.e;
+      var wertDerZerlegung = num(werte.t)*1000 + num(werte.h)*100 + num(werte.z)*10 + num(werte.e);
+      var zahlOk = parseInt(werte.zahl, 10) === a.wert;
+      var gebraucht = a.menge.e > 9 || a.menge.z > 9;
+      var merkmal = gebraucht ? "buendeln wechseln" : "stellenwerte ablesen";
+      if (zerlegungOk && zahlOk){
+        gewertet(true, merkmal, "", String(a.wert));
+        rueck(gebraucht ? "✅ Stimmt – und richtig gewechselt!" : "✅ Stimmt genau!", "gut");
+        $("pruefen").classList.add("verborgen"); weiterKnopf(); return;
+      }
+      if (zerlegungOk && !zahlOk){
+        gewertet(false, "zahl und zerlegung passen", werte.zahl, String(a.wert));
+        rueck("Deine Zerlegung stimmt! Passt die Zahl dazu? Lies die Ziffern in der Reihenfolge T – H – Z – E ab.", "hm");
+        return;
+      }
+      if (!zerlegungOk && wertDerZerlegung !== parseInt(werte.zahl, 10) && zahlOk){
+        gewertet(false, "zahl und zerlegung passen", werte.h + "H" + werte.z + "Z" + werte.e + "E", zerlegungText(s));
+        rueck("Die Zahl stimmt! Schau noch mal, ob deine Zerlegung zur Zahl passt.", "hm");
+        return;
+      }
+      gewertet(false, merkmal, werte.zahl, String(a.wert));
+      if (gebraucht && (menge.e > 9 || menge.z > 9)){
+        rueck("Zähl noch einmal nach. Liegen mehr als 9 Einer oder 9 Zehner da? Dann wird gewechselt – probier den Knopf unter dem Tresen.", "hm");
+        wechselAnbieten();
+      } else {
+        rueck("Zähl noch einmal nach – tipp jedes Teil einmal an, dann zählt es mit.", "hm");
+        tresenMalen(menge);
+      }
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  /* ---- Station 2 ---- */
+  function legenAufgabe(a){
+    var s = stellen(a.wert), menge = { t: 0, h: 0, z: 0, e: 0 };
+    $("auftrag").textContent = "Leg diese Zahl mit Material:";
+    $("unterzeile").textContent = a.zeig === "wort" ? "Lies das Zahlwort genau – Nullen hört man nicht!" : "H heißt Hunderter, Z Zehner, E Einer.";
+    var k = document.createElement("div"); k.className = "zielkarte";
+    k.textContent = a.zeig === "wort" ? zahlwort(a.wert) : zerlegungText(s);
+    $("ziel").appendChild(k);
+    tresenMalen(menge);
+
+    var e = $("eingabe");
+    e.innerHTML = '<div class="auftrag">Material holen</div><div class="leger" id="leger"></div>' +
+      '<div class="tresen-fuss" id="leg-wechsel"></div>' +
+      '<button class="knopf haupt weiter" id="pruefen">Fertig gelegt</button>' +
+      '<div class="rueck" id="rueck"></div>' +
+      '<button class="knopf haupt weiter verborgen" id="weiter"></button>';
+    ["t", "h", "z", "e"].forEach(function(key){
+      var r = document.createElement("div"); r.className = "reihe";
+      r.innerHTML = '<button class="pm" type="button" aria-label="weniger">−</button><span><span class="name"></span><br><span class="anzahl">0</span></span><button class="pm" type="button" aria-label="mehr">+</button>';
+      r.querySelector(".name").textContent = NAMEN[key];
+      var knoepfe = r.querySelectorAll(".pm");
+      knoepfe[0].addEventListener("click", function(){ if (menge[key] > 0){ menge[key]--; malen(); } });
+      knoepfe[1].addEventListener("click", function(){ if (menge[key] < 19){ menge[key]++; var n = {}; n[key] = 1; malen(n); } });
+      r.setAttribute("data-k", key);
+      $("leger").appendChild(r);
+    });
+    var wk = document.createElement("button"); wk.className = "knopf gold"; wk.type = "button"; wk.textContent = "🔁 10 wechseln";
+    wk.addEventListener("click", function(){
+      var n = {};
+      if (menge.e > 9){ menge.e -= 10; menge.z++; n.z = 1; }
+      else if (menge.z > 9){ menge.z -= 10; menge.h++; n.h = 1; }
+      else if (menge.h > 9){ menge.h -= 10; menge.t++; n.t = 1; }
+      malen(n);
+    });
+    $("leg-wechsel").appendChild(wk);
+    function malen(neu){
+      Array.prototype.forEach.call($("leger").querySelectorAll(".reihe"), function(r){ r.querySelector(".anzahl").textContent = menge[r.getAttribute("data-k")]; });
+      wk.disabled = !(menge.e > 9 || menge.z > 9 || menge.h > 9);
+      tresenMalen(menge, neu);
+    }
+    malen();
+
+    $("pruefen").addEventListener("click", function(){
+      var wert = menge.t*1000 + menge.h*100 + menge.z*10 + menge.e;
+      var merkmal = (s.z === 0 || s.e === 0 || a.wert === 1000) ? "null als platzhalter" : "zahl legen";
+      if (wert === a.wert && menge.e <= 9 && menge.z <= 9 && menge.h <= 9){
+        gewertet(true, merkmal, "", String(a.wert));
+        rueck("✅ Genau richtig gelegt! Das ist die " + a.wert + ".", "gut");
+        $("pruefen").classList.add("verborgen"); weiterKnopf(); return;
+      }
+      if (wert === a.wert){
+        // Richtig viel - nur noch nicht gebündelt. Kein Fehler, sondern der nächste Schritt.
+        rueck("Richtig viel! Aber von einer Sorte liegen mehr als 9 da. Wechsle 10 davon – mit dem goldenen Knopf.", "hm");
+        return;
+      }
+      gewertet(false, merkmal, String(wert), String(a.wert));
+      rueck(a.zeig === "wort"
+        ? "Noch nicht. Sprich das Zahlwort langsam: Wie viele Hunderter? Wie viele Zehner? Wie viele Einer – und fehlt eine Stelle?"
+        : "Noch nicht. Schau bei jedem Buchstaben, wie viele Teile du von dieser Sorte brauchst.", "hm");
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  /* ---- Station 3 ---- */
+  function wahlAufgabe(a){
+    $("tresen").classList.add("verborgen");
+    $("auftrag").textContent = a.frage;
+    $("unterzeile").textContent = "";
+    var k = document.createElement("div"); k.className = "zielkarte" + (a.symbole ? " symbole" : "");
+    k.textContent = a.zeig; $("ziel").appendChild(k);
+    var e = $("eingabe");
+    e.innerHTML = '<div class="wahl" id="wahl"></div><div class="rueck" id="rueck"></div><button class="knopf haupt weiter verborgen" id="weiter"></button>';
+    a.optionen.forEach(function(o){
+      var b = document.createElement("button"); b.type = "button"; b.textContent = o;
+      b.addEventListener("click", function(){
+        if (!$("weiter").classList.contains("verborgen") || b.classList.contains("daneben")) return;
+        if (o === a.richtig){
+          gewertet(true, a.merkmal, "", a.richtig);
+          b.classList.add("richtig"); rueck("✅ Richtig – das ist dieselbe Zahl in einem anderen Gesicht.", "gut"); weiterKnopf();
+        } else {
+          gewertet(false, a.merkmal, o, a.richtig);
+          b.classList.add("daneben");
+          rueck("Schau noch mal genau hin: Stimmen die Hunderter, die Zehner UND die Einer – und an welcher Stelle steht eine Null?", "hm");
+        }
+      });
+      $("wahl").appendChild(b);
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  function naechste(){
+    if (nr < aufgaben.length - 1){ nr++; aufgabeZeigen(); return; }
+    merken(station.id, gleichRichtig, aufgaben.length);
+    $("ende-titel").textContent = station.titel + " geschafft!";
+    $("ende-text").textContent = gleichRichtig === aufgaben.length
+      ? "Alle " + aufgaben.length + " Aufgaben gleich beim ersten Mal. Du bist ein echter Wechselprofi!"
+      : gleichRichtig + " von " + aufgaben.length + " gleich beim ersten Mal – und die anderen hast du mit dem zweiten Blick geschafft. Genau so lernt man.";
+    zeige("ende");
+  }
+  $("ende-start").addEventListener("click", function(){ startMalen(); zeige("start"); document.title = "Die Wechselstube"; });
+
+  // Zum Prüfen von außen (Messung) - verrät Paul nichts, was er nicht sieht.
+  window.__wechselstube = { zahlwort: zahlwort, aufgaben: function(){ return aufgaben; }, nr: function(){ return nr; } };
+
+  startMalen();
+  zeige("start");
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
