@@ -167,6 +167,27 @@ sofort an. Dem Kind also sagen, wie es ein frisches bekommt („Ein ganz neues
 Spiel dazu bauen" am Ende einer Runde), sonst sucht es die Änderung im alten
 Spiel und findet sie nicht.
 
+## Die Schmiede gibt es dreimal – der Motor liegt EINMAL in /schmiede/
+
+Seit dem 16.09.2026 (Leon: in seiner Lernwelt fehlte, was Paul hat; Denny:
+„auch gleich für Helena") steht der Spielmotor in `schmiede/motor.js`, das
+Aussehen in `schmiede/schmiede.css`. `paul/schmiede.html`,
+`leon/schmiede.html` und `helena/schmiede.html` enthalten nur noch
+`window.SCHMIEDE` (Kind, Texte, Fächer, Themen, Vorauswahl) — die Liste der
+Felder steht oben in `motor.js`. **Wer am Motor etwas ändert, ändert es für
+alle drei und misst alle drei:**
+
+    node geraete-messen.js /paul/schmiede.html paul mess-schritte-schmiede.js
+    node geraete-messen.js /leon/schmiede.html leon mess-schritte-leon-schmiede.js
+    node geraete-messen.js /helena/schmiede.html helena mess-schritte-helena-schmiede.js
+
+- **Leon** (7): Themen aus `leon/themen.js` — dieselbe Datei nutzt seine
+  Startseite, damit die Schlüssel nie auseinanderlaufen. Jede Aufgabe wird von
+  selbst vorgelesen, „Von allein rennen" ist vorgewählt, Figur „Torwart Leon".
+- **Helena** (12): eigene Themen `g7-/e7-/f7-/d7-/w7-`, am Rätsel-Tor dürfen
+  Wörter die Lösung sein (`textAntworten`). Anmeldung mit **HELENA_CODE**
+  (Dennys Entscheidung 16.09.2026) — nur die Schmiede, ihre Trainer bleiben offen.
+
 ## Pauls Spiel-Schmiede: derselbe Lernstoff, ein anderer Darsteller
 
 Paul am 14.09.2026 (Meldung `8fcenvfnsh`), nachdem er dreimal richtiggestellt
