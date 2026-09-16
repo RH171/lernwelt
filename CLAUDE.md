@@ -672,6 +672,54 @@ Nachschlagen ist Lesen. Der Weiter-Knopf wacht erst nach etwa 0,25 s je Wort auf
 
 Messung: `mess-schritte-lesegeschichte.js`.
 
+## Wie lange eine Anmeldung liegen bleibt (und die Falle darin)
+
+Paul am 16.09.2026 (Meldung `4rq8ghes95`): *„ich wuerde auch gerne jedes Mal,
+wenn man reingeht, automatisch das Passwort eingeben muessen und nicht nach 30
+Tagen."*
+
+`ausweisKopfzeile(ausweis, kind)` in `_riegel.js` entscheidet das **beim
+Anmelden**, anhand des Kindes aus `?kind=` bzw. dem Auftrag. Für `paul` fällt
+das `Max-Age` weg — ein Sitzungs-Cookie, das der Browser beim Schließen
+wegwirft. Leon (7) und der Elternbereich behalten ihre 30 Tage; Paul hatte die
+Rückfrage „nur du oder alle drei?" nicht beantwortet, und ungefragt tippt
+niemand sonst öfter.
+
+**Scoping geht nur an dieser einen Stelle.** Leon hat kein eigenes Secret und
+fällt auf `PAUL_CODE` zurück — **ein Cookie öffnet beide Bereiche**. Wer die
+Dauer pro *Bereich* statt pro *Anmeldung* steuern will, müsste dafür in
+`_middleware.js`, und das ist gesperrt.
+
+**Die Falle, und sie sperrt Paul komplett aus:** Der signierte Stichtag im
+Ausweis muss bei `TAGE` bleiben. `ausweisGueltig()` rechnet daraus zurück, wann
+er ausgestellt wurde (`ausgestellt = bis - TAGE * 86400000`), um „Alle
+abmelden" durchzusetzen. Verkürzt man die Gültigkeit auf z. B. 12 Stunden, ohne
+diese Rechnung anzufassen, liegt das errechnete Ausstellungsdatum 29,5 Tage in
+der Vergangenheit — **jeder frische Ausweis gilt dann als vor dem Stichtag
+ausgestellt und wird sofort wieder abgewiesen**, in einer Schleife, für immer.
+Deshalb fällt hier nur das `Max-Age`, nicht die Gültigkeit. `pruefe-riegel.mjs`
+hält genau das fest, in beide Richtungen.
+
+**Abmelden gibt es jetzt zweimal, und der Unterschied ist wichtig:**
+`/api/alle-abmelden` setzt einen Stichtag im KV — ein **Schreibvorgang** (von
+1000 am Tag) und *alle* Geräte fliegen raus, auch Leons. Das neue
+`/api/abmelden` räumt **nur das Cookie dieses Geräts** weg: kein
+Speicherzugriff, niemand sonst betroffen. Der Knopf „🔒 Abschließen" oben in
+`paul/index.html` nimmt den zweiten Weg.
+
+### `__fahre()` läuft nur in Etappen mit einem `vor`
+
+Beim Messen: `geraete-messen.js` ruft `__fahre(name)` **nur, wenn `et.vor`
+gesetzt ist**. Eine Prüfung in der Ruhezustands-Etappe (`vor: ""`) läuft nie —
+und meldet trotzdem „ok". Genau das ist am 16.09.2026 passiert: Der Knopf zum
+Abschließen war aus der Seite entfernt, und alle sieben Geräte meldeten sauber.
+Aufgefallen ist es nur, weil die Gegenprobe gemacht wurde.
+
+**Dieselbe Lehre wie bei den Pfeilen in der Schmiede und bei den drei kurzen
+Probetiteln: Eine Prüfung, die den Fehler nicht erreichen kann, ist keine
+Prüfung.** Jede neue Etappenprüfung einmal gegen einen kaputt gemachten Stand
+laufen lassen, bevor man ihr glaubt.
+
 ## Was ich nicht anfasse
 
 `paul-sync.js`, `functions/api/progress.js`, `games.json` von Hand, und die
