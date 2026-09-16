@@ -132,6 +132,10 @@ export async function onRequestPost(context) {
 
   const wunsch = String(auftrag.wunsch || "").trim().slice(0, 600);
   const quelle = String(auftrag.quelle || "").trim().slice(0, 40);
+  // Pauls Knopf "Meine Hausaufgabe" (16.09.2026). Denny hat entschieden:
+  // ueben, nicht loesen. Das Spiel uebt denselben Stoff mit ANDEREN Aufgaben -
+  // das Blatt selbst loest das Kind. Geprueft wird das unten in vomBlatt().
+  const hausaufgabe = auftrag.hausaufgabe === true && Array.isArray(auftrag.seiten) && auftrag.seiten.length > 0;
   if (seiten.length === 0 && !wunsch) {
     return fehler(400, "Schreib mir, was du dir wünschst – oder schick ein Foto mit.");
   }
@@ -167,7 +171,13 @@ export async function onRequestPost(context) {
         : { type: "image",    source: { type: "base64", media_type: s.media_type,      data: s.data } }
     );
   }
-  if (seiten.length && wunsch) {
+  if (hausaufgabe) {
+    inhalt.push({ type: "text", text: "Das ist meine HAUSAUFGABE. Bitte löse sie nicht und verrate keine Lösung davon. " +
+      "Bau mir ein Übungsspiel zum selben Stoff mit ANDEREN Aufgaben - andere Zahlen, andere Wörter, andere Sätze -, " +
+      "damit ich die Hausaufgabe danach selbst schaffe. Die Erklärungen zeigen den Weg an deinen eigenen Beispielen. " +
+      "Trag jede Aufgabe, die du auf dem Blatt siehst, kurz in blatt_aufgaben ein." +
+      (wunsch ? ` Was ich brauche: ${wunsch}` : "") });
+  } else if (seiten.length && wunsch) {
     inhalt.push({ type: "text", text: `Das ist mein Schulstoff. Dazu mein Wunsch: ${wunsch}` });
   } else if (seiten.length) {
     inhalt.push({ type: "text", text: "Das ist mein Schulstoff. Bau mir ein Spiel daraus." });
@@ -237,9 +247,11 @@ export async function onRequestPost(context) {
   // nach neunzig Sekunden Warten - und deutlich besser als zwölf Aufgaben,
   // von denen vier Mathe sind.
   if (maengel.length && maengel.every((m) => m.startsWith(FACHFREMD_MARKE) ||
-                                               m.startsWith(RECHENFEHLER_MARKE))) {
+                                               m.startsWith(RECHENFEHLER_MARKE) ||
+                                               m.startsWith(VOM_BLATT_MARKE))) {
     fachfremdeEntfernen(spiel, kind);
     falschGerechneteEntfernen(spiel);
+    vomBlattEntfernen(spiel);
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
@@ -254,6 +266,7 @@ export async function onRequestPost(context) {
   if (kind === "leon") namenRichten(spiel);
 
   spiel.erzeugt = new Date().toISOString();
+  if (hausaufgabe) spiel.hausaufgabe = true;
   spiel.kind = kind;
   spiel.modell = MODELLE_ERLAUBT[String(auftrag.modell || "").toLowerCase()] || MODELL;
 
@@ -337,6 +350,55 @@ export function fachfremdeEntfernen(spiel, kind) {
   return raus;
 }
 
+// ---- Aufgaben, die vom Blatt abgeschrieben sind ----------------------------
+//
+// Regel 2 sagt "SCHREIBE NICHTS AB" seit dem ersten Tag. Seit Pauls Knopf
+// "Meine Hausaufgabe" (16.09.2026) waere eine abgeschriebene Aufgabe aber mehr
+// als unschoen: Das Spiel zeigt nach jeder Antwort die Loesung - es wuerde die
+// Hausaufgabe loesen. Denny hat entschieden: ueben, nicht loesen. Eine Bitte
+// im Auftrag ist keine Pruefung (dieselbe Lehre wie bei den Namen), darum
+// nennt das Modell in blatt_aufgaben, was auf dem Blatt steht, und hier wird
+// verglichen.
+//
+// Verglichen wird nur, was eindeutig ist: Rechnungen (Ziffer UND Rechenzeichen)
+// und Saetze ab vier Woertern. Ein einzelnes Wort wie "Hund" oder eine nackte
+// Zahl darf auch im Spiel vorkommen - sonst waere kein Deutsch-Spiel mehr moeglich.
+const VOM_BLATT_MARKE = "vom Blatt: ";
+
+function blattForm(t) {
+  return String(t == null ? "" : t).toLowerCase()
+    .replace(/[×·∙⋅*]/g, "x").replace(/[÷:]/g, "/").replace(/[−–]/g, "-")
+    .replace(/(\d)\s*x\s*(\d)/g, "$1x$2")
+    .replace(/[^a-zäöüß0-9+\-x\/=]+/g, "");
+}
+
+function blattMuster(spiel) {
+  return ((spiel && spiel.blatt_aufgaben) || []).map((b) => {
+    const roh = String(b == null ? "" : b);
+    const rechnung = /\d/.test(roh) && /[+\-−–×·∙⋅*x÷:\/]/.test(roh.replace(/^\s*\d+[.)]\s*/, ""));
+    const satz = roh.trim().split(/\s+/).length >= 4;
+    // Die Nummerierung vom Blatt ("3)", "b.") gehoert nicht zur Aufgabe.
+    const form = blattForm(roh.replace(/^\s*(\d+|[a-z])[.)]\s+/i, "").replace(/=\s*_*\s*\??\s*$/, ""));
+    return (rechnung || satz) && form.length >= 3 ? form : "";
+  }).filter(Boolean);
+}
+
+export function vomBlatt(a, spiel) {
+  const muster = blattMuster(spiel);
+  if (!muster.length || !a) return false;
+  const frage = blattForm(a.frage);
+  return muster.some((m) => frage.includes(m));
+}
+
+export function vomBlattEntfernen(spiel) {
+  const raus = [];
+  spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
+    if (vomBlatt(a, spiel)) { raus.push(a.frage); return false; }
+    return true;
+  });
+  return raus;
+}
+
 // Dasselbe fuer Aufgaben, bei denen die Zahl nicht stimmt.
 export function falschGerechneteEntfernen(spiel) {
   const raus = [];
@@ -359,6 +421,7 @@ export function pruefeSpiel(spiel, kind) {
   }
   auf.forEach((a, i) => {
     const nr = i + 1;
+    if (vomBlatt(a, spiel)) m.push(`${VOM_BLATT_MARKE}Aufgabe ${nr} steht so auf dem Blatt`);
     const fremd = fachfremd(a, spiel, kind);
     if (fremd) m.push(`${FACHFREMD_MARKE}Aufgabe ${nr} ${fremd}`);
     const krumm = rechenfehler(a);
@@ -482,7 +545,7 @@ DEINE REGELN
 0. OHNE BILD. Kommt kein Foto, sondern nur ein Wunsch in Worten, dann ist der Wunsch die ganze Vorlage. Erkenne daraus Fach und Thema und suche den passenden Lernbereich im Lehrplan. Ist das Thema unklar oder zu weit ("mach was mit Mathe"), wähle das, was laut übliches Reihenfolge gerade dran wäre, und sag es im Begrüßungssatz: "Ich hab mal was zum schriftlichen Malnehmen gebaut - das übt ihr gerade." Wünscht sich das Kind eine Welt oder ein Thema (Fußball, Weltraum, Minecraft-artige Klötzchen), nimm genau das als Einkleidung - der Lernstoff bleibt trotzdem der aus dem Lehrplan.
 
 1. ORDNE EIN. Erkenne, um welches Fach und welchen Lernbereich es geht. Passt nichts, setze lernbereich auf "unbekannt" - rate nicht.
-2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen.
+2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen. Nenne jede Aufgabe, die auf dem Blatt steht, kurz im Feld blatt_aufgaben (z. B. "34 + 27", "Unterstreiche das Prädikat: Der Hund bellt laut."). Ist es eine HAUSAUFGABE, gilt das doppelt: Das Spiel zeigt nach jeder Antwort die Lösung - eine Aufgabe vom Blatt darin würde die Hausaufgabe für das Kind lösen.
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
 4. PASSENDE HÜRDE. Lösbar, aber nicht geschenkt. Bei Fehlern hilft die Erklärung weiter, statt nur "falsch" zu sagen.
 5. WECHSLE DIE AUFGABENART. Nicht zwölfmal dasselbe. Jede Aufgabe hat ein Feld "art":
@@ -594,6 +657,7 @@ const WERKZEUG = {
       welt: { type: "string", description: "Die gewählte Einkleidung, z. B. weltraum, fussball, tiefsee." },
       spielart: { type: "string", enum: SPIELARTEN, description: "Welche Bauform passt." },
       begruessung: { type: "string", description: "Ein Satz zum Start, der Lust macht." },
+      blatt_aufgaben: { type: "array", items: { type: "string" }, description: "Jede Aufgabe, die auf dem Foto/der Datei steht, kurz abgeschrieben (z. B. \"34 + 27\"). Nur zum Abgleich, damit keine davon im Spiel landet. Ohne Foto leeres Array." },
       aufgaben: {
         type: "array",
         description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben. In der ART ABWECHSELN (siehe Regel 5). Durchgängig korrektes Deutsch mit Umlauten.",
@@ -641,7 +705,7 @@ const WERKZEUG = {
         },
       },
     },
-    required: ["titel", "fach", "lernbereich", "thema", "naechstes_thema", "welt", "spielart", "begruessung", "aufgaben"],
+    required: ["titel", "fach", "lernbereich", "thema", "naechstes_thema", "welt", "spielart", "begruessung", "blatt_aufgaben", "aufgaben"],
     additionalProperties: false,
   },
 };
