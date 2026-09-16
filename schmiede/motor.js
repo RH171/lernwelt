@@ -333,7 +333,7 @@
   function standWeg(){ try { if (localStorage.getItem(STAND) !== null) localStorage.removeItem(STAND); } catch(e){} }
   function weiterspielenZeigen(){
     var st = standLesen();
-    zeigen($("weiterspielen"), !!st && schrittNr === 0);
+    zeigen($("weiterspielen"), !!st);
     if (!st) return;
     $("ws-info").textContent = (st.titel ? "„" + st.titel + "“ – " : "") + "Aufgabe " + (st.aufgabeNr + 1) +
       " von " + st.gesamt + " · ⭐ " + st.punkte + " · " + "❤️".repeat(Math.max(1, Math.min(3, st.herzen)));
@@ -1016,6 +1016,7 @@
     document.body.classList.remove("spielt");
     TASTE.links = TASTE.rechts = TASTE.hoch = false;
     sicht("schritte");
+    weiterspielenZeigen();
     spieleLaden();
   }
 
