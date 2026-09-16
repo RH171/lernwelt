@@ -1,0 +1,182 @@
+/* Gemeinsames Aussehen der Spiel-Schmiede (Paul, Leon, Helena). Seit 16.09.2026
+   ausgelagert aus paul/schmiede.html - siehe schmiede/motor.js. */
+  :root{
+    --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
+    --paul:#4f46e5; --gut:#12b76a; --schlecht:#f04438; --gold:#fbbf24;
+    --radius:24px; --schatten:0 1px 2px rgba(20,22,40,.05), 0 12px 34px rgba(20,22,40,.09);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font); color:var(--ink); min-height:100vh;
+    background:radial-gradient(1100px 560px at 82% -12%,#f3efff 0,rgba(243,239,255,0) 55%),
+               radial-gradient(900px 460px at -8% 2%,#e9f3ff 0,rgba(233,243,255,0) 52%), var(--bg);
+    padding:16px; padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  }
+  /* Waehrend gespielt wird, gehoert der ganze Schirm dem Spiel. Sonst
+     scrollt das iPad die Werkbank unter dem Daumen weg, waehrend Paul
+     springt. */
+  body.spielt{overflow:hidden;padding:0;background:#0f172a;height:100%}
+  body.spielt #werkbank{display:none}
+
+  .huelle{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;margin:6px 0 20px}
+  .zurueck{
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:11px 18px;font-weight:600;font-size:15px;box-shadow:var(--schatten);min-height:44px;
+  }
+  .zurueck:active{transform:scale(.97)}
+  h1{font-family:var(--rund);font-size:26px;margin:0;letter-spacing:-.02em}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+         box-shadow:var(--schatten);padding:24px;margin-bottom:16px}
+  .unter{color:var(--muted);font-size:15px;line-height:1.55;margin:8px 0 0}
+  .verborgen{display:none !important}
+
+  /* ---- Der Weg durch die Schritte ---- */
+  .wegweiser{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .wegweiser .punkt{width:10px;height:10px;border-radius:999px;background:#dfe3f1}
+  .wegweiser .punkt.an{background:var(--paul)}
+  .wegweiser .punkt.fertig{background:#b9b4f7}
+  .wegweiser .zahl{color:var(--muted);font-size:13.5px;margin-left:4px}
+  .schrittfrage{font-family:var(--rund);font-size:22px;font-weight:700;margin:4px 0 0;line-height:1.25}
+
+  .felder{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:11px;margin-top:16px}
+  .feld{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;
+    border:2px solid var(--line);background:#fbfcff;border-radius:18px;padding:16px 11px;min-height:118px;
+    font-family:var(--rund);font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;
+    transition:border-color .15s,background .15s,transform .1s;
+  }
+  .feld:active{transform:scale(.98)}
+  .feld:hover{border-color:var(--paul);background:#f7f7ff}
+  .feld.an{border-color:var(--paul);background:#f1f0ff;box-shadow:0 0 0 3px rgba(79,70,229,.13)}
+  .feld .bild{font-size:30px;line-height:1}
+  .feld .sub{font-size:12.5px;font-weight:600;color:var(--muted);line-height:1.35}
+  .feld .bereit{font-size:12.5px;font-weight:600;color:var(--gut);line-height:1.3}
+
+  .faecher{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .fach{border:1px solid var(--line);background:#fbfcff;border-radius:999px;
+        padding:11px 17px;min-height:44px;font-family:var(--rund);font-size:15px;
+        font-weight:600;color:var(--ink);cursor:pointer}
+  .fach.an{background:var(--paul);border-color:var(--paul);color:#fff}
+
+  .wunschfeld{margin-top:18px}
+  .wunschfeld label{display:block;font-family:var(--rund);font-weight:600;font-size:16px;margin-bottom:7px}
+  .wunschfeld textarea{
+    width:100%;min-height:74px;resize:vertical;border:2px solid var(--line);border-radius:16px;
+    padding:14px 15px;font-family:var(--font);font-size:16px;line-height:1.5;color:var(--ink);background:#fbfcff;
+  }
+  .wunschfeld textarea:focus{outline:none;border-color:var(--paul)}
+  .wunschfeld .tipp{color:var(--muted);font-size:14px;margin-top:7px;line-height:1.5}
+
+  .reihe{display:flex;gap:10px;margin-top:18px}
+  .los{
+    flex:1;border:none;border-radius:18px;padding:18px;background:var(--paul);color:#fff;
+    font-family:var(--rund);font-size:18px;font-weight:700;cursor:pointer;min-height:44px;
+    box-shadow:0 8px 22px rgba(79,70,229,.32);transition:transform .1s,opacity .15s;
+  }
+  .los:active{transform:scale(.985)}
+  .los:disabled{opacity:.4;cursor:default;box-shadow:none}
+  .zurueckschritt{
+    border:1px solid var(--line);background:#f5f6fb;color:var(--ink);border-radius:18px;
+    padding:18px 20px;font-family:var(--rund);font-size:16px;font-weight:600;cursor:pointer;min-height:44px;
+  }
+  .hinweis{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:14.5px;line-height:1.5}
+  .hinweis.fehler{background:#fff1f0;color:#a3251c;border:1px solid #ffd5d1}
+
+  .anmeldung{text-align:center}
+  .anmeldung .schloss{font-size:44px}
+  .codefeld{width:100%;max-width:240px;margin:16px auto 0;display:block;text-align:center;
+            font-size:26px;letter-spacing:.28em;padding:14px;border:2px solid var(--line);
+            border-radius:16px;background:#fbfcff}
+  .codefehler{color:var(--schlecht);font-size:14.5px;margin-top:10px;min-height:20px}
+
+  .laden{text-align:center;padding:42px 20px}
+  .kreis{width:54px;height:54px;margin:0 auto 20px;border-radius:50%;
+         border:4px solid #e7e9f5;border-top-color:var(--paul);animation:dreh 1s linear infinite}
+  @keyframes dreh{to{transform:rotate(360deg)}}
+  .schritt{font-family:var(--rund);font-size:18px;font-weight:600}
+
+  .zettel{margin-top:16px;border:1px dashed #d8d5fb;background:#f8f7ff;border-radius:18px;padding:16px 18px}
+  .zettel .kopf{font-family:var(--rund);font-weight:700;font-size:16px;margin-bottom:6px}
+  .zettel .zeile{font-size:14.5px;color:#4a4f63;line-height:1.7}
+
+  /* ---- Die Buehne, auf der gespielt wird ---- */
+  #buehne{position:fixed;inset:0;display:none;background:#0f172a}
+  body.spielt #buehne{display:block}
+  #buehne canvas{display:block;width:100%;height:100%;touch-action:none}
+
+  #kopf{position:absolute;top:0;left:0;right:0;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+        display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  #anzeigen{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pille{background:rgba(255,255,255,.93);border-radius:999px;padding:7px 14px;font-family:var(--rund);
+         font-weight:700;font-size:16px;color:#1e293b;box-shadow:0 4px 0 rgba(0,0,0,.10);white-space:nowrap}
+  #fragekarte{background:rgba(255,255,255,.95);border-radius:18px;padding:11px 16px;
+              box-shadow:0 6px 0 rgba(0,0,0,.10);text-align:center;align-self:center;max-width:96%}
+  #fragelabel{font-family:var(--rund);font-size:12.5px;letter-spacing:.4px;color:#64748b;
+              text-transform:uppercase;margin-bottom:2px}
+  #fragetext{font-family:var(--rund);font-weight:600;font-size:clamp(16px,3.8vw,25px);color:#1e293b;line-height:1.3}
+
+  #steuerung{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;
+             padding:14px 16px calc(18px + env(safe-area-inset-bottom));pointer-events:none}
+  .knopfgruppe{display:flex;gap:14px;pointer-events:auto}
+  /* Nur in der Steuerung "von allein rennen" gibt es die linke Gruppe nicht.
+     Ohne das hier rutscht der Sprungknopf dann in die linke Ecke - dorthin,
+     wo sonst "nach links" liegt. */
+  .knopfgruppe.rechts{margin-left:auto}
+  /* Unten rechts sitzt der Melde-Knopf aus lernstand.js ("Hier stimmt was
+     nicht"), 52 px, fest an der Ecke. Genau dort lag der Sprungknopf - wer
+     springen wollte, hat eine Meldung aufgemacht. Also Platz lassen.
+     Der Knopf selbst bleibt, wo er ist: Er muss auch mitten im Spiel zu
+     erreichen sein, gerade dann. */
+  #steuerung{padding-right:82px}
+  .knopf{width:72px;height:72px;min-width:44px;min-height:44px;border-radius:50%;border:none;
+         background:rgba(255,255,255,.86);box-shadow:0 5px 0 rgba(0,0,0,.20);font-size:32px;color:#1e293b;
+         display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none;
+         transition:transform .05s;cursor:pointer}
+  .knopf:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.20)}
+  #knopf-sprung{background:var(--paul);color:#fff;width:88px;height:88px;font-size:20px;
+                font-family:var(--rund);font-weight:700}
+  @media (max-width:560px){ .knopf{width:62px;height:62px;font-size:27px} #knopf-sprung{width:76px;height:76px;font-size:17px} }
+
+  .eckknopf{position:absolute;top:calc(10px + env(safe-area-inset-top));z-index:6;background:rgba(255,255,255,.92);
+            border:none;border-radius:999px;min-width:44px;min-height:44px;padding:0 12px;font-size:19px;
+            box-shadow:0 4px 0 rgba(0,0,0,.12);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  #tonknopf{right:12px}
+  #rausknopf{right:64px;font-size:15px;font-family:var(--rund);font-weight:700;color:#1e293b}
+
+  .schirm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+          padding:20px;background:rgba(15,23,42,.62);z-index:10;overflow:auto}
+  .schirm.weg{display:none}
+  .tafel{background:#fff;border-radius:26px;padding:24px 22px;max-width:460px;width:100%;
+         box-shadow:0 14px 0 rgba(0,0,0,.18);text-align:center}
+  .tafel h2{font-family:var(--rund);font-weight:700;font-size:clamp(22px,5.6vw,30px);margin:0 0 8px;color:#1e293b}
+  .tafel p{font-size:clamp(15px,3.8vw,17px);color:#475569;margin:0 0 8px;line-height:1.5}
+  .tafel .frageGross{font-family:var(--rund);font-weight:600;font-size:clamp(17px,4.4vw,22px);
+                     color:#1e293b;line-height:1.35;margin:4px 0 14px;text-align:left}
+  .tafel .weg-hinweis{background:#f1f5f9;border-radius:14px;padding:12px 14px;margin:0 0 14px;
+                      font-size:14.5px;color:#334155;line-height:1.55;text-align:left}
+  .tafel .schritte{white-space:pre-line;text-align:left;background:#f4f7fb;border-radius:14px;
+                   padding:13px 15px;font-size:15px;line-height:1.6;color:#33384a}
+  .tafel .merke{display:flex;gap:9px;align-items:flex-start;text-align:left;margin-top:11px;
+                background:#fff8e6;border:1px solid #ffe6ad;border-radius:14px;padding:12px 14px;
+                font-size:14.5px;line-height:1.55;color:#6b4e0d}
+  .tafel .eingabe{display:flex;gap:9px;margin-bottom:12px}
+  .tafel .eingabe input{flex:1;min-height:52px;border:2px solid var(--line);border-radius:14px;
+                        padding:12px 14px;font-size:20px;font-family:var(--rund);text-align:center;background:#fbfcff}
+  .tafel .eingabe input.schlecht{border-color:var(--schlecht);background:#fff5f4}
+  .tafel .eingabe button{min-height:52px;min-width:88px;border:none;border-radius:14px;background:var(--paul);
+                         color:#fff;font-family:var(--rund);font-weight:700;font-size:16px;cursor:pointer}
+  .tafel .startknopf{margin-top:15px;width:100%;border:none;background:var(--paul);color:#fff;
+                     font-family:var(--rund);font-weight:700;font-size:clamp(17px,4.4vw,21px);
+                     padding:16px 24px;border-radius:17px;box-shadow:0 6px 0 #3b34b8;cursor:pointer;min-height:44px}
+  .tafel .startknopf:active{transform:translateY(3px);box-shadow:0 2px 0 #3b34b8}
+  .tafel .nebenknopf{margin-top:9px;width:100%;border:1px solid var(--line);background:#f5f6fb;color:#1e293b;
+                     font-family:var(--rund);font-weight:600;font-size:16px;padding:14px;border-radius:17px;
+                     cursor:pointer;min-height:44px}
+  .punktegross{font-family:var(--rund);font-weight:700;font-size:clamp(38px,10vw,58px);color:var(--paul);line-height:1}
+  .rekord{font-size:15px;color:#64748b;margin-top:4px}
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
