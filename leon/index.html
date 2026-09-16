@@ -57,6 +57,16 @@
   .erfinden .text span{font-size:15px;opacity:.9;line-height:1.35}
   .erfinden .pfeil{font-size:34px;opacity:.8}
   .erfinden:active{transform:scale(.98)}
+  /* Die Lesegeschichte des Tages (16.09.2026) - ganz oben, weil sie jeden Tag dran ist. */
+  .lesekarte{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;margin:0 0 16px;padding:18px 20px;border-radius:22px;min-height:84px;
+    background:linear-gradient(135deg,#f59e0b,#ea580c);box-shadow:0 10px 24px rgba(234,88,12,.28)}
+  .lesekarte.gelesen{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 10px 24px rgba(16,185,129,.28)}
+  .lesekarte .bild{font-size:40px;line-height:1;background:rgba(255,255,255,.18);border-radius:16px;padding:10px}
+  .lesekarte .text{flex:1;display:flex;flex-direction:column;gap:3px}
+  .lesekarte b{font-family:var(--rund);font-size:21px}
+  .lesekarte .text span{font-size:15px;opacity:.95;line-height:1.35}
+  .lesekarte .pfeil{font-size:34px;opacity:.8}
+  .lesekarte:active{transform:scale(.98)}
   /* Die Spiele zum Anfassen: eigene Seiten, sofort da, ohne Bauen. */
   .anfassen h2{font-family:var(--rund);font-size:20px;margin:0 0 4px}
   .anfassen-liste{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:14px}
@@ -327,6 +337,14 @@
 
   <!-- 1. Material sammeln -->
   <section id="sicht-aufnahme">
+    <!-- Denny am 16.09.2026: "Leon muss täglich 10 Minuten lesen. Er möchte gerne
+         alleine lesen." Jeden Tag eine neue Geschichte, danach 5 Fragen als Lesebeweis. -->
+    <a class="lesekarte" id="lesen" href="klasse2-deutsch-lesegeschichte.html">
+      <span class="bild">&#128214;</span>
+      <span class="text"><b>Meine Lesegeschichte</b><span id="lesen-stand">Deine Geschichte für heute wartet auf dich!</span></span>
+      <span class="pfeil">›</span>
+    </a>
+
     <div class="karte">
       <div class="torstand verborgen" id="torstand"></div>
       <div class="faecher" id="faecher" role="tablist">
@@ -557,6 +575,19 @@
   function melde(text, art){
     $("meldung").innerHTML = text ? '<div class="hinweis '+(art||"warn")+'">'+text+'</div>' : "";
   }
+
+  /* ---------- Lesegeschichte: heute schon gelesen? ---------- */
+  (function(){
+    try {
+      var d = JSON.parse(localStorage.getItem("leon-lesepass") || "{}") || {};
+      var j = new Date(), heute = j.getFullYear() + "-" + String(j.getMonth()+1).padStart(2,"0") + "-" + String(j.getDate()).padStart(2,"0");
+      var gelesen = Object.keys(d.gelesen || {}).some(function(id){ return d.gelesen[id].datum === heute; });
+      if (gelesen){
+        $("lesen").classList.add("gelesen");
+        $("lesen-stand").textContent = "✅ Heute schon gelesen – super! Morgen kommt eine neue.";
+      }
+    } catch(e){}
+  })();
 
   /* ---------- Gebaute Spiele ---------- */
 
