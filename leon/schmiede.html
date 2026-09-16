@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Leons Spiel-Schmiede</title>
+<link rel="stylesheet" href="/schmiede/schmiede.css">
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  /* Leons Farbe statt Pauls Lila */
+  :root{ --paul:#16a34a; }
+</style>
+</head>
+<body>
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<!--
+  Leons Spiel-Schmiede (16.09.2026). Denny: "Leon hat gerade moniert, dass in
+  seiner Lernwelt nicht die Moeglichkeiten bestehen, wie Paul ein neues Spiel
+  zu erfinden ... Denke bitte an sein Alter und seine Faehigkeiten."
+
+  Derselbe Motor wie bei Paul (/schmiede/motor.js), angepasst an einen
+  Siebenjaehrigen, der noch nicht sicher liest und kaum tippt:
+   - kurze Fragen in jedem Schritt,
+   - jede Aufgabe im Spiel wird von selbst vorgelesen (🔊 fuer nochmal),
+   - "Von allein rennen" steht vorne und ist vorgewaehlt - dort muss er nur springen,
+   - vorgewaehlt Fussballstadion und Torwart Leon,
+   - seine Themenfelder mit denselben Schluesseln wie auf seiner Startseite
+     (themen.js) - was dort gebaut wurde, spielt die Schmiede sofort an,
+   - das Tor fragt nur Zahlen ab; Leons Aufgaben zum Eintippen sind immer Zahlen
+     (pruefeSpiel in spiel-bauen.js stellt das sicher).
+-->
+<script src="themen.js"></script>
+<script>
+window.SCHMIEDE = {
+  kind: "leon", name: "Leon", titel: "Spiel erfinden", speicher: "leon-schmiede",
+  zurueck: { href: "index.html", text: "‹ Zurück", endeText: "Zurück zu Leons Lernwelt" },
+  faecher: [ { id: "mathe", label: "🔢 Mathe" }, { id: "deutsch", label: "📖 Deutsch" }, { id: "hsu", label: "🌍 HSU" } ],
+  themen: window.LEON_THEMEN,
+  wunschBeispiel: "Zum Beispiel: Rechnen mit Dinos. Tipp: Auf der Tastatur ist ein Mikrofon – da kannst du es einfach sagen.",
+  torLabel: "Am Tor tippst du die Zahl ein",
+  raetselHinweis: "Stimmt die Zahl, geht das Tor auf.",
+  eingabeModus: "numeric",
+  vorlesen: true, vorlesenVonSelbst: true,
+  wahl: { welt: "stadion", figur: "torwart", steuerung: "rennen", toene: "froehlich" },
+  schritte: [
+    { frage: "Wo spielt dein Spiel?", unter: "Tipp auf eine Welt." },
+    { frage: "Wer bist du?", unter: "Such dir deine Figur aus." },
+    { frage: "Wie willst du spielen?", unter: "„Von allein rennen“ ist am leichtesten." },
+    { frage: "Welche Töne?", unter: "Das kannst du später noch ändern." },
+    { frage: "Was willst du üben?", unter: "Tipp auf ein Feld." }
+  ],
+  figuren: [
+    { schluessel: "torwart",   bild: "🧤", titel: "Torwart Leon" },
+    { schluessel: "kleeblatt", bild: "🍀", titel: "Kleeblatt" },
+    { schluessel: "dino",      bild: "🦖", titel: "Dino" },
+    { schluessel: "fuchs",     bild: "🦊", titel: "Fuchs" },
+    { schluessel: "roboter",   bild: "🤖", titel: "Roboter" },
+    { schluessel: "pinguin",   bild: "🐧", titel: "Pinguin" },
+    { schluessel: "drache",    bild: "🐉", titel: "Drache" },
+    { schluessel: "ritter",    bild: "🛡️", titel: "Ritter" }
+  ],
+  // Gleiche Schluessel wie bei Paul - der Motor erkennt die Steuerung daran.
+  steuerungen: [
+    { schluessel: "rennen",  bild: "🏃", titel: "Von allein rennen", sub: "Am leichtesten! Du musst nur springen." },
+    { schluessel: "laufen",  bild: "🕹️", titel: "Laufen und springen", sub: "◀ ▶ laufen, SPRUNG springen." },
+    { schluessel: "fliegen", bild: "🪁", titel: "Fliegen", sub: "Gedrückt halten: hoch. Loslassen: runter." }
+  ],
+  toene: [
+    { schluessel: "froehlich", bild: "🎺", titel: "Fröhlich", sub: "mit Musik" },
+    { schluessel: "leise",     bild: "🔈", titel: "Leise",     sub: "nur ein Klick" },
+    { schluessel: "aus",       bild: "🔇", titel: "Aus",       sub: "ganz still" }
+  ]
+};
+</script>
+<div id="schmiede"></div>
+<script src="/lernstand.js"></script>
+<script src="/schmiede/motor.js"></script>
+</body>
+</html>
