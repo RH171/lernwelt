@@ -108,6 +108,17 @@
   .los:active{transform:scale(.985)}
   .los:disabled{opacity:.4;cursor:default;box-shadow:none}
 
+  /* Meine Hausaufgabe (16.09.2026) */
+  .brauch{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+  .brauch .fach{font-size:15.5px}
+  .ha-antwort{margin-top:18px;text-align:left;background:#f4f6ff;border:1px solid #dfe3fb;
+    border-radius:16px;padding:14px 16px;font-size:15.5px;line-height:1.55;white-space:pre-line}
+  .ha-antwort b{display:block;font-family:var(--rund);font-size:16px;margin-bottom:5px}
+  .ha-antwort .klein{display:block;color:var(--muted);font-size:14px;margin-top:8px}
+  .ha-regel{margin-top:12px;background:#f5fdf9;border:1px solid #c8eddb;color:#185c3c;
+    border-radius:14px;padding:11px 14px;font-size:14.5px;line-height:1.5}
+  .ha-normal{display:inline-block;margin-top:14px;color:var(--paul);font-weight:600;font-size:15px;
+    text-decoration:none;min-height:44px;line-height:44px}
   .hinweis{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:14.5px;line-height:1.5}
   .hinweis.warn{background:#fff6ea;color:#8a5a12;border:1px solid #ffe2bd}
   .hinweis.fehler{background:#fff1f0;color:#a3251c;border:1px solid #ffd5d1}
@@ -295,7 +306,7 @@
   <section id="sicht-aufnahme">
 
     <!-- Themenfelder (Paul, 14.09.2026, Meldung 8fcenvfnsh) -->
-    <div class="karte">
+    <div class="karte" id="themen-karte">
       <div style="font-family:var(--rund);font-size:20px;font-weight:600">Worauf hast du Lust?</div>
       <p class="unter">Tipp ein Feld an – dann baue ich dir ein Spiel dazu. Was schon fertig ist,
       geht sofort los, ganz ohne Warten.</p>
@@ -313,7 +324,7 @@
          die Rueckfrage, wie er gefragt werden will: "Schritt für Schritt,
          bitte." Vorher stand hier nur der kurze Weg, und das grosse Spiel
          verwies ihn an Denny. -->
-    <a class="karte schmiede" href="schmiede.html">
+    <a class="karte schmiede" id="schmiede-karte" href="schmiede.html">
       <div class="schmiede-kopf"><span class="zeichen">🛠️</span>Ein richtig großes Spiel bauen</div>
       <p class="unter">Mit Springen, eigener Welt, eigener Figur und eigenen Tönen.
       Ich frage dich Schritt für Schritt – und am Ende spielst du es sofort.</p>
@@ -321,9 +332,12 @@
     </a>
 
     <div class="karte">
-      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Was hast du heute gelernt?</div>
-      <p class="unter">Fotografier deinen Hefteintrag oder dein Arbeitsblatt – ich bau dir ein Spiel daraus.
+      <div style="font-family:var(--rund);font-size:20px;font-weight:600" id="foto-kopf">Was hast du heute gelernt?</div>
+      <p class="unter" id="foto-unter">Fotografier deinen Hefteintrag oder dein Arbeitsblatt – ich bau dir ein Spiel daraus.
       Du kannst auch mehrere Seiten nehmen, dann wird <b>ein</b> Spiel daraus.</p>
+      <div class="ha-regel verborgen" id="ha-regel">Deine Hausaufgabe löst du selbst – das schaffst du.
+      Ich baue dir <b>ähnliche</b> Aufgaben zum Üben und schicke dein Blatt an die Werkstatt.
+      Dort frage ich dich, was du noch brauchst, und baue dir eine eigene Übung dazu.</div>
 
       <div class="knoepfe">
         <div class="knopf" id="k-kamera"><span class="zeichen">📸</span>Fotografieren</div>
@@ -335,17 +349,24 @@
       <input type="file" id="e-bild"   accept="image/*" multiple class="verborgen">
       <input type="file" id="e-datei"  accept="image/*,application/pdf" multiple class="verborgen">
 
+      <div class="brauch verborgen" id="brauch" role="group" aria-label="Was brauchst du?">
+        <button class="fach an" type="button" data-brauch="ueben">🔁 Ich will das üben</button>
+        <button class="fach" type="button" data-brauch="verstehen">🤔 Ich versteh's noch nicht</button>
+        <button class="fach" type="button" data-brauch="spiel">🎮 Mach ein Spiel draus</button>
+      </div>
+
       <div class="wunschfeld">
-        <label for="wunsch">Oder sag mir einfach, was du dir wünschst</label>
+        <label for="wunsch" id="wunsch-label">Oder sag mir einfach, was du dir wünschst</label>
         <textarea id="wunsch" maxlength="600"
           placeholder="Zum Beispiel: Ein Spiel über Brüche, aber mit Fußball. Oder: Ich will das Einmaleins üben, im Weltraum."></textarea>
-        <div class="tipp">Geht auch ganz ohne Foto. Und wenn du beides nimmst, richte ich mich nach deinem Foto und baue deinen Wunsch mit ein.</div>
+        <div class="tipp" id="wunsch-tipp">Geht auch ganz ohne Foto. Und wenn du beides nimmst, richte ich mich nach deinem Foto und baue deinen Wunsch mit ein.</div>
       </div>
 
       <div class="seiten" id="seiten"></div>
       <div id="meldung"></div>
 
       <button class="los" id="los" disabled>Spiel bauen</button>
+      <a class="ha-normal verborgen" id="ha-normal" href="werkstatt.html">Nur ein Spiel bauen, ohne Hausaufgabe ›</a>
     </div>
 
     <div class="wiederholen verborgen" id="wiederholen">
@@ -367,6 +388,7 @@
       <div class="kreis"></div>
       <div class="schritt" id="schritt">Ich schaue mir deine Seite an …</div>
       <p class="unter" id="schritt-unter">Das dauert einen kleinen Moment.</p>
+      <div class="ha-antwort verborgen" id="ha-antwort"></div>
     </div>
   </section>
 
@@ -389,6 +411,7 @@
       <div style="font-size:52px">🎉</div>
       <div style="font-family:var(--rund);font-size:26px;font-weight:700;margin-top:8px" id="ende-titel"></div>
       <p class="unter" id="ende-text"></p>
+      <div class="ha-antwort verborgen" id="ha-ende"></div>
       <button class="los" id="nochmal">Noch ein Spiel bauen</button>
       <button class="weiter" id="ende-zurueck" style="background:#f2f3fa;color:var(--ink);margin-top:10px">Zurück in die Lernwelt</button>
     </div>
@@ -837,6 +860,7 @@
   }
 
   function malSeiten(){
+    hausaufgabeGeschickt = false;   // neue Seiten = neue Hausaufgabe
     var kasten = $("seiten");
     kasten.innerHTML = "";
     seiten.forEach(function(s, i){
@@ -860,12 +884,131 @@
 
   function knopfPruefen(){
     var wunsch = $("wunsch").value.trim();
+    if (HAUSAUFGABE){
+      // Ohne Blatt keine Hausaufgabe - der Wunsch allein reicht hier nicht.
+      $("los").disabled = seiten.length === 0;
+      $("los").textContent = seiten.length === 0 ? "Erst dein Blatt fotografieren" : "Übungsspiel bauen";
+      return;
+    }
     $("los").disabled = (seiten.length === 0 && !wunsch);
     $("los").textContent = seiten.length > 1
       ? "Spiel aus " + seiten.length + " Seiten bauen"
       : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Spiel bauen";
   }
   $("wunsch").addEventListener("input", knopfPruefen);
+
+  /* ---------- Meine Hausaufgabe ----------
+     Denny am 16.09.2026: Paul soll seine Hausaufgabe fotografieren koennen,
+     "und du dann daraus ein Spiel baust oder was auch immer er benoetigt.
+     Vielleicht kannst du das mit ihm zusammen erarbeiten."
+
+     Zwei Wege auf einen Tipp: Das Uebungsspiel kommt sofort (wie beim Foto
+     sonst auch), und das Blatt geht als Faden an die Werkstatt. Dort antwortet
+     die Werkstatt gleich und fragt, was er braucht; der Bau-Waechter baut
+     danach die eigene Uebung.
+
+     Die Grenze hat Denny gezogen: UEBEN, NICHT LOESEN. Das Spiel bekommt
+     andere Aufgaben (spiel-bauen.js prueft das gegen blatt_aufgaben), die
+     Sofortantwort nennt keine Loesung (_antwort.js). Aufgerufen wird der Weg
+     ueber werkstatt.html?hausaufgabe=1 - die Kachel in Pauls Lernwelt. */
+
+  var HAUSAUFGABE = false;
+  try { HAUSAUFGABE = new URL(location.href).searchParams.get("hausaufgabe") === "1"; } catch(e){}
+  var BRAUCH = {
+    ueben: "Ich will das üben.",
+    verstehen: "Ich verstehe das noch nicht richtig.",
+    spiel: "Mach mir ein Spiel dazu."
+  };
+  var brauch = "ueben";
+  var hausaufgabeGeschickt = false;
+
+  if (HAUSAUFGABE){
+    $("themen-karte").classList.add("verborgen");
+    $("schmiede-karte").classList.add("verborgen");
+    $("foto-kopf").textContent = "📚 Meine Hausaufgabe";
+    $("foto-unter").textContent = "Fotografier dein Arbeitsblatt oder deinen Hefteintrag. Mehrere Seiten gehen auch.";
+    $("ha-regel").classList.remove("verborgen");
+    $("brauch").classList.remove("verborgen");
+    $("ha-normal").classList.remove("verborgen");
+    $("wunsch-label").textContent = "Magst du noch etwas dazuschreiben?";
+    $("wunsch").placeholder = "Zum Beispiel: Aufgabe 3 verstehe ich nicht. Oder: Das mit dem Komma ist schwer.";
+    $("wunsch-tipp").classList.add("verborgen");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-brauch]"), function(k){
+      k.addEventListener("click", function(){
+        brauch = k.getAttribute("data-brauch");
+        Array.prototype.forEach.call(document.querySelectorAll("[data-brauch]"), function(x){
+          x.classList.toggle("an", x === k);
+        });
+      });
+    });
+    knopfPruefen();
+  }
+
+  function hausaufgabeWunsch(){
+    var mehr = $("wunsch").value.trim();
+    return BRAUCH[brauch] + (mehr ? " " + mehr : "");
+  }
+
+  // Fuer den Faden reicht ein kleineres Bild - der Speicher nimmt hoechstens
+  // 900 KB je Bild, und lesen laesst sich ein Blatt auch mit 1400 px.
+  function fuerDenFaden(s){
+    return new Promise(function(fertig){
+      if (!s.vorschau){ fertig(""); return; }
+      var bild = new Image();
+      bild.onload = function(){
+        var f = Math.min(1, 1400 / Math.max(bild.width, bild.height));
+        var c = document.createElement("canvas");
+        c.width = Math.round(bild.width * f); c.height = Math.round(bild.height * f);
+        c.getContext("2d").drawImage(bild, 0, 0, c.width, c.height);
+        var url = c.toDataURL("image/jpeg", 0.78);
+        fertig(url.length < 880 * 1024 ? url : c.toDataURL("image/jpeg", 0.55));
+      };
+      bild.onerror = function(){ fertig(""); };
+      bild.src = s.vorschau;
+    });
+  }
+
+  function antwortZeigen(text){
+    [$("ha-antwort"), $("ha-ende")].forEach(function(k){
+      k.innerHTML = "";
+      var b = document.createElement("b"); b.textContent = "💬 Die Werkstatt schreibt dir:";
+      var t = document.createElement("span"); t.textContent = text;
+      var h = document.createElement("span"); h.className = "klein";
+      h.textContent = "Antworten kannst du über den runden 💬-Knopf unten rechts.";
+      k.appendChild(b); k.appendChild(t); k.appendChild(h);
+      k.classList.remove("verborgen");
+    });
+  }
+
+  function hausaufgabeSchicken(){
+    if (hausaufgabeGeschickt) return;
+    hausaufgabeGeschickt = true;
+    var pdfs = seiten.filter(function(s){ return !s.vorschau; }).length;
+    Promise.all(seiten.slice(0, 4).map(fuerDenFaden)).then(function(bilder){
+      bilder = bilder.filter(Boolean);
+      return fetch("/api/melden", {
+        method: "POST", credentials: "same-origin",
+        headers: {"content-type":"application/json"},
+        body: JSON.stringify({
+          kind: "paul", art: "hausaufgabe",
+          titel: "Meine Hausaufgabe",
+          wo: "Werkstatt – Meine Hausaufgabe",
+          geraet: LS() ? LS().geraet() : "",
+          text: "Meine Hausaufgabe. " + hausaufgabeWunsch() +
+                (seiten.length > 4 ? " (Insgesamt " + seiten.length + " Seiten.)" : "") +
+                (pdfs ? " (Dazu " + pdfs + " PDF – das steckt im Übungsspiel.)" : ""),
+          bild: bilder[0] || "",
+          bilder: bilder.slice(1)
+        })
+      });
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j && j.ok && j.antwort && j.antwort.text) antwortZeigen(j.antwort.text);
+      else if (!j || !j.ok) hausaufgabeGeschickt = false;
+    })
+    .catch(function(){ hausaufgabeGeschickt = false; });
+  }
 
   /* ---------- Bauen lassen ---------- */
 
@@ -896,7 +1039,9 @@
     if (baeuft) return;
     // Ein Wunsch allein genuegt - ein Foto ist nicht noetig.
     if (!seiten.length && !$("wunsch").value.trim()) return;
+    if (HAUSAUFGABE && !seiten.length) return;
     baeuft = true;
+    if (HAUSAUFGABE) hausaufgabeSchicken();
     zeige("laden");
     var i = 0;
     if (seiten.length === 0){
@@ -921,8 +1066,9 @@
       headers: {"content-type":"application/json"},
       body: JSON.stringify({
         kind: "paul",
-        quelle: quelle || "",
-        wunsch: $("wunsch").value.trim(),
+        quelle: HAUSAUFGABE ? "hausaufgabe" : (quelle || ""),
+        hausaufgabe: HAUSAUFGABE,
+        wunsch: HAUSAUFGABE ? hausaufgabeWunsch() : $("wunsch").value.trim(),
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
     })
@@ -1361,6 +1507,7 @@
 
   $("nochmal").addEventListener("click", function(){
     seiten = []; spiel = null; $("wunsch").value = ""; malSeiten(); melde(""); zeige("aufnahme"); sammlungLaden();
+    $("ha-antwort").classList.add("verborgen"); $("ha-ende").classList.add("verborgen");
   });
   $("ende-zurueck").addEventListener("click", function(){
     window.location.href = $("zurueck").getAttribute("href");
