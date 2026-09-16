@@ -69,6 +69,9 @@
   .sp .kl{color:var(--muted);font-size:13px;font-weight:600}
   .sp.weg{opacity:.45}
   .sp .krone{position:absolute;top:-10px;right:-6px;font-size:22px}
+  .sp.wahl{cursor:pointer;font:inherit;color:inherit;min-height:120px;width:100%}
+  .sp.wahl:active{transform:scale(.97)}
+  .sp .weg-knopf{position:absolute;top:4px;right:4px;width:44px;height:44px;border:none;background:transparent;font-size:18px;color:#98a2b3;cursor:pointer}
   .hinweis{background:#fef3c7;border-radius:14px;padding:10px 14px;font-size:15px;line-height:1.45;margin-top:14px;color:#78350f}
 
   /* Frage */
@@ -139,6 +142,16 @@
       <div class="fehler" id="code-fehler"></div>
       <button class="gross-knopf blau" id="code-los" disabled>Rein da!</button>
       <button class="gross-knopf grau" id="code-zurueck">Zurück</button>
+    </div>
+  </section>
+
+  <!-- Wer spielt? Auf einem geteilten iPad spielen mehrere Kinder nacheinander. -->
+  <section id="sicht-wer" class="verborgen">
+    <div class="karte">
+      <h2>Wer spielt jetzt?</h2>
+      <p class="unter">Tipp auf dich – oder leg dich neu an.</p>
+      <div class="spielerliste" id="wer-liste"></div>
+      <button class="gross-knopf blau" id="wer-neu">➕ Jemand anderes</button>
     </div>
   </section>
 
@@ -221,17 +234,32 @@
   var AVATARE = ["🦁","🐯","🦊","🐼","🐸","🦄","🐙","🦖","🚀","⚽","🧤","🎸","🌟","🐬","🦅","🍀"];
   var KLASSEN = [[0,"Kiga"],[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"],[8,"8"],[9,"9"],[10,"10+"]];
 
-  // Eine feste Kennung je Geraet, damit man nach einem Verbindungsabbruch mit
-  // seinen Punkten zurueckkommt. Keine Namen darin.
-  var ich = lese("duell-id", null);
-  if (!ich){ ich = "s" + Math.random().toString(36).slice(2, 12); schreibe("duell-id", ich); }
-  var profil = lese("duell-profil", null);
+  // Die Kennung gilt nur fuer DIESEN Tab (sessionStorage), nicht fuer das Geraet.
+  // Am 16.09.2026 sahen zwei Kinder auf zwei iPads im selben Raum jeweils nur
+  // sich selbst: Beide Geraete trugen dieselbe Kennung und dasselbe Profil
+  // "Torwart, Leon". Der localStorage dieser Seite liegt auf derselben Adresse
+  // wie Pauls Bereich - und Pauls Sync nimmt alles mit, was nicht Leon oder
+  // Helena gehoert, und verteilt es auf jedes Geraet, das /paul/ oeffnet.
+  // Eine Kennung im sessionStorage fasst kein Sync an, und zwei Tabs sind
+  // immer zwei Spieler. Neu laden im selben Tab behaelt sie - fuer die Punkte.
+  var ich = null, profil = null;
+  try { ich = sessionStorage.getItem("duell-sitzung"); profil = JSON.parse(sessionStorage.getItem("duell-sitzung-profil") || "null"); } catch(e){}
+  if (!ich){ ich = "s" + Math.random().toString(36).slice(2, 12) + Date.now().toString(36).slice(-4); try { sessionStorage.setItem("duell-sitzung", ich); } catch(e){} }
+  try { localStorage.removeItem("duell-id"); } catch(e){}     // alte, womoeglich geteilte Kennung
+
+  // Mehrere Profile je Geraet: Geschwister teilen sich ein iPad. Vor jedem Spiel
+  // wird gefragt, wer gerade spielt - ein uebernommenes Profil faellt so sofort auf.
+  var profile = lese("duell-profile", []);
+  if (!Array.isArray(profile)) profile = [];
+  var altesProfil = lese("duell-profil", null);
+  if (altesProfil && altesProfil.name && !profile.some(function(p){ return p.name === altesProfil.name; })){ profile.unshift(altesProfil); schreibe("duell-profile", profile); }
+  function sitzungsProfil(p){ profil = p; try { sessionStorage.setItem("duell-sitzung-profil", JSON.stringify(p)); } catch(e){} }
   var tonAn = lese("duell-ton", true);
 
   var raumCode = null, ws = null, zustand = null, frage = null, meineWahl = null, uhrTakt = null, wiederVerbinden = null, absichtlichZu = false;
 
   function zeige(n){
-    ["start", "code", "profil", "lobby", "frage", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    ["start", "code", "wer", "profil", "lobby", "frage", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
     $("verbindung").classList.add("verborgen");
     window.scrollTo(0, 0);
   }
@@ -301,9 +329,31 @@
   function betreten(code){
     raumCode = code;
     try { history.replaceState(null, "", location.pathname + "?raum=" + code + (new URLSearchParams(location.search).get("ws") ? "&ws=" + encodeURIComponent(new URLSearchParams(location.search).get("ws")) : "")); } catch(e){}
-    if (!profil){ nachProfil = verbinden; profilZeigen(); return; }
-    verbinden();
+    if (profil){ verbinden(); return; }          // in diesem Tab schon gewaehlt (z. B. nach Neuladen)
+    werZeigen();
   }
+
+  function werZeigen(){
+    if (!profile.length){ nachProfil = verbinden; profilZeigen(true); return; }
+    var box = $("wer-liste"); box.innerHTML = "";
+    profile.forEach(function(p, i){
+      var b = document.createElement("div");
+      b.className = "sp wahl"; b.setAttribute("role", "button"); b.setAttribute("tabindex", "0");
+      b.innerHTML = '<div class="av"></div><div class="nm"></div><div class="kl"></div><button class="weg-knopf" aria-label="Profil entfernen">✕</button>';
+      b.querySelector(".av").textContent = p.avatar; b.querySelector(".nm").textContent = p.name;
+      b.querySelector(".kl").textContent = klassenText(p.klasse) + " · " + p.alter + " J.";
+      b.addEventListener("click", function(e){
+        if (e.target.classList.contains("weg-knopf")){
+          profile.splice(i, 1); schreibe("duell-profile", profile); werZeigen(); return;
+        }
+        profile.splice(i, 1); profile.unshift(p); schreibe("duell-profile", profile);
+        sitzungsProfil(p); verbinden();
+      });
+      box.appendChild(b);
+    });
+    zeige("wer");
+  }
+  $("wer-neu").addEventListener("click", function(){ nachProfil = verbinden; profilZeigen(true); });
 
   /* ---------- Profil ---------- */
   var entwurf = {};
@@ -317,8 +367,8 @@
       box.appendChild(b);
     });
   }
-  function profilZeigen(){
-    entwurf = Object.assign({ avatar: AVATARE[Math.floor(Math.random() * AVATARE.length)] }, profil || {});
+  function profilZeigen(neu){
+    entwurf = Object.assign({ avatar: AVATARE[Math.floor(Math.random() * AVATARE.length)] }, neu ? {} : (profil || {}));
     $("name").value = entwurf.name || "";
     chipsMalen($("avatare"), AVATARE, "avatar", function(a){ return a; }, function(a){ return a; });
     var alter = []; for (var i = 5; i <= 16; i++) alter.push(i);
@@ -332,8 +382,11 @@
     if (!entwurf.name){ $("profil-fehler").textContent = "Wie sollen die anderen dich nennen?"; return; }
     if (entwurf.alter == null){ $("profil-fehler").textContent = "Wie alt bist du?"; return; }
     if (entwurf.klasse == null){ $("profil-fehler").textContent = "In welche Klasse gehst du?"; return; }
-    profil = { name: entwurf.name, avatar: entwurf.avatar, alter: entwurf.alter, klasse: entwurf.klasse };
-    schreibe("duell-profil", profil);
+    var altName = profil && profil.name;
+    sitzungsProfil({ name: entwurf.name, avatar: entwurf.avatar, alter: entwurf.alter, klasse: entwurf.klasse });
+    profile = profile.filter(function(p){ return p.name !== profil.name && (nachProfil || p.name !== altName); });
+    profile.unshift(profil); profile = profile.slice(0, 8);
+    schreibe("duell-profile", profile);
     if (nachProfil){ nachProfil = null; verbinden(); }
     else if (ws && ws.readyState === 1){ hallo(); zeige("lobby"); }
     else zeige("start");
