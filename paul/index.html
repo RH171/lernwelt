@@ -252,6 +252,8 @@
   .wf-spiel .wf-u{color:var(--muted);font-size:13px;margin-top:1px;}
   .wf-leer{color:var(--muted);font-size:14px;padding:2px 4px 6px;line-height:1.6;}
 
+  .klassenhinweis{display:block;width:100%;text-align:left;margin:0 0 16px;padding:14px 18px;border-radius:18px;cursor:pointer;min-height:48px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 16px/1.35 inherit;box-shadow:var(--shadow)}
   .soon{
     text-align:center;background:var(--card);border:1px solid var(--line);border-radius:24px;
     padding:46px 24px;box-shadow:var(--shadow);
@@ -476,8 +478,8 @@
 
   <div class="soon" id="soon" style="display:none">
     <div class="e">🌞</div>
-    <h3>Klasse 4 kommt bald!</h3>
-    <p>Nach den Sommerferien füllt sich hier deine neue Klasse.<br>Stell oben einfach wieder auf <b>Klasse 3</b>, um weiterzuspielen.</p>
+    <h3>Hier ist noch Platz!</h3>
+    <p>In dieser Klasse gibt es noch keine Spiele.<br>Bau dir eins in der Werkstatt – oder stell oben auf eine andere Klasse.</p>
   </div>
 
   <details class="werkstattfach" id="werkstattfach" hidden>
@@ -618,10 +620,13 @@
       {title:"Schaltungs-Quiz", sub:"Stromkreise & Schaltungen", icon:"🔌", type:"Quiz"},
     "klasse3-religion-beten-quiz.html":
       {title:"Beten-Quiz", sub:"Rund ums Beten", icon:"🙏", type:"Quiz"},
+    // Die beiden Ferien-Spiele gehoeren zu Pauls Hausaufgabe in der 4. Klasse
+    // (15.09.2026). Der Dateiname bleibt "klasse3-", weil nur so die Liste
+    // games.json sie findet - die Klasse steht deshalb hier.
     "klasse3-deutsch-ferien-zeitung.html":
-      {title:"Die Ferien-Zeitung", sub:"Vergangenheit, Satzanfänge, treffende Wörter, Steigern", icon:"📰", type:"Spiel"},
+      {klasse:4, title:"Die Ferien-Zeitung", sub:"Vergangenheit, Satzanfänge, treffende Wörter, Steigern", icon:"📰", type:"Spiel"},
     "klasse3-deutsch-ferien-reporter.html":
-      {title:"Ferien-Reporter", sub:"Hausaufgabe „Meine Ferien“ – du erzählst, ich frage", icon:"🎙️", type:"Schreiben"}
+      {klasse:4, title:"Ferien-Reporter", sub:"Hausaufgabe „Meine Ferien“ – du erzählst, ich frage", icon:"🎙️", type:"Schreiben"}
   };
   const FACH_ICON = {deutsch:"📘", mathe:"🔢", hsu:"🌍", musik:"🎵", englisch:"🇬🇧", religion:"🙏", spass:"🎲"};
 
@@ -643,7 +648,7 @@
     const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
     const title = ov.title || rest.map(cap).join(" ");
     return {
-      file:file, klasse:3, fach:fach,
+      file:file, klasse:ov.klasse || 3, fach:fach,
       title:title,
       sub: ov.sub || "Neu dazugekommen",
       icon: ov.icon || FACH_ICON[fach] || "🎮",
@@ -841,7 +846,10 @@
     const soon = document.getElementById("soon");
     const foot = document.querySelector(".foot");
 
-    if(klasse !== 3){
+    // Seit 16.09.2026: Paul ist in der 4. Klasse. Vorher stand hier immer
+    // "Klasse 4 kommt bald - nach den Sommerferien", auch als die Ferien
+    // vorbei und die ersten Viertklass-Spiele schon da waren.
+    if(!TOOLS.some(t=>t.klasse===klasse)){
       soon.style.display = "block";
       foot.style.display = "none";
       return;
@@ -850,6 +858,17 @@
     foot.style.display = "block";
 
     let shown = 0;
+    // Wer noch auf Klasse 3 steht, soll die neuen Viertklass-Spiele nicht verpassen.
+    const andere = klasse === 3 ? 4 : 3;
+    const neuDort = TOOLS.filter(t=>t.klasse===andere);
+    if(klasse === 3 && neuDort.length){
+      const hinweis = document.createElement("button");
+      hinweis.type = "button";
+      hinweis.className = "klassenhinweis";
+      hinweis.textContent = "✨ Neu in Klasse 4: " + neuDort.map(t=>t.title).join(", ") + " – hier tippen";
+      hinweis.addEventListener("click", function(){ klasseSel.value = "4"; set("hub-klasse","4"); render(4); });
+      grid.appendChild(hinweis);
+    }
     FACH_ORDER.forEach(function(fk){
       const tools = TOOLS.filter(t=>t.fach===fk && t.klasse===klasse && matchQuery(t));
       if(!tools.length) return;
@@ -983,11 +1002,11 @@
     try{
       const k = parseInt(klasseSel.value,10);
       let msg = "Hallo Paul! Willkommen in deiner Lernwelt. ";
-      if(k===3){
-        const n = TOOLS.filter(t=>t.klasse===3).length;
-        msg += "Du hast hier "+n+" Spiele. Deine Lern-Flamme brennt seit "+streak+(streak===1?" Tag":" Tagen")+". Viel Spaß beim Lernen!";
+      const n = TOOLS.filter(t=>t.klasse===k).length;
+      if(n){
+        msg += "In Klasse "+k+" hast du "+n+" Spiele. Deine Lern-Flamme brennt seit "+streak+(streak===1?" Tag":" Tagen")+". Viel Spaß beim Lernen!";
       } else {
-        msg += "Klasse vier kommt nach den Sommerferien.";
+        msg += "In Klasse "+k+" gibt es noch keine Spiele. Bau dir eins in der Werkstatt!";
       }
       const u=new SpeechSynthesisUtterance(msg); u.lang="de-DE"; u.rate=.96;
       speechSynthesis.cancel(); speechSynthesis.speak(u);
