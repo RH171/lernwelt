@@ -197,11 +197,22 @@ Rätsel-Tor mit Eingabefeld — anspringen kann man eine Zahl nicht, die man
 tippen muss. **3D kann er nicht**, und das steht auch so in Pauls Antwort;
 sein eigener Prädikat-Springer 3D bringt Three.js mit, der Motor hier nicht.
 
-**Gemessen wird mit `mess-schritte-schmiede.js`** — und zwar nicht nur der
+**Gemessen wird mit zwei Schritt-Dateien** — und zwar nicht nur der
 Ruhezustand, sondern das laufende Spiel mit allen drei Tafeln:
 
     node geraete-messen.js /paul/schmiede.html paul mess-schritte-schmiede.js
+    node geraete-messen.js /paul/schmiede.html paul mess-schritte-schmiede-fliegen.js
     node geraete-messen.js /paul/ paul mess-schritte-paul-hub.js
+
+**Warum zwei:** `mess-schritte-schmiede.js` wählt „Von allein rennen", weil die
+Figur dort ohne Tastendrücke bis zu den Tafeln läuft — bequem zu messen. Genau
+diese Steuerung ist aber die **einzige ohne die Pfeile ◀ ▶** unten links. Die
+Messung hat deshalb nie gesehen, dass „Fliegen" und „Laufen und springen" ohne
+sie auf einem Gerät ohne Tastatur unspielbar waren. Die zweite Datei fährt in
+„Fliegen" **mit den Pfeilen**, prüft, dass sie da und 44 px groß sind, dass sie
+links vom FLIEGEN-Knopf sitzen — und kommt nur ans Ziel, wenn sie wirklich
+tragen. **Beim nächsten Spielmotor gilt das wieder:** Wer nur die bequemste
+Steuerung misst, misst die Steuerung, die keine Knöpfe braucht.
 
 Zwei Dinge, die dabei gelernt wurden und beim nächsten Spielmotor wieder
 gelten:
@@ -231,6 +242,17 @@ rennen" hält das Tor die Figur vorne fest, während die Antwort-Ballons hinter
 ihr liegen — und umkehren kann sie nicht. Sie pendelt jetzt zwischen erstem
 Ballon und Tor, bis die Aufgabe gelöst ist. Am Rätsel-Tor **nicht** pendeln:
 dort muss sie anstoßen, sonst geht die Tafel nie auf.
+
+Der Fehler, den sie **nicht** gefunden hat, weil sie ihn nicht messen konnte:
+Die Pfeile wurden nur in „Laufen und springen" eingeblendet
+(`zeigen($("gruppe-laufen"), wahl.steuerung === "laufen")`). In „Fliegen" gab
+es also nur den FLIEGEN-Knopf, und `held.vx` wird dort aus `TASTE.links` und
+`TASTE.rechts` gesetzt — ohne Knöpfe nie wahr. Paul stand am linken Rand, die
+Antwort-Ballons hingen rechts, er kam nie hin (Meldung `9ytvhx394e`,
+16.09.2026, mit Foto). Mit Tastatur fiel es nicht auf: Pfeiltasten und A/D
+gehen weiter, unabhängig von den Knöpfen. **Merksatz für den nächsten
+Spielmotor:** Am Laptop wird geprüft, ob etwas funktioniert — auf dem iPad, ob
+man es überhaupt auslösen kann.
 
 ## Eine Grid-Spalte ist so breit wie ihr breitester Inhalt
 
