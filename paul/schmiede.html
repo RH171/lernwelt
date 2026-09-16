@@ -128,7 +128,7 @@
   #steuerung{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;
              padding:14px 16px calc(18px + env(safe-area-inset-bottom));pointer-events:none}
   .knopfgruppe{display:flex;gap:14px;pointer-events:auto}
-  /* In der Steuerung "von allein rennen" gibt es die linke Gruppe nicht.
+  /* Nur in der Steuerung "von allein rennen" gibt es die linke Gruppe nicht.
      Ohne das hier rutscht der Sprungknopf dann in die linke Ecke - dorthin,
      wo sonst "nach links" liegt. */
   .knopfgruppe.rechts{margin-left:auto}
@@ -412,7 +412,7 @@
     { schluessel:"rennen",  bild:"🏃", titel:"Von allein rennen",
       sub:"Du rennst immer nach rechts. Du musst nur noch springen." },
     { schluessel:"fliegen", bild:"🪁", titel:"Fliegen",
-      sub:"SPRUNG gedrückt halten und du steigst. Loslassen und du sinkst." }
+      sub:"◀ ▶ zum Fliegen nach links und rechts. FLIEGEN gedrückt halten und du steigst, loslassen und du sinkst." }
   ];
 
   var TOENE = [
@@ -912,7 +912,15 @@
     bauzeitMelden();
     if (LS()) LS().uhrZuruecksetzen();
     imSpiel = true;
-    zeigen($("gruppe-laufen"), wahl.steuerung === "laufen");
+    // Die Pfeile gehoeren zu JEDER Steuerung ausser "von allein rennen".
+    // Paul (Meldung 9ytvhx394e, 16.09.2026, Bild): in "Fliegen" stand seine
+    // Figur ganz links am Rand, und es gab nur den FLIEGEN-Knopf. Vorwaerts
+    // kam sie gar nicht - held.vx wird dort aus TASTE.links/rechts gesetzt,
+    // und die wurden ohne Knoepfe nie wahr. Auf dem iPad war "Fliegen"
+    // damit nicht spielbar: Die Antwort-Ballons haengen rechts, er stand
+    // links und kam nie hin. Mit Tastatur fiel es nicht auf, deshalb hat es
+    // beim Bauen keiner gemerkt.
+    zeigen($("gruppe-laufen"), wahl.steuerung !== "rennen");
     $("knopf-sprung").textContent = (wahl.steuerung === "fliegen") ? "FLIEGEN" : "SPRUNG";
     $("tonknopf").textContent = (wahl.toene === "aus") ? "🔇" : "🔊";
     tonAn = (wahl.toene !== "aus");
