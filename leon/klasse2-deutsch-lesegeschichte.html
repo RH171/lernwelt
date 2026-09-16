@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesegeschichte</title>
+<!--
+  Leons Lesegeschichte des Tages (16.09.2026). Denny: "Leon muss täglich 10
+  Minuten lesen. Er möchte gerne alleine lesen ... jeden Tag eine neue
+  Lesegeschichte ... 8 bis 10 Minuten in ganz einfacher Leseform ... im
+  Anschluss 5 Fragen, damit der Lesebeweis erbracht wird ... gerne mit Bildern."
+
+  Die Geschichten stehen in geschichten.js - von Hand geschrieben und geprüft,
+  nicht live erzeugt. Mit den echten Menschen aus Leons Leben, deshalb liegt
+  die Datei hinter dem Riegel unter /leon/ und NIE in einer offenen Notiz.
+
+  Ablauf: Geschichte lesen (8 Seiten, ein Satz pro Zeile, Silben einfärbbar)
+  -> 5 Fragen -> Lesebeweis-Stempel. Eine falsche Antwort ist kein Fehlschlag:
+  Die Seite, auf der es steht, lässt sich aufschlagen - Nachschlagen IST lesen.
+
+  Jeden Tag die nächste noch nicht gelesene Geschichte. Wer einen Tag auslässt,
+  verpasst keine; es gibt keine Serie, die reißen kann (Bauregeln: kein Druck
+  über Verlustangst). Was gelesen wurde, sammelt sich im Lesepass.
+
+  An die Eltern geht es über lernstand.js: Titel, aktive Lesezeit und die fünf
+  Fragen mit "beim ersten Mal richtig oder nicht" (Merkmal "lesebeweis").
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --falsch:#f04438;
+    --silbe-a:#1d4ed8; --silbe-b:#dc2626;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:160px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .knopf{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:16px;
+    font:700 20px/1.1 var(--rund);padding:14px 18px;min-height:58px;cursor:pointer;background:var(--leon);color:#fff}
+  .knopf:active{transform:scale(.98)}
+  .knopf.hell{background:#f2f4f7;color:var(--ink)}
+  .knopf[disabled]{opacity:.35;cursor:default}
+
+  /* ---- Start ---- */
+  .start{max-width:760px;margin:0 auto;text-align:center}
+  .start .gross{font-size:64px;line-height:1.1}
+  .start .ueber{color:var(--leon-dunkel);font:700 15px/1 var(--rund);letter-spacing:.05em;text-transform:uppercase;margin-top:6px}
+  .start h2{font-family:var(--rund);font-size:30px;margin:8px 0 6px}
+  .start p{color:var(--muted);font-size:18px;line-height:1.5;margin:0 0 18px}
+  .start .knopf{width:100%}
+  .erledigt{background:#ecfdf3;border:1px solid #abefc6;border-radius:18px;padding:14px;margin:0 0 14px;
+    font:700 19px/1.4 var(--rund);color:var(--leon-dunkel)}
+  .lesepass{max-width:760px;margin:12px auto 0}
+  .lesepass h3{font-family:var(--rund);font-size:19px;margin:0 0 4px}
+  .lesepass .unter{color:var(--muted);font-size:15px;margin:0 0 12px}
+  .stempel{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+  .stempel button{display:flex;align-items:center;gap:9px;text-align:left;border:2px solid #d1fadf;background:#f6fef9;
+    border-radius:14px;padding:9px 11px;min-height:58px;cursor:pointer;font:600 14.5px/1.25 var(--rund);color:var(--ink)}
+  .stempel button .bild{font-size:26px}
+  .stempel button small{display:block;color:var(--muted);font:500 12.5px/1.3 var(--font)}
+
+  /* ---- Lesen ---- */
+  .buch{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (orientation:landscape) and (min-width:900px){
+    .buch{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:stretch}
+  }
+  .werkzeug{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
+  .werkzeug .titel{flex:1;font:700 18px/1.2 var(--rund);min-width:140px}
+  .silbenknopf{border:2px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;min-height:44px;
+    font:700 16px/1 var(--rund);cursor:pointer;color:var(--ink)}
+  .silbenknopf.an{border-color:var(--silbe-a);background:#eff4ff}
+  .silbenknopf .a{color:var(--silbe-a)} .silbenknopf .b{color:var(--silbe-b)}
+
+  .szene{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:4/3;width:100%;
+    border:1px solid var(--line);isolation:isolate}
+  @media (orientation:landscape) and (min-width:900px){ .szene{aspect-ratio:auto;height:100%;min-height:300px} }
+  @media (orientation:portrait), (max-width:899px){ .szene{aspect-ratio:auto;height:min(34vh,300px)} }
+  .szene .deko{position:absolute;font-size:clamp(34px,7vmin,64px);line-height:1;z-index:0;opacity:.95}
+  .szene .dinge{position:absolute;top:8%;right:6%;display:flex;gap:4%;z-index:1;font-size:clamp(38px,9vmin,78px);line-height:1;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.15))}
+  .szene .leute{position:absolute;left:0;right:0;bottom:5%;display:flex;justify-content:center;gap:5%;z-index:2}
+  .figur{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .figur .koerper{font-size:clamp(46px,11vmin,92px);line-height:1;filter:drop-shadow(0 5px 6px rgba(0,0,0,.2))}
+  .figur .name{font:700 clamp(12px,2.2vmin,16px)/1 var(--rund);color:#fff;border-radius:999px;padding:5px 10px;white-space:nowrap}
+
+  /* Die Orte - gemalt aus Verläufen, damit nichts nachgeladen werden muss. */
+  .ort-platz{background:linear-gradient(#bfe3ff 0 45%,#4caf50 45% 100%)}
+  .ort-platz::after{content:"";position:absolute;left:0;right:0;top:66%;height:4px;background:rgba(255,255,255,.8)}
+  .ort-stadion{background:linear-gradient(#1f2937 0 14%,#9ca3af 14% 18%,#d1d5db 18% 22%,#9ca3af 22% 26%,#d1d5db 26% 30%,#4b5563 30% 34%,#2e7d32 34% 100%)}
+  .ort-klasse{background:linear-gradient(#fdf6e3 0 70%,#c8a47e 70% 100%)}
+  .ort-klasse::before{content:"";position:absolute;left:10%;top:9%;width:52%;height:34%;background:#1f5f3f;border:6px solid #8d6e63;border-radius:6px}
+  .ort-pausenhof{background:linear-gradient(#cfe8ff 0 50%,#b8bec7 50% 100%)}
+  .ort-zimmer{background:linear-gradient(#fff1d6 0 68%,#c58b56 68% 100%)}
+  .ort-kueche{background:linear-gradient(#f4fbff 0 58%,#d7e3ea 58% 64%,#f0e6d8 64% 100%)}
+  .ort-kueche::before{content:"";position:absolute;inset:0 0 42% 0;background-image:linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px);background-size:32px 32px}
+  .ort-garten{background:linear-gradient(#c7e7ff 0 48%,#66bb6a 48% 100%)}
+  .ort-garten::before{content:"";position:absolute;left:0;right:0;top:40%;height:14%;background:repeating-linear-gradient(90deg,#d7b58a 0 14px,transparent 14px 34px)}
+  .ort-strasse{background:linear-gradient(#cfe8ff 0 40%,#e8d5c4 40% 60%,#cfd4da 60% 70%,#6b7280 70% 100%)}
+  .ort-strasse::after{content:"";position:absolute;left:0;right:0;top:85%;height:4px;background:repeating-linear-gradient(90deg,#fff 0 30px,transparent 30px 60px)}
+  .ort-park{background:linear-gradient(#d4ecff 0 44%,#7cc576 44% 100%)}
+  .ort-buecherei{background:linear-gradient(#f6efe6 0 74%,#b08968 74% 100%)}
+  .ort-buecherei::before{content:"";position:absolute;left:6%;right:6%;top:8%;height:52%;
+    background:repeating-linear-gradient(#8d6e63 0 6px,transparent 6px 56px),
+               repeating-linear-gradient(90deg,#ef9a9a 0 12px,#90caf9 12px 22px,#ffe082 22px 34px,#a5d6a7 34px 44px);}
+  .ort-nacht{background:linear-gradient(#0f1a3d 0 62%,#28406b 62% 100%)}
+  .ort-nacht .figur .koerper{filter:drop-shadow(0 0 10px rgba(255,255,255,.35))}
+
+  .seite{display:flex;flex-direction:column;min-height:100%}
+  .text{flex:1;font-family:"Andika","Comic Neue",var(--rund);font-size:clamp(23px,3.1vmax,31px);line-height:1.75;
+    letter-spacing:.015em;word-spacing:.12em;margin:0;padding:4px 2px 10px}
+  .text .zeile{display:block;margin:0 0 .25em}
+  .text .wort{white-space:nowrap}
+  .text.silben .s0{color:var(--silbe-a)} .text.silben .s1{color:var(--silbe-b)}
+  .blaettern{display:flex;gap:10px;align-items:center;margin-top:8px}
+  .blaettern .knopf.hell{flex:0 0 auto;min-width:64px}
+  .blaettern .knopf.vor{flex:1}
+  .punkte{display:flex;gap:6px;justify-content:center;margin:10px 0 0}
+  .punkte i{width:10px;height:10px;border-radius:50%;background:#d0d5dd}
+  .punkte i.an{background:var(--leon)}
+  .nachschau{background:#fff8e6;border:1px solid #fde6a8;border-radius:14px;padding:10px 14px;margin:0 0 10px;
+    font:700 17px/1.35 var(--rund);color:#8a5a12}
+
+  /* ---- Fragen ---- */
+  .fragen{max-width:780px;margin:0 auto}
+  .fragen .zaehler{color:var(--muted);font:700 15px/1 var(--rund);margin-bottom:8px}
+  .fragen .frage{font:700 clamp(24px,3.4vmax,32px)/1.35 var(--rund);margin:0 0 16px}
+  .antworten{display:grid;gap:10px}
+  .antwort{border:3px solid var(--line);background:#fff;border-radius:18px;padding:14px 18px;min-height:64px;
+    text-align:left;font:600 clamp(20px,2.7vmax,26px)/1.3 var(--rund);color:var(--ink);cursor:pointer}
+  .antwort:active{transform:scale(.99)}
+  .antwort.richtig{border-color:var(--gut);background:#ecfdf3}
+  .antwort.daneben{border-color:#fda29b;background:#fff4f3;color:#98a2b3}
+  .rueck{min-height:30px;margin-top:14px;font:700 20px/1.4 var(--rund)}
+  .rueck.gut{color:var(--leon-dunkel)} .rueck.hm{color:#b54708}
+  .fragen .reihe{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .fragen .reihe .knopf{flex:1;min-width:220px}
+
+  /* ---- Lesebeweis ---- */
+  .beweis{max-width:640px;margin:0 auto;text-align:center}
+  .beweis .siegel{width:170px;height:170px;margin:4px auto 12px;border-radius:50%;border:6px dashed var(--leon);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg);
+    color:var(--leon-dunkel);font:800 20px/1.15 var(--rund);background:#f6fef9;animation:stempeln .5s ease-out}
+  .beweis .siegel span{font-size:52px;line-height:1}
+  @keyframes stempeln{0%{transform:scale(2.2) rotate(-8deg);opacity:0}70%{transform:scale(.92) rotate(-8deg);opacity:1}100%{transform:scale(1) rotate(-8deg)}}
+  .beweis h2{font-family:var(--rund);font-size:28px;margin:6px 0}
+  .beweis p{font-size:19px;line-height:1.5;color:var(--muted);margin:0 0 6px}
+  .beweis .knopf{width:100%;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/#lesen">‹ Leons Spiele</a>
+    <h1>📖 Lesegeschichte</h1>
+  </header>
+
+  <!-- 1. Start -->
+  <section id="sicht-start">
+    <div class="karte start">
+      <div class="erledigt verborgen" id="schon-gelesen">✅ Heute hast du schon gelesen. Super gemacht!<br>Morgen wartet eine neue Geschichte.</div>
+      <div class="gross" id="start-bild">📖</div>
+      <div class="ueber" id="start-ueber">Deine Geschichte für heute</div>
+      <h2 id="start-titel"></h2>
+      <p id="start-text">Lies die Geschichte ganz allein. Danach stelle ich dir 5 Fragen – das ist dein Lesebeweis.</p>
+      <button class="knopf" id="start-los">Los, ich lese! 📖</button>
+    </div>
+    <div class="karte lesepass verborgen" id="lesepass">
+      <h3>🏅 Mein Lesepass</h3>
+      <p class="unter" id="lesepass-unter"></p>
+      <div class="stempel" id="stempel"></div>
+    </div>
+  </section>
+
+  <!-- 2. Lesen -->
+  <section id="sicht-lesen" class="verborgen">
+    <div class="karte">
+      <div class="werkzeug">
+        <div class="titel" id="lese-titel"></div>
+        <button class="silbenknopf" id="silben" aria-pressed="false"><span class="a">Sil</span><span class="b">ben</span></button>
+      </div>
+      <div class="nachschau verborgen" id="nachschau">🔎 Such die Antwort auf dieser Seite.</div>
+      <div class="buch">
+        <div class="szene" id="szene" role="img"></div>
+        <div class="seite">
+          <p class="text" id="text"></p>
+          <div class="blaettern">
+            <button class="knopf hell" id="zurueckblaettern" aria-label="Seite zurück">‹</button>
+            <button class="knopf vor" id="weiter">Weiter ›</button>
+          </div>
+          <div class="punkte" id="punkte"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Fragen -->
+  <section id="sicht-fragen" class="verborgen">
+    <div class="karte fragen">
+      <div class="zaehler" id="f-zaehler"></div>
+      <div class="frage" id="f-frage"></div>
+      <div class="antworten" id="f-antworten"></div>
+      <div class="rueck" id="f-rueck"></div>
+      <div class="reihe">
+        <button class="knopf hell verborgen" id="f-nachschauen">🔎 Nachschauen</button>
+        <button class="knopf verborgen" id="f-weiter">Weiter ›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Lesebeweis -->
+  <section id="sicht-beweis" class="verborgen">
+    <div class="karte beweis">
+      <div class="siegel"><span>📖</span>Gelesen!</div>
+      <h2 id="b-titel">Lesebeweis erbracht!</h2>
+      <p id="b-text"></p>
+      <button class="knopf" id="b-fertig">Zurück zu meinen Spielen</button>
+    </div>
+  </section>
+</div>
+
+<script src="geschichten.js"></script>
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var ALLE = window.LEON_GESCHICHTEN || [];
+
+  /* ---------- Speicher ----------
+     "leon-lesepass": { gelesen: {id: {datum, minuten, gleichRichtig}}, heute: {datum, id} }
+     Der Schlüssel ist neu und gehört nur dieser Seite. */
+  var SPEICHER = "leon-lesepass";
+  var SILBEN = "leon-lesen-silben";
+  function lesen(){ try { var d = JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; d.gelesen = d.gelesen || {}; return d; } catch(e){ return { gelesen:{} }; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  function heuteText(){
+    var j = new Date();
+    return j.getFullYear() + "-" + String(j.getMonth()+1).padStart(2,"0") + "-" + String(j.getDate()).padStart(2,"0");
+  }
+  function datumSchoen(iso){
+    var t = String(iso || "").split("-");
+    return t.length === 3 ? Number(t[2]) + "." + Number(t[1]) + "." : "";
+  }
+
+  // Welche Geschichte ist heute dran? Die schon gewählte, sonst die erste noch
+  // ungelesene. Sind alle gelesen, kommt die, die am längsten her ist.
+  function geschichteFuerHeute(){
+    var d = lesen(), heute = heuteText();
+    var schon = d.heute && d.heute.datum === heute && finde(d.heute.id);
+    if (schon) return schon;
+    var neu = ALLE.filter(function(g){ return !d.gelesen[g.id]; })[0];
+    if (!neu){
+      neu = ALLE.slice().sort(function(a, b){
+        return String(d.gelesen[a.id].datum).localeCompare(String(d.gelesen[b.id].datum));
+      })[0];
+    }
+    if (neu){ d.heute = { datum: heute, id: neu.id }; schreiben(d); }
+    return neu;
+  }
+  function finde(id){ return ALLE.filter(function(g){ return g.id === id; })[0] || null; }
+
+  /* ---------- Ansichten ---------- */
+  function zeige(welche){
+    ["start","lesen","fragen","beweis"].forEach(function(s){ $("sicht-"+s).classList.toggle("verborgen", s !== welche); });
+    window.scrollTo(0, 0);
+  }
+
+  var geschichte = null, seite = 0, nachschauenFuer = -1;
+
+  function startMalen(){
+    var d = lesen();
+    geschichte = geschichteFuerHeute();
+    if (!geschichte){ $("start-titel").textContent = "Noch keine Geschichte da."; $("start-los").classList.add("verborgen"); return; }
+    var heuteGelesen = d.gelesen[geschichte.id] && d.gelesen[geschichte.id].datum === heuteText();
+    $("schon-gelesen").classList.toggle("verborgen", !heuteGelesen);
+    $("start-bild").textContent = geschichte.bild || "📖";
+    $("start-titel").textContent = geschichte.titel;
+    $("start-ueber").textContent = heuteGelesen ? "Deine Geschichte von heute" : "Deine Geschichte für heute";
+    $("start-los").textContent = heuteGelesen ? "Nochmal lesen 📖" : "Los, ich lese! 📖";
+
+    var ids = Object.keys(d.gelesen).filter(finde).sort(function(a, b){
+      return String(d.gelesen[b].datum).localeCompare(String(d.gelesen[a].datum));
+    });
+    $("lesepass").classList.toggle("verborgen", !ids.length);
+    $("lesepass-unter").textContent = ids.length === 1
+      ? "Deine erste Geschichte! Tipp drauf, dann kannst du sie nochmal lesen."
+      : ids.length + " Geschichten hast du schon gelesen. Tipp eine an, dann kannst du sie nochmal lesen.";
+    var box = $("stempel"); box.innerHTML = "";
+    ids.forEach(function(id){
+      var g = finde(id), b = document.createElement("button");
+      b.innerHTML = '<span class="bild"></span><span><span class="t"></span><small></small></span>';
+      b.querySelector(".bild").textContent = g.bild || "📖";
+      b.querySelector(".t").textContent = g.titel;
+      b.querySelector("small").textContent = "✅ gelesen am " + datumSchoen(d.gelesen[id].datum);
+      b.addEventListener("click", function(){ geschichte = g; losLesen(); });
+      box.appendChild(b);
+    });
+    document.title = "Lesegeschichte";
+  }
+
+  /* ---------- Lesen ---------- */
+  var silbenAn = false;
+  try { silbenAn = localStorage.getItem(SILBEN) === "1"; } catch(e){}
+  function silbenZeigen(){
+    $("text").classList.toggle("silben", silbenAn);
+    $("silben").classList.toggle("an", silbenAn);
+    $("silben").setAttribute("aria-pressed", silbenAn ? "true" : "false");
+  }
+  $("silben").addEventListener("click", function(){
+    silbenAn = !silbenAn;
+    try { localStorage.setItem(SILBEN, silbenAn ? "1" : "0"); } catch(e){}
+    silbenZeigen();
+  });
+
+  var FIGUR = {
+    "Leon": ["👦", "#10b981"], "Theo": ["👦", "#2563eb"], "Leo": ["🧒", "#f59e0b"],
+    "Xaver": ["🧑", "#7c3aed"], "Paul": ["👦", "#ea580c"], "Helena": ["👧", "#db2777"],
+    "Papa": ["👨", "#0f766e"], "Mama": ["👩", "#e11d48"], "Elisabeth": ["👩", "#9333ea"],
+    "Herr Celis": ["👨‍🏫", "#475569"]
+  };
+  var DEKO = {
+    platz: [["🥅", "left:6%;top:30%"]], stadion: [], klasse: [["🕰️", "right:8%;top:10%"]],
+    pausenhof: [["🌳", "left:4%;top:18%"]], zimmer: [["🪟", "left:6%;top:10%"]], kueche: [],
+    garten: [["🌻", "left:5%;top:36%"]], strasse: [["🏠", "left:4%;top:14%"], ["🏡", "left:22%;top:18%"]],
+    park: [["🌳", "left:3%;top:14%"], ["🌳", "left:18%;top:22%"]], buecherei: [], nacht: [["🌙", "left:8%;top:8%"], ["⭐", "left:30%;top:14%"]]
+  };
+
+  function szeneMalen(sz){
+    var el = $("szene"); el.innerHTML = "";
+    var ort = DEKO.hasOwnProperty(sz.ort) ? sz.ort : "zimmer";
+    el.className = "szene ort-" + ort;
+    DEKO[ort].forEach(function(d){
+      var s = document.createElement("span"); s.className = "deko"; s.textContent = d[0]; s.style.cssText = d[1];
+      el.appendChild(s);
+    });
+    var dinge = document.createElement("div"); dinge.className = "dinge";
+    (sz.dinge || []).forEach(function(x){ var s = document.createElement("span"); s.textContent = x; dinge.appendChild(s); });
+    el.appendChild(dinge);
+    var leute = document.createElement("div"); leute.className = "leute";
+    (sz.leute || []).forEach(function(n){
+      var f = FIGUR[n] || ["🙂", "#667085"];
+      var fig = document.createElement("div"); fig.className = "figur";
+      fig.innerHTML = '<span class="koerper"></span><span class="name"></span>';
+      fig.querySelector(".koerper").textContent = f[0];
+      fig.querySelector(".name").textContent = n;
+      fig.querySelector(".name").style.background = f[1];
+      leute.appendChild(fig);
+    });
+    el.appendChild(leute);
+    el.setAttribute("aria-label", "Bild: " + (sz.leute || []).join(", "));
+  }
+
+  function zeileMalen(z){
+    var p = document.createElement("span"); p.className = "zeile";
+    String(z).split(" ").forEach(function(wort, i){
+      if (i) p.appendChild(document.createTextNode(" "));
+      var w = document.createElement("span"); w.className = "wort";
+      wort.split("|").forEach(function(silbe, j){
+        var s = document.createElement("span"); s.className = "s" + (j % 2); s.textContent = silbe;
+        w.appendChild(s);
+      });
+      p.appendChild(w);
+    });
+    return p;
+  }
+
+  var weiterUhr = null;
+  function seiteMalen(){
+    var s = geschichte.seiten[seite];
+    szeneMalen(s.szene || {});
+    var t = $("text"); t.innerHTML = "";
+    s.zeilen.forEach(function(z){ t.appendChild(zeileMalen(z)); });
+    silbenZeigen();
+    var p = $("punkte"); p.innerHTML = "";
+    geschichte.seiten.forEach(function(_, i){ var d = document.createElement("i"); if (i === seite) d.className = "an"; p.appendChild(d); });
+    $("zurueckblaettern").disabled = seite === 0 || nachschauenFuer >= 0;
+    var letzte = seite === geschichte.seiten.length - 1;
+
+    if (nachschauenFuer >= 0){
+      $("weiter").textContent = "Zurück zur Frage ›";
+      $("weiter").disabled = false;
+    } else {
+      $("weiter").textContent = letzte ? "Fertig gelesen! Zu den Fragen ›" : "Weiter ›";
+      // Kein Durchtippen: Der Knopf wacht erst auf, wenn man die Seite hätte
+      // lesen können - grob eine Viertelsekunde pro Wort. Das merkt nur, wer
+      // nicht liest; eine Uhr oder Warnung sieht Leon nicht.
+      var woerter = s.zeilen.join(" ").split(/\s+/).length;
+      $("weiter").disabled = true;
+      clearTimeout(weiterUhr);
+      weiterUhr = setTimeout(function(){ $("weiter").disabled = false; }, Math.min(12000, woerter * 250));
+    }
+    $("nachschau").classList.toggle("verborgen", nachschauenFuer < 0);
+    window.scrollTo(0, 0);
+  }
+
+  function losLesen(){
+    seite = 0; nachschauenFuer = -1; fragenNr = 0; gleichRichtig = 0; ersterVersuch = true;
+    document.title = "Lesegeschichte: " + geschichte.titel;
+    try { window.lernstand && window.lernstand.uhrZuruecksetzen(); } catch(e){}
+    $("lese-titel").textContent = (geschichte.bild || "📖") + " " + geschichte.titel;
+    zeige("lesen");
+    seiteMalen();
+  }
+
+  $("start-los").addEventListener("click", function(){ if (geschichte) losLesen(); });
+  $("zurueckblaettern").addEventListener("click", function(){ if (seite > 0){ seite--; seiteMalen(); } });
+  $("weiter").addEventListener("click", function(){
+    if (nachschauenFuer >= 0){ nachschauenFuer = -1; zeige("fragen"); return; }
+    if (seite < geschichte.seiten.length - 1){ seite++; seiteMalen(); }
+    else { fragenNr = 0; frageMalen(); zeige("fragen"); }
+  });
+
+  /* ---------- Fragen ---------- */
+  var fragenNr = 0, gleichRichtig = 0, ersterVersuch = true;
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t = f[i]; f[i] = f[j]; f[j] = t; } return f; }
+
+  var LOB = ["Richtig! Gut gelesen.", "Genau so steht es da!", "Stimmt! Du hast gut aufgepasst.", "Super, richtig!", "Ja, richtig!"];
+
+  function frageMalen(){
+    var f = geschichte.fragen[fragenNr];
+    ersterVersuch = true;
+    $("f-zaehler").textContent = "Frage " + (fragenNr + 1) + " von " + geschichte.fragen.length;
+    $("f-frage").textContent = f.frage;
+    $("f-rueck").textContent = ""; $("f-rueck").className = "rueck";
+    $("f-weiter").classList.add("verborgen");
+    $("f-nachschauen").classList.add("verborgen");
+    var box = $("f-antworten"); box.innerHTML = "";
+    mische([f.richtig].concat(f.falsch)).forEach(function(a){
+      var b = document.createElement("button"); b.className = "antwort"; b.textContent = a;
+      b.addEventListener("click", function(){ antworten(b, a); });
+      box.appendChild(b);
+    });
+  }
+
+  function antworten(knopf, a){
+    var f = geschichte.fragen[fragenNr];
+    if (knopf.classList.contains("daneben") || !$("f-weiter").classList.contains("verborgen")) return;
+    var stimmt = a === f.richtig;
+    if (ersterVersuch){
+      if (stimmt) gleichRichtig++;
+      try { window.lernstand && window.lernstand.antwort(stimmt, "lesebeweis", a, f.richtig); } catch(e){}
+    }
+    if (stimmt){
+      knopf.classList.add("richtig");
+      $("f-rueck").textContent = "✅ " + LOB[fragenNr % LOB.length];
+      $("f-rueck").className = "rueck gut";
+      $("f-nachschauen").classList.add("verborgen");
+      $("f-weiter").textContent = fragenNr === geschichte.fragen.length - 1 ? "Zum Lesebeweis ›" : "Nächste Frage ›";
+      $("f-weiter").classList.remove("verborgen");
+    } else {
+      ersterVersuch = false;
+      knopf.classList.add("daneben");
+      $("f-rueck").textContent = "Hm, das steht da anders. Auf Seite " + f.seite + " findest du es!";
+      $("f-rueck").className = "rueck hm";
+      $("f-nachschauen").textContent = "🔎 Seite " + f.seite + " ansehen";
+      $("f-nachschauen").classList.remove("verborgen");
+    }
+  }
+
+  $("f-nachschauen").addEventListener("click", function(){
+    var f = geschichte.fragen[fragenNr];
+    nachschauenFuer = fragenNr;
+    seite = Math.max(0, Math.min(geschichte.seiten.length - 1, (f.seite || 1) - 1));
+    zeige("lesen");
+    seiteMalen();
+  });
+  $("f-weiter").addEventListener("click", function(){
+    if (fragenNr < geschichte.fragen.length - 1){ fragenNr++; frageMalen(); window.scrollTo(0,0); }
+    else beweisZeigen();
+  });
+
+  /* ---------- Lesebeweis ---------- */
+  function beweisZeigen(){
+    var sek = 0;
+    try { sek = window.lernstand ? window.lernstand.aktiveSekunden() : 0; } catch(e){}
+    var minuten = Math.max(1, Math.round(sek / 60));
+    var d = lesen(), heute = heuteText();
+    var vorher = d.gelesen[geschichte.id];
+    // Der erste Lesebeweis bleibt stehen. Liest Leon eine alte Geschichte
+    // nochmal, wird nur das Datum frisch - der Stempel wandert nach vorn.
+    d.gelesen[geschichte.id] = { datum: heute, minuten: minuten, gleichRichtig: gleichRichtig,
+                                 erstesMal: (vorher && vorher.erstesMal) || heute };
+    schreiben(d);
+    $("b-titel").textContent = "Lesebeweis: " + geschichte.titel;
+    $("b-text").textContent = "Du hast die ganze Geschichte gelesen und alle " + geschichte.fragen.length +
+      " Fragen geschafft" + (gleichRichtig === geschichte.fragen.length ? " – jede gleich beim ersten Mal!" :
+      gleichRichtig >= 3 ? ". " + gleichRichtig + " wusstest du sofort, den Rest hast du nachgeschaut. So machen es gute Leser!" :
+      ". Nachschauen gehört zum Lesen dazu – gut gemacht!") +
+      " Ungefähr " + minuten + (minuten === 1 ? " Minute" : " Minuten") + " hast du gelesen.";
+    zeige("beweis");
+  }
+  $("b-fertig").addEventListener("click", function(){ location.href = "/leon/#lesen"; });
+
+  startMalen();
+  zeige("start");
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
