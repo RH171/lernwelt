@@ -275,6 +275,16 @@ gehen weiter, unabhängig von den Knöpfen. **Merksatz für den nächsten
 Spielmotor:** Am Laptop wird geprüft, ob etwas funktioniert — auf dem iPad, ob
 man es überhaupt auslösen kann.
 
+### Spielstand in der Schmiede (seit 16.09.2026)
+
+Leon (Bild vom iPad): „keine Spielstände speichern". Die Schmiede merkte sich nur
+Einstellungen und Rekord. Jetzt: `<kind>-schmiede-stand` = Spiel-id, Aufgabe,
+Sterne, Herzen, gelöst. **Geschrieben nur beim Verlassen** (Raus, `pagehide`,
+`visibilitychange` → unsichtbar), gelöscht beim Spielende – nicht nach jeder
+Aufgabe, weil jeder Schreibvorgang über den Sync ins KV-Kontingent geht. Die Welt
+wird beim Weiterspielen neu gewürfelt. Karte „▶️ Weiterspielen" oben in den
+Schritten. Messung: `mess-schritte-schmiede-stand.js`.
+
 ## Eine Grid-Spalte ist so breit wie ihr breitester Inhalt
 
 Paul am 15.09.2026 (Meldung `jjrd622c6f`, mit Foto): *„ich will das es nicht
@@ -630,6 +640,15 @@ im Auftrag keine Prüfung ist:
 - `bau-waechter.sh`: eigener Abschnitt im Auftrag.
 
 Messung: `mess-schritte-hausaufgabe.js` prüft auch, dass BEIDE Anfragen rausgehen.
+
+**Erweiterung 16.09.2026 nachmittags:** vierter Knopf „✅ Fertig – schau drüber".
+Hat Paul das Blatt selbst gelöst, darf die Werkstatt zeigen, **wo** er noch einmal
+hinschauen soll und worauf er achten soll – nie die Lösung, nie „zu groß/zu klein",
+nie selbst verbessern. Die Sofortantwort bekommt dafür alle Seiten (`bilder`).
+Beispiel dafür: `paul/klasse3-mathe-wechselstube.html` (Klasse 4, Wiederholung zu
+„Wiederholungshelden 4", Quelle ideenreise-blog.de) übt genau Pauls zwei Wackler
+vom Blatt – Zahl passt nicht zur Zerlegung, Null als Platzhalter – und enthält
+keine Zahl vom Blatt (`BLATT`). Messung: `mess-schritte-wechselstube.js`.
 
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
 
