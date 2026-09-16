@@ -27,6 +27,33 @@ const KINDER = {
   helena: { name: "Helena", alter: "12 Jahre, 7. Klasse Gymnasium" },
 };
 
+// Pauls Knopf "Meine Hausaufgabe" (16.09.2026). Denny hat die Grenze gezogen:
+// ueben, nicht loesen. Die Sofortantwort ist die Stelle, an der ein Kind am
+// ehesten "sag mir einfach die Loesung" schreibt - darum steht es hier.
+const HAUSAUFGABE = `
+
+DIESER FADEN IST EINE HAUSAUFGABE.
+Das Kind hat sein Arbeitsblatt oder seinen Hefteintrag fotografiert. Die Werkstatt
+baut gerade schon ein Übungsspiel dazu, das gleich von selbst startet. Danach baut
+sie noch eine eigene Übung, die genau auf das passt, was das Kind braucht.
+
+DEINE ANTWORT:
+1. Sag in einem Satz, was du auf dem Blatt erkennst (Fach und Thema), damit das
+   Kind merkt, dass es angekommen ist.
+2. Frag GENAU EINE Sache, die hilft, die richtige Übung zu bauen - zum Beispiel,
+   welche Aufgabe sich am schwersten anfühlt oder was es noch nicht versteht.
+3. Sag, dass die Übung gebaut wird und es hier im Faden antworten kann.
+   Das Übungsspiel startet gleich von selbst.
+
+ÜBEN, NICHT LÖSEN - das gilt ohne Ausnahme, auch wenn das Kind darum bittet:
+- Nenne NIE die Lösung einer Aufgabe, die auf dem Blatt steht. Auch nicht teilweise,
+  nicht als Tipp, der die Lösung verrät, nicht "Schritt für Schritt" bis zum Ergebnis.
+- Prüfe oder korrigiere KEINE Antworten, die das Kind eingetragen hat.
+- Willst du etwas erklären, nimm ein EIGENES Beispiel mit anderen Zahlen oder Wörtern.
+- Bittet das Kind um die Lösung: freundlich sagen, dass es das Blatt selbst schafft,
+  und dass ihr an ähnlichen Aufgaben übt, bis es sitzt. Das ist Absicht von Papa und
+  der Werkstatt, keine Strenge.`;
+
 const REGELN = `Du bist "die Werkstatt" in einer Lern-App, die ein Vater für seine drei Kinder gebaut hat.
 Ein Kind hat gerade auf den Melde-Knopf gedrückt und dir geschrieben. Antworte SOFORT und PERSÖNLICH.
 
@@ -83,7 +110,7 @@ das jetzt reicht und in die Werkstatt geht.
 Antworte NUR mit dem Text für das Kind. Keine Anrede-Zeile wie "Antwort:",
 keine Erklärung an mich, keine Aufzählungszeichen am Zeilenanfang.`;
 
-export async function antwortErzeugen(env, { kind, text, bild, seite, geraet, verlauf }) {
+export async function antwortErzeugen(env, { kind, text, bild, seite, geraet, verlauf, art }) {
   if (!env.ANTHROPIC_API_KEY) return null;
 
   const k = KINDER[kind] || { name: kind, alter: "Schulkind" };
@@ -120,7 +147,7 @@ export async function antwortErzeugen(env, { kind, text, bild, seite, geraet, ve
       body: JSON.stringify({
         model: MODELL,
         max_tokens: MAX_ANTWORT,
-        system: REGELN,
+        system: art === "hausaufgabe" ? REGELN + HAUSAUFGABE : REGELN,
         messages: [{ role: "user", content: inhalt }],
       }),
     });

@@ -373,21 +373,41 @@ function blattForm(t) {
 }
 
 function blattMuster(spiel) {
-  return ((spiel && spiel.blatt_aufgaben) || []).map((b) => {
-    const roh = String(b == null ? "" : b);
-    const rechnung = /\d/.test(roh) && /[+\-−–×·∙⋅*x÷:\/]/.test(roh.replace(/^\s*\d+[.)]\s*/, ""));
-    const satz = roh.trim().split(/\s+/).length >= 4;
-    // Die Nummerierung vom Blatt ("3)", "b.") gehoert nicht zur Aufgabe.
-    const form = blattForm(roh.replace(/^\s*(\d+|[a-z])[.)]\s+/i, "").replace(/=\s*_*\s*\??\s*$/, ""));
-    return (rechnung || satz) && form.length >= 3 ? form : "";
-  }).filter(Boolean);
+  const muster = [];
+  ((spiel && spiel.blatt_aufgaben) || []).forEach((b) => {
+    // Die Nummerierung vom Blatt ("3)", "b.") gehoert nicht zur Aufgabe, ein
+    // leeres "= __" am Ende auch nicht.
+    const roh = String(b == null ? "" : b)
+      .replace(/^\s*(\d+|[a-z])[.)]\s+/i, "").replace(/=\s*_*\s*\??\s*$/, "");
+    // "Unterstreiche das Prädikat: Der Hund bellt laut." - die Anweisung
+    // formuliert das Spiel anders, der Satz dahinter waere trotzdem derselbe.
+    [roh].concat(roh.split(/[:;]/).length > 1 && !/\d\s*:\s*\d/.test(roh) ? roh.split(/[:;]/) : [])
+      .forEach((teil) => {
+        const rechnung = /\d/.test(teil) && /\d\s*[+\-−–×·∙⋅*x÷:\/]\s*\d/.test(teil);
+        const satz = teil.trim().split(/\s+/).length >= 4;
+        const form = blattForm(teil);
+        if ((rechnung || satz) && form.length >= 3) muster.push(form);
+      });
+  });
+  return muster;
+}
+
+// Enthaelt die Frage das Muster - aber nicht als Teil einer groesseren Zahl?
+// "134 + 27" ist nicht "34 + 27".
+function enthaeltGanz(text, m) {
+  for (let i = text.indexOf(m); i >= 0; i = text.indexOf(m, i + 1)) {
+    const vor = text.charAt(i - 1), nach = text.charAt(i + m.length);
+    if (!(/\d/.test(m.charAt(0)) && /\d/.test(vor)) &&
+        !(/\d/.test(m.charAt(m.length - 1)) && /\d/.test(nach))) return true;
+  }
+  return false;
 }
 
 export function vomBlatt(a, spiel) {
   const muster = blattMuster(spiel);
   if (!muster.length || !a) return false;
   const frage = blattForm(a.frage);
-  return muster.some((m) => frage.includes(m));
+  return muster.some((m) => enthaeltGanz(frage, m));
 }
 
 export function vomBlattEntfernen(spiel) {

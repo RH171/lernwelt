@@ -149,7 +149,7 @@ async function sofortAntworten(env, faden, kind, text, bild) {
   const grund = await darfAntworten(env, kind);
   if (grund === "ok") {
     antwort = await antwortErzeugen(env, {
-      kind, text, bild, seite: faden.seite, geraet: faden.geraet,
+      kind, text, bild, seite: faden.seite, geraet: faden.geraet, art: faden.art,
       verlauf: faden.verlauf.slice(0, -1),
     });
   }
@@ -280,19 +280,31 @@ async function postVerarbeiten(context) {
   if (!text && !bild) return json(400, { ok: false, fehler: "Die Meldung war leer." });
   if (bild.length > MAX_BILD) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
 
+  // Pauls Hausaufgabe (16.09.2026) hat oft mehr als eine Seite. Die weiteren
+  // Seiten stehen als eigene Eintraege im Verlauf - so bleibt jedes Bild unter
+  // seiner Nummer abrufbar (werkstatt.sh bild <id>:<nr>), ohne neues Format.
+  const hausaufgabe = daten.art === "hausaufgabe";
+  const weitere = hausaufgabe && Array.isArray(daten.bilder)
+    ? daten.bilder.filter((b) => typeof b === "string" && b).slice(0, 3) : [];
+  if (weitere.some((b) => b.length > MAX_BILD)) return json(400, { ok: false, fehler: "Ein Bild ist zu groß." });
+
   const id = neueId();
   if (bild) await env.PAUL_KV.put("meldung-bild:" + id + ":0", bild);
+  for (let i = 0; i < weitere.length; i++) {
+    await env.PAUL_KV.put("meldung-bild:" + id + ":" + (i + 1), weitere[i]);
+  }
 
   liste.unshift({
     id, kind,
     zeit: new Date().toISOString(),
-    art: daten.art === "wunsch" ? "wunsch" : "problem",
+    art: daten.art === "wunsch" ? "wunsch" : hausaufgabe ? "hausaufgabe" : "problem",
     wo: String(daten.wo || "").slice(0, 200),
     titel: String(daten.titel || "").slice(0, 120),
     geraet: String(daten.geraet || "").slice(0, 80),
     status: "offen",
     ungelesenKind: false,
-    verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 }],
+    verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 }]
+      .concat(weitere.map((b, i) => ({ von: kind, text: "Seite " + (i + 2), zeit: new Date().toISOString(), hatBild: true, nr: i + 1 }))),
   });
 
   // Sofort antworten - noch in diesem Aufruf, damit das Kind die Antwort
