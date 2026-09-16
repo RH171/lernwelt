@@ -35,12 +35,15 @@ export async function onRequestPost(context) {
 
   await fehlversucheLoeschen(request, env);
   const ausweis = await ausweisBauen(geheim);
+  // Das Kind muss mit: Wie lange die Anmeldung liegen bleibt, haengt davon ab,
+  // wer sich anmeldet. Pauls Bereich bekommt seit dem 16.09.2026 ein
+  // Sitzungs-Cookie (siehe ausweisKopfzeile in _riegel.js).
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
-      "set-cookie": ausweisKopfzeile(ausweis),
+      "set-cookie": ausweisKopfzeile(ausweis, kindAus(request, auftrag)),
     },
   });
 }

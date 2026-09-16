@@ -97,9 +97,36 @@ export async function alleAbmelden(env) {
   return true;
 }
 
-export function ausweisKopfzeile(ausweis) {
-  const maxAlter = TAGE * 86400;
-  return `${COOKIE}=${encodeURIComponent(ausweis)}; Path=/; Max-Age=${maxAlter}; HttpOnly; Secure; SameSite=Lax`;
+// Wie lange die Anmeldung auf dem Geraet liegen bleibt.
+//
+// Paul am 16.09.2026: *"ich wuerde auch gerne jedes Mal, wenn man reingeht,
+// automatisch das Passwort eingeben muessen und nicht nach 30 Tagen."*
+//
+// Fuer seinen Bereich bekommt der Browser darum ein SITZUNGS-Cookie: ohne
+// Max-Age merkt der Browser es sich nicht auf der Platte, sondern wirft es
+// weg, sobald er geschlossen wird. Beim naechsten Reingehen fragt der Riegel
+// wieder nach dem Code.
+//
+// Nur fuer Paul, nicht fuer alle: Leon ist sieben und tippt den Code nicht
+// gern mehrmals am Tag, und der Elternbereich haengt an Dennys Werkzeugen.
+// Welches Kind gemeint ist, weiss code-pruefen.js aus ?kind= bzw. dem Auftrag.
+//
+// Wichtig ist, dass hier NUR das Max-Age faellt. Der signierte Stichtag im
+// Ausweis bleibt bei TAGE - wer ihn verkuerzt, muss auch die Rueckrechnung in
+// ausweisGueltig() anfassen (ausgestellt = bis - TAGE), sonst gilt jeder
+// frische Ausweis als vor dem Abmelde-Stichtag ausgestellt und Paul kommt gar
+// nicht mehr rein.
+const OHNE_GEDAECHTNIS = ["paul"];
+
+export function ausweisKopfzeile(ausweis, kind) {
+  const grund = `${COOKIE}=${encodeURIComponent(ausweis)}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+  if (OHNE_GEDAECHTNIS.includes(String(kind || "").toLowerCase())) return grund;
+  return `${grund}; Max-Age=${TAGE * 86400}`;
+}
+
+// Die Kopfzeile, die den Ausweis wieder wegraeumt - fuer "Abmelden".
+export function abmeldeKopfzeile() {
+  return `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
 }
 
 // Bremse gegen Durchprobieren: höchstens 8 Fehlversuche je Stunde und Absender.

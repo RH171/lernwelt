@@ -392,6 +392,9 @@
     <div class="controls">
       <!-- 14.09.2026: Von Pauls Uebersicht fuehrte kein Weg zur Lernwelt-Startseite. -->
       <a class="iconbtn" href="/" title="Zur Lernwelt-Startseite" style="text-decoration:none;display:inline-flex;align-items:center">🏠 Lernwelt</a>
+      <!-- 16.09.2026, Meldung 4rq8ghes95: Paul will, dass sein Bereich den Code
+           wieder verlangt, wenn er das Geraet aus der Hand gibt. -->
+      <button class="iconbtn" id="abmeldenBtn" type="button" title="Abschliessen - dann fragt die Lernwelt wieder nach deinem Code">🔒 Abschliessen</button>
       <label class="klasse">Klasse
         <select id="klasse">
           <option value="3">3</option>
@@ -720,6 +723,28 @@
     set("hub-theme", darkOn ? "dark" : "light");
     paintMode();
     blip();
+  });
+
+  // ---- Abschliessen: der Riegel faellt wieder zu ------------------------
+  // Paul am 16.09.2026 (Meldung 4rq8ghes95): "ich wuerde auch gerne jedes Mal,
+  // wenn man reingeht, automatisch das Passwort eingeben muessen". Seit dem
+  // Tag bekommt Pauls Anmeldung ein Sitzungs-Cookie, das mit dem Browser
+  // verschwindet. Dieser Knopf ist der Weg, es sofort zu tun - ohne zu warten,
+  // bis der Browser wirklich zugeht.
+  //
+  // /api/abmelden raeumt NUR das Cookie dieses Geraets weg. Nicht
+  // /api/alle-abmelden: das wuerde Leon mit rauswerfen und einen der 1000
+  // taeglichen Schreibvorgaenge kosten.
+  const abmeldenBtn = document.getElementById("abmeldenBtn");
+  abmeldenBtn.addEventListener("click", function(){
+    if(!confirm("Abschliessen? Dann musst du deinen Code wieder eingeben.")) return;
+    abmeldenBtn.disabled = true;
+    fetch("/api/abmelden", {method:"POST", credentials:"same-origin"})
+      .then(function(){ location.reload(); })
+      .catch(function(){
+        abmeldenBtn.disabled = false;
+        alert("Das hat gerade nicht geklappt. Probier es gleich noch einmal.");
+      });
   });
 
   // Gründer-Datum
