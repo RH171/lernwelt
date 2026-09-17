@@ -681,6 +681,29 @@ Stolperstelle: nach UNTEN wird es +10 – in zwei Ausschnitten hat er es umgedre
 Hinweise zeigen den Schritt („↓ +10"), nie die Zahl. Messung:
 `mess-schritte-tausenderbuch.js` (prüft auch, dass jede Zelle zur Buchseite passt).
 
+### Das Hausaufgaben-Heft (seit 17.09.2026) – Pauls Hauptweg für Hausaufgaben
+
+`paul/hausaufgaben.html`, Kachel „Mein Hausaufgaben-Heft" (der alte Weg
+`werkstatt.html?hausaufgabe=1` funktioniert noch, ist aber nicht mehr verlinkt).
+Vorbild ist der 17.09.: Blatt dreimal geschickt, jedes Mal nur WO und WORAUF,
+beim dritten Mal alles richtig.
+
+- Jede Hausaufgabe = ein Faden `art: "hausaufgabe"`. Foto, Bild oder **PDF-Scan**
+  (bis 4 MB, `pdf: true` im Verlauf; Claude liest das PDF direkt). Bis 4 Seiten
+  je Nachricht; Folgeseiten stehen als „Seite 2 …" im Verlauf.
+- Antworten macht die Sofortantwort mit **eigenem Auftrag** `HAUSAUFGABE` in
+  `_antwort.js` (nicht mehr als Anhang an REGELN), mit Denkzeit (`effort: high`,
+  16000 Token): prüfen, zuerst Richtiges loben, Stellen zeigen, bei Widerspruch
+  genau nachsehen und Irrtum zugeben. Eine Antwort dauert darum bis ~1 Minute.
+- „Verbessertes Blatt schicken" = Antwort im selben Faden mit `bild`/`bilder`.
+- „Übungsspiel dazu" holt die Bilder des Fadens und baut über `spiel-bauen`
+  (`hausaufgabe: true`), danach `werkstatt.html?spiel=<id>`.
+- „Eigene Übung bestellen" setzt `uebungOffen`. **Nur solche Hausaufgaben-Fäden
+  wecken den Bau-Wächter** (`waechter-meldungen.sh`); sonst startete jede
+  Verbesserungsrunde eine Bausitzung. Eine Antwort von Hand löscht das Flag.
+
+Messung: `mess-schritte-hausaufgaben-heft.js`.
+
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
 
 Seit 16.09.2026: `leon/klasse2-deutsch-lesegeschichte.html`, Kachel ganz oben in
