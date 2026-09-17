@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Dreher-Jagd</title>
+<!--
+  Pauls Übung zur Hausaufgabe vom 17.09.2026 (Meldung u8cgxaxzci).
+
+  Anlass: das Blatt "Wiederholungshelden 4 (Zahldarstellung)" von
+  ideenreise-blog.de, zwei Seiten, von Paul selbst gelöst und zum
+  Drüberschauen geschickt. Das Blatt war fast durchgehend sauber - auch das
+  Wechseln (11 Einer -> 1 Zehner + 1 Einer) hat er selbst erkannt. Eine
+  Stelle wackelte: Er hatte die Zerlegung verbessert (1Z und 4E), im Kasten
+  "als Zahl" standen die beiden Ziffern aber vertauscht.
+
+  Genau das übt diese Seite: den ZAHLENDREHER. Er hat einen Grund, und der
+  steckt in der deutschen Sprache - gesprochen kommen die Einer zuerst
+  ("sieben-und-zwanzig"), geschrieben stehen sie hinten (27). Wer schreibt,
+  wie er spricht, dreht.
+
+  Üben, nicht lösen (Dennys Regel vom 16.09.2026): KEINE Zahl vom Blatt
+  kommt hier vor, siehe BLATT unten. Nichts von seinem Blatt wird
+  vorgerechnet, verbessert oder als Lösung genannt.
+
+  Drei Stationen, je 6 Aufgaben, ohne Uhr und ohne Herzen:
+    1. Zahlwort-Falle - aus dem Zahlwort die Zahl in die Stellentafel setzen.
+       Der Hilfe-Knopf färbt das Wort ein (Hunderter/Zehner/Einer), statt die
+       Zahl zu verraten.
+    2. Karten-Kontrolle - ein Roboter füllt Karten aus wie auf dem Blatt
+       (Zerlegung + "als Zahl"), manche mit verbesserter Zerlegung und nicht
+       nachgezogener Zahl. Paul ist der Prüfer: passt / passt nicht, und wenn
+       nicht, schreibt er die Zahl, die zur Zerlegung gehört.
+    3. Blitz-Umbau - eine Stelle wird umgebaut ("vertausche Zehner und
+       Einer", "die Zehner werden zu 0"), manchmal zweimal hintereinander.
+       Pauls eigener Wunsch vom 14.09.2026: "flink im Kopfrechnen werden".
+
+  Gezählt wird der erste Versuch; danach gibt es einen gezielten Hinweis und
+  einen zweiten Versuch. Ein Dreher bekommt seinen eigenen Hinweis.
+
+  Liegt als "klasse3-" im Ordner, weil games.json nur diese Dateien findet;
+  die Klasse (4, Wiederholung) steht in paul/index.html unter OVERRIDES.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef2f7; --karte:#fff; --ink:#172033; --muted:#64748b; --line:#dfe5ee;
+    --werk:#4338ca; --werk-hell:#e0e7ff; --gut:#15803d; --hm:#b45309;
+    --h:#d97706; --z:#2563eb; --e:#dc2626;
+    --h-hell:#fef3c7; --z-hell:#dbeafe; --e-hell:#fee2e2;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .knopf-klein{display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:700 15px/1 var(--font);color:var(--ink);cursor:pointer;min-height:44px}
+  h1{font:800 22px/1.1 var(--rund);margin:0;flex:1;min-width:150px}
+  .zaehler{font:800 15px/1 var(--rund);background:#fff;border:1px solid var(--line);border-radius:999px;padding:13px 14px;white-space:nowrap}
+  .karte{background:var(--karte);border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 12px 30px rgba(15,40,70,.09);margin-bottom:12px}
+
+  /* ---- Start ---- */
+  .start{text-align:center}
+  .start .gross{font-size:56px;line-height:1}
+  .start h2{font:800 28px/1.2 var(--rund);margin:8px 0 6px}
+  .start p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 auto 14px;max-width:660px}
+  .merksatz{background:var(--werk-hell);color:#312e81;border-radius:16px;padding:12px 16px;margin:0 auto 16px;
+    max-width:660px;font:700 17px/1.5 var(--rund);text-align:left}
+  .merksatz .wort{font-weight:800}
+  .stationen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:left}
+  @media (max-width:760px){ .stationen{grid-template-columns:1fr} }
+  .station{border:2px solid var(--line);background:#fbfdff;border-radius:18px;padding:14px;cursor:pointer;display:flex;
+    flex-direction:column;gap:6px;min-height:120px;color:var(--ink);font:inherit;text-align:left}
+  .station:active{transform:scale(.98)}
+  .station .ic{font-size:32px}
+  .station b{font:800 18px/1.2 var(--rund)}
+  .station span{color:var(--muted);font-size:14.5px;line-height:1.4}
+  .station .stand{color:var(--gut);font-weight:800}
+
+  /* ---- Spiel ---- */
+  .spielflaeche{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (min-width:900px){ .spielflaeche{grid-template-columns:minmax(0,1fr) minmax(330px,.8fr);align-items:start} }
+  .auftrag{font:800 21px/1.3 var(--rund);margin:0 0 4px}
+  .unterzeile{color:var(--muted);font-size:15px;line-height:1.45;margin:0 0 10px}
+
+  /* Das Zahlwort gross und umbrechbar - "siebenhundertachtundachtzig" passt
+     sonst auf keinem Handy in eine Zeile. */
+  .wortkarte{background:#fff;border:3px solid var(--line);border-radius:18px;padding:16px;text-align:center}
+  .wortkarte .wort{font:800 30px/1.25 var(--rund);word-break:break-word;overflow-wrap:anywhere}
+  @media (max-width:420px){ .wortkarte .wort{font-size:24px} }
+  .wortkarte .teile{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
+  .teil{border-radius:12px;padding:8px 12px;font:800 20px/1.1 var(--rund);border:2px solid transparent}
+  .teil.h{background:var(--h-hell);color:#92400e;border-color:var(--h)}
+  .teil.z{background:var(--z-hell);color:#1e3a8a;border-color:var(--z)}
+  .teil.e{background:var(--e-hell);color:#991b1b;border-color:var(--e)}
+  .teil.u{background:#f1f5f9;color:var(--muted)}
+  .teil .mini{display:block;font:700 11.5px/1.3 var(--font);letter-spacing:.04em;text-transform:uppercase}
+  .wortfuss{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+
+  /* ---- Roboterkarte (Station 2) ---- */
+  .roboter{background:linear-gradient(#f8fafc,#eef2ff);border:3px solid #c7d2fe;border-radius:18px;padding:16px}
+  .roboter .kopf{display:flex;align-items:center;gap:8px;font:800 16px/1.2 var(--rund);color:#3730a3;margin-bottom:10px}
+  .zeile{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:800 26px/1.2 var(--rund);margin:6px 0}
+  @media (max-width:420px){ .zeile{font-size:22px} }
+  .zeile .beschriftung{font:700 14px/1 var(--font);color:var(--muted);min-width:64px}
+  .zeile .weg{text-decoration:line-through;color:#94a3b8;position:relative}
+  .zeile .drueber{color:var(--werk);font-size:.82em;vertical-align:super}
+  .kartenzahl{display:inline-block;background:#fff;border:3px solid var(--line);border-radius:12px;padding:6px 16px;min-width:110px;text-align:center}
+
+  /* ---- Stellentafel ---- */
+  .tafel{display:flex;gap:8px;margin:2px 0 10px;flex-wrap:wrap}
+  .spalte{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .kopfzeile{font:800 12.5px/1 var(--font);letter-spacing:.06em;text-transform:uppercase}
+  .kopfzeile.h{color:var(--h)} .kopfzeile.z{color:var(--z)} .kopfzeile.e{color:var(--e)}
+  .feld{width:64px;height:66px;border:3px solid var(--line);border-radius:14px;background:#fff;
+    font:800 32px/60px var(--rund);text-align:center;cursor:pointer;color:var(--ink);padding:0}
+  .feld.h{border-color:#fcd34d} .feld.z{border-color:#93c5fd} .feld.e{border-color:#fca5a5}
+  .feld.an{box-shadow:0 0 0 4px var(--werk-hell);border-color:var(--werk)}
+  .feld.leer{color:#cbd5e1}
+  .alszahl{display:flex;align-items:center;gap:10px;font:700 17px/1 var(--rund);margin:0 0 12px;flex-wrap:wrap}
+  .alszahl .wert{font:800 30px/1 var(--rund);background:#f8fafc;border:2px solid var(--line);border-radius:12px;padding:8px 14px;min-width:96px;text-align:center}
+  .tasten{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;max-width:420px}
+  .tasten button{min-height:52px;border:none;border-radius:12px;background:#f1f5f9;font:800 22px/1 var(--rund);color:var(--ink);cursor:pointer}
+  .tasten button:active{background:#e2e8f0}
+
+  /* ---- Wahl (Station 2, Schritt 1) ---- */
+  .wahl{display:grid;gap:9px}
+  .wahl button{border:3px solid var(--line);background:#fff;border-radius:16px;padding:14px 16px;min-height:64px;text-align:left;
+    font:800 20px/1.3 var(--rund);color:var(--ink);cursor:pointer}
+  .wahl button.richtig{border-color:var(--gut);background:#f0fdf4}
+  .wahl button.daneben{border-color:#fca5a5;background:#fef2f2;color:#94a3b8}
+
+  .knopf{border:none;border-radius:14px;padding:12px 16px;min-height:48px;font:800 16px/1.1 var(--rund);cursor:pointer;
+    background:#e2e8f0;color:var(--ink)}
+  .knopf:active{transform:scale(.97)}
+  .knopf.haupt{background:var(--werk);color:#fff}
+  .knopf.gold{background:#fef3c7;color:#92400e}
+  .knopf[disabled]{opacity:.4;cursor:default}
+
+  .rueck{min-height:28px;margin:12px 0 0;font:700 17px/1.45 var(--rund)}
+  .rueck.gut{color:var(--gut)} .rueck.hm{color:var(--hm)}
+  .weiter{width:100%;margin-top:10px}
+  /* Prüfen, Rückmeldung und Weiter kleben unten - wie in der Wechselstube:
+     auf dem Handy steht die Aufgabe oben und der Knopf läge sonst weit unter
+     dem Rand. Rechts bleibt Platz für den runden Melde-Knopf. */
+  .aktion{position:sticky;bottom:0;z-index:5;background:linear-gradient(rgba(255,255,255,0),#fff 12px);
+    padding:12px 62px calc(4px + env(safe-area-inset-bottom)) 0;margin:0 -2px}
+  .aktion .rueck{margin-top:0}
+  @media (max-width:899px){
+    .aktion{position:fixed;left:0;right:0;bottom:0;margin:0;background:#fff;box-shadow:0 -6px 18px rgba(15,40,70,.12);
+      padding:8px 70px calc(8px + env(safe-area-inset-bottom)) 12px}
+    .aktion .weiter{margin-top:6px}
+    .aktion .rueck{font-size:15px;min-height:0}
+    body.spielt{padding-bottom:176px}
+  }
+
+  .ende{text-align:center}
+  .ende .gross{font-size:60px}
+  .ende h2{font:800 26px/1.2 var(--rund);margin:6px 0}
+  .ende p{font-size:18px;color:var(--muted);line-height:1.5}
+  .ende .knopf{margin-bottom:8px}
+  @media (max-height:420px){ .ende .gross{font-size:36px} .ende p{font-size:16px;margin:4px 0} }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <button class="knopf-klein" id="zurueck">‹ Lernwelt</button>
+    <h1>🔍 Die Dreher-Jagd</h1>
+    <div class="zaehler verborgen" id="zaehler"></div>
+  </header>
+
+  <section id="sicht-start">
+    <div class="karte start">
+      <div class="gross">🔍</div>
+      <h2>Jagd auf den Zahlendreher!</h2>
+      <p>Ein Zahlendreher ist kein dummer Fehler – er hat einen Grund, und der steckt in unserer Sprache.</p>
+      <div class="merksatz">
+        Du sagst <span class="wort" style="color:var(--e)">sieben</span>und<span class="wort" style="color:var(--z)">zwanzig</span> –
+        die <span class="wort" style="color:var(--e)">Einer</span> kommen beim Sprechen zuerst.<br>
+        Du schreibst <span class="wort" style="color:var(--z)">2</span><span class="wort" style="color:var(--e)">7</span> –
+        beim Schreiben stehen die <span class="wort" style="color:var(--e)">Einer</span> hinten.<br>
+        Wer schreibt, wie er spricht, dreht die Zahl um. Genau darauf gehst du jetzt auf die Jagd.
+      </div>
+      <div class="stationen" id="stationen"></div>
+    </div>
+  </section>
+
+  <section id="sicht-spiel" class="verborgen">
+    <div class="spielflaeche">
+      <div class="karte">
+        <div class="auftrag" id="auftrag"></div>
+        <p class="unterzeile" id="unterzeile"></p>
+        <div id="buehne"></div>
+      </div>
+      <div class="karte" id="eingabe"></div>
+    </div>
+  </section>
+
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte ende">
+      <div class="gross">🏅</div>
+      <h2 id="ende-titel"></h2>
+      <p id="ende-text"></p>
+      <button class="knopf haupt weiter" id="ende-start">Zu den Stationen</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t = f[i]; f[i] = f[j]; f[j] = t; } return f; }
+  function z(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+  function LS(){ return window.lernstand || null; }
+
+  $("zurueck").addEventListener("click", function(){
+    var hub = "index.html";
+    try { var s = localStorage.getItem("hub-url"); if (s) hub = s; } catch(e){}
+    location.href = hub;
+  });
+
+  // Üben, nicht lösen: Diese Zahlen stehen auf Pauls Blatt (beide Seiten) und
+  // kommen hier nie vor - weder als Aufgabe noch als Antwort.
+  var BLATT = [655, 868, 231, 914, 941, 311, 484, 555, 481, 251, 326, 503, 482, 737, 1000];
+  var benutzt = {};
+  function frei(n){ return BLATT.indexOf(n) < 0 && !benutzt[n]; }
+  // Zieht eine Zahl, die eine Bedingung erfüllt und weder auf dem Blatt steht
+  // noch in dieser Runde schon vorkam.
+  function zieh(pruef){
+    for (var i = 0; i < 400; i++){
+      var n = z(102, 989);
+      if (frei(n) && pruef(n, stellen(n))){ benutzt[n] = true; return n; }
+    }
+    for (var m = 102; m <= 989; m++) if (frei(m) && pruef(m, stellen(m))){ benutzt[m] = true; return m; }
+    return 234;
+  }
+  function stellen(n){ return { h: Math.floor(n/100) % 10, z: Math.floor(n/10) % 10, e: n % 10 }; }
+  function dreher(n){ var s = stellen(n); return s.h*100 + s.e*10 + s.z; }
+
+  /* ---------- Zahlwörter ---------- */
+  var EINER = ["", "ein", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun"];
+  var KLEIN = ["", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf",
+               "dreizehn", "vierzehn", "fünfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn"];
+  var ZEHNER = ["", "", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig"];
+  // Das Zahlwort in seine Bausteine - daraus wird der Hilfe-Knopf gefärbt.
+  // Er zeigt, WELCHER Teil welche Stelle meint, und nennt keine Ziffer.
+  function wortTeile(n){
+    var teile = [], h = Math.floor(n/100), rest = n % 100, e = rest % 10, zz = Math.floor(rest/10);
+    if (h) teile.push({ t: EINER[h] + "hundert", r: "h" });
+    if (rest === 0) return teile;
+    if (rest < 20){ teile.push({ t: KLEIN[rest], r: rest < 10 ? "e" : "z" }); return teile; }
+    if (e){ teile.push({ t: EINER[e], r: "e" }); teile.push({ t: "und", r: "u" }); }
+    teile.push({ t: ZEHNER[zz], r: "z" });
+    return teile;
+  }
+  function zahlwort(n){ return wortTeile(n).map(function(x){ return x.t; }).join("") || "null"; }
+  function zerlegungText(s){ return s.h + "H + " + s.z + "Z + " + s.e + "E"; }
+
+  /* ---------- Speicher: nur Rückschau ---------- */
+  var SPEICHER = "paul-dreher-jagd";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function merken(station, richtig, gesamt){
+    try { var d = lesen(); d[station] = { richtig: richtig, gesamt: gesamt }; localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){}
+  }
+
+  var STATIONEN = [
+    { id: "wortfalle", ic: "🎧", titel: "Die Zahlwort-Falle", text: "Ein Zahlwort steht da – setz die Ziffern an ihre Stelle. Der Hilfe-Knopf färbt das Wort ein." },
+    { id: "kontrolle", ic: "🤖", titel: "Karten-Kontrolle", text: "Ein Roboter füllt Karten aus wie auf deinem Blatt. Du bist der Prüfer: Passt die Zahl zur Zerlegung?" },
+    { id: "umbau",     ic: "⚡", titel: "Blitz-Umbau", text: "Eine Stelle wird umgebaut – vertauscht, auf null gesetzt, dazugezählt. Keine Uhr läuft mit." }
+  ];
+
+  function startMalen(){
+    var d = lesen(), box = $("stationen"); box.innerHTML = "";
+    STATIONEN.forEach(function(st){
+      var b = document.createElement("button"); b.className = "station"; b.type = "button";
+      b.innerHTML = '<span class="ic"></span><b></b><span class="txt"></span><span class="stand"></span>';
+      b.querySelector(".ic").textContent = st.ic;
+      b.querySelector("b").textContent = st.titel;
+      b.querySelector(".txt").textContent = st.text;
+      var alt = d[st.id];
+      if (alt) b.querySelector(".stand").textContent = "Zuletzt: " + alt.richtig + " von " + alt.gesamt + " gleich beim ersten Mal";
+      b.addEventListener("click", function(){ starte(st); });
+      box.appendChild(b);
+    });
+  }
+
+  function zeige(welche){
+    ["start", "spiel", "ende"].forEach(function(s){ $("sicht-" + s).classList.toggle("verborgen", s !== welche); });
+    document.body.classList.toggle("spielt", welche === "spiel");
+    $("zaehler").classList.toggle("verborgen", welche !== "spiel");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Aufgaben bauen ---------- */
+
+  // Station 1: Zahlwort -> Stellentafel. Vier davon sind "drehergefährlich"
+  // (Zehner und Einer verschieden und beide besetzt), dazu eine mit einer
+  // Null in der Mitte und eine mit glatten Einern.
+  function bauWortfalle(){
+    var liste = [];
+    for (var i = 0; i < 4; i++)
+      liste.push({ art: "wort", wert: zieh(function(n, s){ return s.z > 1 && s.e > 0 && s.z !== s.e; }) });
+    liste.push({ art: "wort", wert: zieh(function(n, s){ return s.z === 0 && s.e > 0; }) });
+    liste.push({ art: "wort", wert: zieh(function(n, s){ return s.e === 0 && s.z > 1; }) });
+    return mische(liste);
+  }
+
+  // Station 2: Karten eines Roboters. Drei stimmen, drei nicht - zwei davon
+  // sind Dreher (genau Pauls Stelle vom Blatt), eine hat eine falsche Stelle.
+  function bauKontrolle(){
+    var liste = [], i;
+    for (i = 0; i < 2; i++){
+      var a = zieh(function(n, s){ return s.z !== s.e && s.z > 0 && s.e > 0; });
+      liste.push({ art: "karte", wert: a, gezeigt: dreher(a), fehler: "dreher", verbessert: i === 0 });
+    }
+    var b = zieh(function(n, s){ return s.h > 1 && s.h < 9; });
+    var sb = stellen(b);
+    liste.push({ art: "karte", wert: b, gezeigt: (sb.h + (Math.random() < .5 ? 1 : -1))*100 + sb.z*10 + sb.e, fehler: "stelle", verbessert: false });
+    for (i = 0; i < 3; i++){
+      var c = zieh(function(n, s){ return s.z !== s.e; });
+      liste.push({ art: "karte", wert: c, gezeigt: c, fehler: "", verbessert: i === 0 });
+    }
+    return mische(liste);
+  }
+
+  // Station 3: Umbau-Aufträge. Zwei Aufgaben kommen mit einem zweiten Auftrag
+  // hinterher - Pauls Wunsch: die Angabe darf sich noch einmal ändern.
+  var AUFTRAEGE = [
+    { id: "tausch-ze", text: "Vertausche die Zehner und die Einer.",
+      geht: function(s){ return s.z !== s.e; },
+      tu: function(s){ return { h: s.h, z: s.e, e: s.z }; } },
+    { id: "z-null", text: "Die Zehner werden zu 0.",
+      geht: function(s){ return s.z > 0; },
+      tu: function(s){ return { h: s.h, z: 0, e: s.e }; } },
+    { id: "e-null", text: "Die Einer werden zu 0.",
+      geht: function(s){ return s.e > 0; },
+      tu: function(s){ return { h: s.h, z: s.z, e: 0 }; } },
+    { id: "h-mehr", text: "2 Hunderter mehr.",
+      geht: function(s){ return s.h < 7; },
+      tu: function(s){ return { h: s.h + 2, z: s.z, e: s.e }; } },
+    { id: "z-mehr", text: "3 Zehner mehr.",
+      geht: function(s){ return s.z < 7; },
+      tu: function(s){ return { h: s.h, z: s.z + 3, e: s.e }; } },
+    { id: "z-weniger", text: "1 Zehner weniger.",
+      geht: function(s){ return s.z > 0; },
+      tu: function(s){ return { h: s.h, z: s.z - 1, e: s.e }; } },
+    { id: "tausch-he", text: "Vertausche die Hunderter und die Einer.",
+      geht: function(s){ return s.h !== s.e && s.e > 0; },
+      tu: function(s){ return { h: s.e, z: s.z, e: s.h }; } },
+    { id: "e-fuenf", text: "Die Einer werden zu 5.",
+      geht: function(s){ return s.e !== 5; },
+      tu: function(s){ return { h: s.h, z: s.z, e: 5 }; } }
+  ];
+  function wertVon(s){ return s.h*100 + s.z*10 + s.e; }
+  function bauUmbau(){
+    var vorrat = mische(AUFTRAEGE.slice()), liste = [], i;
+    for (i = 0; i < 6; i++){
+      var auf = vorrat[i % vorrat.length];
+      var start = zieh(function(n, s){ return auf.geht(s) && frei(wertVon(auf.tu(s))); });
+      var schritte = [{ text: auf.text, wert: wertVon(auf.tu(stellen(start))) }];
+      // Zwei Aufgaben bekommen einen zweiten Auftrag obendrauf.
+      if (i === 1 || i === 4){
+        var s2 = stellen(schritte[0].wert);
+        var zweiter = vorrat.filter(function(x){ return x.id !== auf.id && x.geht(s2) && frei(wertVon(x.tu(s2))); })[0];
+        if (0 && zweiter) schritte.push({ text: "Und jetzt noch: " + zweiter.text, wert: wertVon(zweiter.tu(s2)) });
+      }
+      liste.push({ art: "umbau", start: start, schritte: schritte });
+    }
+    return liste;
+  }
+
+  /* ---------- Ablauf ---------- */
+  var station = null, aufgaben = [], nr = 0, gleichRichtig = 0;
+  var ersterVersuch = {}, sauber = true, gezaehlt = false;
+
+  function starte(st){
+    station = st; nr = 0; gleichRichtig = 0; benutzt = {};
+    aufgaben = st.id === "wortfalle" ? bauWortfalle() : st.id === "kontrolle" ? bauKontrolle() : bauUmbau();
+    document.title = st.titel;
+    zeige("spiel"); aufgabeZeigen();
+  }
+
+  function rueck(text, art){ var r = $("rueck"); if (!r) return; r.textContent = text; r.className = "rueck " + (art || ""); }
+  function weiterKnopf(){
+    if (!gezaehlt){ gezaehlt = true; if (sauber) gleichRichtig++; }
+    var w = $("weiter"); w.classList.remove("verborgen");
+    w.textContent = nr === aufgaben.length - 1 ? "Station abschließen ›" : "Nächste Aufgabe ›";
+  }
+  // Gezählt wird nur der erste Versuch je Schritt. Ein zweiter Anlauf nach
+  // einem Hinweis ist kein neuer Fehler - er ist das Lernen selbst.
+  function gewertet(schritt, stimmt, merkmal, gegeben, richtig){
+    if (ersterVersuch[schritt] === false) return;
+    ersterVersuch[schritt] = false;
+    if (!stimmt) sauber = false;
+    try { LS() && LS().antwort(stimmt, merkmal, gegeben, richtig); } catch(e){}
+  }
+
+  function aufgabeZeigen(){
+    var a = aufgaben[nr];
+    ersterVersuch = {}; sauber = true; gezaehlt = false;
+    $("zaehler").textContent = "Aufgabe " + (nr + 1) + " von " + aufgaben.length;
+    $("buehne").innerHTML = ""; $("eingabe").innerHTML = "";
+    if (a.art === "wort") wortAufgabe(a);
+    else if (a.art === "karte") kartenAufgabe(a);
+    else umbauAufgabe(a);
+  }
+
+  /* ---------- Stellentafel als Eingabe ---------- */
+  // Eine Tafel für alle drei Stationen: H | Z | E in den Farben des Materials
+  // aus der Wechselstube, darunter dieselbe Zeile "als Zahl" wie auf dem Blatt.
+  function tafelBauen(wohin, beimTippen){
+    var werte = { h: "", z: "", e: "" }, aktiv = "h";
+    var html = '<div class="tafel" id="tafel">';
+    [["h", "Hunderter"], ["z", "Zehner"], ["e", "Einer"]].forEach(function(p){
+      html += '<div class="spalte"><span class="kopfzeile ' + p[0] + '">' + p[1] + '</span>' +
+              '<button class="feld leer ' + p[0] + '" type="button" data-f="' + p[0] + '" aria-label="' + p[1] + '">–</button></div>';
+    });
+    html += '</div><div class="alszahl">als Zahl: <span class="wert" id="alszahl">—</span></div>' +
+            '<div class="tasten" id="tasten"></div>';
+    wohin.insertAdjacentHTML("beforeend", html);
+    var tasten = $("tasten");
+    "1234567890".split("").forEach(function(c){
+      var b = document.createElement("button"); b.type = "button"; b.textContent = c;
+      b.addEventListener("click", function(){ setzen(c); });
+      tasten.appendChild(b);
+    });
+    var lo = document.createElement("button"); lo.type = "button"; lo.textContent = "⌫";
+    lo.addEventListener("click", function(){ werte[aktiv] = ""; malen(); if (beimTippen) beimTippen(zahl()); });
+    tasten.appendChild(lo);
+
+    Array.prototype.forEach.call(wohin.querySelectorAll(".feld"), function(f){
+      f.addEventListener("click", function(){ aktiv = f.getAttribute("data-f"); malen(); });
+    });
+    function setzen(c){
+      werte[aktiv] = c;
+      aktiv = aktiv === "h" ? "z" : aktiv === "z" ? "e" : "e";
+      malen(); if (beimTippen) beimTippen(zahl());
+    }
+    function zahl(){
+      if (werte.h === "" || werte.z === "" || werte.e === "") return null;
+      return parseInt(werte.h, 10)*100 + parseInt(werte.z, 10)*10 + parseInt(werte.e, 10);
+    }
+    function malen(){
+      Array.prototype.forEach.call(document.querySelectorAll("#tafel .feld"), function(f){
+        var k = f.getAttribute("data-f");
+        f.textContent = werte[k] === "" ? "–" : werte[k];
+        f.classList.toggle("leer", werte[k] === "");
+        f.classList.toggle("an", k === aktiv);
+      });
+      var w = zahl();
+      $("alszahl").textContent = w === null ? "—" : w;
+    }
+    malen();
+    return { zahl: zahl, leeren: function(){ werte = { h: "", z: "", e: "" }; aktiv = "h"; malen(); } };
+  }
+
+  function aktionsleiste(knopftext){
+    return '<div class="aktion"><div class="rueck" id="rueck"></div>' +
+           '<button class="knopf haupt weiter" id="pruefen">' + (knopftext || "Prüfen") + '</button>' +
+           '<button class="knopf haupt weiter verborgen" id="weiter"></button></div>';
+  }
+
+  /* ---------- Station 1: Zahlwort-Falle ---------- */
+  function wortAufgabe(a){
+    var s = stellen(a.wert);
+    $("auftrag").textContent = "Welche Zahl ist das?";
+    $("unterzeile").textContent = "Setz jede Ziffer an ihre Stelle. Denk daran: Beim Sprechen kommen die Einer zuerst.";
+    var k = document.createElement("div"); k.className = "wortkarte";
+    k.innerHTML = '<div class="wort" id="wort"></div><div class="teile verborgen" id="teile"></div>' +
+                  '<div class="wortfuss"><button class="knopf gold" type="button" id="hilfe">🎨 Wort einfärben</button>' +
+                  '<button class="knopf" type="button" id="hoeren">🔊 Vorlesen</button></div>';
+    $("buehne").appendChild(k);
+    $("wort").textContent = zahlwort(a.wert);
+
+    $("hilfe").addEventListener("click", function(){
+      var box = $("teile"); box.classList.remove("verborgen"); box.innerHTML = "";
+      wortTeile(a.wert).forEach(function(t){
+        var sp = document.createElement("span"); sp.className = "teil " + t.r;
+        var name = t.r === "h" ? "Hunderter" : t.r === "z" ? "Zehner" : t.r === "e" ? "Einer" : "";
+        sp.innerHTML = '<span class="mini"></span>';
+        sp.querySelector(".mini").textContent = name;
+        sp.insertAdjacentText("beforeend", t.t);
+        box.appendChild(sp);
+      });
+      $("hilfe").disabled = true;
+      rueck("Schau dir die Farben an: Der rote Teil gehört ganz nach hinten, der blaue in die Mitte.", "");
+    });
+    $("hoeren").addEventListener("click", function(){
+      if (!("speechSynthesis" in window)) return;
+      try {
+        speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(zahlwort(a.wert)); u.lang = "de-DE"; u.rate = .9;
+        speechSynthesis.speak(u);
+      } catch(e){}
+    });
+
+    var e = $("eingabe");
+    e.innerHTML = "";
+    var tafel = tafelBauen(e);
+    e.insertAdjacentHTML("beforeend", aktionsleiste());
+    $("pruefen").addEventListener("click", function(){
+      var w = tafel.zahl();
+      if (w === null){ rueck("Da fehlt noch eine Stelle. Tipp auf ein leeres Kästchen und schreib eine Ziffer hinein.", "hm"); return; }
+      var merkmal = s.z === 0 ? "null als platzhalter" : "zahlwort in zahl";
+      if (w === a.wert){
+        gewertet("zahl", true, merkmal, "", String(a.wert));
+        rueck("✅ Genau! " + zahlwort(a.wert) + " = " + a.wert + ".", "gut");
+        $("pruefen").classList.add("verborgen"); weiterKnopf(); return;
+      }
+      gewertet("zahl", false, w === dreher(a.wert) ? "zehner und einer vertauscht" : merkmal, String(w), String(a.wert));
+      if (w === dreher(a.wert))
+        rueck("Fast! Du hast Zehner und Einer vertauscht – genau die Falle. Gesprochen kommen die Einer zuerst, geschrieben stehen sie hinten. Dreh die beiden um.", "hm");
+      else if (s.z === 0)
+        rueck("Noch nicht. Hörst du einen Zehner in dem Wort? Wenn nicht, gehört in das Zehner-Kästchen eine 0 – sie hält den Platz frei.", "hm");
+      else
+        rueck("Noch nicht. Drück auf „Wort einfärben“: Dann siehst du, welcher Teil Hunderter, Zehner und Einer ist.", "hm");
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  /* ---------- Station 2: Karten-Kontrolle ---------- */
+  function kartenAufgabe(a){
+    var s = stellen(a.wert), falsch = !!a.fehler;
+    $("auftrag").textContent = "Stimmt diese Karte?";
+    $("unterzeile").textContent = "Roboter R-17 hat sie ausgefüllt. Vergleich die Zerlegung mit der Zahl darunter – Stelle für Stelle.";
+    var k = document.createElement("div"); k.className = "roboter";
+    var zerlegung = zerlegungText(s);
+    // Manche Karten zeigen eine Verbesserung: der Roboter hat eine Stelle
+    // durchgestrichen und darüber geschrieben - wie auf einem echten Blatt.
+    if (a.verbessert){
+      var andere = (s.z + 1) % 10;
+      zerlegung = s.h + "H + <span class=\"weg\">" + andere + "</span><span class=\"drueber\">" + s.z + "</span>Z + " + s.e + "E";
+    }
+    k.innerHTML = '<div class="kopf">🤖 Karte von R-17</div>' +
+      '<div class="zeile"><span class="beschriftung">Zerlegung</span><span id="k-zerlegung"></span></div>' +
+      '<div class="zeile"><span class="beschriftung">als Zahl</span><span class="kartenzahl" id="k-zahl"></span></div>';
+    $("buehne").appendChild(k);
+    $("k-zerlegung").innerHTML = zerlegung;
+    $("k-zahl").textContent = a.gezeigt;
+
+    var e = $("eingabe");
+    e.innerHTML = '<div class="wahl" id="wahl">' +
+      '<button type="button" data-w="ja">✅ Die Karte passt</button>' +
+      '<button type="button" data-w="nein">❌ Da stimmt was nicht</button></div>' +
+      '<div class="aktion"><div class="rueck" id="rueck"></div><button class="knopf haupt weiter verborgen" id="weiter"></button></div>';
+
+    Array.prototype.forEach.call(e.querySelectorAll("#wahl button"), function(b){
+      b.addEventListener("click", function(){
+        if (b.classList.contains("daneben") || !$("weiter").classList.contains("verborgen")) return;
+        var sagt = b.getAttribute("data-w") === "nein";
+        if (sagt !== falsch){
+          gewertet("finden", false, "zahl und zerlegung passen", sagt ? "stimmt nicht" : "stimmt", falsch ? "stimmt nicht" : "stimmt");
+          b.classList.add("daneben");
+          rueck(falsch
+            ? "Schau noch einmal genau: Zähl die Hunderter, dann die Zehner, dann die Einer – und lies die Zahl darunter in derselben Reihenfolge."
+            : "Vergleich in Ruhe Stelle für Stelle. Wenn jede Stelle passt, darfst du die Karte durchwinken.", "hm");
+          return;
+        }
+        gewertet("finden", true, "zahl und zerlegung passen", "", falsch ? "stimmt nicht" : "stimmt");
+        b.classList.add("richtig");
+        if (!falsch){
+          rueck("✅ Richtig durchgewinkt. Hunderter, Zehner und Einer stehen alle an ihrem Platz.", "gut");
+          weiterKnopf(); return;
+        }
+        rueck(a.fehler === "dreher"
+          ? "✅ Erwischt! R-17 hat Zehner und Einer vertauscht. Schreib jetzt die Zahl, die wirklich zu der Zerlegung gehört."
+          : "✅ Erwischt! Eine Stelle stimmt nicht. Schreib jetzt die Zahl, die wirklich zu der Zerlegung gehört.", "gut");
+        nachbessern(a, s);
+      });
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  // Zweiter Schritt, nur wenn die Karte wirklich falsch war: die passende Zahl
+  // selbst aufschreiben. Neue Zahl, nichts vom Blatt - üben, nicht lösen.
+  function nachbessern(a, s){
+    var e = $("eingabe");
+    e.querySelector("#wahl").classList.add("verborgen");
+    e.querySelector(".aktion").remove();
+    $("auftrag").textContent = "Welche Zahl gehört zu der Zerlegung?";
+    var tafel = tafelBauen(e);
+    e.insertAdjacentHTML("beforeend", aktionsleiste("Zahl prüfen"));
+    $("pruefen").addEventListener("click", function(){
+      var w = tafel.zahl();
+      if (w === null){ rueck("Da fehlt noch eine Stelle – jedes Kästchen braucht eine Ziffer, auch wenn es eine 0 ist.", "hm"); return; }
+      if (w === a.wert){
+        gewertet("bessern", true, "zerlegung in zahl", "", String(a.wert));
+        rueck("✅ So ist die Karte richtig: " + zerlegungText(s) + " sind " + a.wert + ".", "gut");
+        $("pruefen").classList.add("verborgen"); weiterKnopf(); return;
+      }
+      gewertet("bessern", false, w === dreher(a.wert) ? "zehner und einer vertauscht" : "zerlegung in zahl", String(w), String(a.wert));
+      rueck(w === dreher(a.wert)
+        ? "Jetzt hast du selbst gedreht! Die Zehner gehören in die Mitte, die Einer ganz nach hinten."
+        : "Noch nicht. Geh die Zerlegung von links nach rechts durch: Hunderter, Zehner, Einer – jede Ziffer in ihr eigenes Kästchen.", "hm");
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  /* ---------- Station 3: Blitz-Umbau ---------- */
+  function umbauAufgabe(a){
+    var schritt = 0;
+    $("auftrag").textContent = "Bau die Zahl um!";
+    $("unterzeile").textContent = "Keine Uhr läuft mit. Lies den Auftrag, änder nur die genannte Stelle – der Rest bleibt, wie er ist.";
+    var k = document.createElement("div"); k.className = "wortkarte";
+    k.innerHTML = '<div class="wort" id="startzahl"></div>' +
+                  '<div class="zeile" style="justify-content:center;margin-top:10px"><span id="befehl"></span></div>';
+    $("buehne").appendChild(k);
+    $("startzahl").textContent = a.start;
+    $("befehl").textContent = a.schritte[0].text;
+
+    var e = $("eingabe");
+    var tafel = tafelBauen(e);
+    e.insertAdjacentHTML("beforeend", aktionsleiste());
+    $("pruefen").addEventListener("click", function(){
+      var ziel = a.schritte[schritt].wert, w = tafel.zahl();
+      if (w === null){ rueck("Da fehlt noch eine Stelle. Auch eine 0 muss in ihr Kästchen.", "hm"); return; }
+      if (w === ziel){
+        gewertet("umbau" + schritt, true, "stellenwert umbauen", "", String(ziel));
+        if (schritt < a.schritte.length - 1){
+          schritt++;
+          $("startzahl").textContent = ziel;
+          $("befehl").textContent = a.schritte[schritt].text;
+          tafel.leeren();
+          rueck("✅ Stimmt! Und jetzt kommt noch etwas dazu – lies den neuen Auftrag.", "gut");
+          return;
+        }
+        rueck("✅ Genau so! Daraus wird " + ziel + ".", "gut");
+        $("pruefen").classList.add("verborgen"); weiterKnopf(); return;
+      }
+      gewertet("umbau" + schritt, false, "stellenwert umbauen", String(w), String(ziel));
+      var start = schritt === 0 ? a.start : a.schritte[schritt - 1].wert;
+      rueck(w === dreher(ziel)
+        ? "Fast – aber Zehner und Einer sind vertauscht. Schreib sie in der Reihenfolge, in der sie in der Zahl stehen."
+        : "Noch nicht. Schreib erst " + start + " in die Kästchen und änder dann nur die eine Stelle aus dem Auftrag.", "hm");
+    });
+    $("weiter").addEventListener("click", naechste);
+  }
+
+  /* ---------- Weiter und Ende ---------- */
+  function naechste(){
+    if (nr < aufgaben.length - 1){ nr++; aufgabeZeigen(); return; }
+    merken(station.id, gleichRichtig, aufgaben.length);
+    $("ende-titel").textContent = station.titel + " geschafft!";
+    $("ende-text").textContent = gleichRichtig === aufgaben.length
+      ? "Alle " + aufgaben.length + " Aufgaben gleich beim ersten Mal – kein Dreher ist an dir vorbeigekommen."
+      : gleichRichtig + " von " + aufgaben.length + " gleich beim ersten Mal – und die anderen hast du mit dem zweiten Blick geknackt. Genau so wird man ein Dreher-Jäger.";
+    zeige("ende");
+  }
+  $("ende-start").addEventListener("click", function(){ startMalen(); zeige("start"); document.title = "Die Dreher-Jagd"; });
+
+  // Zum Prüfen von außen (Messung) - verrät Paul nichts, was er nicht sieht.
+  window.__dreherjagd = { zahlwort: zahlwort, dreher: dreher, stellen: stellen,
+                          aufgaben: function(){ return aufgaben; }, nr: function(){ return nr; } };
+
+  startMalen();
+  zeige("start");
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
