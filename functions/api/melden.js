@@ -170,6 +170,10 @@ const LISTE = "meldungen";
 const PAPIERKORB = "meldung-papierkorb:";
 const MAX = 200;
 const MAX_BILD = 900 * 1024;
+// Ein gescanntes Blatt als PDF ist groesser als ein verkleinertes Foto
+// (Pauls Scan vom 16.09.2026: 1 MB fuer zwei Seiten). KV nimmt bis 25 MB.
+const MAX_PDF = 4 * 1024 * 1024;
+const zuGross = (b) => b.length > (/^data:application\/pdf;/.test(b) ? MAX_PDF : MAX_BILD);
 
 export async function onRequestPost(context) {
   return mitSpeicherwache(() => postVerarbeiten(context));
@@ -251,12 +255,30 @@ async function postVerarbeiten(context) {
     const text = kuerzen(String(daten.text || "").trim(), von === "werkstatt" ? 6000 : 1500);
     const bild = typeof daten.bild === "string" ? daten.bild : "";
     if (!text && !bild) return json(400, { ok: false, fehler: "Die Nachricht war leer." });
-    if (bild.length > MAX_BILD) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
+    if (zuGross(bild)) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
+    // Ein verbessertes Hausaufgabenblatt kann wieder mehrere Seiten haben.
+    const weitereSeiten = faden.art === "hausaufgabe" && von !== "werkstatt" && Array.isArray(daten.bilder)
+      ? daten.bilder.filter((b) => typeof b === "string" && b).slice(0, 3) : [];
+    if (weitereSeiten.some(zuGross)) return json(400, { ok: false, fehler: "Ein Bild ist zu groß." });
 
     const nr = faden.verlauf.length;
     if (bild) await env.PAUL_KV.put("meldung-bild:" + faden.id + ":" + nr, bild);
 
-    faden.verlauf.push({ von, text, zeit: new Date().toISOString(), hatBild: !!bild, nr });
+    faden.verlauf.push({ von, text, zeit: new Date().toISOString(), hatBild: !!bild, nr,
+                         ...(/^data:application\/pdf;/.test(bild) ? { pdf: true } : {}) });
+    for (let i = 0; i < weitereSeiten.length; i++) {
+      const n2 = faden.verlauf.length;
+      await env.PAUL_KV.put("meldung-bild:" + faden.id + ":" + n2, weitereSeiten[i]);
+      faden.verlauf.push({ von, text: "Seite " + (i + 2), zeit: new Date().toISOString(), hatBild: true, nr: n2,
+                           ...(/^data:application\/pdf;/.test(weitereSeiten[i]) ? { pdf: true } : {}) });
+    }
+    // Hausaufgabe: Den Bau-Waechter braucht es nur, wenn das Kind ausdruecklich
+    // eine eigene Uebung will. Sonst startete jede Verbesserungsrunde eine
+    // ganze Bausitzung (waechter-meldungen.sh achtet auf uebungOffen).
+    if (faden.art === "hausaufgabe"){
+      if (von !== "werkstatt" && daten.uebung === true) faden.uebungOffen = true;
+      if (von === "werkstatt") faden.uebungOffen = false;
+    }
     faden.status = von === "werkstatt" ? "beantwortet" : "offen";
     // Das Kind soll sehen, dass etwas Neues da ist.
     faden.ungelesenKind = von === "werkstatt";
@@ -266,7 +288,7 @@ async function postVerarbeiten(context) {
     // Rueckfrage laege wieder tagelang.
     let antwort = null;
     if (von !== "werkstatt") {
-      antwort = await sofortAntworten(env, faden, von, text, bild);
+      antwort = await sofortAntworten(env, faden, von, text, bild, weitereSeiten);
     }
     await liste_speichern(env, liste);
     return json(200, { ok: true, faden, antwort });
@@ -278,7 +300,7 @@ async function postVerarbeiten(context) {
   const text = kuerzen(String(daten.text || "").trim(), 1500);
   const bild = typeof daten.bild === "string" ? daten.bild : "";
   if (!text && !bild) return json(400, { ok: false, fehler: "Die Meldung war leer." });
-  if (bild.length > MAX_BILD) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
+  if (zuGross(bild)) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
 
   // Pauls Hausaufgabe (16.09.2026) hat oft mehr als eine Seite. Die weiteren
   // Seiten stehen als eigene Eintraege im Verlauf - so bleibt jedes Bild unter
@@ -286,7 +308,7 @@ async function postVerarbeiten(context) {
   const hausaufgabe = daten.art === "hausaufgabe";
   const weitere = hausaufgabe && Array.isArray(daten.bilder)
     ? daten.bilder.filter((b) => typeof b === "string" && b).slice(0, 3) : [];
-  if (weitere.some((b) => b.length > MAX_BILD)) return json(400, { ok: false, fehler: "Ein Bild ist zu groß." });
+  if (weitere.some(zuGross)) return json(400, { ok: false, fehler: "Ein Bild ist zu groß." });
 
   const id = neueId();
   if (bild) await env.PAUL_KV.put("meldung-bild:" + id + ":0", bild);
@@ -303,8 +325,11 @@ async function postVerarbeiten(context) {
     geraet: String(daten.geraet || "").slice(0, 80),
     status: "offen",
     ungelesenKind: false,
-    verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0 }]
-      .concat(weitere.map((b, i) => ({ von: kind, text: "Seite " + (i + 2), zeit: new Date().toISOString(), hatBild: true, nr: i + 1 }))),
+    verlauf: [{ von: kind, text, zeit: new Date().toISOString(), hatBild: !!bild, nr: 0,
+                ...(/^data:application\/pdf;/.test(bild) ? { pdf: true } : {}) }]
+      .concat(weitere.map((b, i) => ({ von: kind, text: "Seite " + (i + 2), zeit: new Date().toISOString(), hatBild: true, nr: i + 1,
+                                        ...(/^data:application\/pdf;/.test(b) ? { pdf: true } : {}) }))),
+    ...(hausaufgabe && daten.uebung === true ? { uebungOffen: true } : {}),
   });
 
   // Sofort antworten - noch in diesem Aufruf, damit das Kind die Antwort
