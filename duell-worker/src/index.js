@@ -109,7 +109,7 @@ export class DuellRaum {
     this.s.spieler[id] = {
       name: sauber(m.name, 14) || "Spieler", avatar: sauber(m.avatar, 8) || "🙂",
       klasse, alter, punkte: alt.punkte || 0,
-      gesehen: Array.isArray(m.gesehen) ? m.gesehen.filter((x) => typeof x === "string").slice(-80) : (alt.gesehen || [])
+      gesehen: Array.isArray(m.gesehen) ? m.gesehen.filter((x) => typeof x === "string").slice(-400) : (alt.gesehen || [])
     };
     if (!this.s.host || !this.s.spieler[this.s.host]) this.s.host = id;
     ws.serializeAttachment({ id });
@@ -171,7 +171,9 @@ export class DuellRaum {
 
     const fragen = liste.slice(0, n).map(({ f, key }) => {
       const antworten = mische(f[4].slice());
-      return { key, kat: f[1], bild: f[2], text: f[3], sprechen: f[6] ? f[6] + "?" : f[3], antworten, richtig: antworten.indexOf(f[4][0]), info: f[5] };
+      return { key, kat: f[1], bild: f[2], text: f[3], sprechen: f[6] ? f[6] + "?" : f[3], antworten, richtig: antworten.indexOf(f[4][0]), info: f[5],
+               // Fragen aus dem Klexikon (CC BY-SA 4.0) nennen ihren Artikel.
+               quelle: f[7] ? "Klexikon: " + f[7] : "" };
     });
 
     for (const sp of Object.values(this.s.spieler)) sp.punkte = 0;
@@ -244,7 +246,7 @@ export class DuellRaum {
   aufloesungBild() {
     const r = this.s.runde, f = r.fragen[r.n], q = r.frage;
     const antworten = Object.entries(q.antworten).map(([id, a]) => ({ id, wahl: a.wahl, ms: a.ms, richtig: a.richtig }));
-    return { t: "aufloesung", n: r.n + 1, von: r.fragen.length, richtig: f.richtig, info: f.info, erster: q.ersterRichtig,
+    return { t: "aufloesung", n: r.n + 1, von: r.fragen.length, richtig: f.richtig, info: f.info, quelle: f.quelle || "", erster: q.ersterRichtig,
       antworten, punkte: Object.fromEntries(Object.entries(this.s.spieler).map(([id, sp]) => [id, sp.punkte])),
       weiterIn: Math.max(0, (r.aufloesungBis || Date.now()) - Date.now()), frageKey: f.key };
   }

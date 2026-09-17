@@ -25,7 +25,10 @@ export const KATEGORIEN = {
   sprache:  { name: "Sprache",        farbe: "#ca8a04" },
   maerchen: { name: "Filme & Märchen", farbe: "#9333ea" },
   wissen:   { name: "Erfinder & Geschichte", farbe: "#0f766e" },
-  rechnen:  { name: "Rechnen",        farbe: "#2563eb" }
+  rechnen:  { name: "Rechnen",        farbe: "#2563eb" },
+  technik:  { name: "Technik & Verkehr", farbe: "#475569" },
+  musik:    { name: "Musik & Kunst",  farbe: "#c026d3" },
+  pflanzen: { name: "Pflanzen",       farbe: "#65a30d" }
 };
 
 export const FRAGEN = [

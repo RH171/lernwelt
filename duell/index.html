@@ -76,6 +76,7 @@
 
   /* Frage */
   .kopfzeile{display:flex;align-items:center;justify-content:space-between;color:#fff;font:700 15px/1 var(--font);margin:0 2px 8px}
+  .quelle{display:block;margin-top:6px;font-size:12.5px;opacity:.7}
   .kat{border-radius:999px;padding:6px 12px;color:#fff;font:800 14px/1 var(--rund)}
   .zeitbalken{height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin-bottom:12px}
   .zeitbalken i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#fbbf24,#f97316);transform-origin:left;transition:transform .2s linear}
@@ -230,7 +231,8 @@
 
   var KATEGORIEN = { tiere:["Tiere","#16a34a"], natur:["Natur & Weltall","#0ea5e9"], welt:["Welt & Länder","#f97316"], sport:["Sport","#e11d48"],
     koerper:["Körper","#db2777"], kurios:["Kurios","#8b5cf6"], sprache:["Sprache","#ca8a04"], maerchen:["Filme & Märchen","#9333ea"],
-    wissen:["Erfinder & Geschichte","#0f766e"], rechnen:["Rechnen","#2563eb"] };
+    wissen:["Erfinder & Geschichte","#0f766e"], rechnen:["Rechnen","#2563eb"],
+    technik:["Technik & Verkehr","#475569"], musik:["Musik & Kunst","#c026d3"], pflanzen:["Pflanzen","#65a30d"] };
   var AVATARE = ["🦁","🐯","🦊","🐼","🐸","🦄","🐙","🦖","🚀","⚽","🧤","🎸","🌟","🐬","🦅","🍀"];
   var KLASSEN = [[0,"Kiga"],[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"],[8,"8"],[9,"9"],[10,"10+"]];
 
@@ -547,7 +549,8 @@
       h += '<div class="schnellster">😮 Diesmal hat es keiner gewusst.</div>';
     }
     $("lesen").textContent = meine ? (meine.richtig ? (m.erster === ich ? "Du warst Erster! +3" : "Richtig! +1") : "Knapp daneben – jetzt weißt du es!") : "Du hast diesmal nicht getippt.";
-    if (m.info) h += '<div class="info"><b>Wusstest du?</b> ' + esc(m.info) + '</div>';
+    if (m.info) h += '<div class="info"><b>Wusstest du?</b> ' + esc(m.info) +
+      (m.quelle ? '<span class="quelle">' + esc(m.quelle) + ' · klexikon.zum.de · CC BY-SA 4.0</span>' : '') + '</div>';
     $("aufloesung").innerHTML = h;
     $("banner").textContent = m.n < m.von ? "Nächste Frage kommt gleich …" : "Gleich kommt die Siegerehrung …";
     if (m.info) sprich("Wusstest du? " + m.info);
@@ -558,7 +561,7 @@
     clearInterval(uhrTakt);
     if (m.gesehen && m.gesehen.length){
       var alt = lese("duell-gesehen", []);
-      schreibe("duell-gesehen", alt.concat(m.gesehen).filter(function(x, i, a){ return a.indexOf(x) === i; }).slice(-80));
+      schreibe("duell-gesehen", alt.concat(m.gesehen).filter(function(x, i, a){ return a.indexOf(x) === i; }).slice(-400));
     }
     zeige("ende");
     var med = ["🥇", "🥈", "🥉"];
