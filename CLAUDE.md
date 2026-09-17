@@ -702,6 +702,19 @@ beim dritten Mal alles richtig.
   wecken den Bau-Wächter** (`waechter-meldungen.sh`); sonst startete jede
   Verbesserungsrunde eine Bausitzung. Eine Antwort von Hand löscht das Flag.
 
+- **Der Lehrer-Auftrag (Denny, 17.09.2026 nachmittags):** „Du bist sein Lehrer …
+  damit Paul nicht an den Hausaufgaben den Spaß verliert." Ablauf in `HAUSAUFGABE`:
+  prüfen → Hilfe in Stufen (1. wo, 2. worauf, 3. eigenes Beispiel, bei Frust kleiner
+  machen) → nach dem gefundenen Fehler 1–2 Lernfragen mit neuen Zahlen, markiert mit
+  „❓ Lernfrage:" (das Heft macht das Schreibfeld dann zur Antwort). Nicht mehr als
+  drei Stellen auf einmal, nach seinem Denken fragen, Stelle nur nennen, wenn sicher.
+  Anlass für „sicher": Am 17.09. früh hat die Antwort eine 6 als 5 gelesen und
+  Kästchen verzählt. Der Verlauf geht bei Hausaufgaben mit 3000 statt 600 Zeichen je
+  Nachricht mit, sonst weiß die Antwort nicht, wie oft sie eine Stelle schon genannt hat.
+- `werkstatt.html?hausaufgabe=1` leitet seit 17.09. ins Heft um (Paul kam über eine
+  offene alte Seite und bekam ein automatisch gebautes Spiel statt Hilfe).
+  `mess-schritte-hausaufgabe.js` misst darum nichts mehr.
+
 Messung: `mess-schritte-hausaufgaben-heft.js`.
 
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
