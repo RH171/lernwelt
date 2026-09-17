@@ -279,6 +279,12 @@
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
+<script>
+  // Seit 17.09.2026 laufen Hausaufgaben im Hausaufgaben-Heft. Paul kam am selben
+  // Tag noch ueber eine offene alte Seite hierher - und bekam nebenbei ein
+  // automatisch gebautes Spiel statt Hilfe beim Verbessern.
+  if (/[?&]hausaufgabe=1/.test(location.search)) location.replace("hausaufgaben.html");
+</script>
 <link rel="stylesheet" href="/beruehrung.css">
 </head>
 <body>

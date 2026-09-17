@@ -179,7 +179,7 @@
         <button class="knopf" id="f-uebung" type="button">🛠️ Eigene Übung bestellen</button>
         <button class="knopf" id="f-fertig" type="button">🎉 Alles erledigt</button>
       </div>
-      <div style="font:700 15px/1.3 var(--rund);margin:16px 0 6px">Oder schreib mir – auch wenn du meinst, ich habe mich geirrt:</div>
+      <div style="font:700 15px/1.3 var(--rund);margin:16px 0 6px" id="f-label">Oder schreib mir – auch wenn du meinst, ich habe mich geirrt:</div>
       <div class="schreibzeile">
         <textarea id="f-text" maxlength="1200" placeholder="Zum Beispiel: Aufgabe 3 stimmt aber!"></textarea>
         <button class="knopf haupt" id="f-senden" type="button">Senden</button>
@@ -388,6 +388,12 @@
       w.textContent = "Ich schaue mir dein Blatt ganz genau an …"; box.appendChild(w);
     }
     $("faden-aktionen").classList.toggle("verborgen", !!wartet || !f);
+    // Hat der Lehrer zuletzt eine Lernfrage gestellt, ist das Schreibfeld die Antwort.
+    var letzteW = f ? f.verlauf.filter(function(n){ return n.von === "werkstatt"; }).slice(-1)[0] : null;
+    var frage = !!(letzteW && /❓\s*Lernfrage/.test(letzteW.text || "") && letzteW === f.verlauf[f.verlauf.length - 1]);
+    $("f-label").textContent = frage ? "❓ Deine Antwort auf die Lernfrage:" : "Oder schreib mir – auch wenn du meinst, ich habe mich geirrt:";
+    $("f-text").placeholder = frage ? "Schreib hier deine Antwort …" : "Zum Beispiel: Aufgabe 3 stimmt aber!";
+    $("f-text").style.borderColor = frage ? "var(--paul)" : "";
     if (f) $("f-fertig").disabled = f.status === "erledigt";
   }
   function vorschau(f, n){
