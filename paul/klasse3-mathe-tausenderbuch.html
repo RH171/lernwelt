@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tausenderbuch-Detektiv</title>
+<!--
+  Pauls Übungsspiel zu "Ausschnitte aus dem Tausender" (17.09.2026).
+
+  Anlass: das Blatt "Wiederholungshelden 4 (Ausschnitte aus dem Tausender)"
+  von ideenreise-blog.de. Den oberen Teil (Bilder im Ausschnitt finden) hat
+  Paul fehlerfrei gelöst. Beim unteren Teil (Ausschnitte mit Lücken,
+  auch schräg abgetreppt) taten sich Paul und Denny schwer.
+
+  Der Kern ist EINE Regel: Im Tausenderbuch hat jede Seite 100 Zahlen in
+  10 Zeilen. Nach rechts +1, nach links -1, nach unten +10, nach oben -10.
+  Schräg kommt beides zusammen: rechts unten +11, links unten +9,
+  links oben -11, rechts oben -9.
+
+  Drei Stationen, aufsteigend:
+    1. Nachbarn     - ein 3x3-Ausschnitt, eine Zahl in der Mitte, ein oder
+                      zwei Nachbarn gesucht (auch schräg).
+    2. Bilder       - 4x4-Ausschnitt mit einer Zahl, Bilder darin finden
+                      (so wie der obere Teil des Blatts).
+    3. Ausschnitte  - krumme Formen mit einer Zahl, alle Lücken füllen,
+                      auch abgetreppt (so wie der untere Teil).
+  Nach einem Fehler: Pfeil vom nächsten sicheren Feld mit "+10" o. ä. -
+  der Weg, nicht die Zahl. Zweiter Versuch; gezählt wird der erste.
+
+  Üben, nicht lösen: Die Zahlen und Formen vom Blatt kommen nicht vor
+  (BLATT). Alles wird zufällig gebaut und bleibt auf einer Buchseite.
+
+  Liegt als "klasse3-" im Ordner, weil games.json nur diese Dateien findet;
+  die Klasse (4, Wiederholung) steht in paul/index.html unter OVERRIDES.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#f1f5f9; --karte:#fff; --ink:#172033; --muted:#64748b; --line:#dbe3ec;
+    --blau:#4338ca; --blau-hell:#e0e7ff; --gut:#15803d; --gut-hell:#dcfce7; --hm:#b45309; --hm-hell:#ffedd5;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --zelle:66px;
+  }
+  @media (max-width:600px){ :root{ --zelle:54px; } }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .knopf-klein{display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:700 15px/1 var(--font);color:var(--ink);cursor:pointer;min-height:44px}
+  h1{font:800 22px/1.1 var(--rund);margin:0;flex:1;min-width:150px}
+  .zaehler{font:800 15px/1 var(--rund);background:#fff;border:1px solid var(--line);border-radius:999px;padding:13px 14px;white-space:nowrap}
+  .karte{background:var(--karte);border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 12px 30px rgba(15,40,70,.09);margin-bottom:12px}
+
+  .start{text-align:center}
+  .start .gross{font-size:56px;line-height:1}
+  .start h2{font:800 28px/1.2 var(--rund);margin:8px 0 6px}
+  .start p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 auto 16px;max-width:640px}
+  .stationen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:left}
+  @media (max-width:760px){ .stationen{grid-template-columns:1fr} }
+  .station{border:2px solid var(--line);background:#fbfdff;border-radius:18px;padding:14px;cursor:pointer;display:flex;
+    flex-direction:column;gap:6px;min-height:120px;color:var(--ink);font:inherit;text-align:left}
+  .station:active{transform:scale(.98)}
+  .station .ic{font-size:32px}
+  .station b{font:800 18px/1.2 var(--rund)}
+  .station span{color:var(--muted);font-size:14.5px;line-height:1.4}
+  .station .stand{color:var(--gut);font-weight:800}
+
+  /* Der Wegweiser: die ganze Regel auf einen Blick. */
+  .wegweiser{display:grid;grid-template-columns:repeat(3,62px);grid-template-rows:repeat(3,46px);gap:4px;justify-content:center;margin:6px auto 0}
+  .wegweiser div{display:flex;align-items:center;justify-content:center;border-radius:10px;background:#f8fafc;border:1px solid var(--line);
+    font:800 15px/1.1 var(--rund);text-align:center}
+  .wegweiser .mitte{background:var(--blau-hell);color:var(--blau);font-size:13px}
+  .wegweiser .gerade{background:#eef2ff;color:var(--blau)}
+
+  .spielflaeche{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (min-width:900px){ .spielflaeche{grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);align-items:start} }
+  .auftrag{font:800 21px/1.3 var(--rund);margin:0 0 4px}
+  .unterzeile{color:var(--muted);font-size:15px;line-height:1.45;margin:0 0 12px}
+
+  .buchseite{position:relative;margin:6px auto 4px;overflow:visible}
+  .zelle{position:absolute;width:var(--zelle);height:var(--zelle);border:2px solid #334155;background:#fff;margin:-1px 0 0 -1px;
+    display:flex;align-items:center;justify-content:center;font:800 calc(var(--zelle) * .33)/1 var(--rund);color:var(--ink);padding:0}
+  .zelle.gegeben{background:#f8fafc;color:#0f172a}
+  .zelle.frage{cursor:pointer;color:var(--blau)}
+  .zelle.frage.leer::after{content:"?";color:#cbd5e1}
+  .zelle.an{background:var(--blau-hell);box-shadow:inset 0 0 0 3px var(--blau);z-index:2}
+  .zelle.richtig{background:var(--gut-hell);color:var(--gut)}
+  .zelle.falsch{background:var(--hm-hell);color:var(--hm)}
+  .zelle .bild{font-size:calc(var(--zelle) * .5);line-height:1}
+  .pfeil{position:absolute;z-index:4;pointer-events:none;background:var(--hm);color:#fff;border-radius:999px;
+    font:800 14px/1 var(--rund);padding:5px 8px;white-space:nowrap;transform:translate(-50%,-50%);box-shadow:0 3px 10px rgba(0,0,0,.2)}
+
+  .bildfragen{display:grid;gap:8px;margin:0 0 12px}
+  .bildfrage{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:14px;padding:6px 10px;cursor:pointer;background:#fff;font:inherit;color:var(--ink)}
+  .bildfrage .bild{font-size:30px}
+  .bildfrage .wert{flex:1;min-height:44px;border-bottom:3px solid #cbd5e1;font:800 26px/44px var(--rund);color:var(--blau);text-align:left}
+  .bildfrage.an{border-color:var(--blau);box-shadow:0 0 0 4px var(--blau-hell)}
+  .bildfrage.richtig{border-color:var(--gut);background:var(--gut-hell)}
+  .bildfrage.falsch{border-color:#fdba74;background:var(--hm-hell)}
+
+  .tasten{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;max-width:420px}
+  .tasten button{min-height:52px;border:none;border-radius:12px;background:#f1f5f9;font:800 22px/1 var(--rund);color:var(--ink);cursor:pointer}
+  .tasten button:active{background:#e2e8f0}
+  .knopf{border:none;border-radius:14px;padding:12px 16px;min-height:50px;font:800 17px/1.1 var(--rund);cursor:pointer;background:#e2e8f0;color:var(--ink)}
+  .knopf:active{transform:scale(.97)}
+  .knopf.haupt{background:var(--blau);color:#fff}
+  .knopf.hell{background:#eef2ff;color:var(--blau)}
+  .weiter{width:100%;margin-top:8px}
+  .rueck{min-height:26px;font:700 17px/1.45 var(--rund)}
+  .rueck.gut{color:var(--gut)} .rueck.hm{color:var(--hm)}
+  .aktion{position:sticky;bottom:0;z-index:5;background:linear-gradient(rgba(255,255,255,0),#fff 12px);
+    padding:12px 62px calc(4px + env(safe-area-inset-bottom)) 0;margin-top:10px}
+  @media (max-width:899px){
+    .aktion{position:fixed;left:0;right:0;bottom:0;margin:0;background:#fff;box-shadow:0 -6px 18px rgba(15,40,70,.12);
+      padding:8px 70px calc(8px + env(safe-area-inset-bottom)) 12px}
+    .aktion .weiter{margin-top:6px}
+    .aktion .rueck{font-size:15px}
+    body.spielt{padding-bottom:180px}
+  }
+  .tipp-wegweiser{margin-top:12px}
+
+  .ende{text-align:center}
+  .ende .gross{font-size:60px}
+  .ende h2{font:800 26px/1.2 var(--rund);margin:6px 0}
+  .ende p{font-size:18px;color:var(--muted);line-height:1.5}
+  @media (max-height:420px){ .ende .gross{font-size:36px} .ende p{font-size:16px;margin:4px 0} }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <button class="knopf-klein" id="zurueck">‹ Lernwelt</button>
+    <h1>🔎 Tausenderbuch-Detektiv</h1>
+    <div class="zaehler verborgen" id="zaehler"></div>
+  </header>
+
+  <section id="sicht-start">
+    <div class="karte start">
+      <div class="gross">📖🔎</div>
+      <h2>Aus dem Tausenderbuch ist etwas herausgeschnitten!</h2>
+      <p>Jede Seite hat 100 Zahlen in 10 Zeilen. Mit diesem Wegweiser findest du jede Zahl – auch schräg:</p>
+      <div class="wegweiser" aria-label="Wegweiser">
+        <div>↖ −11</div><div class="gerade">↑ −10</div><div>↗ −9</div>
+        <div class="gerade">← −1</div><div class="mitte">Zahl</div><div class="gerade">→ +1</div>
+        <div>↙ +9</div><div class="gerade">↓ +10</div><div>↘ +11</div>
+      </div>
+      <p style="margin-top:16px">Such dir eine Station aus.</p>
+      <div class="stationen" id="stationen"></div>
+    </div>
+  </section>
+
+  <section id="sicht-spiel" class="verborgen">
+    <div class="spielflaeche">
+      <div class="karte">
+        <div class="auftrag" id="auftrag"></div>
+        <p class="unterzeile" id="unterzeile"></p>
+        <div class="buchseite" id="buchseite"></div>
+      </div>
+      <div class="karte">
+        <div class="bildfragen" id="bildfragen"></div>
+        <div class="tasten" id="tasten"></div>
+        <button class="knopf hell weiter tipp-wegweiser" id="wegweiser-knopf" type="button">🧭 Wegweiser zeigen</button>
+        <div class="wegweiser verborgen" id="wegweiser-klein">
+          <div>↖ −11</div><div class="gerade">↑ −10</div><div>↗ −9</div>
+          <div class="gerade">← −1</div><div class="mitte">Zahl</div><div class="gerade">→ +1</div>
+          <div>↙ +9</div><div class="gerade">↓ +10</div><div>↘ +11</div>
+        </div>
+        <div class="aktion">
+          <div class="rueck" id="rueck"></div>
+          <button class="knopf haupt weiter" id="pruefen" type="button">Prüfen</button>
+          <button class="knopf haupt weiter verborgen" id="weiter" type="button"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte ende">
+      <div class="gross">🏅</div>
+      <h2 id="ende-titel"></h2>
+      <p id="ende-text"></p>
+      <button class="knopf haupt weiter" id="ende-start" type="button">Zu den Stationen</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function z(a, b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t = f[i]; f[i] = f[j]; f[j] = t; } return f; }
+  function LS(){ return window.lernstand || null; }
+
+  $("zurueck").addEventListener("click", function(){
+    var hub = "index.html";
+    try { var s = localStorage.getItem("hub-url"); if (s) hub = s; } catch(e){}
+    location.href = hub;
+  });
+
+  // Üben, nicht lösen: Diese Zahlen sind auf Pauls Blatt vorgegeben oder gesucht.
+  // Keine davon wird hier als Startzahl benutzt.
+  var BLATT = [523, 502, 514, 522, 535, 755, 757, 766, 775, 788, 997, 967, 989, 998, 976,
+               400, 912, 675];
+
+  /* ---------- Das Tausenderbuch ----------
+     Seite s (0..9) enthält s*100+1 bis s*100+100. Zeile r (0..9), Spalte c (0..9):
+     Zahl = s*100 + r*10 + c + 1. Darum steht die 400 ganz rechts unten auf der
+     Seite 301-400 - und links daneben die 399, darüber die 390. */
+  function zahl(s, r, c){ return s*100 + r*10 + c + 1; }
+
+  var station = null, aufgaben = [], nr = 0, gleichRichtig = 0, ersterVersuch = true;
+  var eingaben = {}, aktiv = null;
+
+  var STATIONEN = [
+    { id: "nachbarn", ic: "🧭", titel: "Nachbarn", text: "Eine Zahl steht in der Mitte. Welche Zahl steht daneben – auch schräg?", anzahl: 6 },
+    { id: "bilder", ic: "🍎", titel: "Bilder im Ausschnitt", text: "Auf welcher Zahl liegt das Bild? Wie oben auf deinem Blatt.", anzahl: 5 },
+    { id: "ausschnitte", ic: "🧩", titel: "Krumme Ausschnitte", text: "Nur eine Zahl ist verraten. Füll alle Lücken – auch die schrägen Treppen.", anzahl: 5 }
+  ];
+
+  var SPEICHER = "paul-tausenderbuch";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function merken(id, richtig, gesamt){ try { var d = lesen(); d[id] = { richtig: richtig, gesamt: gesamt }; localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  function startMalen(){
+    var d = lesen(), box = $("stationen"); box.innerHTML = "";
+    STATIONEN.forEach(function(st){
+      var b = document.createElement("button"); b.className = "station"; b.type = "button";
+      b.innerHTML = '<span class="ic"></span><b></b><span class="txt"></span><span class="stand"></span>';
+      b.querySelector(".ic").textContent = st.ic;
+      b.querySelector("b").textContent = st.titel;
+      b.querySelector(".txt").textContent = st.text;
+      b.querySelector(".stand").textContent = d[st.id] ? "Zuletzt: " + d[st.id].richtig + " von " + d[st.id].gesamt + " gleich richtig" : "";
+      b.addEventListener("click", function(){ stationStarten(st); });
+      box.appendChild(b);
+    });
+  }
+  function zeige(welche){
+    ["start", "spiel", "ende"].forEach(function(s){ $("sicht-" + s).classList.toggle("verborgen", s !== welche); });
+    $("zaehler").classList.toggle("verborgen", welche !== "spiel");
+    document.body.classList.toggle("spielt", welche === "spiel");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Aufgaben bauen ----------
+     Jede Aufgabe: zellen = [{r, c, wert, art: "gegeben"|"frage"|"bild"|"leer", bild}]
+     r/c sind Buchseiten-Koordinaten; gezeichnet wird relativ zur kleinsten. */
+  var BILDER = ["🍎", "🍓", "🍒", "🍐", "🦉", "🐭", "🐿️", "🐤", "☂️", "👢", "🧦", "⚽", "🚲", "🌻", "🐞", "⭐"];
+
+  function seiteWaehlen(){ return z(1, 9); }   // 101-1000; die Seite 1-100 ist zu leicht
+
+  function aufgabeNachbarn(i){
+    for (var v = 0; v < 300; v++){
+      var s = seiteWaehlen(), r = z(1, 8), c = z(1, 8), mitte = zahl(s, r, c);
+      if (BLATT.indexOf(mitte) >= 0) continue;
+      // Erst die geraden Richtungen, ab Aufgabe 3 auch schräg.
+      var richtungen = i < 2 ? [[0,1],[0,-1],[1,0],[-1,0]] : [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+      var gesucht = mische(richtungen.slice()).slice(0, i < 2 ? 1 : 2);
+      if (i >= 2 && !gesucht.some(function(d){ return d[0] && d[1]; })) gesucht[0] = [[1,1],[1,-1],[-1,1],[-1,-1]][z(0,3)];
+      var zellen = [];
+      for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++){
+        var istMitte = !dr && !dc;
+        var istFrage = gesucht.some(function(d){ return d[0] === dr && d[1] === dc; });
+        zellen.push({ r: r + dr, c: c + dc, wert: zahl(s, r + dr, c + dc), art: istMitte ? "gegeben" : (istFrage ? "frage" : "leer") });
+      }
+      return { art: "nachbarn", zellen: zellen, merkmal: gesucht.some(function(d){ return d[0] && d[1]; }) ? "tausenderbuch schraeg" : "tausenderbuch nachbarn" };
+    }
+  }
+
+  function aufgabeBilder(i){
+    for (var v = 0; v < 300; v++){
+      var s = seiteWaehlen(), r0 = z(0, 6), c0 = z(0, 6);
+      var gr = z(0, 3), gc = z(0, 3), gegeben = zahl(s, r0 + gr, c0 + gc);
+      if (BLATT.indexOf(gegeben) >= 0) continue;
+      var plaetze = [];
+      for (var a = 0; a < 4; a++) for (var b = 0; b < 4; b++) if (a !== gr || b !== gc) plaetze.push([a, b]);
+      var bildPlaetze = mische(plaetze).slice(0, i < 2 ? 2 : 4);
+      var bilder = mische(BILDER.slice());
+      var zellen = [];
+      for (a = 0; a < 4; a++) for (b = 0; b < 4; b++){
+        var zelle = { r: r0 + a, c: c0 + b, wert: zahl(s, r0 + a, c0 + b), art: "leer" };
+        if (a === gr && b === gc) zelle.art = "gegeben";
+        bildPlaetze.forEach(function(p, k){ if (p[0] === a && p[1] === b){ zelle.art = "bild"; zelle.bild = bilder[k]; zelle.nr = k; } });
+        zellen.push(zelle);
+      }
+      return { art: "bilder", zellen: zellen, merkmal: "tausenderbuch bilder" };
+    }
+  }
+
+  // Krumme Formen wie unten auf dem Blatt. Eine davon ist immer eine schräge
+  // Treppe, weil genau die am schwersten war.
+  function aufgabeAusschnitt(i){
+    for (var v = 0; v < 500; v++){
+      var s = seiteWaehlen(), zellen = {}, liste = [];
+      function dazu(r, c){ var k = r + "," + c; if (r < 0 || r > 9 || c < 0 || c > 9 || zellen[k]) return false;
+        zellen[k] = { r: r, c: c, wert: zahl(s, r, c), art: "frage" }; liste.push(zellen[k]); return true; }
+      var r = z(0, 9), c = z(0, 9);
+      dazu(r, c);
+      var groesse = z(7, 11);
+      var treppe = (i === 1 || i === 3);
+      var tries = 0;
+      while (liste.length < groesse && tries++ < 80){
+        var basis = liste[liste.length - 1];
+        if (treppe && liste.length >= 3 && liste.length <= 6){
+          var dir = [[1,1],[1,-1],[-1,1],[-1,-1]][i === 1 ? 0 : 1];
+          dazu(basis.r + dir[0], basis.c + dir[1]);
+        } else {
+          var schritt = [[0,1],[0,-1],[1,0],[-1,0]][z(0,3)];
+          var von = Math.random() < .6 ? basis : liste[z(0, liste.length - 1)];
+          dazu(von.r + schritt[0], von.c + schritt[1]);
+        }
+      }
+      if (liste.length < 7) continue;
+      var rs = liste.map(function(x){ return x.r; }), cs = liste.map(function(x){ return x.c; });
+      if (Math.max.apply(null, cs) - Math.min.apply(null, cs) > 4 || Math.max.apply(null, rs) - Math.min.apply(null, rs) > 6) continue;
+      var gegeben = liste[z(0, liste.length - 1)];
+      if (BLATT.indexOf(gegeben.wert) >= 0) continue;
+      gegeben.art = "gegeben";
+      return { art: "ausschnitt", zellen: liste, merkmal: treppe ? "tausenderbuch treppe" : "tausenderbuch ausschnitt" };
+    }
+  }
+
+  function stationStarten(st){
+    station = st; nr = 0; gleichRichtig = 0; aufgaben = [];
+    for (var i = 0; i < st.anzahl; i++)
+      aufgaben.push(st.id === "nachbarn" ? aufgabeNachbarn(i) : st.id === "bilder" ? aufgabeBilder(i) : aufgabeAusschnitt(i));
+    document.title = "Tausenderbuch-Detektiv: " + st.titel;
+    zeige("spiel");
+    aufgabeZeigen();
+  }
+
+  /* ---------- Zeichnen ---------- */
+  function schluessel(zelle){ return zelle.art === "bild" ? "b" + zelle.nr : zelle.r + "," + zelle.c; }
+
+  function aufgabeZeigen(){
+    var a = aufgaben[nr];
+    ersterVersuch = true; eingaben = {}; aktiv = null;
+    $("zaehler").textContent = "Aufgabe " + (nr + 1) + " / " + aufgaben.length;
+    $("rueck").textContent = ""; $("rueck").className = "rueck";
+    $("pruefen").classList.remove("verborgen"); $("weiter").classList.add("verborgen");
+    if (a.art === "nachbarn"){ $("auftrag").textContent = "Welche Zahlen fehlen?"; $("unterzeile").textContent = "Tipp auf ein Feld mit ?, dann tipp die Zahl ein."; }
+    if (a.art === "bilder"){ $("auftrag").textContent = "Auf welcher Zahl liegt das Bild?"; $("unterzeile").textContent = "Geh von der Zahl aus Schritt für Schritt zum Bild."; }
+    if (a.art === "ausschnitt"){ $("auftrag").textContent = "Füll den ganzen Ausschnitt aus!"; $("unterzeile").textContent = "Fang neben der Zahl an, die schon dasteht – dann Feld für Feld weiter."; }
+    var fragen = a.zellen.filter(function(x){ return x.art === "frage" || x.art === "bild"; });
+    if (fragen.length) aktiv = schluessel(a.art === "ausschnitt" ? naechsteFrage(a) : fragen[0]);
+    malen();
+  }
+
+  // Beim Ausschnitt mit einem Feld neben der gegebenen Zahl anfangen.
+  function naechsteFrage(a){
+    var g = a.zellen.filter(function(x){ return x.art === "gegeben"; })[0];
+    var fragen = a.zellen.filter(function(x){ return x.art === "frage"; });
+    fragen.sort(function(p, q){ return (Math.abs(p.r-g.r) + Math.abs(p.c-g.c)) - (Math.abs(q.r-g.r) + Math.abs(q.c-g.c)); });
+    return fragen[0];
+  }
+
+  var zustand = {};   // schluessel -> "richtig" | "falsch"
+  function malen(pfeile){
+    var a = aufgaben[nr], seite = $("buchseite"); seite.innerHTML = "";
+    var gr = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--zelle")) || 66;
+    var rmin = Math.min.apply(null, a.zellen.map(function(x){ return x.r; }));
+    var cmin = Math.min.apply(null, a.zellen.map(function(x){ return x.c; }));
+    var rmax = Math.max.apply(null, a.zellen.map(function(x){ return x.r; }));
+    var cmax = Math.max.apply(null, a.zellen.map(function(x){ return x.c; }));
+    seite.style.width = ((cmax - cmin + 1) * gr) + "px";
+    seite.style.height = ((rmax - rmin + 1) * gr) + "px";
+    a.zellen.forEach(function(x){
+      var el = document.createElement("button"); el.type = "button"; el.className = "zelle " + x.art;
+      el.style.left = ((x.c - cmin) * gr) + "px"; el.style.top = ((x.r - rmin) * gr) + "px";
+      var k = schluessel(x);
+      if (x.art === "gegeben") el.textContent = x.wert;
+      if (x.art === "bild"){ var sp = document.createElement("span"); sp.className = "bild"; sp.textContent = x.bild; el.appendChild(sp); }
+      if (x.art === "frage"){
+        el.textContent = eingaben[k] || ""; if (!eingaben[k]) el.classList.add("leer");
+        if (k === aktiv) el.classList.add("an");
+        if (zustand[k]) el.classList.add(zustand[k]);
+        el.addEventListener("click", function(){ aktiv = k; malen(); });
+      }
+      if (x.art === "leer"){ el.disabled = true; el.setAttribute("aria-hidden", "true"); }
+      if (x.art === "bild") el.disabled = true;
+      seite.appendChild(el);
+    });
+    (pfeile || []).forEach(function(p){
+      var b = document.createElement("div"); b.className = "pfeil"; b.textContent = p.text;
+      b.style.left = ((p.c - cmin) * gr + gr/2) + "px"; b.style.top = ((p.r - rmin) * gr + gr/2) + "px";
+      seite.appendChild(b);
+    });
+
+    var bf = $("bildfragen"); bf.innerHTML = "";
+    a.zellen.filter(function(x){ return x.art === "bild"; }).sort(function(p, q){ return p.nr - q.nr; }).forEach(function(x){
+      var k = schluessel(x), b = document.createElement("button"); b.type = "button"; b.className = "bildfrage";
+      b.innerHTML = '<span class="bild"></span><span class="wert"></span>';
+      b.querySelector(".bild").textContent = x.bild;
+      b.querySelector(".wert").textContent = eingaben[k] || "";
+      if (k === aktiv) b.classList.add("an");
+      if (zustand[k]) b.classList.add(zustand[k]);
+      b.addEventListener("click", function(){ aktiv = k; malen(); });
+      bf.appendChild(b);
+    });
+    bf.classList.toggle("verborgen", a.art !== "bilder");
+  }
+
+  /* ---------- Tippen ---------- */
+  ["1","2","3","4","5","6","7","8","9","0","⌫"].forEach(function(t){
+    var b = document.createElement("button"); b.type = "button"; b.textContent = t;
+    b.addEventListener("click", function(){ taste(t); });
+    $("tasten").appendChild(b);
+  });
+  function taste(t){
+    if (!aktiv || !$("weiter").classList.contains("verborgen")) return;
+    var w = eingaben[aktiv] || "";
+    if (t === "⌫") w = w.slice(0, -1); else if (w.length < 4) w += t;
+    eingaben[aktiv] = w; delete zustand[aktiv];
+    malen();
+  }
+  document.addEventListener("keydown", function(e){
+    if ($("sicht-spiel").classList.contains("verborgen")) return;
+    if (/^[0-9]$/.test(e.key)) taste(e.key);
+    if (e.key === "Backspace") taste("⌫");
+  });
+  $("wegweiser-knopf").addEventListener("click", function(){
+    var w = $("wegweiser-klein"), zu = w.classList.contains("verborgen");
+    w.classList.toggle("verborgen", !zu);
+    this.textContent = zu ? "🧭 Wegweiser ausblenden" : "🧭 Wegweiser zeigen";
+  });
+
+  /* ---------- Prüfen ---------- */
+  var RICHTUNG = {};
+  RICHTUNG["0,1"] = "→ +1"; RICHTUNG["0,-1"] = "← −1"; RICHTUNG["1,0"] = "↓ +10"; RICHTUNG["-1,0"] = "↑ −10";
+  RICHTUNG["1,1"] = "↘ +11"; RICHTUNG["1,-1"] = "↙ +9"; RICHTUNG["-1,1"] = "↗ −9"; RICHTUNG["-1,-1"] = "↖ −11";
+
+  $("pruefen").addEventListener("click", function(){
+    var a = aufgaben[nr];
+    var fragen = a.zellen.filter(function(x){ return x.art === "frage" || x.art === "bild"; });
+    var offen = fragen.filter(function(x){ return !eingaben[schluessel(x)]; });
+    if (offen.length){ $("rueck").textContent = "Da fehlen noch " + offen.length + " Zahl" + (offen.length > 1 ? "en" : "") + "."; $("rueck").className = "rueck hm"; return; }
+    zustand = {};
+    var falsche = [];
+    fragen.forEach(function(x){
+      var k = schluessel(x), ok = parseInt(eingaben[k], 10) === x.wert;
+      zustand[k] = ok ? "richtig" : "falsch";
+      if (!ok) falsche.push(x);
+    });
+    var stimmt = !falsche.length;
+    if (ersterVersuch){
+      ersterVersuch = false;
+      if (stimmt) gleichRichtig++;
+      try { LS() && LS().antwort(stimmt, a.merkmal, stimmt ? "" : falsche.map(function(x){ return eingaben[schluessel(x)]; }).join(" "),
+                                  falsche.map(function(x){ return x.wert; }).join(" ")); } catch(e){}
+    }
+    if (stimmt){
+      malen();
+      $("rueck").textContent = "✅ Alles richtig – gute Detektivarbeit!"; $("rueck").className = "rueck gut";
+      $("pruefen").classList.add("verborgen");
+      $("weiter").textContent = nr === aufgaben.length - 1 ? "Station abschließen ›" : "Nächste Aufgabe ›";
+      $("weiter").classList.remove("verborgen");
+      return;
+    }
+    // Hinweis: vom nächsten sicheren Feld (gegeben oder schon richtig) einen
+    // Pfeil zum ersten falschen Feld - mit dem Schritt, nicht mit der Zahl.
+    var sicher = a.zellen.filter(function(x){ return x.art === "gegeben" || zustand[schluessel(x)] === "richtig"; });
+    var pfeile = [], text = "";
+    var ziel = falsche[0], bester = null;
+    sicher.forEach(function(sz){
+      var dr = ziel.r - sz.r, dc = ziel.c - sz.c, abstand = Math.max(Math.abs(dr), Math.abs(dc));
+      if (!bester || abstand < bester.abstand) bester = { von: sz, dr: dr, dc: dc, abstand: abstand };
+    });
+    if (bester && bester.abstand === 1){
+      var t = RICHTUNG[bester.dr + "," + bester.dc];
+      pfeile.push({ r: ziel.r, c: ziel.c, text: t });
+      text = "Schau von der " + bester.von.wert + " aus: " + t.split(" ")[0] + " heißt " + t.split(" ")[1] + ".";
+    } else if (bester){
+      text = "Geh von der " + bester.von.wert + " aus Feld für Feld: " + (bester.dr ? Math.abs(bester.dr) + (Math.abs(bester.dr) === 1 ? " Zeile " : " Zeilen ") + (bester.dr > 0 ? "nach unten (je +10)" : "nach oben (je −10)") : "") +
+             (bester.dr && bester.dc ? " und " : "") +
+             (bester.dc ? Math.abs(bester.dc) + (Math.abs(bester.dc) === 1 ? " Spalte " : " Spalten ") + (bester.dc > 0 ? "nach rechts (je +1)" : "nach links (je −1)") : "") + ".";
+    }
+    aktiv = schluessel(ziel);
+    malen(pfeile);
+    $("rueck").textContent = (falsche.length === 1 ? "Eine Zahl stimmt noch nicht. " : falsche.length + " Zahlen stimmen noch nicht. ") + text;
+    $("rueck").className = "rueck hm";
+  });
+
+  $("weiter").addEventListener("click", function(){
+    zustand = {};
+    if (nr < aufgaben.length - 1){ nr++; aufgabeZeigen(); window.scrollTo(0, 0); return; }
+    merken(station.id, gleichRichtig, aufgaben.length);
+    $("ende-titel").textContent = station.titel + " geschafft!";
+    $("ende-text").textContent = gleichRichtig === aufgaben.length
+      ? "Jede Aufgabe gleich beim ersten Mal. Das Tausenderbuch hat keine Geheimnisse mehr vor dir!"
+      : gleichRichtig + " von " + aufgaben.length + " gleich beim ersten Mal – die anderen hast du mit dem Wegweiser geknackt. So wird man Detektiv.";
+    zeige("ende");
+  });
+  $("ende-start").addEventListener("click", function(){ startMalen(); zeige("start"); document.title = "Tausenderbuch-Detektiv"; });
+
+  // Für die Messung.
+  window.__tausenderbuch = { aufgaben: function(){ return aufgaben; }, nr: function(){ return nr; }, zahl: zahl };
+
+  startMalen();
+  zeige("start");
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
