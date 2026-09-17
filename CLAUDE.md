@@ -675,6 +675,12 @@ sitzt. **Ein falscher Hinweis kostet ein Kind Zeit an einer Stelle, die längst
 stimmt** — also entweder heranzoomen oder gar nichts sagen. Zurückgenommen
 wurde es ihm gegenüber ausdrücklich; das gehört dazu und ist keine Schwäche.
 
+Zweites Beispiel (17.09.2026): `paul/klasse3-mathe-tausenderbuch.html`
+(„Tausenderbuch-Detektiv", Klasse 4) zu „Ausschnitte aus dem Tausender". Pauls
+Stolperstelle: nach UNTEN wird es +10 – in zwei Ausschnitten hat er es umgedreht.
+Hinweise zeigen den Schritt („↓ +10"), nie die Zahl. Messung:
+`mess-schritte-tausenderbuch.js` (prüft auch, dass jede Zelle zur Buchseite passt).
+
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
 
 Seit 16.09.2026: `leon/klasse2-deutsch-lesegeschichte.html`, Kachel ganz oben in
