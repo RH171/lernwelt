@@ -31,7 +31,11 @@ export const KATEGORIEN = {
   pflanzen: { name: "Pflanzen",       farbe: "#65a30d" }
 };
 
-export const FRAGEN = [
+import { KLEXIKON } from "./fragen-klexikon.js";
+
+// Die Klexikon-Fragen (17.09.2026) haengen HINTEN an: Gesehene Fragen merkt sich
+// das Duell ueber ihre Position ("f" + Index) - die alten behalten so ihre Nummer.
+const EIGENE = [
   // ---------- Tiere ----------
   [1, "tiere", "🕷️", "Wie viele Beine hat eine Spinne?", ["8", "6", "10", "4"], "Insekten haben 6 Beine, Spinnen 8 – darum sind Spinnen keine Insekten."],
   [1, "tiere", "🐞", "Wie viele Beine hat ein Käfer?", ["6", "8", "4", "10"], "Alle Insekten haben 6 Beine: Käfer, Bienen, Ameisen, Schmetterlinge."],
@@ -189,3 +193,5 @@ export const FRAGEN = [
   [5, "wissen", "📖", "Wer erfand in Europa den Buchdruck mit beweglichen Buchstaben?", ["Johannes Gutenberg", "Martin Luther", "Carl Benz", "Galileo Galilei"], "Vorher wurden Bücher mit der Hand abgeschrieben."],
   [5, "wissen", "🧱", "In welchem Jahr fiel die Berliner Mauer?", ["1989", "1945", "2001", "1969"], "Danach wurden Ost- und Westdeutschland wieder ein Land."]
 ];
+
+export const FRAGEN = EIGENE.concat(KLEXIKON);
