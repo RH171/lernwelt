@@ -650,6 +650,31 @@ Beispiel dafür: `paul/klasse3-mathe-wechselstube.html` (Klasse 4, Wiederholung 
 vom Blatt – Zahl passt nicht zur Zerlegung, Null als Platzhalter – und enthält
 keine Zahl vom Blatt (`BLATT`). Messung: `mess-schritte-wechselstube.js`.
 
+### Zweimal dasselbe Blatt: erst die Wechselstube, dann die Dreher-Jagd
+
+Am 17.09.2026 früh kam dasselbe Blatt noch einmal (Meldung `u8cgxaxzci`),
+diesmal beide Seiten und fertig gelöst, mit „schau bitte drüber". Eine zweite
+Übung zum ganzen Thema wäre die Wechselstube ein zweites Mal gewesen. Gebaut
+wurde deshalb `paul/klasse3-mathe-dreher-jagd.html` — **nur die eine Stelle,
+die wirklich noch wackelte**: Er hatte die Zerlegung verbessert, die Ziffern im
+Kasten „als Zahl" standen aber in der anderen Reihenfolge. Ein Zahlendreher,
+und der hat einen Grund: Gesprochen kommen die Einer zuerst
+(„sieben-und-zwanzig"), geschrieben stehen sie hinten (27). Die Seite sagt ihm
+genau das, statt „gut aufpassen". Drei Stationen: Zahlwort → Stellentafel
+(Hilfe-Knopf färbt das Wort ein, ohne eine Ziffer zu nennen), Karten eines
+Roboters prüfen (3 von 6 falsch, manche mit durchgestrichener Verbesserung —
+Pauls eigene Lage), Blitz-Umbau mit zweitem Auftrag hinterher. Messung:
+`mess-schritte-dreher-jagd.js`.
+
+**Beim Drüberschauen über ein Foto zählt der Augenschein nicht.** Von den drei
+Hinweisen der Sofortantwort waren **zwei falsch**: eine 6 in seiner Handschrift
+als 5 gelesen, und Hunderter-Quadrate auf dem Foto verzählt. Für den Bau der
+Übung wurden alle Kästen einzeln herangezoomt (`PIL`, Ausschnitt vergrößern) —
+erst da war zu sehen, dass sogar das Wechseln (11 Einer → 1 Zehner + 1 Einer)
+sitzt. **Ein falscher Hinweis kostet ein Kind Zeit an einer Stelle, die längst
+stimmt** — also entweder heranzoomen oder gar nichts sagen. Zurückgenommen
+wurde es ihm gegenüber ausdrücklich; das gehört dazu und ist keine Schwäche.
+
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
 
 Seit 16.09.2026: `leon/klasse2-deutsch-lesegeschichte.html`, Kachel ganz oben in
