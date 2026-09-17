@@ -122,7 +122,11 @@
     .aktion .rueck{font-size:15px}
     body.spielt{padding-bottom:180px}
   }
-  .tipp-wegweiser{margin-top:12px}
+  /* Der Wegweiser-Knopf sitzt neben "Prüfen": Auf dem Handy lag er sonst unter dem Rand. */
+  .knopfreihe{display:flex;gap:8px;margin-top:8px}
+  .knopfreihe #pruefen, .knopfreihe #weiter{flex:1}
+  .knopfreihe #wegweiser-knopf{flex:0 0 58px;font-size:24px}
+  #wegweiser-klein{margin-top:12px}
 
   .ende{text-align:center}
   .ende .gross{font-size:60px}
@@ -164,7 +168,6 @@
       <div class="karte">
         <div class="bildfragen" id="bildfragen"></div>
         <div class="tasten" id="tasten"></div>
-        <button class="knopf hell weiter tipp-wegweiser" id="wegweiser-knopf" type="button">🧭 Wegweiser zeigen</button>
         <div class="wegweiser verborgen" id="wegweiser-klein">
           <div>↖ −11</div><div class="gerade">↑ −10</div><div>↗ −9</div>
           <div class="gerade">← −1</div><div class="mitte">Zahl</div><div class="gerade">→ +1</div>
@@ -172,8 +175,11 @@
         </div>
         <div class="aktion">
           <div class="rueck" id="rueck"></div>
-          <button class="knopf haupt weiter" id="pruefen" type="button">Prüfen</button>
-          <button class="knopf haupt weiter verborgen" id="weiter" type="button"></button>
+          <div class="knopfreihe">
+            <button class="knopf hell" id="wegweiser-knopf" type="button" aria-label="Wegweiser zeigen">🧭</button>
+            <button class="knopf haupt" id="pruefen" type="button">Prüfen</button>
+            <button class="knopf haupt verborgen" id="weiter" type="button"></button>
+          </div>
         </div>
       </div>
     </div>
@@ -426,7 +432,8 @@
   $("wegweiser-knopf").addEventListener("click", function(){
     var w = $("wegweiser-klein"), zu = w.classList.contains("verborgen");
     w.classList.toggle("verborgen", !zu);
-    this.textContent = zu ? "🧭 Wegweiser ausblenden" : "🧭 Wegweiser zeigen";
+    this.setAttribute("aria-label", zu ? "Wegweiser ausblenden" : "Wegweiser zeigen");
+    if (zu) try { w.scrollIntoView({ block: "center", behavior: "smooth" }); } catch(e){}
   });
 
   /* ---------- Prüfen ---------- */
