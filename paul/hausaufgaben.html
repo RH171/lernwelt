@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Hausaufgaben-Heft</title>
+<!--
+  Pauls Hausaufgaben-Heft (17.09.2026).
+
+  Denny: "Ich würde gern das Ganze bei Paul in der Lernwelt auch verankern,
+  dass er seine Hausaufgaben fotografieren kann und du ihm entsprechende
+  Hilfestellungen gibst zu seinen Fehlern und ihr euch gegenseitig helft,
+  besser zu werden ... auf welche Art auch immer."
+
+  Vorbild ist der Nachmittag davor: Blatt "Ausschnitte aus dem Tausender",
+  dreimal fotografiert. Jedes Mal nur, WO Paul hinschauen soll und WORAUF er
+  achten soll - beim dritten Mal war alles richtig, selbst gefunden.
+
+  Aufbau: Jede Hausaufgabe ist ein Faden in /api/melden mit art "hausaufgabe".
+    - Neue Hausaufgabe: Foto, Bild oder Scan (auch PDF), dazu was Paul braucht.
+    - Im Faden: verbessertes Blatt nachschicken, schreiben ("Das stimmt aber!"),
+      Übungsspiel bauen (spiel-bauen, hausaufgabe:true), eigene Übung bei der
+      Werkstatt bestellen (uebung:true -> Bau-Wächter), "Alles fertig".
+  Die Antworten kommen von der Sofortantwort mit eigenem Hausaufgaben-Auftrag
+  (_antwort.js, HAUSAUFGABE). Regel von Denny: üben, nicht lösen - zeigen WO,
+  nie die Lösung.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<style>
+  :root{
+    --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
+    --paul:#4f46e5; --gruen:#0ea371; --gruen-hell:#e7f8f1; --orange:#b45309;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:14px;
+       padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .huelle{max-width:820px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:4px 0 14px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);
+    border-radius:999px;padding:11px 16px;font:600 15px/1 var(--font);min-height:44px;cursor:pointer}
+  h1{font:800 24px/1.15 var(--rund);margin:0;flex:1;min-width:180px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:12px;
+    box-shadow:0 1px 2px rgba(20,22,40,.04),0 10px 26px rgba(20,22,40,.07)}
+  .unter{color:var(--muted);font-size:15.5px;line-height:1.5;margin:6px 0 0}
+  .knopf{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:16px;min-height:52px;
+    padding:12px 16px;font:800 17px/1.15 var(--rund);cursor:pointer;background:#eef0fb;color:var(--ink);text-align:center}
+  .knopf:active{transform:scale(.98)}
+  .knopf.haupt{background:var(--paul);color:#fff}
+  .knopf.gruen{background:var(--gruen);color:#fff}
+  .knopf[disabled]{opacity:.45;cursor:default}
+  .breit{width:100%}
+
+  .neu-kachel{display:flex;align-items:center;gap:14px;width:100%;border:none;border-radius:22px;padding:18px 20px;cursor:pointer;color:#fff;
+    background:linear-gradient(125deg,#0ea371 0%,#12b0a0 55%,#1b8fd6 100%);box-shadow:0 10px 26px rgba(18,160,140,.3);text-align:left;font:inherit}
+  .neu-kachel .ic{font-size:36px}
+  .neu-kachel b{display:block;font:800 20px/1.2 var(--rund)}
+  .neu-kachel span{font-size:14.5px;opacity:.95}
+
+  .liste{display:grid;gap:9px;margin-top:12px}
+  .eintrag{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:#fff;
+    cursor:pointer;text-align:left;font:inherit;color:var(--ink);min-height:64px;width:100%}
+  .eintrag .ic{font-size:26px}
+  .eintrag .mitte{flex:1;min-width:0}
+  .eintrag b{display:block;font:700 16px/1.3 var(--rund);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .eintrag small{color:var(--muted);font-size:13.5px}
+  .marke{font:800 12.5px/1 var(--rund);border-radius:999px;padding:6px 9px;white-space:nowrap}
+  .marke.neu{background:#fee4e2;color:#b42318}
+  .marke.fertig{background:var(--gruen-hell);color:#067647}
+  .marke.dran{background:#eef0fb;color:var(--paul)}
+
+  .knoepfe{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+  @media (max-width:560px){ .knoepfe{grid-template-columns:1fr} }
+  .aufnahme{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:2px dashed #cfd4ea;background:#fafbff;
+    border-radius:16px;padding:14px;min-height:84px;cursor:pointer;font:700 15px/1.2 var(--rund);color:var(--ink)}
+  .aufnahme .ic{font-size:28px}
+  .seiten{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:12px}
+  .seite{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#f7f8fc;aspect-ratio:3/4}
+  .seite img{width:100%;height:100%;object-fit:cover;display:block}
+  .seite .pdf{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--muted);padding:6px;text-align:center}
+  .seite .weg{position:absolute;top:5px;right:5px;width:44px;height:44px;border:none;border-radius:999px;background:rgba(20,22,40,.6);color:#fff;font-size:18px;cursor:pointer}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:10px 15px;min-height:46px;font:700 15.5px/1.2 var(--rund);cursor:pointer;color:var(--ink)}
+  .chip.an{border-color:var(--paul);background:#eef0fb;color:var(--paul)}
+  textarea{width:100%;min-height:74px;resize:vertical;border:2px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px;
+    font:16px/1.5 var(--font);color:var(--ink);background:#fbfcff}
+  textarea:focus{outline:none;border-color:var(--paul)}
+  .regel{margin-top:12px;background:var(--gruen-hell);border:1px solid #b7ebd4;color:#135c3f;border-radius:14px;padding:10px 13px;font-size:14.5px;line-height:1.5}
+  .fehler{margin-top:10px;background:#fff1f0;color:#a3251c;border:1px solid #ffd5d1;border-radius:12px;padding:10px 12px;font-size:14.5px}
+
+  /* Das Gespräch */
+  .verlauf{display:flex;flex-direction:column;gap:10px}
+  .blase{max-width:88%;border-radius:18px;padding:11px 14px;font-size:16px;line-height:1.55;white-space:pre-line;word-wrap:break-word}
+  .blase.paul{align-self:flex-end;background:#eef0fb;border-bottom-right-radius:6px}
+  .blase.werkstatt{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:6px}
+  .blase .wer{display:block;font:800 12.5px/1 var(--rund);color:var(--muted);margin-bottom:5px}
+  .blase .bilder{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+  .blase .bilder button{border:none;padding:0;background:none;cursor:pointer;border-radius:10px;overflow:hidden;width:92px;height:122px;min-height:44px}
+  .blase .bilder img{width:100%;height:100%;object-fit:cover;display:block}
+  .blase .bilder .pdfkachel{display:flex;align-items:center;justify-content:center;width:92px;height:122px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:13px}
+  .denkt{align-self:flex-start;color:var(--muted);font:700 15px/1.4 var(--rund);padding:6px 4px}
+  .denkt::before{content:"";display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-radius:50%;
+    border:3px solid #d0d5dd;border-top-color:var(--paul);animation:dreh 1s linear infinite}
+  @keyframes dreh{to{transform:rotate(360deg)}}
+  .aktionen{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+  @media (max-width:560px){ .aktionen{grid-template-columns:1fr} }
+  .schreibzeile{display:flex;gap:8px;align-items:flex-end;margin-top:4px}
+  .schreibzeile textarea{min-height:52px;margin-top:0}
+  .grossbild{position:fixed;inset:0;z-index:2147483100;background:rgba(10,12,20,.9);display:flex;align-items:center;justify-content:center;padding:14px}
+  .grossbild img{max-width:100%;max-height:100%;border-radius:8px}
+  .grossbild button{position:absolute;top:14px;right:14px}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <button class="zurueck" id="zurueck" type="button">‹ Lernwelt</button>
+    <h1 id="titel">📚 Mein Hausaufgaben-Heft</h1>
+  </header>
+
+  <!-- 1. Die Liste -->
+  <section id="sicht-liste">
+    <button class="neu-kachel" id="neu" type="button">
+      <span class="ic">📸</span>
+      <span><b>Neue Hausaufgabe</b><span>Fotografieren oder einscannen – ich schaue mit dir drüber.</span></span>
+    </button>
+    <div class="karte" style="margin-top:12px">
+      <div style="font:800 18px/1.2 var(--rund)">Deine Hausaufgaben</div>
+      <p class="unter" id="liste-leer">Hier steht bald deine erste Hausaufgabe.</p>
+      <div class="liste" id="liste"></div>
+    </div>
+  </section>
+
+  <!-- 2. Neue Hausaufgabe -->
+  <section id="sicht-neu" class="verborgen">
+    <div class="karte">
+      <div style="font:800 20px/1.2 var(--rund)" id="aufnahme-titel">1. Dein Blatt</div>
+      <p class="unter" id="aufnahme-unter">Alle Seiten, die dazugehören. Schön gerade und hell fotografieren – dann kann ich jede Zahl lesen.</p>
+      <div class="knoepfe">
+        <button class="aufnahme" id="k-kamera" type="button"><span class="ic">📸</span>Fotografieren</button>
+        <button class="aufnahme" id="k-bild" type="button"><span class="ic">🖼️</span>Bild auswählen</button>
+        <button class="aufnahme" id="k-scan" type="button"><span class="ic">📄</span>Scan oder PDF</button>
+      </div>
+      <input type="file" id="e-kamera" accept="image/*" capture="environment" class="verborgen">
+      <input type="file" id="e-bild" accept="image/*" multiple class="verborgen">
+      <input type="file" id="e-scan" accept="image/*,application/pdf" multiple class="verborgen">
+      <div class="seiten" id="seiten"></div>
+
+      <div id="brauch-teil">
+        <div style="font:800 20px/1.2 var(--rund);margin-top:20px">2. Was brauchst du?</div>
+        <div class="chips" id="brauch">
+          <button class="chip an" type="button" data-brauch="fertig">✅ Fertig – schau drüber</button>
+          <button class="chip" type="button" data-brauch="haengt">🤔 Ich komme nicht weiter</button>
+        </div>
+      </div>
+      <textarea id="text" maxlength="1200" placeholder="Magst du noch etwas dazuschreiben? Zum Beispiel: Die unteren drei Aufgaben verstehe ich nicht."></textarea>
+      <div class="regel">Ich sage dir nie die Lösung – aber ich zeige dir, <b>wo</b> du noch mal hinschauen kannst und <b>worauf</b> du achten sollst. Den Rest schaffst du selbst.</div>
+      <div id="neu-fehler"></div>
+      <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
+        <button class="knopf" id="neu-abbrechen" type="button">Abbrechen</button>
+        <button class="knopf haupt" id="neu-senden" type="button" style="flex:1" disabled>Abschicken</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Eine Hausaufgabe -->
+  <section id="sicht-faden" class="verborgen">
+    <div class="karte">
+      <div class="verlauf" id="verlauf"></div>
+    </div>
+    <div class="karte" id="faden-aktionen">
+      <div class="aktionen">
+        <button class="knopf gruen" id="f-foto" type="button">📸 Verbessertes Blatt schicken</button>
+        <button class="knopf" id="f-spiel" type="button">🎮 Übungsspiel dazu</button>
+        <button class="knopf" id="f-uebung" type="button">🛠️ Eigene Übung bestellen</button>
+        <button class="knopf" id="f-fertig" type="button">🎉 Alles erledigt</button>
+      </div>
+      <div style="font:700 15px/1.3 var(--rund);margin:16px 0 6px">Oder schreib mir – auch wenn du meinst, ich habe mich geirrt:</div>
+      <div class="schreibzeile">
+        <textarea id="f-text" maxlength="1200" placeholder="Zum Beispiel: Aufgabe 3 stimmt aber!"></textarea>
+        <button class="knopf haupt" id="f-senden" type="button">Senden</button>
+      </div>
+      <div id="f-fehler"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var KIND = "paul";
+  var MAX_SEITEN = 4, MAX_PDF = 4 * 1024 * 1024;
+
+  function zeige(welche){
+    ["liste","neu","faden"].forEach(function(s){ $("sicht-" + s).classList.toggle("verborgen", s !== welche); });
+    window.scrollTo(0, 0);
+  }
+  function fehler(ort, text){ $(ort).innerHTML = text ? '<div class="fehler"></div>' : ""; if (text) $(ort).firstChild.textContent = text; }
+  function datum(iso){ try { var d = new Date(iso); return d.toLocaleDateString("de-DE", { weekday:"short", day:"numeric", month:"numeric" }) + ", " + d.toLocaleTimeString("de-DE", { hour:"2-digit", minute:"2-digit" }); } catch(e){ return ""; } }
+
+  $("zurueck").addEventListener("click", function(){
+    if (!$("sicht-liste").classList.contains("verborgen")){
+      var hub = "index.html";
+      try { var s = localStorage.getItem("hub-url"); if (s) hub = s; } catch(e){}
+      location.href = hub; return;
+    }
+    listeLaden(); zeige("liste");
+  });
+
+  /* ---------- Server ---------- */
+  function post(daten){
+    return fetch("/api/melden", { method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
+                                  body: JSON.stringify(Object.assign({ kind: KIND }, daten)) })
+      .then(function(r){ return r.json().then(function(j){ if (r.status === 401) throw new Error("Bitte melde dich in deiner Lernwelt neu an."); return j; }); });
+  }
+  var faeden = [];
+  function listeLaden(){
+    return fetch("/api/melden?meine=1&kind=" + KIND, { credentials:"same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        faeden = ((j && j.meldungen) || []).filter(function(f){ return f.art === "hausaufgabe"; })
+          .sort(function(a, b){ return String(b.zeit).localeCompare(String(a.zeit)); });
+        listeMalen();
+      })
+      .catch(function(){ $("liste-leer").textContent = "Ich konnte deine Hausaufgaben gerade nicht laden. Bist du im Internet?"; });
+  }
+  function listeMalen(){
+    var box = $("liste"); box.innerHTML = "";
+    $("liste-leer").classList.toggle("verborgen", faeden.length > 0);
+    faeden.forEach(function(f){
+      var b = document.createElement("button"); b.type = "button"; b.className = "eintrag";
+      var letzte = (f.verlauf || [])[f.verlauf.length - 1] || {};
+      var marke = f.status === "erledigt" ? ["fertig", "✅ erledigt"] : (f.ungelesenKind ? ["neu", "Neue Antwort"] : ["dran", "läuft"]);
+      b.innerHTML = '<span class="ic">📄</span><span class="mitte"><b></b><small></small></span><span class="marke"></span>';
+      b.querySelector("b").textContent = (f.verlauf[0] && f.verlauf[0].text || "Hausaufgabe").replace(/^Meine Hausaufgabe\.\s*/, "") || "Hausaufgabe";
+      b.querySelector("small").textContent = datum(f.zeit) + " · " + f.verlauf.length + " Nachrichten";
+      b.querySelector(".marke").className = "marke " + marke[0];
+      b.querySelector(".marke").textContent = marke[1];
+      b.addEventListener("click", function(){ fadenOeffnen(f.id); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ---------- Seiten aufnehmen (neu und "verbessert") ---------- */
+  var seiten = [];   // {url, pdf, name}
+  var modus = "neu"; // "neu" | "verbessert"
+  ["kamera","bild","scan"].forEach(function(k){
+    $("k-" + k).addEventListener("click", function(){ $("e-" + k).click(); });
+    $("e-" + k).addEventListener("change", function(ev){ nimm(ev.target.files); ev.target.value = ""; });
+  });
+  function nimm(liste){
+    fehler("neu-fehler", "");
+    Array.prototype.slice.call(liste || []).forEach(function(d){
+      if (seiten.length >= MAX_SEITEN){ fehler("neu-fehler", "Höchstens " + MAX_SEITEN + " Seiten auf einmal."); return; }
+      if (d.type === "application/pdf"){
+        if (d.size > MAX_PDF){ fehler("neu-fehler", "„" + d.name + "“ ist zu groß (höchstens 4 MB). Scanne lieber als Foto oder mit weniger Auflösung."); return; }
+        var l = new FileReader();
+        l.onload = function(){ seiten.push({ url: String(l.result), pdf: true, name: d.name }); seitenMalen(); };
+        l.readAsDataURL(d);
+      } else if (/^image\//.test(d.type)){
+        verkleinern(d);
+      } else fehler("neu-fehler", "„" + d.name + "“ kann ich nicht lesen – nur Fotos oder PDF.");
+    });
+  }
+  // Groß genug, um Handschrift zu lesen, klein genug für den Speicher (900 KB je Bild).
+  function verkleinern(datei){
+    var l = new FileReader();
+    l.onload = function(){
+      var bild = new Image();
+      bild.onload = function(){
+        var f = Math.min(1, 2000 / Math.max(bild.width, bild.height));
+        var c = document.createElement("canvas"); c.width = Math.round(bild.width * f); c.height = Math.round(bild.height * f);
+        c.getContext("2d").drawImage(bild, 0, 0, c.width, c.height);
+        var url = "", q = 0.85;
+        do { url = c.toDataURL("image/jpeg", q); q -= 0.1; } while (url.length > 880 * 1024 && q > 0.3);
+        if (url.length > 880 * 1024){ // notfalls kleiner
+          var c2 = document.createElement("canvas"); c2.width = Math.round(c.width * .7); c2.height = Math.round(c.height * .7);
+          c2.getContext("2d").drawImage(c, 0, 0, c2.width, c2.height); url = c2.toDataURL("image/jpeg", 0.7);
+        }
+        seiten.push({ url: url, pdf: false, name: datei.name || "Foto" }); seitenMalen();
+      };
+      bild.onerror = function(){ fehler("neu-fehler", "Das Bild konnte ich nicht öffnen."); };
+      bild.src = String(l.result);
+    };
+    l.readAsDataURL(datei);
+  }
+  function seitenMalen(){
+    var box = $("seiten"); box.innerHTML = "";
+    seiten.forEach(function(s, i){
+      var d = document.createElement("div"); d.className = "seite";
+      if (s.pdf){ d.innerHTML = '<div class="pdf"><span style="font-size:28px">📄</span><span></span></div>'; d.querySelector(".pdf span:last-child").textContent = s.name.slice(0, 24); }
+      else { var img = document.createElement("img"); img.alt = "Seite " + (i + 1); img.src = s.url; d.appendChild(img); }
+      var w = document.createElement("button"); w.type = "button"; w.className = "weg"; w.textContent = "×"; w.setAttribute("aria-label", "Seite entfernen");
+      w.addEventListener("click", function(){ seiten.splice(i, 1); seitenMalen(); });
+      d.appendChild(w); box.appendChild(d);
+    });
+    $("neu-senden").disabled = seiten.length === 0;
+  }
+
+  var brauch = "fertig";
+  Array.prototype.forEach.call(document.querySelectorAll("[data-brauch]"), function(k){
+    k.addEventListener("click", function(){
+      brauch = k.getAttribute("data-brauch");
+      Array.prototype.forEach.call(document.querySelectorAll("[data-brauch]"), function(x){ x.classList.toggle("an", x === k); });
+    });
+  });
+
+  function neuOeffnen(als){
+    modus = als; seiten = []; seitenMalen(); fehler("neu-fehler", ""); $("text").value = "";
+    $("brauch-teil").classList.toggle("verborgen", als === "verbessert");
+    $("aufnahme-titel").textContent = als === "verbessert" ? "Dein verbessertes Blatt" : "1. Dein Blatt";
+    $("titel").textContent = als === "verbessert" ? "📸 Verbessert" : "📸 Neue Hausaufgabe";
+    $("neu-senden").textContent = als === "verbessert" ? "Nochmal prüfen lassen" : "Abschicken";
+    zeige("neu");
+  }
+  $("neu").addEventListener("click", function(){ neuOeffnen("neu"); });
+  $("neu-abbrechen").addEventListener("click", function(){
+    if (modus === "verbessert" && offen) { fadenOeffnen(offen.id); return; }
+    $("titel").textContent = "📚 Mein Hausaufgaben-Heft"; zeige("liste");
+  });
+
+  var BRAUCH = {
+    fertig: "Ich bin fertig. Schau bitte drüber, wo ich noch mal hinschauen soll.",
+    haengt: "Ich komme nicht weiter. Hilf mir bitte, ohne mir die Lösung zu verraten."
+  };
+
+  $("neu-senden").addEventListener("click", function(){
+    if (!seiten.length) return;
+    var mehr = $("text").value.trim();
+    var urls = seiten.map(function(s){ return s.url; });
+    $("neu-senden").disabled = true;
+    if (modus === "verbessert" && offen){
+      var text = "Hier ist mein verbessertes Blatt. Schau bitte noch mal drüber." + (mehr ? " " + mehr : "");
+      zeigeFadenMitWarten(offen, text, urls);
+      post({ id: offen.id, alsKind: true, text: text, bild: urls[0], bilder: urls.slice(1) })
+        .then(nachAntwort).catch(sendFehler);
+      return;
+    }
+    var neuText = "Meine Hausaufgabe. " + BRAUCH[brauch] + (mehr ? " " + mehr : "");
+    zeigeFadenMitWarten(null, neuText, urls);
+    post({ art: "hausaufgabe", titel: "Meine Hausaufgabe", wo: "Hausaufgaben-Heft",
+           geraet: window.lernstand ? window.lernstand.geraet() : "", text: neuText, bild: urls[0], bilder: urls.slice(1) })
+      .then(nachAntwort).catch(sendFehler);
+  });
+
+  /* ---------- Das Gespräch ---------- */
+  var offen = null, bildSpeicher = {};
+  function fadenOeffnen(id){
+    offen = faeden.filter(function(f){ return f.id === id; })[0] || null;
+    if (!offen){ listeLaden(); zeige("liste"); return; }
+    $("titel").textContent = "📄 Hausaufgabe";
+    verlaufMalen(offen, false);
+    zeige("faden");
+    setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);
+    if (offen.ungelesenKind){ offen.ungelesenKind = false; post({ id: offen.id, gelesen: true }).catch(function(){}); }
+  }
+  function verlaufMalen(f, wartet, zusatz){
+    var box = $("verlauf"); box.innerHTML = "";
+    var eintraege = (f ? f.verlauf : []).slice();
+    if (zusatz) eintraege.push(zusatz);
+    // Folgeseiten ("Seite 2") hängen an der Nachricht davor.
+    var blasen = [];
+    eintraege.forEach(function(n){
+      var istSeite = n.von !== "werkstatt" && /^Seite \d+$/.test(n.text || "") && blasen.length && blasen[blasen.length - 1].von === n.von;
+      if (istSeite){ blasen[blasen.length - 1].bilder.push(n); return; }
+      blasen.push({ von: n.von, text: n.text, zeit: n.zeit, bilder: n.hatBild || (n.lokalUrls && n.lokalUrls.length) ? [n] : [] });
+    });
+    blasen.forEach(function(b){
+      var d = document.createElement("div"); d.className = "blase " + (b.von === "werkstatt" ? "werkstatt" : "paul");
+      var wer = document.createElement("span"); wer.className = "wer";
+      wer.textContent = (b.von === "werkstatt" ? "Werkstatt" : "Du") + " · " + datum(b.zeit);
+      d.appendChild(wer);
+      var t = document.createElement("span"); t.textContent = b.text || ""; d.appendChild(t);
+      if (b.bilder.length){
+        var bb = document.createElement("div"); bb.className = "bilder";
+        b.bilder.forEach(function(n){ bb.appendChild(vorschau(f, n)); });
+        d.appendChild(bb);
+      }
+      box.appendChild(d);
+    });
+    if (wartet){
+      var w = document.createElement("div"); w.className = "denkt"; w.id = "denkt";
+      w.textContent = "Ich schaue mir dein Blatt ganz genau an …"; box.appendChild(w);
+    }
+    $("faden-aktionen").classList.toggle("verborgen", !!wartet || !f);
+    if (f) $("f-fertig").disabled = f.status === "erledigt";
+  }
+  function vorschau(f, n){
+    if (n.lokalUrls){
+      var gruppe = document.createDocumentFragment();
+      n.lokalUrls.forEach(function(u){ gruppe.appendChild(kachel(u)); });
+      return gruppe;
+    }
+    var schl = f.id + ":" + n.nr;
+    var platz = document.createElement("span");
+    function setzen(url){ platz.replaceWith(kachel(url)); }
+    if (bildSpeicher[schl]) { setTimeout(function(){ setzen(bildSpeicher[schl]); }, 0); }
+    else if (n.pdf){ var p = document.createElement("span"); p.className = "pdfkachel"; p.textContent = "📄 PDF"; return p; }
+    else fetch("/api/melden?meine=1&kind=" + KIND + "&bild=" + encodeURIComponent(schl), { credentials:"same-origin" })
+      .then(function(r){ return r.json(); }).then(function(j){ if (j && j.bild){ bildSpeicher[schl] = j.bild; setzen(j.bild); } }).catch(function(){});
+    return platz;
+  }
+  function kachel(url){
+    if (/^data:application\/pdf/.test(url)){ var p = document.createElement("span"); p.className = "pdfkachel"; p.textContent = "📄 PDF"; return p; }
+    var b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "Bild groß ansehen");
+    var img = document.createElement("img"); img.src = url; img.alt = ""; b.appendChild(img);
+    b.addEventListener("click", function(){
+      var g = document.createElement("div"); g.className = "grossbild";
+      var i = document.createElement("img"); i.src = url; g.appendChild(i);
+      var x = document.createElement("button"); x.className = "knopf"; x.type = "button"; x.textContent = "Schließen"; g.appendChild(x);
+      g.addEventListener("click", function(){ g.remove(); });
+      document.body.appendChild(g);
+    });
+    return b;
+  }
+
+  // Das Prüfen dauert - das Modell zählt und rechnet nach. Die Anzeige darf nie einfrieren.
+  var WARTEN = ["Ich schaue mir dein Blatt ganz genau an …", "Ich lese jede Zahl einzeln …", "Ich rechne jede Aufgabe selbst nach …",
+                "Ich suche, was schon richtig ist …", "Gleich hast du meine Antwort …"];
+  var warteUhr = null;
+  function zeigeFadenMitWarten(f, text, urls){
+    $("titel").textContent = "📄 Hausaufgabe";
+    verlaufMalen(f, true, { von: KIND, text: text, zeit: new Date().toISOString(), lokal: true, lokalUrls: urls });
+    zeige("faden");
+    setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);
+    var i = 0; clearInterval(warteUhr);
+    warteUhr = setInterval(function(){ var d = $("denkt"); if (!d){ clearInterval(warteUhr); return; } i++; d.textContent = WARTEN[i % WARTEN.length]; }, 7000);
+  }
+  function nachAntwort(j){
+    clearInterval(warteUhr);
+    $("neu-senden").disabled = false; $("f-senden").disabled = false;
+    if (!j || !j.ok || !j.faden){ sendFehler(new Error((j && j.fehler) || "Das hat nicht geklappt.")); return; }
+    offen = j.faden;
+    offen.ungelesenKind = false;
+    var da = false;
+    faeden = faeden.map(function(f){ if (f.id === offen.id){ da = true; return offen; } return f; });
+    if (!da) faeden.unshift(offen);
+    verlaufMalen(offen, false);
+    setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);
+  }
+  function sendFehler(e){
+    clearInterval(warteUhr);
+    $("neu-senden").disabled = false; $("f-senden").disabled = false;
+    if (offen){ verlaufMalen(offen, false); fehler("f-fehler", (e && e.message) || "Ich konnte nichts senden. Bist du im Internet?"); zeige("faden"); }
+    else { zeige("neu"); fehler("neu-fehler", (e && e.message) || "Ich konnte nichts senden. Bist du im Internet?"); }
+  }
+
+  $("f-foto").addEventListener("click", function(){ neuOeffnen("verbessert"); });
+  $("f-senden").addEventListener("click", function(){
+    var t = $("f-text").value.trim(); if (!t || !offen) return;
+    fehler("f-fehler", ""); $("f-text").value = ""; $("f-senden").disabled = true;
+    zeigeFadenMitWarten(offen, t, null);
+    post({ id: offen.id, alsKind: true, text: t }).then(nachAntwort).catch(sendFehler);
+  });
+  $("f-uebung").addEventListener("click", function(){
+    if (!offen) return;
+    var t = "Bitte bau mir eine eigene Übung zu dieser Hausaufgabe. 🛠️";
+    zeigeFadenMitWarten(offen, t, null);
+    post({ id: offen.id, alsKind: true, text: t, uebung: true }).then(nachAntwort).catch(sendFehler);
+  });
+  $("f-fertig").addEventListener("click", function(){
+    if (!offen) return;
+    $("f-fertig").disabled = true;
+    post({ id: offen.id, status: "passt" }).then(function(j){
+      if (j && j.faden){ offen = j.faden; faeden = faeden.map(function(f){ return f.id === offen.id ? offen : f; }); verlaufMalen(offen, false); }
+    }).catch(function(){ $("f-fertig").disabled = false; });
+  });
+
+  // Übungsspiel: die Seiten dieser Hausaufgabe gehen an die Werkstatt, mit dem,
+  // was im Gespräch noch gehakt hat. Danach startet das Spiel in der Werkstatt.
+  $("f-spiel").addEventListener("click", function(){
+    if (!offen) return;
+    var knopf = $("f-spiel"); knopf.disabled = true; fehler("f-fehler", "");
+    var mitBild = offen.verlauf.filter(function(n){ return n.von !== "werkstatt" && n.hatBild; }).slice(-4);
+    var letzteHilfe = offen.verlauf.filter(function(n){ return n.von === "werkstatt" && n.text; }).slice(-1)[0];
+    var uhrText = ["Ich baue dein Übungsspiel …", "Eigene Aufgaben, nicht die vom Blatt …", "Noch einen Moment …", "Fast fertig …"], k = 0;
+    knopf.textContent = uhrText[0];
+    var uhr = setInterval(function(){ k++; knopf.textContent = uhrText[k % uhrText.length]; }, 8000);
+    Promise.all(mitBild.map(function(n){
+      var schl = offen.id + ":" + n.nr;
+      if (bildSpeicher[schl]) return Promise.resolve(bildSpeicher[schl]);
+      return fetch("/api/melden?meine=1&kind=" + KIND + "&bild=" + encodeURIComponent(schl), { credentials:"same-origin" })
+        .then(function(r){ return r.json(); }).then(function(j){ return (j && j.bild) || ""; });
+    })).then(function(urls){
+      urls = urls.filter(Boolean);
+      if (!urls.length) throw new Error("Ich finde kein Bild in dieser Hausaufgabe.");
+      return fetch("/api/spiel-bauen", { method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
+        body: JSON.stringify({ kind: KIND, quelle: "hausaufgabe", hausaufgabe: true,
+          wunsch: ("Übe gezielt, was bei dieser Hausaufgabe noch nicht gesessen hat." +
+                   (letzteHilfe ? " Die Werkstatt hat mir dazu geschrieben: " + letzteHilfe.text : "")).slice(0, 600),
+          seiten: urls.map(function(u){ return { media_type: u.slice(5, u.indexOf(";")), data: u.split(",")[1] }; }) }) })
+        .then(function(r){ return r.json(); });
+    }).then(function(j){
+      clearInterval(uhr);
+      if (!j || !j.ok || !j.spiel) throw new Error((j && j.fehler) || "Das Spiel kam nicht zurück. Probier es noch einmal.");
+      if (!j.spiel.id) throw new Error("Das Spiel ist gebaut, aber nicht gespeichert worden. Probier es noch einmal.");
+      location.href = "werkstatt.html?spiel=" + encodeURIComponent(j.spiel.id);
+    }).catch(function(e){
+      clearInterval(uhr); knopf.disabled = false; knopf.textContent = "🎮 Übungsspiel dazu";
+      fehler("f-fehler", (e && e.message) || "Ich konnte das Spiel nicht bauen.");
+    });
+  });
+
+  // Direkt eine Hausaufgabe öffnen: hausaufgaben.html?faden=<id>
+  listeLaden().then(function(){
+    var id = ""; try { id = new URL(location.href).searchParams.get("faden") || ""; } catch(e){}
+    if (id) fadenOeffnen(id);
+  });
+
+  // Für die Messung.
+  window.__heft = { seiten: function(){ return seiten; }, nimm: nimm };
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
