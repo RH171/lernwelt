@@ -69,6 +69,14 @@
   .lesekarte:active{transform:scale(.98)}
   /* Die Spiele zum Anfassen: eigene Seiten, sofort da, ohne Bauen. */
   .anfassen h2{font-family:var(--rund);font-size:20px;margin:0 0 4px}
+  .zweikacheln{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
+  @media (max-width:560px){ .zweikacheln{grid-template-columns:1fr} }
+  .minikachel{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);background:#fff;
+    border:2px solid var(--line);border-radius:20px;padding:14px 16px;min-height:78px}
+  .minikachel .bild{font-size:30px;line-height:1}
+  .minikachel b{display:block;font-family:var(--rund);font-size:17px}
+  .minikachel span span{font-size:14px;color:var(--muted);line-height:1.3}
+  .minikachel:active{transform:scale(.98)}
   /* Frisch dazugekommen - faellt auf, ohne zu blinken. */
   .anfass.neu{border-color:var(--leon);background:#f2fdf6;position:relative}
   .anfass.neu::after{content:"NEU";position:absolute;top:6px;right:8px;font-family:var(--font);font-size:10.5px;
@@ -343,6 +351,13 @@
   <section id="sicht-aufnahme">
     <!-- Denny am 16.09.2026: "Leon muss täglich 10 Minuten lesen. Er möchte gerne
          alleine lesen." Jeden Tag eine neue Geschichte, danach 5 Fragen als Lesebeweis. -->
+    <!-- 18.09.2026: eigenes Hausaufgaben-Heft (Denny: "Ja.") und der Stundenplan
+         zum Nachschauen. -->
+    <div class="zweikacheln">
+      <a class="minikachel" href="hausaufgaben.html"><span class="bild">📚</span><span><b>Meine Hausaufgaben</b><span>Foto machen, zusammen schauen</span></span></a>
+      <a class="minikachel" href="stundenplan.html"><span class="bild">📅</span><span><b>Mein Stundenplan</b><span>Was habe ich wann?</span></span></a>
+    </div>
+
     <a class="lesekarte" id="lesen" href="klasse2-deutsch-lesegeschichte.html">
       <span class="bild">&#128214;</span>
       <span class="text"><b>Meine Lesegeschichte</b><span id="lesen-stand">Deine Geschichte für heute wartet auf dich!</span></span>

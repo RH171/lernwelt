@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Stundenplan</title>
+<!--
+  Pauls Stundenplan, Klasse 4bG, Schuljahr 2026/27 (Grundschule Seeackerstraße).
+  Denny am 18.09.2026: "Du kannst es ja als Button hinterlegen. Dann ist er für
+  sie immer ersichtlich!"
+
+  Abgetippt aus dem Schul-Stundenplan; das Original liegt als stundenplan.jpg
+  daneben und ist über den Knopf unten erreichbar. Der heutige Tag ist
+  hervorgehoben - das ist KEIN Kalender und keine Erinnerung (Denny: Termine
+  gehören in den Inhalt), sondern nur der Plan zum Nachschauen.
+
+  X heißt: Deutsch, Mathematik oder HSU - das sucht die Lehrerin selbst aus
+  (Denny, 18.09.2026). Darum steht hier nichts Genaueres.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;
+    --leon:#4f46e5; --leon-hell:#eef0fb; --leon-dunkel:#3730a3;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:150px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .plan{width:100%;border-collapse:collapse;font-family:var(--rund)}
+  .plan th,.plan td{border:1px solid var(--line);padding:9px 6px;text-align:center;font-size:clamp(13px,2.3vw,17px)}
+  .plan th{background:#f7f9fc;font-weight:800}
+  .plan td.zeit{background:#f7f9fc;font-weight:800;white-space:nowrap;font-size:clamp(12px,2vw,15px)}
+  .plan td.zeit small{display:block;color:var(--muted);font-weight:600;font-size:11.5px}
+  .plan .heute{background:var(--leon-hell)}
+  .plan th.heute{background:var(--leon);color:#fff}
+  .plan .pause td{background:#fbfcfe;color:var(--muted);font-weight:700}
+  .plan td.x{color:var(--leon-dunkel);font-weight:800}
+  .legende{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:6px}
+  .legende div{background:#f7f9fc;border-radius:12px;padding:9px 11px;font-size:14.5px;line-height:1.4}
+  .legende b{font-family:var(--rund)}
+  .unter{color:var(--muted);font-size:15px;line-height:1.5;margin:8px 0 0}
+  .knopf{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:16px;
+    min-height:52px;padding:12px 18px;font:800 17px/1.1 var(--rund);cursor:pointer;background:var(--leon);color:#fff;
+    text-decoration:none;margin-top:12px}
+  .bild{width:100%;border-radius:14px;margin-top:12px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/paul/">‹ Pauls Lernwelt</a>
+    <h1>📅 Mein Stundenplan</h1>
+  </header>
+
+  <div class="karte">
+    <table class="plan" id="plan" aria-label="Stundenplan Klasse 4bG"></table>
+    <p class="unter" id="heute-text"></p>
+  </div>
+
+  <div class="karte">
+    <div style="font:800 18px/1.2 var(--rund)">Was heißt was?</div>
+    <div class="legende">
+      <div><b>X</b> – Deutsch, Mathe oder HSU. Das sucht deine Lehrerin aus.</div>
+      <div><b>WÜL</b> – Hausaufgabenzeit in der Schule</div>
+      <div><b>Rel./Eth</b> – Religion oder Ethik</div>
+      <div><b>WG</b> – Werken und Gestalten</div>
+      <div><b>Sp</b> – Sport</div>
+      <div><b>Lernzeitinsel</b> – Lernzeit in der Mittagspause</div>
+      <div><b>WÜL digital</b> – Hausaufgabenzeit am Tablet</div>
+      <div><b>AG</b> – Arbeitsgemeinschaft</div>
+    </div>
+    <p class="unter">Klasse 4bG, Schuljahr 2026/27 · Grundschule Seeackerstraße, Fürth</p>
+    <img class="bild" src="stundenplan.jpg" alt="Der Stundenplan, wie ihn die Schule ausgegeben hat">
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var TAGE = ["Mo", "Di", "Mi", "Do", "Fr"];
+  // Stunde: [Nummer, Zeit, Mo, Di, Mi, Do, Fr] - "" heißt frei.
+  var STUNDEN = [
+    ["1", "8:00 – 8:45",   "X", "X", "X", "X", "X"],
+    ["2", "8:45 – 9:30",   "X", "X", "X", "X", "X"],
+    ["Pause", "9:30 – 9:50"],
+    ["3", "9:50 – 10:35",  "X", "X", "Englisch", "Rel./Eth", "X"],
+    ["4", "10:35 – 11:20", "WÜL", "WÜL", "WÜL", "X", "X"],
+    ["Pause", "11:20 – 11:30"],
+    ["5", "11:30 – 12:15", "Sport (14-tägig)", "Rel./Eth", "Schwimmen", "WÜL", "Musik"],
+    ["6", "12:15 – 13:00", "WG (14-tägig)", "Rel./Eth", "Schwimmen", "", ""],
+    ["Mittag", "13:00 – 13:15"],
+    ["7", "13:15 – 14:00", "", "Lernzeitinsel", "", "Lernzeitinsel", ""],
+    ["8", "14:00 – 14:45", "WÜL", "WÜL", "Kunst", "AG", ""],
+    ["9", "14:45 – 15:30", "X", "WÜL digital", "Kunst", "AG", ""]
+  ];
+
+  var heute = new Date().getDay() - 1;         // 0 = Montag
+  var tabelle = document.getElementById("plan");
+  var kopf = "<tr><th></th>" + TAGE.map(function(t, i){
+    return '<th class="' + (i === heute ? "heute" : "") + '">' + t + "</th>";
+  }).join("") + "</tr>";
+  var zeilen = STUNDEN.map(function(s){
+    if (s[0] === "Pause" || s[0] === "Mittag"){
+      return '<tr class="pause"><td class="zeit">' + s[0] + '<small>' + s[1] + '</small></td><td colspan="5">' + s[0] + '</td></tr>';
+    }
+    return '<tr><td class="zeit">' + s[0] + '.<small>' + s[1] + "</small></td>" +
+      TAGE.map(function(_, i){
+        var f = s[i + 2] || "";
+        return '<td class="' + (i === heute ? "heute " : "") + (f === "X" ? "x" : "") + '">' + (f || "–") + "</td>";
+      }).join("") + "</tr>";
+  }).join("");
+  tabelle.innerHTML = kopf + zeilen;
+
+  var t = document.getElementById("heute-text");
+  if (heute >= 0 && heute <= 4){
+    var faecher = STUNDEN.filter(function(s){ return s[0] !== "Pause" && s[0] !== "Mittag" && s[heute + 2]; })
+                         .map(function(s){ return s[heute + 2]; });
+    t.textContent = "Heute ist " + ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"][heute] +
+      ". Du hast " + faecher.length + " Stunden.";
+  } else {
+    t.textContent = "Heute ist Wochenende – keine Schule!";
+  }
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+</body>
+</html>

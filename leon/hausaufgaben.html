@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mein Hausaufgaben-Heft</title>
+<title>Meine Hausaufgaben</title>
 <!--
-  Pauls Hausaufgaben-Heft (17.09.2026).
+  Leons Hausaufgaben-Heft (18.09.2026) - dieselbe Idee wie bei Paul, nur fuer
+  einen Leseanfaenger: groessere Schrift, kuerzere Saetze, und jede Antwort der
+  Werkstatt laesst sich vorlesen (Leon liest noch nicht sicher).
+  Denny auf die Frage, ob Leon auch eins bekommen soll: "Ja." 
 
   Denny: "Ich würde gern das Ganze bei Paul in der Lernwelt auch verankern,
   dass er seine Hausaufgaben fotografieren kann und du ihm entsprechende
@@ -30,7 +33,7 @@
 <style>
   :root{
     --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
-    --paul:#4f46e5; --gruen:#0ea371; --gruen-hell:#e7f8f1; --orange:#b45309;
+    --paul:#10b981; --gruen:#0ea371; --gruen-hell:#e7f8f1; --orange:#b45309;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
   }
@@ -98,11 +101,13 @@
     font:16px/1.5 var(--font);color:var(--ink);background:#fbfcff}
   textarea:focus{outline:none;border-color:var(--paul)}
   .regel{margin-top:12px;background:var(--gruen-hell);border:1px solid #b7ebd4;color:#135c3f;border-radius:14px;padding:10px 13px;font-size:14.5px;line-height:1.5}
+  .hoerknopf{display:inline-flex;align-items:center;margin-top:10px;border:2px solid var(--line);background:#fff;
+    border-radius:999px;padding:8px 14px;min-height:44px;font:700 15px/1 var(--rund);color:var(--paul);cursor:pointer}
   .fehler{margin-top:10px;background:#fff1f0;color:#a3251c;border:1px solid #ffd5d1;border-radius:12px;padding:10px 12px;font-size:14.5px}
 
   /* Das Gespräch */
   .verlauf{display:flex;flex-direction:column;gap:10px}
-  .blase{max-width:88%;border-radius:18px;padding:11px 14px;font-size:16px;line-height:1.55;white-space:pre-line;word-wrap:break-word}
+  .blase{max-width:92%;border-radius:18px;padding:12px 15px;font-size:18px;line-height:1.6;white-space:pre-line;word-wrap:break-word}
   .blase.paul{align-self:flex-end;background:#eef0fb;border-bottom-right-radius:6px}
   .blase.werkstatt{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:6px}
   .blase .wer{display:block;font:800 12.5px/1 var(--rund);color:var(--muted);margin-bottom:5px}
@@ -127,18 +132,18 @@
 <div class="huelle">
   <header>
     <button class="zurueck" id="zurueck" type="button">‹ Lernwelt</button>
-    <h1 id="titel">📚 Mein Hausaufgaben-Heft</h1>
+    <h1 id="titel">📚 Meine Hausaufgaben</h1>
   </header>
 
   <!-- 1. Die Liste -->
   <section id="sicht-liste">
     <button class="neu-kachel" id="neu" type="button">
       <span class="ic">📸</span>
-      <span><b>Neue Hausaufgabe</b><span>Fotografieren oder einscannen – ich schaue mit dir drüber.</span></span>
+      <span><b>Neue Hausaufgabe</b><span>Mach ein Foto. Wir schauen zusammen drüber.</span></span>
     </button>
     <div class="karte" style="margin-top:12px">
       <div style="font:800 18px/1.2 var(--rund)">Deine Hausaufgaben</div>
-      <p class="unter" id="liste-leer">Hier steht bald deine erste Hausaufgabe.</p>
+      <p class="unter" id="liste-leer">Hier kommt bald deine erste Hausaufgabe.</p>
       <div class="chips verborgen" id="filter"></div>
       <div class="liste" id="liste"></div>
     </div>
@@ -154,7 +159,7 @@
 
     <div class="karte">
       <div style="font:800 20px/1.2 var(--rund)" id="aufnahme-titel">2. Dein Blatt</div>
-      <p class="unter" id="aufnahme-unter">Alle Seiten, die dazugehören. Schön gerade und hell fotografieren – dann kann ich jede Zahl lesen.</p>
+      <p class="unter" id="aufnahme-unter">Leg das Blatt gerade hin. Mach es hell. Dann kann ich alles lesen.</p>
       <div class="knoepfe">
         <button class="aufnahme" id="k-kamera" type="button"><span class="ic">📸</span>Fotografieren</button>
         <button class="aufnahme" id="k-bild" type="button"><span class="ic">🖼️</span>Bild auswählen</button>
@@ -172,8 +177,8 @@
           <button class="chip" type="button" data-brauch="haengt">🤔 Ich komme nicht weiter</button>
         </div>
       </div>
-      <textarea id="text" maxlength="1200" placeholder="Magst du noch etwas dazuschreiben? Zum Beispiel: Die unteren drei Aufgaben verstehe ich nicht."></textarea>
-      <div class="regel">Ich sage dir nie die Lösung – aber ich zeige dir, <b>wo</b> du noch mal hinschauen kannst und <b>worauf</b> du achten sollst. Den Rest schaffst du selbst.</div>
+      <textarea id="text" maxlength="1200" placeholder="Willst du mir etwas sagen? Zum Beispiel: Aufgabe 3 ist schwer."></textarea>
+      <div class="regel">Ich sage dir nie die Lösung. Ich zeige dir nur, <b>wo</b> du noch mal schauen sollst. Den Rest schaffst du allein!</div>
       <div id="neu-fehler"></div>
       <div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap">
         <button class="knopf" id="neu-abbrechen" type="button">Abbrechen</button>
@@ -189,14 +194,14 @@
     </div>
     <div class="karte" id="faden-aktionen">
       <div class="aktionen">
-        <button class="knopf gruen" id="f-foto" type="button">📸 Verbessertes Blatt schicken</button>
+        <button class="knopf gruen" id="f-foto" type="button">📸 Neues Foto schicken</button>
         <button class="knopf" id="f-spiel" type="button">🎮 Übungsspiel dazu</button>
-        <button class="knopf" id="f-uebung" type="button">🛠️ Eigene Übung bestellen</button>
-        <button class="knopf" id="f-fertig" type="button">🎉 Alles erledigt</button>
+        <button class="knopf" id="f-uebung" type="button">🛠️ Übung wünschen</button>
+        <button class="knopf" id="f-fertig" type="button">🎉 Fertig!</button>
       </div>
-      <div style="font:700 15px/1.3 var(--rund);margin:16px 0 6px" id="f-label">Oder schreib mir – auch wenn du meinst, ich habe mich geirrt:</div>
+      <div style="font:700 15px/1.3 var(--rund);margin:16px 0 6px" id="f-label">Du kannst mir auch schreiben:</div>
       <div class="schreibzeile">
-        <textarea id="f-text" maxlength="1200" placeholder="Zum Beispiel: Aufgabe 3 stimmt aber!"></textarea>
+        <textarea id="f-text" maxlength="1200" placeholder="Zum Beispiel: Das stimmt aber!"></textarea>
         <button class="knopf haupt" id="f-senden" type="button">Senden</button>
       </div>
       <div id="f-fehler"></div>
@@ -208,7 +213,7 @@
 (function(){
   "use strict";
   var $ = function(id){ return document.getElementById(id); };
-  var KIND = "paul";
+  var KIND = "leon";
   var MAX_SEITEN = 4, MAX_PDF = 4 * 1024 * 1024;
 
   function zeige(welche){
@@ -351,12 +356,14 @@
   // X steht dort für Deutsch, Mathematik, HSU, Kunst und Musik; dazu Englisch
   // (Mi), Religion/Ethik, Werken und Gestalten. Sport und Schwimmen haben keine
   // Hausaufgaben und fehlen deshalb.
+  // Leons Fächer laut Stundenplan 2bG: X steht für Deutsch, Mathe, HSU, Kunst
+  // und Musik; dazu Religion/Ethik, Werken und Gestalten. Sport hat keine
+  // Hausaufgaben.
   var FAECHER = [
     { k: "deutsch", n: "Deutsch", ic: "📘" }, { k: "mathe", n: "Mathe", ic: "🔢" },
-    { k: "hsu", n: "HSU", ic: "🌍" }, { k: "englisch", n: "Englisch", ic: "🇬🇧" },
-    { k: "religion", n: "Reli/Ethik", ic: "🙏" }, { k: "kunst", n: "Kunst", ic: "🎨" },
-    { k: "musik", n: "Musik", ic: "🎵" }, { k: "wg", n: "Werken/Gestalten", ic: "🪚" },
-    { k: "anderes", n: "Anderes", ic: "✏️" }
+    { k: "hsu", n: "HSU", ic: "🌍" }, { k: "religion", n: "Reli/Ethik", ic: "🙏" },
+    { k: "kunst", n: "Kunst", ic: "🎨" }, { k: "musik", n: "Musik", ic: "🎵" },
+    { k: "wg", n: "Werken", ic: "🪚" }, { k: "anderes", n: "Etwas anderes", ic: "✏️" }
   ];
   var fach = "";
   (function(){
@@ -401,7 +408,7 @@
   $("neu").addEventListener("click", function(){ neuOeffnen("neu"); });
   $("neu-abbrechen").addEventListener("click", function(){
     if (modus === "verbessert" && offen) { fadenOeffnen(offen.id); return; }
-    $("titel").textContent = "📚 Mein Hausaufgaben-Heft"; zeige("liste");
+    $("titel").textContent = "📚 Meine Hausaufgaben"; zeige("liste");
   });
 
   var BRAUCH = {
@@ -456,6 +463,13 @@
       wer.textContent = (b.von === "werkstatt" ? "Werkstatt" : "Du") + " · " + datum(b.zeit);
       d.appendChild(wer);
       var t = document.createElement("span"); t.textContent = b.text || ""; d.appendChild(t);
+      // Leon liest noch nicht sicher - darum liest die Werkstatt ihm vor.
+      if (b.von === "werkstatt" && b.text && kannSprechen){
+        var hoer = document.createElement("button");
+        hoer.type = "button"; hoer.className = "hoerknopf"; hoer.textContent = "🔊 Vorlesen";
+        hoer.addEventListener("click", function(){ sprich(b.text); });
+        d.appendChild(hoer);
+      }
       if (b.bilder.length){
         var bb = document.createElement("div"); bb.className = "bilder";
         b.bilder.forEach(function(n){ bb.appendChild(vorschau(f, n)); });
@@ -465,17 +479,39 @@
     });
     if (wartet){
       var w = document.createElement("div"); w.className = "denkt"; w.id = "denkt";
-      w.textContent = "Ich schaue mir dein Blatt ganz genau an …"; box.appendChild(w);
+      w.textContent = "Ich schaue mir dein Blatt genau an …"; box.appendChild(w);
     }
     $("faden-aktionen").classList.toggle("verborgen", !!wartet || !f);
     // Hat der Lehrer zuletzt eine Lernfrage gestellt, ist das Schreibfeld die Antwort.
     var letzteW = f ? f.verlauf.filter(function(n){ return n.von === "werkstatt"; }).slice(-1)[0] : null;
     var frage = !!(letzteW && /❓\s*Lernfrage/.test(letzteW.text || "") && letzteW === f.verlauf[f.verlauf.length - 1]);
-    $("f-label").textContent = frage ? "❓ Deine Antwort auf die Lernfrage:" : "Oder schreib mir – auch wenn du meinst, ich habe mich geirrt:";
-    $("f-text").placeholder = frage ? "Schreib hier deine Antwort …" : "Zum Beispiel: Aufgabe 3 stimmt aber!";
+    $("f-label").textContent = frage ? "❓ Deine Antwort auf die Lernfrage:" : "Du kannst mir auch schreiben:";
+    $("f-text").placeholder = frage ? "Schreib hier deine Antwort …" : "Zum Beispiel: Das stimmt aber!";
     $("f-text").style.borderColor = frage ? "var(--paul)" : "";
     if (f) $("f-fertig").disabled = f.status === "erledigt";
   }
+  /* Vorlesen: ruhig und langsam, mit der besten deutschen Stimme des Geräts. */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function stimme(){
+    var de = ((window.speechSynthesis && speechSynthesis.getVoices()) || []).filter(function(v){ return /^de/i.test(v.lang || ""); });
+    var lieb = ["anna", "helena", "petra", "markus", "google", "premium", "enhanced"];
+    de.sort(function(a, b){
+      function rang(v){ var n = (v.name || "").toLowerCase(); for (var i = 0; i < lieb.length; i++) if (n.indexOf(lieb[i]) >= 0) return i; return lieb.length; }
+      return rang(a) - rang(b);
+    });
+    return de[0] || null;
+  }
+  function sprich(text){
+    if (!kannSprechen) return;
+    try {
+      speechSynthesis.cancel(); speechSynthesis.resume();
+      var u = new SpeechSynthesisUtterance(String(text));
+      u.lang = "de-DE"; u.rate = .82; u.pitch = 1.05;
+      var st = stimme(); if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+
   function vorschau(f, n){
     if (n.lokalUrls){
       var gruppe = document.createDocumentFragment();
@@ -506,7 +542,7 @@
   }
 
   // Das Prüfen dauert - das Modell zählt und rechnet nach. Die Anzeige darf nie einfrieren.
-  var WARTEN = ["Ich schaue mir dein Blatt ganz genau an …", "Ich lese jede Zahl einzeln …", "Ich rechne jede Aufgabe selbst nach …",
+  var WARTEN = ["Ich schaue mir dein Blatt genau an …", "Ich lese jede Zahl einzeln …", "Ich rechne jede Aufgabe selbst nach …",
                 "Ich suche, was schon richtig ist …", "Gleich hast du meine Antwort …"];
   var warteUhr = null;
   function zeigeFadenMitWarten(f, text, urls){
