@@ -713,9 +713,10 @@
     if (!p && offen.length){ gewaehlt = []; schlitzeMalen(); brettMalen(); p = offen[0]; }
     if (!p){ melden("Hier ist gerade nichts mehr zu bauen. Tipp auf 🏁 Fertig.", "hm"); return; }
     var teil = Math.random() < .5 ? p.a : p.b;
+    Array.prototype.forEach.call($("teile").querySelectorAll(".leuchtet"), function(x){ x.classList.remove("leuchtet"); });
     var knopf = $("teile").querySelector('[data-teil="' + teil + '"]');
     if (knopf){
-      knopf.classList.remove("leuchtet"); void knopf.offsetWidth; knopf.classList.add("leuchtet");
+      void knopf.offsetWidth; knopf.classList.add("leuchtet");
       try { knopf.scrollIntoView({ behavior:"smooth", block:"nearest" }); } catch(e){}
     }
     melden("Mit „" + teil + "“ geht etwas. Such das zweite Teil!", "");
