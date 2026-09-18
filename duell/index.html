@@ -302,10 +302,32 @@
     besteStimme = stimmeWaehlen();
     speechSynthesis.onvoiceschanged = function(){ besteStimme = stimmeWaehlen(); };
   }
+  /* Warum nichts zu hören war (18.09.2026): Safari auf iPad und iPhone lässt
+     Sprachausgabe nur zu, wenn sie einmal aus einer echten Berührung heraus
+     gestartet wurde. Die Frage kommt aber über die Leitung, ohne Berührung -
+     also blieb es still. Darum wird die Stimme beim ersten Tippen irgendwo auf
+     der Seite einmal lautlos geweckt; danach darf sie von selbst sprechen. */
+  var stimmeFrei = false;
+  function stimmeWecken(){
+    if (stimmeFrei || !kannSprechen) return;
+    try {
+      var u = new SpeechSynthesisUtterance(" ");
+      u.volume = 0; u.lang = "de-DE";
+      speechSynthesis.resume();
+      speechSynthesis.speak(u);
+      stimmeFrei = true;
+      if (!besteStimme) besteStimme = stimmeWaehlen();
+    } catch(e){}
+  }
+  ["pointerdown", "touchend", "click", "keydown"].forEach(function(e){
+    document.addEventListener(e, stimmeWecken, true);
+  });
+
   function sprich(t){
     if (!tonAn || !kannSprechen || document.hidden || !t) return;
     try {
       speechSynthesis.cancel();
+      speechSynthesis.resume();     // iOS haelt die Stimme sonst manchmal an
       var u = new SpeechSynthesisUtterance(t);
       u.lang = "de-DE";
       // Ruhig und warm: etwas langsamer als normal, die Stimme minimal heller.
@@ -438,7 +460,7 @@
 
   /* ---------- Verbindung ---------- */
   function hallo(){
-    ws.send(JSON.stringify({ t: "hallo", id: ich, name: profil.name, avatar: profil.avatar, alter: profil.alter, klasse: profil.klasse, gesehen: lese("duell-gesehen", []) }));
+    ws.send(JSON.stringify({ t: "hallo", id: ich, name: profil.name, avatar: profil.avatar, alter: profil.alter, klasse: profil.klasse, gesehen: lese("duell-gesehen", []), falsch: lese("duell-falsch", []) }));
   }
   function verbinden(){
     clearTimeout(wiederVerbinden);
@@ -549,7 +571,7 @@
     zeige("frage");
     var kat = KATEGORIEN[m.kat] || ["Wissen", "#6366f1"];
     $("frage-nr").textContent = "Frage " + m.n + " von " + m.von;
-    $("frage-kat").textContent = kat[0]; $("frage-kat").style.background = kat[1];
+    $("frage-kat").textContent = (m.wiederholung ? "🔁 " : "") + kat[0]; $("frage-kat").style.background = kat[1];
     $("frage-bild").textContent = m.bild;
     $("frage-text").textContent = m.text;
     $("aufloesung").innerHTML = "";
@@ -563,6 +585,7 @@
       box.appendChild(b);
     });
     farbenSetzen(box, m.antworten);
+    if (tonAn && kannSprechen && !stimmeFrei) $("banner").textContent = "🔊 Tipp einmal auf den Bildschirm – dann lese ich vor.";
     reiheMalen(m.beantwortet);
     // Erst die Frage vorlesen, die Antworten kommen, wenn sie zu sehen sind.
     sprich(m.sprechen);
@@ -620,10 +643,18 @@
     });
     $("zeit").style.transform = "scaleX(0)";
     var plus = {};
-    m.antworten.forEach(function(a){ if (a.richtig) plus[a.id] = a.id === m.erster ? 4 : 3; });
+    // Seit 18.09.2026 gibt es fuer jede richtige Antwort gleich viele Punkte.
+    m.antworten.forEach(function(a){ if (a.richtig) plus[a.id] = 3; });
     Object.keys(m.punkte).forEach(function(id){ var s = spielerVon(id); s.punkte = m.punkte[id]; });
     reiheMalen(m.antworten.map(function(a){ return a.id; }), plus);
+    // Die eigene Vokabelbox: falsch beantwortet heißt, die Frage kommt wieder.
     var meine = m.antworten.filter(function(a){ return a.id === ich; })[0];
+    if (m.frageKey){
+      var vokabeln = lese("duell-falsch", []);
+      var drin = vokabeln.indexOf(m.frageKey);
+      if (meine && meine.richtig){ if (drin >= 0){ vokabeln.splice(drin, 1); schreibe("duell-falsch", vokabeln); } }
+      else if (drin < 0){ vokabeln.push(m.frageKey); schreibe("duell-falsch", vokabeln.slice(-150)); }
+    }
     var h = "";
     if (m.erster){
       var e = spielerVon(m.erster), ea = m.antworten.filter(function(a){ return a.id === m.erster; })[0];

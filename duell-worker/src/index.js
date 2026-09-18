@@ -110,7 +110,11 @@ export class DuellRaum {
     this.s.spieler[id] = {
       name: sauber(m.name, 14) || "Spieler", avatar: sauber(m.avatar, 8) || "🙂",
       klasse, alter, punkte: alt.punkte || 0,
-      gesehen: Array.isArray(m.gesehen) ? m.gesehen.filter((x) => typeof x === "string").slice(-400) : (alt.gesehen || [])
+      gesehen: Array.isArray(m.gesehen) ? m.gesehen.filter((x) => typeof x === "string").slice(-400) : (alt.gesehen || []),
+      // Fragen, die dieses Kind zuletzt falsch hatte - wie eine Vokabelbox.
+      // Denny am 18.09.2026: "immer da, wo falsche Antworten waren, diese Frage
+      // wiederholen ... wie Vokabeltraining, nur mit offenen Fragen für Kinder."
+      falsch: Array.isArray(m.falsch) ? m.falsch.filter((x) => typeof x === "string").slice(-150) : (alt.falsch || [])
     };
     if (!this.s.host || !this.s.spieler[this.s.host]) this.s.host = id;
     ws.serializeAttachment({ id });
@@ -151,28 +155,36 @@ export class DuellRaum {
     const gesehen = new Set();
     Object.values(this.s.spieler).forEach((sp) => (sp.gesehen || []).forEach((g) => gesehen.add(g)));
 
+    // Was jemand in der Runde zuletzt falsch hatte, kommt bevorzugt noch einmal.
+    const falsch = new Set();
+    Object.values(this.s.spieler).forEach((sp) => (sp.falsch || []).forEach((k) => falsch.add(k)));
+
     const passend = FRAGEN.map((f, i) => ({ f, i })).filter(({ f }) => f[0] <= stufe);
     // Ungesehene zuerst, dann der Rest - beides gemischt
     const pool = mische(passend.filter(({ i }) => !gesehen.has("f" + i))).concat(mische(passend.filter(({ i }) => gesehen.has("f" + i))));
     const n = this.s.anzahl;
     const rechnenAnzahl = Math.round(n * 0.3);
     const wissen = [];
+    // Erst die Wiederholungen: hoechstens ein Drittel der Wissensfragen.
+    const wiederholen = mische(passend.filter(({ i }) => falsch.has("f" + i)))
+      .slice(0, Math.max(1, Math.round((n - rechnenAnzahl) / 3)));
+    wiederholen.forEach((e) => { e.wiederholung = true; wissen.push(e); });
     let letzteKat = "";
     // Abwechslung: nicht zweimal hintereinander dieselbe Kategorie
     for (let durchgang = 0; durchgang < 2 && wissen.length < n - rechnenAnzahl; durchgang++) {
       for (const eintrag of pool) {
         if (wissen.length >= n - rechnenAnzahl) break;
-        if (wissen.includes(eintrag)) continue;
+        if (wissen.includes(eintrag) || wiederholen.includes(eintrag)) continue;
         if (durchgang === 0 && eintrag.f[1] === letzteKat) continue;
         wissen.push(eintrag); letzteKat = eintrag.f[1];
       }
     }
-    const liste = wissen.map(({ f, i }) => ({ f, key: "f" + i }));
+    const liste = mische(wissen).map(({ f, i, wiederholung }) => ({ f, key: "f" + i, wiederholung: !!wiederholung }));
     for (let r = 0; r < rechnenAnzahl; r++) liste.splice(Math.floor(Math.random() * (liste.length + 1)), 0, { f: rechenFrage(stufe), key: null });
 
-    const fragen = liste.slice(0, n).map(({ f, key }) => {
+    const fragen = liste.slice(0, n).map(({ f, key, wiederholung }) => {
       const antworten = mische(f[4].slice());
-      return { key, kat: f[1], bild: f[2], text: f[3], sprechen: f[6] ? f[6] + "?" : f[3], antworten, richtig: antworten.indexOf(f[4][0]), info: f[5],
+      return { key, wiederholung: !!wiederholung, kat: f[1], bild: f[2], text: f[3], sprechen: f[6] ? f[6] + "?" : f[3], antworten, richtig: antworten.indexOf(f[4][0]), info: f[5],
                // Fragen aus dem Klexikon (CC BY-SA 4.0) nennen ihren Artikel.
                quelle: f[7] ? "Klexikon: " + f[7] : "" };
     });
@@ -211,7 +223,7 @@ export class DuellRaum {
 
   frageBild() {
     const r = this.s.runde, f = r.fragen[r.n], q = r.frage;
-    return { t: "frage", n: r.n + 1, von: r.fragen.length, kat: f.kat, bild: f.bild, text: f.text, sprechen: f.sprechen,
+    return { t: "frage", n: r.n + 1, von: r.fragen.length, kat: f.kat, bild: f.bild, text: f.text, sprechen: f.sprechen, wiederholung: !!f.wiederholung,
       antworten: f.antworten, freiIn: Math.max(0, q.freiAb - Date.now()), zeit: Math.max(0, q.bis - Date.now()),
       antwortenIn: Math.max(0, (q.antwortenAb || q.freiAb) - Date.now()),
       beantwortet: Object.keys(q.antworten), ersterDa: !!q.ersterRichtig };
