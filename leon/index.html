@@ -57,12 +57,6 @@
   .erfinden .text span{font-size:15px;opacity:.9;line-height:1.35}
   .erfinden .pfeil{font-size:34px;opacity:.8}
   .erfinden:active{transform:scale(.98)}
-  /* Trainingstage (18.09.2026). Denny: Leon spielt F-Jugend beim ASC Boxdorf,
-     Training mittwochs und freitags 17 bis 18.30 Uhr. Der Hinweis erinnert ihn
-     daran, vorher zu lesen - ohne Druck, nur als Merkzettel. */
-  .training{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:14px 16px;border-radius:18px;
-    background:#eefbf2;border:2px solid #b7ebd4;color:#0f5132;font:700 16px/1.35 var(--rund)}
-  .training .bild{font-size:26px;line-height:1}
   /* Die Lesegeschichte des Tages (16.09.2026) - ganz oben, weil sie jeden Tag dran ist. */
   .lesekarte{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff;margin:0 0 16px;padding:18px 20px;border-radius:22px;min-height:84px;
     background:linear-gradient(135deg,#f59e0b,#ea580c);box-shadow:0 10px 24px rgba(234,88,12,.28)}
@@ -345,8 +339,6 @@
   <section id="sicht-aufnahme">
     <!-- Denny am 16.09.2026: "Leon muss täglich 10 Minuten lesen. Er möchte gerne
          alleine lesen." Jeden Tag eine neue Geschichte, danach 5 Fragen als Lesebeweis. -->
-    <div class="training verborgen" id="training"><span class="bild">⚽</span><span id="training-text"></span></div>
-
     <a class="lesekarte" id="lesen" href="klasse2-deutsch-lesegeschichte.html">
       <span class="bild">&#128214;</span>
       <span class="text"><b>Meine Lesegeschichte</b><span id="lesen-stand">Deine Geschichte für heute wartet auf dich!</span></span>
@@ -583,26 +575,6 @@
   function melde(text, art){
     $("meldung").innerHTML = text ? '<div class="hinweis '+(art||"warn")+'">'+text+'</div>' : "";
   }
-
-  /* ---------- Training beim ASC Boxdorf ---------- */
-  // Mittwoch und Freitag, 17 bis 18.30 Uhr. Der Text richtet sich nach der Uhrzeit:
-  // vorher erinnern, waehrenddessen Daumen druecken, danach loben.
-  function trainingHinweis(jetzt){
-    var tag = jetzt.getDay();                 // 3 = Mittwoch, 5 = Freitag
-    if (tag !== 3 && tag !== 5) return "";
-    var min = jetzt.getHours() * 60 + jetzt.getMinutes();
-    if (min < 16 * 60)  return "Heute ist Training beim ASC Boxdorf, um 17 Uhr. Lies am besten vorher!";
-    if (min < 17 * 60)  return "Gleich geht's zum Training. Hast du alles eingepackt?";
-    if (min < 18 * 60 + 30) return "Viel Spaß im Training! Danach ist noch Zeit zum Lesen.";
-    return "Training geschafft! Wenn du magst, liest du jetzt noch deine Geschichte.";
-  }
-  (function(){
-    var text = trainingHinweis(new Date());
-    if (!text) return;
-    $("training-text").textContent = text;
-    $("training").classList.remove("verborgen");
-  })();
-  window.__training = trainingHinweis;
 
   /* ---------- Lesegeschichte: heute schon gelesen? ---------- */
   (function(){
