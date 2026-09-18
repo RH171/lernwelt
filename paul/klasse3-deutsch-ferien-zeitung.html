@@ -546,8 +546,13 @@
     if (versuch === 0){
       try {
         window.lernstand && window.lernstand.antwort(ziel.richtig, ressort.merkmal, ziel.gegeben, s.r);
-        var daneben = ops.filter(function(o){ return o.t !== "gleich" && !(o.k >= zielBereich(s).von && o.k < zielBereich(s).bis); })[0];
-        window.lernstand && window.lernstand.antwort(stimmtGanz, "satz genau abschreiben",
+        // Gemessen wird hier NUR der Rest des Satzes. Wer das gesuchte Wort
+        // nicht wusste, sonst aber alles genau abgeschrieben hat, hat beim
+        // Abschreiben nichts falsch gemacht - das darf nicht in derselben
+        // Kerbe landen wie das Lernwort.
+        var b = zielBereich(s);
+        var daneben = ops.filter(function(o){ return o.t !== "gleich" && !(o.k >= b.von && o.k < b.bis); })[0];
+        window.lernstand && window.lernstand.antwort(!daneben, "satz genau abschreiben",
           daneben ? (daneben.w || "") : "", daneben ? (daneben.s || "") : "");
       } catch(e){}
     }
