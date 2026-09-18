@@ -403,27 +403,31 @@
      (? + 7 = 16, ? − 5 = 11) und die Aufgabenfamilie. Genau dort standen auf
      seinem Blatt die beiden roten Korrekturen der Lehrerin. */
   function machePlatzhalterPlus(){
-    var b = zufall(2, 9), l = zufall(3, 11), ziel = l + b;
+    var b, l, ziel;
+    // b und die Loesung duerfen nicht gleich sein, sonst steht die Loesung im
+    // Hinweis ("? + 7 = 14" -> "14 − 7").
+    do { b = zufall(2, 9); l = zufall(3, 11); } while (l === b);
+    ziel = l + b;
     return { art:"platzhalter", a:b, ziel:ziel, loesung:l, merkmal:"platzhalter plus",
              frage:"? + " + b + " = " + ziel,
-             tipp:"Dreh die Aufgabe um: " + ziel + " − " + b + " sagt dir, was fehlt." };
+             tipp:"Dreh sie um: " + ziel + " − " + b + " sagt es dir." };
   }
   function machePlatzhalterMinus(){
     var b = zufall(2, 9), rest = zufall(2, 11), a = rest + b;
     return { art:"platzhalter", a:b, ziel:rest, loesung:a, merkmal:"platzhalter minus",
              frage:"? − " + b + " = " + rest,
-             tipp:"Dreh die Aufgabe um: " + rest + " + " + b + " sagt dir, wo du starten musst." };
+             tipp:"Dreh sie um: " + rest + " + " + b + " sagt es dir." };
   }
   function macheFamilie(){
     var a = zufall(3, 9), b = zufall(3, 9), c = a + b;
     if (Math.random() < .5){
       return { art:"familie", loesung:a, merkmal:"tauschaufgabe", nurWahl:true,
                frage:a + " + " + b + " = " + c + ".  Und " + b + " + ? = " + c,
-               tipp:"Bei der Tauschaufgabe stehen dieselben Zahlen, nur andersherum." };
+               tipp:"Tauschaufgabe: dieselben Zahlen, nur andersherum." };
     }
     return { art:"familie", loesung:b, merkmal:"umkehraufgabe", nurWahl:true,
              frage:a + " + " + b + " = " + c + ".  Und " + c + " − " + a + " = ?",
-             tipp:"Die Umkehraufgabe nimmt wieder weg, was du dazugetan hast." };
+             tipp:"Umkehraufgabe: Sie nimmt wieder weg." };
   }
 
   var BAUER = {
