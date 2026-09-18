@@ -8,6 +8,13 @@ window.LEON_THEMEN = [
     wunsch:"Übe Plus- und Minusaufgaben im Zahlenraum bis 20. Das ist Wiederholung aus der ersten Klasse und soll sicher sitzen." },
   { fach:"mathe", schluessel:"zahlen100", stich:["zahlenraum bis 100","zahlen bis 100"], bild:"\u{1F4AF}", titel:"Zahlen bis 100", jetzt:true,
     wunsch:"Übe den Zahlenraum bis 100: Zahlen ordnen und vergleichen, Nachbarzahlen, Zehner und Einer unterscheiden." },
+  /* 18.09.2026, nach Leons Blatt „Fit für die 2. Klasse?" und „Wir wiederholen
+     die Tausch- und die Umkehraufgaben": genau daran ist er gerade dran. */
+  { fach:"mathe", schluessel:"familien", stich:["tauschaufgabe","umkehraufgabe","aufgabenfamilie"], bild:"\u{1F340}", titel:"Tausch- und Umkehraufgaben", jetzt:true,
+    wunsch:"Übe Aufgabenfamilien im Zahlenraum bis 20: zu 6 + 8 = 14 gehören auch 8 + 6 = 14, 14 − 8 = 6 und 14 − 6 = 8. Tauschaufgabe und Umkehraufgabe erkennen und selbst bilden, auch mit dem Kleeblatt-Bild (drei Zahlen, vier Aufgaben)." },
+  { fach:"mathe", schluessel:"platzhalter", stich:["platzhalter","ergänzen","fehlende zahl"], bild:"\u2753", titel:"Welche Zahl fehlt?", jetzt:true,
+    wunsch:"Übe Platzhalteraufgaben im Zahlenraum bis 20: ? + 7 = 16, ? − 5 = 11, 8 + ? = 13. Zeige, dass die Umkehraufgabe hilft, die fehlende Zahl zu finden." },
+
   { fach:"mathe", schluessel:"plus100", stich:["bis 100"], bild:"\u2796", titel:"Plus und Minus bis 100",
     wunsch:"Übe Plus- und Minusaufgaben im Zahlenraum bis 100, auch mit Zehnerübergang." },
   { fach:"mathe", schluessel:"doppelt", stich:["verdoppeln","halbieren"], bild:"\u{1F91D}", titel:"Verdoppeln und Halbieren",
