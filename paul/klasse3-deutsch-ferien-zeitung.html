@@ -306,6 +306,24 @@
   ressortsMalen();
   $("alle").addEventListener("click", function(){ reihe = RESSORTS.map(function(r){ return r.id; }); ressortStarten(); });
 
+  /* ---------- Auswaehlen oder selbst schreiben ----------
+     Die Einstellung bleibt gemerkt - Paul soll sie nicht vor jedem Artikel
+     neu suchen muessen. Sie liegt im selben Speicherplatz wie die Bestwerte. */
+  var selbst = !!lesen().selbst;
+  function modusMalen(){
+    var k = $("modus");
+    k.classList.toggle("an", selbst);
+    k.setAttribute("aria-pressed", selbst ? "true" : "false");
+    $("modus-stand").textContent = selbst ? "an" : "aus";
+  }
+  function modusSetzen(an){
+    selbst = !!an;
+    var d = lesen(); d.selbst = selbst; schreiben(d);
+    modusMalen();
+  }
+  modusMalen();
+  $("modus").addEventListener("click", function(){ modusSetzen(!selbst); });
+
   /* ---------- Ablauf ---------- */
   var reihe = [], ressort = null, pos = 0, versuch = 0, ergebnis = [], gesamt = 0, gesperrt = false;
 
@@ -342,6 +360,7 @@
       '<button type="button" class="nebenknopf" id="modus-wechsel">' +
       (selbst ? "☝️ Lieber auswählen" : "✍️ Lieber selbst schreiben") + '</button>';
   }
+  function wechselWeg(){ var w = $("modus-wechsel"); if (w && w.parentNode) w.parentNode.removeChild(w); }
   function wechselBinden(){
     var w = $("modus-wechsel");
     if (w) w.addEventListener("click", function(){ modusSetzen(!selbst); aufgabeZeigen(); });
@@ -512,6 +531,7 @@
     if (stimmtGanz){ selbstGeschafft(s, versuch === 0); return; }
 
     versuch++;
+    wechselWeg();
     if (versuch === 1){
       var was = ziel.richtig
         ? '<b>Das gesuchte Wort sitzt!</b> Beim Abschreiben ist noch etwas verrutscht – schau auf die rot markierte Stelle.'
@@ -537,7 +557,7 @@
   }
 
   function selbstGeschafft(s, ersterVersuch){
-    gesperrt = true;
+    gesperrt = true; wechselWeg();
     ergebnis[pos] = ersterVersuch ? "g" : "t";
     if (ersterVersuch) gesamt++;
     $("selbst-text").disabled = true;
@@ -558,7 +578,7 @@
     if (gesperrt) return;
     var s = ressort.saetze[pos], o = b.getAttribute("data-o");
     if (o === s.r){
-      gesperrt = true;
+      gesperrt = true; wechselWeg();
       var ersterVersuch = versuch === 0;
       ergebnis[pos] = ersterVersuch ? "g" : "t";
       if (ersterVersuch) gesamt++;
@@ -579,6 +599,7 @@
       return;
     }
     versuch++;
+    wechselWeg();
     b.classList.add("falsch"); b.disabled = true;
     if (versuch === 1){
       try { window.lernstand && window.lernstand.antwort(false, ressort.merkmal, o, s.r); } catch(e){}
@@ -645,9 +666,15 @@
   }
 
   window.__zeitung = { RESSORTS: RESSORTS, starte: function(id){ reihe = [id]; ressortStarten(); },
-    zustand: function(){ return { ressort: ressort && ressort.id, pos: pos }; },
+    zustand: function(){ return { ressort: ressort && ressort.id, pos: pos, selbst: selbst, versuch: versuch, gesperrt: gesperrt }; },
     tippe: function(o){ var b = Array.prototype.filter.call(document.querySelectorAll(".option"), function(x){ return x.getAttribute("data-o") === o; })[0]; if (b) waehlen(b); return !!b; },
-    weiter: function(){ var w = $("weiter"); if (w) w.click(); } };
+    weiter: function(){ var w = $("weiter"); if (w) w.click(); },
+    modus: function(an){ modusSetzen(an); if (ressort && !$("sicht-spiel").classList.contains("verborgen")) aufgabeZeigen(); return selbst; },
+    satz: function(i){ var s = ressort.saetze[i == null ? pos : i]; return s.v + s.r + s.n; },
+    schreibe: function(txt){ var f = $("selbst-text"); if (!f) return false; f.value = txt; return true; },
+    pruefe: function(){ var b = $("selbst-ab"); if (!b || b.classList.contains("verborgen")) return false; b.click(); return true; },
+    hilfe: function(){ var b = $("selbst-hilfe"); if (b) b.click(); return !!b; },
+    markiert: function(){ return Array.prototype.map.call(document.querySelectorAll(".geprueft > span"), function(x){ return (x.className || "") + ":" + x.textContent; }); } };
 })();
 </script>
 <script src="/lernstand.js" defer></script>
