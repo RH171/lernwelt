@@ -77,6 +77,7 @@
   /* Frage */
   .kopfzeile{display:flex;align-items:center;justify-content:space-between;color:#fff;font:700 15px/1 var(--font);margin:0 2px 8px}
   .quelle{display:block;margin-top:6px;font-size:12.5px;opacity:.7}
+  .schnitt{display:block;font:600 12.5px/1.2 var(--rund);opacity:.7}
   .kat{border-radius:999px;padding:6px 12px;color:#fff;font:800 14px/1 var(--rund)}
   .zeitbalken{height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin-bottom:12px}
   .zeitbalken i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#fbbf24,#f97316);transform-origin:left;transition:transform .2s linear}
@@ -85,12 +86,19 @@
   .fragekarte .text{font:800 clamp(22px,4.6vw,32px)/1.3 var(--rund);margin:6px 0 4px}
   .lesen{color:var(--muted);font-weight:700;font-size:15px;min-height:22px}
   .antworten{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  /* touch-action: manipulation - sonst macht ein zweiter schneller Tipp auf dem
+     iPad einen Zoom statt einer Antwort (Denny, 18.09.2026). */
   .antwort{border:none;border-radius:18px;min-height:78px;padding:12px;cursor:pointer;color:#fff;font:800 clamp(18px,3.6vw,24px)/1.2 var(--rund);
+    touch-action:manipulation;user-select:none;-webkit-user-select:none;
     box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .1s,opacity .2s,filter .2s;overflow-wrap:anywhere}
   .antwort:nth-child(1){background:#e11d48} .antwort:nth-child(2){background:#2563eb} .antwort:nth-child(3){background:#ca8a04} .antwort:nth-child(4){background:#16a34a}
   .antwort:active{transform:translateY(3px)}
   .antwort[disabled]{cursor:default}
   .antworten.gesperrt .antwort{filter:saturate(.35) brightness(1.1);opacity:.6}
+  /* Solange die Frage gelesen wird, sind die Antworten noch verdeckt - sonst
+     lesen die Grossen schon mit und tippen in der Sekunde der Freigabe. */
+  .antworten.verdeckt .antwort{color:transparent;background:#cbd5e1!important;box-shadow:none}
+  .antworten.verdeckt .antwort::after{content:"…";color:#64748b;font-size:28px}
   .antwort.gewaehlt{outline:5px solid #fff;outline-offset:-5px;filter:none!important;opacity:1!important}
   .antwort.richtig{filter:none!important;opacity:1!important;outline:6px solid #86efac;outline-offset:-6px;transform:scale(1.03)}
   .antwort.falsch{opacity:.35!important}
@@ -268,11 +276,42 @@
 
   /* ---------- Vorlesen ---------- */
   var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  /* Die Stimme: Leon kann die Fragen noch nicht schnell lesen, darum liest das
+     Duell vor (Denny, 18.09.2026). Gesucht wird die freundlichste deutsche
+     Stimme, die das Geraet hat - auf dem iPad sind das Anna/Helena/Petra, am
+     Mac die "Premium"- oder "Enhanced"-Stimmen, auf Android die von Google. */
+  var STIMM_RANG = ["anna", "helena", "petra", "markus", "yannick", "google", "premium", "enhanced", "siri"];
+  var besteStimme = null;
+  function stimmeWaehlen(){
+    var alle = (window.speechSynthesis && speechSynthesis.getVoices ? speechSynthesis.getVoices() : []) || [];
+    var de = alle.filter(function(v){ return /^de/i.test(v.lang || ""); });
+    if (!de.length) return null;
+    de.sort(function(a, b){
+      function rang(v){
+        var n = (v.name || "").toLowerCase();
+        for (var i = 0; i < STIMM_RANG.length; i++) if (n.indexOf(STIMM_RANG[i]) >= 0) return i;
+        return STIMM_RANG.length;
+      }
+      return rang(a) - rang(b);
+    });
+    return de[0];
+  }
+  if (typeof speechSynthesis !== "undefined"){
+    besteStimme = stimmeWaehlen();
+    speechSynthesis.onvoiceschanged = function(){ besteStimme = stimmeWaehlen(); };
+  }
   function sprich(t){
     if (!tonAn || !kannSprechen || document.hidden || !t) return;
-    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = .95;
-      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0]; if (st) u.voice = st;
-      speechSynthesis.speak(u); } catch(e){}
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = "de-DE";
+      // Ruhig und warm: etwas langsamer als normal, die Stimme minimal heller.
+      u.rate = .88; u.pitch = 1.05;
+      if (!besteStimme) besteStimme = stimmeWaehlen();
+      if (besteStimme) u.voice = besteStimme;
+      speechSynthesis.speak(u);
+    } catch(e){}
   }
   function tonMalen(){ $("ton").textContent = tonAn ? "🔊" : "🔇"; }
   if (!kannSprechen) $("ton").classList.add("verborgen");
@@ -471,6 +510,7 @@
     }).join("");
   }
 
+  var antwortenUhr = null;
   function frageZeigen(m){
     frage = m; meineWahl = null;
     zeige("frage");
@@ -481,14 +521,22 @@
     $("frage-text").textContent = m.text;
     $("aufloesung").innerHTML = "";
     $("banner").textContent = "";
-    var box = $("antworten"); box.innerHTML = ""; box.classList.add("gesperrt");
+    var box = $("antworten"); box.innerHTML = ""; box.classList.add("gesperrt"); box.classList.add("verdeckt");
     m.antworten.forEach(function(a, i){
       var b = document.createElement("button"); b.className = "antwort"; b.textContent = a; b.disabled = true;
-      b.addEventListener("click", function(){ waehlen(i); });
+      // pointerdown statt click: Maus und Finger zaehlen damit gleich schnell.
+      if (window.PointerEvent) b.addEventListener("pointerdown", function(e){ e.preventDefault(); waehlen(i); });
+      else b.addEventListener("click", function(){ waehlen(i); });
       box.appendChild(b);
     });
     reiheMalen(m.beantwortet);
-    sprich(m.sprechen + " " + m.antworten.join(", ") + "?");
+    // Erst die Frage vorlesen, die Antworten kommen, wenn sie zu sehen sind.
+    sprich(m.sprechen);
+    clearTimeout(antwortenUhr);
+    antwortenUhr = setTimeout(function(){
+      box.classList.remove("verdeckt");
+      sprich(m.antworten.join(", ") + "?");
+    }, Math.max(0, m.antwortenIn == null ? 0 : m.antwortenIn));
     var freiUm = Date.now() + m.freiIn, bisUm = freiUm + (m.zeit - m.freiIn), dauer = Math.max(1, m.zeit - m.freiIn);
     clearInterval(uhrTakt);
     function tick(){
@@ -510,6 +558,7 @@
 
   function waehlen(i){
     if (meineWahl !== null || !frage) return;
+    if ($("antworten").classList.contains("gesperrt")) return;
     meineWahl = i;
     senden({ t: "antwort", n: frage.n, wahl: i });
     var box = $("antworten");
@@ -537,7 +586,7 @@
     });
     $("zeit").style.transform = "scaleX(0)";
     var plus = {};
-    m.antworten.forEach(function(a){ if (a.richtig) plus[a.id] = a.id === m.erster ? 3 : 1; });
+    m.antworten.forEach(function(a){ if (a.richtig) plus[a.id] = a.id === m.erster ? 4 : 3; });
     Object.keys(m.punkte).forEach(function(id){ var s = spielerVon(id); s.punkte = m.punkte[id]; });
     reiheMalen(m.antworten.map(function(a){ return a.id; }), plus);
     var meine = m.antworten.filter(function(a){ return a.id === ich; })[0];
@@ -572,7 +621,8 @@
     $("podest").innerHTML = t.map(function(s, i){
       if (s.punkte !== vorher){ platz = i; vorher = s.punkte; }
       return '<div class="platz' + (platz === 0 ? " eins" : "") + '"><span class="med">' + (med[platz] || (platz + 1) + ".") + '</span><span class="av">' + esc(s.avatar) +
-        '</span><span class="nm">' + esc(s.name) + (s.id === ich ? " (du)" : "") + '</span><span>' + s.punkte + ' P.</span></div>';
+        '</span><span class="nm">' + esc(s.name) + (s.id === ich ? " (du)" : "") + '</span><span>' + s.punkte + ' P.' +
+        (s.schnitt ? '<span class="schnitt">⌀ ' + String(s.schnitt).replace(".", ",") + ' s</span>' : "") + '</span></div>';
     }).join("");
     endeKnoepfe();
     if (t.length) sprich((t[0].punkte > 0 ? t[0].name + " gewinnt! " : "") + "Toll gespielt, alle zusammen!");
