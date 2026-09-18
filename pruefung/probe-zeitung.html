@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Ferien-Zeitung</title>
+<!--
+  Pauls zweites Spiel zum Blatt "Meine Ferien" (15.09.2026). Denny: "Paul fand
+  den Ferien-Reporter richtig gut ... hätte Paul hierzu gerne ein weiteres
+  Spiel, damit er lernt und morgen noch besser sein kann."
+
+  Der Reporter hilft beim Inhalt. Dieses Spiel übt das Handwerk, das hinter
+  dem Blatt steckt (LehrplanPLUS Deutsch 3/4, "Texte planen und schreiben",
+  "Sprache untersuchen"):
+    1. Zeitmaschine   - Erzählen im Präteritum (fuhr, schwamm, aß)
+    2. Dann-Detektiv  - abwechslungsreiche Satzanfänge statt "Dann ... Dann ..."
+    3. Wörter-Tuning  - treffende Wörter statt schön, gut, toll
+    4. Das Lustigste  - Steigerung, gebraucht bei "Das ___, das mir passiert ist"
+                        und "Mein schönster Tag"
+
+  Paul ist Chefredakteur der Ferien-Zeitung: Oben steht ein langweiliger
+  Artikel, jede richtige Antwort verbessert ihn sichtbar. Jede Aufgabe hat
+  genau EINE passende Antwort - Wörter mit mehreren guten Möglichkeiten sind
+  bewusst nicht drin, sonst würde richtiges Deutsch als falsch gewertet.
+
+  Nichts wird für Paul geschrieben, es gibt keine KI. Kein Zeitdruck,
+  ein zweiter Versuch pro Aufgabe; gezählt wird der erste.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#f5f1e8; --papier:#fffdf7; --ink:#1c1917; --muted:#78716c; --line:#e7e0d2;
+    --farbe:#b91c1c; --gut:#15803d; --hell:#fef3c7;
+    --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:14px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:980px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .knopf-klein{display:inline-flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font:700 15px/1 var(--font);color:var(--ink);cursor:pointer;min-height:44px}
+  h1{font:800 22px/1.1 var(--rund);margin:0;flex:1}
+  .punkte{font:800 16px/1 var(--rund);background:#fff;border:1px solid var(--line);border-radius:999px;padding:12px 14px;white-space:nowrap}
+  .karte{background:#fff;border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 12px 30px rgba(68,40,10,.1);margin-bottom:12px}
+
+  /* Start */
+  .start{text-align:center}
+  .start h2{font:800 28px/1.2 var(--serif);margin:6px 0}
+  .start p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 auto 14px;max-width:600px}
+  .ressorts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;text-align:left}
+  @media (max-width:560px){ .ressorts{grid-template-columns:1fr} }
+  .ressort{border:2px solid var(--line);background:var(--papier);border-radius:16px;padding:14px;cursor:pointer;display:flex;gap:12px;align-items:center;min-height:84px;color:var(--ink)}
+  .ressort:active{transform:scale(.98)}
+  .ressort .ic{font-size:34px;flex:none}
+  .ressort b{font:800 18px/1.2 var(--rund);display:block}
+  .ressort span{color:var(--muted);font-size:14px;line-height:1.35}
+  .ressort .stand{display:block;color:var(--gut);font-weight:800;margin-top:3px}
+  .gross-knopf{display:block;width:100%;border:none;border-radius:16px;background:var(--farbe);color:#fff;font:800 19px/1.2 var(--rund);padding:16px;min-height:56px;cursor:pointer;margin-top:12px;box-shadow:0 4px 0 #7f1d1d}
+  .gross-knopf:active{transform:translateY(2px);box-shadow:0 2px 0 #7f1d1d}
+  .gross-knopf.grau{background:#f5f5f4;color:var(--ink);box-shadow:0 3px 0 #d6d3d1}
+
+  /* Spiel */
+  .spielfeld{display:grid;grid-template-columns:1fr;gap:12px}
+  @media (min-width:900px) and (orientation:landscape){ .spielfeld{grid-template-columns:1.05fr 1fr;align-items:start} }
+  .zeitung{background:var(--papier);border:1px solid var(--line);border-radius:6px;padding:16px 18px;box-shadow:0 10px 26px rgba(68,40,10,.12)}
+  .zeitung .kopf{border-bottom:3px double var(--ink);padding-bottom:6px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .zeitung .name{font:900 26px/1 var(--serif);letter-spacing:.02em}
+  .zeitung .datum{font:600 12px/1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .zeitung h3{font:800 20px/1.25 var(--serif);margin:0 0 8px}
+  .artikel{font:400 18px/1.65 var(--serif)}
+  .satz{border-radius:4px;padding:1px 2px;transition:background .4s}
+  .satz.jetzt{background:var(--hell);box-shadow:0 0 0 2px #fcd34d}
+  .satz .alt{text-decoration:underline wavy #dc2626;text-underline-offset:4px;font-weight:700}
+  .satz .neu{color:var(--gut);font-weight:700}
+  .satz.frisch{animation:frisch 1s}
+  @keyframes frisch{0%{background:#bbf7d0}100%{background:transparent}}
+
+  .aufgabe .titel{font:700 13px/1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px;display:flex;justify-content:space-between}
+  .aufgabe .frage{font:800 20px/1.35 var(--rund);margin:0 0 12px}
+  .optionen{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .option{border:2px solid var(--line);background:#fff;border-radius:14px;min-height:60px;padding:10px;font:700 19px/1.2 var(--rund);color:var(--ink);cursor:pointer}
+  .option:active{transform:scale(.97)}
+  .option.falsch{border-color:#dc2626;background:#fef2f2;opacity:.75}
+  .option.richtig{border-color:var(--gut);background:#f0fdf4}
+  .option[disabled]{cursor:default}
+
+  /* ---- Selbst schreiben ----------------------------------------------
+     Paul am 18.09.2026 (Meldung cbevcr5f4p) aus den Ideen angehakt:
+     "Schreib den Satz selbst - statt nur auszuwaehlen, tippst du den Satz
+     einmal ganz allein neu." Und auf die Rueckfrage, was bei einem
+     Vertipper passieren soll - zeigen oder selbst suchen lassen: "Zeigen".
+     Darum wird die Stelle markiert, nicht nur "schau nochmal drueber". */
+  .modus-knopf{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:2px solid var(--line);background:var(--papier);border-radius:16px;padding:12px 14px;min-height:64px;font:800 17px/1.25 var(--rund);color:var(--ink);cursor:pointer;margin-top:12px}
+  .modus-knopf.an{border-color:var(--farbe);background:#fef2f2}
+  .modus-knopf:active{transform:scale(.99)}
+  .modus-knopf .ic{font-size:30px;flex:none}
+  .modus-knopf .mk{display:block;font:400 14px/1.4 var(--font);color:var(--muted);margin-top:3px}
+  .modus-knopf .an-aus{flex:none;font:800 13px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:9px 11px;background:#e7e5e4;color:#57534e}
+  .modus-knopf.an .an-aus{background:var(--farbe);color:#fff}
+
+  .schreib-hinweis{font:600 15.5px/1.45 var(--font);color:var(--muted);margin:-4px 0 10px}
+  .schreiben textarea{display:block;width:100%;min-height:92px;border:2px solid var(--line);border-radius:14px;padding:12px;font:400 19px/1.55 var(--serif);color:var(--ink);background:#fff;resize:vertical;-webkit-appearance:none}
+  .schreiben textarea:focus{outline:none;border-color:var(--farbe)}
+  .nebenknopf{display:inline-flex;align-items:center;gap:7px;margin:10px 8px 0 0;border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 15px;font:700 15px/1 var(--font);color:#57534e;cursor:pointer;min-height:44px}
+  .nebenknopf:active{transform:scale(.97)}
+  .wortschatz{margin-top:10px;background:var(--hell);border-radius:12px;padding:11px 13px;font-size:16.5px;line-height:1.55}
+  .wortschatz b{font-family:var(--rund)}
+  .wortschatz .w{display:inline-block;background:#fff;border:1px solid #fcd34d;border-radius:8px;padding:3px 8px;margin:4px 6px 0 0;font-weight:700}
+  .geprueft{font:400 19px/1.8 var(--serif);margin:8px 0 2px}
+  .geprueft .w{border-radius:4px;padding:1px 3px}
+  .geprueft .w.schief{background:#fee2e2;box-shadow:0 0 0 2px #dc2626;font-weight:700}
+  .geprueft .w.zuviel{background:#fee2e2;color:#991b1b;text-decoration:line-through}
+  .geprueft .luecke{display:inline-block;width:28px;border-bottom:3px solid #dc2626;vertical-align:baseline}
+
+  /* Beim Schreiben steht die Tastatur offen - auf Pauls iPhone bleiben dann
+     360 px Hoehe. Dann tritt alles zurueck, damit "Pruefen" erreichbar ist. */
+  @media (max-height:520px){
+    header{margin-bottom:8px}
+    h1{font-size:18px}
+    .karte{padding:11px;margin-bottom:8px}
+    .aufgabe .titel{margin-bottom:4px}
+    .aufgabe .frage{font-size:17px;line-height:1.3;margin-bottom:8px}
+    /* Der Hinweis tritt zurueck, solange die Tastatur offen steht - er ist
+       wieder da, sobald sie zugeht. Gelesen hat Paul ihn dann schon. */
+    .schreib-hinweis{display:none}
+    .schreiben textarea{min-height:54px;font-size:17px;line-height:1.4;padding:9px}
+    /* Zeitungskopf und Schlagzeile sind beim Tippen nur Ballast - der SATZ,
+       den er abschreibt, bleibt stehen. */
+    .zeitung{padding:9px 11px}
+    .zeitung .kopf, .zeitung h3{display:none}
+    .artikel{font-size:16px;line-height:1.45}
+    .gross-knopf{padding:12px;min-height:50px;font-size:17px;margin-top:9px}
+    .nebenknopf{margin-top:8px}
+    .punktreihe{margin-top:7px}
+    .geprueft{font-size:17px;line-height:1.6}
+  }
+  .rueck{margin-top:12px;border-radius:14px;padding:12px 14px;font-size:16.5px;line-height:1.5}
+  .rueck.gut{background:#f0fdf4} .rueck.nochmal{background:#fff7ed} .rueck.loesung{background:#fef2f2}
+  .rueck b{font-family:var(--rund)}
+  .regel{display:block;margin-top:6px;color:#57534e;font-size:15px}
+  .punktreihe{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+  .punktreihe i{width:13px;height:13px;border-radius:50%;background:#d6d3d1;display:block}
+  .punktreihe i.g{background:var(--gut)} .punktreihe i.t{background:#f59e0b} .punktreihe i.n{outline:3px solid var(--farbe);outline-offset:1px}
+
+  /* Ende */
+  .ende h2{font:800 26px/1.2 var(--serif);margin:0 0 6px;text-align:center}
+  .ende .lob{text-align:center;color:var(--muted);font-size:17px;line-height:1.5;margin:0 0 12px}
+  .merkzettel{background:var(--hell);border-radius:14px;padding:12px 16px;margin:12px 0;font-size:16px;line-height:1.55}
+  .merkzettel b{font-family:var(--rund)}
+  /* Pauls iPhone: der ganze Artikel schob die Antworten unter den Rand. Im Spiel
+     steht dort nur der Satz, um den es geht - ganz lesen kann er ihn am Ende. */
+  @media (max-width:600px){
+    #artikel .satz:not(.jetzt):not(.frisch){display:none}
+    #artikel .satz{display:block}
+    .zeitung{padding:12px 14px}
+    .zeitung .name{font-size:20px}
+    .zeitung h3{font-size:17px;margin-bottom:4px}
+    .aufgabe .frage{font-size:18px}
+    .option{min-height:54px;font-size:18px}
+  }
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <button class="knopf-klein" id="zurueck">‹ Lernwelt</button>
+    <h1>📰 Die Ferien-Zeitung</h1>
+    <span class="punkte verborgen" id="punkte"></span>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:56px">📰✏️</div>
+    <h2>Du bist Chefredakteur!</h2>
+    <p>Unsere Ferien-Zeitung hat vier Artikel – aber die sind ganz schön langweilig geschrieben. Verbessere sie Satz für Satz. Genau das hilft dir auch bei deinem Ferien-Blatt!</p>
+    <div class="ressorts" id="ressorts"></div>
+    <button class="gross-knopf" id="alle">Alle vier Artikel nacheinander</button>
+    <button class="modus-knopf" type="button" id="modus" aria-pressed="false">
+      <span class="ic">✍️</span>
+      <span style="flex:1">Schreib den Satz selbst
+        <span class="mk">Statt nur auszuwählen tippst du den ganzen Satz einmal allein neu – so wie später auf deinem echten Ferien-Blatt. Vertippst du dich, zeige ich dir die Stelle.</span>
+      </span>
+      <span class="an-aus" id="modus-stand">aus</span>
+    </button>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="spielfeld">
+      <div class="zeitung">
+        <div class="kopf"><span class="name">Ferien-Zeitung</span><span class="datum" id="ressort-name"></span></div>
+        <h3 id="artikel-titel"></h3>
+        <div class="artikel" id="artikel"></div>
+      </div>
+      <div class="karte aufgabe" id="aufgabe"></div>
+    </div>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div style="text-align:center;font-size:52px">🗞️🏆</div>
+    <h2 id="ende-titel"></h2>
+    <p class="lob" id="ende-lob"></p>
+    <div class="zeitung"><h3 id="ende-artikel-titel"></h3><div class="artikel" id="ende-artikel"></div></div>
+    <div class="merkzettel" id="merkzettel"></div>
+    <button class="gross-knopf" id="weiterer"></button>
+    <button class="gross-knopf grau" id="zur-auswahl">Zur Redaktion</button>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(t){ return String(t == null ? "" : t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+
+  $("zurueck").addEventListener("click", function(){
+    var hub = "index.html";
+    try { var s = localStorage.getItem("hub-url"); if (s) hub = s; } catch(e){}
+    location.href = hub;
+  });
+
+  /* ---------- Die vier Artikel ----------
+     Jeder Satz: v = davor, a = was verbessert wird, n = danach, r = richtige Antwort,
+     f = { falsche Antwort: warum sie nicht passt }. Die Antwort r ersetzt a im Artikel. */
+  var RESSORTS = [
+    { id: "zeit", ic: "⏳", name: "Zeitmaschine", kurz: "Erzähl in der Vergangenheit", merkmal: "praeteritum",
+      titel: "Zwei Wochen in den Bergen",
+      frage: function(s){ return "Die Ferien sind vorbei! Welche Form passt statt „" + s.a + "“?"; },
+      regel: "Beim Aufschreiben erzählt man in der Vergangenheit (Präteritum). Viele Verben ändern dabei ihren Selbstlaut: schwimmen – schwamm, fahren – fuhr.",
+      merke: "<b>⏳ Vergangenheit:</b> Erzählungen schreibst du im Präteritum: wir fuhren, ich schwamm, wir aßen, ich fand. Kein „schwimmte“ – starke Verben ändern den Selbstlaut.",
+      saetze: [
+        { v: "Wir ", a: "fahren", n: " mit dem Zug in die Berge.", r: "fuhren", f: { "fahrten": "Fahren ist ein starkes Verb – es bekommt kein -te, sondern ändert den Selbstlaut: a wird zu u.", "fuhrten": "Der Selbstlaut stimmt schon, aber das -te ist zu viel.", "fahren": "Das ist noch die Gegenwart." } },
+        { v: "Die Sonne ", a: "scheint", n: " den ganzen Tag.", r: "schien", f: { "scheinte": "Scheinen ist ein starkes Verb: ei wird zu ie, ganz ohne -te.", "schienen": "Das passt zu „die Sonnen“ – es ist aber nur eine Sonne.", "scheint": "Das ist noch die Gegenwart." } },
+        { v: "Ich ", a: "schwimme", n: " im eiskalten See.", r: "schwamm", f: { "schwimmte": "Das sagt man, wenn man klein ist – richtig ist: i wird zu a, ohne -te.", "schwammte": "Der Selbstlaut stimmt, aber das -te ist zu viel.", "schwimm": "Das ist die Befehlsform: „Schwimm schneller!“" } },
+        { v: "Mein Bruder ", a: "springt", n: " vom Holzsteg ins Wasser.", r: "sprang", f: { "springte": "Springen ist ein starkes Verb: i wird zu a.", "sprung": "„Der Sprung“ ist ein Namenwort – gesucht ist das Verb.", "sprangte": "Der Selbstlaut stimmt, das -te ist zu viel." } },
+        { v: "Zum Mittag ", a: "essen", n: " wir riesige Portionen Pommes.", r: "aßen", f: { "essten": "Essen ist ein starkes Verb: Es wird zu aß – mit ß.", "aßten": "Aß stimmt schon, aber das -te ist zu viel.", "asen": "Nach dem langen a kommt ß, nicht s." } },
+        { v: "Am Abend ", a: "sehen", n: " wir einen doppelten Regenbogen.", r: "sahen", f: { "sehten": "Sehen ist ein starkes Verb: e wird zu a.", "sahten": "Der Selbstlaut stimmt, das -te ist zu viel.", "sehen": "Das ist noch die Gegenwart." } },
+        { v: "Am Ufer ", a: "finde", n: " ich einen glitzernden Stein.", r: "fand", f: { "findete": "Finden ist ein starkes Verb: i wird zu a.", "fund": "„Der Fund“ ist ein Namenwort – gesucht ist das Verb.", "fande": "Beim Präteritum von „finden“ hängt bei „ich“ kein -e dran: ich fand." } },
+        { v: "Wir ", a: "bleiben", n: " zwei ganze Wochen dort.", r: "blieben", f: { "bleibten": "Bleiben ist ein starkes Verb: ei wird zu ie.", "bliebten": "Der Selbstlaut stimmt, das -te ist zu viel.", "bleiben": "Das ist noch die Gegenwart." } }
+      ] },
+    { id: "dann", ic: "🔎", name: "Dann-Detektiv", kurz: "Bessere Satzanfänge finden", merkmal: "satzanfaenge",
+      titel: "Die Wanderung zum Wasserfall",
+      frage: function(){ return "Jeder Satz fängt mit „Dann“ an – wie langweilig! Welcher Anfang passt hier am besten?"; },
+      regel: "Abwechslungsreiche Satzanfänge sagen dem Leser, WANN oder WIE etwas passiert. Das Verb bleibt dabei an zweiter Stelle.",
+      merke: "<b>🔎 Satzanfänge:</b> Nicht jeder Satz mit „Dann“! Zeig die Zeit: Am frühen Morgen … Nach dem Frühstück … Anschließend … Plötzlich … Am Abend …",
+      saetze: [
+        { v: "", a: "Dann", n: " klingelte der Wecker.", r: "Am frühen Morgen", f: { "Am Abend": "Der Wecker klingelt, bevor der Tag losgeht – am Abend passt nicht zum Aufstehen.", "Zum Schluss": "Das ist erst der Anfang der Geschichte.", "Im Traum": "Der Wecker klingelt wirklich, nicht im Traum." } },
+        { v: "", a: "Dann", n: " packten wir schnell die Rucksäcke.", r: "Nach dem Frühstück", f: { "In der Nacht": "Wir sind gerade erst aufgestanden – die Nacht ist vorbei.", "Zum Schluss": "Die Wanderung hat noch gar nicht angefangen.", "Vor einem Jahr": "Die Geschichte spielt an einem einzigen Tag." } },
+        { v: "", a: "Dann", n: " wanderten wir drei Stunden bergauf.", r: "Anschließend", f: { "Am Vorabend": "Am Abend davor haben wir noch nicht gewandert.", "Im Schlaf": "Im Schlaf kann man nicht wandern.", "Zum Frühstück": "Das Frühstück war schon – jetzt geht es los." } },
+        { v: "", a: "Dann", n: " raschelte es laut im Gebüsch.", r: "Plötzlich", f: { "Gemütlich": "Ein lautes Rascheln kommt überraschend – gemütlich passt nicht.", "Langsam": "Das Geräusch kommt ganz auf einmal.", "Jeden Tag": "Das passiert nur einmal – und genau das macht es spannend." } },
+        { v: "", a: "Dann", n: " sprang ein kleines Reh auf den Weg.", r: "Im nächsten Moment", f: { "Vor einer Woche": "Das Reh springt gleich nach dem Rascheln heraus.", "Am Morgen danach": "Das passiert sofort, nicht erst am nächsten Tag.", "Jeden Abend": "Das war eine einmalige Überraschung." } },
+        { v: "", a: "Dann", n: " rauschte vor uns der riesige Wasserfall.", r: "Endlich", f: { "Leider": "Wir wollten doch zum Wasserfall – das ist ein Grund zur Freude.", "Zuerst": "Den Wasserfall erreichen wir erst nach der langen Wanderung.", "Heimlich": "Ein Wasserfall rauscht nicht heimlich." } },
+        { v: "", a: "Dann", n: " machten wir am Ufer Picknick.", r: "Danach", f: { "Vorher": "Das Picknick kommt nach der Ankunft am Wasserfall.", "Plötzlich": "Ein Picknick passiert nicht überraschend – das plant man.", "Nie": "Wir haben ja Picknick gemacht." } },
+        { v: "", a: "Dann", n: " fielen wir todmüde ins Bett.", r: "Am Abend", f: { "Am frühen Morgen": "Das war der Anfang des Tages – jetzt ist er zu Ende.", "Nach dem Frühstück": "Nach dem Frühstück geht man nicht ins Bett.", "Mittags": "Todmüde ins Bett fällt man am Ende des Tages." } }
+      ] },
+    { id: "tuning", ic: "🔧", name: "Wörter-Tuning", kurz: "Treffende Wörter statt „schön“", merkmal: "treffende woerter",
+      titel: "Ein Tag am Bergsee",
+      frage: function(s){ return "„" + s.a + "“ sagt nicht viel. Welches Wort passt hier genau?"; },
+      regel: "Treffende Wörter malen ein Bild im Kopf. „Schön“, „gut“ und „toll“ passen überall – und sagen darum fast nichts.",
+      merke: "<b>🔧 Treffende Wörter:</b> Statt schön, gut, toll: eiskalt, knusprig, atemberaubend, abenteuerlich. Statt „ging schnell“: rannte. Frag dich: Was genau war daran besonders?",
+      saetze: [
+        { v: "Das Wasser im Bergsee war ", a: "schön", n: ".", r: "eiskalt", f: { "knusprig": "Knusprig sind Pommes oder Brot – Wasser nicht.", "eckig": "Wasser hat keine Ecken.", "pünktlich": "Pünktlich kann ein Zug sein, aber kein Wasser." } },
+        { v: "Die Pommes am Kiosk waren ", a: "gut", n: ".", r: "knusprig", f: { "nass": "Nasse Pommes? Das wäre kein Lob.", "leise": "Pommes machen kein Geräusch.", "spitz": "Spitz ist ein Messer, keine Pommes." } },
+        { v: "Der Ausblick vom Gipfel war ", a: "toll", n: ".", r: "atemberaubend", f: { "lecker": "Lecker kann man essen – einen Ausblick nicht.", "flüssig": "Flüssig ist Wasser, kein Ausblick.", "pünktlich": "Ein Ausblick kommt nicht zu spät." } },
+        { v: "Mama ", a: "sagte", n: " laut: „Schaut mal, ein Adler!“", r: "rief", f: { "flüsterte": "Flüstern ist leise – im Satz steht aber laut.", "schlief": "Beim Schlafen sagt man nichts.", "trank": "Beim Trinken kann man nichts sagen." } },
+        { v: "Der Weg zum Gipfel war ", a: "schlecht", n: ".", r: "steinig", f: { "saftig": "Saftig ist ein Pfirsich, kein Weg.", "süß": "Süß schmeckt Schokolade – ein Weg nicht.", "hungrig": "Hungrig kann nur ein Lebewesen sein." } },
+        { v: "Ich ", a: "ging schnell", n: " zum Ufer.", r: "rannte", f: { "schlich": "Schleichen ist langsam und leise – im Satz steht schnell.", "saß": "Beim Sitzen kommt man nicht zum Ufer.", "schlief": "Schlafend geht man nirgendwohin." } },
+        { v: "Die Nacht im Zelt war ", a: "toll", n: ".", r: "abenteuerlich", f: { "salzig": "Salzig schmeckt Meerwasser – eine Nacht nicht.", "eckig": "Eine Nacht hat keine Ecken.", "flüssig": "Eine Nacht kann nicht flüssig sein." } },
+        { v: "Der Donner war ", a: "sehr laut", n: ".", r: "ohrenbetäubend", f: { "flüsternd": "Flüstern ist leise – Donner nicht.", "lecker": "Donner kann man nicht essen.", "weich": "Weich ist ein Kissen, kein Geräusch." } }
+      ] },
+    { id: "steigern", ic: "🥇", name: "Das Lustigste", kurz: "Steigern: schön, schöner, am schönsten", merkmal: "steigerung adjektive",
+      titel: "Meine Ferien-Rekorde",
+      frage: function(s){ return "Setz das Wort in Klammern richtig gesteigert ein:"; },
+      regel: "Beim Steigern: schön – schöner – am schönsten. Nach „das“ ohne Namenwort dahinter wird es selbst zum Namenwort und groß geschrieben: das Lustigste.",
+      merke: "<b>🥇 Steigern:</b> lustig – lustiger – am lustigsten. Vor einem Namenwort klein: der schönste Tag. Ohne Namenwort danach groß: Das Lustigste war … Achtung bei gut – besser – am besten und hoch – höher – am höchsten.",
+      saetze: [
+        { v: "Das ", a: "___ (lustig)", n: " in den Ferien: Papa fiel in den See.", r: "Lustigste", f: { "lustigste": "Nach „Das“ steht hier kein Namenwort mehr – also wird das Wort selbst eins und groß geschrieben.", "Lustigster": "Es heißt „das“, deshalb endet es auf -e: das Lustigste.", "Lustigte": "Beim Steigern kommt -st- dazu: lustig – am lustigsten." } },
+        { v: "Mein ", a: "___ (schön)", n: " Tag war der Ausflug zum Wasserfall.", r: "schönster", f: { "schönste": "„Tag“ ist männlich: mein schönster Tag.", "Schönster": "Vor dem Namenwort „Tag“ bleibt das Wiewort klein.", "schöner": "Das ist nur die erste Stufe. Der beste von allen ist der schönste." } },
+        { v: "Das war der ", a: "___ (hoch)", n: " Berg, auf dem ich je war.", r: "höchste", f: { "hochste": "Beim Steigern wird aus o ein ö: hoch – höher – am höchsten.", "hohste": "Aus h wird ch: hoch – am höchsten.", "höchster": "Nach „der“ endet es auf -e: der höchste Berg." } },
+        { v: "Die ", a: "___ (gut)", n: " Pommes gab es am Kiosk.", r: "besten", f: { "gutesten": "„Gut“ ist unregelmäßig: gut – besser – am besten.", "bessten": "Am besten schreibt man mit einem s vor dem t.", "beste": "„Pommes“ sind viele – deshalb: die besten Pommes." } },
+        { v: "Am ", a: "___ (gut)", n: " hat mir das Baden gefallen.", r: "besten", f: { "Besten": "„Am besten“ wird klein geschrieben.", "guten": "„Gut“ ist unregelmäßig: gut – besser – am besten.", "bestem": "Nach „am“ endet es auf -en: am besten." } },
+        { v: "Das ist meine ", a: "___ (schön)", n: " Erinnerung an die Ferien.", r: "schönste", f: { "schönster": "„Erinnerung“ ist weiblich: meine schönste Erinnerung.", "schönsten": "Nach „meine“ bei einem Namenwort in der Einzahl: schönste.", "Schönste": "Vor dem Namenwort „Erinnerung“ bleibt das Wiewort klein." } },
+        { v: "Es war der ", a: "___ (heiß)", n: " Tag des ganzen Sommers.", r: "heißeste", f: { "heißte": "Beim Steigern kommt -est- dazu: heiß – am heißesten.", "heißste": "Nach ß kommt ein e dazwischen: heißeste.", "heißester": "Nach „der“ endet es auf -e: der heißeste Tag." } },
+        { v: "Das ", a: "___ (niedlich)", n: " auf der Wanderung war ein Murmeltier.", r: "Niedlichste", f: { "niedlichste": "Nach „Das“ steht hier kein Namenwort – also groß: das Niedlichste.", "Niedlichster": "Es heißt „das“, deshalb endet es auf -e.", "niedlichte": "Beim Steigern kommt -st- dazu: niedlich – am niedlichsten." } }
+      ] }
+  ];
+
+  /* ---------- Speicher: nur Rueckschau, einmal pro Artikel ---------- */
+  var SCHLUESSEL = "ferien-zeitung";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SCHLUESSEL) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SCHLUESSEL, JSON.stringify(d)); } catch(e){} }
+
+  function zeige(n){
+    ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    $("punkte").classList.toggle("verborgen", n !== "spiel");
+    window.scrollTo(0, 0);
+  }
+
+  function ressortsMalen(){
+    var d = lesen();
+    $("ressorts").innerHTML = RESSORTS.map(function(r){
+      var st = d[r.id] ? '<span class="stand">Bestwert ' + d[r.id].best + ' von 8 · ' + d[r.id].runden + '× gespielt</span>' : "";
+      return '<button class="ressort" data-id="' + r.id + '"><span class="ic">' + r.ic + '</span><span><b>' + r.name + '</b><span>' + r.kurz + '</span>' + st + '</span></button>';
+    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll(".ressort"), function(b){
+      b.addEventListener("click", function(){ reihe = [b.getAttribute("data-id")]; ressortStarten(); });
+    });
+  }
+  ressortsMalen();
+  $("alle").addEventListener("click", function(){ reihe = RESSORTS.map(function(r){ return r.id; }); ressortStarten(); });
+
+  /* ---------- Auswaehlen oder selbst schreiben ----------
+     Die Einstellung bleibt gemerkt - Paul soll sie nicht vor jedem Artikel
+     neu suchen muessen. Sie liegt im selben Speicherplatz wie die Bestwerte. */
+  var selbst = !!lesen().selbst;
+  function modusMalen(){
+    var k = $("modus");
+    k.classList.toggle("an", selbst);
+    k.setAttribute("aria-pressed", selbst ? "true" : "false");
+    $("modus-stand").textContent = selbst ? "an" : "aus";
+  }
+  function modusSetzen(an){
+    selbst = !!an;
+    var d = lesen(); d.selbst = selbst; schreiben(d);
+    modusMalen();
+  }
+  modusMalen();
+  $("modus").addEventListener("click", function(){ modusSetzen(!selbst); });
+
+  /* ---------- Ablauf ---------- */
+  var reihe = [], ressort = null, pos = 0, versuch = 0, ergebnis = [], gesamt = 0, gesperrt = false;
+
+  function ressortStarten(){
+    ressort = RESSORTS.filter(function(r){ return r.id === reihe[0]; })[0];
+    pos = 0; ergebnis = ressort.saetze.map(function(){ return ""; });
+    $("ressort-name").textContent = ressort.ic + " " + ressort.name;
+    $("artikel-titel").textContent = ressort.titel;
+    zeige("spiel");
+    aufgabeZeigen();
+  }
+
+  function artikelHtml(bisFertig){
+    return ressort.saetze.map(function(s, i){
+      var fertig = bisFertig || ergebnis[i] !== "";
+      var mitte = fertig ? '<span class="neu">' + esc(s.r) + '</span>' : '<span class="alt">' + esc(s.a) + '</span>';
+      return '<span class="satz' + (!bisFertig && i === pos ? " jetzt" : "") + '" data-i="' + i + '">' + esc(s.v) + mitte + esc(s.n) + '</span>';
+    }).join(" ");
+  }
+
+  function kopfHtml(s){
+    return '<p class="titel"><span>Satz ' + (pos + 1) + ' von ' + ressort.saetze.length + '</span><span>' + ressort.ic + ' ' + ressort.name + '</span></p>' +
+           '<p class="frage">' + esc(ressort.frage(s)) + '</p>';
+  }
+  function fussHtml(){
+    return '<div id="rueck"></div>' +
+           '<div class="punktreihe">' + ergebnis.map(function(e, i){ return '<i class="' + e + (i === pos ? " n" : "") + '"></i>'; }).join("") + '</div>';
+  }
+  // Der Wechsel geht mitten im Spiel - aber nur, solange die Aufgabe noch
+  // offen ist. Sonst stuende Pauls Rueckmeldung ploetzlich in einer Form da,
+  // zu der sie nicht gehoert.
+  function wechselHtml(){
+    return gesperrt || versuch > 0 ? "" :
+      '<button type="button" class="nebenknopf" id="modus-wechsel">' +
+      (selbst ? "☝️ Lieber auswählen" : "✍️ Lieber selbst schreiben") + '</button>';
+  }
+  function wechselWeg(){ var w = $("modus-wechsel"); if (w && w.parentNode) w.parentNode.removeChild(w); }
+  function wechselBinden(){
+    var w = $("modus-wechsel");
+    if (w) w.addEventListener("click", function(){ modusSetzen(!selbst); aufgabeZeigen(); });
+  }
+
+  function aufgabeZeigen(){
+    var s = ressort.saetze[pos];
+    versuch = 0; gesperrt = false;
+    $("artikel").innerHTML = artikelHtml(false);
+    if (selbst) schreibZeigen(s); else wahlZeigen(s);
+    $("punkte").textContent = "✏️ " + gesamt;
+    var jetzt = document.querySelector(".satz.jetzt");
+    if (jetzt && window.innerWidth < 900) try { jetzt.scrollIntoView({ block: "nearest" }); } catch(e){}
+  }
+
+  function wahlZeigen(s){
+    var optionen = mische([s.r].concat(Object.keys(s.f)));
+    $("aufgabe").innerHTML = kopfHtml(s) +
+      '<div class="optionen">' + optionen.map(function(o){ return '<button class="option" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join("") + '</div>' +
+      wechselHtml() + fussHtml();
+    Array.prototype.forEach.call(document.querySelectorAll(".option"), function(b){
+      b.addEventListener("click", function(){ waehlen(b); });
+    });
+    wechselBinden();
+  }
+
+  function schreibZeigen(s){
+    $("aufgabe").innerHTML = kopfHtml(s) +
+      '<div class="schreiben">' +
+        '<p class="schreib-hinweis">Schreib den ganzen Satz neu auf – mit dem verbesserten Wort. Punkt und große Buchstaben zählen mit.</p>' +
+        '<textarea id="selbst-text" rows="3" maxlength="300" autocapitalize="sentences" autocomplete="off" spellcheck="false" ' +
+          'placeholder="Hier den ganzen Satz hintippen …"></textarea>' +
+        '<button class="gross-knopf" type="button" id="selbst-ab">Prüfen</button>' +
+        '<button type="button" class="nebenknopf" id="selbst-hilfe">💡 Wörter zeigen</button>' +
+        wechselHtml() +
+        '<div id="wortschatz"></div>' +
+      '</div>' + fussHtml();
+    $("selbst-ab").addEventListener("click", function(){ selbstPruefen(); });
+    $("selbst-hilfe").addEventListener("click", function(){ wortschatzZeigen(s); });
+    $("selbst-text").addEventListener("keydown", function(e){
+      if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); selbstPruefen(); }
+    });
+    wechselBinden();
+  }
+
+  // Ein Tipp, der nie verraet, welches Wort stimmt: dieselben vier Woerter wie
+  // in der Auswahl, nur als Text. Schwerer als vorher wird es damit nie.
+  function wortschatzZeigen(s){
+    if ($("wortschatz").innerHTML) return;
+    $("wortschatz").innerHTML = '<div class="wortschatz"><b>Eins von diesen vier Wörtern passt:</b><br>' +
+      mische([s.r].concat(Object.keys(s.f))).map(function(o){ return '<span class="w">' + esc(o) + '</span>'; }).join("") +
+      '</div>';
+  }
+
+  /* ---------- Wort fuer Wort vergleichen ----------
+     Paul wollte die Stelle SEHEN ("Zeigen"), nicht nur hoeren, dass etwas
+     nicht stimmt. Verglichen wird darum nicht Satz gegen Satz, sondern Wort
+     gegen Wort - sonst waere bei einem fehlenden Wort alles dahinter rot. */
+  function zerlege(x){ return String(x == null ? "" : x).replace(/\s+/g, " ").trim().split(" ").filter(Boolean); }
+  function normWort(w){
+    var x = String(w == null ? "" : w);
+    try { x = x.normalize("NFC"); } catch(e){}
+    return x.replace(/[\u201E\u201C\u201D\u00AB\u00BB]/g, '"')
+            .replace(/[\u201A\u2018\u2019\u00B4\u0060]/g, "'")
+            .replace(/[\u2013\u2014\u2212]/g, "-")
+            .replace(/\u2026/g, "...");
+  }
+  function gleichwertig(a, b){ return normWort(a) === normWort(b); }
+  // Fuer das GESUCHTE Wort zaehlt der Wortkern. Ein vergessener Punkt am
+  // Satzende ist ein Abschreibfehler - er darf nicht als "Praeteritum sitzt
+  // nicht" im Lernstand landen.
+  function kern(w){ return normWort(w).replace(/^[^0-9A-Za-zÄÖÜäöüß]+/, "").replace(/[^0-9A-Za-zÄÖÜäöüß]+$/, ""); }
+  function kernGleich(a, b){ return kern(a) === kern(b); }
+
+  function abgleich(soll, ist){
+    var n = soll.length, m = ist.length, i, j;
+    var t = [];
+    for (i = 0; i <= n; i++){ var z = []; for (j = 0; j <= m; j++) z.push(0); t.push(z); }
+    for (i = n - 1; i >= 0; i--)
+      for (j = m - 1; j >= 0; j--)
+        t[i][j] = gleichwertig(soll[i], ist[j]) ? t[i + 1][j + 1] + 1 : Math.max(t[i + 1][j], t[i][j + 1]);
+    var roh = []; i = 0; j = 0;
+    while (i < n && j < m){
+      if (gleichwertig(soll[i], ist[j])){ roh.push({ t: "gleich", w: ist[j], k: i }); i++; j++; }
+      else if (t[i + 1][j] >= t[i][j + 1]){ roh.push({ t: "fehlt", s: soll[i], k: i }); i++; }
+      else { roh.push({ t: "zuviel", w: ist[j] }); j++; }
+    }
+    while (i < n){ roh.push({ t: "fehlt", s: soll[i], k: i }); i++; }
+    while (j < m){ roh.push({ t: "zuviel", w: ist[j] }); j++; }
+    return paaren(roh);
+  }
+
+  // Ein fehlendes und ein ueberfluessiges Wort nebeneinander sind in
+  // Wahrheit EIN falsch geschriebenes Wort - sonst stuenden dort zwei Fehler.
+  function paaren(roh){
+    var aus = [], i = 0;
+    while (i < roh.length){
+      if (roh[i].t === "gleich"){ aus.push(roh[i]); i++; continue; }
+      var e = i; while (e < roh.length && roh[e].t !== "gleich") e++;
+      var block = roh.slice(i, e);
+      var fehlt = block.filter(function(o){ return o.t === "fehlt"; });
+      var zuviel = block.filter(function(o){ return o.t === "zuviel"; });
+      var p = 0;
+      while (p < fehlt.length && p < zuviel.length){
+        aus.push({ t: "schief", w: zuviel[p].w, s: fehlt[p].s, k: fehlt[p].k }); p++;
+      }
+      for (var q = p; q < fehlt.length; q++) aus.push(fehlt[q]);
+      for (var r = p; r < zuviel.length; r++) aus.push(zuviel[r]);
+      i = e;
+    }
+    return aus;
+  }
+
+  function markiertHtml(ops){
+    return '<p class="geprueft">' + ops.map(function(o){
+      if (o.t === "gleich") return '<span class="w">' + esc(o.w) + '</span>';
+      if (o.t === "schief") return '<span class="w">' + esc(o.w) + '</span>';
+      if (o.t === "zuviel") return '<span class="w zuviel">' + esc(o.w) + '</span>';
+      return '<span class="luecke" title="Hier fehlt ein Wort"></span>';
+    }).join(" ") + '</p>';
+  }
+
+  function sollSatz(s){ return s.v + s.r + s.n; }
+  function zielBereich(s){ var a = zerlege(s.v).length; return { von: a, bis: a + zerlege(s.r).length }; }
+
+  function zielPruefen(ops, b){
+    var richtig = true, gegeben = [], gesehen = {};
+    ops.forEach(function(o){
+      if (o.k == null || o.k < b.von || o.k >= b.bis) return;
+      gesehen[o.k] = true;
+      if (o.t === "gleich") return;
+      if (o.t === "schief"){ gegeben.push(o.w); if (!kernGleich(o.w, o.s)) richtig = false; return; }
+      richtig = false;
+    });
+    for (var i = b.von; i < b.bis; i++) if (!gesehen[i]) richtig = false;
+    return { richtig: richtig, gegeben: gegeben.join(" ") };
+  }
+
+  // Bei mehrwortigen Antworten ("Am frühen Morgen") faellt der Wortvergleich
+  // auseinander: aus "Am Abend" wird ein markiertes Wort und eine Luecke, und
+  // der Schluessel "Am Abend" aus der Erklaerungsliste wird nicht mehr
+  // gefunden. Darum vorher der kurze Weg: Steht sein Satz Wort fuer Wort da,
+  // wie er mit einem der vier Woerter dastuende, ist die Sache klar.
+  function welcheWahl(s, ist){
+    var treffer = "";
+    [s.r].concat(Object.keys(s.f)).forEach(function(k){
+      if (treffer) return;
+      var kand = zerlege(s.v + k + s.n);
+      if (kand.length === ist.length && kand.every(function(w, i){ return gleichwertig(w, ist[i]); })) treffer = k;
+    });
+    return treffer;
+  }
+
+  // Hat er ein Wort aus der Auswahl erwischt, bekommt er die Erklaerung, die
+  // auch beim Antippen dort stuende - egal ob mit oder ohne Satzzeichen.
+  function erklaerung(s, gegeben){
+    if (!gegeben) return "";
+    if (s.f[gegeben]) return s.f[gegeben];
+    var treffer = "";
+    Object.keys(s.f).forEach(function(k){ if (!treffer && kernGleich(k, gegeben)) treffer = s.f[k]; });
+    return treffer;
+  }
+
+  function selbstPruefen(){
+    if (gesperrt) return;
+    var s = ressort.saetze[pos], feld = $("selbst-text");
+    var ist = zerlege(feld.value);
+    if (!ist.length){ feld.focus(); return; }
+    var soll = zerlege(sollSatz(s));
+    var ops = abgleich(soll, ist);
+    var stimmtGanz = ops.every(function(o){ return o.t === "gleich"; }) && ist.length === soll.length;
+    var ziel = zielPruefen(ops, zielBereich(s));
+    var wahl = welcheWahl(s, ist);
+    if (wahl && wahl !== s.r){ ziel = { richtig: false, gegeben: wahl }; }
+
+    if (versuch === 0){
+      try {
+        window.lernstand && window.lernstand.antwort(ziel.richtig, ressort.merkmal, ziel.gegeben, s.r);
+        // Gemessen wird hier NUR der Rest des Satzes. Wer das gesuchte Wort
+        // nicht wusste, sonst aber alles genau abgeschrieben hat, hat beim
+        // Abschreiben nichts falsch gemacht - das darf nicht in derselben
+        // Kerbe landen wie das Lernwort.
+        var b = zielBereich(s);
+        var daneben = ops.filter(function(o){ return o.t !== "gleich" && !(o.k >= b.von && o.k < b.bis); })[0];
+        window.lernstand && window.lernstand.antwort(!daneben, "satz genau abschreiben",
+          daneben ? (daneben.w || "") : "", daneben ? (daneben.s || "") : "");
+      } catch(e){}
+    }
+
+    if (stimmtGanz){ selbstGeschafft(s, versuch === 0); return; }
+
+    versuch++;
+    wechselWeg();
+    if (versuch === 1){
+      var was = ziel.richtig
+        ? '<b>Das gesuchte Wort sitzt!</b> Beim Abschreiben ist noch etwas verrutscht – schau auf die rot markierte Stelle.'
+        : '<b>Noch nicht.</b> ' + esc(erklaerung(s, ziel.gegeben) || "Das rot markierte Wort ist noch nicht das richtige.");
+      $("rueck").innerHTML = '<div class="rueck nochmal">' + was + markiertHtml(ops) +
+        '<span class="regel">Ein roter Rahmen heißt: dieses Wort stimmt noch nicht. Ein roter Strich heißt: hier fehlt ein Wort. Durchgestrichen heißt: das steht zu viel da.</span></div>';
+      feld.focus();
+      try { $("rueck").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+      return;
+    }
+
+    gesperrt = true;
+    ergebnis[pos] = "t";
+    feld.disabled = true;
+    $("selbst-ab").classList.add("verborgen");
+    $("selbst-hilfe").classList.add("verborgen");
+    $("artikel").innerHTML = artikelHtml(false);
+    $("rueck").innerHTML = '<div class="rueck loesung"><b>Schau mal, so geht der Satz:</b><br>' +
+      esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) + markiertHtml(ops) +
+      '<span class="regel">' + esc(ressort.regel) + '</span></div>' +
+      '<button class="gross-knopf" id="weiter">' + (pos < ressort.saetze.length - 1 ? "Nächster Satz ›" : "Artikel fertig ›") + '</button>';
+    $("weiter").addEventListener("click", weiter);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function selbstGeschafft(s, ersterVersuch){
+    gesperrt = true; wechselWeg();
+    ergebnis[pos] = ersterVersuch ? "g" : "t";
+    if (ersterVersuch) gesamt++;
+    $("selbst-text").disabled = true;
+    $("selbst-ab").classList.add("verborgen");
+    $("selbst-hilfe").classList.add("verborgen");
+    $("artikel").innerHTML = artikelHtml(false);
+    var satz = document.querySelector('.satz[data-i="' + pos + '"]');
+    if (satz){ satz.classList.remove("jetzt"); satz.classList.add("frisch"); }
+    $("rueck").innerHTML = '<div class="rueck gut"><b>' + (ersterVersuch ? "Ganz allein geschrieben – Wort für Wort richtig!" : "Jetzt steht der Satz!") + '</b> ' +
+      esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) + '<span class="regel">' + esc(ressort.regel) + '</span></div>' +
+      '<button class="gross-knopf" id="weiter">' + (pos < ressort.saetze.length - 1 ? "Nächster Satz ›" : "Artikel fertig ›") + '</button>';
+    $("weiter").addEventListener("click", weiter);
+    $("punkte").textContent = "✏️ " + gesamt;
+    if (ersterVersuch) konfetti(false);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function waehlen(b){
+    if (gesperrt) return;
+    var s = ressort.saetze[pos], o = b.getAttribute("data-o");
+    if (o === s.r){
+      gesperrt = true; wechselWeg();
+      var ersterVersuch = versuch === 0;
+      ergebnis[pos] = ersterVersuch ? "g" : "t";
+      if (ersterVersuch) gesamt++;
+      // Gezaehlt wird nur der erste Versuch - ein Fehlversuch wurde schon gemeldet.
+      if (ersterVersuch) try { window.lernstand && window.lernstand.antwort(true, ressort.merkmal, "", s.r); } catch(e){}
+      b.classList.add("richtig");
+      Array.prototype.forEach.call(document.querySelectorAll(".option"), function(x){ x.disabled = true; });
+      $("artikel").innerHTML = artikelHtml(false);
+      var satz = document.querySelector('.satz[data-i="' + pos + '"]');
+      if (satz){ satz.classList.remove("jetzt"); satz.classList.add("frisch"); }
+      $("rueck").innerHTML = '<div class="rueck gut"><b>' + (ersterVersuch ? "Stark verbessert!" : "Jetzt passt es!") + '</b> ' +
+        esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) + '<span class="regel">' + esc(ressort.regel) + '</span></div>' +
+        '<button class="gross-knopf" id="weiter">' + (pos < ressort.saetze.length - 1 ? "Nächster Satz ›" : "Artikel fertig ›") + '</button>';
+      $("weiter").addEventListener("click", weiter);
+      $("punkte").textContent = "✏️ " + gesamt;
+      if (ersterVersuch) konfetti(false);
+      try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+      return;
+    }
+    versuch++;
+    wechselWeg();
+    b.classList.add("falsch"); b.disabled = true;
+    if (versuch === 1){
+      try { window.lernstand && window.lernstand.antwort(false, ressort.merkmal, o, s.r); } catch(e){}
+      $("rueck").innerHTML = '<div class="rueck nochmal"><b>Noch nicht.</b> ' + esc(s.f[o] || "") + ' Probier es nochmal!</div>';
+    } else {
+      gesperrt = true;
+      ergebnis[pos] = "t";
+      Array.prototype.forEach.call(document.querySelectorAll(".option"), function(x){ x.disabled = true; if (x.getAttribute("data-o") === s.r) x.classList.add("richtig"); });
+      $("artikel").innerHTML = artikelHtml(false);
+      $("rueck").innerHTML = '<div class="rueck loesung"><b>' + esc(s.f[o] || "") + '</b><br>Richtig ist: ' + esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) +
+        '<span class="regel">' + esc(ressort.regel) + '</span></div>' +
+        '<button class="gross-knopf" id="weiter">' + (pos < ressort.saetze.length - 1 ? "Nächster Satz ›" : "Artikel fertig ›") + '</button>';
+      $("weiter").addEventListener("click", weiter);
+      try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+    }
+  }
+
+  var geschafft = [];
+  function weiter(){
+    pos++;
+    if (pos < ressort.saetze.length){ aufgabeZeigen(); return; }
+    var richtig = ergebnis.filter(function(e){ return e === "g"; }).length;
+    var d = lesen(), alt = d[ressort.id] || { best: 0, runden: 0 };
+    d[ressort.id] = { best: Math.max(alt.best, richtig), runden: alt.runden + 1 };
+    schreiben(d);
+    geschafft.push(ressort.id);
+    endeZeigen(richtig);
+  }
+
+  function endeZeigen(richtig){
+    zeige("ende");
+    $("ende-titel").textContent = ressort.ic + " Artikel fertig: " + ressort.titel;
+    $("ende-lob").textContent = richtig === 8 ? "Alle acht Sätze gleich beim ersten Mal verbessert – druckreif!"
+      : richtig + " von 8 gleich beim ersten Mal. Die anderen hast du im zweiten Anlauf geschafft – so lernt man es.";
+    $("ende-artikel-titel").textContent = ressort.titel;
+    $("ende-artikel").innerHTML = artikelHtml(true);
+    $("merkzettel").innerHTML = "<b>📌 Merkzettel für dein Ferien-Blatt</b><br>" +
+      RESSORTS.filter(function(r){ return geschafft.indexOf(r.id) >= 0; }).map(function(r){ return r.merke; }).join("<br>");
+    reihe.shift();
+    if (reihe.length){
+      var naechst = RESSORTS.filter(function(r){ return r.id === reihe[0]; })[0];
+      $("weiterer").textContent = "Nächster Artikel: " + naechst.ic + " " + naechst.name + " ›";
+      $("weiterer").classList.remove("verborgen");
+    } else $("weiterer").classList.add("verborgen");
+    ressortsMalen();
+    konfetti(true);
+  }
+  $("weiterer").addEventListener("click", ressortStarten);
+  $("zur-auswahl").addEventListener("click", function(){ geschafft = []; zeige("start"); });
+
+  /* ---------- Konfetti ---------- */
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(g){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (g ? 110 : 24); i++) stuecke.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
+      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#b91c1c","#15803d","#f59e0b","#1c1917","#2563eb"][i%5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  window.__zeitung = { RESSORTS: RESSORTS, starte: function(id){ reihe = [id]; ressortStarten(); },
+    zustand: function(){ return { ressort: ressort && ressort.id, pos: pos, selbst: selbst, versuch: versuch, gesperrt: gesperrt }; },
+    tippe: function(o){ var b = Array.prototype.filter.call(document.querySelectorAll(".option"), function(x){ return x.getAttribute("data-o") === o; })[0]; if (b) waehlen(b); return !!b; },
+    weiter: function(){ var w = $("weiter"); if (w) w.click(); },
+    modus: function(an){ modusSetzen(an); if (ressort && !$("sicht-spiel").classList.contains("verborgen")) aufgabeZeigen(); return selbst; },
+    satz: function(i){ var s = ressort.saetze[i == null ? pos : i]; return s.v + s.r + s.n; },
+    schreibe: function(txt){ var f = $("selbst-text"); if (!f) return false; f.value = txt; return true; },
+    pruefe: function(){ var b = $("selbst-ab"); if (!b || b.classList.contains("verborgen")) return false; b.click(); return true; },
+    hilfe: function(){ var b = $("selbst-hilfe"); if (b) b.click(); return !!b; },
+    markiert: function(){ return Array.prototype.map.call(document.querySelectorAll(".geprueft > span"), function(x){ return (x.className || "") + ":" + x.textContent; }); } };
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
