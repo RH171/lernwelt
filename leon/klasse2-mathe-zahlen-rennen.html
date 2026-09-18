@@ -70,8 +70,6 @@
   .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
     border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
   h1{font-family:var(--rund);font-size:21px;margin:0;flex:1;min-width:150px}
-  .zaehler{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 14px;
-    font:700 15px/1 var(--rund);color:var(--leon-dunkel);white-space:nowrap}
 
   .karte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
     box-shadow:0 1px 2px rgba(20,22,40,.05),0 10px 26px rgba(20,22,40,.07)}
@@ -189,7 +187,6 @@
   <header>
     <a class="zurueck" href="/leon/">‹ Leons Spiele</a>
     <h1>🏃 Das Zahlen-Rennen</h1>
-    <div class="zaehler verborgen" id="zaehler"></div>
   </header>
 
   <!-- 1. Strecke wählen -->
@@ -432,7 +429,6 @@
   function zeige(welche){
     ["start","spiel","ende"].forEach(function(s){ zeigen($("sicht-" + s), s === welche); });
     zeigen($("panel"), welche === "spiel");
-    zeigen($("zaehler"), welche === "spiel");
     document.body.classList.toggle("spielt", welche === "spiel");
     window.scrollTo(0, 0);
     panelMessen();
@@ -508,7 +504,6 @@
     var a = jetzt();
     if (!a) return;
     versuch = 0; getippt = "";
-    $("zaehler").textContent = "Aufgabe " + (nr + 1) + " von " + aufgaben.length;
     $("schritt").textContent = "Aufgabe " + (nr + 1) + " von " + aufgaben.length;
     $("rechnung").textContent = a.frage;
     $("rechnung").classList.toggle("wort", !!a.wort);
