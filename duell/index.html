@@ -79,6 +79,10 @@
   .quelle{display:block;margin-top:6px;font-size:12.5px;opacity:.7}
   .serie{margin-left:5px;font-size:12.5px}
   .schnitt{display:block;font:600 12.5px/1.2 var(--rund);opacity:.7}
+  .tonzeile{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin:-6px 0 8px;flex-wrap:wrap}
+  #tonstand{color:var(--muted);font:600 14px/1.35 var(--rund);flex:1;min-width:140px;text-align:right}
+  .tontest{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;min-height:44px;
+    font:700 14.5px/1 var(--rund);color:var(--ink);cursor:pointer}
   .kat{border-radius:999px;padding:6px 12px;color:#fff;font:800 14px/1 var(--rund)}
   .zeitbalken{height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin-bottom:12px}
   .zeitbalken i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#fbbf24,#f97316);transform-origin:left;transition:transform .2s linear}
@@ -133,6 +137,7 @@
     <h1>⚡ Quiz-Duell</h1>
     <button class="kopfknopf" id="ton" aria-label="Vorlesen an oder aus">🔊</button>
   </header>
+  <div class="tonzeile"><span id="tonstand"></span><button class="tontest" id="tontest" type="button">🔊 Stimme testen</button></div>
 
   <!-- Start -->
   <section id="sicht-start">
@@ -303,21 +308,33 @@
     besteStimme = stimmeWaehlen();
     speechSynthesis.onvoiceschanged = function(){ besteStimme = stimmeWaehlen(); };
   }
-  /* Warum nichts zu hören war (18.09.2026): Safari auf iPad und iPhone lässt
-     Sprachausgabe nur zu, wenn sie einmal aus einer echten Berührung heraus
-     gestartet wurde. Die Frage kommt aber über die Leitung, ohne Berührung -
-     also blieb es still. Darum wird die Stimme beim ersten Tippen irgendwo auf
-     der Seite einmal lautlos geweckt; danach darf sie von selbst sprechen. */
-  var stimmeFrei = false;
+  /* Vorlesen auf dem iPad - zweiter Anlauf (18.09.2026, nachmittags).
+     Paul hat es mit Denny getestet: immer noch still. Drei Dinge koennen es sein,
+     und alle drei sind jetzt abgedeckt:
+       1. Safari laesst Sprache nur zu, wenn sie einmal AUS EINER BERUEHRUNG kam.
+          Eine leere Aeusserung reicht dafuer nicht - jetzt wird ein echtes Wort
+          lautlos gesprochen.
+       2. cancel() direkt vor speak() verschluckt auf iOS gern die Aeusserung.
+          Darum wartet speak jetzt einen Wimpernschlag.
+       3. Bleibt es trotzdem still, sagt die Seite es: Der Zustand steht unter
+          dem Ton-Knopf ("Stimme: bereit", "Tipp einmal auf den Bildschirm",
+          "Ton am Gerät ist leise?"). Ohne diese Anzeige raten wir nur. */
+  var stimmeFrei = false, stimmeSprach = false, stimmeWache = null;
+  function standMelden(text){
+    var el = $("tonstand");
+    if (el) el.textContent = text || "";
+  }
   function stimmeWecken(){
     if (stimmeFrei || !kannSprechen) return;
     try {
-      var u = new SpeechSynthesisUtterance(" ");
-      u.volume = 0; u.lang = "de-DE";
       speechSynthesis.resume();
+      var u = new SpeechSynthesisUtterance("Los geht's");
+      u.volume = 0; u.lang = "de-DE"; u.rate = 1;
+      u.onstart = function(){ stimmeSprach = true; };
       speechSynthesis.speak(u);
       stimmeFrei = true;
       if (!besteStimme) besteStimme = stimmeWaehlen();
+      standMelden(tonAn ? "Stimme ist bereit 🔊" : "");
     } catch(e){}
   }
   ["pointerdown", "touchend", "click", "keydown"].forEach(function(e){
@@ -326,21 +343,46 @@
 
   function sprich(t){
     if (!tonAn || !kannSprechen || document.hidden || !t) return;
+    if (!stimmeFrei){ standMelden("🔊 Tipp einmal auf den Bildschirm, dann lese ich vor."); return; }
     try {
       speechSynthesis.cancel();
-      speechSynthesis.resume();     // iOS haelt die Stimme sonst manchmal an
-      var u = new SpeechSynthesisUtterance(t);
-      u.lang = "de-DE";
-      // Ruhig und warm: etwas langsamer als normal, die Stimme minimal heller.
-      u.rate = .88; u.pitch = 1.05;
-      if (!besteStimme) besteStimme = stimmeWaehlen();
-      if (besteStimme) u.voice = besteStimme;
-      speechSynthesis.speak(u);
+      speechSynthesis.resume();
+      // Auf dem iPad geht die Aeusserung verloren, wenn sie direkt nach cancel()
+      // kommt. Der kurze Abstand kostet nichts und rettet die Ausgabe.
+      setTimeout(function(){
+        try {
+          var u = new SpeechSynthesisUtterance(String(t));
+          u.lang = "de-DE"; u.rate = .88; u.pitch = 1.05;
+          if (!besteStimme) besteStimme = stimmeWaehlen();
+          if (besteStimme) u.voice = besteStimme;
+          u.onstart = function(){ stimmeSprach = true; clearTimeout(stimmeWache); standMelden(""); };
+          u.onerror = function(){ standMelden("Ich kann gerade nicht vorlesen."); };
+          speechSynthesis.speak(u);
+          // Wenn nach eineinhalb Sekunden nichts angefangen hat, liegt es fast
+          // immer am stummgeschalteten Geraet - dann sagen wir das.
+          clearTimeout(stimmeWache);
+          stimmeWache = setTimeout(function(){
+            if (!stimmeSprach) standMelden("Kein Ton? Schau, ob dein Gerät leise gestellt ist.");
+          }, 1500);
+        } catch(e){}
+      }, 120);
     } catch(e){}
   }
+
   function tonMalen(){ $("ton").textContent = tonAn ? "🔊" : "🔇"; }
   if (!kannSprechen) $("ton").classList.add("verborgen");
-  $("ton").addEventListener("click", function(){ tonAn = !tonAn; schreibe("duell-ton", tonAn); tonMalen(); if (!tonAn) try { speechSynthesis.cancel(); } catch(e){} });
+  $("ton").addEventListener("click", function(){
+    tonAn = !tonAn; schreibe("duell-ton", tonAn); tonMalen();
+    if (!tonAn){ standMelden("Vorlesen ist aus."); try { speechSynthesis.cancel(); } catch(e){} }
+    else { standMelden(""); sprich("Vorlesen ist an."); }
+  });
+  // Ein Knopf zum Ausprobieren - damit man nicht bis zur ersten Frage warten muss.
+  $("tontest").addEventListener("click", function(){
+    if (!kannSprechen){ standMelden("Dieses Gerät kann nicht vorlesen."); return; }
+    if (!tonAn){ tonAn = true; schreibe("duell-ton", true); tonMalen(); }
+    stimmeWecken();
+    sprich("Hallo! Ich lese dir die Fragen vor.");
+  });
   tonMalen();
 
   /* ---------- Adressen ---------- */
