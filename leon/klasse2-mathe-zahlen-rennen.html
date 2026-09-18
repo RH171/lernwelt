@@ -669,7 +669,13 @@
     treffer: function(){ return ersteTreffer; },
     probe: function(art, wieoft){
       var raus = [];
-      for (var i = 0; i < wieoft; i++) raus.push(BAUER[art]());
+      for (var i = 0; i < wieoft; i++){
+        var a = BAUER[art]();
+        a.modus = (i % 2 === 0) ? "tasten" : "wahl";
+        if (a.modus === "wahl") a.optionen = optionenBauen(a.loesung);
+        a.nr = i;
+        raus.push(a);
+      }
       return raus;
     },
     arten: function(){ return Object.keys(BAUER); }
