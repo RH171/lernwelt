@@ -23,7 +23,10 @@ import { FRAGEN } from "../../duell/fragen.js";
 import { rechenFrage } from "../../duell/rechnen.js";
 
 const MAX_SPIELER = 8;
-const NACH_ERSTEM_MS = 3000;
+// Nach der ersten richtigen Antwort bleibt Zeit zum Fertigdenken. Denny am
+// 18.09.2026: zu dritt und zu fuenft waren die Grossen "einfach immer ein Stueck
+// weit schneller" - drei Sekunden waren fuer einen Zweitklaessler zu knapp.
+const NACH_ERSTEM_MS = 6000;
 const AUFLOESUNG_MS = 7000;
 const AUFRAEUMEN_MS = 2 * 60 * 60 * 1000;
 
@@ -176,7 +179,7 @@ export class DuellRaum {
                quelle: f[7] ? "Klexikon: " + f[7] : "" };
     });
 
-    for (const sp of Object.values(this.s.spieler)) sp.punkte = 0;
+    for (const sp of Object.values(this.s.spieler)) { sp.punkte = 0; sp.msSumme = 0; sp.msAnzahl = 0; }
     this.s.runde = { fragen, n: -1, stufe };
     this.s.phase = "frage";
     await this.naechsteFrage();
@@ -188,10 +191,20 @@ export class DuellRaum {
     if (r.n >= r.fragen.length) return this.ende();
     const f = r.fragen[r.n];
     const jetzt = Date.now();
-    // Lesezeit: je laenger die Frage, desto spaeter geht es los - fuer alle gleich
-    const lesen = Math.max(2200, Math.min(5500, 1400 + f.text.length * 45));
+    /* Lesezeit: je laenger Frage UND Antworten, desto spaeter geht es los - fuer
+       alle gleich. Spielt ein Zweitklaessler mit, wird sie deutlich laenger.
+       Vorbild ist Kahoots "dynamic question time" (mindestens fuenf Sekunden,
+       Laenge nach Lesegeschwindigkeit); Leon liest langsamer als 180 Woerter je
+       Minute, darum hier grosszuegiger. Die Antworten erscheinen erst nach
+       ANTWORTEN_AB - vorher kann niemand sie lesen und vorklicken. */
+    const zeichen = f.text.length + f.antworten.join(" ").length;
+    const klein = r.stufe <= 2;
+    const lesen = klein
+      ? Math.max(6000, Math.min(15000, 2500 + zeichen * 80))
+      : Math.max(3000, Math.min(9000, 1500 + zeichen * 45));
     const dauer = (r.stufe <= 2 ? 25000 : 20000);
-    r.frage = { freiAb: jetzt + lesen, bis: jetzt + lesen + dauer, antworten: {}, ersterRichtig: null, schlussUm: null };
+    r.frage = { freiAb: jetzt + lesen, antwortenAb: jetzt + Math.round(lesen * 0.55),
+                bis: jetzt + lesen + dauer, antworten: {}, ersterRichtig: null, schlussUm: null };
     this.s.phase = "frage";
     await this.sichern();
     await this.weckerStellen();
@@ -202,6 +215,7 @@ export class DuellRaum {
     const r = this.s.runde, f = r.fragen[r.n], q = r.frage;
     return { t: "frage", n: r.n + 1, von: r.fragen.length, kat: f.kat, bild: f.bild, text: f.text, sprechen: f.sprechen,
       antworten: f.antworten, freiIn: Math.max(0, q.freiAb - Date.now()), zeit: Math.max(0, q.bis - Date.now()),
+      antwortenIn: Math.max(0, (q.antwortenAb || q.freiAb) - Date.now()),
       beantwortet: Object.keys(q.antworten), ersterDa: !!q.ersterRichtig };
   }
 
@@ -216,15 +230,21 @@ export class DuellRaum {
     const richtig = wahl === f.richtig;
     const ms = jetzt - q.freiAb;
     q.antworten[id] = { wahl, ms, richtig };
+    // Punkte: Richtig sein zaehlt, schnell sein ist ein Bonus - nicht alles.
+    // Vorher: 3 fuer den Ersten, 1 fuer alle anderen. Damit gewann am Laptop, wer
+    // am schnellsten klicken kann (Denny, 18.09.2026).
     if (richtig) {
+      this.s.spieler[id].punkte += 3;
       if (!q.ersterRichtig) {
         q.ersterRichtig = id;
-        this.s.spieler[id].punkte += 3;
-        q.schlussUm = Math.min(q.bis, jetzt + NACH_ERSTEM_MS);
-      } else {
         this.s.spieler[id].punkte += 1;
+        q.schlussUm = Math.min(q.bis, jetzt + NACH_ERSTEM_MS);
       }
     }
+    // Wie lange hat wer gebraucht? Am Ende sieht es jeder von sich selbst.
+    const sp = this.s.spieler[id];
+    sp.msSumme = (sp.msSumme || 0) + ms;
+    sp.msAnzahl = (sp.msAnzahl || 0) + 1;
     const online = this.verbundeneIds();
     const alleDa = [...online].filter((sid) => this.s.spieler[sid]).every((sid) => q.antworten[sid]);
     await this.sichern();
@@ -253,7 +273,8 @@ export class DuellRaum {
 
   async ende() {
     this.s.phase = "ende";
-    const tabelle = Object.entries(this.s.spieler).map(([id, sp]) => ({ id, name: sp.name, avatar: sp.avatar, punkte: sp.punkte }))
+    const tabelle = Object.entries(this.s.spieler).map(([id, sp]) => ({ id, name: sp.name, avatar: sp.avatar, punkte: sp.punkte,
+      schnitt: sp.msAnzahl ? Math.round(sp.msSumme / sp.msAnzahl / 100) / 10 : null }))
       .sort((a, b) => b.punkte - a.punkte);
     const keys = this.s.runde.fragen.map((f) => f.key).filter(Boolean);
     await this.sichern();
