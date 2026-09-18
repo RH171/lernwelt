@@ -118,17 +118,24 @@
   /* Beim Schreiben steht die Tastatur offen - auf Pauls iPhone bleiben dann
      360 px Hoehe. Dann tritt alles zurueck, damit "Pruefen" erreichbar ist. */
   @media (max-height:520px){
-    .karte{padding:12px;margin-bottom:9px}
-    .aufgabe .frage{font-size:17px;margin-bottom:8px}
-    .schreib-hinweis{font-size:14px;margin-bottom:7px}
-    .schreiben textarea{min-height:58px;font-size:17px;line-height:1.4;padding:9px}
-    .zeitung{padding:10px 12px}
-    .zeitung .kopf{margin-bottom:6px;padding-bottom:4px}
-    .zeitung .name{font-size:18px}
-    .zeitung h3{font-size:16px}
+    header{margin-bottom:8px}
+    h1{font-size:18px}
+    .karte{padding:11px;margin-bottom:8px}
+    .aufgabe .titel{margin-bottom:4px}
+    .aufgabe .frage{font-size:17px;line-height:1.3;margin-bottom:8px}
+    /* Der Hinweis tritt zurueck, solange die Tastatur offen steht - er ist
+       wieder da, sobald sie zugeht. Gelesen hat Paul ihn dann schon. */
+    .schreib-hinweis{display:none}
+    .schreiben textarea{min-height:54px;font-size:17px;line-height:1.4;padding:9px}
+    /* Zeitungskopf und Schlagzeile sind beim Tippen nur Ballast - der SATZ,
+       den er abschreibt, bleibt stehen. */
+    .zeitung{padding:9px 11px}
+    .zeitung .kopf, .zeitung h3{display:none}
     .artikel{font-size:16px;line-height:1.45}
     .gross-knopf{padding:12px;min-height:50px;font-size:17px;margin-top:9px}
+    .nebenknopf{margin-top:8px}
     .punktreihe{margin-top:7px}
+    .geprueft{font-size:17px;line-height:1.6}
   }
   .rueck{margin-top:12px;border-radius:14px;padding:12px 14px;font-size:16.5px;line-height:1.5}
   .rueck.gut{background:#f0fdf4} .rueck.nochmal{background:#fff7ed} .rueck.loesung{background:#fef2f2}
