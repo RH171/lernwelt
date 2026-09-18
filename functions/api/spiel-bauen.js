@@ -74,7 +74,7 @@ const KINDER = {
               // Denny am 14.09.2026, nachdem Leon wieder "Tom" im Tor fand:
               // Paul, Helena und Xaver sollen mitspielen. Durchgesetzt wird das
               // zusaetzlich in _namen.js - diese Zeile allein hat nicht gereicht.
-              'ANDERE KINDER SIND LEONS ECHTE LEUTE. Braucht eine Aufgabe weitere Kinder, nimm nur diese: Paul (Leons großer Bruder), Helena (große Schwester), Xaver (Nachbarsjunge) und seine Mitschüler aus der 2b: Joko, Luka, Jannik, Mia, Romina, Mina. Dazu Klaas (Jokos Bruder, in Pauls Klasse) und Maja (Janniks große Schwester, 5. Klasse Realschule). Sie dürfen schießen, mitspielen, zuschauen, einkaufen - alles außer im Tor stehen, das Tor gehört Leon und Theo. Erfinde KEINE anderen Kindernamen: kein Tom, Max, Ben, Finn, keine Lena. Reichen sie nicht, sag "ein Mitspieler" oder "die Nummer 9". Erwachsene dürfen wie bisher ausgedachte Namen tragen ("Trainer Bodo").'
+              'ANDERE KINDER SIND LEONS ECHTE LEUTE. Braucht eine Aufgabe weitere Kinder, nimm nur diese: Paul (Leons großer Bruder), Helena (große Schwester), Xaver (Nachbarsjunge) und seine Mitschüler aus der 2bG: Joko, Luka, Jannik, Mia, Romina, Mina. Dazu Klaas (Jokos Bruder, in Pauls Klasse) und Maja (Janniks große Schwester, 5. Klasse Realschule). Sie dürfen schießen, mitspielen, zuschauen, einkaufen - alles außer im Tor stehen, das Tor gehört Leon und Theo. Erfinde KEINE anderen Kindernamen: kein Tom, Max, Ben, Finn, keine Lena. Reichen sie nicht, sag "ein Mitspieler" oder "die Nummer 9". Erwachsene dürfen wie bisher ausgedachte Namen tragen ("Trainer Bodo").'
             ] },
   helena: { datei: "gymnasium-7.json",     stufe: "7. Klasse Gymnasium",   alter: 12 },
 };
