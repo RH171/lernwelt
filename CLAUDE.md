@@ -759,6 +759,20 @@ Messungen: `mess-schritte-wort-werkstatt.js`, `-zahlen-rennen.js`, `-silben-huep
 – sie prüfen auch die Fachlogik (jede Rechnung, jede Silbentrennung, jedes Wortpaar).
 **Gleichzeitig messen geht nicht:** `geraete-messen.js` belegt fest Port 8777/9222.
 
+### Stundenpläne und Leons Heft (18.09.2026)
+
+- `leon/stundenplan.html` und `paul/stundenplan.html`: der Plan als Tabelle, heutiger
+  Tag hervorgehoben, Legende, darunter der Scan (`stundenplan.jpg`). Kein Kalender
+  und keine Erinnerung – nur zum Nachschauen ([[keine-kalender-banner]] gilt weiter).
+  **X heißt bei Paul Deutsch, Mathe oder HSU, bei Leon zusätzlich Kunst und Musik –
+  die Lehrerin sucht es selbst aus.** Ändert sich der Plan: Tabelle in der Datei
+  ändern UND den Scan neu ablegen.
+- `leon/hausaufgaben.html`: dasselbe Heft wie bei Paul, aber für einen Leseanfänger –
+  größere Schrift, kurze Sätze, und jede Antwort der Werkstatt hat einen
+  🔊-Vorlesen-Knopf. `_antwort.js` kürzt für Klasse 1–2 auf 70 Wörter.
+- Beide Hefte sortieren nach der **letzten Nachricht** (nicht nach dem Anlegen) und
+  haben Fach-Filter, sobald mehr als ein Fach vorkommt.
+
 ### Das Hausaufgaben-Heft (seit 17.09.2026) – Pauls Hauptweg für Hausaufgaben
 
 `paul/hausaufgaben.html`, Kachel „Mein Hausaufgaben-Heft" (der alte Weg
