@@ -29,7 +29,9 @@
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  /* Doppeltipp zoomt sonst mitten im Spiel (Denny, 18.09.2026 - "der Doppelklick
+     hat plötzlich auch wieder funktioniert"). Zwei Finger zum Zoomen bleiben. */
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   html,body{margin:0;padding:0}
   body{font-family:var(--font);color:var(--ink);min-height:100vh;
     background:radial-gradient(900px 500px at 80% -10%,rgba(251,191,36,.25),transparent 60%),radial-gradient(800px 500px at 0% 100%,rgba(236,72,153,.22),transparent 60%),linear-gradient(160deg,var(--bg),var(--bg2));
@@ -83,6 +85,8 @@
   #tonstand{color:var(--muted);font:600 14px/1.35 var(--rund);flex:1;min-width:140px;text-align:right}
   .tontest{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;min-height:44px;
     font:700 14.5px/1 var(--rund);color:var(--ink);cursor:pointer}
+  .stimmwahl{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;min-height:44px;
+    font:600 14.5px/1 var(--rund);color:var(--ink);max-width:180px}
   .kat{border-radius:999px;padding:6px 12px;color:#fff;font:800 14px/1 var(--rund)}
   .zeitbalken{height:10px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin-bottom:12px}
   .zeitbalken i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#fbbf24,#f97316);transform-origin:left;transition:transform .2s linear}
@@ -137,7 +141,11 @@
     <h1>⚡ Quiz-Duell</h1>
     <button class="kopfknopf" id="ton" aria-label="Vorlesen an oder aus">🔊</button>
   </header>
-  <div class="tonzeile"><span id="tonstand"></span><button class="tontest" id="tontest" type="button">🔊 Stimme testen</button></div>
+  <div class="tonzeile">
+    <span id="tonstand"></span>
+    <select class="stimmwahl verborgen" id="stimmwahl" aria-label="Stimme auswählen"></select>
+    <button class="tontest" id="tontest" type="button">🔊 Stimme testen</button>
+  </div>
 
   <!-- Start -->
   <section id="sicht-start">
@@ -288,25 +296,54 @@
      Duell vor (Denny, 18.09.2026). Gesucht wird die freundlichste deutsche
      Stimme, die das Geraet hat - auf dem iPad sind das Anna/Helena/Petra, am
      Mac die "Premium"- oder "Enhanced"-Stimmen, auf Android die von Google. */
-  var STIMM_RANG = ["anna", "helena", "petra", "markus", "yannick", "google", "premium", "enhanced", "siri"];
-  var besteStimme = null;
+  /* Welche Stimme? Denny am 18.09.2026: "Die klingt absolut unmenschlich."
+     Das war die alte Kompaktstimme (auf dem Mac heißt sie Anna). Gesucht wird
+     darum zuerst eine erweiterte oder Premium-Stimme, dann eine Siri-Stimme,
+     erst ganz zum Schluss die alten Kompaktstimmen. Und weil jedes Gerät andere
+     hat, kann man die Stimme unten selbst auswählen - die Wahl bleibt gespeichert. */
+  var GUT = ["premium", "enhanced", "erweitert", "neural", "siri"];
+  var SIRI = ["eddy", "flo", "grandma", "grandpa", "reed", "rocko", "sandy", "shelley", "nicky", "aaron"];
+  var MAGER = ["anna", "compact", "kompakt", "eloquence", "albert", "bahh", "bells", "boing", "bubbles",
+               "cellos", "jester", "organ", "superstar", "trinoids", "whisper", "wobble", "zarvox"];
+  var eigeneStimme = lese("duell-stimme", "");
+  function deutscheStimmen(){
+    return (((window.speechSynthesis && speechSynthesis.getVoices()) || [])
+      .filter(function(v){ return /^de/i.test(v.lang || ""); }));
+  }
+  function stimmenRang(v){
+    var n = (v.name || "").toLowerCase();
+    for (var i = 0; i < GUT.length; i++) if (n.indexOf(GUT[i]) >= 0) return i;
+    for (var k = 0; k < SIRI.length; k++) if (n.indexOf(SIRI[k]) >= 0) return GUT.length;
+    for (var m = 0; m < MAGER.length; m++) if (n.indexOf(MAGER[m]) >= 0) return 99;
+    return GUT.length + 1;
+  }
   function stimmeWaehlen(){
-    var alle = (window.speechSynthesis && speechSynthesis.getVoices ? speechSynthesis.getVoices() : []) || [];
-    var de = alle.filter(function(v){ return /^de/i.test(v.lang || ""); });
+    var de = deutscheStimmen();
     if (!de.length) return null;
-    de.sort(function(a, b){
-      function rang(v){
-        var n = (v.name || "").toLowerCase();
-        for (var i = 0; i < STIMM_RANG.length; i++) if (n.indexOf(STIMM_RANG[i]) >= 0) return i;
-        return STIMM_RANG.length;
-      }
-      return rang(a) - rang(b);
+    if (eigeneStimme){
+      var gewaehlt = de.filter(function(v){ return v.name === eigeneStimme; })[0];
+      if (gewaehlt) return gewaehlt;
+    }
+    return de.slice().sort(function(a, b){ return stimmenRang(a) - stimmenRang(b); })[0];
+  }
+  function stimmenlisteMalen(){
+    var w = $("stimmwahl");
+    if (!w) return;
+    var de = deutscheStimmen();
+    w.innerHTML = "";
+    if (de.length < 2){ w.classList.add("verborgen"); return; }
+    w.classList.remove("verborgen");
+    de.slice().sort(function(a, b){ return stimmenRang(a) - stimmenRang(b); }).forEach(function(v){
+      var o = document.createElement("option");
+      o.value = v.name;
+      o.textContent = v.name.replace(/\s*\(.*?\)\s*$/, "") + (stimmenRang(v) < GUT.length ? " ✨" : "");
+      if (besteStimme && v.name === besteStimme.name) o.selected = true;
+      w.appendChild(o);
     });
-    return de[0];
   }
   if (typeof speechSynthesis !== "undefined"){
     besteStimme = stimmeWaehlen();
-    speechSynthesis.onvoiceschanged = function(){ besteStimme = stimmeWaehlen(); };
+    speechSynthesis.onvoiceschanged = function(){ besteStimme = stimmeWaehlen(); stimmenlisteMalen(); };
   }
   /* Vorlesen auf dem iPad - zweiter Anlauf (18.09.2026, nachmittags).
      Paul hat es mit Denny getestet: immer noch still. Drei Dinge koennen es sein,
@@ -377,13 +414,23 @@
     else { standMelden(""); sprich("Vorlesen ist an."); }
   });
   // Ein Knopf zum Ausprobieren - damit man nicht bis zur ersten Frage warten muss.
+  $("stimmwahl").addEventListener("change", function(){
+    eigeneStimme = this.value;
+    schreibe("duell-stimme", eigeneStimme);
+    besteStimme = stimmeWaehlen();
+    stimmeWecken();
+    sprich("So klinge ich.");
+  });
   $("tontest").addEventListener("click", function(){
     if (!kannSprechen){ standMelden("Dieses Gerät kann nicht vorlesen."); return; }
     if (!tonAn){ tonAn = true; schreibe("duell-ton", true); tonMalen(); }
     stimmeWecken();
+    stimmenlisteMalen();
     sprich("Hallo! Ich lese dir die Fragen vor.");
   });
   tonMalen();
+  stimmenlisteMalen();
+  setTimeout(stimmenlisteMalen, 800);   // Safari liefert die Stimmen verzoegert
 
   /* ---------- Adressen ---------- */
   function wsAdresse(code){
@@ -634,10 +681,12 @@
     reiheMalen(m.beantwortet);
     // Erst die Frage vorlesen, die Antworten kommen, wenn sie zu sehen sind.
     sprich(m.sprechen);
+    // Nur die FRAGE wird vorgelesen. Denny am 18.09.2026: "Lest doch erst mal
+    // nur die Frage vor. Die Antworten sind ja meistens aus einem Wort - die
+    // kann sich Leon alleine durchlesen, und wir haben ja jetzt Zeit."
     clearTimeout(antwortenUhr);
     antwortenUhr = setTimeout(function(){
       box.classList.remove("verdeckt");
-      sprich(m.antworten.join(", ") + "?");
     }, Math.max(0, m.antwortenIn == null ? 0 : m.antwortenIn));
     var freiUm = Date.now() + m.freiIn, bisUm = freiUm + (m.zeit - m.freiIn), dauer = Math.max(1, m.zeit - m.freiIn);
     clearInterval(uhrTakt);
