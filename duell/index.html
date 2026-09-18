@@ -656,13 +656,18 @@
       else if (drin < 0){ vokabeln.push(m.frageKey); schreibe("duell-falsch", vokabeln.slice(-150)); }
     }
     var h = "";
-    if (m.erster){
-      var e = spielerVon(m.erster), ea = m.antworten.filter(function(a){ return a.id === m.erster; })[0];
-      h += '<div class="schnellster">⚡ ' + esc(e.avatar) + ' ' + esc(e.name) + ' war am schnellsten' + (ea ? " – " + (ea.ms / 1000).toFixed(1).replace(".", ",") + " s" : "") + '!</div>';
+    // Nicht mehr "wer war schnell", sondern "wer hatte es" - Tempo gibt keine
+    // Punkte mehr (Denny, 18.09.2026).
+    var richtige = m.antworten.filter(function(a){ return a.richtig; });
+    if (richtige.length === m.antworten.length && richtige.length > 1){
+      h += '<div class="schnellster">🎉 Alle richtig! Stark, ihr ' + richtige.length + '.</div>';
+    } else if (richtige.length){
+      h += '<div class="schnellster">✅ Richtig hatten es: ' + richtige.map(function(a){
+        var s = spielerVon(a.id); return esc(s.avatar) + " " + esc(s.name); }).join(", ") + '</div>';
     } else {
       h += '<div class="schnellster">😮 Diesmal hat es keiner gewusst.</div>';
     }
-    $("lesen").textContent = meine ? (meine.richtig ? (m.erster === ich ? "Du warst Erster! +3" : "Richtig! +1") : "Knapp daneben – jetzt weißt du es!") : "Du hast diesmal nicht getippt.";
+    $("lesen").textContent = meine ? (meine.richtig ? "Richtig! +3" : "Knapp daneben – die Frage kommt nochmal!") : "Du hast diesmal nicht getippt.";
     if (m.info) h += '<div class="info"><b>Wusstest du?</b> ' + esc(m.info) +
       (m.quelle ? '<span class="quelle">' + esc(m.quelle) + ' · klexikon.zum.de · CC BY-SA 4.0</span>' : '') + '</div>';
     $("aufloesung").innerHTML = h;
