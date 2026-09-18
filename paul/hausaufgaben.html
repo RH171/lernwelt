@@ -324,11 +324,16 @@
 
   /* Die Fächer. Paul bekommt heute seinen Stundenplan - danach richte ich die
      Liste danach aus (Denny, 18.09.2026). Sport ist bewusst nicht dabei. */
+  // Pauls Fächer laut Stundenplan 4bG, Schuljahr 2026/27 (Denny, 18.09.2026):
+  // X steht dort für Deutsch, Mathematik, HSU, Kunst und Musik; dazu Englisch
+  // (Mi), Religion/Ethik, Werken und Gestalten. Sport und Schwimmen haben keine
+  // Hausaufgaben und fehlen deshalb.
   var FAECHER = [
     { k: "deutsch", n: "Deutsch", ic: "📘" }, { k: "mathe", n: "Mathe", ic: "🔢" },
     { k: "hsu", n: "HSU", ic: "🌍" }, { k: "englisch", n: "Englisch", ic: "🇬🇧" },
-    { k: "religion", n: "Religion", ic: "🙏" }, { k: "musik", n: "Musik", ic: "🎵" },
-    { k: "kunst", n: "Kunst", ic: "🎨" }, { k: "anderes", n: "Anderes", ic: "✏️" }
+    { k: "religion", n: "Reli/Ethik", ic: "🙏" }, { k: "kunst", n: "Kunst", ic: "🎨" },
+    { k: "musik", n: "Musik", ic: "🎵" }, { k: "wg", n: "Werken/Gestalten", ic: "🪚" },
+    { k: "anderes", n: "Anderes", ic: "✏️" }
   ];
   var fach = "";
   (function(){
