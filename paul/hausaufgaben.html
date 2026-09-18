@@ -237,7 +237,9 @@
       var letzte = (f.verlauf || [])[f.verlauf.length - 1] || {};
       var marke = f.status === "erledigt" ? ["fertig", "✅ erledigt"] : (f.ungelesenKind ? ["neu", "Neue Antwort"] : ["dran", "läuft"]);
       b.innerHTML = '<span class="ic">📄</span><span class="mitte"><b></b><small></small></span><span class="marke"></span>';
-      b.querySelector("b").textContent = (f.verlauf[0] && f.verlauf[0].text || "Hausaufgabe").replace(/^Meine Hausaufgabe\.\s*/, "") || "Hausaufgabe";
+      // Titel kommt aus der ersten Antwort der Werkstatt ("Mathe – Zahlen bis 1000").
+      b.querySelector("b").textContent = (f.titel && f.titel !== "Meine Hausaufgabe") ? f.titel
+        : ((f.verlauf[0] && f.verlauf[0].text || "Hausaufgabe").replace(/^Meine Hausaufgabe\.\s*/, "") || "Hausaufgabe");
       b.querySelector("small").textContent = datum(f.zeit) + " · " + f.verlauf.length + " Nachrichten";
       b.querySelector(".marke").className = "marke " + marke[0];
       b.querySelector(".marke").textContent = marke[1];
@@ -353,7 +355,7 @@
   function fadenOeffnen(id){
     offen = faeden.filter(function(f){ return f.id === id; })[0] || null;
     if (!offen){ listeLaden(); zeige("liste"); return; }
-    $("titel").textContent = "📄 Hausaufgabe";
+    $("titel").textContent = "📄 " + ((offen.titel && offen.titel !== "Meine Hausaufgabe") ? offen.titel : "Hausaufgabe");
     verlaufMalen(offen, false);
     zeige("faden");
     setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);

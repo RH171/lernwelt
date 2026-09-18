@@ -153,8 +153,20 @@ async function sofortAntworten(env, faden, kind, text, bild, bilder) {
       verlauf: faden.verlauf.slice(0, -1),
     });
   }
+  // Hausaufgaben bekommen ihren Titel aus der ersten Antwort: "📌 Mathe - Zahlen
+  // bis 1000". Denny am 18.09.2026: "Kannst Du hier den Titel für die Hausaufgaben
+  // bitte immer entsprechend zum Fach und Aufgabe betiteln." In der Liste stand
+  // sonst bei jeder Hausaufgabe derselbe Satz ("Ich habe das Blatt fertig gelöst").
+  let text2 = antwort;
+  if (antwort && faden.art === "hausaufgabe") {
+    const kopf = antwort.match(/^\s*📌\s*([^\n]{3,70})\n+/);
+    if (kopf) {
+      if (!faden.titel || faden.titel === "Meine Hausaufgabe") faden.titel = kopf[1].trim();
+      text2 = antwort.slice(kopf[0].length);
+    }
+  }
   const eintrag = antwort
-    ? { von: "werkstatt", text: antwort, zeit: new Date().toISOString(),
+    ? { von: "werkstatt", text: text2, zeit: new Date().toISOString(),
         hatBild: false, nr, vonKi: true }
     : { von: "werkstatt", nr, hatBild: false, zeit: new Date().toISOString(),
         automatisch: true, grund: grund === "ok" ? "stoerung" : grund,

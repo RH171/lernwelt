@@ -59,6 +59,8 @@
   .start h2{font-family:var(--rund);font-size:30px;margin:8px 0 6px}
   .start p{color:var(--muted);font-size:18px;line-height:1.5;margin:0 0 18px}
   .start .knopf{width:100%}
+  .start .knopf.hell{background:#eef7f2;color:var(--leon-dunkel);margin-top:10px}
+  .vorrat{color:var(--muted);font-size:15px;margin-top:10px}
   .erledigt{background:#ecfdf3;border:1px solid #abefc6;border-radius:18px;padding:14px;margin:0 0 14px;
     font:700 19px/1.4 var(--rund);color:var(--leon-dunkel)}
   .lesepass{max-width:760px;margin:12px auto 0}
@@ -161,6 +163,7 @@
   .beweis h2{font-family:var(--rund);font-size:28px;margin:6px 0}
   .beweis p{font-size:19px;line-height:1.5;color:var(--muted);margin:0 0 6px}
   .beweis .knopf{width:100%;margin-top:14px}
+  .beweis .knopf.hell{background:#eef7f2;color:var(--leon-dunkel)}
 </style>
 </head>
 <body>
@@ -179,6 +182,8 @@
       <h2 id="start-titel"></h2>
       <p id="start-text">Lies die Geschichte ganz allein. Danach stelle ich dir 5 Fragen – das ist dein Lesebeweis.</p>
       <button class="knopf" id="start-los">Los, ich lese! 📖</button>
+      <button class="knopf hell verborgen" id="andere">Lieber eine andere ›</button>
+      <div class="vorrat" id="vorrat"></div>
     </div>
     <div class="karte lesepass verborgen" id="lesepass">
       <h3>🏅 Mein Lesepass</h3>
@@ -229,7 +234,8 @@
       <div class="siegel"><span>📖</span>Gelesen!</div>
       <h2 id="b-titel">Lesebeweis erbracht!</h2>
       <p id="b-text"></p>
-      <button class="knopf" id="b-fertig">Zurück zu meinen Spielen</button>
+      <button class="knopf verborgen" id="b-weiter">📖 Noch eine Geschichte lesen</button>
+      <button class="knopf hell" id="b-fertig">Zurück zu meinen Spielen</button>
     </div>
   </section>
 </div>
@@ -258,20 +264,30 @@
     return t.length === 3 ? Number(t[2]) + "." + Number(t[1]) + "." : "";
   }
 
-  // Welche Geschichte ist heute dran? Die schon gewählte, sonst die erste noch
-  // ungelesene. Sind alle gelesen, kommt die, die am längsten her ist.
-  function geschichteFuerHeute(){
-    var d = lesen(), heute = heuteText();
-    var schon = d.heute && d.heute.datum === heute && finde(d.heute.id);
-    if (schon) return schon;
-    var neu = ALLE.filter(function(g){ return !d.gelesen[g.id]; })[0];
-    if (!neu){
-      neu = ALLE.slice().sort(function(a, b){
-        return String(d.gelesen[a.id].datum).localeCompare(String(d.gelesen[b.id].datum));
-      })[0];
-    }
-    if (neu){ d.heute = { datum: heute, id: neu.id }; schreiben(d); }
-    return neu;
+  /* Welche Geschichte ist dran? Immer die erste NOCH NICHT GELESENE.
+     Leon am 18.09.2026 (Bild vom iPad): "sehr enttäuscht, weil er jetzt wieder
+     die gleiche Geschichte hat". Vorher war die Geschichte an den TAG gebunden:
+     Wer las, aber die fünf Fragen nicht beantwortete, bekam beim nächsten
+     Öffnen dieselbe noch einmal. Denny: "Vielleicht kannst Du immer 2-3
+     Geschichten auf Puffer bereit halten und Leon kann so viel lesen wie er
+     möchte. Prüfe auch, dass er nicht die gleichen Geschichten lesen muss."
+
+     Also: kein Tageslimit mehr. Gelesen ist gelesen; danach kommt die nächste.
+     "uebersprungen" merkt sich, was er über „Lieber eine andere" weggelegt hat -
+     die kommen erst wieder, wenn nichts Neues mehr da ist. */
+  function ungelesene(){
+    var d = lesen();
+    return ALLE.filter(function(g){ return !d.gelesen[g.id]; });
+  }
+  function naechsteGeschichte(){
+    var d = lesen(), offen = ungelesene();
+    var frisch = offen.filter(function(g){ return (d.uebersprungen || []).indexOf(g.id) < 0; });
+    if (frisch.length) return frisch[0];
+    if (offen.length) return offen[0];
+    // Alles gelesen: die, die am längsten her ist - und das sagen wir auch.
+    return ALLE.slice().sort(function(a, b){
+      return String(d.gelesen[a.id].datum).localeCompare(String(d.gelesen[b.id].datum));
+    })[0] || null;
   }
   function finde(id){ return ALLE.filter(function(g){ return g.id === id; })[0] || null; }
 
@@ -285,14 +301,29 @@
 
   function startMalen(){
     var d = lesen();
-    geschichte = geschichteFuerHeute();
+    geschichte = naechsteGeschichte();
     if (!geschichte){ $("start-titel").textContent = "Noch keine Geschichte da."; $("start-los").classList.add("verborgen"); return; }
-    var heuteGelesen = d.gelesen[geschichte.id] && d.gelesen[geschichte.id].datum === heuteText();
-    $("schon-gelesen").classList.toggle("verborgen", !heuteGelesen);
+    var offen = ungelesene().length;
+    var wiederholung = offen === 0;
+    var heuteSchon = Object.keys(d.gelesen).filter(function(id){ return d.gelesen[id].datum === heuteText(); }).length;
+
+    $("schon-gelesen").classList.toggle("verborgen", heuteSchon === 0);
+    $("schon-gelesen").innerHTML = heuteSchon === 0 ? "" :
+      (heuteSchon === 1 ? "✅ Heute hast du schon eine Geschichte gelesen. Stark!" 
+                        : "✅ Heute hast du schon " + heuteSchon + " Geschichten gelesen. Wow!") +
+      "<br>Wenn du magst, lies gleich weiter.";
     $("start-bild").textContent = geschichte.bild || "📖";
     $("start-titel").textContent = geschichte.titel;
-    $("start-ueber").textContent = heuteGelesen ? "Deine Geschichte von heute" : "Deine Geschichte für heute";
-    $("start-los").textContent = heuteGelesen ? "Nochmal lesen 📖" : "Los, ich lese! 📖";
+    $("start-ueber").textContent = wiederholung ? "Noch einmal lesen" : (heuteSchon ? "Deine nächste Geschichte" : "Deine Geschichte für heute");
+    $("start-text").textContent = wiederholung
+      ? "Du hast schon alle Geschichten gelesen! Die hier ist am längsten her – lies sie ruhig noch einmal."
+      : "Lies die Geschichte ganz allein. Danach stelle ich dir 5 Fragen – das ist dein Lesebeweis.";
+    $("start-los").textContent = "Los, ich lese! 📖";
+    // Noch etwas anderes lesen? Dann diese hier hinten anstellen.
+    zeigen($("andere"), offen > 1);
+    $("vorrat").textContent = offen > 0
+      ? (offen === 1 ? "Danach wartet noch 1 neue Geschichte." : "Danach warten noch " + (offen - 1) + " neue Geschichten.")
+      : "";
 
     var ids = Object.keys(d.gelesen).filter(finde).sort(function(a, b){
       return String(d.gelesen[b].datum).localeCompare(String(d.gelesen[a].datum));
@@ -313,6 +344,7 @@
     });
     document.title = "Lesegeschichte";
   }
+  function zeigen(el, ja){ if (el) el.classList.toggle("verborgen", !ja); }
 
   /* ---------- Lesen ---------- */
   var silbenAn = false;
@@ -422,6 +454,17 @@
   }
 
   $("start-los").addEventListener("click", function(){ if (geschichte) losLesen(); });
+  $("andere").addEventListener("click", function(){
+    // Diese Geschichte hinten anstellen, die nächste ungelesene zeigen.
+    try {
+      var d = lesen();
+      d.uebersprungen = (d.uebersprungen || []).filter(function(id){ return id !== geschichte.id; });
+      d.uebersprungen.push(geschichte.id);
+      d.uebersprungen = d.uebersprungen.slice(-30);
+      schreiben(d);
+    } catch(e){}
+    startMalen();
+  });
   $("zurueckblaettern").addEventListener("click", function(){ if (seite > 0){ seite--; seiteMalen(); } });
   $("weiter").addEventListener("click", function(){
     if (nachschauenFuer >= 0){ nachschauenFuer = -1; zeige("fragen"); return; }
@@ -506,9 +549,21 @@
       gleichRichtig >= 3 ? ". " + gleichRichtig + " wusstest du sofort, den Rest hast du nachgeschaut. So machen es gute Leser!" :
       ". Nachschauen gehört zum Lesen dazu – gut gemacht!") +
       " Ungefähr " + minuten + (minuten === 1 ? " Minute" : " Minuten") + " hast du gelesen.";
+    var offen = ungelesene().length;
+    if (offen){
+      $("b-weiter").classList.remove("verborgen");
+      $("b-weiter").textContent = "📖 Noch eine Geschichte lesen (" + offen + " warten)";
+    } else $("b-weiter").classList.add("verborgen");
     zeige("beweis");
   }
+  $("b-weiter").addEventListener("click", function(){
+    geschichte = naechsteGeschichte();
+    if (geschichte) losLesen(); else { startMalen(); zeige("start"); }
+  });
   $("b-fertig").addEventListener("click", function(){ location.href = "/leon/#lesen"; });
+
+  // Fuer die Messung.
+  window.__lese = { jetzt: function(){ return geschichte; }, offen: function(){ return ungelesene().length; } };
 
   startMalen();
   zeige("start");
