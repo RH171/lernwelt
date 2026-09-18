@@ -74,7 +74,7 @@ const KINDER = {
               // Denny am 14.09.2026, nachdem Leon wieder "Tom" im Tor fand:
               // Paul, Helena und Xaver sollen mitspielen. Durchgesetzt wird das
               // zusaetzlich in _namen.js - diese Zeile allein hat nicht gereicht.
-              'ANDERE KINDER HEISSEN PAUL, HELENA ODER XAVER. Braucht eine Aufgabe weitere Kinder, nimm nur diese drei: Paul ist Leons großer Bruder, Helena seine große Schwester, Xaver der Nachbarsjunge. Sie dürfen schießen, mitspielen, zuschauen, einkaufen - alles außer im Tor stehen, das Tor gehört Leon und Theo. Erfinde KEINE anderen Kindernamen: kein Tom, Max, Ben, Finn, keine Mia oder Lena. Reichen drei nicht, sag "ein Mitspieler" oder "die Nummer 9". Erwachsene dürfen wie bisher ausgedachte Namen tragen ("Trainer Bodo").'
+              'ANDERE KINDER SIND LEONS ECHTE LEUTE. Braucht eine Aufgabe weitere Kinder, nimm nur diese: Paul (Leons großer Bruder), Helena (große Schwester), Xaver (Nachbarsjunge) und seine Mitschüler aus der 2b: Joko, Luka, Jannik, Mia, Romina, Mina. Dazu Klaas (Jokos Bruder, in Pauls Klasse) und Maja (Janniks große Schwester, 5. Klasse Realschule). Sie dürfen schießen, mitspielen, zuschauen, einkaufen - alles außer im Tor stehen, das Tor gehört Leon und Theo. Erfinde KEINE anderen Kindernamen: kein Tom, Max, Ben, Finn, keine Lena. Reichen sie nicht, sag "ein Mitspieler" oder "die Nummer 9". Erwachsene dürfen wie bisher ausgedachte Namen tragen ("Trainer Bodo").'
             ] },
   helena: { datei: "gymnasium-7.json",     stufe: "7. Klasse Gymnasium",   alter: 12 },
 };
@@ -552,7 +552,7 @@ D4. DAS ZIELWORT IN ANFÜHRUNGSZEICHEN: Mit welchem Laut beginnt „Mond"? Keine
 D5. NICHTS, WAS DAS VORLESEN VERRÄT. Steht die Lösung wörtlich und allein in der Frage, hört das Kind sie nur heraus. Rechtschreib-Auswahl wie „Hund" gegen „Hunt" ist dagegen gut - beides klingt gleich, das Kind muss hinschauen.
 D6. LAUT UND BUCHSTABE NICHT VERWECHSELN. „Schuh" beginnt mit dem Laut „Sch", nicht mit „S". Antworten, die nur wegen dieser Verwechslung falsch sind, gehören nicht in die Auswahl.
 D7. MERKMALE: anlaut, inlaut, endlaut, selbstlaute, buchstaben gross klein, silben zaehlen, silben zusammensetzen, reime, nomen erkennen, artikel, grossschreibung nomen, satzanfang gross, einzahl mehrzahl.
-D8. KEINE AUFGABE HÄNGT AN EINEM NAMEN. Kommt ein Kind vor, heißt es Leon, Theo, Paul, Helena oder Xaver - und die Lösung darf nie davon abhängen, wie der Name geschrieben wird.
+D8. KEINE AUFGABE HÄNGT AN EINEM NAMEN. Kommt ein Kind vor, heißt es Leon, Theo, Paul, Helena, Xaver oder eines seiner Mitschülerkinder (Joko, Luka, Jannik, Mia, Romina, Mina) - und die Lösung darf nie davon abhängen, wie der Name geschrieben wird.
 D9. BILDER meist leer. "menge" nur, wenn wirklich gezählt wird.
 D11. KEIN RECHNEN UND KEIN ABZÄHLEN in Deutsch und HSU. Keine "Wie viele Bälle siehst du?", keine Plus-Aufgabe mit Leon und Theo, keine Wochen in Tage umrechnen - das gehört in Mathe. Eine Zahl als Lösung nur, wenn sie aus dem Fach selbst kommt (Silben, Buchstaben, Sinne, Jahreszeiten).
 D12. NAMEN SIND NAMENWÖRTER. Leon, Paul, Ronhof, Fürth sind Nomen und werden groß geschrieben - beim Zählen von Namenwörtern zählen sie mit.

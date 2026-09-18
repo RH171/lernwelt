@@ -12,8 +12,12 @@
 // sollen als Figuren vorkommen - sie ersetzen die ausgedachten Kindernamen.
 
 export const TORHUETER = ["Leon", "Theo"];
-const JUNGEN_FELD = ["Paul", "Xaver"];
-const MAEDCHEN_FELD = ["Helena"];
+// Denny am 18.09.2026: dazu Leons Mitschueler aus der 2bG - Joko (sein Bruder
+// Klaas ist in Pauls Klasse),, (seine grosse Schwester Maja geht in
+// die 5. Klasse der Realschule und spielt oft mit Paul), Mia, Romina (faehrt mit
+// Leon mit dem Roller zur Schule) und Mina.
+const JUNGEN_FELD = ["Paul", "Xaver", "Joko", "Luka", "Jannik", "Klaas"];
+const MAEDCHEN_FELD = ["Helena", "Mia", "Romina", "Mina", "Maja"];
 
 // Kindernamen, die Claude gern erfindet. Bewusst ohne Woerter, die im Deutschen
 // auch etwas anderes bedeuten (Jan = Januar, Mark, Martin, Nikolaus, Rose).
@@ -23,8 +27,8 @@ const JUNGEN = ("Tom Tim Timo Max Ben Finn Fynn Jonas Lukas Luca Luka Noah Elias
   "Kevin Lennard Lennart Jannik Hannes Johannes Fritz Otto Bruno Levi Liam Matteo Emilio " +
   "Vincent Valentin Jonathan Benedikt Sven Lasse Malte Nils Till Leopold Konrad Aaron Adrian " +
   "Fabian Dominik Daniel Lenny Jona Joshua Mattis Hugo Carlo Ludwig").split(" ");
-const MAEDCHEN = ("Mia Emma Lena Anna Hannah Hanna Lea Leonie Marie Sophie Sofia Lina Ella " +
-  "Clara Klara Ida Emilia Lara Laura Lisa Sarah Sara Julia Nele Paula Frieda Greta Maja Mila " +
+const MAEDCHEN = ("Emma Lena Anna Hannah Hanna Lea Leonie Marie Sophie Sofia Lina Ella " +
+  "Clara Klara Ida Emilia Lara Laura Lisa Sarah Sara Julia Nele Paula Frieda Greta Mila " +
   "Luisa Johanna Amelie Charlotte Pia Lotta Ronja Jana Nina Zoe Lilly Lilli Mathilda Emely " +
   "Marlene Merle Finja Carla Luna Elif Selin Alina Tina Katja Svenja Kim").split(" ");
 
