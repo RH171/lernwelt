@@ -54,7 +54,7 @@ const KINDER = {
               'DIE ÄNDERUNG MUSS DASTEHEN, NICHT ZU ERRATEN SEIN. Wie bei W2: In der Aufgabe steht ausdrücklich, worauf sich die Änderung bezieht ("250 g mehr als die erste Bestellung"), und beide Zahlen bleiben im Zahlenraum aus Regel 15 - auch die geänderte. Ein Ergebnis unter null oder eine krumme Zwischenzahl darf dabei nicht herauskommen. Höchstens ein paar Aufgaben je Spiel so, sonst wird aus der Abwechslung eine Masche.'
             ] },
   leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 7,
-            interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus.",
+            interessen: "Fußball, und zwar die SpVgg Greuther Fürth - das Kleeblatt, zu Hause im Ronhof. Leon lebt in Fürth und kennt sich damit richtig gut aus. Er spielt selbst: F-Jugend beim ASC Boxdorf, Training mittwochs und freitags von 17 bis 18.30 Uhr - Training, Trikot, Sporttasche und Trinkflasche sind für ihn Alltag.",
             // Leon am 09.09.2026 (Meldung c75z9z49k5): "Wenn ein Torwart mit Namen
             // benannt wird, muss der Leon heißen. Weil Leon ist Torwart." Auf die
             // Rueckfrage nach dem zweiten Tor: "soll er Theo heißen. Weil der ist
