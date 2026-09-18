@@ -475,9 +475,11 @@
     } catch(e){}
     startMalen();
   });
-  $("zurueckblaettern").addEventListener("click", function(){ if (seite > 0){ seite--; seiteMalen(); } });
+  // Wer eine Seite verlässt, hat sie gesehen - beim Zurückkommen wartet er nicht neu.
+  $("zurueckblaettern").addEventListener("click", function(){ if (seite > 0){ schonGelesen[seite] = true; seite--; seiteMalen(); } });
   $("weiter").addEventListener("click", function(){
     if (nachschauenFuer >= 0){ nachschauenFuer = -1; zeige("fragen"); return; }
+    schonGelesen[seite] = true;
     if (seite < geschichte.seiten.length - 1){ seite++; seiteMalen(); }
     else { fragenNr = 0; frageMalen(); zeige("fragen"); }
   });
