@@ -69,6 +69,10 @@
   .lesekarte:active{transform:scale(.98)}
   /* Die Spiele zum Anfassen: eigene Seiten, sofort da, ohne Bauen. */
   .anfassen h2{font-family:var(--rund);font-size:20px;margin:0 0 4px}
+  /* Frisch dazugekommen - faellt auf, ohne zu blinken. */
+  .anfass.neu{border-color:var(--leon);background:#f2fdf6;position:relative}
+  .anfass.neu::after{content:"NEU";position:absolute;top:6px;right:8px;font-family:var(--font);font-size:10.5px;
+    font-weight:800;letter-spacing:.06em;color:#fff;background:var(--leon);border-radius:999px;padding:3px 7px}
   .anfassen-liste{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:14px}
   @media (max-width:640px){ .anfassen-liste{grid-template-columns:1fr} }
   .anfass{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink);
@@ -401,6 +405,12 @@
         <a class="anfass" href="klasse2-mathe-stadionuhr.html"><span class="bild">&#128338;</span>Die Stadionuhr<span class="fachname">Mathe</span></a>
         <a class="anfass" href="klasse2-deutsch-artikel-kabine.html"><span class="bild">&#128682;</span>Der-die-das-Kabine<span class="fachname">Deutsch</span></a>
         <a class="anfass" href="klasse2-hsu-wetter-garderobe.html"><span class="bild">&#129509;</span>Was zieht Leon an?<span class="fachname">HSU</span></a>
+        <!-- 18.09.2026: drei Spiele in den Formaten, die gerade angesagt sind -
+             Baukasten (Infinite Craft), Rennen mit Rechnen, One-Button-Spiel.
+             Denny: Leon war traurig, "dass die Großen so coole Spiele haben". -->
+        <a class="anfass neu" href="klasse2-deutsch-wort-werkstatt.html"><span class="bild">&#129513;</span>Die Wort-Werkstatt<span class="fachname">Deutsch</span></a>
+        <a class="anfass neu" href="klasse2-mathe-zahlen-rennen.html"><span class="bild">&#127939;</span>Das Zahlen-Rennen<span class="fachname">Mathe</span></a>
+        <a class="anfass neu" href="klasse2-deutsch-silben-huepfer.html"><span class="bild">&#129432;</span>Der Silben-Hüpfer<span class="fachname">Deutsch</span></a>
       </div>
     </div>
 
