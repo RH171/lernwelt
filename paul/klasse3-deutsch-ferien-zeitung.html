@@ -398,7 +398,7 @@
     $("aufgabe").innerHTML = kopfHtml(s) +
       '<div class="schreiben">' +
         '<p class="schreib-hinweis">Schreib den ganzen Satz neu auf – mit dem verbesserten Wort. Punkt und große Buchstaben zählen mit.</p>' +
-        '<textarea id="selbst-text" rows="3" autocapitalize="sentences" autocomplete="off" spellcheck="false" ' +
+        '<textarea id="selbst-text" rows="3" maxlength="300" autocapitalize="sentences" autocomplete="off" spellcheck="false" ' +
           'placeholder="Hier den ganzen Satz hintippen …"></textarea>' +
         '<button class="gross-knopf" type="button" id="selbst-ab">Prüfen</button>' +
         '<button type="button" class="nebenknopf" id="selbst-hilfe">💡 Wörter zeigen</button>' +
@@ -506,6 +506,21 @@
     return { richtig: richtig, gegeben: gegeben.join(" ") };
   }
 
+  // Bei mehrwortigen Antworten ("Am frühen Morgen") faellt der Wortvergleich
+  // auseinander: aus "Am Abend" wird ein markiertes Wort und eine Luecke, und
+  // der Schluessel "Am Abend" aus der Erklaerungsliste wird nicht mehr
+  // gefunden. Darum vorher der kurze Weg: Steht sein Satz Wort fuer Wort da,
+  // wie er mit einem der vier Woerter dastuende, ist die Sache klar.
+  function welcheWahl(s, ist){
+    var treffer = "";
+    [s.r].concat(Object.keys(s.f)).forEach(function(k){
+      if (treffer) return;
+      var kand = zerlege(s.v + k + s.n);
+      if (kand.length === ist.length && kand.every(function(w, i){ return gleichwertig(w, ist[i]); })) treffer = k;
+    });
+    return treffer;
+  }
+
   // Hat er ein Wort aus der Auswahl erwischt, bekommt er die Erklaerung, die
   // auch beim Antippen dort stuende - egal ob mit oder ohne Satzzeichen.
   function erklaerung(s, gegeben){
@@ -525,6 +540,8 @@
     var ops = abgleich(soll, ist);
     var stimmtGanz = ops.every(function(o){ return o.t === "gleich"; }) && ist.length === soll.length;
     var ziel = zielPruefen(ops, zielBereich(s));
+    var wahl = welcheWahl(s, ist);
+    if (wahl && wahl !== s.r){ ziel = { richtig: false, gegeben: wahl }; }
 
     if (versuch === 0){
       try {
