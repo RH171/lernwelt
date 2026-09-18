@@ -111,7 +111,7 @@
   /* ---- Die Leiste unten. Sie klebt am Fensterrand, damit "Zusammenbauen"
          nie unter den Rand rutscht; rechts bleibt Platz fuer den runden
          Melde-Knopf aus lernstand.js. ---- */
-  .aktion{position:static;left:0;right:0;bottom:0;z-index:20;background:#fff;
+  .aktion{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;
     box-shadow:0 -6px 18px rgba(15,40,70,.14);
     padding:10px 74px calc(10px + env(safe-area-inset-bottom)) 12px}
   .aktion-innen{max-width:900px;margin:0 auto}
@@ -712,7 +712,9 @@
     var p = offen.filter(function(x){ return gewaehlt.indexOf(x.a) < 0 && gewaehlt.indexOf(x.b) < 0; })[0];
     if (!p && offen.length){ gewaehlt = []; schlitzeMalen(); brettMalen(); p = offen[0]; }
     if (!p){ melden("Hier ist gerade nichts mehr zu bauen. Tipp auf 🏁 Fertig.", "hm"); return; }
-    var teil = Math.random() < .5 ? p.a : p.b;
+    var teil = p.a;
+    var zwei = $("teile").querySelector('[data-teil="' + p.b + '"]');
+    if (zwei) zwei.classList.add("leuchtet");
     Array.prototype.forEach.call($("teile").querySelectorAll(".leuchtet"), function(x){ x.classList.remove("leuchtet"); });
     var knopf = $("teile").querySelector('[data-teil="' + teil + '"]');
     if (knopf){
