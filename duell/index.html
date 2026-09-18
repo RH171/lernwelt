@@ -98,6 +98,8 @@
   /* Solange die Frage gelesen wird, sind die Antworten noch verdeckt - sonst
      lesen die Grossen schon mit und tippen in der Sekunde der Freigabe. */
   .antworten.verdeckt .antwort{color:transparent;background:#cbd5e1!important;box-shadow:none}
+  /* Farbknoepfe brauchen einen Rand, sonst verschwindet Weiss auf Weiss. */
+  .farbknopf{box-shadow:0 6px 0 rgba(0,0,0,.18),inset 0 0 0 3px rgba(0,0,0,.12)}
   .antworten.verdeckt .antwort::after{content:"…";color:#64748b;font-size:28px}
   .antwort.gewaehlt{outline:5px solid #fff;outline-offset:-5px;filter:none!important;opacity:1!important}
   .antwort.richtig{filter:none!important;opacity:1!important;outline:6px solid #86efac;outline-offset:-6px;transform:scale(1.03)}
@@ -510,6 +512,37 @@
     }).join("");
   }
 
+  /* Farbfragen: Steht in den Antworten eine Farbe, bekommt der Knopf genau diese
+     Farbe. Denny am 18.09.2026: "Im grünen Button steht rot" - bei einer Frage
+     nach der Ampel ist das mehr als unschön, es verwirrt beim Lernen. */
+  var FARBEN = {
+    rot:["#dc2626","#fff"], dunkelrot:["#991b1b","#fff"], blau:["#2563eb","#fff"], hellblau:["#60a5fa","#0b1324"],
+    dunkelblau:["#1e3a8a","#fff"], gruen:["#16a34a","#fff"], hellgruen:["#86efac","#0b1324"], dunkelgruen:["#166534","#fff"],
+    gelb:["#fde047","#3b2f00"], orange:["#f97316","#fff"], braun:["#92400e","#fff"], schwarz:["#111827","#fff"],
+    weiss:["#f8fafc","#0b1324"], grau:["#6b7280","#fff"], rosa:["#f9a8d4","#3b0d2a"], pink:["#ec4899","#fff"],
+    lila:["#7c3aed","#fff"], violett:["#7c3aed","#fff"], tuerkis:["#14b8a6","#04231f"], gold:["#ca8a04","#fff"],
+    silber:["#cbd5e1","#0b1324"], beige:["#e7d8b1","#3b2f00"], bunt:["linear-gradient(135deg,#ef4444,#f59e0b,#22c55e,#3b82f6)","#fff"]
+  };
+  function farbeVon(text){
+    var t = String(text).toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+             .replace(/[^a-z]/g, "");
+    if (FARBEN[t]) return FARBEN[t];
+    // "rosa Blüten", "grün-weiß" - die Farbe steht oft mit einem Wort dabei.
+    var treffer = Object.keys(FARBEN).filter(function(f){ return t === f || t.indexOf(f) === 0; });
+    return treffer.length === 1 ? FARBEN[treffer[0]] : null;
+  }
+  function farbenSetzen(box, antworten){
+    var farben = antworten.map(farbeVon);
+    // Nur wenn fast alle Antworten Farben sind - sonst bleibt die bunte Reihe.
+    if (farben.filter(Boolean).length < Math.max(3, antworten.length - 1)) return;
+    Array.prototype.forEach.call(box.children, function(b, i){
+      var f = farben[i];
+      if (!f) return;
+      b.style.background = f[0]; b.style.color = f[1];
+      b.classList.add("farbknopf");
+    });
+  }
+
   var antwortenUhr = null;
   function frageZeigen(m){
     frage = m; meineWahl = null;
@@ -529,6 +562,7 @@
       else b.addEventListener("click", function(){ waehlen(i); });
       box.appendChild(b);
     });
+    farbenSetzen(box, m.antworten);
     reiheMalen(m.beantwortet);
     // Erst die Frage vorlesen, die Antworten kommen, wenn sie zu sehen sind.
     sprich(m.sprechen);

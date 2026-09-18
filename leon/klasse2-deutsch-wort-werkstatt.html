@@ -65,7 +65,8 @@
   html,body{margin:0;padding:0}
   body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
        padding:12px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
-  body.spielt{padding-bottom:196px}
+  body.spielt{padding-bottom:210px}
+  body.neuseite{padding-bottom:96px}
   .huelle{max-width:900px;margin:0 auto}
   .verborgen{display:none!important}
   header{display:flex;align-items:center;gap:10px;margin:2px 0 10px;flex-wrap:wrap}
@@ -136,6 +137,8 @@
   .neu .gebaut{font:800 clamp(28px,6vw,40px)/1.25 var(--rund);margin:2px 0 10px;overflow-wrap:anywhere}
   .frage{font:700 19px/1.4 var(--rund);margin:10px 0 10px}
   .wahl{display:grid;gap:9px;grid-template-columns:repeat(3,1fr)}
+  /* Ganze Woerter nebeneinander wuerden auf dem Handy in vier Zeilen brechen. */
+  .wahl.lang{grid-template-columns:1fr}
   .wahl button{border:3px solid var(--line);background:#fff;border-radius:16px;min-height:62px;padding:10px 6px;
     font:800 21px/1.2 var(--rund);color:var(--ink);cursor:pointer;min-width:0;overflow-wrap:anywhere}
   .wahl button.richtig{border-color:var(--gut);background:#f0fdf4;color:var(--leon-dunkel)}
@@ -151,6 +154,10 @@
   .hoeren{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:#f2f4f7;font-size:23px;cursor:pointer;margin-top:8px}
   .weiter{display:block;width:100%;margin-top:12px;border:none;border-radius:16px;background:var(--leon);color:#fff;
     font:700 19px/1.2 var(--rund);padding:15px;cursor:pointer;min-height:54px}
+  /* "Weiter bauen" klebt unten. Auf Leons kurzem iPad-Fenster (1024x665) und
+     erst recht auf dem Handy laege es sonst unter dem Rand, sobald der
+     Merksatz drei Zeilen braucht - und er muesste nach jedem Wort scrollen. */
+  .aktion .weiter{margin-top:0}
   .knopf2{display:block;width:100%;margin-top:9px;border:1px solid var(--line);border-radius:16px;background:#f2f4f7;color:var(--ink);
     font:700 17px/1.2 var(--rund);padding:15px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
 
@@ -231,7 +238,11 @@
       <p class="merksatz" id="merksatz"></p>
       <button class="hoeren" id="hoeren" aria-label="Wort anhören">🔊</button>
     </div>
-    <button class="weiter verborgen" id="weiter">Weiter bauen ›</button>
+    <div class="aktion verborgen" id="neu-aktion">
+      <div class="aktion-innen">
+        <button class="weiter" id="weiter">Weiter bauen ›</button>
+      </div>
+    </div>
   </section>
 
   <section class="karte ende verborgen" id="sicht-ende">
@@ -417,6 +428,7 @@
   function zeige(n){
     ["start","spiel","neu","ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
     document.body.classList.toggle("spielt", n === "spiel");
+    document.body.classList.toggle("neuseite", n === "neu");
     window.scrollTo(0, 0);
   }
 
@@ -604,7 +616,7 @@
     $("neu-bild").textContent = plan.bild;
     $("neu-jubel").textContent = "Super! Ein neues Wort!";
     $("loesung").classList.add("verborgen");
-    $("weiter").classList.add("verborgen");
+    $("neu-aktion").classList.add("verborgen");
     frageStellen(plan);
     zeige("neu");
     sprich(plan.wort, .85);
@@ -640,6 +652,7 @@
       daten.merkmal = "zusammengesetzte nomen";
     }
     frageDaten = daten;
+    $("wahl").className = "wahl" + (art === "schreibweise" ? " lang" : "");
     $("wahl").innerHTML = daten.optionen.map(function(o){
       return '<button type="button" data-wahl="' + o + '">' + o + '</button>';
     }).join("");
@@ -677,7 +690,7 @@
     $("merksatz").textContent = satz;
     $("neu-jubel").textContent = stimmt ? "Stark! Das saß." : "Gut gebaut – die Frage merkst du dir fürs nächste Mal.";
     $("loesung").classList.remove("verborgen");
-    $("weiter").classList.remove("verborgen");
+    $("neu-aktion").classList.remove("verborgen");
     if (stimmt) konfetti(false);
   }
 
@@ -714,9 +727,12 @@
     $("ende-bild").textContent = grund === "fertig" ? "🏆" : "🧰";
     $("ende-titel").textContent = n === 0 ? "Bis gleich!"
       : "Du hast heute " + n + (n === 1 ? " Wort gebaut." : " Wörter gebaut.");
-    $("beute").innerHTML = heute.map(function(p){
+    // Hoechstens zwoelf Karten zeigen: sonst waechst die Rueckschau mit jedem
+    // Wort, und "Weiter bauen" rutscht auf dem Handy unter den Rand.
+    var zeigen = heute.slice(-12);
+    $("beute").innerHTML = zeigen.map(function(p){
       return '<span>' + p.bild + " " + p.artikel + " " + p.wort + '</span>';
-    }).join("");
+    }).join("") + (heute.length > 12 ? '<span>… und ' + (heute.length - 12) + ' mehr</span>' : "");
     $("ende-text").textContent = grund === "fertig"
       ? "Diese Kiste ist leer – du hast jedes Wort daraus gebaut. Stark!"
       : n === 0 ? "Du kannst jederzeit weiterbauen."
