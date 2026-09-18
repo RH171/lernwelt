@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Wort-Werkstatt</title>
+<!--
+  Leons Wort-Werkstatt (18.09.2026).
+
+  GEWUENSCHT HAT ES: Leon (8, 2bG). Er war traurig, weil "die Grossen so coole
+  Spiele haben" - gemeint sind die Bau-Spiele, in denen man aus zwei Dingen ein
+  drittes macht (Infinite Craft). Hier baut er aus zwei Wortkarten ein neues
+  Wort: Feuer + Wehr = Feuerwehr.
+
+  WAS ES UEBT (LehrplanPLUS Bayern, Deutsch 1/2):
+   - zusammengesetzte Nomen bilden und als ein Wort schreiben (D 4.2 / D 2.1),
+   - Grossschreibung der Nomen,
+   - den bestimmten Artikel zuordnen,
+   - Silben schwingen und zaehlen.
+  Nach jedem gebauten Wort kommt EINE kurze Frage aus genau diesem Wort, mit
+  drei grossen Knoepfen. Gemeldet wird sie an den Lernstand mit den Merkmalen
+  "zusammengesetzte nomen", "artikel" und "silben zaehlen".
+
+  WIE ES AUFGEBAUT IST:
+   - Start: fuenf Kisten aus Leons Welt (Fussballplatz, Schule, Herbst, Tiere,
+     Zuhause). Eine Kiste = ein abgeschlossener Wortschatz. Das ist nicht nur
+     Deko: Nur so bleibt ueberschaubar, welche Bausteine sich begegnen - und
+     nur so lassen sich die zufaellig entstehenden echten Woerter beherrschen
+     (siehe BEKANNT weiter unten).
+   - Werkbank: zwoelf Bausteine liegen da. ANTIPPEN genuegt - nichts muss
+     gezogen werden (Leon spielt auf dem iPad). Zwei Teile in die Schlitze,
+     dann "Zusammenbauen".
+   - Passt es: Jubel, Karte mit Bild, Frage, und das Wort wandert in die
+     Sammlung. Passt es nicht: ein freundlicher Satz und weiter. KEIN
+     Fehlerzaehler, keine Uhr, kein Verlieren.
+   - Die Reihenfolge zaehlt (Fussball, nicht Ballfuss). Steht es verkehrt
+     herum, sagt das Spiel das - und der Knopf "Tauschen" dreht es um, statt
+     Leon alles neu antippen zu lassen.
+
+  ZWEI SACHEN, DIE BEIM BAUEN WICHTIG WAREN:
+   1. Die Frage darf nicht von der Seite ablesbar sein. Die Silbenboegen
+      erscheinen deshalb ERST nach der Antwort - stuenden sie darueber, waere
+      "Wie viele Silben?" abgezaehlt statt geklatscht. Bei der Frage zur
+      Schreibweise steht oben nur "Feuer + Wehr", nicht das fertige Wort.
+   2. Aus zwei Bausteinen lassen sich mehr echte Woerter bauen, als in der
+      Liste stehen (Zimmer + Tuer gibt es wirklich). Ein schlichtes "passt
+      nicht" waere da gelogen. BEKANNT sammelt solche Woerter je Kiste und
+      antwortet ehrlich: "Stimmt, das gibt es! In unserem Regal fehlt es
+      noch." Was dort nicht steht, bekommt den neutralen Satz mit "hier".
+
+  Die Sammlung liegt in localStorage unter "leon-wortwerkstatt" - nur die
+  gefundenen Woerter und ihre Anzahl, sonst nichts. Geschrieben wird nur,
+  wenn wirklich ein neues Wort dazugekommen ist (jeder Schreibvorgang geht
+  ueber den Sync ins knappe KV-Kontingent).
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef6f0; --card:#fff; --ink:#15171f; --muted:#5b6474; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --hm:#b54708;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  body.spielt{padding-bottom:196px}
+  .huelle{max-width:900px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:11px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:21px;margin:0;flex:1}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .karte + .karte{margin-top:12px}
+
+  /* ---- Start ---- */
+  .start{text-align:center}
+  .start h2{font-family:var(--rund);font-size:25px;margin:4px 0 6px}
+  .start p{color:var(--muted);margin:0 0 16px;font-size:16px;line-height:1.5}
+  .kisten{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px}
+  .kiste{border:2px solid #d6f0de;background:#f6fdf8;border-radius:20px;padding:14px 8px;cursor:pointer;color:var(--ink);
+    font:700 19px/1.2 var(--rund);display:flex;flex-direction:column;align-items:center;gap:5px;min-height:112px;justify-content:center;min-width:0}
+  .kiste .gross{font-size:34px;line-height:1}
+  .kiste .klein{font:600 14px/1.3 var(--font);color:var(--muted)}
+  .kiste.fertig{border-color:#fdb022;background:#fffaf0}
+  .kiste:active{transform:scale(.97)}
+  .rueckblick{margin-top:14px;color:var(--leon-dunkel);font-weight:700;font-size:16px}
+
+  /* ---- Werkbank ---- */
+  .leiste{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .zaehler{font:700 17px/1.3 var(--rund);flex:1;min-width:130px}
+  .zaehler b{font-size:20px;color:var(--leon-dunkel)}
+  .knopf-klein{border:1px solid var(--line);background:#f8fafc;border-radius:999px;padding:10px 14px;
+    font:700 15px/1.2 var(--font);color:var(--ink);cursor:pointer;min-height:44px}
+  .knopf-klein:active{background:#eef2f6}
+  .sammel{display:flex;flex-wrap:wrap;gap:5px;font-size:25px;line-height:1.2;margin-top:10px}
+  .sammel:empty{display:none}
+  .anleitung{color:var(--muted);font-size:15px;margin:12px 2px 6px;font-weight:600}
+  .teile{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:9px}
+  .teil{min-height:58px;min-width:0;border:2px solid var(--line);background:#fff;border-radius:15px;
+    font:700 19px/1.2 var(--rund);color:var(--ink);cursor:pointer;padding:8px 5px;overflow-wrap:anywhere}
+  .teil:active{transform:scale(.96)}
+  .teil.gewaehlt{border-color:var(--leon);background:#eefbf2;color:var(--leon-dunkel)}
+  .teil.leuchtet{animation:leuchten 1.1s 3}
+  @keyframes leuchten{50%{background:#fef0c7;border-color:#fdb022;transform:scale(1.06)}}
+
+  /* ---- Die Leiste unten. Sie klebt am Fensterrand, damit "Zusammenbauen"
+         nie unter den Rand rutscht; rechts bleibt Platz fuer den runden
+         Melde-Knopf aus lernstand.js. ---- */
+  .aktion{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;
+    box-shadow:0 -6px 18px rgba(15,40,70,.14);
+    padding:10px 74px calc(10px + env(safe-area-inset-bottom)) 12px}
+  .aktion-innen{max-width:900px;margin:0 auto}
+  .schlitze{display:flex;align-items:center;gap:7px}
+  .schlitz{flex:1;min-width:0;min-height:54px;border:3px dashed #c5cbd5;border-radius:15px;background:#fafbfc;
+    font:800 19px/1.2 var(--rund);color:var(--ink);cursor:pointer;padding:6px 4px;overflow-wrap:anywhere}
+  .schlitz.voll{border-style:solid;border-color:var(--leon);background:#eefbf2}
+  .plus{font:800 21px/1 var(--rund);color:var(--muted);flex:none}
+  .rueck{min-height:21px;margin:7px 2px 0;font:700 15px/1.35 var(--font);color:var(--muted)}
+  .rueck.gut{color:var(--gut)} .rueck.hm{color:var(--hm)}
+  .knopfzeile{display:flex;gap:8px;align-items:stretch;margin-top:7px}
+  .tausch{flex:none;width:52px;min-height:52px;border:2px solid var(--line);background:#f8fafc;border-radius:15px;
+    font-size:22px;cursor:pointer}
+  .bauen{flex:1;min-height:52px;border:none;border-radius:15px;background:var(--leon);color:#fff;
+    font:700 19px/1.2 var(--rund);cursor:pointer;padding:6px 10px}
+  .bauen:active{background:var(--leon-dunkel)}
+  .bauen[disabled]{background:#cfd6df;color:#7b8494}
+
+  /* ---- Das neue Wort ---- */
+  .neu{text-align:center}
+  .neu .bild{font-size:clamp(56px,11vw,84px);line-height:1.1}
+  .neu .jubel{font:700 19px/1.3 var(--rund);color:var(--leon-dunkel);margin:2px 0 4px}
+  .neu .gebaut{font:800 clamp(28px,6vw,40px)/1.25 var(--rund);margin:2px 0 10px;overflow-wrap:anywhere}
+  .frage{font:700 19px/1.4 var(--rund);margin:10px 0 10px}
+  .wahl{display:grid;gap:9px;grid-template-columns:repeat(3,1fr)}
+  .wahl button{border:3px solid var(--line);background:#fff;border-radius:16px;min-height:62px;padding:10px 6px;
+    font:800 21px/1.2 var(--rund);color:var(--ink);cursor:pointer;min-width:0;overflow-wrap:anywhere}
+  .wahl button.richtig{border-color:var(--gut);background:#f0fdf4;color:var(--leon-dunkel)}
+  .wahl button.daneben{border-color:#fca5a5;background:#fef2f2;color:#98a2b3}
+  .loesung{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .wort{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:2px;
+    font:800 clamp(26px,5.5vw,38px)/1.35 var(--rund);margin:2px 0}
+  .silbe{padding:0 4px 12px;position:relative}
+  .silbe::after{content:"";position:absolute;left:3px;right:3px;bottom:0;height:11px;
+    border:3px solid var(--leon);border-top:none;border-radius:0 0 40px 40px}
+  .silbe:nth-child(2n)::after{border-color:#3b82f6}
+  .merksatz{color:var(--muted);font-size:16px;line-height:1.5;margin:8px 0 0}
+  .hoeren{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:#f2f4f7;font-size:23px;cursor:pointer;margin-top:8px}
+  .weiter{display:block;width:100%;margin-top:12px;border:none;border-radius:16px;background:var(--leon);color:#fff;
+    font:700 19px/1.2 var(--rund);padding:15px;cursor:pointer;min-height:54px}
+  .knopf2{display:block;width:100%;margin-top:9px;border:1px solid var(--line);border-radius:16px;background:#f2f4f7;color:var(--ink);
+    font:700 17px/1.2 var(--rund);padding:15px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
+
+  /* ---- Ende ---- */
+  .ende{text-align:center}
+  .ende .gross{font-size:52px;line-height:1.1}
+  .ende h2{font-family:var(--rund);font-size:25px;margin:6px 0}
+  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 12px}
+  .beute{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:8px 0 14px}
+  .beute span{background:#f6fdf8;border:1px solid #d6f0de;border-radius:999px;padding:7px 12px;font:700 16px/1.2 var(--font)}
+
+  @media (max-width:420px){
+    .teile{grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+    .teil{font-size:17px}
+    .schlitz{font-size:17px;min-height:50px}
+    .wahl button{font-size:19px;min-height:58px}
+  }
+  @media (max-height:700px){
+    body.spielt{padding-bottom:186px}
+    .karte{padding:14px}
+    .neu .bild{font-size:clamp(44px,8vw,62px)}
+  }
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a>
+    <h1>🔨 Die Wort-Werkstatt</h1>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:48px">🔨🧰</div>
+    <h2>Bau dir neue Wörter!</h2>
+    <p>Zwei Teile antippen, zusammenbauen – fertig ist ein neues Wort.<br>Fuß + Ball = Fußball.</p>
+    <div class="kisten" id="kisten"></div>
+    <div class="rueckblick verborgen" id="rueckblick"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="karte">
+      <div class="leiste">
+        <div class="zaehler" id="zaehler"></div>
+        <button class="knopf-klein" id="tipp">🔎 Was kann ich noch bauen?</button>
+        <button class="knopf-klein" id="schluss">🏁 Fertig</button>
+      </div>
+      <div class="sammel" id="sammel"></div>
+    </div>
+    <div class="karte">
+      <div class="anleitung" id="anleitung">Tipp zwei Teile an.</div>
+      <div class="teile" id="teile"></div>
+    </div>
+    <div class="aktion">
+      <div class="aktion-innen">
+        <div class="schlitze">
+          <button class="schlitz" id="schlitz0" aria-label="Erstes Teil">?</button>
+          <span class="plus">+</span>
+          <button class="schlitz" id="schlitz1" aria-label="Zweites Teil">?</button>
+        </div>
+        <p class="rueck" id="rueck"></p>
+        <div class="knopfzeile">
+          <button class="tausch" id="tausch" aria-label="Die zwei Teile tauschen">🔄</button>
+          <button class="bauen" id="bauen">🔨 Zusammenbauen</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="karte neu verborgen" id="sicht-neu">
+    <div class="bild" id="neu-bild" aria-hidden="true"></div>
+    <div class="jubel" id="neu-jubel"></div>
+    <div class="gebaut" id="neu-gebaut"></div>
+    <div class="frage" id="frage"></div>
+    <div class="wahl" id="wahl"></div>
+    <div class="loesung verborgen" id="loesung">
+      <div class="wort" id="neu-wort"></div>
+      <p class="merksatz" id="merksatz"></p>
+      <button class="hoeren" id="hoeren" aria-label="Wort anhören">🔊</button>
+    </div>
+    <button class="weiter verborgen" id="weiter">Weiter bauen ›</button>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div class="gross" id="ende-bild">🏆</div>
+    <h2 id="ende-titel"></h2>
+    <div class="beute" id="beute"></div>
+    <p id="ende-text"></p>
+    <button class="weiter" id="ende-weiter">Weiter bauen</button>
+    <button class="knopf2" id="ende-kisten">Andere Kiste wählen</button>
+    <a class="knopf2" href="/leon/#anfassen">Zurück zu Leons Spielen</a>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- Die Wortliste ----------
+     Ein Paar ist [erstes Teil, zweites Teil, Artikel, Silben, Bild].
+     Das Wort entsteht durch Zusammensetzen - das zweite Teil wird dabei
+     klein: Hand + Tuch = Handtuch. Genau das ist der Lernstoff, darum
+     steht es nirgends doppelt in der Liste.
+     Nur Bilder, die auch auf aelteren iPads erscheinen (nichts Neueres
+     als Emoji 12, keine zusammengesetzten Zeichen). */
+  var KISTEN = [
+    { id:"fussball", name:"Fußballplatz", bild:"⚽", paare:[
+      ["Fuß","Ball","der","Fuß-ball","⚽"],
+      ["Tor","Wart","der","Tor-wart","🥅"],
+      ["Hand","Ball","der","Hand-ball","🤾"],
+      ["Hand","Schuh","der","Hand-schuh","🧤"],
+      ["Sport","Platz","der","Sport-platz","🏟️"],
+      ["Spiel","Platz","der","Spiel-platz","🎠"],
+      ["Sport","Halle","die","Sport-hal-le","🏐"],
+      ["Turn","Halle","die","Turn-hal-le","🤸"],
+      ["Turn","Schuh","der","Turn-schuh","👟"],
+      ["Eck","Ball","der","Eck-ball","🚩"],
+      ["Elf","Meter","der","Elf-me-ter","🎯"],
+      ["Sieger","Pokal","der","Sie-ger-po-kal","🏆"]
+    ]},
+    { id:"schule", name:"Schule", bild:"🏫", paare:[
+      ["Schul","Weg","der","Schul-weg","🚸"],
+      ["Schul","Hof","der","Schul-hof","🏫"],
+      ["Schul","Bus","der","Schul-bus","🚌"],
+      ["Schul","Tasche","die","Schul-ta-sche","🎒"],
+      ["Schul","Buch","das","Schul-buch","📚"],
+      ["Schul","Aufgabe","die","Schul-auf-ga-be","✏️"],
+      ["Lese","Buch","das","Le-se-buch","📖"],
+      ["Mal","Buch","das","Mal-buch","📕"],
+      ["Mal","Kasten","der","Mal-kas-ten","🎨"],
+      ["Pausen","Brot","das","Pau-sen-brot","🥪"],
+      ["Pausen","Hof","der","Pau-sen-hof","🏃"],
+      ["Haus","Aufgabe","die","Haus-auf-ga-be","📝"],
+      ["Klassen","Zimmer","das","Klas-sen-zim-mer","🪑"],
+      ["Klassen","Buch","das","Klas-sen-buch","📔"],
+      ["Turn","Beutel","der","Turn-beu-tel","👝"],
+      ["Schreib","Tisch","der","Schreib-tisch","🖊️"],
+      ["Filz","Stift","der","Filz-stift","🖍️"]
+    ]},
+    { id:"herbst", name:"Herbst", bild:"🍂", paare:[
+      ["Regen","Schirm","der","Re-gen-schirm","☔"],
+      ["Regen","Bogen","der","Re-gen-bo-gen","🌈"],
+      ["Regen","Jacke","die","Re-gen-ja-cke","🧥"],
+      ["Regen","Wurm","der","Re-gen-wurm","🐛"],
+      ["Regen","Tropfen","der","Re-gen-trop-fen","💧"],
+      ["Herbst","Wind","der","Herbst-wind","🍃"],
+      ["Herbst","Ferien","die","Herbst-fe-ri-en","🍁"],
+      ["Herbst","Laub","das","Herbst-laub","🍂"],
+      ["Laub","Baum","der","Laub-baum","🌳"],
+      ["Wind","Rad","das","Wind-rad","🌬️"],
+      ["Papier","Drachen","der","Pa-pier-dra-chen","🪁"],
+      ["Gummi","Stiefel","der","Gum-mi-stie-fel","🥾"],
+      ["Apfel","Saft","der","Ap-fel-saft","🥤"],
+      ["Apfel","Baum","der","Ap-fel-baum","🍏"],
+      ["Kürbis","Suppe","die","Kür-bis-sup-pe","🎃"]
+    ]},
+    { id:"tiere", name:"Tiere", bild:"🐞", paare:[
+      ["Marien","Käfer","der","Ma-ri-en-kä-fer","🐞"],
+      ["Eich","Hörnchen","das","Eich-hörn-chen","🐿️"],
+      ["Wild","Schwein","das","Wild-schwein","🐗"],
+      ["Vogel","Nest","das","Vo-gel-nest","🐣"],
+      ["Vogel","Futter","das","Vo-gel-fut-ter","🌰"],
+      ["Fisch","Teich","der","Fisch-teich","🐟"],
+      ["Fisch","Futter","das","Fisch-fut-ter","🐠"],
+      ["Enten","Teich","der","En-ten-teich","🦆"],
+      ["Hunde","Hütte","die","Hun-de-hüt-te","🐕"],
+      ["Hunde","Futter","das","Hun-de-fut-ter","🦴"],
+      ["Katzen","Futter","das","Kat-zen-fut-ter","🐱"],
+      ["Pferde","Stall","der","Pfer-de-stall","🐴"],
+      ["Pferde","Futter","das","Pfer-de-fut-ter","🥕"],
+      ["Honig","Biene","die","Ho-nig-bie-ne","🐝"],
+      ["Wald","Weg","der","Wald-weg","🌲"],
+      ["Bären","Höhle","die","Bä-ren-höh-le","🐻"],
+      ["Schaf","Herde","die","Schaf-her-de","🐑"]
+    ]},
+    { id:"zuhause", name:"Zuhause", bild:"🏠", paare:[
+      ["Haus","Tür","die","Haus-tür","🚪"],
+      ["Haus","Schuh","der","Haus-schuh","🧦"],
+      ["Garten","Haus","das","Gar-ten-haus","🏡"],
+      ["Garten","Tür","die","Gar-ten-tür","🌿"],
+      ["Kinder","Garten","der","Kin-der-gar-ten","🧒"],
+      ["Kinder","Zimmer","das","Kin-der-zim-mer","🧸"],
+      ["Kinder","Bett","das","Kin-der-bett","🛌"],
+      ["Kinder","Wagen","der","Kin-der-wa-gen","👶"],
+      ["Bett","Decke","die","Bett-de-cke","🛏️"],
+      ["Tisch","Decke","die","Tisch-de-cke","🍽️"],
+      ["Zahn","Bürste","die","Zahn-bürs-te","🦷"],
+      ["Zahn","Pasta","die","Zahn-pas-ta","🧴"],
+      ["Kühl","Schrank","der","Kühl-schrank","🧊"],
+      ["Wasch","Maschine","die","Wasch-ma-schi-ne","🧺"],
+      ["Blumen","Topf","der","Blu-men-topf","🌱"],
+      ["Sonnen","Blume","die","Son-nen-blu-me","🌻"],
+      ["Brief","Kasten","der","Brief-kas-ten","📮"],
+      ["Hand","Tuch","das","Hand-tuch","🛁"],
+      ["Tee","Kanne","die","Tee-kan-ne","🍵"],
+      ["Feuer","Wehr","die","Feu-er-wehr","🚒"]
+    ]}
+  ];
+
+  /* Echte Woerter, die sich aus den Bausteinen bauen lassen, aber nicht in
+     der Sammlung stehen. Leon soll dafuer nicht hoeren, es gaebe sie nicht. */
+  var BEKANNT = {
+    fussball: ["Sportschuh","Spielhalle"],
+    schule:   ["Schultisch","Schulzimmer","Malstift","Hausschuh"],
+    herbst:   ["Windjacke","Gummibaum","Papierbogen"],
+    tiere:    ["Schafstall","Entenfutter","Waldhütte"],
+    zuhause:  ["Zimmertür","Schranktür","Gartentisch","Tischtuch","Blumenkasten",
+               "Blumengarten","Handbürste","Kindertisch","Gartenblume"]
+  };
+
+  function klein(t){ return t.charAt(0).toLowerCase() + t.slice(1); }
+  function wortAus(a, b){ return a + klein(b); }
+
+  // Die Liste einmal aufbereiten: aus jedem Eintrag wird ein Bauplan.
+  KISTEN.forEach(function(k){
+    k.plaene = k.paare.map(function(p){
+      return { a:p[0], b:p[1], wort:wortAus(p[0], p[1]), artikel:p[2], silben:p[3], bild:p[4], kiste:k.id };
+    });
+  });
+
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t = f[i]; f[i] = f[j]; f[j] = t; } return f; }
+
+  /* ---------- Die Sammlung ---------- */
+  var SPEICHER = "leon-wortwerkstatt";
+  var gefunden = {};
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function speichern(){
+    var liste = Object.keys(gefunden);
+    var neu = JSON.stringify({ woerter: liste, anzahl: liste.length });
+    try { if (localStorage.getItem(SPEICHER) !== neu) localStorage.setItem(SPEICHER, neu); } catch(e){}
+  }
+  (function(){
+    var d = lesen();
+    (d.woerter || []).forEach(function(w){ gefunden[w] = true; });
+  })();
+  function planFuer(wort){
+    for (var i = 0; i < KISTEN.length; i++){
+      for (var j = 0; j < KISTEN[i].plaene.length; j++) if (KISTEN[i].plaene[j].wort === wort) return KISTEN[i].plaene[j];
+    }
+    return null;
+  }
+
+  /* ---------- Vorlesen ---------- */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t, tempo){
+    if (!kannSprechen || document.hidden) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = tempo || .85;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
+      if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) { try { speechSynthesis.cancel(); } catch(e){} } });
+
+  /* ---------- Zustand ---------- */
+  var BRETT = 12;
+  var kiste = null, brett = [], gewaehlt = [], jetzt = null, fragenNr = 0, frageDaten = null;
+  var heute = [];
+
+  function zeige(n){
+    ["start","spiel","neu","ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    document.body.classList.toggle("spielt", n === "spiel");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Startseite ---------- */
+  function kistenMalen(){
+    $("kisten").innerHTML = "";
+    KISTEN.forEach(function(k){
+      var hat = k.plaene.filter(function(p){ return gefunden[p.wort]; }).length;
+      var b = document.createElement("button");
+      b.className = "kiste" + (hat === k.plaene.length ? " fertig" : "");
+      b.setAttribute("data-kiste", k.id);
+      b.innerHTML = '<span class="gross">' + k.bild + '</span>' + k.name +
+        '<span class="klein">' + (hat === k.plaene.length ? "alle gebaut 🏆" : hat + " von " + k.plaene.length + " gebaut") + '</span>';
+      b.addEventListener("click", function(){ kisteStarten(k.id); });
+      $("kisten").appendChild(b);
+    });
+    var anzahl = Object.keys(gefunden).length;
+    if (anzahl){
+      $("rueckblick").textContent = "🧰 Schon gebaut: " + anzahl + (anzahl === 1 ? " Wort." : " Wörter.");
+      $("rueckblick").classList.remove("verborgen");
+    } else $("rueckblick").classList.add("verborgen");
+  }
+
+  /* ---------- Werkbank ---------- */
+  function offenePlaene(){
+    if (!kiste) return [];
+    return kiste.plaene.filter(function(p){ return !gefunden[p.wort]; });
+  }
+  function vorrat(){
+    var t = [];
+    offenePlaene().forEach(function(p){ if (t.indexOf(p.a) < 0) t.push(p.a); if (t.indexOf(p.b) < 0) t.push(p.b); });
+    return t;
+  }
+  // Steht auf dem Brett ein Paar, das sich noch bauen laesst?
+  function paarAufBrett(){
+    var offen = mische(offenePlaene());
+    for (var i = 0; i < offen.length; i++){
+      if (brett.indexOf(offen[i].a) >= 0 && brett.indexOf(offen[i].b) >= 0) return offen[i];
+    }
+    return null;
+  }
+  // Zwei Bausteine, die in KEINER Reihenfolge ein Wort ergeben (fuer die Messung).
+  function nichtPaar(){
+    var da = brett.filter(Boolean);
+    for (var i = 0; i < da.length; i++) for (var j = 0; j < da.length; j++){
+      if (i === j) continue;
+      if (!planZu(da[i], da[j]) && !planZu(da[j], da[i]) && !istBekannt(wortAus(da[i], da[j]))) return { a:da[i], b:da[j] };
+    }
+    return null;
+  }
+  function planZu(a, b){
+    var alle = kiste ? kiste.plaene : [];
+    for (var i = 0; i < alle.length; i++) if (alle[i].a === a && alle[i].b === b) return alle[i];
+    return null;
+  }
+  function istBekannt(wort){
+    var liste = (kiste && BEKANNT[kiste.id]) || [];
+    return liste.indexOf(wort) >= 0;
+  }
+  function freierPlatz(ausser){
+    // Ein Platz, den wir ueberschreiben duerfen: leer, oder ein Baustein, der
+    // gerade nicht gewaehlt ist und nicht zum Paar gehoert, das wir hinlegen.
+    for (var i = 0; i < BRETT; i++) if (!brett[i]) return i;
+    var platz = mische(brett.map(function(_, i){ return i; }));
+    for (var k = 0; k < platz.length; k++){
+      var t = brett[platz[k]];
+      if (gewaehlt.indexOf(t) < 0 && ausser.indexOf(t) < 0) return platz[k];
+    }
+    return -1;
+  }
+  function hinlegen(teil, ausser){
+    if (brett.indexOf(teil) >= 0) return;
+    var i = freierPlatz(ausser);
+    if (i >= 0) brett[i] = teil;
+  }
+  function brettAufraeumen(){
+    var da = vorrat();
+    // Bausteine, die in keinem offenen Wort mehr vorkommen, raeumen wir weg.
+    for (var i = 0; i < BRETT; i++) if (brett[i] && da.indexOf(brett[i]) < 0) brett[i] = null;
+    var rest = mische(da.filter(function(t){ return brett.indexOf(t) < 0; }));
+    for (var j = 0; j < BRETT; j++) if (!brett[j] && rest.length) brett[j] = rest.shift();
+    // Es muss immer mindestens ein Wort zu bauen sein.
+    if (!paarAufBrett()){
+      var p = mische(offenePlaene())[0];
+      if (p){ hinlegen(p.a, [p.a, p.b]); hinlegen(p.b, [p.a, p.b]); }
+    }
+    while (brett.length > BRETT) brett.pop();
+  }
+  function brettMalen(){
+    var h = "";
+    brett.forEach(function(t){
+      if (!t) return;
+      h += '<button class="teil' + (gewaehlt.indexOf(t) >= 0 ? " gewaehlt" : "") + '" data-teil="' + t + '">' + t + '</button>';
+    });
+    $("teile").innerHTML = h;
+    Array.prototype.forEach.call($("teile").querySelectorAll(".teil"), function(b){
+      b.addEventListener("click", function(){ teilTippen(b.getAttribute("data-teil")); });
+    });
+  }
+  function schlitzeMalen(){
+    [0, 1].forEach(function(i){
+      var s = $("schlitz" + i);
+      s.textContent = gewaehlt[i] || "?";
+      s.classList.toggle("voll", !!gewaehlt[i]);
+    });
+    $("bauen").disabled = gewaehlt.length < 2;
+    $("anleitung").textContent = gewaehlt.length === 0 ? "Tipp zwei Teile an."
+      : gewaehlt.length === 1 ? "Gut. Jetzt noch ein Teil." : "Jetzt zusammenbauen!";
+  }
+  function teilTippen(t){
+    var i = gewaehlt.indexOf(t);
+    if (i >= 0) gewaehlt.splice(i, 1);
+    else if (gewaehlt.length < 2){ gewaehlt.push(t); sprich(t, 1); }
+    else { gewaehlt = [gewaehlt[1], t]; sprich(t, 1); }
+    melden("", "");
+    brettMalen(); schlitzeMalen();
+  }
+  function melden(text, art){
+    $("rueck").textContent = text;
+    $("rueck").className = "rueck" + (art ? " " + art : "");
+  }
+  function zaehlerMalen(){
+    var anzahl = Object.keys(gefunden).length;
+    var inKiste = kiste ? kiste.plaene.filter(function(p){ return gefunden[p.wort]; }).length : 0;
+    $("zaehler").innerHTML = "🧰 Schon gebaut: <b>" + anzahl + "</b> " + (anzahl === 1 ? "Wort" : "Wörter") +
+      (kiste ? " · " + kiste.name + ": " + inKiste + "/" + kiste.plaene.length : "");
+    var zeigen = kiste ? kiste.plaene.filter(function(p){ return gefunden[p.wort]; }) : [];
+    $("sammel").innerHTML = zeigen.map(function(p){
+      return '<span title="' + p.wort + '">' + p.bild + '</span>';
+    }).join("");
+  }
+
+  function kisteStarten(id){
+    kiste = KISTEN.filter(function(k){ return k.id === id; })[0];
+    gewaehlt = []; brett = [];
+    if (!offenePlaene().length){
+      // Kiste ist schon fertig - dann zeigen wir die Rueckschau statt einer leeren Werkbank.
+      zeigeEnde("fertig");
+      return;
+    }
+    brettAufraeumen();
+    brett = mische(brett.filter(Boolean));
+    melden("", "");
+    zaehlerMalen(); brettMalen(); schlitzeMalen();
+    zeige("spiel");
+  }
+
+  /* ---------- Bauen ---------- */
+  function bauen(){
+    if (gewaehlt.length < 2) return;
+    var a = gewaehlt[0], b = gewaehlt[1];
+    var plan = planZu(a, b);
+    if (plan && gefunden[plan.wort]) plan = null;
+    if (plan){ gelungen(plan); return; }
+    var umgedreht = planZu(b, a);
+    if (umgedreht && !gefunden[umgedreht.wort]){
+      melden("Fast! Dreh die zwei Teile um – tipp auf 🔄.", "hm");
+      return;
+    }
+    var wort = wortAus(a, b);
+    if (gefunden[wort]){
+      melden("Das hast du schon gebaut. Such ein neues Wort!", "hm");
+      return;
+    }
+    if (istBekannt(wort)){
+      melden("Stimmt, „" + wort + "“ gibt es wirklich! In unserem Regal fehlt es noch.", "hm");
+      return;
+    }
+    melden("Hm, „" + a + "“ und „" + b + "“ passen hier noch nicht. Probier ein anderes Teil.", "hm");
+  }
+  function tauschen(){
+    if (gewaehlt.length < 2) return;
+    gewaehlt = [gewaehlt[1], gewaehlt[0]];
+    melden("", "");
+    schlitzeMalen();
+  }
+
+  function gelungen(plan){
+    gefunden[plan.wort] = true;
+    heute.push(plan);
+    speichern();
+    jetzt = plan;
+    gewaehlt = [];
+    konfetti(false);
+    $("neu-bild").textContent = plan.bild;
+    $("neu-jubel").textContent = "Super! Ein neues Wort!";
+    $("loesung").classList.add("verborgen");
+    $("weiter").classList.add("verborgen");
+    frageStellen(plan);
+    zeige("neu");
+    sprich(plan.wort, .85);
+  }
+
+  /* ---------- Die Frage zum gebauten Wort ----------
+     Reihum drei Arten. Keine davon darf von der Seite ablesbar sein: die
+     Silbenboegen kommen erst nach der Antwort, und bei der Schreibweise
+     steht oben nur "Feuer + Wehr". */
+  function frageStellen(plan){
+    var art = ["artikel", "silben", "schreibweise"][fragenNr % 3];
+    fragenNr++;
+    var silben = plan.silben.split("-");
+    var daten = { art:art, plan:plan };
+    if (art === "artikel"){
+      $("neu-gebaut").textContent = plan.wort;
+      $("frage").textContent = "Wie heißt es: der, die oder das " + plan.wort + "?";
+      daten.optionen = ["der", "die", "das"];
+      daten.richtig = plan.artikel;
+      daten.merkmal = "artikel";
+    } else if (art === "silben"){
+      $("neu-gebaut").textContent = plan.wort;
+      $("frage").textContent = "Wie viele Silben hat " + plan.wort + "? Klatsch mit!";
+      var n = silben.length, von = Math.max(2, n - 1);
+      daten.optionen = [von, von + 1, von + 2].map(String);
+      daten.richtig = String(n);
+      daten.merkmal = "silben zaehlen";
+    } else {
+      $("neu-gebaut").textContent = plan.a + " + " + plan.b;
+      $("frage").textContent = "Nomen schreibt man groß – und zusammen. Welches stimmt?";
+      daten.optionen = mische([plan.wort, klein(plan.wort), plan.a + " " + plan.b]);
+      daten.richtig = plan.wort;
+      daten.merkmal = "zusammengesetzte nomen";
+    }
+    frageDaten = daten;
+    $("wahl").innerHTML = daten.optionen.map(function(o){
+      return '<button type="button" data-wahl="' + o + '">' + o + '</button>';
+    }).join("");
+    Array.prototype.forEach.call($("wahl").querySelectorAll("button"), function(b){
+      b.addEventListener("click", function(){ antworten(b, b.getAttribute("data-wahl")); });
+    });
+  }
+
+  function antworten(knopf, wert){
+    if (!frageDaten || frageDaten.fertig) return;
+    frageDaten.fertig = true;
+    var d = frageDaten, plan = d.plan, stimmt = wert === d.richtig;
+    Array.prototype.forEach.call($("wahl").querySelectorAll("button"), function(b){
+      var w = b.getAttribute("data-wahl");
+      if (w === d.richtig) b.classList.add("richtig");
+      else if (b === knopf) b.classList.add("daneben");
+      b.disabled = true;
+    });
+    try { window.lernstand && window.lernstand.antwort(stimmt, d.merkmal, wert, d.richtig); } catch(e){}
+
+    $("neu-wort").innerHTML = plan.silben.split("-").map(function(s){
+      return '<span class="silbe">' + s + '</span>';
+    }).join("");
+    var satz;
+    if (d.art === "artikel"){
+      satz = (stimmt ? "Richtig! " : "Fast – es heißt ") + plan.artikel + " " + plan.wort + ". " +
+             "Der Artikel kommt vom zweiten Teil: " + plan.artikel + " " + plan.b + " → " + plan.artikel + " " + plan.wort + ".";
+    } else if (d.art === "silben"){
+      satz = (stimmt ? "Genau! " : "Schau: ") + plan.wort + " hat " + plan.silben.split("-").length + " Silben – " +
+             plan.silben.split("-").join(" · ") + ".";
+    } else {
+      satz = (stimmt ? "Richtig! " : "Schau: ") + plan.wort + " ist ein Nomen. " +
+             "Zwei Nomen werden ein einziges Wort, und das fängt groß an.";
+    }
+    $("merksatz").textContent = satz;
+    $("neu-jubel").textContent = stimmt ? "Stark! Das saß." : "Gut gebaut – die Frage merkst du dir fürs nächste Mal.";
+    $("loesung").classList.remove("verborgen");
+    $("weiter").classList.remove("verborgen");
+    if (stimmt) konfetti(false);
+  }
+
+  function weiterBauen(){
+    brettAufraeumen();
+    if (!offenePlaene().length){ zeigeEnde("fertig"); return; }
+    melden("", "");
+    zaehlerMalen(); brettMalen(); schlitzeMalen();
+    zeige("spiel");
+  }
+
+  /* ---------- Tipp: EIN Bauteil, nie die ganze Loesung ---------- */
+  function tippGeben(){
+    var offen = mische(offenePlaene()).filter(function(p){
+      return brett.indexOf(p.a) >= 0 && brett.indexOf(p.b) >= 0;
+    });
+    // Ein Paar, von dem noch kein Teil im Schlitz liegt - sonst waere der
+    // Tipp die fertige Loesung.
+    var p = offen.filter(function(x){ return gewaehlt.indexOf(x.a) < 0 && gewaehlt.indexOf(x.b) < 0; })[0];
+    if (!p && offen.length){ gewaehlt = []; schlitzeMalen(); brettMalen(); p = offen[0]; }
+    if (!p){ melden("Hier ist gerade nichts mehr zu bauen. Tipp auf 🏁 Fertig.", "hm"); return; }
+    var teil = Math.random() < .5 ? p.a : p.b;
+    var knopf = $("teile").querySelector('[data-teil="' + teil + '"]');
+    if (knopf){
+      knopf.classList.remove("leuchtet"); void knopf.offsetWidth; knopf.classList.add("leuchtet");
+      try { knopf.scrollIntoView({ behavior:"smooth", block:"nearest" }); } catch(e){}
+    }
+    melden("Mit „" + teil + "“ geht etwas. Such das zweite Teil!", "");
+  }
+
+  /* ---------- Rueckschau ---------- */
+  function zeigeEnde(grund){
+    var n = heute.length;
+    $("ende-bild").textContent = grund === "fertig" ? "🏆" : "🧰";
+    $("ende-titel").textContent = n === 0 ? "Bis gleich!"
+      : "Du hast heute " + n + (n === 1 ? " Wort gebaut." : " Wörter gebaut.");
+    $("beute").innerHTML = heute.map(function(p){
+      return '<span>' + p.bild + " " + p.artikel + " " + p.wort + '</span>';
+    }).join("");
+    $("ende-text").textContent = grund === "fertig"
+      ? "Diese Kiste ist leer – du hast jedes Wort daraus gebaut. Stark!"
+      : n === 0 ? "Du kannst jederzeit weiterbauen."
+      : "Jedes Wort besteht aus zwei Teilen. Das hast du heute oft erkannt.";
+    zeige("ende");
+    kistenMalen();
+    if (grund === "fertig") konfetti(true);
+  }
+
+  /* ---------- Knoepfe ---------- */
+  $("bauen").addEventListener("click", bauen);
+  $("tausch").addEventListener("click", tauschen);
+  $("tipp").addEventListener("click", tippGeben);
+  $("schluss").addEventListener("click", function(){ zeigeEnde("pause"); });
+  $("schlitz0").addEventListener("click", function(){ if (gewaehlt[0]) teilTippen(gewaehlt[0]); });
+  $("schlitz1").addEventListener("click", function(){ if (gewaehlt[1]) teilTippen(gewaehlt[1]); });
+  $("weiter").addEventListener("click", weiterBauen);
+  $("hoeren").addEventListener("click", function(){ if (jetzt) sprich(jetzt.wort, .8); });
+  $("ende-weiter").addEventListener("click", function(){
+    if (kiste && offenePlaene().length){ weiterBauen(); return; }
+    zeige("start"); kistenMalen();
+  });
+  $("ende-kisten").addEventListener("click", function(){ zeige("start"); kistenMalen(); });
+
+  kistenMalen();
+
+  /* ---------- Konfetti ---------- */
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(gross){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (gross ? 120 : 34); i++) stuecke.push({ x:Math.random()*fl.width, y:-20 - Math.random()*100,
+      b:6 + Math.random()*6, h:8 + Math.random()*8, v:2.4 + Math.random()*3, d:Math.random()*6,
+      t:(Math.random() - .5)*.3, f:["#10b981","#16a34a","#ffffff","#f79009","#3b82f6"][i % 5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d);
+      st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  /* ---------- Fuer die Messung ---------- */
+  window.__werkstatt = {
+    KISTEN: KISTEN,
+    BEKANNT: BEKANNT,
+    starten: kisteStarten,
+    brett: function(){ return brett.filter(Boolean); },
+    plaene: function(){ return kiste ? kiste.plaene : []; },
+    gefunden: function(){ return Object.keys(gefunden); },
+    paarAufBrett: paarAufBrett,
+    nichtPaar: nichtPaar,
+    tippeTeil: function(t){
+      var k = $("teile").querySelector('[data-teil="' + t + '"]');
+      if (k) k.click();
+      return !!k;
+    },
+    frage: function(){ return frageDaten; },
+    zustand: function(){ return { kiste:kiste && kiste.id, gewaehlt:gewaehlt.slice(), heute:heute.length, wort:jetzt && jetzt.wort }; }
+  };
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
