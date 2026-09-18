@@ -1,5 +1,6 @@
 /* Leons Lesegeschichten - eine je Tag, in dieser Reihenfolge (lesegeschichte.html).
-   Stand 18.09.2026: 37 Geschichten (Nachschub am 18.09., dazu Leons Mitschueler aus der 2bG), von Hand geschrieben und geprüft. Neue hinten
+   Stand 18.09.2026: 42 Geschichten (Mitschueler aus der 2bG und der ASC Boxdorf -
+   Denny: Termine gehoeren in den Inhalt, nicht als Banner in die App), von Hand geschrieben und geprüft. Neue hinten
    anhängen, nie eine id ändern - der Lesepass merkt sich die id. */
 window.LEON_GESCHICHTEN = [
  {
@@ -7907,6 +7908,1062 @@ window.LEON_GESCHICHTEN = [
     "falsch": [
      "kalte Milch",
      "kühlen Apfelsaft"
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "g1-mittwoch-ist-trainingstag",
+  "titel": "Mittwoch ist Trainingstag",
+  "bild": "🎽",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "⏰",
+      "🎒"
+     ],
+     "leute": [
+      "Leon",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Heu|te ist end|lich wie|der Mitt|woch.",
+     "Le|on freut sich schon den gan|zen Mor|gen.",
+     "Denn am Mitt|woch hat er im|mer Trai|ning.",
+     "Herr Ce|lis schreibt noch Zah|len an die Ta|fel.",
+     "Le|on rech|net schnell und schaut zur Uhr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🎒",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Nach der Schu|le läuft Le|on nach Hau|se.",
+     "Pa|pa war|tet schon an der Haus|tür.",
+     "„Wir müs|sen gleich los“, sagt Pa|pa.",
+     "Le|on nickt und rennt in sein Zim|mer.",
+     "Die Sport|ta|sche liegt dort noch ganz leer."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧤",
+      "👕"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu|erst packt Le|on sei|ne Hand|schu|he ein.",
+     "Dann kommt das grü|ne Tri|kot da|zu.",
+     "Die Fuß|ball|schu|he steckt er auch hin|ein.",
+     "O|ben|drauf legt er die Was|ser|fla|sche.",
+     "„Fer|tig!“, ruft Le|on ganz laut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🍎",
+      "⏰"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "In der Kü|che holt Le|on ei|nen Ap|fel.",
+     "Er isst ihn in sechs gro|ßen Bis|sen.",
+     "Pa|pa lacht und schaut auf die Uhr.",
+     "„Um fünf geht es los“, sagt er.",
+     "Le|on schnappt sei|ne Ta|sche und rennt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Pa|pa fährt mit Le|on zum ASC Box|dorf.",
+     "Der Weg dau|ert nur we|ni|ge Mi|nu|ten.",
+     "Le|on trom|melt lei|se auf sei|ne Ta|sche.",
+     "Am Zaun hän|gen schon vie|le bun|te Blät|ter.",
+     "Dann sieht er schon den grü|nen Platz."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf dem Platz war|tet schon Trai|ner Jens.",
+     "Er hat die Bäl|le in ei|nem gro|ßen Netz.",
+     "„Hal|lo Le|on!“, ruft Trai|ner Jens.",
+     "„Heu|te ü|ben wir viel im Tor.“",
+     "Schnell zieht Le|on sei|ne Hand|schu|he an."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu|erst lau|fen al|le ein|mal um den Platz.",
+     "Dann stellt sich Le|on zwi|schen die Pfos|ten.",
+     "Trai|ner Jens schießt flach auf das Tor.",
+     "Le|on hält den Ball mit bei|den Hän|den.",
+     "„Su|per ge|macht!“, ruft Trai|ner Jens."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🌙",
+      "🎒"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Um halb sie|ben ist das Trai|ning zu En|de.",
+     "Drau|ßen wird es schon ein biss|chen dun|kel.",
+     "Pa|pa steht am Zaun und winkt.",
+     "„Am Frei|tag kom|me ich wie|der!“, ruft Le|on.",
+     "Trai|ner Jens hebt den Dau|men und lacht."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "An welchem Tag ist immer Training?",
+    "richtig": "am Mittwoch",
+    "falsch": [
+     "am Montag",
+     "am Sonntag"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was packt Leon zuerst ein?",
+    "richtig": "seine Handschuhe",
+    "falsch": [
+     "den Apfel",
+     "den Ball"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was sieht Leon am Ende der Fahrt?",
+    "richtig": "den grünen Platz",
+    "falsch": [
+     "das Stadion",
+     "die Schule"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wie heißt der Trainer?",
+    "richtig": "Jens",
+    "falsch": [
+     "Jonas",
+     "Jakob"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Wann ist das Training zu Ende?",
+    "richtig": "um halb sieben",
+    "falsch": [
+     "um fünf Uhr",
+     "am Abend"
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "g2-leons-neue-handschuhe",
+  "titel": "Leons neue Handschuhe",
+  "bild": "🤲",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧤",
+      "📦"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Am Mitt|woch bringt Pa|pa ein Pa|ket mit.",
+     "Le|on macht es ganz schnell auf.",
+     "Da|rin lie|gen zwei neu|e Tor|wart|hand|schu|he.",
+     "Sie sind grün und füh|len sich weich an.",
+     "„Die sind für dein Trai|ning“, sagt Pa|pa."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🎒",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Kurz vor fünf ge|hen die bei|den los.",
+     "Le|on trägt die Ta|sche ganz al|lein.",
+     "Die Blät|ter am Weg sind schon gelb.",
+     "„Zwei|mal in der Wo|che ist Trai|ning“, sagt Pa|pa.",
+     "„Mitt|woch und Frei|tag“, ruft Le|on stolz."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf dem Platz steht schon Trai|ner Jens.",
+     "Er zählt lang|sam al|le Kin|der durch.",
+     "Dann lau|fen al|le zwei Run|den um den Platz.",
+     "Le|on wird warm und zieht die Ja|cke aus.",
+     "„Heu|te ü|ben wir das Hech|ten“, sagt Jens."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "„Hech|ten ist ein Sprung zum Ball“, sagt Jens.",
+     "Jens legt den Ball auf das Gras.",
+     "Er zeigt den Sprung ganz lang|sam vor.",
+     "Sei|ne Ar|me stre|cken sich weit nach vorn.",
+     "Le|on schaut ge|nau auf sei|ne Hän|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🌿"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt darf Le|on selbst ins Tor.",
+     "Jens rollt den Ball nach links.",
+     "Le|on springt und fällt ins wei|che Gras.",
+     "Der Ball rollt knapp an ihm vor|bei.",
+     "„Fast!“, ruft Jens und klatscht."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "💪"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "„Sprin|ge frü|her los“, sagt Trai|ner Jens.",
+     "Le|on nickt und stellt sich wie|der hin.",
+     "Die|ses Mal springt er viel schnel|ler.",
+     "Sei|ne Fin|ger be|rüh|ren den Ball ganz kurz.",
+     "„Das war schon viel bes|ser!“, ruft Jens."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🎉"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Beim drit|ten Mal rollt der Ball nach rechts.",
+     "Le|on hech|tet und streckt sich ganz weit.",
+     "Er hält den Ball fest an sei|nem Bauch.",
+     "Die an|de|ren Kin|der klat|schen laut.",
+     "Le|on liegt im Gras und strahlt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🌙",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Um halb sie|ben pfeift Jens zum Schluss.",
+     "Le|ons neu|e Hand|schu|he sind vol|ler Gras.",
+     "Pa|pa war|tet schon hin|ter dem Zaun.",
+     "„Du hast rich|tig mu|tig ge|übt“, sagt Pa|pa.",
+     "„Am Frei|tag hech|te ich noch wei|ter!“, sagt Le|on."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Was liegt in dem Paket?",
+    "richtig": "zwei neue Handschuhe",
+    "falsch": [
+     "ein Ball",
+     "ein Buch"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wann ist Training in der Woche?",
+    "richtig": "Mittwoch und Freitag",
+    "falsch": [
+     "Montag und Dienstag",
+     "nur am Samstag"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was ist Hechten?",
+    "richtig": "ein Sprung zum Ball",
+    "falsch": [
+     "ein schneller Lauf",
+     "ein harter Schuss"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wohin rollt der erste Ball?",
+    "richtig": "nach links",
+    "falsch": [
+     "nach rechts",
+     "nach oben"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Was macht Leon beim dritten Mal?",
+    "richtig": "Er hält den Ball fest.",
+    "falsch": [
+     "Er fällt ins Gras.",
+     "Er schießt ein Tor."
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "g3-training-im-regen",
+  "titel": "Training im Regen",
+  "bild": "💧",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌧️",
+      "🪟"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Es ist ein grau|er Frei|tag|nach|mit|tag.",
+     "Le|on schaut trau|rig aus dem Fens|ter.",
+     "Drau|ßen reg|net es in di|cken Trop|fen.",
+     "Die Stra|ße glänzt ganz nass.",
+     "„Und heu|te ist Trai|ning“, sagt Le|on lei|se."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧥",
+      "🎒"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "„Fällt das Trai|ning jetzt aus?“, fragt Le|on.",
+     "Pa|pa schüt|telt den Kopf und lacht.",
+     "„Wir spie|len auch im Re|gen“, sagt er.",
+     "Le|on holt sei|ne Re|gen|ja|cke aus dem Schrank.",
+     "Die Hand|schu|he steckt er in die Ta|sche."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "☔",
+      "👟"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Der Weg zum Platz ist voll mit Pfüt|zen.",
+     "Le|on springt mit bei|den Bei|nen hin|ein.",
+     "Das Was|ser spritzt bis an die Ja|cke.",
+     "Pa|pa hält den Schirm ü|ber sie bei|de.",
+     "Bei|de la|chen den gan|zen Weg lang."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🌧️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Platz steht schon die gan|ze Mann|schaft.",
+     "Kein ein|zi|ges Kind ist zu Hau|se ge|blie|ben.",
+     "Al|le tra|gen Ja|cken mit Ka|pu|ze.",
+     "Trai|ner Jens hat ei|ne Müt|ze auf.",
+     "„Ihr seid al|le rich|tig tap|fer!“, ruft er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "💦"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Ball ist nass und ganz schwer.",
+     "Le|on stellt sich zwi|schen die Pfos|ten.",
+     "Das Was|ser läuft ihm ü|ber das Ge|sicht.",
+     "Trotz|dem schaut er ge|nau auf den Ball.",
+     "Dann fliegt der ers|te Schuss auf ihn zu."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "😄"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hech|tet in die lin|ke E|cke.",
+     "Er fängt den Ball und rutscht durch das Gras.",
+     "Sei|ne Ho|se ist jetzt braun und nass.",
+     "Le|on steht auf und lacht ganz laut.",
+     "„Das hat Spaß ge|macht!“, ruft er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🍵",
+      "🧣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Um halb sie|ben ist das Trai|ning vor|bei.",
+     "Al|le Kin|der sind nass bis auf die Haut.",
+     "Da holt Jens ei|ne gro|ße Kan|ne.",
+     "Da|rin ist hei|ßer Tee mit Ho|nig.",
+     "Je|des Kind be|kommt ei|nen war|men Be|cher."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "☕",
+      "🤝"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Le|on nimmt den Be|cher in bei|de Hän|de.",
+     "Der Tee wärmt sei|ne kal|ten Fin|ger.",
+     "Pa|pa kommt mit ei|nem tro|cke|nen Hand|tuch.",
+     "„Ihr habt heu|te durch|ge|hal|ten“, sagt Jens.",
+     "Le|on freut sich schon auf den Mitt|woch."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Welcher Tag ist es?",
+    "richtig": "Freitag",
+    "falsch": [
+     "Mittwoch",
+     "Samstag"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was holt Leon aus dem Schrank?",
+    "richtig": "seine Regenjacke",
+    "falsch": [
+     "seine Mütze",
+     "seinen Schirm"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wie viele Kinder bleiben zu Hause?",
+    "richtig": "kein einziges",
+    "falsch": [
+     "fünf Kinder",
+     "die halbe Mannschaft"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wohin hechtet Leon?",
+    "richtig": "in die linke Ecke",
+    "falsch": [
+     "in die rechte Ecke",
+     "nach oben"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Was bekommt jedes Kind zum Schluss?",
+    "richtig": "heißen Tee",
+    "falsch": [
+     "kalte Milch",
+     "warmen Kakao"
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "g4-joko-kommt-zum-training",
+  "titel": "Joko kommt zum Training",
+  "bild": "👋",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "⚽",
+      "🎒"
+     ],
+     "leute": [
+      "Leon",
+      "Joko"
+     ]
+    },
+    "zeilen": [
+     "In der Pau|se sitzt Le|on ne|ben Jo|ko.",
+     "Jo|ko schaut neu|gie|rig in Le|ons gro|ße Ta|sche.",
+     "Da|rin lie|gen zwei grü|ne Hand|schu|he.",
+     "„Ich bin Tor|wart im Ver|ein“, sagt Le|on.",
+     "Jo|kos Au|gen wer|den auf ein|mal ganz groß."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "🥅",
+      "🙂"
+     ],
+     "leute": [
+      "Leon",
+      "Joko"
+     ]
+    },
+    "zeilen": [
+     "„Darf ich da auch ein|mal mit|kom|men?“, fragt Jo|ko.",
+     "„Klar, komm ein|fach mit!“, ruft Le|on so|fort.",
+     "„Wir trai|nie|ren mitt|wochs und frei|tags.“",
+     "„Von fünf bis halb sie|ben“, sagt Le|on.",
+     "Jo|ko nickt und freut sich rie|sig."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "🎒"
+     ],
+     "leute": [
+      "Leon",
+      "Joko",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Am Mitt|woch klin|gelt Jo|ko an der Tür.",
+     "Er hat ei|ne blau|e Ta|sche da|bei.",
+     "Pa|pa fährt die bei|den zum Platz.",
+     "Jo|ko ist ein biss|chen auf|ge|regt und still.",
+     "„Al|le sind dort wirk|lich nett“, sagt Le|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🤝",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Joko"
+     ]
+    },
+    "zeilen": [
+     "Trai|ner Jens gibt Jo|ko die Hand.",
+     "„Heu|te schnup|perst du ein|fach bei uns mit!“",
+     "Jo|ko be|kommt ein Leib|chen in Gelb.",
+     "Dann lau|fen al|le ei|ne gro|ße Run|de.",
+     "Jo|ko bleibt da|bei im|mer ne|ben Le|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "👟"
+     ],
+     "leute": [
+      "Leon",
+      "Joko"
+     ]
+    },
+    "zeilen": [
+     "Zu|erst ü|ben al|le Kin|der das Pas|sen.",
+     "Jo|ko trifft den Ball nicht rich|tig.",
+     "Er wird ein biss|chen rot im Ge|sicht.",
+     "„Das geht mir auch oft so“, sagt Le|on.",
+     "Trai|ner Jens zeigt ihm den rich|ti|gen Fuß."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Joko"
+     ]
+    },
+    "zeilen": [
+     "Dann stellt sich Le|on wie|der ins Tor.",
+     "Jo|ko darf drei|mal auf ihn schie|ßen.",
+     "Den ers|ten Ball hält Le|on ganz leicht.",
+     "Der zwei|te fliegt weit ü|ber das Tor.",
+     "Beim drit|ten Mal trifft Jo|ko ge|nau."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🎉",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Joko"
+     ]
+    },
+    "zeilen": [
+     "Der Ball rollt ganz lang|sam in die E|cke.",
+     "Le|on springt und kommt doch zu spät.",
+     "„Su|per Schuss!“, ruft Le|on laut.",
+     "Jo|ko lacht und hebt bei|de Ar|me.",
+     "Al|le an|de|ren Kin|der klat|schen mit."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🌙",
+      "🤝"
+     ],
+     "leute": [
+      "Leon",
+      "Joko",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Um halb sie|ben ist das Trai|ning aus.",
+     "Jo|ko gibt Trai|ner Jens die Hand.",
+     "„Am Frei|tag kom|me ich wie|der!“, sagt er.",
+     "Le|on freut sich ü|ber den neu|en Mit|spie|ler.",
+     "Pa|pa bringt die bei|den wie|der nach Hau|se."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Was liegt in Leons großer Tasche?",
+    "richtig": "zwei grüne Handschuhe",
+    "falsch": [
+     "ein Buch",
+     "eine Trinkflasche"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wann trainiert Leon?",
+    "richtig": "mittwochs und freitags",
+    "falsch": [
+     "jeden Tag",
+     "am Wochenende"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was bekommt Joko auf dem Platz?",
+    "richtig": "ein Leibchen in Gelb",
+    "falsch": [
+     "eine grüne Mütze",
+     "neue Handschuhe"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie oft darf Joko auf Leon schießen?",
+    "richtig": "dreimal",
+    "falsch": [
+     "einmal",
+     "fünfmal"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Was ruft Leon nach dem Schuss?",
+    "richtig": "Super Schuss!",
+    "falsch": [
+     "Nicht schon wieder!",
+     "Das war Pech."
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "g5-das-erste-spiel-am-samstag",
+  "titel": "Das erste Spiel am Samstag",
+  "bild": "👏",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "🛏️"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Heu|te ist Sams|tag und Le|on ist schon wach.",
+     "Sonst ist nur mitt|wochs und frei|tags Trai|ning.",
+     "A|ber heu|te gibt es ein Spiel.",
+     "Paul sitzt schon auf dem Bett und gähnt.",
+     "„Ich kom|me mit und schau|e zu“, sagt Paul."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Papa",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Um neun fah|ren al|le drei zum Platz.",
+     "Le|on hält die Hand|schu|he auf dem Schoß.",
+     "Sein Bauch kit|zelt ein biss|chen.",
+     "„Du hast so oft ge|übt“, sagt Pa|pa.",
+     "Das macht Le|on ein biss|chen ru|hi|ger."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🎽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf dem Platz war|tet schon die an|de|re Mann|schaft.",
+     "Die Kin|der tra|gen blau|e Tri|kots.",
+     "Le|ons Mann|schaft spielt in Grün.",
+     "Trai|ner Jens klatscht laut in die Hän|de.",
+     "„Habt ein|fach Spaß da|bei!“, ruft er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt sich zwi|schen die Pfos|ten.",
+     "Er zupft sei|ne Hand|schu|he zu|recht.",
+     "Dann pfeift Trai|ner Jens das Spiel an.",
+     "So|fort lau|fen al|le Kin|der los.",
+     "Le|on schaut nur noch auf den Ball."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "💪"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Kind in Blau schießt von links.",
+     "Der Ball fliegt flach auf das Tor.",
+     "Le|on hech|tet und fängt ihn fest.",
+     "Sei|ne Mann|schaft ju|belt ganz laut.",
+     "Le|on wirft den Ball schnell nach vorn."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "😔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann rollt ein Ball von rechts he|ran.",
+     "Le|on springt und be|kommt ihn nicht.",
+     "Der Ball rollt lang|sam ins Tor.",
+     "Le|on setzt sich ganz kurz ins Gras.",
+     "Sei|ne Au|gen wer|den ein biss|chen feucht."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🤝",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Da läuft Trai|ner Jens zu ihm hin.",
+     "„Kein Tor|wart hält je|den Ball“, sagt er.",
+     "Nie|mand schimpft und nie|mand lacht ihn aus.",
+     "Le|on steht auf und holt tief Luft.",
+     "Beim nächs|ten Schuss hält er den Ball wie|der."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "👏",
+      "🍎"
+     ],
+     "leute": [
+      "Leon",
+      "Papa",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Nach dem Spiel klat|schen bei|de Mann|schaf|ten.",
+     "Al|le Kin|der be|kom|men ein Stück Ap|fel.",
+     "Paul hebt bei|de Dau|men für Le|on.",
+     "„Du warst so mu|tig“, sagt Pa|pa lei|se.",
+     "Am Mitt|woch geht Le|on wie|der zum Trai|ning."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Welcher Tag ist heute?",
+    "richtig": "Samstag",
+    "falsch": [
+     "Mittwoch",
+     "Freitag"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Welche Farbe tragen die anderen Kinder?",
+    "richtig": "blau",
+    "falsch": [
+     "gelb",
+     "rot"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was macht Leon mit dem ersten Ball?",
+    "richtig": "Er fängt ihn fest.",
+    "falsch": [
+     "Er rollt ihn weg.",
+     "Er lässt ihn los."
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Was passiert mit dem zweiten Ball?",
+    "richtig": "Er rollt ins Tor.",
+    "falsch": [
+     "Leon hält ihn.",
+     "Er fliegt weit weg."
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Was sagt Trainer Jens zu Leon?",
+    "richtig": "Kein Torwart hält jeden Ball.",
+    "falsch": [
+     "Du musst schneller springen.",
+     "Der Ball war zu schnell."
     ],
     "seite": 7
    }
