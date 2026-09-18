@@ -86,6 +86,50 @@
   .option.falsch{border-color:#dc2626;background:#fef2f2;opacity:.75}
   .option.richtig{border-color:var(--gut);background:#f0fdf4}
   .option[disabled]{cursor:default}
+
+  /* ---- Selbst schreiben ----------------------------------------------
+     Paul am 18.09.2026 (Meldung cbevcr5f4p) aus den Ideen angehakt:
+     "Schreib den Satz selbst - statt nur auszuwaehlen, tippst du den Satz
+     einmal ganz allein neu." Und auf die Rueckfrage, was bei einem
+     Vertipper passieren soll - zeigen oder selbst suchen lassen: "Zeigen".
+     Darum wird die Stelle markiert, nicht nur "schau nochmal drueber". */
+  .modus-knopf{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:2px solid var(--line);background:var(--papier);border-radius:16px;padding:12px 14px;min-height:64px;font:800 17px/1.25 var(--rund);color:var(--ink);cursor:pointer;margin-top:12px}
+  .modus-knopf.an{border-color:var(--farbe);background:#fef2f2}
+  .modus-knopf:active{transform:scale(.99)}
+  .modus-knopf .ic{font-size:30px;flex:none}
+  .modus-knopf .mk{display:block;font:400 14px/1.4 var(--font);color:var(--muted);margin-top:3px}
+  .modus-knopf .an-aus{flex:none;font:800 13px/1 var(--font);letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:9px 11px;background:#e7e5e4;color:#57534e}
+  .modus-knopf.an .an-aus{background:var(--farbe);color:#fff}
+
+  .schreib-hinweis{font:600 15.5px/1.45 var(--font);color:var(--muted);margin:-4px 0 10px}
+  .schreiben textarea{display:block;width:100%;min-height:92px;border:2px solid var(--line);border-radius:14px;padding:12px;font:400 19px/1.55 var(--serif);color:var(--ink);background:#fff;resize:vertical;-webkit-appearance:none}
+  .schreiben textarea:focus{outline:none;border-color:var(--farbe)}
+  .nebenknopf{display:inline-flex;align-items:center;gap:7px;margin:10px 8px 0 0;border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 15px;font:700 15px/1 var(--font);color:#57534e;cursor:pointer;min-height:44px}
+  .nebenknopf:active{transform:scale(.97)}
+  .wortschatz{margin-top:10px;background:var(--hell);border-radius:12px;padding:11px 13px;font-size:16.5px;line-height:1.55}
+  .wortschatz b{font-family:var(--rund)}
+  .wortschatz .w{display:inline-block;background:#fff;border:1px solid #fcd34d;border-radius:8px;padding:3px 8px;margin:4px 6px 0 0;font-weight:700}
+  .geprueft{font:400 19px/1.8 var(--serif);margin:8px 0 2px}
+  .geprueft .w{border-radius:4px;padding:1px 3px}
+  .geprueft .w.schief{background:#fee2e2;box-shadow:0 0 0 2px #dc2626;font-weight:700}
+  .geprueft .w.zuviel{background:#fee2e2;color:#991b1b;text-decoration:line-through}
+  .geprueft .luecke{display:inline-block;width:28px;border-bottom:3px solid #dc2626;vertical-align:baseline}
+
+  /* Beim Schreiben steht die Tastatur offen - auf Pauls iPhone bleiben dann
+     360 px Hoehe. Dann tritt alles zurueck, damit "Pruefen" erreichbar ist. */
+  @media (max-height:520px){
+    .karte{padding:12px;margin-bottom:9px}
+    .aufgabe .frage{font-size:17px;margin-bottom:8px}
+    .schreib-hinweis{font-size:14px;margin-bottom:7px}
+    .schreiben textarea{min-height:58px;font-size:17px;line-height:1.4;padding:9px}
+    .zeitung{padding:10px 12px}
+    .zeitung .kopf{margin-bottom:6px;padding-bottom:4px}
+    .zeitung .name{font-size:18px}
+    .zeitung h3{font-size:16px}
+    .artikel{font-size:16px;line-height:1.45}
+    .gross-knopf{padding:12px;min-height:50px;font-size:17px;margin-top:9px}
+    .punktreihe{margin-top:7px}
+  }
   .rueck{margin-top:12px;border-radius:14px;padding:12px 14px;font-size:16.5px;line-height:1.5}
   .rueck.gut{background:#f0fdf4} .rueck.nochmal{background:#fff7ed} .rueck.loesung{background:#fef2f2}
   .rueck b{font-family:var(--rund)}
