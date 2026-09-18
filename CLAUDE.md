@@ -727,9 +727,14 @@ Nachschlagen ist Lesen. Der Weiter-Knopf wacht erst nach etwa 0,25 s je Wort auf
 - **Die Geschichten liegen in `leon/geschichten.js`** und kommen mit echten Menschen
   aus Leons Umfeld vor. Darum nur hinter dem Riegel unter `/leon/` – **nie** Namen,
   Familienverhältnisse oder Schule in diese offene Datei hier schreiben.
-- Reihenfolge = Reihenfolge im Array. Jeden Tag die erste ungelesene; sind alle
-  gelesen, die am längsten her ist. **Neue hinten anhängen, nie eine `id` ändern** –
-  `leon-lesepass` merkt sich die ids.
+- Reihenfolge = Reihenfolge im Array. Dran ist immer die erste **ungelesene**;
+  sind alle gelesen, die am längsten her ist. **Neue hinten anhängen, nie eine `id`
+  ändern** – `leon-lesepass` merkt sich die ids.
+- **Kein Tageslimit (seit 18.09.2026).** Vorher hing die Geschichte am Datum: Wer las,
+  aber die fünf Fragen nicht beantwortete, bekam beim nächsten Öffnen dieselbe noch
+  einmal – Leon war enttäuscht. Jetzt: „Lieber eine andere" stellt eine Geschichte
+  hinten an (`uebersprungen`), nach dem Lesebeweis führt ein Knopf gleich zur
+  nächsten, und der Start zeigt, wie viele noch warten.
 - Stand 16.09.2026: 21 Geschichten, also Vorrat bis etwa 06.10.2026. Nachschub nach
   demselben Format (8 Seiten, 3–5 Zeilen, ≤ 9 Wörter je Satz, 220–320 Wörter,
   Silbenstriche `|`, 5 Fragen mit `seite`), vorher selbst gegenlesen.
