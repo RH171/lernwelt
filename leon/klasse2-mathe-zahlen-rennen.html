@@ -398,24 +398,54 @@
              tipp:"Von " + a + " bis " + ziel + " fehlt nicht viel. Schau auf die Einer." };
   }
 
+  /* Neu am 18.09.2026, nach Leons Blatt „Fit für die 2. Klasse?" und
+     „Wir wiederholen die Tausch- und die Umkehraufgaben": Platzhalter vorne
+     (? + 7 = 16, ? − 5 = 11) und die Aufgabenfamilie. Genau dort standen auf
+     seinem Blatt die beiden roten Korrekturen der Lehrerin. */
+  function machePlatzhalterPlus(){
+    var b = zufall(2, 9), l = zufall(3, 11), ziel = l + b;
+    return { art:"platzhalter", a:b, ziel:ziel, loesung:l, merkmal:"platzhalter plus",
+             frage:"? + " + b + " = " + ziel,
+             tipp:"Dreh die Aufgabe um: " + ziel + " − " + b + " sagt dir, was fehlt." };
+  }
+  function machePlatzhalterMinus(){
+    var b = zufall(2, 9), rest = zufall(2, 11), a = rest + b;
+    return { art:"platzhalter", a:b, ziel:rest, loesung:a, merkmal:"platzhalter minus",
+             frage:"? − " + b + " = " + rest,
+             tipp:"Dreh die Aufgabe um: " + rest + " + " + b + " sagt dir, wo du starten musst." };
+  }
+  function macheFamilie(){
+    var a = zufall(3, 9), b = zufall(3, 9), c = a + b;
+    if (Math.random() < .5){
+      return { art:"familie", loesung:a, merkmal:"tauschaufgabe", nurWahl:true,
+               frage:a + " + " + b + " = " + c + ".  Und " + b + " + ? = " + c,
+               tipp:"Bei der Tauschaufgabe stehen dieselben Zahlen, nur andersherum." };
+    }
+    return { art:"familie", loesung:b, merkmal:"umkehraufgabe", nurWahl:true,
+             frage:a + " + " + b + " = " + c + ".  Und " + c + " − " + a + " = ?",
+             tipp:"Die Umkehraufgabe nimmt wieder weg, was du dazugetan hast." };
+  }
+
   var BAUER = {
     "plus20":machePlus20, "minus20":macheMinus20, "plusOhne":machePlusOhne,
     "minusOhne":macheMinusOhne, "plusMit":machePlusMit, "minusMit":macheMinusMit,
     "verdoppeln":macheVerdoppeln, "halbieren":macheHalbieren, "nachbar":macheNachbar,
-    "nachbarzehner":macheNachbarzehner, "ergaenzen":macheErgaenzen
+    "nachbarzehner":macheNachbarzehner, "ergaenzen":macheErgaenzen,
+    "platzhalterPlus":machePlatzhalterPlus, "platzhalterMinus":machePlatzhalterMinus,
+    "familie":macheFamilie
   };
   // Erst der sichere Bereich, dann die Erweiterung - und nie zweimal dasselbe
   // hintereinander. Die kurze Strecke ist der Anfang dieser Liste.
-  var REIHE = ["plus20","minus20","verdoppeln","plusOhne","nachbar","plusMit","minusOhne","ergaenzen",
-               "halbieren","minusMit","nachbarzehner","plusMit",
-               "minusMit","verdoppeln","ergaenzen","plusOhne"];
+  var REIHE = ["plus20","familie","verdoppeln","platzhalterPlus","minus20","nachbar","platzhalterMinus","plusMit",
+               "halbieren","familie","minusOhne","ergaenzen",
+               "platzhalterPlus","minusMit","nachbarzehner","platzhalterMinus"];
 
   function aufgabenBauen(anzahl){
     var raus = [];
     for (var i = 0; i < anzahl; i++){
       var a = BAUER[REIHE[i % REIHE.length]]();
       // Wechselnd tippen und auswählen - Leon soll beides üben.
-      a.modus = (i % 2 === 0) ? "tasten" : "wahl";
+      a.modus = a.nurWahl ? "wahl" : ((i % 2 === 0) ? "tasten" : "wahl");
       if (a.modus === "wahl") a.optionen = optionenBauen(a.loesung);
       a.nr = i;
       raus.push(a);
@@ -666,7 +696,7 @@
       var raus = [];
       for (var i = 0; i < wieoft; i++){
         var a = BAUER[art]();
-        a.modus = (i % 2 === 0) ? "tasten" : "wahl";
+        a.modus = a.nurWahl ? "wahl" : ((i % 2 === 0) ? "tasten" : "wahl");
         if (a.modus === "wahl") a.optionen = optionenBauen(a.loesung);
         a.nr = i;
         raus.push(a);
