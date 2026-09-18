@@ -83,6 +83,14 @@
   .seite img{width:100%;height:100%;object-fit:cover;display:block}
   .seite .pdf{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--muted);padding:6px;text-align:center}
   .seite .weg{position:absolute;top:5px;right:5px;width:44px;height:44px;border:none;border-radius:999px;background:rgba(20,22,40,.6);color:#fff;font-size:18px;cursor:pointer}
+  /* Fach-Kacheln (18.09.2026). Denny: "Baue doch hier gleich Kacheln, damit Paul
+     auf Deutsch, Mathe und alle Fächer, die er sonst noch hat, klicken kann." */
+  .faecher{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:14px}
+  .fach{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:2px solid var(--line);
+    background:#fbfcff;border-radius:16px;padding:12px 8px;min-height:86px;cursor:pointer;font:700 15px/1.2 var(--rund);color:var(--ink)}
+  .fach .ic{font-size:26px;line-height:1}
+  .fach.an{border-color:var(--paul);background:#eef0fb;color:var(--paul)}
+  .fachmarke{font:800 12.5px/1 var(--rund);border-radius:999px;padding:6px 9px;background:#eef0fb;color:var(--paul);white-space:nowrap}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
   .chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:10px 15px;min-height:46px;font:700 15.5px/1.2 var(--rund);cursor:pointer;color:var(--ink)}
   .chip.an{border-color:var(--paul);background:#eef0fb;color:var(--paul)}
@@ -137,8 +145,14 @@
 
   <!-- 2. Neue Hausaufgabe -->
   <section id="sicht-neu" class="verborgen">
+    <div class="karte" id="fach-karte">
+      <div style="font:800 20px/1.2 var(--rund)">1. Welches Fach?</div>
+      <p class="unter">Tipp das Fach an, dann weiß ich gleich, worum es geht.</p>
+      <div class="faecher" id="faecher"></div>
+    </div>
+
     <div class="karte">
-      <div style="font:800 20px/1.2 var(--rund)" id="aufnahme-titel">1. Dein Blatt</div>
+      <div style="font:800 20px/1.2 var(--rund)" id="aufnahme-titel">2. Dein Blatt</div>
       <p class="unter" id="aufnahme-unter">Alle Seiten, die dazugehören. Schön gerade und hell fotografieren – dann kann ich jede Zahl lesen.</p>
       <div class="knoepfe">
         <button class="aufnahme" id="k-kamera" type="button"><span class="ic">📸</span>Fotografieren</button>
@@ -151,7 +165,7 @@
       <div class="seiten" id="seiten"></div>
 
       <div id="brauch-teil">
-        <div style="font:800 20px/1.2 var(--rund);margin-top:20px">2. Was brauchst du?</div>
+        <div style="font:800 20px/1.2 var(--rund);margin-top:20px">3. Was brauchst du?</div>
         <div class="chips" id="brauch">
           <button class="chip an" type="button" data-brauch="fertig">✅ Fertig – schau drüber</button>
           <button class="chip" type="button" data-brauch="haengt">🤔 Ich komme nicht weiter</button>
@@ -236,7 +250,11 @@
       var b = document.createElement("button"); b.type = "button"; b.className = "eintrag";
       var letzte = (f.verlauf || [])[f.verlauf.length - 1] || {};
       var marke = f.status === "erledigt" ? ["fertig", "✅ erledigt"] : (f.ungelesenKind ? ["neu", "Neue Antwort"] : ["dran", "läuft"]);
-      b.innerHTML = '<span class="ic">📄</span><span class="mitte"><b></b><small></small></span><span class="marke"></span>';
+      b.innerHTML = '<span class="ic"></span><span class="mitte"><b></b><small></small></span><span class="fachmarke"></span><span class="marke"></span>';
+      var fk = FAECHER.filter(function(x){ return x.k === f.fach; })[0];
+      b.querySelector(".ic").textContent = fk ? fk.ic : "📄";
+      b.querySelector(".fachmarke").textContent = fk ? fk.n : "";
+      if (!fk) b.querySelector(".fachmarke").style.display = "none";
       // Titel kommt aus der ersten Antwort der Werkstatt ("Mathe – Zahlen bis 1000").
       b.querySelector("b").textContent = (f.titel && f.titel !== "Meine Hausaufgabe") ? f.titel
         : ((f.verlauf[0] && f.verlauf[0].text || "Hausaufgabe").replace(/^Meine Hausaufgabe\.\s*/, "") || "Hausaufgabe");
@@ -301,8 +319,34 @@
       w.addEventListener("click", function(){ seiten.splice(i, 1); seitenMalen(); });
       d.appendChild(w); box.appendChild(d);
     });
-    $("neu-senden").disabled = seiten.length === 0;
+    knopfPruefen();
   }
+
+  /* Die Fächer. Paul bekommt heute seinen Stundenplan - danach richte ich die
+     Liste danach aus (Denny, 18.09.2026). Sport ist bewusst nicht dabei. */
+  var FAECHER = [
+    { k: "deutsch", n: "Deutsch", ic: "📘" }, { k: "mathe", n: "Mathe", ic: "🔢" },
+    { k: "hsu", n: "HSU", ic: "🌍" }, { k: "englisch", n: "Englisch", ic: "🇬🇧" },
+    { k: "religion", n: "Religion", ic: "🙏" }, { k: "musik", n: "Musik", ic: "🎵" },
+    { k: "kunst", n: "Kunst", ic: "🎨" }, { k: "anderes", n: "Anderes", ic: "✏️" }
+  ];
+  var fach = "";
+  (function(){
+    var box = $("faecher");
+    FAECHER.forEach(function(f){
+      var b = document.createElement("button"); b.type = "button"; b.className = "fach";
+      b.innerHTML = '<span class="ic"></span><span class="n"></span>';
+      b.querySelector(".ic").textContent = f.ic; b.querySelector(".n").textContent = f.n;
+      b.addEventListener("click", function(){
+        fach = f.k;
+        Array.prototype.forEach.call(box.querySelectorAll(".fach"), function(x){ x.classList.toggle("an", x === b); });
+        knopfPruefen();
+      });
+      box.appendChild(b);
+    });
+  })();
+  function fachName(k){ var f = FAECHER.filter(function(x){ return x.k === k; })[0]; return f ? f.n : ""; }
+  function knopfPruefen(){ $("neu-senden").disabled = seiten.length === 0 || (modus === "neu" && !fach); }
 
   var brauch = "fertig";
   Array.prototype.forEach.call(document.querySelectorAll("[data-brauch]"), function(k){
@@ -313,9 +357,15 @@
   });
 
   function neuOeffnen(als){
-    modus = als; seiten = []; seitenMalen(); fehler("neu-fehler", ""); $("text").value = "";
+    modus = als; seiten = []; fehler("neu-fehler", ""); $("text").value = "";
+    if (als === "neu"){
+      fach = "";
+      Array.prototype.forEach.call($("faecher").querySelectorAll(".fach"), function(x){ x.classList.remove("an"); });
+    }
+    $("fach-karte").classList.toggle("verborgen", als === "verbessert");
+    seitenMalen();
     $("brauch-teil").classList.toggle("verborgen", als === "verbessert");
-    $("aufnahme-titel").textContent = als === "verbessert" ? "Dein verbessertes Blatt" : "1. Dein Blatt";
+    $("aufnahme-titel").textContent = als === "verbessert" ? "Dein verbessertes Blatt" : "2. Dein Blatt";
     $("titel").textContent = als === "verbessert" ? "📸 Verbessert" : "📸 Neue Hausaufgabe";
     $("neu-senden").textContent = als === "verbessert" ? "Nochmal prüfen lassen" : "Abschicken";
     zeige("neu");
@@ -343,9 +393,9 @@
         .then(nachAntwort).catch(sendFehler);
       return;
     }
-    var neuText = "Meine Hausaufgabe. " + BRAUCH[brauch] + (mehr ? " " + mehr : "");
+    var neuText = "Meine Hausaufgabe in " + fachName(fach) + ". " + BRAUCH[brauch] + (mehr ? " " + mehr : "");
     zeigeFadenMitWarten(null, neuText, urls);
-    post({ art: "hausaufgabe", titel: "Meine Hausaufgabe", wo: "Hausaufgaben-Heft",
+    post({ art: "hausaufgabe", titel: fachName(fach), fach: fach, wo: "Hausaufgaben-Heft",
            geraet: window.lernstand ? window.lernstand.geraet() : "", text: neuText, bild: urls[0], bilder: urls.slice(1) })
       .then(nachAntwort).catch(sendFehler);
   });

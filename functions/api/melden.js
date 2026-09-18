@@ -161,7 +161,7 @@ async function sofortAntworten(env, faden, kind, text, bild, bilder) {
   if (antwort && faden.art === "hausaufgabe") {
     const kopf = antwort.match(/^\s*📌\s*([^\n]{3,70})\n+/);
     if (kopf) {
-      if (!faden.titel || faden.titel === "Meine Hausaufgabe") faden.titel = kopf[1].trim();
+      faden.titel = kopf[1].trim();
       text2 = antwort.slice(kopf[0].length);
     }
   }
@@ -333,6 +333,8 @@ async function postVerarbeiten(context) {
     zeit: new Date().toISOString(),
     art: daten.art === "wunsch" ? "wunsch" : hausaufgabe ? "hausaufgabe" : "problem",
     wo: String(daten.wo || "").slice(0, 200),
+    // Welches Fach - Paul waehlt es im Hausaufgaben-Heft (18.09.2026).
+    fach: String(daten.fach || "").slice(0, 24),
     titel: String(daten.titel || "").slice(0, 120),
     geraet: String(daten.geraet || "").slice(0, 80),
     status: "offen",
