@@ -171,6 +171,13 @@
     <p>Unsere Ferien-Zeitung hat vier Artikel – aber die sind ganz schön langweilig geschrieben. Verbessere sie Satz für Satz. Genau das hilft dir auch bei deinem Ferien-Blatt!</p>
     <div class="ressorts" id="ressorts"></div>
     <button class="gross-knopf" id="alle">Alle vier Artikel nacheinander</button>
+    <button class="modus-knopf" type="button" id="modus" aria-pressed="false">
+      <span class="ic">✍️</span>
+      <span style="flex:1">Schreib den Satz selbst
+        <span class="mk">Statt nur auszuwählen tippst du den ganzen Satz einmal allein neu – so wie später auf deinem echten Ferien-Blatt. Vertippst du dich, zeige ich dir die Stelle.</span>
+      </span>
+      <span class="an-aus" id="modus-stand">aus</span>
+    </button>
   </section>
 
   <section class="verborgen" id="sicht-spiel">
@@ -319,23 +326,232 @@
     }).join(" ");
   }
 
+  function kopfHtml(s){
+    return '<p class="titel"><span>Satz ' + (pos + 1) + ' von ' + ressort.saetze.length + '</span><span>' + ressort.ic + ' ' + ressort.name + '</span></p>' +
+           '<p class="frage">' + esc(ressort.frage(s)) + '</p>';
+  }
+  function fussHtml(){
+    return '<div id="rueck"></div>' +
+           '<div class="punktreihe">' + ergebnis.map(function(e, i){ return '<i class="' + e + (i === pos ? " n" : "") + '"></i>'; }).join("") + '</div>';
+  }
+  // Der Wechsel geht mitten im Spiel - aber nur, solange die Aufgabe noch
+  // offen ist. Sonst stuende Pauls Rueckmeldung ploetzlich in einer Form da,
+  // zu der sie nicht gehoert.
+  function wechselHtml(){
+    return gesperrt || versuch > 0 ? "" :
+      '<button type="button" class="nebenknopf" id="modus-wechsel">' +
+      (selbst ? "☝️ Lieber auswählen" : "✍️ Lieber selbst schreiben") + '</button>';
+  }
+  function wechselBinden(){
+    var w = $("modus-wechsel");
+    if (w) w.addEventListener("click", function(){ modusSetzen(!selbst); aufgabeZeigen(); });
+  }
+
   function aufgabeZeigen(){
     var s = ressort.saetze[pos];
     versuch = 0; gesperrt = false;
     $("artikel").innerHTML = artikelHtml(false);
-    var optionen = mische([s.r].concat(Object.keys(s.f)));
-    $("aufgabe").innerHTML =
-      '<p class="titel"><span>Satz ' + (pos + 1) + ' von ' + ressort.saetze.length + '</span><span>' + ressort.ic + ' ' + ressort.name + '</span></p>' +
-      '<p class="frage">' + esc(ressort.frage(s)) + '</p>' +
-      '<div class="optionen">' + optionen.map(function(o){ return '<button class="option" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join("") + '</div>' +
-      '<div id="rueck"></div>' +
-      '<div class="punktreihe">' + ergebnis.map(function(e, i){ return '<i class="' + e + (i === pos ? " n" : "") + '"></i>'; }).join("") + '</div>';
-    Array.prototype.forEach.call(document.querySelectorAll(".option"), function(b){
-      b.addEventListener("click", function(){ waehlen(b); });
-    });
+    if (selbst) schreibZeigen(s); else wahlZeigen(s);
     $("punkte").textContent = "✏️ " + gesamt;
     var jetzt = document.querySelector(".satz.jetzt");
     if (jetzt && window.innerWidth < 900) try { jetzt.scrollIntoView({ block: "nearest" }); } catch(e){}
+  }
+
+  function wahlZeigen(s){
+    var optionen = mische([s.r].concat(Object.keys(s.f)));
+    $("aufgabe").innerHTML = kopfHtml(s) +
+      '<div class="optionen">' + optionen.map(function(o){ return '<button class="option" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join("") + '</div>' +
+      wechselHtml() + fussHtml();
+    Array.prototype.forEach.call(document.querySelectorAll(".option"), function(b){
+      b.addEventListener("click", function(){ waehlen(b); });
+    });
+    wechselBinden();
+  }
+
+  function schreibZeigen(s){
+    $("aufgabe").innerHTML = kopfHtml(s) +
+      '<div class="schreiben">' +
+        '<p class="schreib-hinweis">Schreib den ganzen Satz neu auf – mit dem verbesserten Wort. Punkt und große Buchstaben zählen mit.</p>' +
+        '<textarea id="selbst-text" rows="3" autocapitalize="sentences" autocomplete="off" spellcheck="false" ' +
+          'placeholder="Hier den ganzen Satz hintippen …"></textarea>' +
+        '<button class="gross-knopf" type="button" id="selbst-ab">Prüfen</button>' +
+        '<button type="button" class="nebenknopf" id="selbst-hilfe">💡 Wörter zeigen</button>' +
+        wechselHtml() +
+        '<div id="wortschatz"></div>' +
+      '</div>' + fussHtml();
+    $("selbst-ab").addEventListener("click", function(){ selbstPruefen(); });
+    $("selbst-hilfe").addEventListener("click", function(){ wortschatzZeigen(s); });
+    $("selbst-text").addEventListener("keydown", function(e){
+      if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); selbstPruefen(); }
+    });
+    wechselBinden();
+  }
+
+  // Ein Tipp, der nie verraet, welches Wort stimmt: dieselben vier Woerter wie
+  // in der Auswahl, nur als Text. Schwerer als vorher wird es damit nie.
+  function wortschatzZeigen(s){
+    if ($("wortschatz").innerHTML) return;
+    $("wortschatz").innerHTML = '<div class="wortschatz"><b>Eins von diesen vier Wörtern passt:</b><br>' +
+      mische([s.r].concat(Object.keys(s.f))).map(function(o){ return '<span class="w">' + esc(o) + '</span>'; }).join("") +
+      '</div>';
+  }
+
+  /* ---------- Wort fuer Wort vergleichen ----------
+     Paul wollte die Stelle SEHEN ("Zeigen"), nicht nur hoeren, dass etwas
+     nicht stimmt. Verglichen wird darum nicht Satz gegen Satz, sondern Wort
+     gegen Wort - sonst waere bei einem fehlenden Wort alles dahinter rot. */
+  function zerlege(x){ return String(x == null ? "" : x).replace(/\s+/g, " ").trim().split(" ").filter(Boolean); }
+  function normWort(w){
+    var x = String(w == null ? "" : w);
+    try { x = x.normalize("NFC"); } catch(e){}
+    return x.replace(/[\u201E\u201C\u201D\u00AB\u00BB]/g, '"')
+            .replace(/[\u201A\u2018\u2019\u00B4\u0060]/g, "'")
+            .replace(/[\u2013\u2014\u2212]/g, "-")
+            .replace(/\u2026/g, "...");
+  }
+  function gleichwertig(a, b){ return normWort(a) === normWort(b); }
+  // Fuer das GESUCHTE Wort zaehlt der Wortkern. Ein vergessener Punkt am
+  // Satzende ist ein Abschreibfehler - er darf nicht als "Praeteritum sitzt
+  // nicht" im Lernstand landen.
+  function kern(w){ return normWort(w).replace(/^[^0-9A-Za-zÄÖÜäöüß]+/, "").replace(/[^0-9A-Za-zÄÖÜäöüß]+$/, ""); }
+  function kernGleich(a, b){ return kern(a) === kern(b); }
+
+  function abgleich(soll, ist){
+    var n = soll.length, m = ist.length, i, j;
+    var t = [];
+    for (i = 0; i <= n; i++){ var z = []; for (j = 0; j <= m; j++) z.push(0); t.push(z); }
+    for (i = n - 1; i >= 0; i--)
+      for (j = m - 1; j >= 0; j--)
+        t[i][j] = gleichwertig(soll[i], ist[j]) ? t[i + 1][j + 1] + 1 : Math.max(t[i + 1][j], t[i][j + 1]);
+    var roh = []; i = 0; j = 0;
+    while (i < n && j < m){
+      if (gleichwertig(soll[i], ist[j])){ roh.push({ t: "gleich", w: ist[j], k: i }); i++; j++; }
+      else if (t[i + 1][j] >= t[i][j + 1]){ roh.push({ t: "fehlt", s: soll[i], k: i }); i++; }
+      else { roh.push({ t: "zuviel", w: ist[j] }); j++; }
+    }
+    while (i < n){ roh.push({ t: "fehlt", s: soll[i], k: i }); i++; }
+    while (j < m){ roh.push({ t: "zuviel", w: ist[j] }); j++; }
+    return paaren(roh);
+  }
+
+  // Ein fehlendes und ein ueberfluessiges Wort nebeneinander sind in
+  // Wahrheit EIN falsch geschriebenes Wort - sonst stuenden dort zwei Fehler.
+  function paaren(roh){
+    var aus = [], i = 0;
+    while (i < roh.length){
+      if (roh[i].t === "gleich"){ aus.push(roh[i]); i++; continue; }
+      var e = i; while (e < roh.length && roh[e].t !== "gleich") e++;
+      var block = roh.slice(i, e);
+      var fehlt = block.filter(function(o){ return o.t === "fehlt"; });
+      var zuviel = block.filter(function(o){ return o.t === "zuviel"; });
+      var p = 0;
+      while (p < fehlt.length && p < zuviel.length){
+        aus.push({ t: "schief", w: zuviel[p].w, s: fehlt[p].s, k: fehlt[p].k }); p++;
+      }
+      for (var q = p; q < fehlt.length; q++) aus.push(fehlt[q]);
+      for (var r = p; r < zuviel.length; r++) aus.push(zuviel[r]);
+      i = e;
+    }
+    return aus;
+  }
+
+  function markiertHtml(ops){
+    return '<p class="geprueft">' + ops.map(function(o){
+      if (o.t === "gleich") return '<span class="w">' + esc(o.w) + '</span>';
+      if (o.t === "schief") return '<span class="w schief">' + esc(o.w) + '</span>';
+      if (o.t === "zuviel") return '<span class="w zuviel">' + esc(o.w) + '</span>';
+      return '<span class="luecke" title="Hier fehlt ein Wort"></span>';
+    }).join(" ") + '</p>';
+  }
+
+  function sollSatz(s){ return s.v + s.r + s.n; }
+  function zielBereich(s){ var a = zerlege(s.v).length; return { von: a, bis: a + zerlege(s.r).length }; }
+
+  function zielPruefen(ops, b){
+    var richtig = true, gegeben = [], gesehen = {};
+    ops.forEach(function(o){
+      if (o.k == null || o.k < b.von || o.k >= b.bis) return;
+      gesehen[o.k] = true;
+      if (o.t === "gleich") return;
+      if (o.t === "schief"){ gegeben.push(o.w); if (!kernGleich(o.w, o.s)) richtig = false; return; }
+      richtig = false;
+    });
+    for (var i = b.von; i < b.bis; i++) if (!gesehen[i]) richtig = false;
+    return { richtig: richtig, gegeben: gegeben.join(" ") };
+  }
+
+  // Hat er ein Wort aus der Auswahl erwischt, bekommt er die Erklaerung, die
+  // auch beim Antippen dort stuende - egal ob mit oder ohne Satzzeichen.
+  function erklaerung(s, gegeben){
+    if (!gegeben) return "";
+    if (s.f[gegeben]) return s.f[gegeben];
+    var treffer = "";
+    Object.keys(s.f).forEach(function(k){ if (!treffer && kernGleich(k, gegeben)) treffer = s.f[k]; });
+    return treffer;
+  }
+
+  function selbstPruefen(){
+    if (gesperrt) return;
+    var s = ressort.saetze[pos], feld = $("selbst-text");
+    var ist = zerlege(feld.value);
+    if (!ist.length){ feld.focus(); return; }
+    var soll = zerlege(sollSatz(s));
+    var ops = abgleich(soll, ist);
+    var stimmtGanz = ops.every(function(o){ return o.t === "gleich"; }) && ist.length === soll.length;
+    var ziel = zielPruefen(ops, zielBereich(s));
+
+    if (versuch === 0){
+      try {
+        window.lernstand && window.lernstand.antwort(ziel.richtig, ressort.merkmal, ziel.gegeben, s.r);
+        var daneben = ops.filter(function(o){ return o.t !== "gleich" && !(o.k >= zielBereich(s).von && o.k < zielBereich(s).bis); })[0];
+        window.lernstand && window.lernstand.antwort(stimmtGanz, "satz genau abschreiben",
+          daneben ? (daneben.w || "") : "", daneben ? (daneben.s || "") : "");
+      } catch(e){}
+    }
+
+    if (stimmtGanz){ selbstGeschafft(s, versuch === 0); return; }
+
+    versuch++;
+    if (versuch === 1){
+      var was = ziel.richtig
+        ? '<b>Das gesuchte Wort sitzt!</b> Beim Abschreiben ist noch etwas verrutscht – schau auf die rot markierte Stelle.'
+        : '<b>Noch nicht.</b> ' + esc(erklaerung(s, ziel.gegeben) || "Das rot markierte Wort ist noch nicht das richtige.");
+      $("rueck").innerHTML = '<div class="rueck nochmal">' + was + markiertHtml(ops) +
+        '<span class="regel">Ein roter Rahmen heißt: dieses Wort stimmt noch nicht. Ein roter Strich heißt: hier fehlt ein Wort. Durchgestrichen heißt: das steht zu viel da.</span></div>';
+      feld.focus();
+      try { $("rueck").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+      return;
+    }
+
+    gesperrt = true;
+    ergebnis[pos] = "t";
+    feld.disabled = true;
+    $("selbst-ab").classList.add("verborgen");
+    $("artikel").innerHTML = artikelHtml(false);
+    $("rueck").innerHTML = '<div class="rueck loesung"><b>Schau mal, so geht der Satz:</b><br>' +
+      esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) + markiertHtml(ops) +
+      '<span class="regel">' + esc(ressort.regel) + '</span></div>' +
+      '<button class="gross-knopf" id="weiter">' + (pos < ressort.saetze.length - 1 ? "Nächster Satz ›" : "Artikel fertig ›") + '</button>';
+    $("weiter").addEventListener("click", weiter);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
+  }
+
+  function selbstGeschafft(s, ersterVersuch){
+    gesperrt = true;
+    ergebnis[pos] = ersterVersuch ? "g" : "t";
+    if (ersterVersuch) gesamt++;
+    $("selbst-text").disabled = true;
+    $("selbst-ab").classList.add("verborgen");
+    $("artikel").innerHTML = artikelHtml(false);
+    var satz = document.querySelector('.satz[data-i="' + pos + '"]');
+    if (satz){ satz.classList.remove("jetzt"); satz.classList.add("frisch"); }
+    $("rueck").innerHTML = '<div class="rueck gut"><b>' + (ersterVersuch ? "Ganz allein geschrieben – Wort für Wort richtig!" : "Jetzt steht der Satz!") + '</b> ' +
+      esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) + '<span class="regel">' + esc(ressort.regel) + '</span></div>' +
+      '<button class="gross-knopf" id="weiter">' + (pos < ressort.saetze.length - 1 ? "Nächster Satz ›" : "Artikel fertig ›") + '</button>';
+    $("weiter").addEventListener("click", weiter);
+    $("punkte").textContent = "✏️ " + gesamt;
+    if (ersterVersuch) konfetti(false);
+    try { $("weiter").scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch(e){}
   }
 
   function waehlen(b){
