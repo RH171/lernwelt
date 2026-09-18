@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Das Zahlen-Rennen</title>
+<!--
+  Das Zahlen-Rennen für Leon (18.09.2026).
+
+  WER HAT ES GEWÜNSCHT: Leon (8, 2bG) war frustriert, "weil die Großen so coole
+  Spiele haben". Gewünscht war ein Renn-Spiel mit Rechnen, so wie die Spiele,
+  die gerade Trend sind – aber mit seinem Stoff. Leon spielt F-Jugend beim
+  ASC Boxdorf und ist Kleeblatt-Fan; daher die drei Strecken.
+
+  WAS ES ÜBT (LehrplanPLUS Bayern, Mathematik 2, Zahlenraum bis 100):
+    - Plus und Minus bis 20 (der sichere Bereich)      "plus bis 20", "minus bis 20"
+    - Plus und Minus bis 100 OHNE Zehnerübergang       "plus ohne zehneruebergang",
+                                                       "minus ohne zehneruebergang"
+    - Plus und Minus bis 100 MIT Zehnerübergang        "zehneruebergang plus",
+                                                       "zehneruebergang minus"
+    - Verdoppeln und Halbieren                         "verdoppeln", "halbieren"
+    - Nachbarzahlen und Nachbarzehner                  "nachbarzahlen", "nachbarzehner"
+    - Zum nächsten Zehner ergänzen                     "zehner ergaenzen"
+  Die Merkmalsnamen sind dieselben wie in den gebauten Spielen (spiel-bauen.js),
+  damit der Elternbereich zusammenzählen kann, statt zwei Töpfe zu führen.
+
+  WIE ES AUFGEBAUT IST:
+    Start  -> Leon wählt eine von drei Strecken (8 / 12 / 16 Aufgaben).
+    Spiel  -> Oben die Rennbahn: Leon läuft mit dem Ball Richtung Tor, die
+              Zuschauer jubeln bei jeder gelösten Aufgabe. Darunter die Aufgabe,
+              unten die Eingabe. Die wechselt bewusst ab: mal eigene
+              Zifferntasten, mal drei große Antwortknöpfe. Eine Systemtastatur
+              wird nie gebraucht.
+    Ende   -> Rückschau. Gelobt wird das Durchhalten, nicht das Tempo.
+
+  KEIN DRUCK: Es gibt keine Uhr, die abläuft, und keinen Rückschritt. Eine
+  falsche Antwort kostet nichts – sie zeigt den RECHENWEG ("Erst bis zum
+  Zehner: 47 + 3 = 50. Dann bleiben noch 5.") und gibt einen zweiten Versuch.
+  Auch nach dem zweiten Versuch geht es vorwärts. Gezählt wird nur, wie oft
+  es gleich beim ersten Mal saß – und das steht am Ende als Lob da, nicht
+  als Note.
+
+  AN DIE ELTERN: window.lernstand.antwort(...) je Aufgabe, immer der ERSTE
+  Versuch, mit dem Merkmal aus der Liste oben.
+
+  BESTLEISTUNG: localStorage "leon-zahlenrennen", nur Zahlen (je Strecke die
+  beste Zahl der Ersttreffer und wie oft sie gelaufen wurde). Geschrieben nur,
+  wenn sich wirklich etwas geändert hat – jeder Schreibvorgang geht über den
+  Sync ins KV-Kontingent.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#5a6478; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --hm:#b54708;
+    --rasen:#3fa34d; --rasen-dunkel:#2f7d3b; --himmel:#bfe3ff;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --panel:0px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  body.spielt{padding-bottom:calc(var(--panel) + 14px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:21px;margin:0;flex:1;min-width:150px}
+  .zaehler{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 14px;
+    font:700 15px/1 var(--rund);color:var(--leon-dunkel);white-space:nowrap}
+
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 10px 26px rgba(20,22,40,.07)}
+  .knopf{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:16px;
+    font:700 20px/1.15 var(--rund);padding:12px 16px;min-height:56px;cursor:pointer;background:var(--leon);color:#fff;width:100%}
+  .knopf:active{transform:scale(.985)}
+  .knopf.hell{background:#f1f5f9;color:var(--ink)}
+  .knopf[disabled]{opacity:.4;cursor:default}
+
+  /* ---------- Startseite ---------- */
+  .anfang{max-width:720px;margin:0 auto;text-align:center}
+  .anfang .gross{font-size:56px;line-height:1.1}
+  .anfang h2{font-family:var(--rund);font-size:26px;margin:6px 0 4px}
+  .anfang p{color:var(--muted);font-size:17px;line-height:1.5;margin:0 0 14px}
+  .strecken{display:grid;gap:10px}
+  .strecke{display:flex;align-items:center;gap:12px;text-align:left;border:3px solid var(--line);background:#fff;
+    border-radius:18px;padding:12px 14px;min-height:74px;cursor:pointer;color:var(--ink);width:100%}
+  .strecke:active{transform:scale(.99)}
+  .strecke .zeichen{font-size:32px;line-height:1;flex:0 0 auto}
+  .strecke .wort{flex:1;min-width:0}
+  .strecke .name{display:block;font:800 20px/1.2 var(--rund)}
+  .strecke .unter{display:block;color:var(--muted);font:600 15px/1.3 var(--font);margin-top:3px}
+  .bestwert{margin:14px 0 0;color:var(--leon-dunkel);font:700 16px/1.4 var(--rund)}
+
+  /* ---------- Rennbahn ---------- */
+  .bahn{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+    height:clamp(104px,19vh,168px);background:linear-gradient(var(--himmel) 0 34%,var(--rasen) 34% 100%)}
+  .bahn::after{content:"";position:absolute;left:0;right:0;top:78%;height:3px;background:rgba(255,255,255,.75)}
+  .zuschauer{position:absolute;left:0;right:0;top:2%;display:flex;justify-content:center;gap:3%;
+    font-size:clamp(15px,3.4vmin,25px);line-height:1;z-index:1}
+  .zuschauer span{display:inline-block;transform:translateY(0)}
+  .zuschauer.jubel span{animation:huepfen .55s ease-in-out 2}
+  .zuschauer.jubel span:nth-child(2){animation-delay:.08s}
+  .zuschauer.jubel span:nth-child(3){animation-delay:.16s}
+  .zuschauer.jubel span:nth-child(4){animation-delay:.24s}
+  .zuschauer.jubel span:nth-child(5){animation-delay:.32s}
+  .zuschauer.jubel span:nth-child(6){animation-delay:.4s}
+  .zuschauer.jubel span:nth-child(7){animation-delay:.48s}
+  @keyframes huepfen{0%,100%{transform:translateY(0)}50%{transform:translateY(-32%)}}
+
+  .tor{position:absolute;right:2%;bottom:16%;font-size:clamp(34px,8vmin,60px);line-height:1;z-index:2}
+  .marken{position:absolute;left:5%;right:14%;bottom:12%;height:6px;z-index:1;
+    display:flex;align-items:center;gap:3px}
+  .marken i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.45)}
+  .marken i.voll{background:#fff}
+  .laeufer{position:absolute;bottom:14%;left:4%;z-index:3;display:flex;align-items:flex-end;gap:2px;
+    transition:left .85s cubic-bezier(.35,0,.2,1)}
+  .laeufer .koerper{font-size:clamp(30px,7.5vmin,56px);line-height:1;filter:drop-shadow(0 4px 5px rgba(0,0,0,.25))}
+  .laeufer .ball{font-size:clamp(15px,3.6vmin,26px);line-height:1;margin-bottom:4%}
+  .laeufer.rennt .koerper{animation:wippen .3s linear 3}
+  @keyframes wippen{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14%) rotate(3deg)}}
+
+  /* ---------- Aufgabe ---------- */
+  .aufgabe{margin-top:10px;text-align:center}
+  .aufgabe .oben{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .aufgabe .schritt{color:var(--muted);font:700 15px/1 var(--rund)}
+  .vorlesen{border:2px solid var(--line);background:#fff;border-radius:999px;min-width:52px;min-height:44px;
+    padding:8px 12px;font-size:19px;line-height:1;cursor:pointer;color:var(--ink)}
+  .rechnung{font:800 clamp(30px,7.2vmin,52px)/1.2 var(--rund);margin:8px 0 2px;word-break:break-word}
+  .rechnung.wort{font-size:clamp(23px,5vmin,38px)}
+
+  /* ---------- Eingabe unten ---------- */
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;
+    box-shadow:0 -6px 18px rgba(15,40,70,.12);
+    padding:8px 70px calc(8px + env(safe-area-inset-bottom)) 12px}
+  .panel .innen{max-width:1100px;margin:0 auto}
+  .rueck{min-height:22px;margin:0 0 6px;font:700 16px/1.35 var(--rund);color:var(--muted)}
+  .rueck.gut{color:var(--leon-dunkel)} .rueck.hm{color:var(--hm)}
+  .anzeigereihe{display:flex;align-items:stretch;gap:8px;margin-bottom:7px}
+  .anzeige{flex:1;min-width:0;border:3px dashed var(--line);border-radius:14px;background:#f8fafc;
+    font:800 28px/1 var(--rund);color:var(--ink);display:flex;align-items:center;justify-content:center;min-height:54px}
+  .anzeige.leer{color:#c3cad6}
+  .loeschen{flex:0 0 auto;width:72px;min-height:54px;font-size:22px}
+  .tasten{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+  .tasten button{min-width:0;min-height:52px;border:none;border-radius:13px;background:#f1f5f9;
+    font:800 23px/1 var(--rund);color:var(--ink);cursor:pointer}
+  .tasten button:active{background:#e2e8f0}
+  .wahl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:7px}
+  .wahl button{min-width:0;min-height:66px;border:3px solid var(--line);background:#fff;border-radius:16px;
+    font:800 clamp(22px,5vmin,28px)/1 var(--rund);color:var(--ink);cursor:pointer;padding:6px}
+  .wahl button.richtig{border-color:var(--gut);background:#f0fdf4}
+  .wahl button.daneben{border-color:#fca5a5;background:#fef2f2;color:#98a2b3}
+  .panel .knopf{margin-top:4px}
+
+  /* Kurze Fenster (Leons iPad mit Tab-Leiste, Handys): alles eine Spur flacher,
+     damit Bahn, Aufgabe UND Eingabe ohne Scrollen zusammen dastehen. */
+  @media (max-height:700px){
+    .bahn{height:clamp(88px,15vh,120px)}
+    .rechnung{font-size:clamp(27px,6vmin,40px);margin:5px 0 0}
+    .rechnung.wort{font-size:clamp(21px,4.4vmin,31px)}
+    .karte{padding:14px}
+    .tasten button{min-height:48px}
+    .anzeige,.loeschen{min-height:48px}
+    .wahl button{min-height:60px}
+    .knopf{min-height:52px;font-size:19px}
+  }
+
+  /* ---------- Ende ---------- */
+  .ende{max-width:640px;margin:0 auto;text-align:center}
+  .ende .siegel{width:150px;height:150px;margin:2px auto 10px;border-radius:50%;border:6px dashed var(--leon);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-7deg);
+    color:var(--leon-dunkel);font:800 18px/1.15 var(--rund);background:#f6fef9;animation:stempeln .5s ease-out}
+  .ende .siegel span{font-size:46px;line-height:1}
+  @keyframes stempeln{0%{transform:scale(2.1) rotate(-7deg);opacity:0}70%{transform:scale(.93) rotate(-7deg);opacity:1}100%{transform:scale(1) rotate(-7deg)}}
+  .ende h2{font-family:var(--rund);font-size:26px;margin:6px 0}
+  .ende p{font-size:18px;line-height:1.5;color:var(--muted);margin:0 0 6px}
+  .ende .lob{color:var(--leon-dunkel);font:700 19px/1.45 var(--rund)}
+  .ende .knopf{margin-top:10px}
+  .ende .knopf.hell{background:#eef7f2;color:var(--leon-dunkel)}
+  @media (max-height:560px){ .ende .siegel{width:104px;height:104px;font-size:15px} .ende .siegel span{font-size:32px} }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/">‹ Leons Spiele</a>
+    <h1>🏃 Das Zahlen-Rennen</h1>
+    <div class="zaehler verborgen" id="zaehler"></div>
+  </header>
+
+  <!-- 1. Strecke wählen -->
+  <section id="sicht-start">
+    <div class="karte anfang">
+      <div class="gross">🏃‍♂️⚽</div>
+      <h2>Lauf zum Tor!</h2>
+      <p>Jede gelöste Aufgabe bringt dich weiter.<br>Such dir eine Strecke aus.</p>
+      <div class="strecken" id="strecken"></div>
+      <p class="bestwert verborgen" id="bestwert"></p>
+    </div>
+  </section>
+
+  <!-- 2. Das Rennen -->
+  <section id="sicht-spiel" class="verborgen">
+    <div class="karte">
+      <div class="bahn" id="bahn">
+        <div class="zuschauer" id="zuschauer"><span>🙌</span><span>📣</span><span>🙌</span><span>🎉</span><span>🙌</span><span>📣</span><span>🙌</span></div>
+        <div class="marken" id="marken"></div>
+        <div class="tor">🥅</div>
+        <div class="laeufer" id="laeufer"><span class="koerper">🏃‍♂️</span><span class="ball">⚽</span></div>
+      </div>
+      <div class="aufgabe">
+        <div class="oben">
+          <div class="schritt" id="schritt"></div>
+          <button class="vorlesen" id="vorlesen" aria-label="Aufgabe vorlesen">🔊</button>
+        </div>
+        <div class="rechnung" id="rechnung"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Rückschau -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte ende">
+      <div class="siegel"><span>🏅</span>Geschafft!</div>
+      <h2 id="e-titel">Du bist angekommen!</h2>
+      <p class="lob" id="e-lob"></p>
+      <p id="e-text"></p>
+      <p id="e-best"></p>
+      <button class="knopf" id="e-nochmal">Noch eine Strecke laufen</button>
+      <button class="knopf hell" id="e-fertig">Zurück zu meinen Spielen</button>
+    </div>
+  </section>
+</div>
+
+<!-- Die Eingabe klebt unten: Leons iPad hat ein kurzes Fenster, und die Zahl
+     soll nie erst erscrollt werden müssen. Rechts bleiben 70 px frei, dort
+     sitzt der runde Melde-Knopf aus lernstand.js. -->
+<div class="panel verborgen" id="panel">
+  <div class="innen">
+    <div class="rueck" id="rueck"></div>
+    <div id="eingabe-tasten">
+      <div class="anzeigereihe">
+        <div class="anzeige leer" id="anzeige">?</div>
+        <button class="knopf hell loeschen" id="loeschen" aria-label="Letzte Ziffer löschen">⌫</button>
+      </div>
+      <div class="tasten" id="tasten"></div>
+    </div>
+    <div class="wahl verborgen" id="wahl"></div>
+    <button class="knopf primaer" id="pruefen">Prüfen</button>
+    <button class="knopf primaer weiter verborgen" id="weiter">Weiter ›</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  function zeigen(el, ja){ if (el) el.classList.toggle("verborgen", !ja); }
+
+  /* ================= Speicher =================
+     "leon-zahlenrennen" = { "<strecke>": { b: beste Ersttreffer, l: Läufe } }
+     Nur Zahlen, keine Namen. Geschrieben nur bei echter Änderung. */
+  var SPEICHER = "leon-zahlenrennen";
+  function bestenLesen(){
+    try { var d = JSON.parse(localStorage.getItem(SPEICHER) || "{}"); return d && typeof d === "object" ? d : {}; }
+    catch(e){ return {}; }
+  }
+  function bestenSchreiben(d){
+    try {
+      var neu = JSON.stringify(d);
+      if (neu === localStorage.getItem(SPEICHER)) return;
+      localStorage.setItem(SPEICHER, neu);
+    } catch(e){}
+  }
+
+  /* ================= Strecken ================= */
+  var STRECKEN = [
+    { schluessel:"feld",    name:"Einmal ums Feld",  zeichen:"⚽", anzahl:8,  unter:"8 Aufgaben – eine kurze Runde" },
+    { schluessel:"ronhof",  name:"Zum Ronhof",       zeichen:"🍀", anzahl:12, unter:"12 Aufgaben – bis ins Stadion" },
+    { schluessel:"boxdorf", name:"Bis nach Boxdorf", zeichen:"🚩", anzahl:16, unter:"16 Aufgaben – der weite Weg" }
+  ];
+
+  /* ================= Aufgaben bauen =================
+     Alles bleibt im Zahlenraum bis 100. Jede Art hat ihren eigenen Bauer,
+     damit die Grenzen an EINER Stelle stehen und nicht im Spielablauf. */
+  function zufall(min, max){ return min + Math.floor(Math.random() * (max - min + 1)); }
+  function mischen(liste){
+    var a = liste.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1)), h = a[i]; a[i] = a[j]; a[j] = h;
+    }
+    return a;
+  }
+  function optionenBauen(loesung){
+    var menge = [loesung];
+    var nah = mischen([loesung+1, loesung-1, loesung+10, loesung-10, loesung+2, loesung-2,
+                       loesung+9, loesung-9, loesung+20, loesung-20, loesung+11, loesung-11]);
+    for (var i = 0; i < nah.length && menge.length < 3; i++){
+      var k = nah[i];
+      if (k >= 0 && k <= 100 && menge.indexOf(k) < 0) menge.push(k);
+    }
+    var n = 1;
+    while (menge.length < 3 && n <= 100){ if (menge.indexOf(n) < 0) menge.push(n); n++; }
+    return mischen(menge);
+  }
+
+  function machePlus20(){
+    var a, b;
+    if (Math.random() < .6){ a = zufall(3, 9); b = zufall(2, Math.min(9, 18 - a)); }
+    else { a = zufall(11, 17); b = zufall(2, 20 - a); }
+    var tipp = (a < 10 && a + b > 10)
+      ? "Erst bis zur 10: " + a + " + " + (10 - a) + " = 10. Dann bleiben noch " + (b - (10 - a)) + "."
+      : "Zähle von " + a + " aus " + b + " weiter.";
+    return { art:"plus", a:a, b:b, loesung:a + b, merkmal:"plus bis 20",
+             frage:a + " + " + b + " = ?", tipp:tipp };
+  }
+  function macheMinus20(){
+    var a, b, l;
+    do {
+      a = zufall(11, 20); b = zufall(2, 9); l = a - b;
+      // Bei der 5 stünde im Hinweis dieselbe Zahl wie die Lösung - das wäre
+      // kein Rechenweg mehr, sondern die Antwort.
+    } while (l < 1 || (a - b < 10 && l === 5));
+    var tipp = (a - b < 10)
+      ? "Erst bis zur 10: " + a + " − " + (a - 10) + " = 10. Dann noch " + (b - (a - 10)) + " weg."
+      : "Zähle von " + a + " aus " + b + " zurück.";
+    return { art:"minus", a:a, b:b, loesung:l, merkmal:"minus bis 20",
+             frage:a + " − " + b + " = ?", tipp:tipp };
+  }
+  function machePlusOhne(){
+    var e = zufall(1, 7), e2 = zufall(1, 9 - e);
+    var z = zufall(1, 7), z2 = zufall(1, 9 - z);
+    var a = z * 10 + e, b = z2 * 10 + e2;
+    return { art:"plus", a:a, b:b, loesung:a + b, merkmal:"plus ohne zehneruebergang",
+             frage:a + " + " + b + " = ?",
+             tipp:"Erst die Zehner: " + (z * 10) + " + " + (z2 * 10) + ". Dann die Einer: " + e + " + " + e2 + "." };
+  }
+  function macheMinusOhne(){
+    var e2 = zufall(1, 7), e = zufall(e2 + 1, 9);
+    var z2 = zufall(1, 7), z = zufall(z2 + 1, 9);
+    var a = z * 10 + e, b = z2 * 10 + e2;
+    return { art:"minus", a:a, b:b, loesung:a - b, merkmal:"minus ohne zehneruebergang",
+             frage:a + " − " + b + " = ?",
+             tipp:"Erst die Zehner: " + (z * 10) + " − " + (z2 * 10) + ". Dann die Einer: " + e + " − " + e2 + "." };
+  }
+  function machePlusMit(){
+    var e = zufall(2, 9), b = zufall(11 - e, 9);
+    var z = zufall(1, 8), a = z * 10 + e;
+    if (a + b > 100){ z = zufall(1, 7); a = z * 10 + e; }
+    return { art:"plus", a:a, b:b, loesung:a + b, merkmal:"zehneruebergang plus",
+             frage:a + " + " + b + " = ?",
+             tipp:"Erst bis zum Zehner: " + a + " + " + (10 - e) + " = " + (a + 10 - e) +
+                  ". Dann bleiben noch " + (b - (10 - e)) + "." };
+  }
+  function macheMinusMit(){
+    var b = zufall(2, 9), e = zufall(1, b - 1);
+    var z = zufall(2, 9), a = z * 10 + e;
+    return { art:"minus", a:a, b:b, loesung:a - b, merkmal:"zehneruebergang minus",
+             frage:a + " − " + b + " = ?",
+             tipp:"Erst bis zum Zehner: " + a + " − " + e + " = " + (a - e) +
+                  ". Dann noch " + (b - e) + " weg." };
+  }
+  function macheVerdoppeln(){
+    var n = zufall(6, 50);
+    return { art:"verdoppeln", a:n, loesung:2 * n, merkmal:"verdoppeln",
+             frage:"Verdopple " + n, wort:true,
+             tipp:"Verdoppeln heißt: " + n + " plus " + n + ". Erst die Zehner, dann die Einer." };
+  }
+  function macheHalbieren(){
+    var n = 2 * zufall(6, 50);
+    return { art:"halbieren", a:n, loesung:n / 2, merkmal:"halbieren",
+             frage:"Die Hälfte von " + n, wort:true,
+             tipp:"Zerlege " + n + " in Zehner und Einer. Halbiere beides einzeln." };
+  }
+  function macheNachbar(){
+    var n = zufall(11, 99), hoch = Math.random() < .5;
+    return { art:hoch ? "nachfolger" : "vorgaenger", a:n, loesung:hoch ? n + 1 : n - 1,
+             merkmal:"nachbarzahlen", wort:true,
+             frage:(hoch ? "Nachfolger von " : "Vorgänger von ") + n,
+             tipp:hoch ? "Der Nachfolger ist eins mehr. Zähle einen Schritt weiter."
+                       : "Der Vorgänger ist eins weniger. Zähle einen Schritt zurück." };
+  }
+  function macheNachbarzehner(){
+    var n; do { n = zufall(11, 99); } while (n % 10 === 0);
+    var hoch = Math.random() < .5;
+    var l = hoch ? (Math.floor(n / 10) + 1) * 10 : Math.floor(n / 10) * 10;
+    return { art:hoch ? "zehner-hoch" : "zehner-runter", a:n, loesung:l,
+             merkmal:"nachbarzehner", wort:true,
+             frage:(hoch ? "Nächster Zehner nach " : "Zehner vor ") + n,
+             tipp:"Schau auf die Einer von " + n + ". Ein Zehner endet immer auf 0." };
+  }
+  function macheErgaenzen(){
+    var e = zufall(1, 9), z = zufall(1, 9), a = z * 10 + e;
+    var ziel = (z + 1) * 10;
+    return { art:"ergaenzen", a:a, ziel:ziel, loesung:ziel - a, merkmal:"zehner ergaenzen",
+             frage:a + " + ? = " + ziel,
+             tipp:"Von " + a + " bis " + ziel + " fehlt nicht viel. Schau auf die Einer." };
+  }
+
+  var BAUER = {
+    "plus20":machePlus20, "minus20":macheMinus20, "plusOhne":machePlusOhne,
+    "minusOhne":macheMinusOhne, "plusMit":machePlusMit, "minusMit":macheMinusMit,
+    "verdoppeln":macheVerdoppeln, "halbieren":macheHalbieren, "nachbar":macheNachbar,
+    "nachbarzehner":macheNachbarzehner, "ergaenzen":macheErgaenzen
+  };
+  // Erst der sichere Bereich, dann die Erweiterung - und nie zweimal dasselbe
+  // hintereinander. Die kurze Strecke ist der Anfang dieser Liste.
+  var REIHE = ["plus20","minus20","verdoppeln","plusOhne","nachbar","plusMit","minusOhne","ergaenzen",
+               "halbieren","minusMit","nachbarzehner","plusMit",
+               "minusMit","verdoppeln","ergaenzen","plusOhne"];
+
+  function aufgabenBauen(anzahl){
+    var raus = [];
+    for (var i = 0; i < anzahl; i++){
+      var a = BAUER[REIHE[i % REIHE.length]]();
+      // Wechselnd tippen und auswählen - Leon soll beides üben.
+      a.modus = (i % 2 === 0) ? "tasten" : "wahl";
+      if (a.modus === "wahl") a.optionen = optionenBauen(a.loesung);
+      a.nr = i;
+      raus.push(a);
+    }
+    return raus;
+  }
+
+  /* ================= Zustand ================= */
+  var strecke = null, aufgaben = [], nr = 0, versuch = 0, ersteTreffer = 0, getippt = "";
+
+  function zeige(welche){
+    ["start","spiel","ende"].forEach(function(s){ zeigen($("sicht-" + s), s === welche); });
+    zeigen($("panel"), welche === "spiel");
+    zeigen($("zaehler"), welche === "spiel");
+    document.body.classList.toggle("spielt", welche === "spiel");
+    window.scrollTo(0, 0);
+    panelMessen();
+  }
+  function panelMessen(){
+    var p = $("panel");
+    if (!p || p.classList.contains("verborgen")) return;
+    var h = Math.round(p.getBoundingClientRect().height);
+    document.documentElement.style.setProperty("--panel", h + "px");
+  }
+
+  /* ================= Startseite ================= */
+  function startMalen(){
+    var beste = bestenLesen();
+    var kasten = $("strecken");
+    kasten.innerHTML = "";
+    STRECKEN.forEach(function(s){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "strecke start";
+      b.setAttribute("data-strecke", s.schluessel);
+      b.innerHTML = '<span class="zeichen">' + s.zeichen + '</span><span class="wort">' +
+        '<span class="name"></span><span class="unter"></span></span>';
+      b.querySelector(".name").textContent = s.name;
+      b.querySelector(".unter").textContent = s.unter;
+      b.addEventListener("click", function(){ rennenStarten(s); });
+      kasten.appendChild(b);
+    });
+    var satz = "";
+    STRECKEN.forEach(function(s){
+      var d = beste[s.schluessel];
+      if (d && d.b > 0 && !satz) satz = "Beste Runde auf „" + s.name + "“: " + d.b + " gleich beim ersten Mal.";
+    });
+    $("bestwert").textContent = satz;
+    zeigen($("bestwert"), !!satz);
+  }
+
+  /* ================= Rennen ================= */
+  function rennenStarten(s){
+    strecke = s;
+    aufgaben = aufgabenBauen(s.anzahl);
+    nr = 0; ersteTreffer = 0;
+    try { window.lernstand && window.lernstand.uhrZuruecksetzen(); } catch(e){}
+    markenMalen();
+    zeige("spiel");
+    aufgabeZeigen();
+  }
+  function markenMalen(){
+    var m = $("marken");
+    m.innerHTML = "";
+    for (var i = 0; i < aufgaben.length; i++) m.appendChild(document.createElement("i"));
+  }
+  function laeuferSetzen(geschafft, mitLauf){
+    var anteil = aufgaben.length ? geschafft / aufgaben.length : 0;
+    $("laeufer").style.left = (4 + anteil * 76) + "%";
+    var kinder = $("marken").children;
+    for (var i = 0; i < kinder.length; i++) kinder[i].classList.toggle("voll", i < geschafft);
+    if (mitLauf){
+      var l = $("laeufer");
+      l.classList.remove("rennt");
+      void l.offsetWidth;
+      l.classList.add("rennt");
+      var z = $("zuschauer");
+      z.classList.remove("jubel");
+      void z.offsetWidth;
+      z.classList.add("jubel");
+    }
+  }
+
+  function jetzt(){ return aufgaben[nr] || null; }
+
+  function aufgabeZeigen(){
+    var a = jetzt();
+    if (!a) return;
+    versuch = 0; getippt = "";
+    $("zaehler").textContent = "Aufgabe " + (nr + 1) + " von " + aufgaben.length;
+    $("schritt").textContent = "Aufgabe " + (nr + 1) + " von " + aufgaben.length;
+    $("rechnung").textContent = a.frage;
+    $("rechnung").classList.toggle("wort", !!a.wort);
+    $("rueck").textContent = "";
+    $("rueck").className = "rueck";
+    zeigen($("eingabe-tasten"), a.modus === "tasten");
+    zeigen($("wahl"), a.modus === "wahl");
+    zeigen($("pruefen"), a.modus === "tasten");
+    zeigen($("weiter"), false);
+    $("pruefen").disabled = true;
+    anzeigeMalen();
+    if (a.modus === "wahl") wahlMalen(a);
+    laeuferSetzen(nr, false);
+    panelMessen();
+  }
+
+  function anzeigeMalen(){
+    var el = $("anzeige");
+    el.textContent = getippt === "" ? "?" : getippt;
+    el.classList.toggle("leer", getippt === "");
+    $("pruefen").disabled = getippt === "";
+  }
+  function wahlMalen(a){
+    var w = $("wahl");
+    w.innerHTML = "";
+    a.optionen.forEach(function(o){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = String(o);
+      b.addEventListener("click", function(){ antworten(o, b); });
+      w.appendChild(b);
+    });
+  }
+
+  function tastenBauen(){
+    var t = $("tasten");
+    t.innerHTML = "";
+    ["1","2","3","4","5","6","7","8","9","0"].forEach(function(z){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = z;
+      b.addEventListener("click", function(){
+        if (getippt.length >= 3) return;
+        if (getippt === "" && z === "0") return;
+        getippt += z;
+        anzeigeMalen();
+      });
+      t.appendChild(b);
+    });
+  }
+
+  /* Eine Antwort. Gezählt wird IMMER nur der erste Versuch - der zweite ist
+     zum Verstehen da, nicht zum Bewerten. */
+  function antworten(zahl, knopf){
+    var a = jetzt();
+    if (!a) return;
+    var stimmt = (zahl === a.loesung);
+    versuch++;
+    if (versuch === 1){
+      if (stimmt) ersteTreffer++;
+      try { window.lernstand && window.lernstand.antwort(stimmt, a.merkmal, String(zahl), String(a.loesung)); } catch(e){}
+    }
+    if (knopf) knopf.classList.add(stimmt ? "richtig" : "daneben");
+
+    if (stimmt){
+      $("rueck").className = "rueck gut";
+      $("rueck").textContent = versuch === 1 ? "Stark! Gleich beim ersten Mal." : "Genau! Jetzt sitzt es.";
+      weiterZeigen();
+      return;
+    }
+    if (versuch === 1){
+      $("rueck").className = "rueck hm";
+      $("rueck").textContent = "Fast. " + a.tipp;
+      getippt = "";
+      anzeigeMalen();
+      if (a.modus === "wahl") knopf && (knopf.disabled = true);
+      return;
+    }
+    // Zweiter Versuch daneben: kein Verlust, kein Zurück. Lösung zeigen und weiter.
+    $("rueck").className = "rueck hm";
+    $("rueck").textContent = "Die Lösung ist " + a.loesung + ". " + a.tipp;
+    weiterZeigen();
+  }
+
+  function weiterZeigen(){
+    zeigen($("pruefen"), false);
+    zeigen($("weiter"), true);
+    zeigen($("eingabe-tasten"), false);
+    var a = jetzt();
+    if (a && a.modus === "wahl"){
+      Array.prototype.forEach.call($("wahl").querySelectorAll("button"), function(b){ b.disabled = true; });
+    }
+    $("weiter").textContent = (nr + 1 >= aufgaben.length) ? "Ins Tor! 🥅" : "Weiter ›";
+    laeuferSetzen(nr + 1, true);
+    panelMessen();
+  }
+
+  $("pruefen").addEventListener("click", function(){
+    if (getippt === "") return;
+    antworten(parseInt(getippt, 10), null);
+  });
+  $("loeschen").addEventListener("click", function(){
+    getippt = getippt.slice(0, -1);
+    anzeigeMalen();
+  });
+  $("weiter").addEventListener("click", function(){
+    nr++;
+    if (nr >= aufgaben.length) endeZeigen(); else aufgabeZeigen();
+  });
+
+  /* ================= Vorlesen ================= */
+  function sprechbar(text){
+    return String(text).replace(/\+/g, " plus ").replace(/−/g, " minus ")
+      .replace(/=/g, " gleich ").replace(/\?/g, " wie viel ").replace(/\s+/g, " ").trim();
+  }
+  $("vorlesen").addEventListener("click", function(){
+    var a = jetzt();
+    if (!a || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(sprechbar(a.frage));
+      u.lang = "de-DE"; u.rate = .85;
+      window.speechSynthesis.speak(u);
+    } catch(e){}
+  });
+
+  /* ================= Rückschau =================
+     Zeit spielt keine Rolle. Gelobt wird, dass er die Strecke zu Ende
+     gelaufen ist - und danach erst, was gleich saß. */
+  function endeZeigen(){
+    var ges = aufgaben.length;
+    $("e-titel").textContent = "Angekommen: " + strecke.name + "!";
+    $("e-lob").textContent = "Du hast " + ges + " Aufgaben geschafft und " +
+      ersteTreffer + " gleich beim ersten Mal.";
+    $("e-text").textContent = ersteTreffer === ges
+      ? "Alle beim ersten Mal. Wahnsinn!"
+      : "Du bist bis zum Schluss drangeblieben. Das zählt.";
+
+    var beste = bestenLesen();
+    var alt = beste[strecke.schluessel] || { b:0, l:0 };
+    var rekord = ersteTreffer > alt.b;
+    beste[strecke.schluessel] = { b:Math.max(alt.b, ersteTreffer), l:alt.l + 1 };
+    bestenSchreiben(beste);
+    $("e-best").textContent = rekord
+      ? "Das ist deine beste Runde auf dieser Strecke!"
+      : "Deine beste Runde hier: " + beste[strecke.schluessel].b + " beim ersten Mal.";
+    zeige("ende");
+  }
+  $("e-nochmal").addEventListener("click", function(){ startMalen(); zeige("start"); });
+  $("e-fertig").addEventListener("click", function(){ location.href = "/leon/"; });
+
+  /* ================= Für die Messung ================= */
+  window.__rennen = {
+    strecken: function(){ return STRECKEN; },
+    aufgaben: function(){ return aufgaben; },
+    nr: function(){ return nr; },
+    versuch: function(){ return versuch; },
+    treffer: function(){ return ersteTreffer; },
+    probe: function(art, wieoft){
+      var raus = [];
+      for (var i = 0; i < wieoft; i++) raus.push(BAUER[art]());
+      return raus;
+    },
+    arten: function(){ return Object.keys(BAUER); }
+  };
+
+  tastenBauen();
+  startMalen();
+  zeige("start");
+  try { new ResizeObserver(panelMessen).observe($("panel")); } catch(e){}
+  window.addEventListener("resize", panelMessen);
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
