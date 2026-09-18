@@ -135,7 +135,7 @@ export class DuellRaum {
   raumBild() {
     const online = this.verbundeneIds();
     const liste = Object.entries(this.s.spieler).map(([id, sp]) => ({
-      id, name: sp.name, avatar: sp.avatar, klasse: sp.klasse, alter: sp.alter, punkte: sp.punkte, online: online.has(id)
+      id, name: sp.name, avatar: sp.avatar, klasse: sp.klasse, alter: sp.alter, punkte: sp.punkte, serie: sp.serie || 0, online: online.has(id)
     }));
     return { t: "raum", code: this.s.code, phase: this.s.phase, host: this.s.host, anzahl: this.s.anzahl,
       stufe: this.stufe(), spieler: liste };
@@ -189,7 +189,7 @@ export class DuellRaum {
                quelle: f[7] ? "Klexikon: " + f[7] : "" };
     });
 
-    for (const sp of Object.values(this.s.spieler)) { sp.punkte = 0; sp.msSumme = 0; sp.msAnzahl = 0; }
+    for (const sp of Object.values(this.s.spieler)) { sp.punkte = 0; sp.msSumme = 0; sp.msAnzahl = 0; sp.serie = 0; }
     this.s.runde = { fragen, n: -1, stufe };
     this.s.phase = "frage";
     await this.naechsteFrage();
@@ -245,14 +245,25 @@ export class DuellRaum {
     // am Ende ein Unentschieden ... und das haben alle richtig."
     // Darum auch kein Countdown mehr, sobald jemand richtig liegt: Wer langsamer
     // liest, soll in Ruhe zu Ende denken koennen.
+    /* Serien-Bonus (Denny, 18.09.2026): "Wenn man drei Mal richtig hintereinander
+       geantwortet hat, bekommt man einen Zusatzpunkt, und bei fünf Mal
+       hintereinander zwei." Ab der dritten richtigen Antwort in Folge also +1,
+       ab der fuenften +2 - solange die Serie haelt. Belohnt wird Dranbleiben,
+       nicht Tempo. */
+    const spieler = this.s.spieler[id];
     if (richtig) {
-      this.s.spieler[id].punkte += 3;
+      spieler.serie = (spieler.serie || 0) + 1;
+      const bonus = spieler.serie >= 5 ? 2 : (spieler.serie >= 3 ? 1 : 0);
+      spieler.punkte += 3 + bonus;
+      q.antworten[id].bonus = bonus;
+      q.antworten[id].serie = spieler.serie;
       if (!q.ersterRichtig) q.ersterRichtig = id;   // nur fuer die Anzeige "als Erster"
+    } else {
+      spieler.serie = 0;
     }
     // Wie lange hat wer gebraucht? Am Ende sieht es jeder von sich selbst.
-    const sp = this.s.spieler[id];
-    sp.msSumme = (sp.msSumme || 0) + ms;
-    sp.msAnzahl = (sp.msAnzahl || 0) + 1;
+    spieler.msSumme = (spieler.msSumme || 0) + ms;
+    spieler.msAnzahl = (spieler.msAnzahl || 0) + 1;
     const online = this.verbundeneIds();
     const alleDa = [...online].filter((sid) => this.s.spieler[sid]).every((sid) => q.antworten[sid]);
     await this.sichern();
@@ -263,6 +274,9 @@ export class DuellRaum {
   }
 
   async aufloesen() {
+    // Wer gar nicht getippt hat, dessen Serie ist auch zu Ende.
+    const q0 = this.s.runde && this.s.runde.frage;
+    if (q0) for (const [id, sp] of Object.entries(this.s.spieler)) if (!q0.antworten[id]) sp.serie = 0;
     this.s.phase = "aufloesung";
     this.s.runde.aufloesungBis = Date.now() + AUFLOESUNG_MS;
     await this.sichern();
@@ -272,7 +286,8 @@ export class DuellRaum {
 
   aufloesungBild() {
     const r = this.s.runde, f = r.fragen[r.n], q = r.frage;
-    const antworten = Object.entries(q.antworten).map(([id, a]) => ({ id, wahl: a.wahl, ms: a.ms, richtig: a.richtig }));
+    const antworten = Object.entries(q.antworten).map(([id, a]) => ({ id, wahl: a.wahl, ms: a.ms, richtig: a.richtig,
+      bonus: a.bonus || 0, serie: a.serie || 0 }));
     return { t: "aufloesung", n: r.n + 1, von: r.fragen.length, richtig: f.richtig, info: f.info, quelle: f.quelle || "", erster: q.ersterRichtig,
       antworten, punkte: Object.fromEntries(Object.entries(this.s.spieler).map(([id, sp]) => [id, sp.punkte])),
       weiterIn: Math.max(0, (r.aufloesungBis || Date.now()) - Date.now()), frageKey: f.key };
