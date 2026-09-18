@@ -579,7 +579,7 @@
     if (!frage || frage.n !== m.n){ frage = { n: m.n, antworten: [], beantwortet: [] }; }
     zeige("frage");
     var box = $("antworten");
-    box.classList.remove("gesperrt");
+    box.classList.remove("gesperrt"); box.classList.remove("verdeckt");
     Array.prototype.forEach.call(box.children, function(b, j){
       b.disabled = true;
       if (j === m.richtig) b.classList.add("richtig"); else b.classList.add("falsch");
