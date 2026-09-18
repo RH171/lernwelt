@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Silben-Hüpfer</title>
+<!--
+  Der Silben-Hüpfer (18.09.2026) – gewünscht hat es Leon (8, 2. Klasse, 2bG):
+  Er war traurig, weil "die Großen so coole Spiele haben". Ein One-Button-Game,
+  wie es gerade Trend ist – aber mit seinem Lernstoff.
+
+  WAS ES ÜBT (LehrplanPLUS Bayern, Deutsch 1/2, Lernbereich 1.1 und 2.2):
+  Silben hören, Wörter in Silben gliedern, Silben zu Wörtern zusammensetzen
+  und die Silbenzahl bestimmen. Oben steht das Wort in Silben, zum Beispiel
+  "Fuß-ball-tor". Auf dem Weg kommen zwei Silben-Plattformen: eine oben zum
+  Anspringen, eine unten zum Drüberlaufen. Leon muss die NÄCHSTE richtige
+  Silbe erwischen – dazu muss er lesen, wo er im Wort gerade steht.
+
+  WIE ES AUFGEBAUT IST
+  - Ein einziger Knopf: der grosse Knopf unten, die Leertaste und ein Tipp auf
+    die Spielfläche machen alle dasselbe. Drücken = auf die obere Plattform
+    springen, nichts drücken = unten durchlaufen.
+  - Gedrückt wird nicht auf den Punkt genau: Der Druck MELDET den Sprung an,
+    abgesprungen wird von selbst im richtigen Moment. So kann man nicht "zu
+    früh" drücken, und die Figur landet immer sauber.
+  - Tempo langsam und ruhig (Leseanfänger). Immer nur EIN Tor auf einmal.
+  - Daneben ist kein Fehlschlag: Die Figur fällt sanft ins Gras, steht sofort
+    wieder auf, die Silbe bleibt offen. Kein Leben weg, kein Neustart, keine
+    Uhr (Bauregeln: kein Druck über Verlustangst). Nach dem zweiten Danebengehen
+    zeigt ein gestrichelter Rahmen, welche Silbe dran ist.
+  - Nach jedem geschafften Wort eine kurze Frage: "Wie viele Silben hat das
+    Wort?" mit drei grossen Knöpfen.
+  - Vorgelesen wird nur auf Knopfdruck: erst das ganze Wort, dann die Silben
+    einzeln. Das Wort steht ohnehin schon in Silben da – verraten wird nichts.
+
+  DIE WÖRTER (39) kommen aus Leons Welt: Fußball, Schule, Brotzeit. Die
+  Silbentrennung folgt genau den Mustern aus geschichten.js, damit die
+  Lesegeschichten und dieses Spiel dasselbe sagen (ck bleibt zusammen:
+  "Schul-glo-cke"; st wird getrennt: "Fens-ter"; zusammengesetzte Wörter
+  trennen zuerst an der Fuge: "Fuß-ball-tor").
+
+  AN DIE ELTERN geht über lernstand.js je Silbe "silben zusammensetzen"
+  (erster Versuch zählt) und je Wort "silben zaehlen".
+  RÜCKSCHAU in localStorage "leon-silbenhuepfer": geschaffte Wörter gesamt und
+  die beste Runde. Geschrieben wird nur am Ende einer Runde und nur, wenn sich
+  wirklich etwas geändert hat.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef6f0; --card:#fff; --ink:#15171f; --muted:#5b6474; --line:#e3e7ee;
+    --leon:#10b981; --leon-dunkel:#067647; --gut:#12b76a; --schlecht:#e04a3c;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  body.spielt{padding-bottom:calc(106px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1100px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:21px;margin:0;flex:1;min-width:150px}
+  .zaehler{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 14px;
+    font:700 15px/1 var(--rund);color:var(--leon-dunkel);white-space:nowrap}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .knopf{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:16px;
+    font:700 20px/1.1 var(--rund);padding:14px 18px;min-height:58px;cursor:pointer;background:var(--leon);color:#fff}
+  .knopf:active{transform:scale(.98)}
+  .knopf.hell{background:#f2f4f7;color:var(--ink)}
+  .knopf[disabled]{opacity:.4;cursor:default}
+
+  /* ---------- Start ---------- */
+  .start{max-width:720px;margin:0 auto;text-align:center}
+  .start .gross{font-size:60px;line-height:1.1}
+  .start h2{font-family:var(--rund);font-size:28px;margin:8px 0 6px}
+  .start p{color:var(--muted);font-size:18px;line-height:1.5;margin:0 0 8px}
+  .start .knopf{width:100%;margin-top:10px}
+  .rueckblick{background:#ecfdf3;border:1px solid #abefc6;border-radius:16px;padding:12px 14px;
+    margin:12px 0 0;font:700 17px/1.4 var(--rund);color:var(--leon-dunkel)}
+  .sowirds{display:grid;gap:8px;text-align:left;margin:14px 0 0}
+  .sowirds div{display:flex;gap:10px;align-items:center;background:#f7f9fc;border-radius:14px;
+    padding:11px 13px;font:600 16.5px/1.35 var(--rund)}
+  .sowirds b{font-size:26px;line-height:1}
+
+  /* ---------- Das Wort ---------- */
+  .wortkarte{padding:12px 14px;text-align:center}
+  .wortzeile{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px}
+  .wortbild{font-size:clamp(26px,4.4vmin,36px);line-height:1;margin-right:6px}
+  .silbe{font:800 clamp(21px,4vmin,32px)/1.15 var(--rund);padding:5px 10px;border-radius:12px;
+    background:#f2f4f7;color:#344054;border:2px dashed transparent}
+  .silbe.fertig{background:#d1fadf;color:#05603a;border-color:#6ce9a6;border-style:solid}
+  .silbe.zeiger{border-color:#2563eb;background:#eff4ff;color:#1d4ed8}
+  .trenn{color:#a3aab8;font-weight:800;font-size:clamp(18px,3.4vmin,26px)}
+
+  /* ---------- Die Bühne ---------- */
+  .buehne{position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--line);
+    margin-top:10px;height:clamp(212px,37vh,320px);cursor:pointer;touch-action:manipulation;
+    background:linear-gradient(#d8efff 0 58%,#c6e9d2 58% 100%)}
+  .buehne .deko{position:absolute;line-height:1;opacity:.9}
+  .gras{position:absolute;left:0;right:0;bottom:0;background:#6cc07d;border-top:5px solid #55a866}
+  .welt{position:absolute;inset:0}
+  .tor{position:absolute;top:0;bottom:0;width:0}
+  .pl{position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    white-space:nowrap;font:800 clamp(18px,3.2vmin,26px)/1 var(--rund);border-radius:12px;
+    box-shadow:0 3px 0 rgba(20,30,20,.18)}
+  .pl.oben{background:#fff2c2;border:3px solid #e0a90a;color:#7a4a05}
+  .pl.unten{background:#ead9be;border:3px solid #a98b63;color:#553f20}
+  .tor.offen .pl{animation:pochen 1.4s ease-in-out infinite}
+  .tor.zu .pl.oben{opacity:.45}
+  @keyframes pochen{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  .pl.gut{background:#d1fadf;border-color:#12b76a;color:#05603a}
+  .pl.daneben{background:#fde8e6;border-color:#e04a3c;color:#912018}
+  .figur{position:absolute;width:56px;text-align:center;font-size:40px;line-height:1;
+    filter:drop-shadow(0 4px 4px rgba(0,0,0,.2));will-change:transform}
+  .funken{position:absolute;inset:0;pointer-events:none}
+  .funken span{position:absolute;font-size:26px;animation:hoch .9s ease-out forwards}
+  @keyframes hoch{0%{transform:translateY(0) scale(.6);opacity:1}100%{transform:translateY(-54px) scale(1.3);opacity:0}}
+  .rueck{min-height:30px;margin:8px 2px 0;font:700 17.5px/1.35 var(--rund);text-align:center}
+  .rueck.gut{color:var(--leon-dunkel)} .rueck.hm{color:#b54708}
+
+  /* ---------- Knopfleiste unten ---------- */
+  .leiste{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:10px;align-items:center;
+    background:#fff;box-shadow:0 -6px 18px rgba(15,40,70,.14);
+    padding:10px 70px calc(10px + env(safe-area-inset-bottom)) 12px}
+  .leiste #hoeren{flex:0 0 auto;min-width:66px;font-size:26px;padding:12px}
+  .leiste #springen{flex:1;min-height:62px;font-size:21px;letter-spacing:.02em}
+  .leiste #springen.bereit{box-shadow:0 0 0 4px rgba(16,185,129,.25)}
+
+  /* ---------- Silbenfrage ---------- */
+  .frage{max-width:720px;margin:0 auto;text-align:center}
+  .frage .wortgross{font:800 clamp(26px,5vmin,40px)/1.25 var(--rund);margin:4px 0 2px}
+  .frage .wortgross i{color:#a3aab8;font-style:normal}
+  .frage h2{font-family:var(--rund);font-size:clamp(20px,3.4vmin,26px);margin:10px 0 14px}
+  .zahlen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .antwort{border:3px solid var(--line);background:#fff;border-radius:18px;padding:12px 6px;min-height:76px;
+    cursor:pointer;font:800 30px/1.1 var(--rund);color:var(--ink);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  .antwort small{font:600 13.5px/1 var(--font);color:var(--muted)}
+  .antwort.richtig{border-color:var(--gut);background:#ecfdf3}
+  .antwort.daneben{border-color:#fda29b;background:#fff4f3;color:#98a2b3}
+  .frage .knopf{width:100%;margin-top:12px}
+
+  /* ---------- Rückschau ---------- */
+  .ende{max-width:640px;margin:0 auto;text-align:center}
+  .ende .gross{font-size:58px;line-height:1.1}
+  .ende h2{font-family:var(--rund);font-size:26px;margin:6px 0}
+  .ende p{font-size:18px;line-height:1.5;color:var(--muted);margin:0 0 6px}
+  .ende .knopf{width:100%;margin-top:10px}
+  .ende .knopf.hell{background:#eef7f2;color:var(--leon-dunkel)}
+  .liste{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:12px 0 2px}
+  .liste span{background:#ecfdf3;border:1px solid #abefc6;border-radius:999px;padding:7px 12px;
+    font:700 15.5px/1 var(--rund);color:var(--leon-dunkel)}
+
+  @media (max-height:520px){
+    .buehne{height:clamp(180px,44vh,240px)}
+    .start .gross{font-size:42px} .ende .gross{font-size:42px}
+    .sowirds{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a>
+    <h1>🦘 Der Silben-Hüpfer</h1>
+    <div class="zaehler verborgen" id="zaehler"></div>
+  </header>
+
+  <!-- 1. Start -->
+  <section id="sicht-start">
+    <div class="karte start">
+      <div class="gross">🦘</div>
+      <h2>Spring von Silbe zu Silbe!</h2>
+      <p>Oben steht ein Wort in Silben. Spring auf die Silbe, die als Nächstes kommt.</p>
+      <div class="sowirds">
+        <div><b>⬆️</b><span>Drücken: Leon springt auf die obere Silbe.</span></div>
+        <div><b>➡️</b><span>Nichts drücken: Leon läuft unten durch.</span></div>
+        <div><b>🌱</b><span>Daneben? Leon steht wieder auf. Du darfst weiter.</span></div>
+      </div>
+      <button class="knopf primaer" id="start-los">Los geht's! 🦘</button>
+      <div class="rueckblick verborgen" id="rueckblick"></div>
+    </div>
+  </section>
+
+  <!-- 2. Spiel -->
+  <section id="sicht-spiel" class="verborgen">
+    <div class="karte wortkarte">
+      <div class="wortzeile" id="wortzeile"></div>
+    </div>
+    <div class="buehne" id="buehne" role="img" aria-label="Leon läuft über den Pausenhof">
+      <span class="deko" id="deko-haus">🏫</span>
+      <span class="deko" id="deko-wolke">☁️</span>
+      <span class="deko" id="deko-baum">🌳</span>
+      <div class="welt" id="welt"></div>
+      <div class="gras" id="gras"></div>
+      <div class="figur" id="figur">🧒</div>
+      <div class="funken" id="funken"></div>
+    </div>
+    <div class="rueck" id="rueck"></div>
+  </section>
+
+  <!-- 3. Silbenfrage -->
+  <section id="sicht-frage" class="verborgen">
+    <div class="karte frage">
+      <div class="wortgross" id="frage-wort"></div>
+      <h2>Wie viele Silben hat das Wort?</h2>
+      <div class="zahlen" id="frage-antworten"></div>
+      <div class="rueck" id="frage-rueck"></div>
+      <button class="knopf weiter verborgen" id="frage-weiter">Weiter ›</button>
+    </div>
+  </section>
+
+  <!-- 4. Rückschau -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte ende">
+      <div class="gross">🏅</div>
+      <h2 id="ende-titel">Geschafft!</h2>
+      <p id="ende-text"></p>
+      <div class="liste" id="ende-liste"></div>
+      <p id="ende-gesamt"></p>
+      <button class="knopf start" id="ende-nochmal">Noch eine Runde 🦘</button>
+      <button class="knopf hell" id="ende-fertig">Zurück zu meinen Spielen</button>
+    </div>
+  </section>
+</div>
+
+<div class="leiste verborgen" id="leiste">
+  <button class="knopf hell" id="hoeren" aria-label="Wort vorlesen">🔊</button>
+  <button class="knopf primaer" id="springen">⬆️ SPRINGEN</button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- Die Wörter ----------
+     Silbentrennung nach denselben Mustern wie in geschichten.js. */
+  var WOERTER = [
+    { w:"Fußball",       s:["Fus","ball"],            b:"⚽" },
+    { w:"Fußballtor",    s:["Fuß","ball","tor"],      b:"🥅" },
+    { w:"Torwart",       s:["Tor","wart"],            b:"🧤" },
+    { w:"Handschuhe",    s:["Hand","schu","he"],      b:"🧤" },
+    { w:"Trikot",        s:["Tri","kot"],             b:"👕" },
+    { w:"Elfmeter",      s:["Elf","me","ter"],        b:"🎯" },
+    { w:"Trainer",       s:["Trai","ner"],            b:"🧑‍🏫" },
+    { w:"Training",      s:["Trai","ning"],           b:"🏃" },
+    { w:"Mannschaft",    s:["Mann","schaft"],         b:"🧑‍🤝‍🧑" },
+    { w:"Kleeblatt",     s:["Klee","blatt"],          b:"🍀" },
+    { w:"Sportplatz",    s:["Sport","platz"],         b:"🏟️" },
+    { w:"Sporttasche",   s:["Sport","ta","sche"],     b:"🎽" },
+    { w:"Sockenball",    s:["So","cken","ball"],      b:"🧦" },
+    { w:"Pausenhof",     s:["Pau","sen","hof"],       b:"🏫" },
+    { w:"Pause",         s:["Pau","se"],              b:"⏸️" },
+    { w:"Schulranzen",   s:["Schul","ran","zen"],     b:"🎒" },
+    { w:"Schulhaus",     s:["Schul","haus"],          b:"🏫" },
+    { w:"Schulglocke",   s:["Schul","glo","cke"],     b:"🔔" },
+    { w:"Klasse",        s:["Klas","se"],             b:"🧑‍🎓" },
+    { w:"Mitschüler",    s:["Mit","schü","ler"],      b:"🧒" },
+    { w:"Tafel",         s:["Ta","fel"],              b:"📋" },
+    { w:"Lernen",        s:["Ler","nen"],             b:"📖" },
+    { w:"Bücherei",      s:["Bü","che","rei"],        b:"📚" },
+    { w:"Matheheft",     s:["Ma","the","heft"],       b:"📓" },
+    { w:"Hausaufgaben",  s:["Haus","auf","ga","ben"], b:"📝" },
+    { w:"Lineal",        s:["Li","ne","al"],          b:"📏" },
+    { w:"Bleistift",     s:["Blei","stift"],          b:"✏️" },
+    { w:"Filzstift",     s:["Filz","stift"],          b:"🖍️" },
+    { w:"Spitzer",       s:["Spit","zer"],            b:"✏️" },
+    { w:"Rucksack",      s:["Ruck","sack"],           b:"🎒" },
+    { w:"Turnbeutel",    s:["Turn","beu","tel"],      b:"👟" },
+    { w:"Fenster",       s:["Fens","ter"],            b:"🪟" },
+    { w:"Brotdose",      s:["Brot","do","se"],        b:"🥪" },
+    { w:"Wasserflasche", s:["Was","ser","fla","sche"],b:"💧" },
+    { w:"Apfelsaft",     s:["Ap","fel","saft"],       b:"🧃" },
+    { w:"Käsebrot",      s:["Kä","se","brot"],        b:"🧀" },
+    { w:"Pfannkuchen",   s:["Pfann","ku","chen"],     b:"🥞" },
+    { w:"Wohnzimmer",    s:["Wohn","zim","mer"],      b:"🛋️" },
+    { w:"Regenbogen",    s:["Re","gen","bo","gen"],   b:"🌈" }
+  ];
+  var RUNDE = 6;
+
+  // Alle Silben einmal - daraus kommen die Silben, die NICHT passen.
+  var VORRAT = [];
+  WOERTER.forEach(function(x){
+    x.s.forEach(function(si){ if (VORRAT.indexOf(si) < 0) VORRAT.push(si); });
+  });
+
+  /* ---------- Speicher ---------- */
+  var SPEICHER = "leon-silbenhuepfer";
+  function standLesen(){
+    try { var d = JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {};
+          return { woerter: Number(d.woerter) || 0, beste: Number(d.beste) || 0 }; }
+    catch(e){ return { woerter:0, beste:0 }; }
+  }
+  function standSchreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  /* ---------- Ansichten ---------- */
+  function zeigen(el, ja){ if (el) el.classList.toggle("verborgen", !ja); }
+  var sichtJetzt = "start";
+  function zeige(welche){
+    sichtJetzt = welche;
+    ["start","spiel","frage","ende"].forEach(function(s){
+      $("sicht-"+s).classList.toggle("verborgen", s !== welche);
+    });
+    document.body.classList.toggle("spielt", welche === "spiel");
+    zeigen($("leiste"), welche === "spiel");
+    zeigen($("zaehler"), welche === "spiel" || welche === "frage");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Vorlesen ---------- */
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" &&
+                     typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sag(text, tempo){
+    try {
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "de-DE"; u.rate = tempo;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
+      if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  function vorlesen(){
+    if (!kannSprechen || !wort || document.hidden) return;
+    try { speechSynthesis.cancel(); } catch(e){}
+    sag(wort.w, .8);
+    wort.s.forEach(function(si){ sag(si, .7); });
+  }
+  if (!kannSprechen) zeigen($("hoeren"), false);
+  document.addEventListener("visibilitychange", function(){
+    if (document.hidden && kannSprechen) { try { speechSynthesis.cancel(); } catch(e){} }
+  });
+
+  /* ---------- Töne ---------- */
+  var hall = null;
+  function ton(hz, dauer, art){
+    try {
+      var A = window.AudioContext || window.webkitAudioContext;
+      if (!A) return;
+      if (!hall) hall = new A();
+      if (hall.state === "suspended") { try { hall.resume(); } catch(e){} }
+      var o = hall.createOscillator(), g = hall.createGain();
+      o.type = art || "sine"; o.frequency.value = hz;
+      o.connect(g); g.connect(hall.destination);
+      var t = hall.currentTime;
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.exponentialRampToValueAtTime(.11, t + .03);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dauer);
+      o.start(t); o.stop(t + dauer + .03);
+    } catch(e){}
+  }
+
+  /* ---------- Masse der Welt ----------
+     Alles hängt an der Bühnenbreite: Auf dem Handy läuft die Welt langsamer
+     und die Plattformen sind schmaler, damit der Weg vom Auftauchen bis zum
+     Absprung überall gleich lang zum Lesen ist. */
+  var BODEN = 30, STUFE = 38, HOCH_H = 46, STAND = .22, LUECKE = 18;
+  var SPEED = 55, P_BREITE = 120, P_HOEHE = 110, SPRUNG_T = 1.4, LAND = 70, FIG_X = 56, SPAWN = 400;
+  var neueMasse = false;
+
+  function masseRechnen(){
+    var b = $("buehne").clientWidth || 360;
+    var h = $("buehne").clientHeight || 220;
+    SPEED    = Math.max(45, Math.min(70, b / 8));
+    P_BREITE = Math.max(104, Math.min(154, b * 0.30));
+    P_HOEHE  = Math.max(104, Math.min(134, h * 0.44));
+    SPRUNG_T = Math.max(0.9, Math.min(1.7, (P_BREITE * 0.62 + 10) / SPEED));
+    LAND     = Math.min(P_BREITE * 0.78, Math.max(P_BREITE * 0.3, SPEED * SPRUNG_T - 10));
+    FIG_X    = Math.max(44, Math.min(110, b * 0.13));
+    SPAWN    = Math.min(b + 30, 470);
+    $("gras").style.height = BODEN + "px";
+    $("figur").style.left = (FIG_X - 28) + "px";
+    $("deko-haus").style.cssText = "left:3%;bottom:" + (BODEN + 4) + "px;font-size:clamp(34px,7vmin,60px)";
+    $("deko-baum").style.cssText = "right:4%;bottom:" + (BODEN + 2) + "px;font-size:clamp(30px,6vmin,52px)";
+    $("deko-wolke").style.cssText = "left:52%;top:8%;font-size:clamp(24px,5vmin,40px)";
+  }
+  function masseMerken(){
+    if (zustand === "sprung" || armiert) { neueMasse = true; return; }
+    masseRechnen(); torNeuZeichnen();
+  }
+  window.addEventListener("resize", masseMerken);
+  window.addEventListener("orientationchange", masseMerken);
+
+  /* ---------- Zustand ---------- */
+  var runde = [], wortNr = 0, wort = null, silbeNr = 0;
+  var fehlFuerSilbe = 0, erstFuerSilbe = true, sauberesWort = true;
+  var geschafft = [], sauberZaehler = 0;
+  var tore = [], torId = 0, torGeloest = 0, torPause = 0;
+  var kamera = 0, figY = 0, figDreh = 0;
+  var zustand = "laufen";          // laufen | sprung | fall | jubel | pause
+  var armiert = null, sprungTor = null, sprungT = 0, fallT = 0, jubelT = 0;
+  var weltLaeuft = true;
+
+  function mische(f){
+    for (var i = f.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1)); var t = f[i]; f[i] = f[j]; f[j] = t;
+    }
+    return f;
+  }
+
+  /* ---------- Wort und Silbenzeile ---------- */
+  function wortMalen(){
+    var z = $("wortzeile"); z.innerHTML = "";
+    var bild = document.createElement("span");
+    bild.className = "wortbild"; bild.textContent = wort.b;
+    z.appendChild(bild);
+    wort.s.forEach(function(si, i){
+      if (i){
+        var tr = document.createElement("span");
+        tr.className = "trenn"; tr.textContent = "-";
+        z.appendChild(tr);
+      }
+      var sp = document.createElement("span");
+      sp.className = "silbe" + (i < silbeNr ? " fertig" : "") +
+                     (i === silbeNr && fehlFuerSilbe >= 2 ? " zeiger" : "");
+      sp.textContent = si;
+      z.appendChild(sp);
+    });
+    $("zaehler").textContent = "Wort " + (wortNr + 1) + " von " + RUNDE;
+  }
+
+  /* ---------- Tore ---------- */
+  function andereSilbe(){
+    var soll = wort.s[silbeNr];
+    var eigene = wort.s.filter(function(si){ return si !== soll; });
+    var quelle = (eigene.length && Math.random() < .6) ? eigene
+               : VORRAT.filter(function(si){ return si !== soll; });
+    if (!quelle.length) quelle = VORRAT.filter(function(si){ return si !== soll; });
+    return quelle[Math.floor(Math.random() * quelle.length)];
+  }
+
+  function torBauen(){
+    var soll = wort.s[silbeNr];
+    var falsch = andereSilbe();
+    var obenIstRichtig = Math.random() < .5;
+    var g = {
+      id: ++torId,
+      x: kamera + SPAWN,
+      oben: obenIstRichtig ? soll : falsch,
+      unten: obenIstRichtig ? falsch : soll,
+      richtig: obenIstRichtig ? "oben" : "unten",
+      phase: "offen",
+      gewaehlt: ""
+    };
+    var el = document.createElement("div");
+    el.className = "tor offen";
+    var o = document.createElement("div"); o.className = "pl oben"; o.textContent = g.oben;
+    var u = document.createElement("div"); u.className = "pl unten"; u.textContent = g.unten;
+    el.appendChild(o); el.appendChild(u);
+    $("welt").appendChild(el);
+    g.el = el; g.elOben = o; g.elUnten = u;
+    torStellen(g);
+    tore.push(g);
+    return g;
+  }
+  function torStellen(g){
+    g.elOben.style.width = P_BREITE + "px";
+    g.elOben.style.height = HOCH_H + "px";
+    g.elOben.style.left = "0px";
+    g.elOben.style.bottom = (BODEN + P_HOEHE - HOCH_H) + "px";
+    g.elUnten.style.width = P_BREITE + "px";
+    g.elUnten.style.height = STUFE + "px";
+    g.elUnten.style.left = (P_BREITE + LUECKE) + "px";
+    g.elUnten.style.bottom = BODEN + "px";
+  }
+  function torNeuZeichnen(){ tore.forEach(torStellen); }
+  function offenesTor(){
+    for (var i = 0; i < tore.length; i++) if (tore[i].phase !== "fertig") return tore[i];
+    return null;
+  }
+  function toreLeeren(){
+    tore = []; $("welt").innerHTML = ""; armiert = null; sprungTor = null;
+  }
+
+  /* ---------- Melden ---------- */
+  function melden(stimmt, merkmal, gegeben, richtig){
+    try { if (window.lernstand && window.lernstand.antwort) window.lernstand.antwort(stimmt, merkmal, gegeben, richtig); } catch(e){}
+  }
+
+  function funkenSetzen(x, y, zeichen){
+    var box = $("funken");
+    if (box.childNodes.length > 12) box.innerHTML = "";
+    var s = document.createElement("span");
+    s.textContent = zeichen;
+    s.style.left = Math.max(4, x - 14) + "px";
+    s.style.bottom = y + "px";
+    box.appendChild(s);
+  }
+
+  function sagen(text, art){
+    $("rueck").textContent = text;
+    $("rueck").className = "rueck" + (art ? " " + art : "");
+  }
+
+  var LOB = ["Stark!", "Genau!", "Richtig!", "Super gehüpft!", "Das sitzt!", "Ja, so geht es weiter!"];
+
+  /* ---------- Ein Tor entscheiden ---------- */
+  function torEntscheiden(g, wahl){
+    g.phase = "fertig"; g.gewaehlt = wahl;
+    g.el.classList.remove("offen"); g.el.classList.remove("zu");
+    torGeloest++;
+    // Das nächste Tor kommt erst, wenn Leon sicher wieder auf dem Boden steht.
+    // Sonst taucht es auf, während er noch in der Luft ist - und der Druck auf
+    // den Knopf ginge ins Leere, ohne dass ein Kind wüsste, warum.
+    torPause = SPRUNG_T + STAND + .25;
+    var silbe = wahl === "oben" ? g.oben : g.unten;
+    var soll = wort.s[silbeNr];
+    var feld = wahl === "oben" ? g.elOben : g.elUnten;
+
+    if (silbe === soll){
+      feld.classList.add("gut");
+      if (erstFuerSilbe) melden(true, "silben zusammensetzen", silbe, soll);
+      erstFuerSilbe = true; fehlFuerSilbe = 0;
+      silbeNr++;
+      wortMalen();
+      funkenSetzen(FIG_X, BODEN + (wahl === "oben" ? P_HOEHE : STUFE) + 30, "✨");
+      ton(660, .12); ton(880, .16);
+      if (silbeNr >= wort.s.length){
+        sagen("🎉 " + wort.w + " – geschafft!", "gut");
+        zustand = "jubel"; jubelT = 0; weltLaeuft = false;
+      } else {
+        sagen("✅ " + LOB[silbeNr % LOB.length] + " Jetzt kommt »" + wort.s[silbeNr] + "«.", "gut");
+      }
+    } else {
+      feld.classList.add("daneben");
+      if (erstFuerSilbe) melden(false, "silben zusammensetzen", silbe, soll);
+      erstFuerSilbe = false;
+      fehlFuerSilbe++; sauberesWort = false;
+      wortMalen();
+      ton(320, .18, "triangle");
+      sagen(fehlFuerSilbe >= 2
+        ? "Kein Problem. Schau: »" + soll + "« ist dran – sie leuchtet oben."
+        : "Fast! »" + soll + "« kommt als Nächstes. Du darfst weiter.", "hm");
+      zustand = "fall"; fallT = 0; weltLaeuft = false;
+    }
+  }
+
+  /* ---------- Springen ---------- */
+  function springenWollen(){
+    if (sichtJetzt !== "spiel") return;
+    // Auch mitten in einem Hüpfer darf man den nächsten Sprung anmelden -
+    // sonst verpufft der Druck und das Kind sucht den Fehler bei sich.
+    if (zustand !== "laufen" && zustand !== "sprung") return;
+    var g = offenesTor();
+    if (!g || g.phase !== "offen"){
+      // Ein kleiner Übungshüpfer - schadet nie und tut nichts.
+      zustand = "sprung"; sprungTor = null; sprungT = SPRUNG_T * .55;
+      return;
+    }
+    armiert = g;
+    $("springen").classList.add("bereit");
+  }
+  $("springen").addEventListener("click", springenWollen);
+  $("buehne").addEventListener("click", springenWollen);
+  document.addEventListener("keydown", function(e){
+    if (e.code === "Space" || e.key === " " || e.code === "Enter" || e.key === "Enter"){
+      if (sichtJetzt !== "spiel") return;
+      e.preventDefault(); springenWollen();
+    }
+  });
+  $("hoeren").addEventListener("click", vorlesen);
+
+  /* ---------- Der Takt ----------
+     Alles läuft über dieses eine dt: der Sprung, der Fall, der Jubel, die
+     Pause zwischen zwei Toren. So lässt sich das Spiel für die Messung
+     vorspulen, ohne dass irgendein setTimeout danebenläuft. */
+  function takt(dt){
+    if (sichtJetzt !== "spiel") return;
+    if (dt > .05) dt = .05;
+
+    if (neueMasse && zustand === "laufen" && !armiert){
+      neueMasse = false; masseRechnen(); torNeuZeichnen();
+    }
+    if (torPause > 0) torPause -= dt;
+    if (weltLaeuft) kamera += SPEED * dt;
+
+    // Neues Tor, sobald das alte durch ist.
+    if (weltLaeuft && !offenesTor() && torPause <= 0 && zustand !== "jubel") torBauen();
+
+    var g = offenesTor();
+    if (g){
+      var landSchirm = g.x + LAND - kamera;
+      if (g.phase === "offen" && landSchirm - FIG_X <= SPEED * SPRUNG_T + 0.5){
+        if (armiert === g){
+          zustand = "sprung"; sprungTor = g; sprungT = 0;
+          armiert = null; $("springen").classList.remove("bereit");
+          ton(520, .1);
+        } else {
+          g.phase = "zu"; g.el.classList.remove("offen"); g.el.classList.add("zu");
+        }
+      }
+      if (g.phase !== "fertig" && landSchirm <= FIG_X){
+        torEntscheiden(g, (zustand === "sprung" && sprungTor === g) ? "oben" : "unten");
+      }
+    }
+
+    // Sprungbahn: hoch bis SPRUNG_T, kurz oben stehen, dann wieder runter.
+    if (zustand === "sprung"){
+      sprungT += dt;
+      var hoehe = sprungTor ? P_HOEHE : STUFE + 16;
+      if (sprungT <= SPRUNG_T){
+        var u = (sprungT - SPRUNG_T) / SPRUNG_T;
+        figY = hoehe * (1 - u * u);
+      } else if (sprungT <= SPRUNG_T + STAND){
+        figY = hoehe;
+      } else {
+        var v = (sprungT - SPRUNG_T - STAND) / SPRUNG_T;
+        if (v >= 1){ zustand = "laufen"; sprungTor = null; figY = 0; }
+        else figY = hoehe * (1 - v * v);
+      }
+    } else if (zustand === "fall"){
+      fallT += dt;
+      if (fallT < .45){ figY = Math.max(0, figY - 340 * dt); figDreh = -70 * Math.min(1, fallT / .45); }
+      else if (fallT < 1.25){ figY = 0; figDreh = -70; }
+      else { figY = 0; figDreh = 0; zustand = "laufen"; weltLaeuft = true; }
+    } else if (zustand === "jubel"){
+      jubelT += dt;
+      figY = Math.abs(Math.sin(jubelT * 7)) * 26;
+      if (jubelT > 1.25){ figY = 0; frageZeigen(); return; }
+    } else {
+      // Laufen: über einer unteren Silbenstufe steigt Leon hinauf.
+      var ziel = 0;
+      tore.forEach(function(t){
+        var l = t.x + P_BREITE + LUECKE - kamera;
+        if (FIG_X > l - 6 && FIG_X < l + P_BREITE + 6) ziel = STUFE;
+      });
+      if (figY < ziel) figY = Math.min(ziel, figY + 300 * dt);
+      else if (figY > ziel) figY = Math.max(ziel, figY - 300 * dt);
+      figDreh = 0;
+    }
+
+    zeichnen();
+  }
+
+  function zeichnen(){
+    tore.forEach(function(t){
+      t.el.style.transform = "translateX(" + Math.round(t.x - kamera) + "px)";
+    });
+    var f = $("figur");
+    f.style.bottom = Math.round(BODEN + figY) + "px";
+    f.style.transform = "rotate(" + Math.round(figDreh) + "deg)" +
+      (zustand === "laufen" && weltLaeuft ? " translateY(" + (Math.round(Math.sin(kamera / 14) * 2)) + "px)" : "");
+    // Tore, die hinten raus sind, wegräumen.
+    for (var i = tore.length - 1; i >= 0; i--){
+      if (tore[i].phase === "fertig" && tore[i].x + 2 * P_BREITE + LUECKE - kamera < -30){
+        if (tore[i].el.parentNode) tore[i].el.parentNode.removeChild(tore[i].el);
+        tore.splice(i, 1);
+      }
+    }
+  }
+
+  var letzteZeit = 0;
+  function schleife(ts){
+    if (!letzteZeit) letzteZeit = ts;
+    var dt = (ts - letzteZeit) / 1000; letzteZeit = ts;
+    takt(dt);
+    requestAnimationFrame(schleife);
+  }
+
+  /* ---------- Silbenfrage ---------- */
+  var frageOffen = false;
+  function frageZeigen(){
+    zustand = "pause"; weltLaeuft = false; frageOffen = true;
+    var n = wort.s.length;
+    var box = $("frage-antworten"); box.innerHTML = "";
+    var w = $("frage-wort"); w.innerHTML = "";
+    wort.s.forEach(function(si, i){
+      if (i){ var t = document.createElement("i"); t.textContent = "-"; w.appendChild(t); }
+      var sp = document.createElement("span"); sp.textContent = si; w.appendChild(sp);
+    });
+    var zahlen = mische([n - 1, n, n + 1].filter(function(z){ return z >= 1; }));
+    while (zahlen.length < 3) zahlen.push(Math.max.apply(null, zahlen) + 1);
+    zahlen.forEach(function(z){
+      var b = document.createElement("button");
+      b.className = "antwort"; b.type = "button";
+      b.innerHTML = '<span></span><small>Silben</small>';
+      b.querySelector("span").textContent = String(z);
+      b.addEventListener("click", function(){ frageAntwort(b, z, n); });
+      box.appendChild(b);
+    });
+    $("frage-rueck").textContent = ""; $("frage-rueck").className = "rueck";
+    zeigen($("frage-weiter"), false);
+    zeige("frage");
+  }
+  function frageAntwort(knopf, gewaehlt, richtig){
+    if (!frageOffen) return;
+    frageOffen = false;
+    var stimmt = gewaehlt === richtig;
+    melden(stimmt, "silben zaehlen", gewaehlt, richtig);
+    knopf.classList.add(stimmt ? "richtig" : "daneben");
+    if (!stimmt){
+      Array.prototype.forEach.call($("frage-antworten").querySelectorAll("button"), function(b){
+        if (b.querySelector("span").textContent === String(richtig)) b.classList.add("richtig");
+      });
+      ton(320, .18, "triangle");
+    } else { ton(700, .12); ton(940, .16); }
+    $("frage-rueck").textContent = stimmt
+      ? "✅ Genau! " + wort.s.join("-") + " – das sind " + richtig + " Silben."
+      : "Schau: " + wort.s.join("-") + ". Das sind " + richtig + " Silben.";
+    $("frage-rueck").className = "rueck " + (stimmt ? "gut" : "hm");
+    if (sauberesWort) sauberZaehler++;
+    geschafft.push(wort.w);
+    $("frage-weiter").textContent = (wortNr + 1 >= RUNDE) ? "Zur Rückschau ›" : "Nächstes Wort ›";
+    zeigen($("frage-weiter"), true);
+  }
+  $("frage-weiter").addEventListener("click", function(){
+    if (wortNr + 1 >= RUNDE) endeZeigen();
+    else { wortNr++; wortStarten(); }
+  });
+
+  /* ---------- Ablauf ---------- */
+  function wortStarten(){
+    wort = runde[wortNr];
+    silbeNr = 0; fehlFuerSilbe = 0; erstFuerSilbe = true; sauberesWort = true;
+    toreLeeren();
+    torPause = .25; figY = 0; figDreh = 0; zustand = "laufen"; weltLaeuft = true;
+    $("funken").innerHTML = "";
+    $("springen").classList.remove("bereit");
+    wortMalen();
+    sagen("Welche Silbe kommt zuerst?", "");
+    zeige("spiel");
+    masseRechnen(); torNeuZeichnen();
+  }
+
+  function rundeStarten(){
+    runde = mische(WOERTER.slice()).slice(0, RUNDE).sort(function(a, b){ return a.s.length - b.s.length; });
+    wortNr = 0; geschafft = []; sauberZaehler = 0; kamera = 0; torGeloest = 0;
+    try { if (window.lernstand && window.lernstand.uhrZuruecksetzen) window.lernstand.uhrZuruecksetzen(); } catch(e){}
+    wortStarten();
+  }
+
+  function endeZeigen(){
+    zustand = "pause"; weltLaeuft = false;
+    var alt = standLesen();
+    var neu = { woerter: alt.woerter + geschafft.length, beste: Math.max(alt.beste, sauberZaehler) };
+    if (neu.woerter !== alt.woerter || neu.beste !== alt.beste) standSchreiben(neu);
+    $("ende-titel").textContent = "Du hast " + geschafft.length +
+      (geschafft.length === 1 ? " Wort" : " Wörter") + " gebaut!";
+    $("ende-text").textContent = sauberZaehler === geschafft.length
+      ? "Und bei jedem Wort hast du jede Silbe gleich beim ersten Versuch getroffen. Stark!"
+      : (sauberZaehler > 0
+          ? sauberZaehler + (sauberZaehler === 1 ? " Wort" : " Wörter") + " davon gleich beim ersten Versuch. Der Rest hat auch geklappt – dranbleiben lohnt sich."
+          : "Jede Silbe hast du gefunden. Manche erst beim zweiten Mal – genau so lernt man lesen.");
+    var liste = $("ende-liste"); liste.innerHTML = "";
+    geschafft.forEach(function(w){
+      var s = document.createElement("span"); s.textContent = w; liste.appendChild(s);
+    });
+    $("ende-gesamt").textContent = "Insgesamt hast du schon " + neu.woerter +
+      (neu.woerter === 1 ? " Wort" : " Wörter") + " gehüpft.";
+    zeige("ende");
+  }
+
+  $("start-los").addEventListener("click", rundeStarten);
+  $("ende-nochmal").addEventListener("click", rundeStarten);
+  $("ende-fertig").addEventListener("click", function(){ location.href = "/leon/#anfassen"; });
+
+  function startMalen(){
+    var d = standLesen();
+    if (d.woerter > 0){
+      $("rueckblick").textContent = "🦘 Schon " + d.woerter +
+        (d.woerter === 1 ? " Wort" : " Wörter") + " gehüpft." +
+        (d.beste > 0 ? " Beste Runde: " + d.beste + " gleich beim ersten Versuch." : "");
+      zeigen($("rueckblick"), true);
+    } else zeigen($("rueckblick"), false);
+  }
+
+  /* ---------- Für die Messung ---------- */
+  window.__huepfer = {
+    woerter: function(){ return WOERTER; },
+    runde: function(){ return runde; },
+    sicht: function(){ return sichtJetzt; },
+    stand: function(){
+      return {
+        wortNr: wortNr, wort: wort ? wort.w : "", silben: wort ? wort.s.slice() : [],
+        silbeNr: silbeNr, silbe: wort ? wort.s[silbeNr] : "", silbenZahl: wort ? wort.s.length : 0,
+        zustand: zustand, geschafft: geschafft.slice(), sauber: sauberZaehler, fehl: fehlFuerSilbe
+      };
+    },
+    tor: function(){ var g = offenesTor(); return g ? { oben:g.oben, unten:g.unten, richtig:g.richtig, phase:g.phase, id:g.id } : null; },
+    torNr: function(){ return torGeloest; },
+    springen: springenWollen,
+    spulen: function(ms){ var n = Math.max(1, Math.round(ms / 25)); for (var i = 0; i < n; i++) takt(.025); }
+  };
+
+  masseRechnen();
+  startMalen();
+  zeige("start");
+  requestAnimationFrame(schleife);
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
