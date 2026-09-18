@@ -746,6 +746,19 @@ Stolperstelle: nach UNTEN wird es +10 – in zwei Ausschnitten hat er es umgedre
 Hinweise zeigen den Schritt („↓ +10"), nie die Zahl. Messung:
 `mess-schritte-tausenderbuch.js` (prüft auch, dass jede Zelle zur Buchseite passt).
 
+### Leons drei „Trend-Spiele" (18.09.2026)
+
+Denny: Leon war traurig, „dass die Großen so coole Spiele haben". Gebaut in den
+Formaten, die gerade laufen, aber mit seinem Stoff und ohne Druck:
+`leon/klasse2-deutsch-wort-werkstatt.html` (Infinite-Craft-Prinzip, 81 Wortpaare),
+`leon/klasse2-mathe-zahlen-rennen.html` (Rennen, 11 Rechenarten bis 100),
+`leon/klasse2-deutsch-silben-huepfer.html` (One-Button, 39 Wörter).
+Alle drei: eine Datei, nichts aus dem Netz, keine Uhr, kein „Game over", zweiter
+Versuch mit Hinweis, Rückschau in `leon-…`-Schlüsseln, Meldung an `lernstand`.
+Messungen: `mess-schritte-wort-werkstatt.js`, `-zahlen-rennen.js`, `-silben-huepfer.js`
+– sie prüfen auch die Fachlogik (jede Rechnung, jede Silbentrennung, jedes Wortpaar).
+**Gleichzeitig messen geht nicht:** `geraete-messen.js` belegt fest Port 8777/9222.
+
 ### Das Hausaufgaben-Heft (seit 17.09.2026) – Pauls Hauptweg für Hausaufgaben
 
 `paul/hausaufgaben.html`, Kachel „Mein Hausaufgaben-Heft" (der alte Weg
