@@ -21,6 +21,15 @@ Kind auf, statt sich zu beschweren.
    Web-Ordners — sie verbindet Kindernamen mit Gerätemodellen und hätte sonst
    offen im Netz gestanden.
 
+   **Ein eingetragenes Gerät bleibt nicht ewig richtig.** Am 18.09.2026 stand
+   bei „Pauls iPad, quer" noch 1180×760 — sein tatsächliches Fenster ist seit
+   Tagen 1180×688 (7 von 14 Runden, dazu beide Meldungen des Tages). 72 px zu
+   bequem gemessen, und niemand hat es gemerkt. Neu dazu kam
+   „Pauls iPad, geteilter Bildschirm" (784×688): Split View, die Lernwelt liegt
+   neben einer zweiten App — **schmal und niedrig zugleich**, was keine andere
+   Größe abdeckte. Also: `./werkstatt.sh geraete` nicht nur nach *neuen* Namen
+   lesen, sondern die eingetragenen Maße gegen die echten Zahlen halten.
+
 2. **Messen, nicht anschauen.** Das macht ein Aufruf, seit dem 08.09.2026:
 
        node geraete-messen.js /paul/klasse3-mathe-gewichte-wiegespiel.html paul
