@@ -443,4 +443,13 @@ export const KLEXIKON = [
   [5, "sprache", "🛡️", "Wovon hat Asterix seinen Namen?", ["vom Sternchen „Asterisk“", "von einer Pflanze", "von einem römischen Kaiser", "von einem gallischen Dorf"], "Obelix hat seinen Namen vom Obelisken, einem stehenden Stein.", null, "Asterix und Obelix"],
   [5, "sprache", "🇬🇧", "Nach welchem Volk ist England benannt?", ["nach den Angeln", "nach den Kelten", "nach den Römern", "nach den Wikingern"], "Die Angeln kamen aus Gegenden, die heute in Norddeutschland und Dänemark liegen.", null, "Englische Sprache"],
   [5, "kurios", "🎆", "Wie viele Stunden früher als bei uns beginnt Neujahr in Neuseeland?", ["12 Stunden", "1 Stunde", "6 Stunden", "24 Stunden"], "Den 1. Januar als Jahresbeginn haben die Römer eingeführt – vorher begann ihr Jahr am 1. März.", null, "Neujahr"],
+
+  // Nachschub vom 18.09.2026
+  [2, "tiere", "🌙", "Wann jagt die Waldohreule nach Beute?", ["Nachts", "Morgens", "Mittags", "Abends"], "Wusstest du? Die Waldohreule hört ihre Beute schon von Weitem.", null, "Waldohreule"],
+  [1, "tiere", "🦊", "Welche Farbe hat der Polarfuchs im Winter?", ["Weiß", "Schwarz", "Braun", "Grau"], "Wusstest du? Im Schnee ist der weiße Polarfuchs fast unsichtbar.", null, "Polarfuchs"],
+  [2, "tiere", "🐾", "Was frisst der Polarfuchs am liebsten?", ["Lemminge", "Frösche", "Schnecken", "Regenwürmer"], "Wusstest du? Lemminge sind kleine Mäuse in der kalten Tundra.", null, "Polarfuchs"],
+  [3, "kurios", "🍳", "Woraus wird die Schweizer Rösti gemacht?", ["Kartoffeln", "Reis", "Nudeln", "Bohnen"], "Wusstest du? Rösti wird in einer Pfanne mit Butter gebraten.", null, "Rösti"],
+  [4, "technik", "♻️", "Woraus stellt man Kunststoff heute meist her?", ["Erdöl", "Holz", "Sand", "Salz"], "Wusstest du? Kunststoff zersetzt sich in der Natur fast gar nicht.", null, "Kunststoff"],
+  [5, "wissen", "📐", "Wie berechnet man die Fläche eines Rechtecks?", ["Länge mal Breite", "Umfang mal Breite", "Höhe mal Tiefe", "Umfang geteilt Zwei"], "Wusstest du? Ein Quadratmeter ist die Fläche eines Quadrats mit einem Meter Seitenlänge.", null, "Fläche"],
+  [3, "welt", "💰", "Welches Geld nutzen viele Länder in Europa?", ["Euro", "Yen", "Rubel", "Peso"], "Wusstest du? Vorher hatte jedes Land in Europa sein eigenes Geld.", null, "Währung"],
 ];
