@@ -760,6 +760,16 @@
 
   kistenMalen();
 
+  // spiel-navi.js setzt den Knopf "↺ Auswahl" in die Kopfzeile und blendet
+  // damit die Sichten selbst um. Die Leiste unten haengt an einer Klasse am
+  // body - ohne das hier bliebe auf der Startseite ein leerer Streifen stehen.
+  new MutationObserver(function(){
+    if (!$("sicht-start").classList.contains("verborgen")){
+      document.body.classList.remove("spielt", "neuseite");
+      kistenMalen();
+    }
+  }).observe($("sicht-start"), { attributes:true, attributeFilter:["class"] });
+
   /* ---------- Konfetti ---------- */
   var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
   function konfetti(gross){
