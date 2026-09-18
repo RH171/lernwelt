@@ -571,6 +571,7 @@
     ergebnis[pos] = "t";
     feld.disabled = true;
     $("selbst-ab").classList.add("verborgen");
+    $("selbst-hilfe").classList.add("verborgen");
     $("artikel").innerHTML = artikelHtml(false);
     $("rueck").innerHTML = '<div class="rueck loesung"><b>Schau mal, so geht der Satz:</b><br>' +
       esc(s.v) + '<b>' + esc(s.r) + '</b>' + esc(s.n) + markiertHtml(ops) +
@@ -586,6 +587,7 @@
     if (ersterVersuch) gesamt++;
     $("selbst-text").disabled = true;
     $("selbst-ab").classList.add("verborgen");
+    $("selbst-hilfe").classList.add("verborgen");
     $("artikel").innerHTML = artikelHtml(false);
     var satz = document.querySelector('.satz[data-i="' + pos + '"]');
     if (satz){ satz.classList.remove("jetzt"); satz.classList.add("frisch"); }

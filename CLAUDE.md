@@ -395,6 +395,62 @@ Kasten baut, misst ihn gegen den inneren Rand, nicht gegen den Bildschirm.**
 Dieselbe Etappe prüft auch fachlich nach (48 Wörter, 3 Sätze, „28 zu viel",
 `600.000` heil), nicht nur das Aussehen.
 
+## Die Ferien-Zeitung: auswählen — oder den Satz selbst schreiben
+
+Paul am 18.09.2026 (Meldung `cbevcr5f4p`) aus den vorgeschlagenen Ideen
+angehakt: *„Schreib den Satz selbst — statt nur auszuwählen, tippst du den Satz
+einmal ganz allein neu."* Auf die Rückfrage, was bei einem Vertipper passieren
+soll — die Stelle zeigen oder ihn selbst suchen lassen — kam nach zwei Anläufen
+ein klares *„Zeigen"*. Beides steht so in `paul/klasse3-deutsch-ferien-zeitung.html`.
+
+Der Knopf **✍️ Schreib den Satz selbst** steht in der Redaktion unter „Alle vier
+Artikel"; die Einstellung liegt als `selbst` im selben localStorage-Eintrag wie
+die Bestwerte. Mitten im Spiel lässt sie sich über „✍️ Lieber selbst schreiben"
+bzw. „☝️ Lieber auswählen" wechseln — aber **nur, solange die Aufgabe noch offen
+ist** (`wechselWeg()`): `aufgabeZeigen()` setzt den Versuchszähler zurück, ein
+Wechsel nach dem Fehlversuch wäre ein Freifahrtschein gewesen.
+
+Drei Dinge, die an so einer Freitext-Prüfung hängen und hier gelöst sind:
+
+- **Wort gegen Wort, nicht Satz gegen Satz.** Bei einem fehlenden Wort wäre
+  sonst alles dahinter rot. `abgleich()` richtet beide Sätze über eine längste
+  gemeinsame Folge aneinander aus; `paaren()` macht aus einem fehlenden und
+  einem überzähligen Wort nebeneinander **einen** Fehler statt zweier. Angezeigt
+  wird: roter Rahmen = stimmt nicht, roter Strich = hier fehlt etwas,
+  durchgestrichen = steht zu viel da.
+- **Der Wortkern entscheidet über den Lernstand.** Ein vergessener Punkt am
+  Satzende ist ein Abschreibfehler und darf nicht als „Präteritum sitzt nicht"
+  in `lernstand` landen (`kern()`/`kernGleich()`). Sitzt das gesuchte Wort und
+  ist nur der Rest verrutscht, sagt die Rückmeldung genau das — und der Satz
+  muss trotzdem stimmen, bevor es weitergeht. Mitgeschrieben werden zwei
+  Merkmale: das des Ressorts und `satz genau abschreiben`.
+- **Mehrwortige Antworten brechen den Wortvergleich auf.** Aus „Am frühen
+  Morgen" gegen „Am Abend" wird ein markiertes Wort *und* eine Lücke, und der
+  Schlüssel `"Am Abend"` aus der Erklärungsliste wird nicht mehr gefunden.
+  Darum geht `welcheWahl()` vorher den kurzen Weg: Steht sein Satz Wort für Wort
+  so da, wie er mit einem der vier Wörter dastünde, ist die Sache klar und er
+  bekommt dieselbe Erklärung wie beim Antippen.
+
+**Die Hilfe verrät nichts.** „💡 Wörter zeigen" legt dieselben vier Wörter hin,
+die im Auswahl-Modus als Knöpfe dastehen — als Text, ungeordnet, ohne Hinweis
+darauf, welches stimmt. Schwerer als vorher wird es damit nie; ohne sie wäre der
+Dann-Detektiv („Am frühen Morgen") nicht zu erraten gewesen.
+
+**Die Zeitung ist jetzt Pauls zweite Seite zum Schreiben** und steht deshalb bei
+„Pauls iPhone mit offener Tastatur" (375×360) in `pruefung-geraete.json`. Dort
+lag „Prüfen" beim ersten Lauf **68 px unter dem Rand**. Repariert wie beim
+Reporter über `@media (max-height:520px)`: Der Schreib-Hinweis tritt zurück,
+Zeitungskopf und Schlagzeile werden ausgeblendet — der **Satz**, den er
+abschreibt, bleibt stehen —, Kopfzeile und Karten werden flacher.
+
+**Gemerkt für den nächsten Knopf:** `layout-messen.js` kennt als Hauptknopf nur
+`.next, .start, .schicken, .weiter, #weiter, #startBtn, #chk, #again,
+[type=submit], button.primaer, .cta`. „Prüfen" heißt `#selbst-ab` und stand in
+keiner dieser Klassen — die Messung hätte ihn ungemessen unter den Rand rutschen
+lassen. `mess-schritte-ferien-zeitung.js` misst ihn darum mit `__imFenster()`
+von Hand. **Wer einen neuen Hauptknopf baut, gibt ihm eine der bekannten Klassen
+oder misst ihn selbst nach.**
+
 ## Vorgebaute Spiele werden gelesen, nicht nur gezählt
 
 `pruefeSpiel` prüft die Form (Anzahl, Lösung in der Auswahl, Zahlentastatur).
