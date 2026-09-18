@@ -26,7 +26,20 @@
   nie die Lösung.
 -->
 <link rel="stylesheet" href="/beruehrung.css">
-<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<!--
+  Hier stand bis zum 18.09.2026 abends window.LERNSTAND_SCHREIBT_SELBST = true.
+  Das heisst "ich melde meine Runde selbst an /api/statistik" - und genau das
+  hat das Heft nie getan. Ergebnis: Pauls Hausaufgabenzeit tauchte im
+  Elternbereich ueberhaupt nicht auf. Denny ist es am selben Abend aufgefallen
+  ("er hat mit dir doch die Hausaufgaben gemacht?"): 14:49 und 15:15 Uhr im
+  Faden, in der Statistik nichts.
+
+  Ohne die Zeile meldet lernstand.js die Runde von allein - mit der ehrlichen
+  Uhr (zwei Minuten Nachdenken zaehlen, laenger Weggehen nicht) und als
+  nurBesuch, weil es hier kein richtig/falsch gibt und die Quote nicht
+  verfaelscht werden darf. Wer die Zeile wieder setzt, schreibt erst den
+  Sender dazu - siehe helena/trainer.js.
+-->
 <style>
   :root{
     --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
