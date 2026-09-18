@@ -809,6 +809,59 @@ beim dritten Mal alles richtig.
 
 Messung: `mess-schritte-hausaufgaben-heft.js`.
 
+### `LERNSTAND_SCHREIBT_SELBST` ist ein Versprechen, keine Einstellung
+
+Am 18.09.2026 abends stand Denny im Elternbereich und fragte: *„Hat Paul heute
+wirklich nur so wenig gelernt? Er hat mit dir doch die Hausaufgaben gemacht."*
+Hatte er — um 14:49 und 15:15 Uhr, nachlesbar in den Fäden. In der Statistik
+stand für den ganzen Tag nur 7:04 bis 7:16 Uhr.
+
+Beide Hausaufgaben-Hefte setzten `window.LERNSTAND_SCHREIBT_SELBST = true`.
+Das heißt **„ich melde meine Runde selbst an `/api/statistik`"** — und genau
+das hat keines der beiden je getan. `lernstand.js` hielt sich an die Ansage und
+schwieg, das Heft schwieg auch. Die gesamte Hausaufgabenzeit beider Kinder ist
+nie irgendwo angekommen, seit es die Hefte gibt.
+
+Das Tückische: Von außen sieht alles gesund aus. Die Seite lädt, der Puls geht,
+`lernstand.js` ist eingebunden — es fehlt nur eine Zahl, die niemand vermisst,
+solange niemand nachrechnet. **Gefunden hat es nicht die Messung, sondern ein
+Vater, der wusste, was sein Kind nachmittags getan hat.**
+
+Die Regel daraus: Wer das Flag setzt, schreibt im selben Zug den Sender dazu
+und nennt ihn im Kommentar — so wie `helena/trainer.js` es tut. Wer eine
+Übersichtsseite ohne Lernzeit baut (`helena/spiele.html`), schreibt genau das
+als Begründung daneben. **Ein Flag ohne Begründung ist ab jetzt ein Befund.**
+
+Nachzuprüfen ist das mit einem Zweizeiler — aber **`lernstand.js` muss dabei
+ausgeschlossen werden**, sonst gilt jede Seite als versorgt, die es einbindet
+(genau so ist mein erster Prüflauf grün geworden und war wertlos):
+
+    grep -rl 'LERNSTAND_SCHREIBT_SELBST *= *true' --include='*.html' lernwelt/
+
+Die Etappe **„Zeit kommt an"** in `mess-schritte-hausaufgaben-heft.js` fährt
+den echten Weg: arbeiten, Uhr vorspulen, Seite verlassen, nachsehen, ob die
+Runde rausgeht. Zwei Dinge waren dafür nötig und gelten beim nächsten Mal
+wieder:
+
+- **Die Lernzeit geht mit `sendBeacon`, nicht mit `fetch`.** Eine
+  untergeschobene `fetch`-Attrappe sieht sie nie. `navigator.sendBeacon` muss
+  in `__vorLaden()` eigens mitgeschrieben werden.
+- **Eine Runde unter 30 Sekunden gilt als bloßer Blick** und wird nicht
+  gemeldet. Eine Messung dauert Sekunden. Ohne vorspulbare Uhr
+  (`Date.now` mit `window.__zeitSprung`) könnte die Prüfung den Fehler gar
+  nicht erreichen — und wäre wieder keine Prüfung.
+
+Gegengeprobt gegen eine absichtlich kaputte Kopie: Mit dem Flag bricht die
+Messung mit „Heft sagt 'ich melde selbst' – dann muss es auch an
+/api/statistik senden" ab.
+
+### Was im Elternbereich grundsätzlich nicht auftaucht
+
+Das **Quiz-Duell** zählt bewusst nicht mit (`duell/index.html`, Kopfkommentar):
+Es würde die Runde einem einzelnen Kind zuschreiben, obwohl dort mehrere
+gleichzeitig spielen. Wer die Tageszahlen eines Kindes deutet, muss das wissen —
+an einem Abend, an dem viel Duell gespielt wurde, sieht jedes Kind faul aus.
+
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
 
 Seit 16.09.2026: `leon/klasse2-deutsch-lesegeschichte.html`, Kachel ganz oben in
