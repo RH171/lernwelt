@@ -416,6 +416,7 @@
   }
 
   var weiterUhr = null;
+  var schonGelesen = {};   // Seiten, die Leon in dieser Geschichte schon offen hatte
   function seiteMalen(){
     var s = geschichte.seiten[seite];
     szeneMalen(s.szene || {});
@@ -435,17 +436,26 @@
       // Kein Durchtippen: Der Knopf wacht erst auf, wenn man die Seite hätte
       // lesen können - grob eine Viertelsekunde pro Wort. Das merkt nur, wer
       // nicht liest; eine Uhr oder Warnung sieht Leon nicht.
-      var woerter = s.zeilen.join(" ").split(/\s+/).length;
-      $("weiter").disabled = true;
+      //
+      // Leon am 18.09.2026: "Wenn er zurückblättert, kann er nicht wieder
+      // vorblättern, sondern muss erneut lesen." Stimmt - die Wartezeit lief
+      // jedes Mal neu. Eine Seite, die er schon gelesen hat, ist darum sofort
+      // wieder frei: blättern darf er, wie er will.
       clearTimeout(weiterUhr);
-      weiterUhr = setTimeout(function(){ $("weiter").disabled = false; }, Math.min(12000, woerter * 250));
+      if (schonGelesen[seite]){
+        $("weiter").disabled = false;
+      } else {
+        var woerter = s.zeilen.join(" ").split(/\s+/).length;
+        $("weiter").disabled = true;
+        weiterUhr = setTimeout(function(){ $("weiter").disabled = false; schonGelesen[seite] = true; }, Math.min(12000, woerter * 250));
+      }
     }
     $("nachschau").classList.toggle("verborgen", nachschauenFuer < 0);
     window.scrollTo(0, 0);
   }
 
   function losLesen(){
-    seite = 0; nachschauenFuer = -1; fragenNr = 0; gleichRichtig = 0; ersterVersuch = true;
+    seite = 0; nachschauenFuer = -1; schonGelesen = {}; fragenNr = 0; gleichRichtig = 0; ersterVersuch = true;
     document.title = "Lesegeschichte: " + geschichte.titel;
     try { window.lernstand && window.lernstand.uhrZuruecksetzen(); } catch(e){}
     $("lese-titel").textContent = (geschichte.bild || "📖") + " " + geschichte.titel;

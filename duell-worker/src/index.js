@@ -23,10 +23,8 @@ import { FRAGEN } from "../../duell/fragen.js";
 import { rechenFrage } from "../../duell/rechnen.js";
 
 const MAX_SPIELER = 8;
-// Nach der ersten richtigen Antwort bleibt Zeit zum Fertigdenken. Denny am
-// 18.09.2026: zu dritt und zu fuenft waren die Grossen "einfach immer ein Stueck
-// weit schneller" - drei Sekunden waren fuer einen Zweitklaessler zu knapp.
-const NACH_ERSTEM_MS = 6000;
+// Seit 18.09.2026 gibt es keinen Countdown mehr, sobald jemand richtig geantwortet
+// hat: Tempo bringt keine Punkte, also darf auch niemand gehetzt werden.
 const AUFLOESUNG_MS = 7000;
 const AUFRAEUMEN_MS = 2 * 60 * 60 * 1000;
 
@@ -230,16 +228,14 @@ export class DuellRaum {
     const richtig = wahl === f.richtig;
     const ms = jetzt - q.freiAb;
     q.antworten[id] = { wahl, ms, richtig };
-    // Punkte: Richtig sein zaehlt, schnell sein ist ein Bonus - nicht alles.
-    // Vorher: 3 fuer den Ersten, 1 fuer alle anderen. Damit gewann am Laptop, wer
-    // am schnellsten klicken kann (Denny, 18.09.2026).
+    // Punkte: NUR richtig zaehlt, Tempo gar nicht mehr. Denny am 18.09.2026:
+    // "Wer am schnellsten gedrückt hat - das hätte ich gerne weg. Lieber gibt es
+    // am Ende ein Unentschieden ... und das haben alle richtig."
+    // Darum auch kein Countdown mehr, sobald jemand richtig liegt: Wer langsamer
+    // liest, soll in Ruhe zu Ende denken koennen.
     if (richtig) {
       this.s.spieler[id].punkte += 3;
-      if (!q.ersterRichtig) {
-        q.ersterRichtig = id;
-        this.s.spieler[id].punkte += 1;
-        q.schlussUm = Math.min(q.bis, jetzt + NACH_ERSTEM_MS);
-      }
+      if (!q.ersterRichtig) q.ersterRichtig = id;   // nur fuer die Anzeige "als Erster"
     }
     // Wie lange hat wer gebraucht? Am Ende sieht es jeder von sich selbst.
     const sp = this.s.spieler[id];
@@ -251,8 +247,7 @@ export class DuellRaum {
     if (alleDa) return this.aufloesen();
     await this.weckerStellen();
     // Allen zeigen, wer schon getippt hat (nicht, was) - und ob schon jemand richtig lag
-    this.alleSenden({ t: "stand", beantwortet: Object.keys(q.antworten), ersterDa: !!q.ersterRichtig,
-      schlussIn: q.schlussUm ? Math.max(0, q.schlussUm - jetzt) : null });
+    this.alleSenden({ t: "stand", beantwortet: Object.keys(q.antworten), ersterDa: false, schlussIn: null });
   }
 
   async aufloesen() {
