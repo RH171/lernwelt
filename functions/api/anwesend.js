@@ -15,9 +15,8 @@
 // fehlen.
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
-import { anwesendLesen, letzteTage, blockUhrzeit, BLOECKE_PRO_TAG } from "./_anwesend.js";
+import { anwesendLesen, letzteTage, blockUhrzeit, KINDER } from "./_anwesend.js";
 
-const KINDER = ["paul", "leon", "helena"];
 const TAGE_MAX = 45;          // so weit reicht die Haltbarkeit der Baender
 const TAGE_STANDARD = 7;
 
@@ -30,7 +29,11 @@ export async function onRequestGet(context) {
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
   const url = new URL(request.url);
-  const gewuenscht = Number(url.searchParams.get("tage"));
+  // Achtung: Number(null) ist 0 und damit endlich - ein fehlender Parameter
+  // haette hier auf 1 Tag gedeckelt statt auf den Standardwert. Darum wird der
+  // Rohwert geprueft, nicht sein Zahlenwert (Pruefrunde 01).
+  const roh = url.searchParams.get("tage");
+  const gewuenscht = roh === null || roh === "" ? NaN : Number(roh);
   const tage = Number.isFinite(gewuenscht)
     ? Math.min(TAGE_MAX, Math.max(1, Math.trunc(gewuenscht)))
     : TAGE_STANDARD;
@@ -42,8 +45,14 @@ export async function onRequestGet(context) {
   for (const kind of KINDER) {
     const tageRaus = [];
     let zuletzt = null;
+    let unsicher = false;
     for (const tag of liste) {
       const band = await anwesendLesen(env, kind, tag);
+      // Hat der Speicher fuer einen Tag nicht geantwortet, darf "nichts
+      // gefunden" nicht als "war nicht da" durchgehen. Der Elternbereich sagt
+      // das dann auch so - eine falsche Auskunft waere hier schlimmer als gar
+      // keine (Pruefrunde 01).
+      if (band.unsicher) unsicher = true;
       const alle = [...new Set(band.lernwelt.concat(band.duell))].sort((a, b) => a - b);
       if (!alle.length) continue;
       tageRaus.push({
@@ -51,18 +60,25 @@ export async function onRequestGet(context) {
         lernwelt: band.lernwelt,
         duell: band.duell,
         viertelstunden: alle.length,
+        // Erster und letzter Zeitpunkt des Tages. Das ist eine SPANNE, keine
+        // durchgehende Anwesenheit: Wer um 2:30 und um 10:00 da war, steht hier
+        // mit "2:30 bis 10:15". Damit das niemand als siebeneinhalb Stunden
+        // liest, wird die Zahl der Viertelstunden immer mitgenannt und bei
+        // Luecken ausdruecklich markiert (Pruefrunde 01).
         von: blockUhrzeit(alle[0]),
-        // Das Ende ist der SCHLUSS der letzten Viertelstunde, nicht ihr Anfang.
-        // Sonst stuende bei einem Kind, das von 8:00 bis 8:15 da war,
-        // "8:00 bis 8:00" - und das liest sich wie "gar nicht".
-        bis: blockUhrzeit(Math.min(BLOECKE_PRO_TAG - 1, alle[alle.length - 1] + 1)),
+        // Das Ende ist der SCHLUSS der letzten Viertelstunde, nicht ihr Anfang -
+        // sonst stuende bei 8:00 bis 8:15 nur "8:00 bis 8:00". Block 96 ist
+        // dabei erlaubt und heisst 24:00.
+        bis: blockUhrzeit(alle[alle.length - 1] + 1),
+        // Zusammenhaengend heisst: keine Luecke zwischen erstem und letztem Block.
+        amStueck: alle.length === alle[alle.length - 1] - alle[0] + 1,
         nurDuell: band.lernwelt.length === 0,
       });
       // Die Liste kommt von heute rueckwaerts, der erste Treffer ist also der
       // juengste Tag mit Anwesenheit.
       if (!zuletzt) zuletzt = { tag, uhrzeit: blockUhrzeit(alle[alle.length - 1]) };
     }
-    kinder[kind] = { zuletzt, tage: tageRaus };
+    kinder[kind] = { zuletzt, tage: tageRaus, unsicher };
   }
 
   return json(200, { ok: true, heute: liste[0], tage: liste, kinder });

@@ -99,6 +99,23 @@ export async function onRequestPost(context) {
   if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
 
+  /* Meldung aus dem Quiz-Duell: NUR Anwesenheit, kein Puls.
+   *
+   * Der Puls unten haelt das Ausrollen an, solange ein Kind spielt. Das Duell
+   * hat daran aber nicht teil: Es bindet lernstand.js bewusst nicht ein, fragt
+   * also auch niemanden "darf ich kurz?" und wertet updateWartet nicht aus.
+   * Wuerde es hier mitpulsen, blockierte ein Quizabend jedes Ausrollen bis zu
+   * 45 Minuten lang, ohne dass irgendjemand gefragt wird - eine stille
+   * Verschlechterung gegenueber vorher, wo ein Quizabend gar nichts blockiert
+   * hat (Pruefrunde 01, 19.09.2026).
+   *
+   * Das Band wird trotzdem fortgeschrieben - genau darum geht es ja.
+   */
+  if (daten.quelle === "duell") {
+    try { await anwesendVermerken(env, kind, "duell", Date.now()); } catch (e) {}
+    return json(200, { ok: true, vermerkt: true });
+  }
+
   if (daten.weg) {
     // Sauber abgemeldet - dann muss niemand die volle Stille abwarten.
     // Erst nachschauen: Ein delete ist im KV ein SCHREIBvorgang, ein get nicht.
@@ -141,12 +158,8 @@ export async function onRequestPost(context) {
    * Viertelstunde ab 8:45 waere nie vermerkt worden, obwohl das Kind
    * durchgehend da war. Nachschauen kostet nichts; geschrieben wird drinnen nur
    * bei einer wirklich neuen Viertelstunde.
-   *
-   * quelle="duell" kommt aus dem Quiz-Duell, das sonst ueberhaupt keine Spur
-   * hinterlaesst. Alles andere zaehlt als Lernwelt.
    */
-  const quelle = daten.quelle === "duell" ? "duell" : "lernwelt";
-  try { await anwesendVermerken(env, kind, quelle, Date.now()); } catch (e) {}
+  try { await anwesendVermerken(env, kind, "lernwelt", Date.now()); } catch (e) {}
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
