@@ -13,6 +13,7 @@
 // wir wollen wissen, ob jemand spielt, nicht wo die Maus steht.
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
+import { anwesendVermerken } from "./_anwesend.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const SCHLUESSEL = (kind) => "aktiv:" + kind;
@@ -131,6 +132,21 @@ export async function onRequestPost(context) {
     await env.PAUL_KV.put(SCHLUESSEL(kind), String(Date.now()),
                           { expirationTtl: STILLE_BIS_WEG + 120 });
   }
+
+  /* Das Anwesenheitsband fortschreiben - siehe _anwesend.js.
+   *
+   * Das laeuft ABSICHTLICH ausserhalb des PULS_MINDESTABSTAND oben: Sonst ginge
+   * genau an der Viertelstundengrenze ein Block verloren. Puls um 8:44:50,
+   * naechster um 8:45:10 - der zweite faellt unter den Mindestabstand, und die
+   * Viertelstunde ab 8:45 waere nie vermerkt worden, obwohl das Kind
+   * durchgehend da war. Nachschauen kostet nichts; geschrieben wird drinnen nur
+   * bei einer wirklich neuen Viertelstunde.
+   *
+   * quelle="duell" kommt aus dem Quiz-Duell, das sonst ueberhaupt keine Spur
+   * hinterlaesst. Alles andere zaehlt als Lernwelt.
+   */
+  const quelle = daten.quelle === "duell" ? "duell" : "lernwelt";
+  try { await anwesendVermerken(env, kind, quelle, Date.now()); } catch (e) {}
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
