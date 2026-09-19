@@ -534,7 +534,7 @@ Es läuft an **beiden** Enden: beim Bauen in `pruefeSpiel` (Marke
 `rechnet falsch: `, die einzelne Aufgabe fliegt raus wie eine fachfremde, das
 Spiel bleibt) und über den Bestand:
 
-    node lernwelt/pruefe-rechnung.mjs --selbsttest
+    node pruefe-rechnung.mjs --selbsttest
     ./pruefe-bestand.sh                 # ruft es als zweiten Teil mit auf
 
 **Warum es so wenig prüft, und warum das richtig ist.** Ein Fehlalarm wirft
