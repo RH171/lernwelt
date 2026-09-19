@@ -295,8 +295,15 @@
   function kindName(k){ return k ? k.charAt(0).toUpperCase()+k.slice(1) : "Jemand"; }
 
   function reiterMalen(){
-    var namen = Object.keys(DATEN).filter(function(k){ return DATEN[k] && DATEN[k].runden; });
-    if (!namen.length) namen = Object.keys(DATEN);
+    /* Jedes Kind bekommt einen Reiter - auch eines ohne Runden.
+       Bis zum 19.09.2026 stand hier ein Filter auf .runden, und damit war ein
+       Kind ohne Runden ueberhaupt nicht anklickbar, solange ein anderes welche
+       hatte. Genau Helenas Lage an dem Tag: Denny fragte "War Helena nicht ein
+       einziges Mal da?" - und haette im Elternbereich nicht einmal auf sie
+       klicken koennen, um nachzusehen. Ein Kind verschwinden zu lassen, weil
+       es nichts gespielt hat, verbirgt ausgerechnet die Auskunft, die dann
+       gebraucht wird. */
+    var namen = Object.keys(DATEN);
     var kasten = $("reiter"); kasten.innerHTML = "";
     namen.forEach(function(k){
       var b = document.createElement("button");
