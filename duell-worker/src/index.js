@@ -358,7 +358,14 @@ export class DuellRaum {
     if (!this.s) return;
     this.s.zuletzt = Date.now();
     const uebrig = this.ctx.getWebSockets().filter((w) => w !== ws && w.readyState === 1);
-    if (uebrig.length === 0 && (this.s.phase === "lobby" || this.s.phase === "ende")) {
+    /* Ist niemand mehr da, wird aufgeraeumt - in JEDER Phase.
+     *
+     * Vorher galt das nur fuer "lobby" und "ende": Ging der letzte Spieler
+     * mitten in einer Frage, blieb der Raum bis zum Fragen-Wecker liegen. Mit
+     * 20 Sekunden je Frage fiel das nicht auf; seit es 90 Sekunden sind, waeren
+     * es rund 25 statt 6 Minuten Leerlauf (Pruefrunde 05).
+     */
+    if (uebrig.length === 0) {
       await this.sichern();
       await this.ctx.storage.setAlarm(Date.now() + AUFRAEUMEN_MS);
       return;
