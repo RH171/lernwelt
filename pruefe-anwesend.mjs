@@ -10,8 +10,8 @@
 //
 // Rueckgabe 0 = alles sauber, 1 = es hakt.
 
-import { berlinZeit, blockUhrzeit, bloeckeLesen, anwesendVermerken, anwesendLesen,
-         letzteTage, BLOECKE_PRO_TAG } from "./functions/api/_anwesend.js";
+import { berlinZeit, blockUhrzeit, monatLesen, anwesendVermerken, anwesendLesen,
+         monateLesen, monatTag, monateFuer, letzteTage, BLOECKE_PRO_TAG } from "./functions/api/_anwesend.js";
 
 let fehler = 0;
 const pruefe = (name, bedingung, zusatz) => {
@@ -77,16 +77,19 @@ console.log("Uhrzeit einer Viertelstunde");
 
 console.log("Gespeichertes einlesen");
 {
-  pruefe("leer", bloeckeLesen(null).length === 0);
-  pruefe("kaputtes JSON wirft nicht", bloeckeLesen("{nicht json").length === 0);
-  pruefe("fremdes Format wirft nicht", bloeckeLesen('"text"').length === 0);
-  pruefe("altes Objektformat wirft nicht", bloeckeLesen('{"l":[3],"d":[4]}').length === 0);
-  const b = bloeckeLesen('[5,3,3,999,-1,"7"]');
-  pruefe("sortiert und entdoppelt", JSON.stringify(b) === "[3,5,7]", JSON.stringify(b));
-  pruefe("Bloecke ausserhalb fliegen raus", !b.includes(999) && !b.includes(-1));
+  pruefe("leer", Object.keys(monatLesen(null)).length === 0);
+  pruefe("kaputtes JSON wirft nicht", Object.keys(monatLesen("{nicht json")).length === 0);
+  pruefe("fremdes Format wirft nicht", Object.keys(monatLesen('"text"')).length === 0);
+  pruefe("Array statt Objekt wirft nicht", Object.keys(monatLesen('[1,2]')).length === 0);
+  const m = monatLesen('{"19":[5,3,3,999,-1,"7"],"20":[2],"99":[1],"x":[1]}');
+  pruefe("sortiert und entdoppelt", JSON.stringify(m["19"]) === "[3,5,7]", JSON.stringify(m["19"]));
+  pruefe("Bloecke ausserhalb fliegen raus", !m["19"].includes(999) && !m["19"].includes(-1));
+  pruefe("unmoegliche Tage fliegen raus", !m["99"] && !m["x"], JSON.stringify(Object.keys(m)));
+  pruefe("zweiter Tag bleibt", JSON.stringify(m["20"]) === "[2]");
   // Pruefrunde 01: Number(true) ist 1 - das waere erfundene Anwesenheit um 0:15.
-  pruefe("true/false sind keine Bloecke", bloeckeLesen("[true,false]").length === 0,
-         JSON.stringify(bloeckeLesen("[true,false]")));
+  pruefe("true/false sind keine Bloecke",
+         Object.keys(monatLesen('{"19":[true,false]}')).length === 0,
+         JSON.stringify(monatLesen('{"19":[true,false]}')));
 }
 
 console.log("Sparsamkeit - das Wichtigste");
@@ -311,6 +314,53 @@ console.log("Duell: wer ist gemeint?");
     pruefe("leerer Name gibt null", welchesKind("") === null);
     pruefe("null gibt null", welchesKind(null) === null);
   }
+}
+
+console.log("Wie teuer ist das Lesen?");
+{
+  /* Pruefrunde 02, schwerster Fund: Ein Schluessel je Tag UND Quelle kostete 85
+     KV-Abfragen fuer die 14 Tage, die der Elternbereich holt, und 271 fuer 45
+     Tage - nacheinander, also knapp zehn Sekunden Ladezeit. Dieser Test haelt
+     die Kosten fest, damit der naechste Umbau sie nicht unbemerkt wieder
+     hochtreibt. */
+  const KINDER_N = 3;
+  for (const [tage, grenze] of [[7, 20], [14, 20], [45, 30]]) {
+    const k = kvAttrappe();
+    const liste = letzteTage(tage, MS("2026-09-19T10:00:00Z"));
+    const monate = monateFuer(liste);
+    for (const kind of ["paul", "leon", "helena"]) await monateLesen(k.env, kind, monate);
+    pruefe("?tage=" + tage + " kostet hoechstens " + grenze + " Leseabfragen",
+           k.zaehler.get <= grenze, k.zaehler.get + " Abfragen");
+    pruefe("?tage=" + tage + " liest nichts doppelt",
+           k.zaehler.get === KINDER_N * 2 * monate.length,
+           k.zaehler.get + " statt " + (KINDER_N * 2 * monate.length));
+  }
+
+  // Und das Lesen darf natuerlich gar nichts schreiben.
+  const k2 = kvAttrappe();
+  await monateLesen(k2.env, "leon", monateFuer(letzteTage(45, Date.now())));
+  pruefe("Lesen schreibt nichts", k2.zaehler.put === 0, String(k2.zaehler.put));
+}
+
+console.log("Ein Monat, viele Tage");
+{
+  const k = kvAttrappe();
+  // Drei Tage ueber einen Monatswechsel hinweg.
+  for (const iso of ["2026-09-29T08:00:00Z", "2026-09-30T08:00:00Z", "2026-10-01T08:00:00Z"])
+    await anwesendVermerken(k.env, "leon", "lernwelt", MS(iso));
+  pruefe("drei Tage, drei Schreibvorgaenge", k.zaehler.put === 3, String(k.zaehler.put));
+  pruefe("zwei Monatsschluessel", k.inhalt.size === 2,
+         JSON.stringify([...k.inhalt.keys()]));
+
+  const gelesen = await monateLesen(k.env, "leon", ["2026-09", "2026-10"]);
+  for (const tag of ["2026-09-29", "2026-09-30", "2026-10-01"])
+    pruefe(tag + " steht im Band", monatTag(gelesen, tag).lernwelt.length === 1,
+           JSON.stringify(monatTag(gelesen, tag)));
+  // Ein Tag ohne Besuch darf nicht erfunden werden.
+  pruefe("2026-09-28 ist leer", monatTag(gelesen, "2026-09-28").lernwelt.length === 0);
+  // Und die beiden Monate duerfen sich nicht vermischen.
+  pruefe("1. Oktober liegt nicht im September",
+         !(gelesen.monate["2026-09"].lernwelt["1"]), JSON.stringify(gelesen.monate["2026-09"]));
 }
 
 console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
