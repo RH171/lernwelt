@@ -15,7 +15,7 @@
 // fehlen.
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
-import { anwesendLesen, letzteTage, blockUhrzeit, KINDER } from "./_anwesend.js";
+import { monateLesen, monatTag, monateFuer, letzteTage, blockUhrzeit, KINDER } from "./_anwesend.js";
 
 const TAGE_MAX = 45;          // so weit reicht die Haltbarkeit der Baender
 const TAGE_STANDARD = 7;
@@ -42,12 +42,16 @@ export async function onRequestGet(context) {
   const liste = letzteTage(tage, jetzt);
   const kinder = {};
 
+  const monate = monateFuer(liste);
   for (const kind of KINDER) {
     const tageRaus = [];
     let zuletzt = null;
-    let unsicher = false;
+    // Alle Monate dieses Kindes auf einmal - nicht jeden Tag einzeln. 14 Tage
+    // kosteten vorher 85 Abfragen und knapp zehn Sekunden (Pruefrunde 02).
+    const gelesen = await monateLesen(env, kind, monate);
+    let unsicher = gelesen.unsicher;
     for (const tag of liste) {
-      const band = await anwesendLesen(env, kind, tag);
+      const band = monatTag(gelesen, tag);
       // Hat der Speicher fuer einen Tag nicht geantwortet, darf "nichts
       // gefunden" nicht als "war nicht da" durchgehen. Der Elternbereich sagt
       // das dann auch so - eine falsche Auskunft waere hier schlimmer als gar

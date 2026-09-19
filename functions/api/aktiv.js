@@ -92,29 +92,37 @@ export async function onRequestPost(context) {
   const kind = String(daten.kind || "").toLowerCase();
   if (!KINDER.includes(kind)) return json(400, { ok: false, fehler: "Welches Kind denn?" });
 
+  /* Meldung aus dem Quiz-Duell: NUR Anwesenheit, kein Puls - und BEWUSST ohne
+   * Ausweis.
+   *
+   * Denny am 19.09.2026 auf die Frage, wie das geloest werden soll: "Ohne
+   * Anmeldung zaehlen." Der Grund: /duell/ liegt ausserhalb des Riegels und ist
+   * nur von der offenen Startseite verlinkt, nicht aus Pauls oder Leons
+   * Bereich. Wer direkt dorthin geht, hat kein Cookie - mit Ausweispflicht
+   * waere die Meldung fuer beide meistens mit 401 abgewiesen worden, und die
+   * Anforderung "das Duell meldet mit" waere still ausgefallen (Pruefrunde 01).
+   *
+   * Was das kostet: Wer die Adresse kennt, kann einen Anwesenheitseintrag fuer
+   * ein fremdes Kind erzeugen. Betroffen ist nur diese Anzeige - keine
+   * Lerndaten, keine Inhalte, kein Zugang. Fuer Helena galt das ohnehin schon,
+   * weil ihr Bereich keinen Riegel hat.
+   *
+   * Der Puls wird hier NICHT gesetzt: Er haelt das Ausrollen an, und das Duell
+   * wertet die Rueckfrage "darf ich kurz?" gar nicht aus - ein Quizabend haette
+   * sonst bis zu 45 Minuten lang jedes Ausrollen blockiert, ohne dass jemand
+   * gefragt wird (Pruefrunde 01).
+   */
+  if (daten.quelle === "duell") {
+    try { await anwesendVermerken(env, kind, "duell", Date.now()); } catch (e) {}
+    return json(200, { ok: true, vermerkt: true });
+  }
+
   // Liegt der Bereich des Kindes hinter dem Riegel, muss der Ausweis stimmen.
   // Helenas Bereich ist offen - sie kann sich gar nicht anmelden, also nehmen
   // wir dort ohne Ausweis an. Sobald HELENA_CODE gesetzt und ihr Bereich in
   // GESCHUETZT aufgenommen wird, gilt auch fuer sie der Ausweis.
   if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
-
-  /* Meldung aus dem Quiz-Duell: NUR Anwesenheit, kein Puls.
-   *
-   * Der Puls unten haelt das Ausrollen an, solange ein Kind spielt. Das Duell
-   * hat daran aber nicht teil: Es bindet lernstand.js bewusst nicht ein, fragt
-   * also auch niemanden "darf ich kurz?" und wertet updateWartet nicht aus.
-   * Wuerde es hier mitpulsen, blockierte ein Quizabend jedes Ausrollen bis zu
-   * 45 Minuten lang, ohne dass irgendjemand gefragt wird - eine stille
-   * Verschlechterung gegenueber vorher, wo ein Quizabend gar nichts blockiert
-   * hat (Pruefrunde 01, 19.09.2026).
-   *
-   * Das Band wird trotzdem fortgeschrieben - genau darum geht es ja.
-   */
-  if (daten.quelle === "duell") {
-    try { await anwesendVermerken(env, kind, "duell", Date.now()); } catch (e) {}
-    return json(200, { ok: true, vermerkt: true });
-  }
 
   if (daten.weg) {
     // Sauber abgemeldet - dann muss niemand die volle Stille abwarten.

@@ -38,6 +38,19 @@
 // heute meint Dennys Tag, nicht den des Servers. Darum Europe/Berlin.
 //
 // ---------------------------------------------------------------------------
+// Warum ein Schluessel je MONAT und Quelle (Pruefrunde 02, 19.09.2026)
+//
+// Die zweite Fassung legte einen Schluessel je Tag UND Quelle an. Lesen kostete
+// damit 85 KV-Abfragen fuer die 14 Tage, die der Elternbereich holt, und 271
+// fuer 45 Tage - nacheinander, also knapp zehn Sekunden Ladezeit. Ein Monat je
+// Quelle kostet stattdessen hoechstens 18 Abfragen fuer denselben Zeitraum.
+//
+// Der Wettlauf wird davon NICHT schlimmer: Zwei gleichzeitige Schreiber lesen
+// denselben Ausgangsstand und schreiben ihn mit je einem zusaetzlichen Block
+// zurueck - verloren geht der Block des Langsameren, nicht der ganze Monat.
+// Das gilt fuer Tag, Woche und Monat gleichermassen.
+//
+// ---------------------------------------------------------------------------
 // Warum je Quelle ein eigener Schluessel (Pruefrunde 01, 19.09.2026)
 //
 // Anfangs standen Lernwelt- und Duell-Bloecke in EINEM Eintrag. Weil ein
@@ -52,11 +65,18 @@
 
 const TAKT_MINUTEN = 15;
 export const BLOECKE_PRO_TAG = (24 * 60) / TAKT_MINUTEN;   // 96
-export const BAND_HAELT_TAGE = 45;
+export const BAND_HAELT_TAGE = 45;      // so weit zurueck wird angezeigt
+const HALTBAR_SEKUNDEN = 100 * 24 * 3600;  // Monatsblock: Anzeigespanne plus Puffer
 export const KINDER = ["paul", "leon", "helena"];
 const QUELLEN = ["lernwelt", "duell"];
 
-const SCHLUESSEL = (kind, tag, quelle) => "da:" + kind + ":" + tag + ":" + quelle;
+/* Schluessel: da:<kind>:<jjjj-mm>:<quelle>, Inhalt {"<tag>":[bloecke]}.
+   Der Tag steht als Zahl ohne fuehrende Null darin ("19"), der Monat im
+   Schluessel. Haltbarkeit grosszuegig ueber den Monat hinaus, damit ein am
+   Monatsanfang angelegter Eintrag nicht mitten in der Anzeigespanne verfaellt. */
+const SCHLUESSEL = (kind, monat, quelle) => "da:" + kind + ":" + monat + ":" + quelle;
+const MONAT = (tag) => String(tag).slice(0, 7);
+const TAG_IM_MONAT = (tag) => String(Number(String(tag).slice(8, 10)));
 
 // hourCycle h23 erzwingt 00-23. Ohne die Angabe liefern manche Umgebungen bei
 // hour12:false eine 24 fuer Mitternacht - daraus wuerde Block 96 und damit ein
@@ -99,18 +119,38 @@ export function blockUhrzeit(block) {
 // Blockliste einlesen und dabei jeden Unsinn abfangen, der im Speicher stehen
 // koennte (alte Formate, halb geschriebene Werte, true/false - Number(true)
 // waere sonst Block 1 und damit erfundene Anwesenheit um 0:15).
-export function bloeckeLesen(roh) {
-  if (!roh) return [];
-  let d = null;
-  try { d = JSON.parse(roh); } catch (e) { return []; }
-  if (!Array.isArray(d)) return [];
+function bloeckeSaeubern(liste) {
+  if (!Array.isArray(liste)) return [];
   const raus = [];
-  for (const x of d) {
+  for (const x of liste) {
+    // typeof pruefen, nicht nur Number(): Number(true) waere 1 und damit
+    // erfundene Anwesenheit um 0:15 (Pruefrunde 01).
     if (typeof x !== "number" && typeof x !== "string") continue;
     const n = Number(x);
     if (Number.isInteger(n) && n >= 0 && n < BLOECKE_PRO_TAG && !raus.includes(n)) raus.push(n);
   }
   return raus.sort((a, b) => a - b);
+}
+
+// Einen Monatseintrag einlesen: {"19":[34,35], "20":[10]} -> dasselbe, gesaeubert.
+export function monatLesen(roh) {
+  if (!roh) return {};
+  let d = null;
+  try { d = JSON.parse(roh); } catch (e) { return {}; }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return {};
+  const raus = {};
+  for (const [tag, liste] of Object.entries(d)) {
+    if (!/^([1-9]|[12]\d|3[01])$/.test(tag)) continue;
+    const b = bloeckeSaeubern(liste);
+    if (b.length) raus[tag] = b;
+  }
+  return raus;
+}
+
+// Die Bloecke eines einzelnen Tages aus einem Monatseintrag.
+export function bloeckeLesen(roh, tag) {
+  const m = monatLesen(roh);
+  return m[TAG_IM_MONAT(tag)] || [];
 }
 
 function kindOk(kind) { return KINDER.includes(String(kind || "").toLowerCase()); }
@@ -130,19 +170,22 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs) {
   if (!z) return { geschrieben: false, fehler: "unbrauchbare Zeit" };
 
   const feld = QUELLEN.includes(quelle) ? quelle : "lernwelt";
-  const schluessel = SCHLUESSEL(String(kind).toLowerCase(), z.tag, feld);
+  const schluessel = SCHLUESSEL(String(kind).toLowerCase(), MONAT(z.tag), feld);
+  const tagImMonat = TAG_IM_MONAT(z.tag);
 
-  let bloecke;
-  try { bloecke = bloeckeLesen(await env.PAUL_KV.get(schluessel)); }
+  let monat;
+  try { monat = monatLesen(await env.PAUL_KV.get(schluessel)); }
   catch (e) { return { geschrieben: false, fehler: "Speicher antwortet nicht" }; }
 
+  const bloecke = monat[tagImMonat] || [];
   if (bloecke.includes(z.block)) return { geschrieben: false, tag: z.tag, block: z.block };
   bloecke.push(z.block);
   bloecke.sort((a, b) => a - b);
+  monat[tagImMonat] = bloecke;
 
   try {
-    await env.PAUL_KV.put(schluessel, JSON.stringify(bloecke),
-                          { expirationTtl: BAND_HAELT_TAGE * 24 * 3600 });
+    await env.PAUL_KV.put(schluessel, JSON.stringify(monat),
+                          { expirationTtl: HALTBAR_SEKUNDEN });
   } catch (e) {
     // Voller Speicher darf den Puls nicht abwuergen - der hat die wichtigere
     // Aufgabe (kein Ausrollen, waehrend ein Kind spielt).
@@ -161,14 +204,50 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs) {
  * einer echten Auskunft. Ein Ausfall muss sichtbar sein (Pruefrunde 01).
  */
 export async function anwesendLesen(env, kind, tag) {
-  const leer = { lernwelt: [], duell: [], unsicher: false };
-  if (!env || !env.PAUL_KV) return { ...leer, unsicher: true };
-  if (!kindOk(kind)) return leer;
-  const raus = { lernwelt: [], duell: [], unsicher: false };
-  for (const q of QUELLEN) {
-    try { raus[q] = bloeckeLesen(await env.PAUL_KV.get(SCHLUESSEL(String(kind).toLowerCase(), tag, q))); }
-    catch (e) { raus.unsicher = true; }
+  const monate = await monateLesen(env, kind, [MONAT(tag)]);
+  return monatTag(monate, tag);
+}
+
+/* Mehrere Monate auf einmal holen - so liest der Elternbereich.
+ *
+ * 14 Tage kosten damit hoechstens 12 Abfragen (3 Kinder x 2 Quellen x 2
+ * Monate) statt 85 (Pruefrunde 02). Die Quellen eines Monats gehen parallel
+ * raus, nicht nacheinander.
+ */
+export async function monateLesen(env, kind, monate) {
+  const raus = { unsicher: false, monate: {} };
+  if (!env || !env.PAUL_KV) { raus.unsicher = true; return raus; }
+  if (!kindOk(kind)) return raus;
+  const k = String(kind).toLowerCase();
+  const auftraege = [];
+  for (const m of monate) for (const q of QUELLEN) auftraege.push({ m, q });
+  const antworten = await Promise.all(auftraege.map(async ({ m, q }) => {
+    try { return { m, q, daten: monatLesen(await env.PAUL_KV.get(SCHLUESSEL(k, m, q))) }; }
+    catch (e) { return { m, q, fehler: true }; }
+  }));
+  for (const a of antworten) {
+    if (a.fehler) { raus.unsicher = true; continue; }
+    if (!raus.monate[a.m]) raus.monate[a.m] = {};
+    raus.monate[a.m][a.q] = a.daten;
   }
+  return raus;
+}
+
+// Aus dem Ergebnis von monateLesen einen einzelnen Tag herausziehen.
+export function monatTag(gelesen, tag) {
+  const m = (gelesen.monate || {})[MONAT(tag)] || {};
+  const d = TAG_IM_MONAT(tag);
+  return {
+    lernwelt: (m.lernwelt || {})[d] || [],
+    duell: (m.duell || {})[d] || [],
+    unsicher: !!gelesen.unsicher,
+  };
+}
+
+// Welche Monate deckt diese Tagesliste ab?
+export function monateFuer(tage) {
+  const raus = [];
+  for (const t of tage) { const m = MONAT(t); if (!raus.includes(m)) raus.push(m); }
   return raus;
 }
 
