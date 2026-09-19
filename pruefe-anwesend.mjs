@@ -285,3 +285,33 @@ console.log("Der Wettlauf trifft nicht mehr beide Quellen");
 
 console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
 process.exit(fehler ? 1 : 0);
+
+console.log("Duell: wer ist gemeint?");
+{
+  /* welchesKind() steckt in duell/index.html in einer IIFE und ist von aussen
+     nicht aufrufbar. Statt die Logik hier nachzubauen - was nur eine Kopie
+     pruefen wuerde - wird die echte Funktion aus der Datei geholt und
+     ausgefuehrt. Findet sie sich nicht mehr, ist das selbst ein Fehler. */
+  const { readFileSync } = await import("node:fs");
+  const quelle = readFileSync(new URL("./duell/index.html", import.meta.url), "utf8");
+  const m = quelle.match(/var KINDERNAMEN = \[[^\]]*\];[\s\S]*?\n  \}/);
+  pruefe("welchesKind ist in duell/index.html auffindbar", !!m);
+  if (m) {
+    const welchesKind = new Function(m[0] + "; return welchesKind;")();
+    // Was gehen muss:
+    pruefe('"Torwart Leon" -> leon', welchesKind("Torwart Leon") === "leon");
+    pruefe('"Leon" -> leon', welchesKind("Leon") === "leon");
+    pruefe('"paul" -> paul', welchesKind("paul") === "paul");
+    pruefe('"Helena 12" -> helena', welchesKind("Helena 12") === "helena");
+    pruefe('"Leon, der Beste" -> leon', welchesKind("Leon, der Beste") === "leon");
+    /* Und was NICHT gehen darf. Die erste Fassung nahm indexOf und machte aus
+       jedem dieser Gaeste ein Kind in Dennys Anzeige (Pruefrunde 01). Die
+       Regel lautet: lieber eine Luecke als ein falscher Name. */
+    for (const fremd of ["Leonie", "Napoleon", "Chamäleon", "Paula", "Pauline", "Helenas Freundin"]) {
+      const r = welchesKind(fremd);
+      pruefe('"' + fremd + '" ist kein Kind', r === null, "wurde zu " + r);
+    }
+    pruefe("leerer Name gibt null", welchesKind("") === null);
+    pruefe("null gibt null", welchesKind(null) === null);
+  }
+}
