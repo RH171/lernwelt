@@ -392,7 +392,14 @@
      haette also erst auf Helenas Reiter tippen muessen, um ihre Antwort zu
      sehen. Die zwei Sekunden gab es damit nur im Terminal (Pruefrunde 04). */
   function anwesenheitUeberblick(){
-    if (ANWESEND_FEHLER || !ANWESEND) return "";
+    /* Bei einem Ausfall darf der Überblick nicht spurlos verschwinden - das
+       war der schwerste Fund aus Runde 01, hier stand er wieder drin
+       (Prüfrunde 05). */
+    if (ANWESEND_FEHLER)
+      return '<div class="karte heute-karte"><h2>Wer war heute da?</h2>' +
+        '<p class="unter"><b>Das lässt sich gerade nicht sagen.</b> ' + esc(ANWESEND_FEHLER) +
+        '<br>Das heißt <b>nicht</b>, dass niemand da war.</p></div>';
+    if (!ANWESEND) return "";
     var reihen = Object.keys(ANWESEND.kinder || {}).map(function(k){
       var a = ANWESEND.kinder[k] || {};
       var heute = (a.tage || []).filter(function(t){ return t.tag === ANWESEND.heute; })[0];
@@ -401,6 +408,9 @@
         klasse = "war-da";
         text = heute.von + "\u2013" + heute.bis + " \u00B7 " + heute.viertelstunden +
                " Viertelstunde" + (heute.viertelstunden === 1 ? "" : "n") +
+               // Wie in der Karte darunter: eine Spanne mit Lücken darf nicht
+               // wie durchgehende Zeit aussehen (Prüfrunde 05).
+               (heute.amStueck === false ? " \u00B7 mit Pausen" : "") +
                (heute.nurDuell ? " \u00B7 nur Quizduell" : "");
       } else if (a.zuletzt){
         klasse = "war-nicht";

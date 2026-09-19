@@ -99,7 +99,19 @@ const QUELLEN = ["lernwelt", "duell"];
  * 32 Viertelstunden sind acht Stunden am Tag. Kein Kind spielt so lange Quiz;
  * fuer die Anzeige "war jemand da" ist die Frage nach der 33. Viertelstunde
  * ohnehin beantwortet. Der offene Weg kostet damit hoechstens 96 statt 288. */
-const BLOECKE_OFFEN = 32;      // ohne Anmeldung hereingekommen
+/* Ohne Anmeldung hereingekommen: 64 Viertelstunden, also sechzehn Stunden.
+ *
+ * Erst waren es 32 (acht Stunden) - gedacht als "kein Kind spielt so lange".
+ * Das stimmt fuer das Quizduell, trifft aber Helena voll: Ihr Bereich hat als
+ * einziger keinen Riegel, ihre Pulse gelten darum immer als "offen". Ein Tag
+ * von 9 bis 20 Uhr sind 44 Viertelstunden - ab 16:45 waere sie unsichtbar
+ * gewesen, und zwar ausgerechnet das Kind, fuer das dieses Werkzeug gebaut
+ * wurde (Pruefrunde 05).
+ *
+ * 16 Stunden deckt jeden wachen Tag ab. Der Missbrauchsschutz bleibt: statt
+ * 288 moeglicher Schreibvorgaenge ueber die offenen Wege sind es hoechstens
+ * 192 von 1000 - genug Luft, damit fuer die Kinder nichts stehen bleibt. */
+const BLOECKE_OFFEN = 64;
 const BLOECKE_ANGEMELDET = 96; // volle Tagesbreite
 
 /* Schluessel: da:<kind>:<jjjj-mm>:<quelle>, Inhalt {"<tag>":[bloecke]}.
@@ -165,11 +177,19 @@ function bloeckeSaeubern(liste) {
 }
 
 // Einen Monatseintrag einlesen: {"19":[34,35], "20":[10]} -> dasselbe, gesaeubert.
+/* Gibt {} zurueck, wenn nichts dasteht - und wirft KAPUTT, wenn etwas dasteht,
+   das sich nicht lesen laesst. Der Unterschied ist wichtig: "nichts gespeichert"
+   heisst "war nicht da", "unlesbar" heisst "ich weiss es nicht". Die erste
+   Fassung machte aus einem halb geschriebenen Wert still ein leeres Band und
+   meldete unsicher:false - also genau die falsche Auskunft, gegen die dieses
+   Modul gebaut ist (Pruefrunde 05). */
+export const KAPUTT = Symbol("unlesbar");
+
 export function monatLesen(roh) {
-  if (!roh) return {};
+  if (roh == null || roh === "") return {};
   let d = null;
-  try { d = JSON.parse(roh); } catch (e) { return {}; }
-  if (!d || typeof d !== "object" || Array.isArray(d)) return {};
+  try { d = JSON.parse(roh); } catch (e) { return KAPUTT; }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return KAPUTT;
   const raus = {};
   for (const [tag, liste] of Object.entries(d)) {
     if (!/^([1-9]|[12]\d|3[01])$/.test(tag)) continue;
@@ -182,6 +202,7 @@ export function monatLesen(roh) {
 // Die Bloecke eines einzelnen Tages aus einem Monatseintrag.
 export function bloeckeLesen(roh, tag) {
   const m = monatLesen(roh);
+  if (m === KAPUTT) return [];
   return m[TAG_IM_MONAT(tag)] || [];
 }
 
@@ -193,7 +214,11 @@ function kindOk(kind) { return KINDER.includes(String(kind || "").toLowerCase())
  * Aufrufer darf einen Fehler NICHT als "war nicht da" deuten - siehe
  * anwesendLesen().
  */
-export async function anwesendVermerken(env, kind, quelle, jetztMs, offen) {
+/* `offen` sagt, ob hier ein Ausweis geprueft wurde. Wird es vergessen, gilt
+   der STRENGERE Deckel - nicht der laxere. Die erste Fassung war fail-open:
+   ein Aufruf ohne das fuenfte Argument bekam volle 96 Bloecke, also genau die
+   Nachsicht, die der Deckel verhindern soll (Pruefrunde 05). */
+export async function anwesendVermerken(env, kind, quelle, jetztMs, offen = true) {
   if (!env || !env.PAUL_KV) return { geschrieben: false, fehler: "kein Speicher" };
   // Ein unbekannter Kindname wuerde einen Muell-Schluessel anlegen, der 45 Tage
   // im Speicher steht (Pruefrunde 01).
@@ -208,6 +233,8 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs, offen) {
   let monat;
   try { monat = monatLesen(await env.PAUL_KV.get(schluessel)); }
   catch (e) { return { geschrieben: false, fehler: "Speicher antwortet nicht" }; }
+  // Unlesbares NICHT ueberschreiben - darin koennten echte Tage stecken.
+  if (monat === KAPUTT) return { geschrieben: false, fehler: "Eintrag ist unlesbar" };
 
   const bloecke = monat[tagImMonat] || [];
   if (bloecke.includes(z.block)) return { geschrieben: false, tag: z.tag, block: z.block };
@@ -224,7 +251,9 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs, offen) {
      kann derselbe offene Weg 288 der 1000 Tagesschreibvorgaenge verbrennen,
      und ist das Kontingent leer, speichert fuer die Kinder GAR NICHTS mehr -
      keine Runde, keine Meldung, kein Hausaufgabenfoto (14.09.2026).
-     Eine Luecke in einer Anzeige wiegt weniger als ein stehendes System.
+     Eine Luecke in einer Anzeige wiegt weniger als ein stehendes System -
+     deshalb steht der Deckel bei 16 Stunden und nicht bei acht: hoch genug,
+     dass er keinen echten Tag abschneidet.
      Der Aufrufer bekommt den Grund gesagt und kann ihn weiterreichen. */
   if (bloecke.length >= (offen ? BLOECKE_OFFEN : BLOECKE_ANGEMELDET))
     return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Tagesdeckel erreicht" };
@@ -271,8 +300,11 @@ export async function monateLesen(env, kind, monate) {
   const auftraege = [];
   for (const m of monate) for (const q of QUELLEN) auftraege.push({ m, q });
   const antworten = await Promise.all(auftraege.map(async ({ m, q }) => {
-    try { return { m, q, daten: monatLesen(await env.PAUL_KV.get(SCHLUESSEL(k, m, q))) }; }
-    catch (e) { return { m, q, fehler: true }; }
+    try {
+      const daten = monatLesen(await env.PAUL_KV.get(SCHLUESSEL(k, m, q)));
+      if (daten === KAPUTT) return { m, q, fehler: true };
+      return { m, q, daten };
+    } catch (e) { return { m, q, fehler: true }; }
   }));
   for (const a of antworten) {
     if (a.fehler) { raus.unsicher = true; continue; }
@@ -353,7 +385,10 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
   for (const q of welche) {
     const schluessel = SCHLUESSEL(k, MONAT(tag), q);
     let monat;
-    try { monat = monatLesen(await env.PAUL_KV.get(schluessel)); }
+    try {
+      monat = monatLesen(await env.PAUL_KV.get(schluessel));
+      if (monat === KAPUTT) { probleme.push(q + ": Eintrag ist unlesbar"); continue; }
+    }
     // Nicht sofort aussteigen: Die zweite Quelle soll trotzdem geraeumt
     // werden, und der Aufrufer soll erfahren, was gelang und was nicht.
     // Vorher meldete ein Fehler bei der zweiten Quelle schlicht "Fehler",
