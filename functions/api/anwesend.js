@@ -60,6 +60,10 @@ export async function onRequestGet(context) {
       // gefunden" nicht als "war nicht da" durchgehen. Der Elternbereich sagt
       // das dann auch so - eine falsche Auskunft waere hier schlimmer als gar
       // keine (Pruefrunde 01).
+      // Doppelt gehalten, mit Absicht: Faellt eine der beiden Zeilen weg,
+      // traegt die andere. Pruefrunde 04 hat das Entfernen EINER davon als
+      // Testluecke gemeldet - nachgestellt zeigt sich, dass die Zusicherung
+      // dann immer noch steht. Erst ohne beide wird der Selbsttest rot.
       if (band.unsicher) unsicher = true;
       const alle = [...new Set(band.lernwelt.concat(band.duell))].sort((a, b) => a - b);
       if (!alle.length) continue;
