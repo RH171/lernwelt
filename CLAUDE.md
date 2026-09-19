@@ -862,6 +862,48 @@ Es würde die Runde einem einzelnen Kind zuschreiben, obwohl dort mehrere
 gleichzeitig spielen. Wer die Tageszahlen eines Kindes deutet, muss das wissen —
 an einem Abend, an dem viel Duell gespielt wurde, sieht jedes Kind faul aus.
 
+## Im Quiz-Duell entscheidet die Uhr nicht mehr (19.09.2026)
+
+Denny, mit zwei Bildern aus einem Spiel gegen Paul: *„Es sollte doch nicht mehr
+der gewinnen, der am schnellsten ist."*
+
+Punkte für Tempo gab es zu dem Zeitpunkt längst nicht mehr (18.09.2026, drei
+Punkte je richtiger Antwort plus Serien-Bonus). **Das Zeitlimit war der
+Tempo-Wettbewerb durch die Hintertür:** 20 Sekunden zum Antworten, 25 wenn ein
+Zweitklässler mitspielt. Wer die Antwort wusste und 21 Sekunden brauchte, bekam
+nichts — und der Schnellere zog davon. Punktegleichheit auf dem Papier, Rennen
+in der Praxis.
+
+Jetzt sind es **90 Sekunden**, und zwar nur als Notausstieg für den Fall, dass
+jemand aufsteht. Im Normalfall wartet niemand: Sobald **alle** geantwortet
+haben, löst die Frage sofort auf (`alleDa` in `duell-worker/src/index.js`).
+Passt zu Dennys Satz vom 18.09.2026: *„Lieber gibt es am Ende ein Unentschieden
+… und das haben alle richtig."*
+
+**Merksatz:** Ein Zeitlimit ist eine Wertung, auch wenn es keine Punkte vergibt.
+Wer Tempo aus einem Spiel nehmen will, muss beides anfassen.
+
+## Die Sprachausgabe im Duell ist raus (19.09.2026)
+
+Denny: *„Auch die Sprechanlage sollte raus."*
+
+Das Duell hat ab dem 18.09.2026 die Fragen vorgelesen, weil Leon sie noch nicht
+schnell lesen kann. Die Gerätestimmen klangen durchweg schlecht — *„Die klingt
+absolut unmenschlich"*, später *„so unmenschlich und schlecht, dass man eher
+lachen muss"*. Drei Anläufe (andere Stimmenreihenfolge, eigene Stimmenwahl,
+Weckruf fürs iPad mit Testknopf) haben daran nichts geändert. Auf dem Mac waren
+zudem nur die Kompaktstimmen installiert, die guten Fassungen hatte nie jemand
+geladen.
+
+Entfernt ist alles: `speechSynthesis`, Stimmenwahl, Testknopf, Tonzeile,
+Ton-Knopf im Kopf. **Was bleibt, ist die Lesezeit vor jeder Frage** — sie ist
+für einen Zweitklässler bemessen und der eigentliche Grund, warum Leon mithalten
+kann.
+
+**Wer Vorlesen je wieder einbaut, nimmt keine Gerätestimme**, sondern
+vorproduzierte Audiodateien oder einen neuronalen Sprachdienst. Gerätestimmen
+sind hier zweimal durchgefallen.
+
 ## Leons Lesegeschichte: eine je Tag, von Hand geschrieben
 
 Seit 16.09.2026: `leon/klasse2-deutsch-lesegeschichte.html`, Kachel ganz oben in

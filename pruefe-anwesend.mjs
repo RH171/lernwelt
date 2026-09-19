@@ -421,13 +421,16 @@ console.log("Falsche Eintraege wegraeumen");
       async put(x, v) { inhalt.set(x, v); },
       async delete(x) { inhalt.delete(x); },
     } };
-    inhalt.set("da:leon:2026-09-19:lernwelt", JSON.stringify({ "19": [34, 35] }));
+    // Der Schluessel traegt den MONAT, nicht den Tag - der Tag steht im Inhalt.
+    // (Beim ersten Anlauf stand hier "2026-09-19" und der Test war rot, obwohl
+    // der Code stimmte.)
+    inhalt.set("da:leon:2026-09:lernwelt", JSON.stringify({ "19": [34, 35] }));
     const r2 = await anwesendLoeschen(env, "leon", "2026-09-19");
     pruefe("Teilerfolg wird als Erfolg gemeldet", r2.ok === true, JSON.stringify(r2));
     pruefe("und die zwei Viertelstunden sind wirklich weg", r2.entfernt === 2, JSON.stringify(r2));
     pruefe("die kaputte Quelle wird benannt", !!r2.unvollstaendig, JSON.stringify(r2));
     pruefe("der lernwelt-Schluessel ist geraeumt",
-           !inhalt.has("da:leon:2026-09-19:lernwelt"), JSON.stringify([...inhalt.keys()]));
+           !inhalt.has("da:leon:2026-09:lernwelt"), JSON.stringify([...inhalt.keys()]));
     pruefe("die kaputte Quelle wurde wirklich versucht", lesezaehler === 1, String(lesezaehler));
   }
 
