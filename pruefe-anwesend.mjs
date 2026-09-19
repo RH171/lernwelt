@@ -283,9 +283,6 @@ console.log("Der Wettlauf trifft nicht mehr beide Quellen");
          JSON.stringify([...k.inhalt.keys()]));
 }
 
-console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
-process.exit(fehler ? 1 : 0);
-
 console.log("Duell: wer ist gemeint?");
 {
   /* welchesKind() steckt in duell/index.html in einer IIFE und ist von aussen
@@ -315,3 +312,6 @@ console.log("Duell: wer ist gemeint?");
     pruefe("null gibt null", welchesKind(null) === null);
   }
 }
+
+console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
+process.exit(fehler ? 1 : 0);
