@@ -37,6 +37,14 @@
      herauslaufen, darum minmax(0,1fr) statt 1fr: Eine Grid-Spalte ist sonst so
      breit wie ihr breitester Inhalt, und genau daran ist Pauls Spieleliste
      schon einmal aus dem Rand gelaufen. */
+  .heute-karte h2{margin-bottom:10px}
+  .heute-zeile{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:8px 0;
+    border-top:1px solid var(--line);font-size:14.5px}
+  .heute-zeile:first-of-type{border-top:none}
+  .heute-zeile b{font-family:var(--rund);min-width:64px}
+  .heute-zeile.war-da span{color:#15803d;font-weight:600}
+  .heute-zeile.war-nicht span{color:var(--muted)}
+  .heute-zeile .luecke{color:#b45309;font-weight:600;font-size:13px}
   .bandliste{display:flex;flex-direction:column;gap:5px;margin-top:4px}
   .tagzeile{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:8px}
   .tagname{font-size:12.5px;color:var(--muted);white-space:nowrap}
@@ -172,7 +180,7 @@
   function $(id){ return document.getElementById(id); }
   function esc(t){ var d=document.createElement("div"); d.textContent=(t==null?"":String(t)); return d.innerHTML; }
 
-  var DATEN = null, KIND = null;
+  var DATEN = null, KIND = null, GEHOLT_UM = null;
   var FARBEN = {paul:"var(--paul)", leon:"var(--leon)", helena:"var(--helena)"};
 
   function stufe(q){ return q >= 85 ? "gut" : q >= 65 ? "mittel" : "schlecht"; }
@@ -189,6 +197,7 @@
         if (a.status === 401){ zeige("anmelden"); $("code").focus(); return; }
         if (!a.j || !a.j.ok){ zeige("anmelden"); $("codefehler").textContent = (a.j&&a.j.fehler)||"Das ging nicht."; return; }
         DATEN = a.j.kinder || {};
+        GEHOLT_UM = new Date();
         zeige("daten");
         meldungenLaden();
         anwesenheitLaden();
@@ -332,6 +341,15 @@
      gespielt" und sonst nichts. Wer dann fragt "war sie da?", bekommt wieder
      keine Antwort und merkt nicht einmal, dass er keine bekommen hat
      (Prüfrunde 01). */
+  /* Kommt die Seite nach laengerer Zeit wieder in den Blick, sind die Zahlen
+     womoeglich Stunden alt. Dann neu holen - aber nur, wenn wirklich Zeit
+     vergangen ist, damit kein Tabwechsel eine Abfragewelle ausloest. */
+  document.addEventListener("visibilitychange", function(){
+    if (document.hidden || !GEHOLT_UM) return;
+    if (Date.now() - GEHOLT_UM.getTime() < 300000) return;   // unter 5 Minuten: lassen
+    laden();
+  });
+
   function anwesenheitLaden(){
     ANWESEND_FEHLER = null;
     fetch("/api/anwesend?tage=14", {credentials:"same-origin"})
@@ -365,6 +383,38 @@
       s += '<i class="stueck' + art + '"></i>';
     }
     return '<div class="band" aria-hidden="true">' + s + '</div>';
+  }
+
+  /* Alle drei Kinder auf einen Blick, ueber den Reitern.
+     Dennys freigegebener Wortlaut: "Im Elternbereich eine Zeile 'zuletzt
+     gesehen' JE KIND … damit beantwortet sich 'war Helena heute da?' in zwei
+     Sekunden." Die Karte weiter unten zeigt immer nur das gewaehlte Kind - man
+     haette also erst auf Helenas Reiter tippen muessen, um ihre Antwort zu
+     sehen. Die zwei Sekunden gab es damit nur im Terminal (Pruefrunde 04). */
+  function anwesenheitUeberblick(){
+    if (ANWESEND_FEHLER || !ANWESEND) return "";
+    var reihen = Object.keys(ANWESEND.kinder || {}).map(function(k){
+      var a = ANWESEND.kinder[k] || {};
+      var heute = (a.tage || []).filter(function(t){ return t.tag === ANWESEND.heute; })[0];
+      var text, klasse;
+      if (heute){
+        klasse = "war-da";
+        text = heute.von + "\u2013" + heute.bis + " \u00B7 " + heute.viertelstunden +
+               " Viertelstunde" + (heute.viertelstunden === 1 ? "" : "n") +
+               (heute.nurDuell ? " \u00B7 nur Quizduell" : "");
+      } else if (a.zuletzt){
+        klasse = "war-nicht";
+        text = "heute noch nicht \u00B7 zuletzt " + tagName(a.zuletzt.tag) + ", " + a.zuletzt.uhrzeit + " Uhr";
+      } else {
+        klasse = "war-nicht";
+        text = "keine Spur in den letzten 14 Tagen";
+      }
+      return '<div class="heute-zeile ' + klasse + '"><b>' + esc(k.charAt(0).toUpperCase() + k.slice(1)) +
+             '</b><span>' + esc(text) + '</span>' +
+             (a.unsicher ? '<span class="luecke">Speicher hat nicht geantwortet</span>' : '') + '</div>';
+    }).join("");
+    return '<div class="karte heute-karte"><h2>Wer war heute da?</h2>' + reihen +
+           '<p class="unter" style="margin:10px 0 0">Das ist <b>keine Lernzeit</b> \u2013 nur, ob jemand da war.</p></div>';
   }
 
   function anwesenheitKarte(){
@@ -416,18 +466,23 @@
   function malen(){
     var d = DATEN[KIND] || {};
     var h = "";
-    $("stand").textContent = "Stand: " + new Date().toLocaleString("de-DE", {dateStyle:"medium", timeStyle:"short"});
+    /* Der Zeitpunkt des ABRUFS, nicht die aktuelle Uhr. Geholt wird genau
+       einmal beim Laden; die Zeile wurde aber bei jedem Reiterklick auf "jetzt"
+       gesetzt. Wer um 21 Uhr auf Helenas Reiter tippt, las dann "heute noch
+       nicht da, Stand 21:00" - obwohl die Daten von 19 Uhr waren und sie um
+       19:30 noch da war (Pruefrunde 04). */
+    $("stand").textContent = "Stand: " + (GEHOLT_UM || new Date()).toLocaleString("de-DE", {dateStyle:"medium", timeStyle:"short"});
 
     if (!d.runden){
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = anwesenheitKarte() +
+      $("inhalt").innerHTML = anwesenheitUeberblick() + anwesenheitKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += anwesenheitKarte();
+    h += anwesenheitUeberblick() + anwesenheitKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
