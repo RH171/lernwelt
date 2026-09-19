@@ -184,7 +184,9 @@ export class DuellRaum {
 
     const fragen = liste.slice(0, n).map(({ f, key, wiederholung }) => {
       const antworten = mische(f[4].slice());
-      return { key, wiederholung: !!wiederholung, kat: f[1], bild: f[2], text: f[3], sprechen: f[6] ? f[6] + "?" : f[3], antworten, richtig: antworten.indexOf(f[4][0]), info: f[5],
+      // "sprechen" ist weggefallen: Die Sprachausgabe im Duell ist seit dem
+      // 19.09.2026 entfernt (Denny: "Auch die Sprechanlage sollte raus").
+      return { key, wiederholung: !!wiederholung, kat: f[1], bild: f[2], text: f[3], antworten, richtig: antworten.indexOf(f[4][0]), info: f[5],
                // Fragen aus dem Klexikon (CC BY-SA 4.0) nennen ihren Artikel.
                quelle: f[7] ? "Klexikon: " + f[7] : "" };
     });
@@ -229,7 +231,7 @@ export class DuellRaum {
      * Unentschieden - und das haben alle richtig." */
     const dauer = 90000;
     r.frage = { freiAb: jetzt + lesen, antwortenAb: jetzt + Math.round(lesen * 0.55),
-                bis: jetzt + lesen + dauer, antworten: {}, ersterRichtig: null, schlussUm: null };
+                bis: jetzt + lesen + dauer, antworten: {}, ersterRichtig: null };
     this.s.phase = "frage";
     await this.sichern();
     await this.weckerStellen();
@@ -238,7 +240,7 @@ export class DuellRaum {
 
   frageBild() {
     const r = this.s.runde, f = r.fragen[r.n], q = r.frage;
-    return { t: "frage", n: r.n + 1, von: r.fragen.length, kat: f.kat, bild: f.bild, text: f.text, sprechen: f.sprechen, wiederholung: !!f.wiederholung,
+    return { t: "frage", n: r.n + 1, von: r.fragen.length, kat: f.kat, bild: f.bild, text: f.text, wiederholung: !!f.wiederholung,
       antworten: f.antworten, freiIn: Math.max(0, q.freiAb - Date.now()), zeit: Math.max(0, q.bis - Date.now()),
       antwortenIn: Math.max(0, (q.antwortenAb || q.freiAb) - Date.now()),
       beantwortet: Object.keys(q.antworten), ersterDa: !!q.ersterRichtig };
@@ -323,7 +325,7 @@ export class DuellRaum {
   // ---------- Wecker ----------
   async weckerStellen() {
     let wann = null;
-    if (this.s.phase === "frage") { const q = this.s.runde.frage; wann = q.schlussUm ? Math.min(q.schlussUm, q.bis) : q.bis; }
+    if (this.s.phase === "frage") wann = this.s.runde.frage.bis;
     if (this.s.phase === "aufloesung") wann = this.s.runde.aufloesungBis;
     if (wann) await this.ctx.storage.setAlarm(wann);
   }
@@ -334,8 +336,7 @@ export class DuellRaum {
     const jetzt = Date.now();
     if (this.s.phase === "frage") {
       const q = this.s.runde.frage;
-      const schluss = q.schlussUm ? Math.min(q.schlussUm, q.bis) : q.bis;
-      if (jetzt + 50 >= schluss) return this.aufloesen();
+      if (jetzt + 50 >= q.bis) return this.aufloesen();
       return this.weckerStellen();
     }
     if (this.s.phase === "aufloesung") {
