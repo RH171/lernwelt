@@ -273,3 +273,43 @@ export function letzteTage(anzahl, jetztMs) {
   }
   return raus;
 }
+
+/* Einen Tag aus dem Band entfernen.
+ *
+ * Gebraucht wird das, seit die Duell-Meldung ohne Ausweis angenommen wird
+ * (Dennys Entscheidung vom 19.09.2026): Wer die Adresse kennt, kann einen
+ * Eintrag fuer ein fremdes Kind erzeugen, und ein Gast, der sich "Leon" nennt,
+ * erzeugt ihn sogar versehentlich. Ohne einen Weg, so etwas wieder wegzuraeumen,
+ * waere die Anzeige auf Dauer nicht mehr zu glauben - und dann waere das ganze
+ * Werkzeug wertlos. Auch meine eigenen Testeintraege sind so entstanden.
+ *
+ * Geloescht wird immer ein ganzer Tag einer Quelle, nicht einzelne
+ * Viertelstunden: feiner waere schwerer zu erklaeren als es hilft.
+ */
+export async function anwesendLoeschen(env, kind, tag, quelle) {
+  if (!env || !env.PAUL_KV) return { ok: false, fehler: "kein Speicher" };
+  if (!kindOk(kind)) return { ok: false, fehler: "unbekanntes Kind" };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(tag || ""))) return { ok: false, fehler: "unbrauchbarer Tag" };
+  const k = String(kind).toLowerCase();
+  const welche = QUELLEN.includes(quelle) ? [quelle] : QUELLEN;
+  let entfernt = 0;
+  for (const q of welche) {
+    const schluessel = SCHLUESSEL(k, MONAT(tag), q);
+    let monat;
+    try { monat = monatLesen(await env.PAUL_KV.get(schluessel)); }
+    catch (e) { return { ok: false, fehler: "Speicher antwortet nicht" }; }
+    const d = TAG_IM_MONAT(tag);
+    if (!monat[d]) continue;                       // nichts da, nichts schreiben
+    entfernt += monat[d].length;
+    delete monat[d];
+    try {
+      // Ist der Monat danach leer, den Schluessel ganz wegnehmen.
+      if (Object.keys(monat).length) {
+        await env.PAUL_KV.put(schluessel, JSON.stringify(monat), { expirationTtl: HALTBAR_SEKUNDEN });
+      } else {
+        await env.PAUL_KV.delete(schluessel);
+      }
+    } catch (e) { return { ok: false, fehler: "Speicher nimmt nichts an" }; }
+  }
+  return { ok: true, entfernt };
+}

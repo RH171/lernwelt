@@ -15,7 +15,8 @@
 // fehlen.
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
-import { monateLesen, monatTag, monateFuer, letzteTage, blockUhrzeit, KINDER } from "./_anwesend.js";
+import { monateLesen, monatTag, monateFuer, letzteTage, blockUhrzeit, KINDER,
+         anwesendLoeschen } from "./_anwesend.js";
 
 const TAGE_MAX = 45;          // so weit reicht die Haltbarkeit der Baender
 const TAGE_STANDARD = 7;
@@ -93,4 +94,29 @@ function json(status, daten) {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
+}
+
+/* DELETE /api/anwesend?kind=leon&tag=2026-09-19[&quelle=duell]
+ *
+ * Raeumt einen falschen Eintrag weg - nur mit Elternausweis. Notwendig, seit
+ * die Duell-Meldung ohne Anmeldung angenommen wird: Sonst koennte ein
+ * versehentlicher oder fremder Eintrag nie wieder verschwinden, und die
+ * Anzeige waere auf Dauer nicht mehr zu glauben.
+ */
+export async function onRequestDelete(context) {
+  const { request, env } = context;
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+
+  const geheim = geheimFuer(env, "eltern");
+  if (!geheim || !(await ausweisGueltig(request, geheim, env)))
+    return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  const url = new URL(request.url);
+  const kind = String(url.searchParams.get("kind") || "").toLowerCase();
+  const tag = String(url.searchParams.get("tag") || "");
+  const quelle = url.searchParams.get("quelle") || "";
+  if (!KINDER.includes(kind)) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+
+  const r = await anwesendLoeschen(env, kind, tag, quelle);
+  return json(r.ok ? 200 : 400, r);
 }
