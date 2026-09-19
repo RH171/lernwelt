@@ -217,6 +217,15 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs, offen) {
      Helenas Bereich hat keinen Riegel, ein Puls {"kind":"helena"} kommt ohne
      Cookie durch, landete im Lernwelt-Band mit Deckel 96 und setzte obendrein
      den Puls (Pruefrunde 04). */
+  /* Was der Deckel kostet, und warum es trotzdem so bleibt (Pruefrunde 04):
+     Sind die 32 Plaetze voll, wird auch ECHTE Anwesenheit nicht mehr
+     vermerkt - wer den Tag mit 32 fremden Bloecken zustellt, macht den Abend
+     unsichtbar. Der Preis fuer die andere Richtung waere hoeher: Ohne Deckel
+     kann derselbe offene Weg 288 der 1000 Tagesschreibvorgaenge verbrennen,
+     und ist das Kontingent leer, speichert fuer die Kinder GAR NICHTS mehr -
+     keine Runde, keine Meldung, kein Hausaufgabenfoto (14.09.2026).
+     Eine Luecke in einer Anzeige wiegt weniger als ein stehendes System.
+     Der Aufrufer bekommt den Grund gesagt und kann ihn weiterreichen. */
   if (bloecke.length >= (offen ? BLOECKE_OFFEN : BLOECKE_ANGEMELDET))
     return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Tagesdeckel erreicht" };
   bloecke.push(z.block);

@@ -1097,7 +1097,19 @@
   var PULS_TAKT = 180000;                 // 3 Minuten
   var pulsUhr = null, binGemeldet = false;
 
-  function pulsSchicken(weg) {
+  /* Ein verlorener Puls ist eine Luecke im Anwesenheitsband (seit 19.09.2026).
+     Vorher wurde jeder Fehlschlag still verschluckt: Ein kurzer Aussetzer im
+     WLAN - und die Viertelstunde fehlte, ohne dass es jemand merkte. Fuer das
+     Band ist das schlimmer als fuer den Puls selbst, denn dort sieht eine
+     Luecke aus wie "war nicht da" (Pruefrunde 04).
+
+     Darum ein EINZELNER Wiederholungsversuch nach 20 Sekunden. Keine
+     Warteschlange: Der naechste regulaere Puls kommt ohnehin in drei Minuten,
+     und jeder weitere Versuch kostet einen Schreibvorgang von 1000 am Tag.
+     Bei laengerem Ausfall bleibt die Luecke - das ist bewusst so. */
+  var pulsNachholen = null;
+
+  function pulsSchicken(weg, istWiederholung) {
     var text = JSON.stringify({ kind: KIND, weg: !!weg });
     try {
       if (weg && navigator.sendBeacon) {
@@ -1106,9 +1118,19 @@
         fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
           headers: { "content-type": "application/json" }, body: text,
           keepalive: !!weg })
-          .then(function (r) { return r.json(); })
+          .then(function (r) {
+            if (!r.ok) throw new Error("Puls abgewiesen: " + r.status);
+            return r.json();
+          })
           .then(function (j) { if (j && j.updateWartet) updateFragen(j.updateWas); })
-          .catch(function () {});
+          .catch(function () {
+            // Genau einmal nachfassen, und nur beim laufenden Puls.
+            if (weg || istWiederholung || pulsNachholen) return;
+            pulsNachholen = setTimeout(function () {
+              pulsNachholen = null;
+              if (!document.hidden) pulsSchicken(false, true);
+            }, 20000);
+          });
       }
     } catch (e) {}
   }
