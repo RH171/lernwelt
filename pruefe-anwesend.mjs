@@ -184,5 +184,104 @@ console.log("Die letzten Tage");
          JSON.stringify(u));
 }
 
+/* ---------------------------------------------------------------------------
+   Was Pruefrunde 01 (19.09.2026) gefunden hat. Jeder dieser Tests ist ohne die
+   zugehoerige Reparatur rot - sonst waere er keine Pruefung. */
+
+console.log("Zeitumstellung: kein Tag darf verschwinden");
+{
+  // Der 29.03.2026 hat nur 23 Stunden. Mit festen 24-Stunden-Schritten fiel er
+  // zwischen 00:00 und 01:00 deutscher Zeit ganz aus der Liste - bei weiterhin
+  // sieben Eintraegen, es sah also nichts kaputt aus.
+  const v = letzteTage(3, MS("2026-03-29T22:30:00Z"));   // 30.03. 00:30 Berlin
+  pruefe("29.03. fehlt nicht",
+         JSON.stringify(v) === '["2026-03-30","2026-03-29","2026-03-28"]', JSON.stringify(v));
+
+  // Achtung beim Umrechnen: Am 25.10. wird zurueckgestellt, ab 03:00 gilt
+  // wieder UTC+1. 22:00 UTC ist also erst 23:00 Berlin - noch derselbe Tag.
+  // Fuer Mitternacht Berlin braucht es 23:00 UTC. (Diese Erwartung hatte ich
+  // beim ersten Lauf falsch; der Code hatte recht.)
+  const r = letzteTage(3, MS("2026-10-25T23:00:00Z"));   // 26.10. 00:00 Berlin
+  pruefe("nach der Rueckstellung drei Tage",
+         JSON.stringify(r) === '["2026-10-26","2026-10-25","2026-10-24"]', JSON.stringify(r));
+
+  // Ein ganzes Jahr stuendlich durchfahren: nie eine Luecke, nie eine Doppelte,
+  // immer die verlangte Anzahl.
+  let schief = 0;
+  for (let h = 0; h < 366 * 24; h++) {
+    const l = letzteTage(7, MS("2026-01-01T00:00:00Z") + h * 3600000);
+    if (l.length !== 7 || new Set(l).size !== 7) { schief++; continue; }
+    for (let i = 1; i < l.length; i++) {
+      const a = new Date(l[i - 1] + "T00:00:00Z"), b = new Date(l[i] + "T00:00:00Z");
+      if ((a - b) !== 86400000) { schief++; break; }
+    }
+  }
+  pruefe("ein Jahr stuendlich: immer sieben lueckenlose Tage", schief === 0, schief + " Ausreisser");
+}
+
+console.log("Kein Muell im Speicher");
+{
+  const k = kvAttrappe();
+  const t = MS("2026-09-19T06:37:00Z");
+  // Ein unbekannter Kindname legte vorher einen Schluessel an, der 45 Tage steht.
+  for (const falsch of ["", null, undefined, "eltern", "a:b", "LEON "]) {
+    await anwesendVermerken(k.env, falsch, "lernwelt", t);
+  }
+  pruefe("unbekannte Kinder schreiben nichts", k.zaehler.put === 0,
+         k.zaehler.put + " Schreibvorgaenge, Schluessel: " + JSON.stringify([...k.inhalt.keys()]));
+
+  // Grossschreibung soll aber gehen - dasselbe Kind, nicht ein zweites Band.
+  await anwesendVermerken(k.env, "LEON", "lernwelt", t);
+  const b = await anwesendLesen(k.env, "leon", "2026-09-19");
+  pruefe("LEON und leon sind dasselbe Kind", b.lernwelt.includes(34), JSON.stringify(b));
+
+  // Ein ISO-String wurde vorher still als "jetzt" gedeutet - der Eintrag landete
+  // dann im falschen Tag, ohne dass jemand etwas merkt.
+  const k2 = kvAttrappe();
+  const a = await anwesendVermerken(k2.env, "leon", "lernwelt", "2026-09-19T06:37:00Z");
+  pruefe("ISO-String wird abgewiesen, nicht als jetzt gedeutet",
+         !a.geschrieben && k2.zaehler.put === 0, JSON.stringify(a));
+}
+
+console.log("Ein Speicherfehler ist keine Abwesenheit");
+{
+  // Der schwerste Fund: Vorher gab ein kaputter Speicher ein leeres Band
+  // zurueck, und der Elternbereich druckte "war nicht da" als Tatsache.
+  const env = { PAUL_KV: { async get() { throw new Error("weg"); }, async put() {} } };
+  const b = await anwesendLesen(env, "leon", "2026-09-19");
+  pruefe("Lesefehler wird als unsicher gemeldet", b.unsicher === true, JSON.stringify(b));
+
+  const k = kvAttrappe();
+  const gut = await anwesendLesen(k.env, "leon", "2026-09-19");
+  pruefe("ohne Fehler ist nichts unsicher", gut.unsicher === false, JSON.stringify(gut));
+
+  pruefe("ohne Speicher ist es unsicher",
+         (await anwesendLesen({}, "leon", "2026-09-19")).unsicher === true);
+
+  // Auch beim Schreiben muss der Grund durchkommen.
+  const envVoll = { PAUL_KV: {
+    async get() { return null; },
+    async put() { throw new Error("KV put() limit exceeded for the day."); } } };
+  const s = await anwesendVermerken(envVoll, "leon", "lernwelt", Date.now());
+  pruefe("voller Speicher meldet den Grund", !!s.fehler, JSON.stringify(s));
+}
+
+console.log("Der Wettlauf trifft nicht mehr beide Quellen");
+{
+  // Vorher stand der ganze Tag in EINEM Eintrag: Lernwelt- und Duell-Puls
+  // ueberschrieben sich gegenseitig, im Test verschwanden 45 Minuten.
+  const k = kvAttrappe();
+  const t = MS("2026-09-19T06:37:00Z");
+  for (let i = 0; i < 4; i++) await anwesendVermerken(k.env, "leon", "lernwelt", t + i * 900000);
+  await anwesendVermerken(k.env, "leon", "duell", t);
+  const b = await anwesendLesen(k.env, "leon", "2026-09-19");
+  pruefe("Duell-Puls loescht die Lernwelt-Bloecke nicht",
+         b.lernwelt.length === 4 && b.duell.length === 1, JSON.stringify(b));
+  pruefe("getrennte Schluessel je Quelle",
+         [...k.inhalt.keys()].some((x) => x.endsWith(":lernwelt")) &&
+         [...k.inhalt.keys()].some((x) => x.endsWith(":duell")),
+         JSON.stringify([...k.inhalt.keys()]));
+}
+
 console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
 process.exit(fehler ? 1 : 0);
