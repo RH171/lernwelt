@@ -452,4 +452,14 @@ export const KLEXIKON = [
   [4, "technik", "♻️", "Woraus stellt man Kunststoff heute meist her?", ["Erdöl", "Holz", "Sand", "Salz"], "Kunststoff zersetzt sich in der Natur fast gar nicht.", null, "Kunststoff"],
   [5, "wissen", "📐", "Wie berechnet man die Fläche eines Rechtecks?", ["Länge mal Breite", "Umfang mal Breite", "Höhe mal Tiefe", "Umfang geteilt Zwei"], "Ein Quadratmeter ist die Fläche eines Quadrats mit einem Meter Seitenlänge.", null, "Fläche"],
   [3, "welt", "💰", "Welches Geld nutzen viele Länder in Europa?", ["Euro", "Yen", "Rubel", "Peso"], "Vorher hatte jedes Land in Europa sein eigenes Geld.", null, "Währung"],
+
+  // Nachschub vom 19.09.2026
+  [1, "koerper", "👁️", "Wo sitzt die Netzhaut?", ["Im Auge", "Im Ohr", "Im Mund", "In der Nase"], "Die Netzhaut schickt Bilder über einen Nerv direkt ans Gehirn weiter.", null, "Netzhaut"],
+  [4, "koerper", "👁️", "Wie heißt die Stelle auf der Netzhaut ohne Sinneszellen?", ["Blinder Fleck", "Gelber Punkt", "Grauer Star", "Grüner Star"], "Genau dort verlässt der Sehnerv das Auge, deshalb fehlen dort Sinneszellen.", null, "Netzhaut"],
+  [1, "sport", "⛷️", "Worauf gleitet man im Schnee die Berge hinunter?", ["Auf Skiern", "Auf Schlittschuhen", "Auf Rollschuhen", "Auf einem Board"], "Schon vor sehr langer Zeit nutzten Menschen Skier, um schnell durch tiefen Schnee zu kommen.", null, "Skifahren"],
+  [4, "sport", "🎿", "Wie heißt die Strecke beim alpinen Skifahren?", ["Piste", "Loipe", "Trasse", "Bahn"], "Beim Slalom dürfen Skifahrer die Stangen sogar umstoßen, solange sie richtig vorbeifahren.", null, "Skifahren"],
+  [2, "pflanzen", "🧄", "Zu welcher Pflanze gehört der Knoblauch?", ["Zum Lauch", "Zur Zwiebel", "Zum Kohl", "Zum Salat"], "Aus einer einzigen Knoblauchzehe kann eine ganz neue Pflanze wachsen.", null, "Knoblauch"],
+  [1, "natur", "🏜️", "Wodurch entsteht eine Düne?", ["Durch Wind", "Durch Regen", "Durch Frost", "Durch Wellen"], "Manche Dünen wandern langsam weiter, weil der Wind den Sand immer wieder verschiebt.", null, "Düne"],
+  [3, "technik", "🚲", "Wie heißt der kleine Generator am Fahrrad?", ["Dynamo", "Motor", "Turbine", "Akku"], "Ein Fahrrad-Dynamo wird von den Beinen des Fahrers angetrieben und macht daraus Licht.", null, "Generator"],
+  [2, "welt", "🏙️", "Wovon zeigt eine Skyline die Ansicht?", ["Von einer Stadt", "Von einem Wald", "Von einem See", "Von einem Fluss"], "Die Skyline zeigt vor allem hohe Häuser und Türme, die man von weitem sieht.", null, "Skyline"],
 ];
