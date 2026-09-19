@@ -10,7 +10,7 @@
 //
 // Rueckgabe 0 = alles sauber, 1 = es hakt.
 
-import { berlinZeit, blockUhrzeit, bandLesen, anwesendVermerken, anwesendLesen,
+import { berlinZeit, blockUhrzeit, bloeckeLesen, anwesendVermerken, anwesendLesen,
          letzteTage, BLOECKE_PRO_TAG } from "./functions/api/_anwesend.js";
 
 let fehler = 0;
@@ -68,18 +68,25 @@ console.log("Uhrzeit einer Viertelstunde");
   pruefe("Block 0 = 0:00", blockUhrzeit(0) === "0:00", blockUhrzeit(0));
   pruefe("Block 34 = 8:30", blockUhrzeit(34) === "8:30", blockUhrzeit(34));
   pruefe("Block 95 = 23:45", blockUhrzeit(95) === "23:45", blockUhrzeit(95));
-  pruefe("zu grosser Block wird gedeckelt", blockUhrzeit(999) === "23:45", blockUhrzeit(999));
+  /* Pruefrunde 01: Block 96 gibt es als ENDE des Tages. Wer von 23:45 bis
+     Mitternacht da war, war "23:45 bis 24:00" da - vorher stand dort
+     "23:45 bis 23:45", was sich wie "gar nicht" liest. */
+  pruefe("Block 96 = 24:00 (Tagesende)", blockUhrzeit(96) === "24:00", blockUhrzeit(96));
+  pruefe("zu grosser Block wird auf 24:00 gedeckelt", blockUhrzeit(999) === "24:00", blockUhrzeit(999));
 }
 
 console.log("Gespeichertes einlesen");
 {
-  pruefe("leer", bandLesen(null).lernwelt.length === 0);
-  pruefe("kaputtes JSON wirft nicht", bandLesen("{nicht json").lernwelt.length === 0);
-  pruefe("fremdes Format wirft nicht", bandLesen('"text"').duell.length === 0);
-  const b = bandLesen('{"l":[5,3,3,999,-1,"7"],"d":[2]}');
-  pruefe("sortiert und entdoppelt", JSON.stringify(b.lernwelt) === "[3,5,7]", JSON.stringify(b.lernwelt));
-  pruefe("Bloecke ausserhalb fliegen raus", !b.lernwelt.includes(999) && !b.lernwelt.includes(-1));
-  pruefe("Duell getrennt", JSON.stringify(b.duell) === "[2]", JSON.stringify(b.duell));
+  pruefe("leer", bloeckeLesen(null).length === 0);
+  pruefe("kaputtes JSON wirft nicht", bloeckeLesen("{nicht json").length === 0);
+  pruefe("fremdes Format wirft nicht", bloeckeLesen('"text"').length === 0);
+  pruefe("altes Objektformat wirft nicht", bloeckeLesen('{"l":[3],"d":[4]}').length === 0);
+  const b = bloeckeLesen('[5,3,3,999,-1,"7"]');
+  pruefe("sortiert und entdoppelt", JSON.stringify(b) === "[3,5,7]", JSON.stringify(b));
+  pruefe("Bloecke ausserhalb fliegen raus", !b.includes(999) && !b.includes(-1));
+  // Pruefrunde 01: Number(true) ist 1 - das waere erfundene Anwesenheit um 0:15.
+  pruefe("true/false sind keine Bloecke", bloeckeLesen("[true,false]").length === 0,
+         JSON.stringify(bloeckeLesen("[true,false]")));
 }
 
 console.log("Sparsamkeit - das Wichtigste");

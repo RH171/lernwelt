@@ -324,13 +324,27 @@
 
      Diese Karte beantwortet deshalb nur die eine Frage - war jemand da - und
      sagt ausdrücklich NICHT, dass gelernt wurde. Dagesessen ist nicht gelernt. */
-  var ANWESEND = null;
+  var ANWESEND = null, ANWESEND_FEHLER = null;
 
+  /* Ein Ausfall darf NICHT verschluckt werden.
+     Die erste Fassung fing jeden Fehler still ab - die Karte verschwand dann
+     spurlos, und übrig blieb genau das Bild vom 19.09.2026: "Noch nichts
+     gespielt" und sonst nichts. Wer dann fragt "war sie da?", bekommt wieder
+     keine Antwort und merkt nicht einmal, dass er keine bekommen hat
+     (Prüfrunde 01). */
   function anwesenheitLaden(){
+    ANWESEND_FEHLER = null;
     fetch("/api/anwesend?tage=14", {credentials:"same-origin"})
-      .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && j.ok){ ANWESEND = j; if (!$("sicht-daten").classList.contains("verborgen")) malen(); } })
-      .catch(function(){});
+      .then(function(r){
+        return r.json().catch(function(){ return null; }).then(function(j){
+          if (r.status === 401) throw new Error("Die Anmeldung reicht dafür nicht.");
+          if (!j || !j.ok) throw new Error((j && j.fehler) || "Der Server hat nicht geantwortet.");
+          return j;
+        });
+      })
+      .then(function(j){ ANWESEND = j; })
+      .catch(function(e){ ANWESEND_FEHLER = e.message || "Das ging nicht."; })
+      .then(function(){ if (!$("sicht-daten").classList.contains("verborgen")) malen(); });
   }
 
   function tagName(iso){
@@ -354,15 +368,29 @@
   }
 
   function anwesenheitKarte(){
+    // Der Ausfall bekommt eine eigene Karte. Lieber "ich weiß es nicht" als
+    // eine Lücke, die wie "war nicht da" aussieht.
+    if (ANWESEND_FEHLER){
+      return '<div class="karte"><h2>War ' + esc(KIND) + ' da?</h2>' +
+        '<p class="unter"><b>Das lässt sich gerade nicht sagen.</b> ' + esc(ANWESEND_FEHLER) +
+        '<br>Das heißt <b>nicht</b>, dass niemand da war – nur, dass die Auskunft nicht kam.</p></div>';
+    }
     if (!ANWESEND) return "";
     var a = (ANWESEND.kinder || {})[KIND] || {};
     var tage = a.tage || [];
     var heute = tage.filter(function(t){ return t.tag === ANWESEND.heute; })[0];
 
+    // Hat der Speicher für einzelne Tage nicht geantwortet, darf aus "nichts
+    // gefunden" kein "war nicht da" werden.
+    var luecke = a.unsicher ?
+      '<p class="unter" style="color:#b45309"><b>Achtung:</b> Für mindestens einen Tag hat der Speicher nicht geantwortet. ' +
+      'Was hier fehlt, muss nicht bedeuten, dass niemand da war.</p>' : '';
+
     var kopf;
     if (heute){
       kopf = '<p class="unter"><b>Heute da:</b> ' + esc(heute.von) + ' bis ' + esc(heute.bis) +
              ' · ' + heute.viertelstunden + ' Viertelstunde' + (heute.viertelstunden === 1 ? '' : 'n') +
+             (heute.amStueck === false ? ' · mit Pausen dazwischen' : '') +
              (heute.nurDuell ? ' · nur Quizduell' : '') + '</p>';
     } else if (a.zuletzt){
       kopf = '<p class="unter"><b>Heute noch nicht da.</b> Zuletzt ' +
@@ -376,12 +404,13 @@
              bandMalen(t) + '<span class="tagzeit">' + esc(t.von) + '–' + esc(t.bis) + '</span></div>';
     }).join("");
 
-    return '<div class="karte"><h2>War ' + esc(KIND) + ' da?</h2>' + kopf +
+    return '<div class="karte"><h2>War ' + esc(KIND) + ' da?</h2>' + kopf + luecke +
       (zeilen ? '<div class="bandliste">' + zeilen + '</div>' : '') +
       '<p class="unter" style="margin-top:10px">' +
       '<i class="probe lern"></i> in der Lernwelt &nbsp; <i class="probe duell"></i> im Quizduell<br>' +
-      'Das ist <b>keine Lernzeit</b> – nur, ob jemand da war. Im Quizduell wird der Name am ' +
-      'Spitznamen erkannt; wer sich anders nennt, taucht hier nicht auf.</p></div>';
+      'Die Uhrzeiten sind der erste und der letzte Moment des Tages, nicht eine durchgehende Zeit – ' +
+      'wie lange wirklich, sagt die Zahl der Viertelstunden. Das ist <b>keine Lernzeit</b>, nur ob jemand ' +
+      'da war. Im Quizduell wird der Name am Spitznamen erkannt; wer sich anders nennt, taucht hier nicht auf.</p></div>';
   }
 
   function malen(){
