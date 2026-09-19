@@ -45,10 +45,18 @@
 // fuer 45 Tage - nacheinander, also knapp zehn Sekunden Ladezeit. Ein Monat je
 // Quelle kostet stattdessen hoechstens 18 Abfragen fuer denselben Zeitraum.
 //
-// Der Wettlauf wird davon NICHT schlimmer: Zwei gleichzeitige Schreiber lesen
-// denselben Ausgangsstand und schreiben ihn mit je einem zusaetzlichen Block
-// zurueck - verloren geht der Block des Langsameren, nicht der ganze Monat.
-// Das gilt fuer Tag, Woche und Monat gleichermassen.
+// Der Wettlauf zwischen zwei SCHREIBERN wird davon nicht schlimmer: Beide
+// lesen denselben Ausgangsstand und schreiben ihn mit je einem zusaetzlichen
+// Block zurueck - verloren geht der Block des Langsameren, nicht der ganze
+// Monat. Das gilt fuer Tag, Woche und Monat gleichermassen.
+//
+// ANDERS beim LOESCHEN (Pruefrunde 03): anwesendLoeschen() schreibt den Monat
+// als Vollbild zurueck. Faellt ein Puls genau zwischen dessen get und put,
+// koennen ganze fremde Tage mit verschwinden - oder ein haengender Schreiber
+// stellt einen gerade geloeschten Monat wieder her. Das ist bewusst in Kauf
+// genommen: Geloescht wird nur von Hand, von Denny, wenn ein falscher Eintrag
+// aufgefallen ist - also selten und mit Blick darauf, was hinterher dasteht.
+// Wer das Loeschen jemals automatisiert, muss diese Stelle vorher loesen.
 //
 // ---------------------------------------------------------------------------
 // Warum je Quelle ein eigener Schluessel (Pruefrunde 01, 19.09.2026)
@@ -65,10 +73,33 @@
 
 const TAKT_MINUTEN = 15;
 export const BLOECKE_PRO_TAG = (24 * 60) / TAKT_MINUTEN;   // 96
-export const BAND_HAELT_TAGE = 45;      // so weit zurueck wird angezeigt
-const HALTBAR_SEKUNDEN = 100 * 24 * 3600;  // Monatsblock: Anzeigespanne plus Puffer
+/* Wie lange ein Monatsblock im Speicher bleibt, und wie weit zurueck darum
+   ueberhaupt gefragt werden darf. Die beiden Zahlen gehoeren zusammen: Ein
+   Block wird beim LETZTEN Schreibvorgang aufgefrischt, im ungueenstigsten Fall
+   also am Monatsersten. Wer 71 Tage zurueckfragt, kann damit gerade noch alles
+   sehen; darueber verfiele der aelteste Monat still - und "still verfallen"
+   sieht in dieser Anzeige genauso aus wie "war nicht da" (Pruefrunde 03).
+   TAGE_MAX in anwesend.js leitet sich daraus ab, statt eine eigene Zahl zu
+   raten. */
+const HALTBAR_TAGE = 100;
+export const BAND_HAELT_TAGE = HALTBAR_TAGE - 31 + 2;   // = 71, sicher abgedeckt
+const HALTBAR_SEKUNDEN = HALTBAR_TAGE * 24 * 3600;
 export const KINDER = ["paul", "leon", "helena"];
 const QUELLEN = ["lernwelt", "duell"];
+
+/* Wie viele Viertelstunden eine Quelle an einem Tag hoechstens eintragen darf.
+ *
+ * Grund: Die Duell-Meldung wird seit Dennys Entscheidung vom 19.09.2026 OHNE
+ * Ausweis angenommen. Jeder, der die Adresse kennt, koennte damit
+ * Schreibvorgaenge verbrennen - und davon gibt es nur 1000 am Tag fuer die
+ * ganze Lernwelt. Ist das Kontingent leer, speichert fuer die Kinder gar
+ * nichts mehr (so geschehen am 14.09.2026). Ohne Deckel waeren es bis zu 96 je
+ * Kind und Quelle, also 288 allein ueber diesen offenen Weg (Pruefrunde 03).
+ *
+ * 32 Viertelstunden sind acht Stunden am Tag. Kein Kind spielt so lange Quiz;
+ * fuer die Anzeige "war jemand da" ist die Frage nach der 33. Viertelstunde
+ * ohnehin beantwortet. Der offene Weg kostet damit hoechstens 96 statt 288. */
+const BLOECKE_MAX_JE_TAG = { duell: 32, lernwelt: 96 };
 
 /* Schluessel: da:<kind>:<jjjj-mm>:<quelle>, Inhalt {"<tag>":[bloecke]}.
    Der Tag steht als Zahl ohne fuehrende Null darin ("19"), der Monat im
@@ -179,6 +210,8 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs) {
 
   const bloecke = monat[tagImMonat] || [];
   if (bloecke.includes(z.block)) return { geschrieben: false, tag: z.tag, block: z.block };
+  if (bloecke.length >= (BLOECKE_MAX_JE_TAG[feld] || BLOECKE_PRO_TAG))
+    return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Tagesdeckel erreicht" };
   bloecke.push(z.block);
   bloecke.sort((a, b) => a - b);
   monat[tagImMonat] = bloecke;
@@ -293,14 +326,19 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
   const k = String(kind).toLowerCase();
   const welche = QUELLEN.includes(quelle) ? [quelle] : QUELLEN;
   let entfernt = 0;
+  const probleme = [];
   for (const q of welche) {
     const schluessel = SCHLUESSEL(k, MONAT(tag), q);
     let monat;
     try { monat = monatLesen(await env.PAUL_KV.get(schluessel)); }
-    catch (e) { return { ok: false, fehler: "Speicher antwortet nicht" }; }
+    // Nicht sofort aussteigen: Die zweite Quelle soll trotzdem geraeumt
+    // werden, und der Aufrufer soll erfahren, was gelang und was nicht.
+    // Vorher meldete ein Fehler bei der zweiten Quelle schlicht "Fehler",
+    // obwohl die erste schon weg war (Pruefrunde 03).
+    catch (e) { probleme.push(q + ": Speicher antwortet nicht"); continue; }
     const d = TAG_IM_MONAT(tag);
     if (!monat[d]) continue;                       // nichts da, nichts schreiben
-    entfernt += monat[d].length;
+    const wieviele = monat[d].length;
     delete monat[d];
     try {
       // Ist der Monat danach leer, den Schluessel ganz wegnehmen.
@@ -309,7 +347,9 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
       } else {
         await env.PAUL_KV.delete(schluessel);
       }
-    } catch (e) { return { ok: false, fehler: "Speicher nimmt nichts an" }; }
+      entfernt += wieviele;
+    } catch (e) { probleme.push(q + ": Speicher nimmt nichts an"); }
   }
-  return { ok: true, entfernt };
+  if (probleme.length && !entfernt) return { ok: false, fehler: probleme.join("; ") };
+  return { ok: true, entfernt, unvollstaendig: probleme.length ? probleme.join("; ") : undefined };
 }

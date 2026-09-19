@@ -16,9 +16,12 @@
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { monateLesen, monatTag, monateFuer, letzteTage, blockUhrzeit, KINDER,
-         anwesendLoeschen } from "./_anwesend.js";
+         anwesendLoeschen, BAND_HAELT_TAGE } from "./_anwesend.js";
 
-const TAGE_MAX = 45;          // so weit reicht die Haltbarkeit der Baender
+// Nicht weiter zurueck fragen, als die Baender sicher im Speicher liegen. Die
+// Zahl wird abgeleitet, nicht geraten: Sonst verfiele der aelteste Monat still,
+// und das saehe hier aus wie "war nicht da" (Pruefrunde 03).
+const TAGE_MAX = BAND_HAELT_TAGE;
 const TAGE_STANDARD = 7;
 
 export async function onRequestGet(context) {

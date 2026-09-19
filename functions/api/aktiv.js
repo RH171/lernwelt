@@ -113,8 +113,12 @@ export async function onRequestPost(context) {
    * gefragt wird (Pruefrunde 01).
    */
   if (daten.quelle === "duell") {
-    try { await anwesendVermerken(env, kind, "duell", Date.now()); } catch (e) {}
-    return json(200, { ok: true, vermerkt: true });
+    // Ehrlich antworten, was passiert ist. Die erste Fassung meldete immer
+    // "vermerkt: true" - auch bei vollem Speicher. Damit belegte ein
+    // erfolgreicher Live-Aufruf gar nichts (Pruefrunde 03).
+    let r = { geschrieben: false, fehler: "unbekannt" };
+    try { r = await anwesendVermerken(env, kind, "duell", Date.now()); } catch (e) {}
+    return json(200, { ok: !r.fehler, vermerkt: !!r.geschrieben, grund: r.fehler });
   }
 
   // Liegt der Bereich des Kindes hinter dem Riegel, muss der Ausweis stimmen.
