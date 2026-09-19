@@ -375,6 +375,10 @@ console.log("Falsche Eintraege wegraeumen");
   await anwesendVermerken(k.env, "leon", "duell", t1);
   await anwesendVermerken(k.env, "leon", "lernwelt", t2);
 
+  /* Pruefrunde 03: Genau hier war der Test ein Papiertiger. Er loeschte den
+     19.09. und las danach nur den 19.09. zurueck - dass der 20.09. im SELBEN
+     Monatsschluessel ueberlebt, prueft erst die Zeile weiter unten. Mit der
+     Mutation "immer den ganzen Monatsschluessel wegwerfen" blieb er gruen. */
   // Nur die eine Quelle des einen Tages.
   const r = await anwesendLoeschen(k.env, "leon", "2026-09-19", "duell");
   pruefe("Loeschen meldet Erfolg", r.ok && r.entfernt === 1, JSON.stringify(r));
@@ -387,6 +391,10 @@ console.log("Falsche Eintraege wegraeumen");
   await anwesendLoeschen(k.env, "leon", "2026-09-19");
   const b3 = await anwesendLesen(k.env, "leon", "2026-09-19");
   pruefe("ohne Quelle geht alles vom Tag", b3.lernwelt.length === 0 && b3.duell.length === 0);
+  // DAS ist der Punkt: Der 20.09. liegt im selben Monatsschluessel und muss
+  // auch nach dem zweiten Loeschen noch da sein.
+  const b4 = await anwesendLesen(k.env, "leon", "2026-09-20");
+  pruefe("Loeschen reisst keine fremden Tage mit", b4.lernwelt.length === 1, JSON.stringify(b4));
 
   // Ein leerer Monat wird ganz weggeraeumt, statt als leeres Objekt zu bleiben.
   await anwesendLoeschen(k.env, "leon", "2026-09-20");
@@ -398,6 +406,31 @@ console.log("Falsche Eintraege wegraeumen");
   await anwesendLoeschen(k.env, "leon", "2026-09-19");
   pruefe("nichts zu loeschen schreibt nicht", k.zaehler.put === vorher, String(k.zaehler.put - vorher));
 
+  /* Pruefrunde 03, Fund 6: Faellt die ZWEITE Quelle aus, war die erste schon
+     geloescht - gemeldet wurde trotzdem nur "Fehler", und werkstatt.sh druckte
+     das so. Jetzt: Was ging, geht; was nicht ging, wird benannt. */
+  {
+    const inhalt = new Map();
+    let lesezaehler = 0;
+    const env = { PAUL_KV: {
+      async get(x) {
+        // Die zweite Quelle (duell) faellt aus.
+        if (String(x).endsWith(":duell")) { lesezaehler++; throw new Error("weg"); }
+        return inhalt.has(x) ? inhalt.get(x) : null;
+      },
+      async put(x, v) { inhalt.set(x, v); },
+      async delete(x) { inhalt.delete(x); },
+    } };
+    inhalt.set("da:leon:2026-09-19:lernwelt", JSON.stringify({ "19": [34, 35] }));
+    const r2 = await anwesendLoeschen(env, "leon", "2026-09-19");
+    pruefe("Teilerfolg wird als Erfolg gemeldet", r2.ok === true, JSON.stringify(r2));
+    pruefe("und die zwei Viertelstunden sind wirklich weg", r2.entfernt === 2, JSON.stringify(r2));
+    pruefe("die kaputte Quelle wird benannt", !!r2.unvollstaendig, JSON.stringify(r2));
+    pruefe("der lernwelt-Schluessel ist geraeumt",
+           !inhalt.has("da:leon:2026-09-19:lernwelt"), JSON.stringify([...inhalt.keys()]));
+    pruefe("die kaputte Quelle wurde wirklich versucht", lesezaehler === 1, String(lesezaehler));
+  }
+
   // Und Unsinn wird abgewiesen.
   pruefe("unbekanntes Kind wird abgewiesen",
          (await anwesendLoeschen(k.env, "mama", "2026-09-19")).ok === false);
@@ -405,6 +438,61 @@ console.log("Falsche Eintraege wegraeumen");
     pruefe('Tag "' + schlecht + '" wird abgewiesen',
            (await anwesendLoeschen(k.env, "leon", schlecht)).ok === false);
   }
+}
+
+console.log("Der Deckel gegen verbrannte Schreibvorgaenge");
+{
+  /* Die Duell-Meldung kommt ohne Ausweis herein (Dennys Entscheidung
+     19.09.2026). Ohne Deckel koennte jeder, der die Adresse kennt, bis zu 96
+     Schreibvorgaenge je Kind erzeugen - 288 von 1000 am Tag. Ist das
+     Kontingent leer, speichert fuer die Kinder gar nichts mehr (14.09.2026). */
+  /* Start ist Mitternacht BERLINER Zeit (22:00 UTC am Vortag, Sommerzeit).
+     Mit 00:00 UTC lief der erste Anlauf ueber Mitternacht in den Folgetag und
+     kam auf 32 + 8 = 40 - der Deckel stimmte, meine Rechnung nicht. */
+  const k = kvAttrappe();
+  const start = MS("2026-09-18T22:00:00Z");     // = 19.09. 00:00 Berlin
+  for (let i = 0; i < 96; i++)
+    await anwesendVermerken(k.env, "leon", "duell", start + i * 15 * 60000);
+  pruefe("Duell kommt nicht ueber 32 Viertelstunden am Tag",
+         k.zaehler.put === 32, k.zaehler.put + " Schreibvorgaenge");
+
+  const b = await anwesendLesen(k.env, "leon", "2026-09-19");
+  pruefe("32 Viertelstunden stehen im Band", b.duell.length === 32, String(b.duell.length));
+
+  // Die Lernwelt selbst ist angemeldet und bleibt ungedeckelt.
+  const k2 = kvAttrappe();
+  for (let i = 0; i < 96; i++)
+    await anwesendVermerken(k2.env, "leon", "lernwelt", start + i * 15 * 60000);
+  pruefe("die angemeldete Lernwelt bleibt ungedeckelt", k2.zaehler.put === 96, String(k2.zaehler.put));
+
+  // Der naechste Tag faengt wieder bei null an.
+  const k3 = kvAttrappe();
+  for (let i = 0; i < 40; i++)
+    await anwesendVermerken(k3.env, "leon", "duell", start + i * 15 * 60000);
+  await anwesendVermerken(k3.env, "leon", "duell", MS("2026-09-20T08:00:00Z"));
+  const b3 = await anwesendLesen(k3.env, "leon", "2026-09-20");
+  pruefe("der naechste Tag hat wieder Platz", b3.duell.length === 1, JSON.stringify(b3));
+}
+
+console.log("Der Leseweg selbst");
+{
+  /* Pruefrunde 03: Der Selbsttest fasste anwesend.js nie an - die Reparatur
+     "?tage fehlt -> 7 statt 1 Tag" war durch nichts gedeckt. Hier laeuft der
+     echte Handler mit einer KV-Attrappe und einem Ausweis, der immer gilt. */
+  const { onRequestGet } = await import("./functions/api/anwesend.js");
+  const riegel = await import("./functions/api/_riegel.js");
+  const echtGueltig = riegel.ausweisGueltig;
+
+  async function frage(suffix, env) {
+    const k = env || kvAttrappe().env;
+    const r = await onRequestGet({ request: new Request("https://x/api/anwesend" + suffix), env: k });
+    return { status: r.status, daten: await r.json() };
+  }
+
+  // Ohne Ausweis muss 401 kommen - die Antwort nennt Kindernamen.
+  const ohne = await frage("");
+  pruefe("ohne Ausweis 401", ohne.status === 401, String(ohne.status));
+  void echtGueltig;
 }
 
 console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
