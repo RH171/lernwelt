@@ -212,7 +212,22 @@ export class DuellRaum {
     const lesen = klein
       ? Math.max(6000, Math.min(15000, 2500 + zeichen * 80))
       : Math.max(3000, Math.min(9000, 1500 + zeichen * 45));
-    const dauer = (r.stufe <= 2 ? 25000 : 20000);
+    /* Wie lange zum Antworten? Seit dem 19.09.2026 sehr grosszuegig.
+     *
+     * Denny an dem Tag, mit zwei Bildern aus einem Spiel gegen Paul: "Es sollte
+     * doch nicht mehr der gewinnen, der am schnellsten ist." Punkte fuer Tempo
+     * gab es da schon lange nicht mehr - aber das Zeitlimit war der Tempo-
+     * Wettbewerb durch die Hintertuer: Wer die Antwort wusste und 21 Sekunden
+     * brauchte, bekam trotzdem nichts, und der Schnellere zog davon.
+     *
+     * Jetzt entscheidet die Uhr praktisch nicht mehr. Sobald ALLE geantwortet
+     * haben, geht es sofort weiter (siehe alleDa unten) - im Normalfall wartet
+     * also niemand. Die 90 Sekunden sind nur der Notausstieg fuer den Fall,
+     * dass jemand aufsteht und das Spiel sonst haengen bliebe.
+     *
+     * Passt zu Dennys Satz vom 18.09.2026: "Lieber gibt es am Ende ein
+     * Unentschieden - und das haben alle richtig." */
+    const dauer = 90000;
     r.frage = { freiAb: jetzt + lesen, antwortenAb: jetzt + Math.round(lesen * 0.55),
                 bis: jetzt + lesen + dauer, antworten: {}, ersterRichtig: null, schlussUm: null };
     this.s.phase = "frage";
