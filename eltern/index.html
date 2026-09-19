@@ -30,6 +30,29 @@
          padding:18px 20px;margin-bottom:16px}
   .karte h2{font-family:var(--rund);font-size:17px;margin:0 0 4px}
   .karte .unter{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+
+  /* Anwesenheitsband (19.09.2026): eine Spur aus 96 Viertelstunden je Tag.
+     Die Stuecke duerfen beliebig schmal werden - sie sind reine Anzeige und
+     kein Tippziel, das 44 px braeuchte. Die Zeile selbst darf nicht seitlich
+     herauslaufen, darum minmax(0,1fr) statt 1fr: Eine Grid-Spalte ist sonst so
+     breit wie ihr breitester Inhalt, und genau daran ist Pauls Spieleliste
+     schon einmal aus dem Rand gelaufen. */
+  .bandliste{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+  .tagzeile{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:8px}
+  .tagname{font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .tagzeit{font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .band{display:flex;gap:1px;min-width:0;height:13px;background:#f1f4f8;
+        border-radius:4px;overflow:hidden;padding:2px}
+  .band .stueck{flex:1 1 0;min-width:0;border-radius:1px;background:transparent}
+  .band .stueck.lern{background:#2563eb}
+  .band .stueck.duell{background:#f59e0b}
+  .probe{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px}
+  .probe.lern{background:#2563eb}
+  .probe.duell{background:#f59e0b}
+  @media (max-width:430px){
+    .tagzeile{grid-template-columns:52px minmax(0,1fr)}
+    .tagzeit{grid-column:2;justify-self:end}
+  }
   .zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
   .zahl{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:13px 14px}
   .zahl .gross{font-family:var(--rund);font-size:24px;font-weight:800;line-height:1.1}
@@ -168,6 +191,7 @@
         DATEN = a.j.kinder || {};
         zeige("daten");
         meldungenLaden();
+        anwesenheitLaden();
         reiterMalen();
       })
       .catch(function(){ zeige("anmelden"); });
@@ -285,16 +309,89 @@
     if (!KIND){ KIND = namen[0]; reiterMalen(); malen(); }
   }
 
+  /* ---------- War das Kind überhaupt da? ----------
+     Denny am 19.09.2026: "War Helena nicht ein einziges Mal da - kannst Du das
+     sicher sagen?" Konnte ich nicht. Die Lernrunden haben drei Lücken: Besuche
+     unter 30 Sekunden werden verworfen, das Quizduell zählt bewusst nicht mit,
+     und Helenas Trainer schickt Runden vom Handy erst später nach.
+
+     Diese Karte beantwortet deshalb nur die eine Frage - war jemand da - und
+     sagt ausdrücklich NICHT, dass gelernt wurde. Dagesessen ist nicht gelernt. */
+  var ANWESEND = null;
+
+  function anwesenheitLaden(){
+    fetch("/api/anwesend?tage=14", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (j && j.ok){ ANWESEND = j; if (!$("sicht-daten").classList.contains("verborgen")) malen(); } })
+      .catch(function(){});
+  }
+
+  function tagName(iso){
+    var d = new Date(iso + "T12:00:00");
+    if (isNaN(d)) return iso;
+    var heute = ANWESEND && ANWESEND.heute;
+    if (iso === heute) return "heute";
+    return ["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()] + " " +
+           String(d.getDate()).padStart(2,"0") + "." + String(d.getMonth()+1).padStart(2,"0") + ".";
+  }
+
+  // 96 Viertelstunden als schmale Spur. Zwei Farben, damit man sieht, was
+  // Lernwelt war und was Quizduell - das Duell taucht sonst nirgends auf.
+  function bandMalen(tag){
+    var s = "";
+    for (var i = 0; i < 96; i++){
+      var art = tag.duell.indexOf(i) >= 0 ? " duell" : (tag.lernwelt.indexOf(i) >= 0 ? " lern" : "");
+      s += '<i class="stueck' + art + '"></i>';
+    }
+    return '<div class="band" aria-hidden="true">' + s + '</div>';
+  }
+
+  function anwesenheitKarte(){
+    if (!ANWESEND) return "";
+    var a = (ANWESEND.kinder || {})[KIND] || {};
+    var tage = a.tage || [];
+    var heute = tage.filter(function(t){ return t.tag === ANWESEND.heute; })[0];
+
+    var kopf;
+    if (heute){
+      kopf = '<p class="unter"><b>Heute da:</b> ' + esc(heute.von) + ' bis ' + esc(heute.bis) +
+             ' · ' + heute.viertelstunden + ' Viertelstunde' + (heute.viertelstunden === 1 ? '' : 'n') +
+             (heute.nurDuell ? ' · nur Quizduell' : '') + '</p>';
+    } else if (a.zuletzt){
+      kopf = '<p class="unter"><b>Heute noch nicht da.</b> Zuletzt ' +
+             esc(tagName(a.zuletzt.tag)) + ' um ' + esc(a.zuletzt.uhrzeit) + ' Uhr.</p>';
+    } else {
+      kopf = '<p class="unter"><b>In den letzten 14 Tagen nicht da.</b> Aufgezeichnet wird das erst seit dem 19.09.2026 – davor gab es kein Protokoll.</p>';
+    }
+
+    var zeilen = tage.map(function(t){
+      return '<div class="tagzeile"><span class="tagname">' + esc(tagName(t.tag)) + '</span>' +
+             bandMalen(t) + '<span class="tagzeit">' + esc(t.von) + '–' + esc(t.bis) + '</span></div>';
+    }).join("");
+
+    return '<div class="karte"><h2>War ' + esc(KIND) + ' da?</h2>' + kopf +
+      (zeilen ? '<div class="bandliste">' + zeilen + '</div>' : '') +
+      '<p class="unter" style="margin-top:10px">' +
+      '<i class="probe lern"></i> in der Lernwelt &nbsp; <i class="probe duell"></i> im Quizduell<br>' +
+      'Das ist <b>keine Lernzeit</b> – nur, ob jemand da war. Im Quizduell wird der Name am ' +
+      'Spitznamen erkannt; wer sich anders nennt, taucht hier nicht auf.</p></div>';
+  }
+
   function malen(){
     var d = DATEN[KIND] || {};
     var h = "";
     $("stand").textContent = "Stand: " + new Date().toLocaleString("de-DE", {dateStyle:"medium", timeStyle:"short"});
 
     if (!d.runden){
-      $("inhalt").innerHTML = '<div class="karte"><h2>Noch nichts gespielt</h2>' +
+      // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
+      // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
+      // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
+      $("inhalt").innerHTML = anwesenheitKarte() +
+        '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
+    h += anwesenheitKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
