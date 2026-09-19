@@ -279,8 +279,63 @@
   if (!Array.isArray(profile)) profile = [];
   var altesProfil = lese("duell-profil", null);
   if (altesProfil && altesProfil.name && !profile.some(function(p){ return p.name === altesProfil.name; })){ profile.unshift(altesProfil); schreibe("duell-profile", profile); }
-  function sitzungsProfil(p){ profil = p; try { sessionStorage.setItem("duell-sitzung-profil", JSON.stringify(p)); } catch(e){} }
+  function sitzungsProfil(p){ profil = p; try { sessionStorage.setItem("duell-sitzung-profil", JSON.stringify(p)); } catch(e){} anwesenheitStarten(); }
   var tonAn = lese("duell-ton", true);
+
+  /* ---------- "Ich bin da" ----------
+     Denny am 19.09.2026, nachdem ich auf "War Helena nicht ein einziges Mal
+     da?" ehrlich nur antworten konnte, dass ich es nicht weiss: "haettest Du
+     in Zukunft die Moeglichkeit das besser zu loggen".
+
+     Das Duell war die groesste blinde Stelle: lernstand.js ist hier bewusst
+     NICHT eingebunden (es wuerde die Runde einem einzelnen Kind zuschreiben,
+     obwohl mehrere gleichzeitig spielen) - damit hinterliess ein ganzer
+     Quizabend ueberhaupt keine Spur, und jedes Kind sah im Elternbereich faul
+     aus.
+
+     Gemeldet wird deshalb NUR Anwesenheit, keine Lernzeit und keine Runde.
+     Die Statistik bleibt unberuehrt und damit ehrlich.
+
+     Woher der Name kommt: aus dem Profil, das VOR jedem Spiel gewaehlt wird
+     ("wer spielt gerade?"), und das im sessionStorage liegt - also pro Tab und
+     vom Sync unberuehrt. Steckt kein Kindername darin ("Torwart Leon" ->
+     leon), wird gar nichts gemeldet. Lieber eine Luecke als ein falscher Name:
+     Wer sich als Gast "Drache" nennt, darf nicht als Paul in der Anzeige
+     landen. Im Elternbereich steht darum ausdruecklich dabei, dass das aus dem
+     Spitznamen erkannt wurde. */
+  var KIND_AUS_NAME = [["leon", "leon"], ["paul", "paul"], ["helena", "helena"]];
+  function welchesKind(name){
+    var n = String(name || "").toLowerCase();
+    for (var i = 0; i < KIND_AUS_NAME.length; i++)
+      if (n.indexOf(KIND_AUS_NAME[i][0]) >= 0) return KIND_AUS_NAME[i][1];
+    return null;
+  }
+
+  var anwesenheitsUhr = null;
+  function anwesenheitMelden(){
+    var kind = welchesKind(profil && profil.name);
+    if (!kind || document.hidden) return;
+    try {
+      fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: kind, quelle: "duell" }) }).catch(function(){});
+    } catch(e){}
+  }
+  function anwesenheitStarten(){
+    if (anwesenheitsUhr || !welchesKind(profil && profil.name)) return;
+    anwesenheitMelden();
+    // Derselbe Takt wie in lernstand.js. Der Server schreibt ohnehin nur, wenn
+    // der letzte Puls ueber 90 s zurueckliegt oder eine neue Viertelstunde
+    // beginnt - haeufiger zu fragen wuerde nichts verbessern und kostet.
+    anwesenheitsUhr = setInterval(anwesenheitMelden, 180000);
+  }
+  document.addEventListener("visibilitychange", function(){
+    // Ein vergessener Tab im Hintergrund soll nicht stundenlang "da" melden -
+    // sonst blockiert er jedes Ausrollen und faelscht die Anzeige.
+    if (document.hidden){ clearInterval(anwesenheitsUhr); anwesenheitsUhr = null; }
+    else anwesenheitStarten();
+  });
+  if (profil) anwesenheitStarten();   // nach dem Neuladen im selben Tab
 
   var raumCode = null, ws = null, zustand = null, frage = null, meineWahl = null, uhrTakt = null, wiederVerbinden = null, absichtlichZu = false;
 
