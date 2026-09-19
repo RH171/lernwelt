@@ -10,7 +10,7 @@
 //
 // Rueckgabe 0 = alles sauber, 1 = es hakt.
 
-import { berlinZeit, blockUhrzeit, monatLesen, anwesendVermerken, anwesendLesen,
+import { berlinZeit, blockUhrzeit, monatLesen, anwesendVermerken, anwesendLesen, anwesendLoeschen,
          monateLesen, monatTag, monateFuer, letzteTage, BLOECKE_PRO_TAG } from "./functions/api/_anwesend.js";
 
 let fehler = 0;
@@ -361,6 +361,50 @@ console.log("Ein Monat, viele Tage");
   // Und die beiden Monate duerfen sich nicht vermischen.
   pruefe("1. Oktober liegt nicht im September",
          !(gelesen.monate["2026-09"].lernwelt["1"]), JSON.stringify(gelesen.monate["2026-09"]));
+}
+
+console.log("Falsche Eintraege wegraeumen");
+{
+  /* Gebraucht, seit die Duell-Meldung ohne Ausweis angenommen wird (Dennys
+     Entscheidung 19.09.2026): Ein versehentlicher oder fremder Eintrag muss
+     wieder verschwinden koennen, sonst ist die Anzeige auf Dauer nicht mehr
+     zu glauben. */
+  const k = kvAttrappe();
+  const t1 = MS("2026-09-19T06:37:00Z"), t2 = MS("2026-09-20T06:37:00Z");
+  await anwesendVermerken(k.env, "leon", "lernwelt", t1);
+  await anwesendVermerken(k.env, "leon", "duell", t1);
+  await anwesendVermerken(k.env, "leon", "lernwelt", t2);
+
+  // Nur die eine Quelle des einen Tages.
+  const r = await anwesendLoeschen(k.env, "leon", "2026-09-19", "duell");
+  pruefe("Loeschen meldet Erfolg", r.ok && r.entfernt === 1, JSON.stringify(r));
+  const b = await anwesendLesen(k.env, "leon", "2026-09-19");
+  pruefe("Duell weg, Lernwelt bleibt", b.duell.length === 0 && b.lernwelt.length === 1, JSON.stringify(b));
+  const b2 = await anwesendLesen(k.env, "leon", "2026-09-20");
+  pruefe("der andere Tag bleibt unberuehrt", b2.lernwelt.length === 1, JSON.stringify(b2));
+
+  // Ohne Quelle: beide.
+  await anwesendLoeschen(k.env, "leon", "2026-09-19");
+  const b3 = await anwesendLesen(k.env, "leon", "2026-09-19");
+  pruefe("ohne Quelle geht alles vom Tag", b3.lernwelt.length === 0 && b3.duell.length === 0);
+
+  // Ein leerer Monat wird ganz weggeraeumt, statt als leeres Objekt zu bleiben.
+  await anwesendLoeschen(k.env, "leon", "2026-09-20");
+  pruefe("leerer Monat verschwindet", k.inhalt.size === 0,
+         JSON.stringify([...k.inhalt.keys()]));
+
+  // Was nicht da ist, kostet auch keinen Schreibvorgang.
+  const vorher = k.zaehler.put;
+  await anwesendLoeschen(k.env, "leon", "2026-09-19");
+  pruefe("nichts zu loeschen schreibt nicht", k.zaehler.put === vorher, String(k.zaehler.put - vorher));
+
+  // Und Unsinn wird abgewiesen.
+  pruefe("unbekanntes Kind wird abgewiesen",
+         (await anwesendLoeschen(k.env, "mama", "2026-09-19")).ok === false);
+  for (const schlecht of ["", "19.09.2026", "2026-9-9", "heute", null]) {
+    pruefe('Tag "' + schlecht + '" wird abgewiesen',
+           (await anwesendLoeschen(k.env, "leon", schlecht)).ok === false);
+  }
 }
 
 console.log(fehler ? "\n" + fehler + " Punkt(e) stimmen nicht." : "\nAlles sauber.");
