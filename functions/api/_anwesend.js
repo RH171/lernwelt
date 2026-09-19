@@ -99,7 +99,8 @@ const QUELLEN = ["lernwelt", "duell"];
  * 32 Viertelstunden sind acht Stunden am Tag. Kein Kind spielt so lange Quiz;
  * fuer die Anzeige "war jemand da" ist die Frage nach der 33. Viertelstunde
  * ohnehin beantwortet. Der offene Weg kostet damit hoechstens 96 statt 288. */
-const BLOECKE_MAX_JE_TAG = { duell: 32, lernwelt: 96 };
+const BLOECKE_OFFEN = 32;      // ohne Anmeldung hereingekommen
+const BLOECKE_ANGEMELDET = 96; // volle Tagesbreite
 
 /* Schluessel: da:<kind>:<jjjj-mm>:<quelle>, Inhalt {"<tag>":[bloecke]}.
    Der Tag steht als Zahl ohne fuehrende Null darin ("19"), der Monat im
@@ -192,7 +193,7 @@ function kindOk(kind) { return KINDER.includes(String(kind || "").toLowerCase())
  * Aufrufer darf einen Fehler NICHT als "war nicht da" deuten - siehe
  * anwesendLesen().
  */
-export async function anwesendVermerken(env, kind, quelle, jetztMs) {
+export async function anwesendVermerken(env, kind, quelle, jetztMs, offen) {
   if (!env || !env.PAUL_KV) return { geschrieben: false, fehler: "kein Speicher" };
   // Ein unbekannter Kindname wuerde einen Muell-Schluessel anlegen, der 45 Tage
   // im Speicher steht (Pruefrunde 01).
@@ -210,7 +211,13 @@ export async function anwesendVermerken(env, kind, quelle, jetztMs) {
 
   const bloecke = monat[tagImMonat] || [];
   if (bloecke.includes(z.block)) return { geschrieben: false, tag: z.tag, block: z.block };
-  if (bloecke.length >= (BLOECKE_MAX_JE_TAG[feld] || BLOECKE_PRO_TAG))
+  /* Der Deckel haengt daran, OB jemand angemeldet war - nicht daran, aus
+     welcher Ecke die Meldung kam. Die erste Fassung deckelte nur
+     quelle==="duell" und liess damit genau den anderen offenen Weg frei:
+     Helenas Bereich hat keinen Riegel, ein Puls {"kind":"helena"} kommt ohne
+     Cookie durch, landete im Lernwelt-Band mit Deckel 96 und setzte obendrein
+     den Puls (Pruefrunde 04). */
+  if (bloecke.length >= (offen ? BLOECKE_OFFEN : BLOECKE_ANGEMELDET))
     return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Tagesdeckel erreicht" };
   bloecke.push(z.block);
   bloecke.sort((a, b) => a - b);
@@ -324,7 +331,14 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
   if (!kindOk(kind)) return { ok: false, fehler: "unbekanntes Kind" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(tag || ""))) return { ok: false, fehler: "unbrauchbarer Tag" };
   const k = String(kind).toLowerCase();
-  const welche = QUELLEN.includes(quelle) ? [quelle] : QUELLEN;
+  /* Nur eine WEGGELASSENE Quelle heisst "beide". Ein Tippfehler ("Duell",
+     "duel") raeumte vorher still auch das echte, angemeldete Lernwelt-Band mit
+     weg - beim einzigen unwiderruflichen Vorgang, den es hier gibt, und
+     ausgerechnet dann, wenn der Anlass ein falscher Duell-Eintrag war
+     (Pruefrunde 04). */
+  if (quelle && !QUELLEN.includes(quelle))
+    return { ok: false, fehler: "unbekannte Quelle: " + String(quelle).slice(0, 20) };
+  const welche = quelle ? [quelle] : QUELLEN;
   let entfernt = 0;
   const probleme = [];
   for (const q of welche) {

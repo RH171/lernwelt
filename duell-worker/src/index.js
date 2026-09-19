@@ -370,6 +370,22 @@ export class DuellRaum {
     }
     await this.sichern();
     for (const w of uebrig) { try { w.send(JSON.stringify(this.raumBild())); } catch (e) {} }
+
+    /* Geht jemand mitten in einer Frage, kann auf ihn niemand mehr warten.
+     *
+     * Solange die Antwortzeit 20 Sekunden war, fiel das kaum auf. Seit sie am
+     * 19.09.2026 auf 90 Sekunden steht ("Es sollte doch nicht mehr der
+     * gewinnen, der am schnellsten ist"), saessen die Uebrigen anderthalb
+     * Minuten vor einer beantworteten Frage - eine Verschlechterung, die aus
+     * genau der Aenderung entstand, die es besser machen sollte
+     * (Pruefrunde 04). Haben alle Verbliebenen geantwortet, wird jetzt sofort
+     * aufgeloest.
+     */
+    if (this.s.phase === "frage" && this.s.runde && this.s.runde.frage) {
+      const q = this.s.runde.frage;
+      const daIds = [...online].filter((sid) => this.s.spieler[sid]);
+      if (daIds.length && daIds.every((sid) => q.antworten[sid])) return this.aufloesen();
+    }
   }
 
   alleSenden(obj) {

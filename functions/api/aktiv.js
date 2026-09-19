@@ -117,7 +117,8 @@ export async function onRequestPost(context) {
     // "vermerkt: true" - auch bei vollem Speicher. Damit belegte ein
     // erfolgreicher Live-Aufruf gar nichts (Pruefrunde 03).
     let r = { geschrieben: false, fehler: "unbekannt" };
-    try { r = await anwesendVermerken(env, kind, "duell", Date.now()); } catch (e) {}
+    // offen = true: Hier wurde kein Ausweis geprueft.
+    try { r = await anwesendVermerken(env, kind, "duell", Date.now(), true); } catch (e) {}
     return json(200, { ok: !r.fehler, vermerkt: !!r.geschrieben, grund: r.fehler });
   }
 
@@ -125,8 +126,15 @@ export async function onRequestPost(context) {
   // Helenas Bereich ist offen - sie kann sich gar nicht anmelden, also nehmen
   // wir dort ohne Ausweis an. Sobald HELENA_CODE gesetzt und ihr Bereich in
   // GESCHUETZT aufgenommen wird, gilt auch fuer sie der Ausweis.
-  if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+  /* Wurde hier wirklich ein Ausweis geprueft? Fuer Helena ist brauchtAusweis
+     false - ihr Bereich hat keinen Riegel -, ein Puls kommt also ohne Cookie
+     durch. Das war schon vorher so; neu ist nur, dass daraus jetzt ein
+     45 Tage haltbarer Eintrag wird. Darum wird die Antwort mitgefuehrt und
+     unten an den Tagesdeckel gegeben (Pruefrunde 04). */
+  const ausweisNoetig = brauchtAusweis(env, kind);
+  if (ausweisNoetig && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
+  const offen = !ausweisNoetig;
 
   if (daten.weg) {
     // Sauber abgemeldet - dann muss niemand die volle Stille abwarten.
@@ -171,7 +179,7 @@ export async function onRequestPost(context) {
    * durchgehend da war. Nachschauen kostet nichts; geschrieben wird drinnen nur
    * bei einer wirklich neuen Viertelstunde.
    */
-  try { await anwesendVermerken(env, kind, "lernwelt", Date.now()); } catch (e) {}
+  try { await anwesendVermerken(env, kind, "lernwelt", Date.now(), offen); } catch (e) {}
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
