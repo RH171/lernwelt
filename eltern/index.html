@@ -344,10 +344,15 @@
   /* Kommt die Seite nach laengerer Zeit wieder in den Blick, sind die Zahlen
      womoeglich Stunden alt. Dann neu holen - aber nur, wenn wirklich Zeit
      vergangen ist, damit kein Tabwechsel eine Abfragewelle ausloest. */
+  var LAEUFT = false;
   document.addEventListener("visibilitychange", function(){
-    if (document.hidden || !GEHOLT_UM) return;
+    if (document.hidden || !GEHOLT_UM || LAEUFT) return;
     if (Date.now() - GEHOLT_UM.getTime() < 300000) return;   // unter 5 Minuten: lassen
-    laden();
+    /* Ein Riegel gegen mehrfaches Laden: Ohne ihn kann jedes Hin- und
+       Herschalten eine weitere Abfrage anstossen, und ein Netzaussetzer
+       waehrenddessen wirft auf die Anmeldemaske zurueck (Pruefrunde 05). */
+    LAEUFT = true;
+    try { laden(); } finally { setTimeout(function(){ LAEUFT = false; }, 3000); }
   });
 
   function anwesenheitLaden(){
