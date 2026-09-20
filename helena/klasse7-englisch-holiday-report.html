@@ -183,6 +183,37 @@
     .station{min-height:60px;padding:12px 14px;margin-top:8px}
   }
 
+  /* Ganz flach - das ist Helenas Handy mit offener Tastatur (360x360), der
+     schlimmste Moment ueberhaupt. Gemessen am 20.09.2026 lag "Prüfen" in
+     Station 1 43 px, in Station 3 133 px und "Weiter" in Station 2 164 px
+     unter dem Rand. Hier tritt alles zurueck, was nicht die Aufgabe ist:
+     Kopfzeile, Fortschrittsbalken und Zaehler. Und sobald eine Aufgabe
+     aufgeloest ist, gehen die Antwortknoepfe weg - sie sind dann nur noch
+     Deko, die richtige Antwort steht fett in der Rueckmeldung. */
+  @media (max-height:420px){
+    body{padding:7px}
+    header{display:none}
+    .fortschritt,.meta{display:none}
+    .karte{padding:11px;border-radius:16px}
+    .zitat{font-size:14px;padding:7px 10px;margin-bottom:8px}
+    .zitat .wer{font-size:12px;margin-bottom:1px}
+    .satz{font-size:16px;line-height:1.35}
+    .auftrag{display:none}
+    .notiz{margin-bottom:8px}
+    .notiz i{padding:5px 9px;font-size:12.5px}
+    .wahl{gap:8px}
+    .wahl button{min-height:46px;font-size:16px;padding:10px 12px}
+    .tippzeile input{min-height:48px;font-size:18px}
+    .bauzeile{min-height:50px;margin-bottom:8px}
+    .steine{gap:6px}
+    .stein{min-height:44px;padding:8px 10px;font-size:14.5px}
+    .rueck{padding:9px 11px;font-size:13.5px;margin-top:9px}
+    .weiter{min-height:46px;margin-top:8px;font-size:16px}
+    .zweitreihe{margin-top:6px}
+    .zweitreihe button{min-height:44px;font-size:13px}
+    body.geloest .wahl{display:none}
+  }
+
   /* Station 1 ist die einzige mit Tastatur. Auf Helenas Handy bleiben dann
      rund 360 px Hoehe - der Pruefen-Knopf muss trotzdem sichtbar sein.
      Es tritt nur Beiwerk zurueck; kein Knopf wird verschoben oder geklebt. */
@@ -462,6 +493,7 @@
   function aufgabeZeigen(){
     var a = lauf.liste[lauf.nr];
     lauf.versuch = 0;
+    document.body.classList.remove("geloest");
     $("balken").style.width = Math.round(lauf.nr / lauf.liste.length * 100) + "%";
     $("metalinks").textContent = STATIONEN[lauf.schluessel].titel + " · " +
       (lauf.nr + 1) + " von " + lauf.liste.length;
@@ -621,6 +653,7 @@
     // Hoechste an der Station. Auf Helenas Handy lag "Weiter" mit stehendem
     // Wortvorrat 115 px unter dem Rand (gemessen 20.09.2026). Weg damit.
     if (lauf.art === "bauen" && $("steine")) $("steine").style.display = "none";
+    document.body.classList.add("geloest");
     var w = $("weiter");
     w.disabled = false; w.classList.remove("grau");
     w.textContent = (lauf.nr + 1 >= lauf.liste.length) ? "Fertig" : "Weiter";
