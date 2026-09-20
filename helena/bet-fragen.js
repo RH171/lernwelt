@@ -122,6 +122,255 @@ window.BET_RUNDEN = [
 ]},
 
 /* ------------------------------------------------------------------ */
+/* Ausgezaehlt ueber die Loesungshefte 2022-2025: Das ISB nennt zu jedem
+   der 20 Items in Teil II das geprüfte Lernziel ("Focus on"). Der mit
+   Abstand haeufigste Eintrag ist "L1 interference" - der typisch deutsche
+   Fehler: 13 von 80 Items in vier Jahren. Genau die stehen hier. */
+{ k: "deutsch", n: "Typisch deutsch", ic: "🇩🇪", unter: "die Fehler, die der Test am häufigsten prüft",
+  fragen: [
+  { frage: "„In der Klinik gibt es elf Koalas.“ Wie heißt das auf Englisch?",
+    antworten: ["There are eleven koalas in the clinic.", "It gives eleven koalas in the clinic.",
+                "There gives eleven koalas in the clinic.", "It are eleven koalas in the clinic."], richtig: 0,
+    erklaerung: "„Es gibt“ heißt there is (Einzahl) oder there are (Mehrzahl) – nie 'it gives'. Genau dieser Fehler stand 2022 im Test.",
+    merkmal: "typisch deutsch – es gibt" },
+
+  { frage: "„Die Arbeit mit den Koalas macht Spaß.“ Wie sagt man das?",
+    antworten: ["Working with the koalas is fun.", "Working with the koalas makes fun.",
+                "The work with the koalas makes fun.", "It makes fun to work with the koalas."], richtig: 0,
+    erklaerung: "'to make fun' heißt sich über jemanden lustig machen. Spaß machen = to be fun oder to enjoy something.",
+    merkmal: "typisch deutsch – Spaß machen" },
+
+  { frage: "„Sie steht früh auf.“ Wie heißt das auf Englisch?",
+    antworten: ["She gets up early.", "She stands up early.", "She stands early up.", "She is standing up early."], richtig: 0,
+    erklaerung: "get up = aufstehen (aus dem Bett). stand up heißt: sich hinstellen.",
+    merkmal: "typisch deutsch – aufstehen" },
+
+  { frage: "„Am Nachmittag hilft sie mit.“ Welche Präposition?",
+    antworten: ["In the afternoon she helps.", "At the afternoon she helps.",
+                "On the afternoon she helps.", "To the afternoon she helps."], richtig: 0,
+    erklaerung: "in the morning, in the afternoon, in the evening – aber at night.",
+    merkmal: "typisch deutsch – in the afternoon" },
+
+  { frage: "„Sie sorgt dafür, dass es den Koalas gut geht und sie glücklich sind.“",
+    antworten: ["… that they are well and happy.", "… that they are well and lucky.",
+                "… that they are good and lucky.", "… that they are healthy and luck."], richtig: 0,
+    erklaerung: "happy = glücklich im Gefühl. lucky = Glück gehabt. Der Test hat genau das 2022 abgefragt.",
+    merkmal: "typisch deutsch – happy / lucky" },
+
+  { frage: "„Sie hat eine eigene Internet-Show.“",
+    antworten: ["She has her own internet show.", "She has an own internet show.",
+                "She has a own internet show.", "She has an own internet-show of her."], richtig: 0,
+    erklaerung: "Vor 'own' steht immer ein Possessivbegleiter: my own, her own, their own – nie 'an own'.",
+    merkmal: "typisch deutsch – her own" },
+
+  { frage: "„Die meisten Leute denken das.“",
+    antworten: ["Most people think so.", "The most people think so.",
+                "Most of people think so.", "The most of people think so."], richtig: 0,
+    erklaerung: "Allgemein: most people. Mit 'the' nur, wenn eine bestimmte Gruppe gemeint ist: most of the people in my class.",
+    merkmal: "typisch deutsch – most people" },
+
+  { frage: "„Die Kinder waren an seinen Geschichten interessiert.“",
+    antworten: ["The kids were interested in his stories.", "The kids were interesting in his stories.",
+                "The kids were interested on his stories.", "The kids were interest in his stories."], richtig: 0,
+    erklaerung: "Ich bin interested (das Gefühl), die Sache ist interesting (sie macht das Gefühl). Und: interested IN.",
+    merkmal: "interested / interesting" },
+
+  { frage: "„Ich war so aufgeregt!“",
+    antworten: ["I was so excited!", "I was so exciting!", "I was so exciting about it!", "I was such exciting!"], richtig: 0,
+    erklaerung: "Dieselbe Regel wie bei interested: Die Person ist excited, die Sache ist exciting.",
+    merkmal: "excited / exciting" },
+
+  { frage: "„Meine Mutter wollte, dass ich es versuche.“",
+    antworten: ["My mum wanted me to try it.", "My mum wanted that I try it.",
+                "My mum wanted, that I tried it.", "My mum wanted me that I try it."], richtig: 0,
+    erklaerung: "want somebody to do something. Einen 'dass'-Satz gibt es nach want nicht.",
+    merkmal: "typisch deutsch – want somebody to" },
+
+  { frage: "„Meine Oma bringt mir das bei.“",
+    antworten: ["My grandma teaches me.", "My grandma learns me.",
+                "My grandma learns it to me.", "My grandma studies me."], richtig: 0,
+    erklaerung: "teach = beibringen, learn = selbst lernen. Im Deutschen klingt 'lernen' nach beidem – im Englischen nicht.",
+    merkmal: "teach / learn" },
+
+  { frage: "„Wir schauen abends fern.“",
+    antworten: ["We watch TV in the evening.", "We look TV in the evening.",
+                "We see TV in the evening.", "We are looking TV at the evening."], richtig: 0,
+    erklaerung: "watch TV, aber look at a picture und see a film at the cinema.",
+    merkmal: "watch / look / see" },
+
+  { frage: "„Ich lernte ihn kennen, während ich in London war.“",
+    antworten: ["I met him while I was in London.", "I met him during I was in London.",
+                "I met him while my stay in London.", "I met him during was I in London."], richtig: 0,
+    erklaerung: "while + ganzer Satz, during + Nomen (during my stay).",
+    merkmal: "while / during" },
+
+  { frage: "„Wenn ich älter bin, arbeite ich mit Tieren.“",
+    antworten: ["When I'm older, I'll work with animals.", "If I'm older, I'll work with animals.",
+                "When I'll be older, I work with animals.", "If I will be older, I work with animals."], richtig: 0,
+    erklaerung: "Älter wird sie sicher – dann when. if heißt: nur falls es passiert. Und nach when/if steht kein will.",
+    merkmal: "when / if" }
+]},
+
+/* ------------------------------------------------------------------ */
+/* Zweithaeufigstes Thema der Loesungshefte 2022-2025: Vergleichen und
+   Steigern, 10 von 80 Items. Die Testfehler hiessen: more good, famousest,
+   popularest, more easy, not so lazy like, as strong like. */
+{ k: "steigern", n: "Steigern & vergleichen", ic: "📊", unter: "as … as, than, better, the most",
+  fragen: [
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["These doughnuts are better than the ones from the shop.",
+                "These doughnuts are more good than the ones from the shop.",
+                "These doughnuts are gooder than the ones from the shop.",
+                "These doughnuts are better as the ones from the shop."], richtig: 0,
+    erklaerung: "good – better – best, und verglichen wird mit than.",
+    merkmal: "Steigerung – unregelmäßig (good)" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["He was the most famous kid in town.", "He was the famousest kid in town.",
+                "He was the most famousest kid in town.", "He was the more famous kid in town."], richtig: 0,
+    erklaerung: "Lange Adjektive: more / the most. famous hat drei Silben.",
+    merkmal: "Steigerung – lange Adjektive" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["The chocolate one is the most popular doughnut.", "The chocolate one is the popularest doughnut.",
+                "The chocolate one is the more popular doughnut.", "The chocolate one is the popularst doughnut."], richtig: 0,
+    erklaerung: "popular hat drei Silben → the most popular.",
+    merkmal: "Steigerung – lange Adjektive" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["After a while it got easier.", "After a while it got more easy.",
+                "After a while it got easyer.", "After a while it got more easier."], richtig: 0,
+    erklaerung: "Zweisilbige Adjektive auf -y: y wird zu i und dann -er. easy – easier – easiest.",
+    merkmal: "Steigerung – Adjektive auf -y" },
+
+  { frage: "„Die Koalas sind nicht so faul, wie alle denken.“",
+    antworten: ["The koalas aren't as lazy as everybody thinks.", "The koalas aren't so lazy like everybody thinks.",
+                "The koalas aren't as lazy like everybody thinks.", "The koalas aren't so lazy as like everybody thinks."], richtig: 0,
+    erklaerung: "Gleichheit: as … as. 'like' ist der deutsche Denkfehler und wird im Test regelmäßig versteckt.",
+    merkmal: "Vergleich – as … as" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["She had the best personality of all.", "She had the most good personality of all.",
+                "She had the better personality of all.", "She had the goodest personality of all."], richtig: 0,
+    erklaerung: "good – better – best. Der Superlativ bekommt 'the'.",
+    merkmal: "Steigerung – unregelmäßig (good)" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["This film is worse than the first one.", "This film is more bad than the first one.",
+                "This film is badder than the first one.", "This film is worser than the first one."], richtig: 0,
+    erklaerung: "bad – worse – worst, ebenfalls unregelmäßig.",
+    merkmal: "Steigerung – unregelmäßig (bad)" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["He is one of the youngest people to walk the trail.",
+                "He is one from the youngest people to walk the trail.",
+                "He is one of the youngest person to walk the trail.",
+                "He is one of youngest people to walk the trail."], richtig: 0,
+    erklaerung: "one OF the … und danach die Mehrzahl. 'one from' ist aus dem Deutschen übersetzt.",
+    merkmal: "one of the …" },
+
+  { frage: "„Er ist genauso groß wie sein Bruder.“",
+    antworten: ["He is as tall as his brother.", "He is as tall like his brother.",
+                "He is so tall as his brother.", "He is as taller as his brother."], richtig: 0,
+    erklaerung: "as + Grundform + as. Gesteigert wird dabei nicht.",
+    merkmal: "Vergleich – as … as" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["It was the coldest day of the year.", "It was the most cold day of the year.",
+                "It was the colder day of the year.", "It was the coldst day of the year."], richtig: 0,
+    erklaerung: "Kurzes Adjektiv → -est, und der Superlativ bekommt 'the'.",
+    merkmal: "Steigerung – kurze Adjektive" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["I have never been happier.", "I was never happier in my life until now.",
+                "I have never been more happy.", "I am never happier been."], richtig: 0,
+    erklaerung: "Bis jetzt und immer noch → present perfect. Und happy wird zu happier.",
+    merkmal: "present perfect statt simple past" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["Her room is bigger than mine.", "Her room is more big than mine.",
+                "Her room is biger than mine.", "Her room is bigger as mine."], richtig: 0,
+    erklaerung: "Kurzes Adjektiv mit einem Vokal: Der Endkonsonant wird verdoppelt – big – bigger – biggest.",
+    merkmal: "Steigerung – kurze Adjektive" }
+]},
+
+/* ------------------------------------------------------------------ */
+/* Drittes grosses Thema: unregelmaessige Vergangenheitsformen, 8 von 80
+   Items. Die Testfehler waren gived, buyed, choosed, heared, tryed - immer
+   die regelmaessige Form da, wo eine unregelmaessige hingehoert. */
+{ k: "verbformen", n: "Verbformen", ic: "🔁", unter: "gave statt gived – und der Rest der Stolpersteine",
+  fragen: [
+  { frage: "Welche Form ist richtig? „His brothers ___ the doughnuts a thumbs up.“",
+    antworten: ["gave", "gived", "gaved", "given"], richtig: 0,
+    erklaerung: "give – gave – given.",
+    merkmal: "unregelmäßige Verbformen" },
+
+  { frage: "Welche Form ist richtig? „Her mother ___ an animal clinic years ago.“",
+    antworten: ["bought", "buyed", "buought", "boughted"], richtig: 0,
+    erklaerung: "buy – bought – bought.",
+    merkmal: "unregelmäßige Verbformen" },
+
+  { frage: "Welche Form ist richtig? „Then we ___ to try something new.“",
+    antworten: ["chose", "choosed", "choosen", "chosed"], richtig: 0,
+    erklaerung: "choose – chose – chosen.",
+    merkmal: "unregelmäßige Verbformen" },
+
+  { frage: "Welche Form ist richtig? „Have you ever ___ of Harvey Sutton?“",
+    antworten: ["heard", "heared", "hear", "hearing"], richtig: 0,
+    erklaerung: "hear – heard – heard. Geschrieben ohne e, gesprochen kurz.",
+    merkmal: "unregelmäßige Verbformen" },
+
+  { frage: "Welche Form ist richtig? „He really ___ hard to do his best.“",
+    antworten: ["tried", "tryed", "tryied", "trys"], richtig: 0,
+    erklaerung: "Verben auf Konsonant + y: y wird zu i, dann -ed. try – tried.",
+    merkmal: "Rechtschreibung – tried / studied" },
+
+  { frage: "Welche Form ist richtig? „The walks ___ longer and longer.“",
+    antworten: ["became", "become", "becomed", "becames"], richtig: 0,
+    erklaerung: "become – became – become.",
+    merkmal: "unregelmäßige Verbformen" },
+
+  { frage: "Welche Form ist richtig? „I ___ that coming.“ (Verneinung)",
+    antworten: ["didn't see", "didn't saw", "don't saw", "didn't seen"], richtig: 0,
+    erklaerung: "Nach didn't steht immer die Grundform – auch bei unregelmäßigen Verben.",
+    merkmal: "Verneinung im simple past" },
+
+  { frage: "„Ich musste meine Familie um Hilfe bitten.“",
+    antworten: ["I had to ask my family for help.", "I musted ask my family for help.",
+                "I must asked my family for help.", "I have must ask my family for help."], richtig: 0,
+    erklaerung: "must hat keine Vergangenheitsform – dafür steht had to.",
+    merkmal: "Modalverben – Ersatzformen" },
+
+  { frage: "„Ich durfte es nicht mehr allein machen.“",
+    antworten: ["I wasn't allowed to do it on my own any more.", "I couldn't allowed to do it on my own any more.",
+                "I mustn't to do it on my own any more.", "I didn't allowed to do it on my own any more."], richtig: 0,
+    erklaerung: "may/can haben im past keine eigene Form für Erlaubnis – dafür: wasn't allowed to.",
+    merkmal: "Modalverben – Ersatzformen" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["Last week he went to school for the first time.",
+                "Last week he has gone to school for the first time.",
+                "Last week he is gone to school for the first time.",
+                "Last week he had gone to school for the first time."], richtig: 0,
+    erklaerung: "Mit einer abgeschlossenen Zeitangabe (last week) steht das simple past.",
+    merkmal: "present perfect vs. simple past" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["She has already seen koalas fighting.", "She already saw koalas fighting.",
+                "She has already saw koalas fighting.", "She is already seeing koalas fighting."], richtig: 0,
+    erklaerung: "already ohne Zeitangabe → present perfect: has/have + 3. Form.",
+    merkmal: "present perfect vs. simple past" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["If everything goes as planned, he will open a second shop.",
+                "If everything go as planned, he will open a second shop.",
+                "If everything goes as planned, he opens a second shop tomorrow for sure.",
+                "If everything will go as planned, he will open a second shop."], richtig: 0,
+    erklaerung: "Nach if steht das present simple – mit -s bei everything – und im Hauptsatz will.",
+    merkmal: "if-Sätze Typ 1" }
+]},
+
+/* ------------------------------------------------------------------ */
 { k: "zeiten", n: "Zeiten", ic: "⏱", unter: "present simple, progressive, past, going to",
   fragen: [
   { frage: "She ___ to school every day.",
@@ -712,7 +961,32 @@ window.BET_RUNDEN = [
                 "I hope that you can to come, it becomes great!",
                 "I hope you can came, it will be great!"], richtig: 0,
     erklaerung: "Nach can steht die Grundform, und 'es wird toll' heißt it's going to be great – nicht 'it becomes'.",
-    merkmal: "E-Mail – typische Fehler" }
+    merkmal: "E-Mail – typische Fehler" },
+
+  /* In allen vier Tests 2022-2025 musste eine Angabe aus einem Ticket, einer
+     Karte oder einem Flyer in die E-Mail uebernommen werden, und immer war
+     einer der drei Punkte ein Erlebnis aus der Vergangenheit. */
+  { frage: "In der Aufgabe liegt ein Ticket mit Ankunftszeit und Bahnhof. Was tust du?",
+    antworten: ["Die Angaben in eigenen Sätzen in die E-Mail einbauen.",
+                "Das Ticket abschreiben, Zeile für Zeile.",
+                "Die Angaben weglassen – sie stehen ja schon im Ticket.",
+                "Eine eigene Uhrzeit erfinden, das merkt keiner."], richtig: 0,
+    erklaerung: "Das ist die Aufgabe: die Angaben aus dem Bild in deinen Text übertragen. Abschreiben bringt keine Sprachpunkte, Weglassen kostet Inhaltspunkte.",
+    merkmal: "E-Mail – Angaben aus Ticket oder Flyer" },
+
+  { frage: "Du sollst den Weg vom Haus zur Veranstaltung beschreiben. Was passt?",
+    antworten: ["Go straight on, then turn left at the church. It's next to the park.",
+                "You go always straight and then left by the church, near from the park.",
+                "Walk always gerade out and turn on the left at the church.",
+                "You must going straight, after turn you left at the church."], richtig: 0,
+    erklaerung: "go straight on, turn left/right, next to, opposite, between – das sind die Bausteine für eine Wegbeschreibung.",
+    merkmal: "E-Mail – Weg beschreiben" },
+
+  { frage: "Du sollst Charlotte nach ihrer Meinung fragen. Was passt?",
+    antworten: ["What do you think about that?", "What thinks you about that?",
+                "How do you mean that?", "What is your meaning about that?"], richtig: 0,
+    erklaerung: "What do you think …? oder Do you like the idea? – 'meaning' heißt Bedeutung, nicht Meinung.",
+    merkmal: "E-Mail – nach der Meinung fragen" }
 ]}
 
 ];

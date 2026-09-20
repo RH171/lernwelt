@@ -123,7 +123,11 @@
       kein ganzer Test. Was du falsch hast, kommt am Ende der Runde noch einmal
       und danach so lange wieder, bis es sitzt.</p>
     <div class="runden" id="runden"></div>
+    <a class="knopf still" href="bet-quiz.html" id="alle-runden">Alle Runden ansehen</a>
     <a class="knopf" href="bet-quiz.html?runde=gemischt">🎲 Gemischte Runde starten</a>
+    <p class="quelle" style="margin-top:10px">Die Themen sind ausgezählt: In den Lösungsheften
+      2022–2025 steht zu jeder der 20 Aufgaben aus Teil II, was sie prüft. Oben stehen die,
+      die am häufigsten drankamen.</p>
   </div>
 
   <div class="karte">
@@ -272,7 +276,8 @@
     if (!box || !RUNDEN.length){ if (box) box.style.display = "none"; return; }
     var st = {};
     try { st = (JSON.parse(localStorage.getItem("helena-bet-quiz") || "{}") || {}).sitzt || {}; } catch(e){}
-    RUNDEN.forEach(function(p){
+    var ZEIGEN = 4;   // der Rest steht in bet-quiz.html
+    RUNDEN.slice(0, ZEIGEN).forEach(function(p){
       var sitzen = p.fragen.filter(function(_, i){ return (st[p.k + "-" + i] || 0) >= 3; }).length;
       var a = document.createElement("a");
       a.className = "runde" + (sitzen === p.fragen.length ? " fertig" : "");
@@ -286,6 +291,9 @@
       a.querySelector(".stand b").textContent = sitzen + "/" + p.fragen.length;
       box.appendChild(a);
     });
+    var rest = RUNDEN.length - ZEIGEN;
+    var knopf = document.getElementById("alle-runden");
+    if (knopf && rest > 0) knopf.textContent = "Alle " + RUNDEN.length + " Runden ansehen (" + rest + " weitere)";
   })();
 })();
 </script>
