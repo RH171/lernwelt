@@ -116,7 +116,11 @@
   try { id = new URL(location.href).searchParams.get("spiel") || ""; } catch(e){}
   if (!id){ $("ladefehler").textContent = "Ich weiß nicht, welches Spiel du meinst. Geh zurück ins Heft und tipp noch einmal auf „Übungsspiel dazu“."; }
   else {
-    fetch("/api/spiele?id=" + encodeURIComponent(id), { credentials:"same-origin" })
+    /* Das "kind" MUSS mit: /api/spiele nimmt ohne diesen Parameter "paul" an -
+       dann wird in Pauls Regal gesucht UND Pauls Ausweis geprueft. Helena war
+       angemeldet und bekam trotzdem "Bitte melde dich mit deinem Code an."
+       (Denny, 20.09.2026). */
+    fetch("/api/spiele?kind=" + KIND + "&id=" + encodeURIComponent(id), { credentials:"same-origin" })
       .then(function(r){ return r.text(); })
       .then(function(t){
         var a = null; try { a = JSON.parse(t); } catch(e){}
@@ -297,7 +301,7 @@
 
     // Dem Server sagen, wie die Runde lief - Grundlage fuers Wiederholen.
     if (spiel && spiel.id){
-      fetch("/api/spiele", { method:"POST", credentials:"same-origin",
+      fetch("/api/spiele?kind=" + KIND, { method:"POST", credentials:"same-origin",
         headers:{"content-type":"application/json"},
         body: JSON.stringify({ id: spiel.id, richtig: richtig, gesamt: gesamt }) }).catch(function(){});
     }
@@ -305,7 +309,6 @@
   }
 
   $("nochmal").addEventListener("click", function(){ if (spiel) starten(); });
-  void KIND;
 })();
 </script>
 <script src="/spiel-navi.js" defer></script>
