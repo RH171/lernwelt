@@ -69,6 +69,7 @@
   .lesekarte:active{transform:scale(.98)}
   /* Die Spiele zum Anfassen: eigene Seiten, sofort da, ohne Bauen. */
   .anfassen h2{font-family:var(--rund);font-size:20px;margin:0 0 4px}
+  .minikachel.breit{width:100%}
   .zweikacheln{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
   @media (max-width:560px){ .zweikacheln{grid-template-columns:1fr} }
   .minikachel{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);background:#fff;
@@ -357,6 +358,10 @@
       <a class="minikachel" href="hausaufgaben.html"><span class="bild">📚</span><span><b>Meine Hausaufgaben</b><span>Foto machen, zusammen schauen</span></span></a>
       <a class="minikachel" href="stundenplan.html"><span class="bild">📅</span><span><b>Mein Stundenplan</b><span>Was habe ich wann?</span></span></a>
     </div>
+    <!-- Das taegliche Quiz (20.09.2026) - kurze Fragen aus seinem Stoff. -->
+    <a class="minikachel breit" href="quiz.html" style="margin-top:10px">
+      <span class="bild">🎯</span><span><b>Mein Quiz</b><span>Ein paar Fragen. Was du nicht wusstest, kommt wieder.</span></span>
+    </a>
 
     <a class="lesekarte" id="lesen" href="klasse2-deutsch-lesegeschichte.html">
       <span class="bild">&#128214;</span>
