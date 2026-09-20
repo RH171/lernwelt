@@ -598,7 +598,13 @@
       clearInterval(uhr);
       if (!j || !j.ok || !j.spiel) throw new Error((j && j.fehler) || "Das Spiel kam nicht zurück. Probier es noch einmal.");
       if (!j.spiel.id) throw new Error("Das Spiel ist gebaut, aber nicht gespeichert worden. Probier es noch einmal.");
-      location.href = "werkstatt.html?spiel=" + encodeURIComponent(j.spiel.id);
+      /* NICHT einfach aufspringen.
+         Denny am 20.09.2026: "Wir waren aber mitten am Arbeiten, und ploetzlich
+         geht das Spiel einfach in den Vordergrund. Da soll bitte ein Pop-up
+         aufgehen: 'Jetzt spielen' oder 'Spaeter spielen', aber nicht einfach
+         ungefragt komplett aufgehen und den Lernfluss sabotieren."
+         Das Spiel ist gebaut und liegt im Regal - es laeuft nicht weg. */
+      spielFertig(j.spiel);
     }).catch(function(e){
       clearInterval(uhr); knopf.disabled = false; knopf.textContent = "🎮 Übungsspiel dazu";
       fehler("f-fehler", (e && e.message) || "Ich konnte das Spiel nicht bauen.");
@@ -613,6 +619,37 @@
 
   // Für die Messung.
   window.__heft = { seiten: function(){ return seiten; }, nimm: nimm };
+
+  /* Das fertige Uebungsspiel anbieten, statt es aufzudraengen. */
+  function spielFertig(spiel){
+    var knopf = $("f-spiel");
+    if (knopf){ knopf.disabled = false; knopf.textContent = "\uD83C\uDFAE \u00DCbungsspiel dazu"; }
+    var alt = document.getElementById("spiel-frage");
+    if (alt) alt.remove();
+    var kasten = document.createElement("div");
+    kasten.id = "spiel-frage";
+    kasten.className = "karte";
+    kasten.innerHTML =
+      '<div style="font:800 18px/1.25 var(--rund);margin-bottom:6px">\uD83C\uDFAE Dein \u00DCbungsspiel ist fertig</div>' +
+      '<p class="unter" style="margin:0 0 12px"><span id="spiel-titel"></span>' +
+      '<br>Es bleibt gespeichert \u2013 du kannst auch sp\u00E4ter noch spielen.</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<button class="knopf haupt" id="spiel-jetzt" type="button">Jetzt spielen</button>' +
+      '<button class="knopf" id="spiel-spaeter" type="button">Sp\u00E4ter spielen</button></div>';
+    // Titel als Text setzen, nicht als HTML - er kommt vom Modell.
+    kasten.querySelector("#spiel-titel").textContent =
+      spiel.titel || "Eine \u00DCbung zu deiner Hausaufgabe";
+    var ziel = document.getElementById("sicht-faden") || document.body;
+    ziel.insertBefore(kasten, ziel.firstChild);
+    kasten.scrollIntoView({ block: "nearest" });
+    document.getElementById("spiel-jetzt").addEventListener("click", function(){
+      location.href = "werkstatt.html?spiel=" + encodeURIComponent(spiel.id);
+    });
+    document.getElementById("spiel-spaeter").addEventListener("click", function(){
+      kasten.remove();
+    });
+  }
+
 })();
 </script>
 <script src="/spiel-navi.js" defer></script>
