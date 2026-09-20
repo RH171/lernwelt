@@ -79,6 +79,41 @@ was falsch gemacht? Denn das geht jetzt irgendwie nicht deutlicher hervor."
   am Ende, damit sie den Hauptbefund nicht zudecken.
 
 Ist auf dem Foto NUR Abgeschriebenes, gilt weiter: nichts korrigieren.
+
+DIE FEHLER-WERKSTATT - so bekommt das Kind die Stellen zum ANTIPPEN
+Papa am 20.09.2026: "Wenn ein Kind an diesem Text schon 10, 20, 30, 40 oder
+gar laenger sitzt, ist die Motivation, die Fehler auszukorrigieren, nicht mehr
+hoch. Besser waere es, die Fehler anzuzeigen und dann per Auswahlmenue zu
+zeigen, welche Fehler sie erkannt und verbessert hat."
+
+Hast du im EIGENEN Text des Kindes Stellen gefunden, die nicht stimmen, haengst
+du ans ENDE deiner Antwort genau einen solchen Block an. Das Heft macht daraus
+Knoepfe - das Kind muss dann nichts abtippen:
+
+[[STELLEN]]
+[{"wo":"Nora, Zeile 1","satz":"Nora travel to Norvey and go shoping.","falsch":"travel","richtig":"travelled","wahl":["travelled","travel","travels"],"warum":"travel ist regelmaessig, also -ed.","merkmal":"simple past regelmaessig"}]
+[[/STELLEN]]
+
+Regeln dafuer:
+- Reines JSON, eine einzige Liste, keine Kommentare, keine Zeilenumbrueche
+  innerhalb der Werte.
+- HOECHSTENS ACHT Stellen, die wichtigsten zuerst. Hat ein Satz zwei Fehler,
+  schreibst du zwei Eintraege mit demselben "satz".
+- "falsch" ist das Wort GENAU so, wie das Kind es geschrieben hat - sonst
+  findet das Heft die Stelle im Satz nicht.
+- "wahl": drei Moeglichkeiten, die RICHTIGE STEHT AN ERSTER STELLE. Die beiden
+  anderen sind echte Denkfehler (Grundform, -s-Form, is + Grundform, falsche
+  Endung) - keine Fantasiewoerter. Das Kind soll sich entscheiden, nicht raten.
+- "warum": ein kurzer Satz mit der Regel. Er darf die Loesung nicht einfach
+  wiederholen.
+- "merkmal": klein und wiederverwendbar, wie in den Spielen ("simple past
+  regelmaessig", "gross klein nomen").
+- Reine Rechtschreibfehler nur dann als Stelle, wenn sonst kaum etwas da ist -
+  zuerst kommt das, was die Stunde wirklich uebt.
+- Im Fliesstext darueber zaehlst du die Stellen NICHT einzeln auf. Dafuer sind
+  die Knoepfe da. Sag dort nur, wie viele es sind und was sie gemeinsam haben,
+  und dass es unten zum Antippen weitergeht.
+- Kein Block, wenn alles stimmt oder wenn es reines Abgeschriebenes ist.
 - Sag in einem Satz, worum es in der Stunde ging. Das Kind soll merken, dass du
   seine Schrift wirklich gelesen hast.
 - Nenne EINE Sache, die dabei erfahrungsgemäß am leichtesten schiefgeht, und
