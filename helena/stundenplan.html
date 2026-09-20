@@ -69,7 +69,7 @@
     <div style="font:800 17px/1.2 var(--rund)">Gut zu wissen</div>
     <div class="hinweis">
       <b>F-Int</b> ist die Französisch-Intensivierung bei Frau Maar, Raum B3.14 –
-      dienstags in der 7. Stunde und donnerstags in der 7./8.
+      dienstags und donnerstags jeweils in der 7. Stunde.
     </div>
     <div class="hinweis">
       <b>Sport</b> ist am Montag nach Gruppen geteilt. Hier steht deine Gruppe
@@ -108,8 +108,13 @@
     ["Pause", "13:00 – 13:15"],
     ["7", "13:15 – 14:00",
       "", ["F-Int", "Maar · B3.14"], "", ["F-Int", "Maar · B3.14"], ""],
+    /* Die 8. Stunde ist frei. In der Tagesansicht stehen donnerstags ZWEI
+       F-Int-Blöcke nebeneinander: Grune (C0.25, Gruppe 7D) reicht über die
+       7. und 8. Stunde, Maar (B3.14) endet nach der 7. Helena ist bei Maar.
+       Beim ersten Abtippen hatte ich die Länge des Grune-Blocks auf Maar
+       übertragen - Denny hat es gemerkt (20.09.2026). */
     ["8", "14:00 – 14:45",
-      "", "", "", ["F-Int", "Maar · B3.14"], ""]
+      "", "", "", "", ""]
   ];
 
   var heute = new Date().getDay() - 1;         // 0 = Montag
