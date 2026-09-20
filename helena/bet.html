@@ -98,14 +98,12 @@
     <p class="unter">Der Test zählt als kleiner Leistungsnachweis, aber <b>doppelt gewichtet</b>.</p>
   </div>
 
+  <!-- Ein Plan statt einer Materialsammlung. Die Seite sagte bisher nur
+       "hier sind vier Tests" - nicht, was damit zu tun ist. Die Schritte
+       richten sich nach der verbleibenden Zeit (siehe Skript unten). -->
   <div class="karte">
-    <h2>Echte Tests zum Üben</h2>
-    <p class="unter" style="margin-top:0">Das sind die Originaltests der letzten Jahre, mit
-      Hörverstehen-Audio und Lösungen. Mach am besten einen davon unter echten
-      Bedingungen: 50 Minuten, Handy weg, erst danach die Lösungen.</p>
-    <div class="jahre" id="jahre"></div>
-    <p class="quelle">Quelle: Staatsinstitut für Schulqualität und Bildungsforschung (ISB), Bayern.
-      Die Dateien liegen dort – ich verlinke sie nur, damit du immer die aktuellen hast.</p>
+    <h2>So würde ich das angehen</h2>
+    <div class="plan" id="plan"></div>
   </div>
 
   <div class="karte">
@@ -117,6 +115,17 @@
     <a class="knopf" href="hausaufgaben.html">📓 Blatt oder Heft fotografieren</a>
     <a class="knopf still" href="quiz.html">🎯 Englisch im Lernquiz üben</a>
   </div>
+
+  <div class="karte">
+    <h2>Echte Tests zum Üben</h2>
+    <p class="unter" style="margin-top:0">Das sind die Originaltests der letzten Jahre, mit
+      Hörverstehen-Audio und Lösungen. Mach am besten einen davon unter echten
+      Bedingungen: 50 Minuten, Handy weg, erst danach die Lösungen.</p>
+    <div class="jahre" id="jahre"></div>
+    <p class="quelle">Quelle: Staatsinstitut für Schulqualität und Bildungsforschung (ISB), Bayern.
+      Die Dateien liegen dort – ich verlinke sie nur, damit du immer die aktuellen hast.</p>
+  </div>
+
 </div>
 
 <script>
@@ -145,16 +154,69 @@
     { j: "2023", a: "2023/JT_2023_E7_Aufgaben.pdf", h: "2023/JT_2023_E7_Hoerverstehen.mp3", l: "2023/JT_2023_E7_Loesungen.pdf" },
     { j: "2022", a: "2022/2022_7_e_aufgaben.pdf",   h: "2022/2022_7_e_audio.mp3",           l: "2022/2022_7_e_loesungen.pdf" }
   ];
+  /* Abhaken, welcher Test schon gemacht ist - nur auf ihrem Geraet. */
+  var SPEICHER = "helena-bet-tests";
+  function lese(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function sichern(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  var gemacht = lese();
+
   var box = document.getElementById("jahre");
-  JAHRE.forEach(function(x){
-    var d = document.createElement("div");
-    d.className = "jahr";
-    d.innerHTML = "<b>Test " + x.j + "</b>" +
-      '<a href="' + BASIS + x.a + '" target="_blank" rel="noopener">📄 Aufgaben</a>' +
-      '<a href="' + BASIS + x.h + '" target="_blank" rel="noopener">🎧 Hörverstehen</a>' +
-      '<a href="' + BASIS + x.l + '" target="_blank" rel="noopener">✅ Lösungen</a>';
-    box.appendChild(d);
-  });
+  function testeMalen(){
+    box.innerHTML = "";
+    JAHRE.forEach(function(x){
+      var d = document.createElement("div");
+      d.className = "jahr";
+      d.innerHTML = "<b>Test " + x.j + "</b>" +
+        '<a href="' + BASIS + x.a + '" target="_blank" rel="noopener">📄 Aufgaben</a>' +
+        '<a href="' + BASIS + x.h + '" target="_blank" rel="noopener">🎧 Hörverstehen</a>' +
+        '<a href="' + BASIS + x.l + '" target="_blank" rel="noopener">✅ Lösungen</a>';
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "hak" + (gemacht[x.j] ? " an" : "");
+      b.innerHTML = '<span class="kasten">' + (gemacht[x.j] ? "✓" : "") + "</span><span></span>";
+      b.querySelector("span:last-child").textContent = gemacht[x.j] ? "gemacht" : "noch nicht gemacht";
+      b.addEventListener("click", function(){
+        if (gemacht[x.j]) delete gemacht[x.j];
+        else gemacht[x.j] = new Date().toISOString().slice(0,10);
+        sichern(gemacht); testeMalen(); planMalen();
+      });
+      d.appendChild(b);
+      box.appendChild(d);
+    });
+  }
+  testeMalen();
+
+  /* Der Plan richtet sich nach der verbleibenden Zeit UND danach, was sie
+     schon gemacht hat. Kein starrer Ablauf, der ab Tag 3 nicht mehr passt. */
+  function planMalen(){
+    var fertig = JAHRE.filter(function(x){ return gemacht[x.j]; }).length;
+    var s = [];
+    if (tage <= 0){
+      s.push(["✓", "Geschafft", "Wenn du magst, schick mir hinterher, was drankam – dann üben wir gezielt weiter."]);
+    } else if (tage <= 2){
+      s.push(["1", "Heute nur noch durchschauen", "Nimm deine Fehler aus dem letzten Test. Nichts Neues mehr anfangen."]);
+      s.push(["2", "Früh schlafen", "Das bringt mehr als eine weitere Stunde büffeln."]);
+    } else {
+      s.push(["1", fertig ? "Noch einen Test schreiben" : "Einen Test unter echten Bedingungen",
+              "50 Minuten, Handy weg, Lösungen erst danach. Dann weißt du, wo du stehst." +
+              (fertig ? " Du hast schon " + fertig + " gemacht." : "")]);
+      s.push(["2", "Fehler mit mir durchgehen",
+              "Fotografier die Stellen, die falsch waren. Ich baue dir eine Übung genau dazu."]);
+      s.push(["3", "Jeden Tag kurz Englisch im Quiz",
+              "Fünf Minuten reichen. Was du falsch hattest, kommt von selbst wieder."]);
+    }
+    var p = document.getElementById("plan");
+    p.innerHTML = "";
+    s.forEach(function(x, i){
+      var d = document.createElement("div");
+      d.className = "schritt";
+      d.innerHTML = '<span class="nr">' + x[0] + '</span><div><b></b><span></span></div>';
+      d.querySelector("b").textContent = x[1];
+      d.querySelector("span:last-child").textContent = x[2];
+      p.appendChild(d);
+    });
+  }
+  planMalen();
 })();
 </script>
 <script src="/spiel-navi.js" defer></script>
