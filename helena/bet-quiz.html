@@ -326,6 +326,14 @@
 
   /* ---------- Aufbau ---------- */
   $("q-gemischt").addEventListener("click", function () { starten(ALLE, "gemischt"); });
+  /* Von der BET-Seite kann man direkt in eine Runde springen: bet-quiz.html?runde=zeiten */
+  (function () {
+    var wunsch = new URLSearchParams(location.search).get("runde");
+    if (!wunsch) return;
+    if (wunsch === "gemischt") return starten(ALLE, "gemischt");
+    var p = RUNDEN.filter(function (x) { return x.k === wunsch; })[0];
+    if (p) starten(p.fragen, p.ic + " " + p.n);
+  })();
   $("q-offen").addEventListener("click", function () { starten(offeneAlle(), "gemischt"); });
   $("q-nochmal").addEventListener("click", function () { zeige("start"); });
   rundenMalen();

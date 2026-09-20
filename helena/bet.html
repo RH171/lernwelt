@@ -85,6 +85,19 @@
     display:flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 auto}
   .jahr .hak.an{border-color:var(--gut);color:var(--gut)}
   .jahr .hak.an .kasten{background:var(--gut);border-color:var(--gut);color:#08251f}
+  /* Die Uebungsrunden ganz oben. minmax(0,1fr) deckelt die Spalte auf die
+     Kastenbreite - sonst ist sie so breit wie ihr breitester Inhalt. */
+  .runden{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;margin:12px 0}
+  .runde{display:flex;align-items:center;gap:12px;min-width:0;text-decoration:none;color:var(--ink);
+         border:2px solid var(--line);background:var(--surface2);border-radius:15px;padding:13px 14px}
+  .runde .ic{font-size:24px;line-height:1;flex:0 0 auto}
+  .runde .mitte{flex:1 1 auto;min-width:0}
+  .runde .titel{display:block;font:800 16px/1.25 var(--rund)}
+  .runde .unter2{display:block;color:var(--muted);font-size:13.5px;line-height:1.35;margin-top:2px}
+  .runde .stand{flex:0 0 auto;font:700 12px/1 var(--rund);color:var(--muted);text-align:right}
+  .runde .stand b{display:block;font-size:16px;color:var(--brand);margin-bottom:3px}
+  .runde.fertig{border-color:var(--gut)}
+  .runde.fertig .stand b{color:var(--gut)}
 </style>
 </head>
 <body>
@@ -98,6 +111,19 @@
     <div style="font-size:15px;opacity:.9">Bayerischer Englischtest</div>
     <div class="cdzahl" id="cd">–</div>
     <div class="cdtext" id="cdtext">Donnerstag, 1. Oktober 2026</div>
+  </div>
+
+  <!-- Denny am 20.09.2026: "erst mal einzelne Fragespiele oder einzelne
+       Fragerunden ... Gerne per Multiple Choice, damit sie sich einfach tut."
+       Darum steht das Ueben in kurzen Runden GANZ OBEN und der
+       50-Minuten-Originaltest weiter unten. -->
+  <div class="karte">
+    <h2>Üben in kleinen Runden</h2>
+    <p class="unter" style="margin-top:0">Acht Fragen zum Antippen, ein paar Minuten –
+      kein ganzer Test. Was du falsch hast, kommt am Ende der Runde noch einmal
+      und danach so lange wieder, bis es sitzt.</p>
+    <div class="runden" id="runden"></div>
+    <a class="knopf" href="bet-quiz.html?runde=gemischt">🎲 Gemischte Runde starten</a>
   </div>
 
   <div class="karte">
@@ -130,7 +156,7 @@
       Übung genau dazu – und was du falsch hattest, kommt in den nächsten Runden
       wieder, mit anderen Wörtern.</p>
     <a class="knopf" href="hausaufgaben.html">📓 Blatt oder Heft fotografieren</a>
-    <a class="knopf still" href="quiz.html">🎯 Englisch im Lernquiz üben</a>
+    <a class="knopf still" href="bet-quiz.html">🎯 Fragerunde zum BET</a>
   </div>
 
   <div class="karte">
@@ -145,6 +171,7 @@
 
 </div>
 
+<script src="bet-fragen.js"></script>
 <script>
 (function(){
   "use strict";
@@ -211,7 +238,7 @@
     if (tage <= 0){
       s.push(["✓", "Geschafft", "Wenn du magst, schick mir hinterher, was drankam – dann üben wir gezielt weiter."]);
     } else if (tage <= 2){
-      s.push(["1", "Heute nur noch durchschauen", "Nimm deine Fehler aus dem letzten Test. Nichts Neues mehr anfangen."]);
+      s.push(["1", "Heute nur noch durchschauen", "Eine kurze Fragerunde über das, was noch wackelt. Nichts Neues mehr anfangen."]);
       s.push(["2", "Früh schlafen", "Das bringt mehr als eine weitere Stunde büffeln."]);
     } else {
       s.push(["1", fertig ? "Noch einen Test schreiben" : "Einen Test unter echten Bedingungen",
@@ -219,8 +246,8 @@
               (fertig ? " Du hast schon " + fertig + " gemacht." : "")]);
       s.push(["2", "Fehler mit mir durchgehen",
               "Fotografier die Stellen, die falsch waren. Ich baue dir eine Übung genau dazu."]);
-      s.push(["3", "Jeden Tag kurz Englisch im Quiz",
-              "Fünf Minuten reichen. Was du falsch hattest, kommt von selbst wieder."]);
+      s.push(["3", "Jeden Tag eine kurze Fragerunde",
+              "Acht Fragen, ein paar Minuten. Was du falsch hattest, kommt von selbst wieder."]);
     }
     var p = document.getElementById("plan");
     p.innerHTML = "";
@@ -234,6 +261,30 @@
     });
   }
   planMalen();
+
+  /* Die Uebungsrunden mit ihrem Stand. Gezaehlt wird dasselbe wie in
+     bet-quiz.html: dreimal richtig in Folge, dann sitzt eine Frage. */
+  (function(){
+    var box = document.getElementById("runden");
+    var RUNDEN = window.BET_RUNDEN || [];
+    if (!box || !RUNDEN.length){ if (box) box.style.display = "none"; return; }
+    var st = {};
+    try { st = (JSON.parse(localStorage.getItem("helena-bet-quiz") || "{}") || {}).sitzt || {}; } catch(e){}
+    RUNDEN.forEach(function(p){
+      var sitzen = p.fragen.filter(function(_, i){ return (st[p.k + "-" + i] || 0) >= 3; }).length;
+      var a = document.createElement("a");
+      a.className = "runde" + (sitzen === p.fragen.length ? " fertig" : "");
+      a.href = "bet-quiz.html?runde=" + encodeURIComponent(p.k);
+      a.innerHTML = '<span class="ic"></span><span class="mitte">' +
+        '<span class="titel"></span><span class="unter2"></span></span>' +
+        '<span class="stand"><b></b>sitzen</span>';
+      a.querySelector(".ic").textContent = p.ic;
+      a.querySelector(".titel").textContent = p.n;
+      a.querySelector(".unter2").textContent = p.unter;
+      a.querySelector(".stand b").textContent = sitzen + "/" + p.fragen.length;
+      box.appendChild(a);
+    });
+  })();
 })();
 </script>
 <script src="/spiel-navi.js" defer></script>
