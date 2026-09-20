@@ -563,7 +563,18 @@
       .then(function(r){ return r.json(); })
       .then(function(a){
         zeige(a && a.ok ? "aufnahme" : "anmelden");
-        if (a && a.ok) sammlungLaden(); else $("code").focus();
+        if (a && a.ok){
+          // Kommt Leon aus dem Hausaufgaben-Heft ("Uebungsspiel dazu"), steht
+          // die Spiel-Nummer in der Adresse. Vorher schickte ihn das Heft auf
+          // werkstatt.html - die gibt es nur bei Paul, er landete auf der
+          // Startseite (Denny, 20.09.2026).
+          var gewuenscht = "";
+          try { gewuenscht = new URL(location.href).searchParams.get("spiel") || ""; } catch(e){}
+          if (gewuenscht){
+            try { history.replaceState(null, "", location.pathname); } catch(e){}
+            spielHolen(gewuenscht);
+          } else sammlungLaden();
+        } else $("code").focus();
       })
       .catch(function(){ zeige("anmelden"); });
   }

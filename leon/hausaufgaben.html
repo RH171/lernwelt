@@ -511,7 +511,7 @@
       a.style.marginBottom = "8px";
       a.textContent = "\uD83C\uDFAE " + (s.titel || "\u00DCbung zu dieser Hausaufgabe");
       a.addEventListener("click", function(){
-        location.href = "werkstatt.html?spiel=" + encodeURIComponent(s.id);
+        location.href = "index.html?spiel=" + encodeURIComponent(s.id);
       });
       box.appendChild(a);
     });
@@ -745,7 +745,7 @@
     ziel.insertBefore(kasten, ziel.firstChild);
     kasten.scrollIntoView({ block: "nearest" });
     document.getElementById("spiel-jetzt").addEventListener("click", function(){
-      location.href = "werkstatt.html?spiel=" + encodeURIComponent(spiel.id);
+      location.href = "index.html?spiel=" + encodeURIComponent(spiel.id);
     });
     document.getElementById("spiel-spaeter").addEventListener("click", function(){
       kasten.remove();

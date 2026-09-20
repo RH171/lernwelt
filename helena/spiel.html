@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Übungsspiel</title>
+<!--
+  Helenas Spieler für gebaute Übungsspiele (20.09.2026).
+
+  Denny: "Ich habe gerade das Spiel bauen lassen und danach habe ich auf
+  'Jetzt spielen' geklickt und bin auf die Startseite zurückgekommen."
+
+  Der Grund: Ihr Hausaufgaben-Heft schickte sie auf "werkstatt.html?spiel=…" -
+  aber eine werkstatt.html gibt es nur bei Paul. Bei Helena UND bei Leon lief
+  der Knopf ins Leere, seit es die Hefte gibt. Leon hat einen eigenen Spieler
+  auf seiner Startseite (die nimmt jetzt ?spiel= entgegen), Helena hatte keinen
+  - das ist diese Seite.
+
+  Kein Zeitdruck, kein "Game over": zweiter Versuch mit Hinweis, danach die
+  Lösung mit Erklärung. Am Ende geht die Runde an /api/spiele (Statistik des
+  Spiels) und an lernstand (Merkmale für den Elternbereich).
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="/quiz/quiz.css">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
+    --akzent:#a78bfa; --akzent-hell:#241f3d; --akzent-auf:#141024; --akzent-text:#c9b8ff;
+    --gut:#49d6bd; --gut-hell:#13322f; --gut-text:#8ee0c2;
+    --schlecht:#ff7a6b; --schlecht-hell:#33191c; --schlecht-text:#ff9b91;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  .eingabe{width:100%;box-sizing:border-box;margin-top:12px;padding:14px;border-radius:14px;
+           border:2px solid var(--line);background:var(--akzent-auf);color:var(--ink);
+           font:600 18px/1.3 var(--font)}
+  .eingabe:focus{outline:none;border-color:var(--akzent)}
+  .schritt{background:var(--akzent-auf);border:1px solid var(--line);border-radius:12px;
+           padding:10px 12px;margin-top:8px;font-size:15px;line-height:1.45;color:var(--muted)}
+  .schritt.fertig{color:var(--gut-text);border-color:var(--gut)}
+  .weg{white-space:pre-wrap;margin-top:10px;font-size:15px;line-height:1.5}
+  @media (max-height:520px){
+    .karte{padding:13px;margin-bottom:9px}
+    .frage{font-size:18px}
+    .qantworten{gap:7px}
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="hausaufgaben.html">‹ Zurück</a>
+    <h1 id="titel">🎮 Übungsspiel</h1>
+    <span class="serie" id="fach"></span>
+  </header>
+
+  <section id="sicht-laden">
+    <div class="karte">
+      <div class="laedt"><i></i><span>Ich hole dein Spiel …</span></div>
+      <div class="fehler" id="ladefehler"></div>
+    </div>
+  </section>
+
+  <section id="sicht-spiel" class="verborgen">
+    <div class="leiste"><i id="balken"></i></div>
+    <div class="karte">
+      <div class="kopfzeile"><span id="nr"></span><span id="merkmal"></span></div>
+      <div class="frage" id="frage"></div>
+      <div id="schritte"></div>
+      <div class="qantworten" id="antworten"></div>
+      <input class="eingabe verborgen" id="feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="knopf verborgen" id="pruefen" type="button">Prüfen</button>
+      <div class="erklaerung verborgen" id="rueckmeldung"></div>
+      <button class="knopf verborgen" id="weiter" type="button">Weiter</button>
+      <p class="unter" style="text-align:right"><span id="punkte"></span></p>
+    </div>
+  </section>
+
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <h2>Geschafft</h2>
+      <div class="endezahl" id="ende-zahl"></div>
+      <p class="unter" id="ende-text"></p>
+      <div class="offen verborgen" id="ende-offen" style="text-align:left"></div>
+      <a class="knopf" href="hausaufgaben.html" style="text-decoration:none">Zurück ins Heft</a>
+      <button class="knopf still" id="nochmal" type="button">Noch einmal spielen</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var KIND = "helena";
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+  function zeige(w){ ["laden","spiel","ende"].forEach(function(x){ $("sicht-"+x).classList.toggle("verborgen", x!==w); }); window.scrollTo(0,0); }
+
+  var spiel = null, nr = 0, richtig = 0, versuch = 0, schrittNr = 0, log = [];
+
+  /* Tolerant vergleichen: Gross/klein, Leerzeichen, Umlaute und ein Punkt am
+     Ende sind kein Fehler. Sonst tippt sie die richtige Antwort und bekommt
+     gesagt, sie sei falsch - genau das ist Paul am 07.09.2026 passiert. */
+  function gleich(a, b){
+    function n(s){
+      return String(s == null ? "" : s).toLowerCase().trim()
+        .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+        .replace(/[.,;!?]+$/,"").replace(/\s+/g," ")
+        .replace(/[''`´]/g,"'");
+    }
+    return n(a) === n(b);
+  }
+
+  /* ---------- Laden ---------- */
+  var id = "";
+  try { id = new URL(location.href).searchParams.get("spiel") || ""; } catch(e){}
+  if (!id){ $("ladefehler").textContent = "Ich weiß nicht, welches Spiel du meinst. Geh zurück ins Heft und tipp noch einmal auf „Übungsspiel dazu“."; }
+  else {
+    fetch("/api/spiele?id=" + encodeURIComponent(id), { credentials:"same-origin" })
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var a = null; try { a = JSON.parse(t); } catch(e){}
+        if (a && a.ok && a.spiel && (a.spiel.aufgaben||[]).length){ spiel = a.spiel; starten(); }
+        else $("ladefehler").textContent = (a && a.fehler) || "Das Spiel konnte ich nicht laden. Versuch es gleich noch einmal.";
+      })
+      .catch(function(){ $("ladefehler").textContent = "Keine Verbindung. Bist du online?"; });
+  }
+
+  function starten(){
+    $("titel").textContent = "🎮 " + (spiel.titel || "Übungsspiel");
+    $("fach").textContent = spiel.fach ? spiel.fach.charAt(0).toUpperCase() + spiel.fach.slice(1) : "";
+    document.title = spiel.titel || "Übungsspiel";
+    nr = 0; richtig = 0; log = [];
+    zeige("spiel");
+    aufgabeMalen();
+  }
+
+  /* ---------- Eine Aufgabe ---------- */
+  function aufgabe(){ return spiel.aufgaben[nr]; }
+
+  function aufgabeMalen(){
+    var a = aufgabe();
+    if (!a) return endeMalen();
+    versuch = 0; schrittNr = 0;
+    $("nr").textContent = "Aufgabe " + (nr + 1) + " von " + spiel.aufgaben.length;
+    $("merkmal").textContent = a.merkmal || "";
+    $("rueckmeldung").classList.add("verborgen");
+    $("weiter").classList.add("verborgen");
+    $("schritte").innerHTML = "";
+    malen();
+  }
+
+  function malen(){
+    var a = aufgabe();
+    var art = a.art || "wahl";
+    var schritte = a.teilschritte || [];
+    $("antworten").innerHTML = "";
+    $("feld").classList.add("verborgen");
+    $("pruefen").classList.add("verborgen");
+
+    if (art === "teilschritte" && schrittNr < schritte.length){
+      $("frage").textContent = schritte[schrittNr].frage;
+      feldZeigen();
+      return;
+    }
+    $("frage").textContent = a.frage;
+    if (art === "wahl" && (a.antworten||[]).length){
+      var reihen = a.antworten.map(function(_,i){ return i; });
+      for (var i = reihen.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var h=reihen[i]; reihen[i]=reihen[j]; reihen[j]=h; }
+      reihen.forEach(function(k){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "qantwort"; b.textContent = a.antworten[k];
+        b.addEventListener("click", function(){ pruefen(a.antworten[k], b); });
+        $("antworten").appendChild(b);
+      });
+    } else {
+      feldZeigen();
+    }
+    fortschritt();
+  }
+
+  function feldZeigen(){
+    var f = $("feld");
+    f.value = ""; f.classList.remove("verborgen");
+    $("pruefen").classList.remove("verborgen");
+    $("pruefen").textContent = "Prüfen";
+    setTimeout(function(){ try { f.focus(); } catch(e){} }, 30);
+  }
+
+  $("pruefen").addEventListener("click", function(){ pruefen($("feld").value, null); });
+  $("feld").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); pruefen($("feld").value, null); } });
+
+  function pruefen(gegeben, knopf){
+    var a = aufgabe();
+    var art = a.art || "wahl";
+    var schritte = a.teilschritte || [];
+    var imSchritt = art === "teilschritte" && schrittNr < schritte.length;
+    var soll = imSchritt ? schritte[schrittNr].richtig : a.richtig;
+    if (!String(gegeben).trim()) return;
+    var stimmt = gleich(gegeben, soll);
+
+    if (imSchritt){
+      if (stimmt){
+        var d = document.createElement("div");
+        d.className = "schritt fertig";
+        d.textContent = "✓ " + schritte[schrittNr].frage + "  →  " + soll;
+        $("schritte").appendChild(d);
+        schrittNr++;
+        malen();
+        return;
+      }
+      rueckmeldung(false, "Schau noch einmal – das war es noch nicht.", true);
+      return;
+    }
+
+    versuch++;
+    if (stimmt){
+      if (versuch === 1) richtig++;
+      melden(a, true);
+      Array.prototype.forEach.call($("antworten").children, function(b){
+        b.disabled = true; if (gleich(b.textContent, soll)) b.classList.add("richtig");
+      });
+      $("feld").disabled = true; $("pruefen").classList.add("verborgen");
+      rueckmeldung(true, a.erklaerung || a.weg || "", false);
+      return;
+    }
+
+    if (knopf) knopf.classList.add("falsch");
+    var hinweis = "";
+    (a.diagnosen || []).forEach(function(d){ if (gleich(d.antwort, gegeben)) hinweis = d.hinweis; });
+
+    if (versuch === 1){
+      rueckmeldung(false, hinweis || "Noch nicht. Schau dir die Frage in Ruhe an und versuch es noch einmal.", true);
+      return;
+    }
+    // Zweiter Fehlversuch: Lösung zeigen. Ein Kind soll üben, nicht feststecken.
+    melden(a, false);
+    Array.prototype.forEach.call($("antworten").children, function(b){
+      b.disabled = true; if (gleich(b.textContent, soll)) b.classList.add("richtig");
+    });
+    $("feld").disabled = true; $("pruefen").classList.add("verborgen");
+    rueckmeldung(false, "Richtig wäre: " + soll + (a.erklaerung ? "\n" + a.erklaerung : (a.weg ? "\n" + a.weg : "")), false);
+  }
+
+  function rueckmeldung(gut, text, weiterVersuchen){
+    var e = $("rueckmeldung");
+    e.innerHTML = "<b>" + (gut ? "Richtig." : "Noch nicht.") + "</b> <span class='weg'></span>";
+    e.querySelector(".weg").textContent = text || "";
+    e.classList.remove("verborgen");
+    e.classList.toggle("gut", !!gut);
+    if (weiterVersuchen){
+      if (!$("feld").classList.contains("verborgen")){ $("feld").value = ""; try { $("feld").focus(); } catch(e2){} }
+      return;
+    }
+    $("weiter").classList.remove("verborgen");
+    $("weiter").textContent = (nr + 1 >= spiel.aufgaben.length) ? "Fertig" : "Weiter";
+    var w = $("weiter");
+    if (w.getBoundingClientRect().bottom > window.innerHeight) w.scrollIntoView({ block:"end" });
+    fortschritt();
+  }
+
+  function melden(a, stimmt){
+    log.push({ merkmal: a.merkmal || "", stimmt: stimmt });
+    if (window.lernstand && window.lernstand.antwort)
+      window.lernstand.antwort(stimmt, a.merkmal || "übung", "", String(a.richtig || ""));
+  }
+
+  $("weiter").addEventListener("click", function(){
+    $("feld").disabled = false;
+    nr++;
+    if (nr >= spiel.aufgaben.length) return endeMalen();
+    aufgabeMalen();
+  });
+
+  function fortschritt(){
+    $("balken").style.width = Math.round((nr / Math.max(1, spiel.aufgaben.length)) * 100) + "%";
+    $("punkte").textContent = richtig + " von " + spiel.aufgaben.length + " gleich richtig";
+  }
+
+  /* ---------- Ende ---------- */
+  function endeMalen(){
+    var gesamt = spiel.aufgaben.length;
+    var quote = gesamt ? Math.round((richtig / gesamt) * 100) : 0;
+    $("ende-zahl").textContent = richtig + " von " + gesamt;
+    $("ende-text").textContent = quote >= 80 ? "Stark. Das sitzt."
+      : quote >= 50 ? "Gut durchgehalten. Was noch wackelt, üben wir weiter."
+      : "Das war schwer, und du bist drangeblieben. Genau darum ging es.";
+
+    var offen = {};
+    log.forEach(function(l){ if (!l.stimmt && l.merkmal) offen[l.merkmal] = true; });
+    var namen = Object.keys(offen);
+    var box = $("ende-offen");
+    if (namen.length){
+      box.innerHTML = "<b>Das üben wir weiter:</b><ul>" + namen.map(function(m){ return "<li>" + esc(m) + "</li>"; }).join("") + "</ul>";
+      box.classList.remove("verborgen");
+    } else box.classList.add("verborgen");
+
+    // Dem Server sagen, wie die Runde lief - Grundlage fuers Wiederholen.
+    if (spiel && spiel.id){
+      fetch("/api/spiele", { method:"POST", credentials:"same-origin",
+        headers:{"content-type":"application/json"},
+        body: JSON.stringify({ id: spiel.id, richtig: richtig, gesamt: gesamt }) }).catch(function(){});
+    }
+    zeige("ende");
+  }
+
+  $("nochmal").addEventListener("click", function(){ if (spiel) starten(); });
+  void KIND;
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
