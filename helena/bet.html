@@ -57,8 +57,10 @@
   .jahre{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
   .jahr{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
   .jahr b{display:block;font:800 17px/1.2 var(--rund);margin-bottom:7px}
-  .jahr a{display:block;color:var(--brand);text-decoration:none;font-size:14.5px;
-    padding:7px 0;min-height:32px;border-bottom:1px solid var(--line)}
+  /* 44 px ist das Mindestmass fuer den Finger (WCAG 2.5.8) - mit 39 px waren
+     die drei Links auf dem iPad und ihrem Handy zu knapp (Messung 20.09.2026). */
+  .jahr a{display:flex;align-items:center;color:var(--brand);text-decoration:none;font-size:14.5px;
+    padding:10px 0;min-height:46px;border-bottom:1px solid var(--line)}
   .jahr a:last-child{border-bottom:none}
   .knopf{display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none;
     border:none;border-radius:15px;min-height:56px;padding:14px 18px;
