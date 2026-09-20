@@ -148,8 +148,11 @@
   .wahlknopf.falsch{border-color:var(--schlecht,#ff7a6b);opacity:.55}
   .stelle-warum{margin-top:9px;font-size:15px;line-height:1.45;color:var(--muted)}
   .stelle-warum.gut{color:var(--gut)}
-  .stelle-feld{width:100%;box-sizing:border-box;margin-top:10px;padding:12px;border-radius:12px;
-               border:2px solid var(--line);background:transparent;color:inherit;font:600 17px/1.2 inherit}
+  /* min-height 48: Ein Eingabefeld ist ein Tippziel und muss mit dem Finger
+     zu treffen sein (44 px, WCAG 2.5.8). Gemessen am 20.09.2026. */
+  .stelle-feld{width:100%;box-sizing:border-box;margin-top:10px;padding:13px;border-radius:12px;
+               min-height:48px;border:2px solid var(--line);background:transparent;color:inherit;
+               font:600 17px/1.2 inherit}
   .loesung{margin-top:14px;border-radius:14px;padding:13px 15px;background:var(--gut-hell,rgba(73,214,189,.10));
            border:1px solid var(--gut);font-size:16px;line-height:1.5}
 </style>
