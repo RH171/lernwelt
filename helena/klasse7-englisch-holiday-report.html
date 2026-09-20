@@ -171,6 +171,16 @@
     .weiter{min-height:50px;margin-top:10px}
     .zweitreihe{margin-top:7px}
     .zweitreihe button{min-height:44px}
+    /* Der Schlussschirm ist der zweite hohe Zustand: Nach einer ganzen Station
+       stehen bis zu sieben Merkmalszeilen untereinander. "Noch eine Runde" lag
+       damit 49 px unter dem Rand (360x643, gemessen 20.09.2026). */
+    .panel h2{font-size:20px}
+    .panel p{font-size:13.5px;margin-bottom:9px}
+    .bilanz{gap:7px;margin:10px 0 2px}
+    .bilanz div{padding:9px 12px;font-size:13.5px}
+    .bilanz .zahl{font-size:14px}
+    .rat{padding:10px 12px;margin-top:9px;font-size:13.5px}
+    .station{min-height:60px;padding:12px 14px;margin-top:8px}
   }
 
   /* Station 1 ist die einzige mit Tastatur. Auf Helenas Handy bleiben dann
@@ -733,6 +743,7 @@
   staendeZeigen();
 })();
 </script>
+<script>window.LERNSTAND_SCHREIBT_SELBST=true;</script>
 <script src="/lernstand.js" defer></script>
 </body>
 </html>
