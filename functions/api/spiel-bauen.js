@@ -11,6 +11,7 @@
 // erfundenes Spiel - das entscheidet die Werkstatt, nicht der Server.
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { schwaechenHolen, schwaechenBlock, wiederholungGeprueft } from "./_schwaechen.js";
 import { spielSichern } from "./spiele.js";
 import { namenRichten } from "./_namen.js";
 import { rechenfehler } from "./_rechnung.js";
@@ -185,6 +186,14 @@ export async function onRequestPost(context) {
   } else {
     inhalt.push({ type: "text", text: `Ich habe kein Bild dabei. Bau mir ein Spiel nach diesem Wunsch: ${wunsch}` });
   }
+
+  /* Was zuletzt nicht saß, kommt wieder - siehe _schwaechen.js.
+     Bewusst in die NUTZER-Nachricht und nicht in den System-Text: Der wird
+     zwischengespeichert (cache_control), und eine Liste, die sich bei jedem
+     Kind und jedem Aufruf ändert, würde den Cache bei jedem Spiel entwerten. */
+  let schwaechen = [];
+  try { schwaechen = await schwaechenHolen(env, kind); } catch (e) {}
+  if (schwaechen.length) inhalt.push({ type: "text", text: schwaechenBlock(schwaechen) });
 
   const anfrageStellen = () => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
