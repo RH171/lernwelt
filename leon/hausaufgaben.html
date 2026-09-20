@@ -505,7 +505,7 @@
     $("titel").textContent = "📄 " + ((offen.titel && offen.titel !== "Meine Hausaufgabe") ? offen.titel : "Hausaufgabe");
     verlaufMalen(offen, false);
     zeige("faden");
-    setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);
+    setTimeout(zumArbeitsplatz, 50);
     if (offen.ungelesenKind){ offen.ungelesenKind = false; post({ id: offen.id, gelesen: true }).catch(function(){}); }
   }
   /* Die Uebungsspiele DIESER Hausaufgabe - dauerhaft, nicht nur einmal nach
@@ -642,7 +642,7 @@
     $("titel").textContent = "📄 Hausaufgabe";
     verlaufMalen(f, true, { von: KIND, text: text, zeit: new Date().toISOString(), lokal: true, lokalUrls: urls });
     zeige("faden");
-    setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);
+    setTimeout(zumArbeitsplatz, 50);
     var i = 0; clearInterval(warteUhr);
     warteUhr = setInterval(function(){ var d = $("denkt"); if (!d){ clearInterval(warteUhr); return; } i++; d.textContent = WARTEN[i % WARTEN.length]; }, 7000);
   }
@@ -656,7 +656,7 @@
     faeden = faeden.map(function(f){ if (f.id === offen.id){ da = true; return offen; } return f; });
     if (!da) faeden.unshift(offen);
     verlaufMalen(offen, false);
-    setTimeout(function(){ window.scrollTo(0, document.body.scrollHeight); }, 50);
+    setTimeout(zumArbeitsplatz, 50);
   }
   function sendFehler(e){
     clearInterval(warteUhr);
@@ -818,6 +818,23 @@
      - Der fertige Text kommt ERST, wenn alle Stellen sitzen. Das ist der
        Belohnungsmoment, nicht die Abkuerzung. */
 
+  /* Wohin der Blick nach einer Antwort springt. Frueher immer ans Seitenende -
+     dort stehen aber nur die Knoepfe. Denny am 20.09.2026 beim Test auf dem
+     iPhone: "Nach deiner Pruefung muesste es nach oben springen und nicht
+     unten bleiben." Gibt es eine offene Verbesserung, ist DAS der
+     Arbeitsplatz; ist alles geschafft, der fertige Text. */
+  function zumArbeitsplatz(){
+    var offeneStelle = document.querySelector("#f-stellen .stelle:not(.fertig)");
+    var fertigText = document.getElementById("stellen-loesung");
+    var ziel = offeneStelle
+      || (fertigText && !fertigText.classList.contains("verborgen") ? fertigText : null);
+    if (ziel){
+      try { ziel.scrollIntoView({ block: "center", behavior: "smooth" }); return; } catch(e){}
+      ziel.scrollIntoView(); return;
+    }
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
   var STELLEN_AUF = /\[\[STELLEN\]\]/, STELLEN_ZU = /\[\[\/STELLEN\]\]/;
 
   function ohneBlock(text){
@@ -972,6 +989,8 @@
         malenStelle(karte, s, i);
         zaehlerSchreiben();
         loesungPruefen();
+        // Weiter zur naechsten offenen Stelle - sie soll nicht suchen muessen.
+        setTimeout(zumArbeitsplatz, 120);
       }
       function danebenMelden(){
         stand["v" + i] = true;
