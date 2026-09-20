@@ -568,6 +568,9 @@
         kopie.type = "button"; kopie.className = "stein";
         kopie.textContent = b.textContent;
         kopie.addEventListener("click", function(){
+          // Ist die Aufgabe durch, ist die Zeile zu. Sonst koennte ein Tipp
+          // den Weiter-Knopf wieder sperren und Helena saesse fest.
+          if ($("weiter").dataset.modus === "weiter") return;
           if ($("bauzeile").classList.contains("richtig")) return;
           kopie.remove(); b.classList.remove("weg");
           $("bauzeile").classList.remove("falsch");
@@ -615,6 +618,10 @@
       regel);
     $("hinweis").disabled = true;
     $("hinweis").style.opacity = ".4";
+    // Ist der Satz abgehakt, sind die Woerter unten nutzlos - und sie sind das
+    // Hoechste an der Station. Auf Helenas Handy lag "Weiter" mit stehendem
+    // Wortvorrat 115 px unter dem Rand (gemessen 20.09.2026). Weg damit.
+    
     var w = $("weiter");
     w.disabled = false; w.classList.remove("grau");
     w.textContent = (lauf.nr + 1 >= lauf.liste.length) ? "Fertig" : "Weiter";
