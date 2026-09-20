@@ -30,7 +30,8 @@ export async function onRequest(context) {
   // Unterordner greift bei Cloudflare NICHT für statische Dateien, nur für
   // Functions – deshalb ist dies die einzige Stelle, an der es wirkt.
   // Fehlt das Secret, wird niemand ausgesperrt.
-  const bereich = url.pathname.match(/^\/(paul|leon|eltern)(?:\/|$)/);
+  // Seit 20.09.2026 auch /helena/ - siehe GESCHUETZT in api/_riegel.js.
+  const bereich = url.pathname.match(/^\/(paul|leon|helena|eltern)(?:\/|$)/);
   if (bereich) {
     const geheim = geheimFuer(env, bereich[1]);
     if (geheim && !(await ausweisGueltig(request, geheim, env))) {

@@ -14,7 +14,12 @@
 // also galt sein Bereich fuer die API als offen - jeder konnte Runden in seine
 // Statistik schreiben, obwohl die Seite selbst einen Code verlangt. Gefunden
 // beim Durchpruefen am 07.09.2026.
-export const GESCHUETZT = ["paul", "leon", "eltern"];
+/* Helena kam am 20.09.2026 dazu (Dennys Entscheidung: "Bereich zumachen").
+   Ihr Bereich war als einziger offen - mit dem Hausaufgaben-Heft hätten ihre
+   Fotos und Texte ohne Anmeldung im Netz gestanden, während dieselben Inhalte
+   bei Paul und Leon hinter dem Riegel liegen. Ihre Vokabeltrainer verlangen
+   damit ebenfalls den Code; das war der Preis und ist so entschieden. */
+export const GESCHUETZT = ["paul", "leon", "helena", "eltern"];
 
 export function brauchtAusweis(env, kind) {
   return GESCHUETZT.includes(String(kind || "").toLowerCase()) && !!geheimFuer(env, kind);
