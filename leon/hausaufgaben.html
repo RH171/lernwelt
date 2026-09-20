@@ -131,6 +131,22 @@
   .grossbild{position:fixed;inset:0;z-index:2147483100;background:rgba(10,12,20,.9);display:flex;align-items:center;justify-content:center;padding:14px}
   .grossbild img{max-width:100%;max-height:100%;border-radius:8px}
   .grossbild button{position:absolute;top:14px;right:14px}
+  .stelle{border:2px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+  .stelle.fertig{border-color:var(--gut);background:var(--gut-hell,rgba(73,214,189,.08))}
+  .stelle-wo{font:700 13px/1.2 var(--rund);color:var(--muted);margin-bottom:6px}
+  .stelle-satz{font-size:16.5px;line-height:1.5}
+  .stelle-satz .luecke{font-weight:800;border-bottom:2px dashed var(--schlecht,#ff7a6b);padding:0 2px}
+  .stelle-satz .luecke.gut{border-bottom-color:var(--gut);color:var(--gut)}
+  .stelle-wahl{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .wahlknopf{border:2px solid var(--line);background:transparent;color:inherit;border-radius:12px;
+             padding:11px 14px;font:700 16px/1.2 var(--rund);cursor:pointer;min-height:44px}
+  .wahlknopf.falsch{border-color:var(--schlecht,#ff7a6b);opacity:.55}
+  .stelle-warum{margin-top:9px;font-size:15px;line-height:1.45;color:var(--muted)}
+  .stelle-warum.gut{color:var(--gut)}
+  .stelle-feld{width:100%;box-sizing:border-box;margin-top:10px;padding:12px;border-radius:12px;
+               border:2px solid var(--line);background:transparent;color:inherit;font:600 17px/1.2 inherit}
+  .loesung{margin-top:14px;border-radius:14px;padding:13px 15px;background:var(--gut-hell,rgba(73,214,189,.10));
+           border:1px solid var(--gut);font-size:16px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -535,7 +551,7 @@
       var wer = document.createElement("span"); wer.className = "wer";
       wer.textContent = (b.von === "werkstatt" ? "Werkstatt" : "Du") + " · " + datum(b.zeit);
       d.appendChild(wer);
-      var t = document.createElement("span"); t.textContent = b.text || ""; d.appendChild(t);
+      var t = document.createElement("span"); t.textContent = ohneBlock(b.text || ""); d.appendChild(t);
       // Leon liest noch nicht sicher - darum liest die Werkstatt ihm vor.
       if (b.von === "werkstatt" && b.text && kannSprechen){
         var hoer = document.createElement("button");
@@ -554,6 +570,7 @@
       var w = document.createElement("div"); w.className = "denkt"; w.id = "denkt";
       w.textContent = "Ich schaue mir dein Blatt genau an …"; box.appendChild(w);
     }
+    if (!wartet) stellenMalen(f); else { var wegDamit = document.getElementById("f-stellen"); if (wegDamit) wegDamit.remove(); }
     $("faden-aktionen").classList.toggle("verborgen", !!wartet || !f);
     // Hat der Lehrer zuletzt eine Lernfrage gestellt, ist das Schreibfeld die Antwort.
     var letzteW = f ? f.verlauf.filter(function(n){ return n.von === "werkstatt"; }).slice(-1)[0] : null;
@@ -779,6 +796,247 @@
     if (!knopf) return;
     var liegt = offen && Array.isArray(offen.spiele) && offen.spiele.length;
     knopf.textContent = liegt ? "\u25B6\uFE0F \u00DCbungsspiel spielen" : "\uD83C\uDFAE \u00DCbungsspiel dazu";
+  }
+
+
+  /* ---------- Die Fehler-Werkstatt ----------
+     Denny am 20.09.2026: "Wenn ein Kind an diesem Text schon 10, 20, 30, 40
+     oder gar laenger sitzt, ist die Motivation, die Fehler auszukorrigieren,
+     nicht mehr hoch. Besser waere es, die Fehler anzuzeigen und dann per
+     Auswahlmenue ... zu zeigen, welche Fehler sie erkannt und verbessert hat,
+     und dann die komplette Loesung zu zeigen, wenn sie alle Fehler korrigiert
+     hat."
+
+     Die Antwort der Werkstatt bringt die Stellen als JSON-Block mit. Hier
+     werden daraus Knoepfe. Zwei Entscheidungen von Denny (20.09.2026):
+     - Die ersten Stellen zum ANTIPPEN, die letzten beiden selbst TIPPEN.
+       Wiedererkennen ist leichter als Schreiben - im Test muss sie schreiben.
+       Wer nicht weiterkommt, holt sich die Auswahl per Knopf dazu.
+     - Der fertige Text kommt ERST, wenn alle Stellen sitzen. Das ist der
+       Belohnungsmoment, nicht die Abkuerzung. */
+
+  var STELLEN_AUF = /\[\[STELLEN\]\]/, STELLEN_ZU = /\[\[\/STELLEN\]\]/;
+
+  function ohneBlock(text){
+    var t = String(text || "");
+    var a = t.search(STELLEN_AUF);
+    if (a < 0) return t;
+    var b = t.search(STELLEN_ZU);
+    return (t.slice(0, a) + (b > a ? t.slice(b + 14) : "")).trim();
+  }
+
+  function stellenLesen(text){
+    var t = String(text || "");
+    var a = t.search(STELLEN_AUF);
+    if (a < 0) return null;
+    var b = t.search(STELLEN_ZU);
+    if (b < a) return null;
+    var roh = t.slice(a + 12, b).trim();
+    var liste = null;
+    try { liste = JSON.parse(roh); } catch(e){ return null; }
+    if (!Array.isArray(liste) || !liste.length) return null;
+    return liste.filter(function(s){
+      return s && s.satz && s.falsch && s.richtig && Array.isArray(s.wahl) && s.wahl.length >= 2;
+    }).slice(0, 8);
+  }
+
+  // Wie viele Stellen am Schluss selbst getippt werden.
+  var SELBST_TIPPEN = 2;
+
+  function standSchluessel(f){ return KIND + "-stellen-" + (f && f.id ? f.id : "x"); }
+  function standLesen(f){
+    try { return JSON.parse(localStorage.getItem(standSchluessel(f)) || "{}") || {}; } catch(e){ return {}; }
+  }
+  function standSchreiben(f, d){
+    try { localStorage.setItem(standSchluessel(f), JSON.stringify(d)); } catch(e){}
+  }
+
+  function satzMitLuecke(s){
+    var i = String(s.satz).indexOf(s.falsch);
+    if (i < 0) return { vor: s.satz + " ", luecke: "", nach: "" };
+    return { vor: s.satz.slice(0, i), luecke: s.falsch, nach: s.satz.slice(i + s.falsch.length) };
+  }
+  function satzRichtig(s){
+    var teile = satzMitLuecke(s);
+    return teile.luecke ? (teile.vor + s.richtig + teile.nach) : s.satz;
+  }
+  function wortGleich(a, b){
+    function n(x){ return String(x == null ? "" : x).toLowerCase().trim().replace(/[.,;:!?]+$/,"").replace(/\s+/g," "); }
+    return n(a) === n(b);
+  }
+
+  function stellenMalen(f){
+    var alt = document.getElementById("f-stellen");
+    if (alt) alt.remove();
+    if (!f) return;
+    var letzteW = (f.verlauf || []).filter(function(n){ return n.von === "werkstatt"; }).slice(-1)[0];
+    var stellen = letzteW ? stellenLesen(letzteW.text) : null;
+    if (!stellen || !stellen.length) return;
+
+    var stand = standLesen(f);
+    var kasten = document.createElement("div");
+    kasten.className = "karte";
+    kasten.id = "f-stellen";
+    var kopf = document.createElement("div");
+    kopf.style.cssText = "font:800 18px/1.25 var(--rund);margin-bottom:4px";
+    kopf.textContent = "✏️ Deine Verbesserungen";
+    kasten.appendChild(kopf);
+    var zaehler = document.createElement("p");
+    zaehler.className = "unter";
+    zaehler.style.margin = "0 0 12px";
+    kasten.appendChild(zaehler);
+
+    function fertigZaehlen(){
+      return stellen.filter(function(_, i){ return stand["s" + i] === true; }).length;
+    }
+    function zaehlerSchreiben(){
+      var n = fertigZaehlen();
+      zaehler.textContent = n + " von " + stellen.length + " geschafft"
+        + (n < stellen.length ? " – tipp die richtige Form an." : "");
+    }
+
+    stellen.forEach(function(s, i){
+      var karte = document.createElement("div");
+      karte.className = "stelle";
+      karte.dataset.nr = String(i);
+      kasten.appendChild(karte);
+      malenStelle(karte, s, i);
+    });
+
+    var loesung = document.createElement("div");
+    loesung.id = "stellen-loesung";
+    loesung.className = "loesung verborgen";
+    kasten.appendChild(loesung);
+
+    function loesungPruefen(){
+      if (fertigZaehlen() < stellen.length){ loesung.classList.add("verborgen"); return; }
+      loesung.innerHTML = "<b>🎉 Geschafft – so ist dein Text richtig:</b>";
+      var ul = document.createElement("div");
+      ul.style.cssText = "margin-top:8px;display:grid;gap:6px";
+      stellen.forEach(function(s){
+        var z = document.createElement("div");
+        z.style.cssText = "font-size:15.5px;line-height:1.45";
+        z.textContent = (s.wo ? s.wo + ": " : "") + satzRichtig(s);
+        ul.appendChild(z);
+      });
+      loesung.appendChild(ul);
+      var hin = document.createElement("p");
+      hin.className = "unter";
+      hin.style.margin = "10px 0 0";
+      hin.textContent = "Schreib es jetzt so in dein Heft. Wenn du magst, schick mir das verbesserte Blatt – dann schaue ich noch einmal drueber.";
+      loesung.appendChild(hin);
+      loesung.classList.remove("verborgen");
+      loesung.scrollIntoView({ block: "nearest" });
+    }
+
+    function malenStelle(karte, s, i){
+      karte.innerHTML = "";
+      var geschafft = stand["s" + i] === true;
+      var wo = document.createElement("div");
+      wo.className = "stelle-wo";
+      wo.textContent = s.wo || ("Stelle " + (i + 1));
+      karte.appendChild(wo);
+
+      var satz = document.createElement("div");
+      satz.className = "stelle-satz";
+      var teile = satzMitLuecke(s);
+      var vor = document.createElement("span"); vor.textContent = teile.vor;
+      var mitte = document.createElement("span");
+      mitte.className = geschafft ? "luecke gut" : "luecke";
+      mitte.textContent = geschafft ? s.richtig : (teile.luecke || "…");
+      var nach = document.createElement("span"); nach.textContent = teile.nach;
+      satz.appendChild(vor); satz.appendChild(mitte); satz.appendChild(nach);
+      karte.appendChild(satz);
+
+      if (geschafft){
+        karte.classList.add("fertig");
+        var ok = document.createElement("div");
+        ok.className = "stelle-warum gut";
+        ok.textContent = "✓ " + (s.warum || "Stimmt.");
+        karte.appendChild(ok);
+        return;
+      }
+
+      var rueck = document.createElement("div");
+      rueck.className = "stelle-warum verborgen";
+      karte.appendChild(rueck);
+
+      function geschafftMelden(){
+        stand["s" + i] = true;
+        standSchreiben(f, stand);
+        if (window.lernstand && window.lernstand.antwort)
+          window.lernstand.antwort(stand["v" + i] ? false : true, s.merkmal || "verbessern", "", s.richtig);
+        malenStelle(karte, s, i);
+        zaehlerSchreiben();
+        loesungPruefen();
+      }
+      function danebenMelden(){
+        stand["v" + i] = true;
+        standSchreiben(f, stand);
+      }
+
+      // Die letzten Stellen werden selbst getippt - dort ist die Auswahl
+      // eine Hilfe auf Knopfdruck, kein Standardweg.
+      var tippen = (i >= stellen.length - SELBST_TIPPEN) && stellen.length > SELBST_TIPPEN && !stand["h" + i];
+
+      if (tippen){
+        var feld = document.createElement("input");
+        feld.className = "stelle-feld";
+        feld.type = "text"; feld.autocomplete = "off"; feld.spellcheck = false;
+        feld.placeholder = "Wie heißt es richtig?";
+        karte.appendChild(feld);
+        var reihe = document.createElement("div");
+        reihe.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px";
+        var pruef = document.createElement("button");
+        pruef.type = "button"; pruef.className = "knopf"; pruef.textContent = "Prüfen";
+        var hilfe = document.createElement("button");
+        hilfe.type = "button"; hilfe.className = "knopf still"; hilfe.textContent = "Ich komme nicht weiter";
+        reihe.appendChild(pruef); reihe.appendChild(hilfe);
+        karte.appendChild(reihe);
+        function pruefen(){
+          var wert = feld.value.trim();
+          if (!wert) return;
+          if (wortGleich(wert, s.richtig)) return geschafftMelden();
+          danebenMelden();
+          rueck.textContent = s.warum || "Noch nicht – schau dir die Zeitform an.";
+          rueck.classList.remove("verborgen", "gut");
+          feld.value = ""; try { feld.focus(); } catch(e){}
+        }
+        pruef.addEventListener("click", pruefen);
+        feld.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); pruefen(); } });
+        hilfe.addEventListener("click", function(){
+          stand["h" + i] = true; standSchreiben(f, stand); malenStelle(karte, s, i);
+        });
+        return;
+      }
+
+      var wahl = document.createElement("div");
+      wahl.className = "stelle-wahl";
+      var reihenfolge = s.wahl.map(function(_, k){ return k; });
+      for (var x = reihenfolge.length - 1; x > 0; x--){
+        var y = Math.floor(Math.random() * (x + 1));
+        var h = reihenfolge[x]; reihenfolge[x] = reihenfolge[y]; reihenfolge[y] = h;
+      }
+      reihenfolge.forEach(function(k){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "wahlknopf"; b.textContent = s.wahl[k];
+        b.addEventListener("click", function(){
+          if (wortGleich(s.wahl[k], s.richtig)) return geschafftMelden();
+          danebenMelden();
+          b.classList.add("falsch"); b.disabled = true;
+          rueck.textContent = s.warum || "Noch nicht – versuch es noch einmal.";
+          rueck.classList.remove("verborgen", "gut");
+        });
+        wahl.appendChild(b);
+      });
+      karte.appendChild(wahl);
+    }
+
+    zaehlerSchreiben();
+    var ziel = document.getElementById("verlauf");
+    if (ziel && ziel.parentNode) ziel.parentNode.insertBefore(kasten, ziel.nextSibling);
+    else document.body.appendChild(kasten);
+    loesungPruefen();
   }
 
 })();
