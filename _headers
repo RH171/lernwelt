@@ -1,0 +1,28 @@
+# Arbeitsdateien duerfen nicht im Cache haengenbleiben.
+#
+# Am 19.09.2026 lagen CLAUDE.md und sechs pruefe-*-Dateien versehentlich im
+# Web-Ordner und wurden aus dem Deployment genommen. Am 20.09.2026 waren sie
+# TROTZDEM noch abrufbar: Cloudflare hatte sie kurz vorher mit
+# "public, s-maxage=604800" gecacht und liefert sie sieben Tage weiter aus -
+# auch wenn es die Datei am Ursprung gar nicht mehr gibt. In der gecachten
+# CLAUDE.md standen 147 Nennungen der Kindernamen.
+#
+# Aus dem Deployment nehmen reicht also nicht. Diese Endungen kommen in der
+# Lernwelt als Kind-Seite nie vor (nachgesehen am 20.09.2026: keine einzige
+# im Web-Ordner). Landet wieder eine dort, ist sie nach dem Aufraeumen
+# SOFORT weg statt erst in einer Woche.
+/*.md
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/*.mjs
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/*.sh
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+
+/*.xlsx
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
