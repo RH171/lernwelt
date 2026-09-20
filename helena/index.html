@@ -59,6 +59,20 @@
   .bet .bettext span{font-size:13px;color:var(--muted)}
   .bet .bettage{font:800 15px/1.2 var(--rund);color:#f59e0b;white-space:nowrap;text-align:right}
   .hauptwege{display:grid;gap:10px;margin:0 0 16px}
+  /* Auf dem Handy muss "Los geht's" ohne Scrollen erreichbar bleiben.
+     Mit drei grossen Karten lag es 66 px unter dem Rand (Messung 20.09.2026,
+     Helenas Android). Darum dort flacher, einzeilig und ohne Untertext -
+     die Wege bleiben sichtbar, kosten aber die Haelfte an Hoehe. */
+  @media (max-width:520px){
+    .hauptwege{gap:6px;margin-bottom:8px}
+    .hauptweg{min-height:46px;padding:8px 12px;gap:9px}
+    .hauptweg .hwic{font-size:21px}
+    .hauptweg .hwtext b{font-size:14.5px}
+    .hauptweg .hwtext span{display:none}
+    /* 44 px bleibt das Mindestmass fuer den Finger (WCAG 2.5.8). */
+    .bet{min-height:46px;padding:8px 12px;margin-bottom:6px}
+    .bet .bettext span{display:none}
+  }
   @media (min-width:680px){ .hauptwege{grid-template-columns:1fr 1fr} }
   .hauptweg{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
