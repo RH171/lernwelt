@@ -212,6 +212,22 @@
     .zweitreihe{margin-top:6px}
     .zweitreihe button{min-height:44px;font-size:13px}
     body.geloest .wahl{display:none}
+    /* Die Stichworte braucht sie beim Bauen, nicht mehr beim Lesen der
+       Rueckmeldung - und die kostet hier denselben Platz. */
+    body.geloest .notiz{display:none}
+    /* Sonst steht der Wortvorrat unter der Bauzeile UND die Bauzeile waechst:
+       die Seite wird doppelt so hoch wie noetig. Auf allen anderen Geraeten
+       bleibt ein gelegtes Wort blass stehen, damit nichts springt - hier ist
+       Platz wichtiger als Ruhe. */
+    .stein.weg{display:none}
+    /* Der Schlussschirm kann sieben Merkmalszeilen haben. Statt sie zu
+       kuerzen - jede ist eine Auskunft, die sie haben wollte - bekommt die
+       Liste hier einen eigenen kleinen Rollbereich. */
+    .bilanz{max-height:96px;overflow-y:auto;margin:8px 0 2px}
+    .bilanz div{padding:8px 11px;font-size:13px}
+    .panel h2{font-size:18px;margin-bottom:5px}
+    .panel p{font-size:13px;margin-bottom:8px}
+    .rat{padding:9px 11px;font-size:13px;margin-top:8px}
   }
 
   /* Station 1 ist die einzige mit Tastatur. Auf Helenas Handy bleiben dann
