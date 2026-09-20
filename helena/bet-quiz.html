@@ -49,16 +49,32 @@
   .runde .stand b{display:block;font-size:17px;color:var(--akzent-text);margin-bottom:3px}
   .runde.fertig{border-color:var(--gut)}
   .runde.fertig .stand b{color:var(--gut-text)}
+  /* Der Lesetext ist der einzige Teil, der beliebig lang wird. Ohne Deckel
+     schiebt er auf einem flachen Fenster (iPad quer, 688 px) den Weiter-Knopf
+     58 px unter den Rand - gemessen am 20.09.2026. Also: er scrollt in sich,
+     der Rest der Aufgabe bleibt sichtbar. */
   .lesetext{white-space:pre-wrap;background:var(--akzent-auf);border:1px solid var(--line);
             border-radius:14px;padding:13px 15px;margin:4px 0 12px;
-            font-size:15.5px;line-height:1.55}
+            font-size:15.5px;line-height:1.55;
+            max-height:min(30vh,260px);overflow:auto;overscroll-behavior:contain}
   .qantwort{text-align:left}
+  /* Flaches Fenster (iPad quer ist nur 688 px hoch): Luft sparen, sonst
+     rutscht "Weiter" nach dem Aufdecken der Erklaerung unter den Rand. */
+  @media (max-height:760px){
+    .karte{padding:14px;margin-bottom:10px}
+    .frage{font-size:19px}
+    .qantworten{gap:8px;margin-top:11px}
+    .lesetext{max-height:26vh}
+    h1{font-size:20px}
+  }
   /* Handy mit offener Tastatur bzw. sehr flaches Fenster: Luft sparen,
      damit "Weiter" nicht unter den Rand rutscht. */
   @media (max-height:520px){
     .karte{padding:13px;margin-bottom:9px}
     .frage{font-size:18px}
-    .lesetext{max-height:34vh;overflow:auto;font-size:14.5px}
+    .lesetext{max-height:22vh;font-size:14.5px;padding:10px 12px;margin-bottom:8px}
+    .qantworten{gap:7px}
+    .qantwort{padding:11px 13px}
     header{margin-bottom:6px}
   }
 </style>
@@ -263,6 +279,11 @@
 
     $("q-weiter").classList.remove("verborgen");
     $("q-weiter").textContent = (nr + 1 >= liste.length) ? "Fertig" : "Weiter";
+    /* Bei einer langen Aufgabe (Lesetext!) steht der Knopf auf einem flachen
+       Fenster sonst unter dem Rand, und sie muesste nach JEDER Antwort
+       scrollen - gemessen auf 1180x688 am 20.09.2026. */
+    var w = $("q-weiter");
+    if (w.getBoundingClientRect().bottom > window.innerHeight) w.scrollIntoView({ block: "end" });
     log.push({ merkmal: f.merkmal, stimmt: stimmt });
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmt, f.merkmal, stimmt ? "" : f.antworten[original], f.antworten[f.richtig]);
