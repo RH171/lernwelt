@@ -142,6 +142,15 @@
 
   <!-- 1. Die Liste -->
   <section id="sicht-liste">
+    <!-- Denny am 20.09.2026: "nicht nur ihre Hausaufgaben hochzuladen ...
+         sondern auch das, was sie an dem Tag oder in der Woche in der Schule
+         gemacht haben ... immer aktuell mit dem Lernstoff zu sein in jedem
+         Fach und zu jeder Stunde." Derselbe Weg, andere Frage. -->
+    <button class="neu-kachel" id="neu-schule" type="button"
+            style="background:linear-gradient(125deg,#7c3aed 0%,#a855f7 55%,#c084fc 100%);box-shadow:0 10px 26px rgba(124,58,237,.3);margin-bottom:10px">
+      <span class="ic">📓</span>
+      <span><b>Das haben wir heute gemacht</b><span>Mach ein Foto von deinem Heft. Ich baue dir eine Übung.</span></span>
+    </button>
     <button class="neu-kachel" id="neu" type="button">
       <span class="ic">📸</span>
       <span><b>Neue Hausaufgabe</b><span>Mach ein Foto. Wir schauen zusammen drüber.</span></span>
@@ -180,6 +189,7 @@
         <div class="chips" id="brauch">
           <button class="chip an" type="button" data-brauch="fertig">✅ Fertig – schau drüber</button>
           <button class="chip" type="button" data-brauch="haengt">🤔 Ich komme nicht weiter</button>
+          <button class="chip" type="button" data-brauch="schule">📓 Heute in der Schule</button>
         </div>
       </div>
       <textarea id="text" maxlength="1200" placeholder="Willst du mir etwas sagen? Zum Beispiel: Aufgabe 3 ist schwer."></textarea>
@@ -412,6 +422,12 @@
     zeige("neu");
   }
   $("neu").addEventListener("click", function(){ neuOeffnen("neu"); });
+  $("neu-schule").addEventListener("click", function(){
+    neuOeffnen("neu");
+    // Dieselbe Maske, nur mit der anderen Frage vorgewählt.
+    var chip = document.querySelector('#brauch [data-brauch="schule"]');
+    if (chip) chip.click();
+  });
   $("neu-abbrechen").addEventListener("click", function(){
     if (modus === "verbessert" && offen) { fadenOeffnen(offen.id); return; }
     $("titel").textContent = "📚 Meine Hausaufgaben"; zeige("liste");
@@ -419,7 +435,9 @@
 
   var BRAUCH = {
     fertig: "Ich bin fertig. Schau bitte drüber, wo ich noch mal hinschauen soll.",
-    haengt: "Ich komme nicht weiter. Hilf mir bitte, ohne mir die Lösung zu verraten."
+    haengt: "Ich komme nicht weiter. Hilf mir bitte, ohne mir die Lösung zu verraten.",
+    // Kein Hausaufgabenblatt, sondern der Unterricht von heute (20.09.2026).
+    schule: "Das haben wir heute gemacht. Bau mir eine Übung dazu."
   };
 
   $("neu-senden").addEventListener("click", function(){
@@ -434,7 +452,9 @@
         .then(nachAntwort).catch(sendFehler);
       return;
     }
-    var neuText = "Meine Hausaufgabe in " + fachName(fach) + ". " + BRAUCH[brauch] + (mehr ? " " + mehr : "");
+    var neuText = (brauch === "schule"
+        ? "Unterricht in " + fachName(fach) + ". "
+        : "Meine Hausaufgabe in " + fachName(fach) + ". ") + BRAUCH[brauch] + (mehr ? " " + mehr : "");
     zeigeFadenMitWarten(null, neuText, urls);
     post({ art: "hausaufgabe", titel: fachName(fach), fach: fach, wo: "Hausaufgaben-Heft",
            geraet: window.lernstand ? window.lernstand.geraet() : "", text: neuText, bild: urls[0], bilder: urls.slice(1) })

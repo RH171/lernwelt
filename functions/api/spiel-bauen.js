@@ -275,6 +275,17 @@ export async function onRequestPost(context) {
   // Xaver. Die Bitte im Auftrag reicht nicht - hier wird es sicher.
   if (kind === "leon") namenRichten(spiel);
 
+  /* Kam die Wiederholung wirklich an? "Eine Bitte im Auftrag ist keine
+     Prüfung" (CLAUDE.md) - also mechanisch nachsehen. Das Spiel wird deswegen
+     NICHT verworfen: Neun brauchbare Aufgaben sind besser als eine
+     Fehlermeldung nach neunzig Sekunden Warten. Aber es wird vermerkt, damit
+     im Elternbereich sichtbar ist, was noch offen steht. */
+  if (schwaechen.length) {
+    const fehlend = wiederholungGeprueft(schwaechen, spiel.aufgaben);
+    spiel.wiederholt = schwaechen.map((s) => s.merkmal).filter((m) => !fehlend.includes(m));
+    if (fehlend.length) spiel.wiederholungFehlt = fehlend;
+  }
+
   spiel.erzeugt = new Date().toISOString();
   if (hausaufgabe) spiel.hausaufgabe = true;
   spiel.kind = kind;
