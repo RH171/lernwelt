@@ -51,6 +51,21 @@
   .hinweis{background:var(--surface2);border-radius:12px;padding:11px 13px;margin-top:10px;
     font-size:14.5px;line-height:1.5;color:var(--muted)}
   .tage{font:800 15px/1 var(--rund);color:var(--warn)}
+  .fach{background:var(--surface2);border-radius:14px;padding:13px 15px;margin-bottom:10px}
+  .fachkopf{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}
+  .fachname{font:800 17px/1.2 var(--rund)}
+  .fachstand{font:800 14px/1.2 var(--rund);color:var(--muted)}
+  .fachstand.fertig{color:var(--gut,#49d6bd)}
+  .haken{display:flex;flex-wrap:wrap;gap:8px}
+  .hak{display:flex;align-items:center;justify-content:center;gap:7px;border:2px solid var(--line);
+    background:var(--card);border-radius:12px;padding:9px 13px;min-height:46px;cursor:pointer;
+    font:700 14.5px/1.2 var(--rund);color:var(--ink)}
+  .hak .kasten{width:20px;height:20px;border-radius:6px;border:2px solid var(--muted);
+    display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1}
+  .hak.an{border-color:var(--gut,#49d6bd);color:var(--gut,#49d6bd)}
+  .hak.an .kasten{background:var(--gut,#49d6bd);border-color:var(--gut,#49d6bd);color:#08251f}
+  .gesamt{background:var(--surface2);border-radius:12px;padding:12px 14px;margin-top:4px;
+    font:700 15.5px/1.4 var(--rund)}
 </style>
 </head>
 <body>
@@ -62,13 +77,9 @@
 
   <div class="karte">
     <h2>Große Leistungsnachweise in der 7. Klasse</h2>
-    <table>
-      <tr><th>Fach</th><th>Wie viele</th><th>Was das heißt</th></tr>
-      <tr><td>Deutsch</td><td class="zahl">3</td><td>Drei Schulaufgaben im Schuljahr</td></tr>
-      <tr><td>Englisch</td><td class="zahl">3 + 1</td><td>Drei Schulaufgaben, dazu eine Projekt-Schulaufgabe</td></tr>
-      <tr><td>Mathematik</td><td class="zahl">4</td><td>Vier Schulaufgaben im Schuljahr</td></tr>
-      <tr><td>Französisch</td><td class="zahl">3 + 1</td><td>Drei schriftliche, dazu eine mündliche Schulaufgabe</td></tr>
-    </table>
+    <p class="unter" style="margin-top:0">Hak ab, was geschrieben ist – dann siehst du
+      immer, was noch kommt.</p>
+    <div id="faecher"></div>
     <p class="unter">Nach den Festlegungen der Schule (GSO, Stand 19.09.2026).
       Das sind die <b>großen</b> Leistungsnachweise – kleine wie Ex und Abfragen
       kommen zusätzlich dazu.</p>
@@ -108,6 +119,73 @@
 <script>
 (function(){
   "use strict";
+  /* Abhaken, was geschrieben ist. Helena am 20.09.2026 über Denny: "würde
+     gerne die Anzahl der Prüfungen sehen und dann abhaken können, wenn sie
+     erledigt sind. So weiss sie immer, was noch auf sie vorkommt."
+     Gespeichert nur auf ihrem Gerät (localStorage) - es sind ihre Noten-
+     Termine, die gehen niemanden sonst etwas an. */
+  var SPEICHER = "helena-pruefungen";
+  var FAECHER = [
+    { k: "deutsch", n: "Deutsch", teile: [
+        { id: "d1", t: "1. Schulaufgabe" }, { id: "d2", t: "2. Schulaufgabe" },
+        { id: "d3", t: "3. Schulaufgabe" } ] },
+    { k: "englisch", n: "Englisch", teile: [
+        { id: "e1", t: "1. Schulaufgabe" }, { id: "e2", t: "2. Schulaufgabe" },
+        { id: "e3", t: "3. Schulaufgabe" }, { id: "ep", t: "Projekt-SA" } ] },
+    { k: "mathe", n: "Mathematik", teile: [
+        { id: "m1", t: "1. Schulaufgabe" }, { id: "m2", t: "2. Schulaufgabe" },
+        { id: "m3", t: "3. Schulaufgabe" }, { id: "m4", t: "4. Schulaufgabe" } ] },
+    { k: "franz", n: "Französisch", teile: [
+        { id: "f1", t: "1. Schulaufgabe" }, { id: "f2", t: "2. Schulaufgabe" },
+        { id: "f3", t: "3. Schulaufgabe" }, { id: "fm", t: "mündliche SA" } ] }
+  ];
+  function lese(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreibe(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  var stand = lese();
+
+  function malen(){
+    var box = document.getElementById("faecher");
+    box.innerHTML = "";
+    var offenGesamt = 0, alleGesamt = 0;
+    FAECHER.forEach(function(f){
+      var fertig = f.teile.filter(function(x){ return stand[x.id]; }).length;
+      offenGesamt += f.teile.length - fertig; alleGesamt += f.teile.length;
+      var d = document.createElement("div");
+      d.className = "fach";
+      var kopf = document.createElement("div");
+      kopf.className = "fachkopf";
+      kopf.innerHTML = '<span class="fachname"></span><span class="fachstand' +
+        (fertig === f.teile.length ? " fertig" : "") + '"></span>';
+      kopf.querySelector(".fachname").textContent = f.n;
+      kopf.querySelector(".fachstand").textContent =
+        fertig === f.teile.length ? "alle geschrieben" : fertig + " von " + f.teile.length;
+      d.appendChild(kopf);
+      var h = document.createElement("div");
+      h.className = "haken";
+      f.teile.forEach(function(x){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "hak" + (stand[x.id] ? " an" : "");
+        b.innerHTML = '<span class="kasten">' + (stand[x.id] ? "✓" : "") + "</span><span></span>";
+        b.querySelector("span:last-child").textContent = x.t;
+        b.addEventListener("click", function(){
+          if (stand[x.id]) delete stand[x.id]; else stand[x.id] = new Date().toISOString().slice(0,10);
+          schreibe(stand); malen();
+        });
+        h.appendChild(b);
+      });
+      d.appendChild(h);
+      box.appendChild(d);
+    });
+    var g = document.createElement("div");
+    g.className = "gesamt";
+    g.textContent = offenGesamt === 0
+      ? "Alle " + alleGesamt + " Schulaufgaben geschrieben."
+      : "Noch " + offenGesamt + " von " + alleGesamt + " Schulaufgaben vor dir.";
+    box.appendChild(g);
+  }
+  malen();
+
   // Wie viele Tage noch? Kein Countdown, der drängt - nur eine Zahl, damit
   // klar ist, ob das nächste Woche oder nächsten Monat ist.
   var ziel = new Date(2026, 9, 1);           // 1. Oktober 2026
