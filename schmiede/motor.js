@@ -1531,6 +1531,34 @@
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
 
+  /* ---- Fenster fuer die Messung: nur lesen ----------------------------
+     Figur, Ballons und Boden liegen im Canvas, nicht im DOM - aus einer
+     Schritt-Datei heraus sind sie also unsichtbar. Die Messung musste
+     deshalb blind tippen und hoffen, dass sie unterwegs einen Ballon
+     streift; mal ging es gut, mal nicht (mess-schritte-schmiede-fliegen.js,
+     Etappe "Endtafel"). Eine Pruefung, die ihr Ziel nur zufaellig erreicht,
+     ist keine Pruefung.
+
+     Hier steht darum, WO alles ist - lesend, nichts laesst sich von aussen
+     setzen. Bewusst NICHT dabei: welcher Ballon der richtige ist. Das waere
+     ein Spickzettel fuer jedes Kind, das die Konsole aufmacht, und dafuer
+     ist hier niemand zu jung. Zum Messen reicht "irgendein Ballon": ob
+     richtig oder falsch - danach kommt die Loesungstafel, und das Spiel
+     laeuft weiter. */
+  window.__messStand = function(){
+    return {
+      x: held.x, y: held.y, w: held.w, h: held.h,
+      boden: bodenY, kamera: kamera, breite: W, zustand: zustand,
+      torX: station ? station.torX : null,
+      art: station ? station.art : null,
+      geloest: station ? !!station.geloest : null,
+      ballons: (station && station.art === "ballons")
+        ? station.items.filter(function(it){ return !it.weg; })
+                       .map(function(it){ return { x:it.x, y:it.y, w:it.w, h:it.h }; })
+        : []
+    };
+  };
+
   var laeuft = false;
   function schleife(){
     if (document.body.classList.contains("spielt")){ update(); zeichnen(); }
