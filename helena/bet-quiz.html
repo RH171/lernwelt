@@ -43,8 +43,10 @@
          border-radius:16px;padding:14px;text-align:left;font:inherit;cursor:pointer}
   .runde .ic{font-size:26px;line-height:1;flex:0 0 auto}
   .runde .mitte{flex:1 1 auto;min-width:0}
+  /* display:block, sonst stehen Titel und Untertitel in EINER Zeile
+     aneinandergeklebt ("Zeitenpresent simple ...") - gemeldet 20.09.2026. */
   .runde .titel{font:800 17px/1.25 var(--rund)}
-  .runde .unter2{color:var(--muted);font-size:14px;line-height:1.35;margin-top:2px}
+  .runde .unter2{display:block;color:var(--muted);font-size:14px;line-height:1.4;margin-top:3px}
   .runde .stand{flex:0 0 auto;font:700 13px/1 var(--rund);color:var(--muted);text-align:right}
   .runde .stand b{display:block;font-size:17px;color:var(--akzent-text);margin-bottom:3px}
   .runde.fertig{border-color:var(--gut)}
