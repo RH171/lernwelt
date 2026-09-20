@@ -291,6 +291,26 @@ async function postVerarbeiten(context) {
       if (von !== "werkstatt" && daten.uebung === true) faden.uebungOffen = true;
       if (von === "werkstatt") faden.uebungOffen = false;
     }
+
+    /* Ein Uebungsspiel gehoert zu SEINER Hausaufgabe, nicht ins allgemeine
+       Regal. Denny am 20.09.2026, mit Foto des Fadens: "Es ist jetzt aber auch
+       nicht ersichtlich, wo das Uebungsspiel gelandet ist ... sodass das dann
+       in dieser Uebungshausaufgabe unten auch erscheint ... Das Spiel ist
+       extra und separat nur fuer diese Hausaufgabe."
+       Darum wird die Kennung am Faden gemerkt; das Heft zeigt sie dort als
+       Knopf, solange es die Hausaufgabe gibt. */
+    if (daten.spielId){
+      const id = String(daten.spielId).slice(0, 40).replace(/[^a-z0-9]/gi, "");
+      if (id){
+        if (!Array.isArray(faden.spiele)) faden.spiele = [];
+        if (!faden.spiele.some((s) => s.id === id)){
+          faden.spiele.push({ id,
+            titel: kuerzen(String(daten.spielTitel || "Übung zu dieser Hausaufgabe").trim(), 120),
+            zeit: new Date().toISOString() });
+          faden.spiele = faden.spiele.slice(-6);
+        }
+      }
+    }
     faden.status = von === "werkstatt" ? "beantwortet" : "offen";
     // Das Kind soll sehen, dass etwas Neues da ist.
     faden.ungelesenKind = von === "werkstatt";
