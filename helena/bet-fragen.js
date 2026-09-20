@@ -186,9 +186,9 @@ window.BET_RUNDEN = [
     erklaerung: "want somebody to do something. Einen 'dass'-Satz gibt es nach want nicht.",
     merkmal: "typisch deutsch – want somebody to" },
 
-  { frage: "„Meine Oma bringt mir das bei.“",
-    antworten: ["My grandma teaches me.", "My grandma learns me.",
-                "My grandma learns it to me.", "My grandma studies me."], richtig: 0,
+  { frage: "„Meine Oma bringt mir Kartenlesen bei.“",
+    antworten: ["My grandma teaches me how to read a map.", "My grandma learns me how to read a map.",
+                "My grandma learns me map reading.", "My grandma studies me how to read a map."], richtig: 0,
     erklaerung: "teach = beibringen, learn = selbst lernen. Im Deutschen klingt 'lernen' nach beidem – im Englischen nicht.",
     merkmal: "teach / learn" },
 
@@ -228,7 +228,7 @@ window.BET_RUNDEN = [
   { frage: "Welcher Satz ist richtig?",
     antworten: ["He was the most famous kid in town.", "He was the famousest kid in town.",
                 "He was the most famousest kid in town.", "He was the more famous kid in town."], richtig: 0,
-    erklaerung: "Lange Adjektive: more / the most. famous hat drei Silben.",
+    erklaerung: "Zweisilbige Adjektive, die nicht auf -y enden, steigern mit more / the most: famous – more famous – the most famous.",
     merkmal: "Steigerung – lange Adjektive" },
 
   { frage: "Welcher Satz ist richtig?",
@@ -283,7 +283,7 @@ window.BET_RUNDEN = [
 
   { frage: "Welcher Satz ist richtig?",
     antworten: ["I have never been happier.", "I was never happier in my life until now.",
-                "I have never been more happy.", "I am never happier been."], richtig: 0,
+                "I have never been happyer.", "I am never happier been."], richtig: 0,
     erklaerung: "Bis jetzt und immer noch → present perfect. Und happy wird zu happier.",
     merkmal: "present perfect statt simple past" },
 
@@ -325,9 +325,9 @@ window.BET_RUNDEN = [
     erklaerung: "Verben auf Konsonant + y: y wird zu i, dann -ed. try – tried.",
     merkmal: "Rechtschreibung – tried / studied" },
 
-  { frage: "Welche Form ist richtig? „The walks ___ longer and longer.“",
-    antworten: ["became", "become", "becomed", "becames"], richtig: 0,
-    erklaerung: "become – became – become.",
+  { frage: "Welche Form ist richtig? „Last summer the walks ___ longer and longer.“",
+    antworten: ["became", "becomed", "becames", "have became"], richtig: 0,
+    erklaerung: "become – became – become. Mit last summer steht das simple past.",
     merkmal: "unregelmäßige Verbformen" },
 
   { frage: "Welche Form ist richtig? „I ___ that coming.“ (Verneinung)",
@@ -344,7 +344,7 @@ window.BET_RUNDEN = [
   { frage: "„Ich durfte es nicht mehr allein machen.“",
     antworten: ["I wasn't allowed to do it on my own any more.", "I couldn't allowed to do it on my own any more.",
                 "I mustn't to do it on my own any more.", "I didn't allowed to do it on my own any more."], richtig: 0,
-    erklaerung: "may/can haben im past keine eigene Form für Erlaubnis – dafür: wasn't allowed to.",
+    erklaerung: "Für eine einzelne Situation in der Vergangenheit nimmt man wasn't allowed to. (could gibt es auch – aber für etwas, das allgemein erlaubt war.)",
     merkmal: "Modalverben – Ersatzformen" },
 
   { frage: "Welcher Satz ist richtig?",
@@ -358,13 +358,13 @@ window.BET_RUNDEN = [
   { frage: "Welcher Satz ist richtig?",
     antworten: ["She has already seen koalas fighting.", "She already saw koalas fighting.",
                 "She has already saw koalas fighting.", "She is already seeing koalas fighting."], richtig: 0,
-    erklaerung: "already ohne Zeitangabe → present perfect: has/have + 3. Form.",
+    erklaerung: "already ohne Zeitangabe → present perfect: has/have + 3. Form. Im amerikanischen Englisch hört man auch das simple past – im Test gilt die britische Regel.",
     merkmal: "present perfect vs. simple past" },
 
   { frage: "Welcher Satz ist richtig?",
     antworten: ["If everything goes as planned, he will open a second shop.",
                 "If everything go as planned, he will open a second shop.",
-                "If everything goes as planned, he opens a second shop tomorrow for sure.",
+                "If everything goes as planned, he will opens a second shop.",
                 "If everything will go as planned, he will open a second shop."], richtig: 0,
     erklaerung: "Nach if steht das present simple – mit -s bei everything – und im Hauptsatz will.",
     merkmal: "if-Sätze Typ 1" }
@@ -886,10 +886,10 @@ window.BET_RUNDEN = [
     erklaerung: "An jemanden in deinem Alter: Hi Jack, oder Dear Jack,. 'Dear Sir or Madam' ist für Briefe an Fremde in einer Firma.",
     merkmal: "E-Mail – Anrede" },
 
-  { frage: "Nach der Anrede kommt ein Komma. Wie geht es weiter?",
-    antworten: ["mit einem kleinen Buchstaben in der nächsten Zeile", "mit einem großen Buchstaben",
-                "mit einem Doppelpunkt", "ohne Zeilenumbruch, direkt dahinter"], richtig: 0,
-    erklaerung: "Anders als im Deutschen? Nein – hier ist es gleich: nach 'Hi Jack,' geht es klein weiter. Im Englischen sieht man auch Großschreibung, aber klein ist nie falsch.",
+  { frage: "Nach der Anrede „Hi Jack,“ geht es in der nächsten Zeile weiter. Wie?",
+    antworten: ["I'm writing to tell you about our trip.", "i'm writing to tell you about our trip.",
+                "- I'm writing to tell you about our trip.", "Hi again, I'm writing to tell you about our trip."], richtig: 0,
+    erklaerung: "Im Englischen geht es nach der Anrede GROSS weiter – anders als im Deutschen, wo man klein weiterschreibt.",
     merkmal: "E-Mail – Aufbau" },
 
   { frage: "Der erste Satz soll sagen, warum du schreibst. Was passt?",
@@ -985,7 +985,7 @@ window.BET_RUNDEN = [
   { frage: "Du sollst Charlotte nach ihrer Meinung fragen. Was passt?",
     antworten: ["What do you think about that?", "What thinks you about that?",
                 "How do you mean that?", "What is your meaning about that?"], richtig: 0,
-    erklaerung: "What do you think …? oder Do you like the idea? – 'meaning' heißt Bedeutung, nicht Meinung.",
+    erklaerung: "What do you think …? oder Do you like the idea? – 'meaning' heißt Bedeutung, nicht Meinung. „How do you mean that?“ ist zwar richtiges Englisch, fragt aber: Wie ist das gemeint?",
     merkmal: "E-Mail – nach der Meinung fragen" }
 ]}
 
