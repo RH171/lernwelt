@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meine Prüfungen</title>
+<!--
+  Helenas Übersicht über die großen Leistungsnachweise (20.09.2026).
+
+  Quelle: "Anlage TOP 21", Festlegungen gemäß GSO zur Zahl der großen
+  Leistungsnachweise (KMS vom 18.06.26), Stand 19.09.2026 - von Denny
+  geschickt.
+
+  WICHTIG und ehrlich: Das Dokument nennt KEINE Prüfungstermine, sondern wie
+  VIELE Prüfungen es je Fach und Jahrgangsstufe gibt. Der einzige feste Termin
+  darin ist der BET 7 am 01.10.2026. Alles andere legt die Schule im Lauf des
+  Jahres fest - darum steht hier nirgends ein erfundenes Datum.
+
+  Kein Kalender und keine Erinnerung (siehe [[keine-kalender-banner]]) -
+  nur zum Nachschauen, wie der Stundenplan.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --surface2:#1f2740; --ink:#eef2fb;
+    --muted:#8a92a8; --line:#2a3350; --brand:#a78bfa; --warn:#ffce5c;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:860px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
+    font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:150px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+  h2{font:800 18px/1.25 var(--rund);margin:0 0 10px}
+  table{width:100%;border-collapse:collapse;font-family:var(--rund)}
+  th,td{border:1px solid var(--line);padding:11px 9px;text-align:left;font-size:clamp(14px,2.4vw,16px)}
+  th{background:var(--surface2);font-weight:800}
+  td.zahl{font-weight:800;text-align:center;white-space:nowrap}
+  .unter{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px 0 0}
+  .termin{display:flex;gap:12px;align-items:flex-start;background:#3a2f12;border:1px solid #6b5518;
+    border-radius:14px;padding:13px 15px;margin-top:10px}
+  .termin .ic{font-size:22px;line-height:1.2}
+  .termin b{color:var(--warn)}
+  .hinweis{background:var(--surface2);border-radius:12px;padding:11px 13px;margin-top:10px;
+    font-size:14.5px;line-height:1.5;color:var(--muted)}
+  .tage{font:800 15px/1 var(--rund);color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/helena/">‹ Zurück</a>
+    <h1>📋 Meine Prüfungen</h1>
+  </header>
+
+  <div class="karte">
+    <h2>Große Leistungsnachweise in der 7. Klasse</h2>
+    <table>
+      <tr><th>Fach</th><th>Wie viele</th><th>Was das heißt</th></tr>
+      <tr><td>Deutsch</td><td class="zahl">3</td><td>Drei Schulaufgaben im Schuljahr</td></tr>
+      <tr><td>Englisch</td><td class="zahl">3 + 1</td><td>Drei Schulaufgaben, dazu eine Projekt-Schulaufgabe</td></tr>
+      <tr><td>Mathematik</td><td class="zahl">4</td><td>Vier Schulaufgaben im Schuljahr</td></tr>
+      <tr><td>Französisch</td><td class="zahl">3 + 1</td><td>Drei schriftliche, dazu eine mündliche Schulaufgabe</td></tr>
+    </table>
+    <p class="unter">Nach den Festlegungen der Schule (GSO, Stand 19.09.2026).
+      Das sind die <b>großen</b> Leistungsnachweise – kleine wie Ex und Abfragen
+      kommen zusätzlich dazu.</p>
+  </div>
+
+  <div class="karte">
+    <h2>Fester Termin</h2>
+    <div class="termin">
+      <span class="ic">📝</span>
+      <div>
+        <b>BET 7 – Bayerischer Englischtest</b><br>
+        Donnerstag, <b>1. Oktober 2026</b> · <span id="countdown" class="tage"></span><br>
+        <span style="color:var(--muted);font-size:14px">Verpflichtend. Zählt als kleiner Leistungsnachweis,
+        aber <b>doppelt gewichtet</b>.</span>
+      </div>
+    </div>
+    <div class="hinweis">
+      Das ist der einzige feste Termin im Dokument. Wann deine Schulaufgaben
+      geschrieben werden, legt die Schule im Lauf des Jahres fest – sobald du
+      einen Termin hast, kannst du ihn mir im Hausaufgaben-Heft schreiben.
+    </div>
+  </div>
+
+  <div class="karte">
+    <h2>Was später kommt</h2>
+    <table>
+      <tr><th>Klasse</th><th>Deutsch</th><th>Englisch</th><th>Mathe</th><th>Französisch</th></tr>
+      <tr><td>8</td><td class="zahl">3</td><td class="zahl">2 + 1 mdl.</td><td class="zahl">3</td><td class="zahl">4</td></tr>
+      <tr><td>9</td><td class="zahl">2 + 1 mdl.</td><td class="zahl">3</td><td class="zahl">3</td><td class="zahl">3</td></tr>
+      <tr><td>10</td><td class="zahl">3</td><td class="zahl">3</td><td class="zahl">3</td><td class="zahl">2 + 1 mdl.</td></tr>
+    </table>
+    <p class="unter">In der 8. Klasse kommt außerdem der Mathematiktest BMT 8 dazu,
+      ab dem Schuljahr 26/27 doppelt gewichtet.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // Wie viele Tage noch? Kein Countdown, der drängt - nur eine Zahl, damit
+  // klar ist, ob das nächste Woche oder nächsten Monat ist.
+  var ziel = new Date(2026, 9, 1);           // 1. Oktober 2026
+  var heute = new Date(); heute.setHours(0,0,0,0);
+  var tage = Math.round((ziel - heute) / 86400000);
+  var el = document.getElementById("countdown");
+  el.textContent = tage > 1 ? "in " + tage + " Tagen"
+                 : tage === 1 ? "morgen"
+                 : tage === 0 ? "heute"
+                 : "vorbei";
+  if (tage < 0) el.style.color = "var(--muted)";
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+</body>
+</html>
