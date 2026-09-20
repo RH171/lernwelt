@@ -50,6 +50,17 @@
     .chip{padding:8px 11px; font-size:13px;}
   }
 
+  .hauptwege{display:grid;gap:10px;margin:0 0 16px}
+  @media (min-width:680px){ .hauptwege{grid-template-columns:1fr 1fr} }
+  .hauptweg{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;min-height:76px}
+  .hauptweg.schule{background:linear-gradient(125deg,#4c1d95 0%,#6d28d9 55%,#8b5cf6 100%);
+    border-color:transparent;color:#fff}
+  .hauptweg .hwic{font-size:30px;line-height:1}
+  .hauptweg .hwtext{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .hauptweg .hwtext b{font-size:17px}
+  .hauptweg .hwtext span{font-size:14px;opacity:.85;line-height:1.35}
   .setup{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
     padding:18px; box-shadow:var(--shadow); margin-bottom:16px;}
   .setup h2{font-family:var(--round); font-weight:800; font-size:16px; margin:0 0 14px;}
@@ -347,6 +358,23 @@
       <div class="chip">🧠 <span id="sitzt">0</span><small>sitzen</small></div>
     </div>
   </header>
+
+  <!-- Zwei grosse Wege nach oben, nicht nur als Knopf in der Kopfzeile.
+       Denny am 20.09.2026: "Wo finden wir das? Weil ich wuerde gerne mit
+       Helena Blaetter hochladen..." - bei Paul war es von Anfang an eine
+       grosse Karte, bei ihr nur ein Chip. Zu versteckt. -->
+  <div class="hauptwege">
+    <a class="hauptweg schule" href="hausaufgaben.html">
+      <span class="hwic">📓</span>
+      <span class="hwtext"><b>Das haben wir heute gemacht</b>
+        <span>Heft, Tafelbild oder Blatt fotografieren – ich baue eine Übung daraus.</span></span>
+    </a>
+    <a class="hauptweg" href="hausaufgaben.html">
+      <span class="hwic">📝</span>
+      <span class="hwtext"><b>Meine Hausaufgaben</b>
+        <span>Wir schauen zusammen drüber, bis alles sitzt.</span></span>
+    </a>
+  </div>
 
   <section class="setup" id="setup">
     <!-- Ein Hauptweg statt drei Entscheidungen: Das System weiss, was ansteht.

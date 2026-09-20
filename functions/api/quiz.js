@@ -1,0 +1,311 @@
+// Das tägliche Lernquiz - Fragen zum aktuellen Schulstoff, je Kind.
+//
+// Denny am 20.09.2026: "Kannst du bei jedem Anwender noch ein Quiz bauen, wo
+// die Fragen zum Schulunterricht sind und nur die Fragen, die falsch
+// beantwortet werden, immer wiederholt werden? Die Fragen sollen immer
+// unterschiedlich sein ... 5 bis 10 Minuten lernen oder früh morgens noch mal
+// schnell ... alle oder nur gezielte Fächer ... 15 oder mehr Fragen oder
+// endlos ... aber so, dass ein hoher Lernerfolg ist."
+// Dazu: "daran denken, dass dies immer aktuell bei jedem Spieler sein muss."
+//
+// GET  /api/quiz?faecher=mathe,deutsch&anzahl=15   -> Fragen
+// POST /api/quiz  {antworten:[{frageId, merkmal, fach, stimmt}]}  -> mitschreiben
+//
+// ---------------------------------------------------------------------------
+// Woher die Fragen kommen, und warum nicht aus einer festen Liste
+//
+// Eine feste Liste ist genau das Problem, das Paul am selben Tag gemeldet hat:
+// "die Aufgaben hier sind immer die gleichen" - er lernt die Antwort auswendig
+// statt der Regel. Darum gibt es einen VORRAT je Kind, der nachwächst:
+//
+//   quiz-vorrat:<kind>   { fragen: [...], gebaut: <iso> }
+//
+// Läuft er leer, wird nachgebaut - mit dem Lehrplan des Kindes, seinen offenen
+// Lernzielen (_schwaechen.js) und dem, was es zuletzt aus der Schule
+// fotografiert hat. Das ist der "immer aktuell"-Teil: Nicht der Lehrplan
+// allein entscheidet, sondern was in der Woche wirklich dran war.
+//
+// Gestellte Fragen werden vermerkt und kommen nicht wieder - eine Frage wird
+// also nie zweimal gezeigt. Das LERNZIEL dagegen schon, sooft es nötig ist.
+
+import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
+import { schwaechenHolen } from "./_schwaechen.js";
+
+const KINDER = {
+  paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
+  leon:   { datei: "grundschule-1-2.json", stufe: "2. Klasse Grundschule", alter: 8 },
+  helena: { datei: "gymnasium-7.json",     stufe: "7. Klasse Gymnasium",   alter: 12 },
+};
+
+const VORRAT = (kind) => "quiz-vorrat:" + kind;
+const GESTELLT = (kind) => "quiz-gestellt:" + kind;
+
+// So viele Fragen baut ein Nachschub-Lauf. Gross genug, dass es sich lohnt
+// (ein Lauf kostet echtes Geld), klein genug fuer eine Antwort ohne Abbruch.
+const JE_LAUF = 24;
+// Darunter wird nachgefuellt, damit nie jemand vor einem leeren Quiz sitzt.
+const NACHFUELLEN_AB = 10;
+// Mehr als so viele Kennungen werden nicht aufgehoben - sonst waechst der
+// Eintrag endlos und jeder Schreibvorgang wird teurer.
+const GESTELLT_MAX = 400;
+
+export async function onRequestGet(context) {
+  const { request, env } = context;
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+
+  const url = new URL(request.url);
+  const kind = String(url.searchParams.get("kind") || "").toLowerCase();
+  if (!KINDER[kind]) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+  if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+    return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  const gewuenschteFaecher = String(url.searchParams.get("faecher") || "")
+    .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const anzahlRoh = Number(url.searchParams.get("anzahl"));
+  // 0 heisst "endlos" - dann wird geliefert, was da ist, und beim naechsten
+  // Nachladen weiter.
+  const anzahl = Number.isFinite(anzahlRoh) ? Math.min(40, Math.max(0, Math.trunc(anzahlRoh))) : 15;
+
+  let vorrat = await vorratLesen(env, kind);
+  const gestellt = new Set(await gestellteLesen(env, kind));
+
+  let offen = vorrat.fragen.filter((f) => !gestellt.has(f.id));
+  if (gewuenschteFaecher.length)
+    offen = offen.filter((f) => gewuenschteFaecher.includes(String(f.fach || "").toLowerCase()));
+
+  // Reicht es nicht, wird nachgebaut. Der Aufruf dauert - darum sagt die
+  // Antwort ehrlich, dass gewartet wird, statt still nichts zu liefern.
+  let nachgebaut = false;
+  if (offen.length < Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB)) {
+    try {
+      const neu = await nachschubBauen(env, kind, gewuenschteFaecher);
+      if (neu.length) {
+        vorrat.fragen = vorrat.fragen.concat(neu).slice(-200);
+        vorrat.gebaut = new Date().toISOString();
+        await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(vorrat));
+        nachgebaut = true;
+        offen = vorrat.fragen.filter((f) => !gestellt.has(f.id));
+        if (gewuenschteFaecher.length)
+          offen = offen.filter((f) => gewuenschteFaecher.includes(String(f.fach || "").toLowerCase()));
+      }
+    } catch (e) { /* Vorrat reicht vielleicht trotzdem */ }
+  }
+
+  if (!offen.length)
+    return json(200, { ok: true, fragen: [], leer: true,
+      fehler: "Für diese Auswahl habe ich gerade keine neuen Fragen. Versuch es mit mehr Fächern." });
+
+  mischen(offen);
+  const raus = anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40);
+  return json(200, { ok: true, fragen: raus, nachgebaut, vorrat: offen.length });
+}
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+
+  let daten = {};
+  try { daten = await request.json(); } catch (e) {}
+  const kind = String(daten.kind || "").toLowerCase();
+  if (!KINDER[kind]) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+  if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+    return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  const antworten = Array.isArray(daten.antworten) ? daten.antworten.slice(0, 60) : [];
+  if (!antworten.length) return json(200, { ok: true });
+
+  /* Gestellte Fragen merken - eine Frage kommt nie zweimal.
+     RICHTIG beantwortete verschwinden endgültig. FALSCHE bleiben im Vorrat
+     nicht liegen: Das Lernziel kommt über _schwaechen.js in die nächsten
+     Spiele UND in den nächsten Nachschub, aber als andere Frage. Genau
+     Dennys Vorgabe: "nicht exakt die gleiche Frage ... sondern mit dem
+     gleichen Lernziel". */
+  const gestellt = await gestellteLesen(env, kind);
+  for (const a of antworten) if (a && a.frageId) gestellt.push(String(a.frageId).slice(0, 24));
+  await env.PAUL_KV.put(GESTELLT(kind), JSON.stringify(gestellt.slice(-GESTELLT_MAX)));
+
+  return json(200, { ok: true });
+}
+
+async function vorratLesen(env, kind) {
+  try {
+    const roh = await env.PAUL_KV.get(VORRAT(kind));
+    const d = roh ? JSON.parse(roh) : null;
+    if (d && Array.isArray(d.fragen)) return d;
+  } catch (e) {}
+  return { fragen: [], gebaut: null };
+}
+
+async function gestellteLesen(env, kind) {
+  try {
+    const roh = await env.PAUL_KV.get(GESTELLT(kind));
+    const d = roh ? JSON.parse(roh) : null;
+    if (Array.isArray(d)) return d;
+  } catch (e) {}
+  return [];
+}
+
+function mischen(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+function json(status, daten) {
+  return new Response(JSON.stringify(daten), {
+    status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+/* ---------- Nachschub ---------- */
+
+const WERKZEUG = {
+  name: "quiz_fragen",
+  description: "Die Quizfragen als Liste.",
+  input_schema: {
+    type: "object",
+    properties: {
+      fragen: {
+        type: "array", minItems: 12, maxItems: 30,
+        items: {
+          type: "object",
+          properties: {
+            fach: { type: "string", description: "Kürzel des Fachs, genau wie in der Fächerliste vorgegeben." },
+            frage: { type: "string", description: "Eine Frage, höchstens 20 Wörter. Keine Aufzählung, kein Lückentext über mehrere Zeilen." },
+            antworten: { type: "array", minItems: 3, maxItems: 4, items: { type: "string" },
+                         description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
+            erklaerung: { type: "string", description: "Ein Satz, warum das stimmt. Für das Kind, nicht für Erwachsene." },
+            merkmal: { type: "string", description: 'Was die Frage übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Gleiche Sache = gleicher Schlüssel, damit sich zählen lässt, ob es sitzt. Gut: "zehneruebergang plus", "m in cm", "steigerung adjektive", "passe compose". Schlecht: "Frage 3", "gemischt".' },
+          },
+          required: ["fach", "frage", "antworten", "erklaerung", "merkmal"],
+        },
+      },
+    },
+    required: ["fragen"],
+  },
+};
+
+async function nachschubBauen(env, kind, nurFaecher) {
+  if (!env.ANTHROPIC_API_KEY) return [];
+  const k = KINDER[kind];
+
+  let lehrplan = null;
+  try {
+    const r = await env.ASSETS.fetch(new URL("/lehrplan/" + k.datei, "https://x"));
+    lehrplan = await r.json();
+  } catch (e) { return []; }
+  if (!lehrplan) return [];
+
+  let faecher = Array.isArray(lehrplan) ? lehrplan : (lehrplan.faecher || []);
+  if (nurFaecher && nurFaecher.length)
+    faecher = faecher.filter((f) => nurFaecher.includes(String(f.kuerzel || "").toLowerCase()));
+  if (!faecher.length) faecher = Array.isArray(lehrplan) ? lehrplan : (lehrplan.faecher || []);
+
+  const fachListe = faecher.map((f) =>
+    `${f.kuerzel} = ${f.name}: ` +
+    (f.lernbereiche || []).slice(0, 8).map((l) => l.titel).join("; ")).join("\n");
+
+  // Was zuletzt nicht saß - das ist der Kern der Wiederholung.
+  let schwaechen = [];
+  try { schwaechen = await schwaechenHolen(env, kind, 6); } catch (e) {}
+
+  // Und was zuletzt wirklich im Unterricht dran war (Fotos aus dem Heft).
+  const ausDerSchule = await letzterUnterricht(env, kind);
+
+  const auftrag = `Du baust Quizfragen für ein Kind, das jeden Tag fünf bis zehn Minuten üben will.
+
+DAS KIND
+${kind.charAt(0).toUpperCase() + kind.slice(1)}, ${k.alter} Jahre, ${k.stufe}, Bayern.
+
+FÄCHER UND LERNBEREICHE (Kürzel genau so ins Feld "fach")
+${fachListe}
+${ausDerSchule ? `
+DAS WAR ZULETZT WIRKLICH DRAN
+Das Kind hat aus dem Unterricht fotografiert:
+${ausDerSchule}
+Nimm das als Schwerpunkt - dafür ist das Quiz da. Ein Lehrplan sagt, was
+irgendwann drankommt; das hier sagt, was diese Woche zählt.
+` : ""}${schwaechen.length ? `
+DAS HAT ZULETZT NICHT GESESSEN
+${schwaechen.map((s) => `- "${s.merkmal}"${s.beispiel ? ` (zuletzt: ${s.beispiel})` : ""}`).join("\n")}
+Zu jedem dieser Punkte mindestens zwei Fragen, mit genau diesem Schlüssel im
+Feld "merkmal". Aber: andere Zahlen, andere Wörter, anderer Zusammenhang.
+Wer die alte Frage wiedererkennt, lernt die Antwort auswendig statt der Regel.
+` : ""}
+REGELN
+1. ${JE_LAUF} Fragen. Wenn mehrere Fächer dabei sind, verteile sie gleichmäßig.
+2. Eine Frage = ein Gedanke. Höchstens 20 Wörter, beantwortbar in unter 30 Sekunden.
+3. Die ERSTE Antwort ist die richtige. Die falschen müssen plausibel sein -
+   typische Fehler, nicht Unsinn. Eine Antwort, die niemand wählt, ist keine.
+4. Alle Antworten ungefähr gleich lang. Sonst rät man nach Länge.
+5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
+6. Deutsche Rechtschreibung mit Umlauten und ß.
+${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
+   nur bekannte Wörter, keine Jahreszahlen, keine Nebensätze.` :
+  k.alter >= 12 ? `7. Diese Schülerin ist am Gymnasium in der 7. Klasse - Fragen dürfen einen
+   Gedankenschritt verlangen, nicht nur Auswendiggelerntes abfragen.` :
+  `7. Vierte Klasse: konkret und aus dem Alltag, keine abstrakten Definitionen.`}`;
+
+  const antwort = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-opus-5",
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      output_config: { effort: "low" },
+      tools: [WERKZEUG],
+      tool_choice: { type: "tool", name: "quiz_fragen" },
+      messages: [{ role: "user", content: auftrag }],
+    }),
+  });
+  if (!antwort.ok) return [];
+
+  let daten = null;
+  try { daten = await antwort.json(); } catch (e) { return []; }
+  const block = (daten.content || []).find((c) => c.type === "tool_use");
+  const fragen = (block && block.input && block.input.fragen) || [];
+
+  const erlaubt = new Set(faecher.map((f) => String(f.kuerzel || "").toLowerCase()));
+  return fragen
+    .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
+    // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
+    .filter((f) => erlaubt.has(String(f.fach || "").toLowerCase()))
+    .map((f) => ({
+      id: kennung(),
+      fach: String(f.fach).toLowerCase(),
+      frage: String(f.frage).slice(0, 300),
+      antworten: f.antworten.slice(0, 4).map((a) => String(a).slice(0, 120)),
+      richtig: 0,                       // die erste ist richtig; gemischt wird auf der Seite
+      erklaerung: String(f.erklaerung || "").slice(0, 300),
+      merkmal: String(f.merkmal || "").toLowerCase().slice(0, 40),
+    }));
+}
+
+function kennung() {
+  return "q" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+
+/* Was hat das Kind zuletzt aus dem Unterricht geschickt?
+   Das ist der "immer aktuell"-Teil: Die Fotos aus dem Heft (Kachel "Das haben
+   wir heute gemacht") sagen, was diese Woche wirklich dran war. */
+async function letzterUnterricht(env, kind) {
+  try {
+    const roh = await env.PAUL_KV.get("meldungen");
+    const alle = roh ? JSON.parse(roh) : [];
+    const grenze = Date.now() - 14 * 24 * 3600 * 1000;
+    const texte = (Array.isArray(alle) ? alle : [])
+      .filter((m) => m && m.kind === kind && m.art === "hausaufgabe")
+      .filter((m) => new Date(m.zeit || 0).getTime() >= grenze)
+      .flatMap((m) => (m.verlauf || [])
+        .filter((n) => n && n.von !== "werkstatt" && /^Unterricht in /.test(String(n.text || "")))
+        .map((n) => String(n.text).slice(0, 200)))
+      .slice(-6);
+    return texte.length ? texte.map((t) => "- " + t).join("\n") : "";
+  } catch (e) { return ""; }
+}
