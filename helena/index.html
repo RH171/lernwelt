@@ -59,6 +59,21 @@
   .bet .bettext span{font-size:13px;color:var(--muted)}
   .bet .bettage{font:800 15px/1.2 var(--rund);color:#f59e0b;white-space:nowrap;text-align:right}
   .hauptwege{display:grid;gap:10px;margin:0 0 16px}
+  @media (min-width:760px){ .hauptwege{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  .hauptweg{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;min-height:76px}
+  .hauptweg.quiz{background:linear-gradient(125deg,#0f766e 0%,#0d9488 55%,#2dd4bf 100%);
+    border-color:transparent;color:#fff}
+  .hauptweg.schule{background:linear-gradient(125deg,#4c1d95 0%,#6d28d9 55%,#8b5cf6 100%);
+    border-color:transparent;color:#fff}
+  .hauptweg .hwic{font-size:30px;line-height:1}
+  .hauptweg .hwtext{display:flex;flex-direction:column;gap:3px;min-width:0;overflow-wrap:anywhere}
+  .hauptweg .hwtext b{font-size:17px}
+  .hauptweg .hwtext span{font-size:14px;opacity:.85;line-height:1.35}
+  /* MUSS nach den Grundregeln stehen, sonst ueberschreiben die sie wieder -
+     genau so ist die Regel am 20.09.2026 beim Wiederherstellen verlorengegangen.
+     Auf dem Handy muss "Los geht's" ohne Scrollen erreichbar bleiben. */
   /* Auf dem Handy muss "Los geht's" ohne Scrollen erreichbar bleiben.
      Mit drei grossen Karten lag es 66 px unter dem Rand (Messung 20.09.2026,
      Helenas Android). Darum dort flacher, einzeilig und ohne Untertext -
@@ -73,16 +88,6 @@
     .bet{min-height:46px;padding:8px 12px;margin-bottom:6px}
     .bet .bettext span{display:none}
   }
-  @media (min-width:680px){ .hauptwege{grid-template-columns:1fr 1fr} }
-  .hauptweg{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);
-    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-    padding:16px 18px;min-height:76px}
-  .hauptweg.schule{background:linear-gradient(125deg,#4c1d95 0%,#6d28d9 55%,#8b5cf6 100%);
-    border-color:transparent;color:#fff}
-  .hauptweg .hwic{font-size:30px;line-height:1}
-  .hauptweg .hwtext{display:flex;flex-direction:column;gap:3px;min-width:0;overflow-wrap:anywhere}
-  .hauptweg .hwtext b{font-size:17px}
-  .hauptweg .hwtext span{font-size:14px;opacity:.85;line-height:1.35}
   .setup{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
     padding:18px; box-shadow:var(--shadow); margin-bottom:16px;}
   .setup h2{font-family:var(--round); font-weight:800; font-size:16px; margin:0 0 14px;}
@@ -400,6 +405,11 @@
       <span class="hwic">📓</span>
       <span class="hwtext"><b>Das haben wir heute gemacht</b>
         <span>Heft, Tafelbild oder Blatt fotografieren – ich baue eine Übung daraus.</span></span>
+    </a>
+    <a class="hauptweg quiz" href="quiz.html">
+      <span class="hwic">🎯</span>
+      <span class="hwtext"><b>Mein Lernquiz</b>
+        <span>5–10 Minuten, Fächer selbst wählen – Fehler kommen wieder.</span></span>
     </a>
     <a class="hauptweg" href="hausaufgaben.html">
       <span class="hwic">📝</span>
