@@ -50,6 +50,14 @@
     .chip{padding:8px 11px; font-size:13px;}
   }
 
+  .bet{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-left:4px solid #f59e0b;
+    border-radius:14px;padding:12px 15px;min-height:60px;margin:0 0 10px}
+  .bet .betic{font-size:22px;line-height:1}
+  .bet .bettext{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .bet .bettext b{font-size:15.5px}
+  .bet .bettext span{font-size:13px;color:var(--muted)}
+  .bet .bettage{font:800 15px/1.2 var(--rund);color:#f59e0b;white-space:nowrap;text-align:right}
   .hauptwege{display:grid;gap:10px;margin:0 0 16px}
   @media (min-width:680px){ .hauptwege{grid-template-columns:1fr 1fr} }
   .hauptweg{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);
@@ -364,6 +372,15 @@
        Denny am 20.09.2026: "Wo finden wir das? Weil ich wuerde gerne mit
        Helena Blaetter hochladen..." - bei Paul war es von Anfang an eine
        grosse Karte, bei ihr nur ein Chip. Zu versteckt. -->
+  <!-- Kleine Kachel fuer den BET 7 am 01.10.2026. Denny: "Wann und wieviel
+       Zeit noch bis dahin ist." Sie verschwindet von selbst, sobald der Test
+       vorbei ist - kein Kalender, der alte Termine mitschleppt. -->
+  <a class="bet" href="bet.html" id="bet-kachel">
+    <span class="betic">🇬🇧</span>
+    <span class="bettext"><b>BET 7 – Englischtest</b><span id="bet-wann">1. Oktober</span></span>
+    <span class="bettage" id="bet-tage"></span>
+  </a>
+
   <div class="hauptwege">
     <a class="hauptweg schule" href="hausaufgaben.html">
       <span class="hwic">📓</span>
@@ -3177,5 +3194,20 @@ window.HELENA_KONFIG = {
 <script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
 <script src="/lernstand.js"></script>
 <script src="/helena/trainer.js"></script>
+<script>
+(function(){
+  // Tage bis zum BET 7. Ist er vorbei, verschwindet die Kachel - ein alter
+  // Termin, der stehen bleibt, ist nur Rauschen (20.09.2026).
+  var ziel = new Date(2026, 9, 1), heute = new Date(); heute.setHours(0,0,0,0);
+  var tage = Math.round((ziel - heute) / 86400000);
+  var k = document.getElementById("bet-kachel");
+  if (!k) return;
+  if (tage < 0){ k.style.display = "none"; return; }
+  document.getElementById("bet-tage").textContent =
+    tage > 1 ? "noch " + tage + " Tage" : tage === 1 ? "morgen" : "heute";
+  document.getElementById("bet-wann").textContent =
+    tage === 0 ? "Heute – viel Erfolg!" : "Donnerstag, 1. Oktober";
+})();
+</script>
 </body>
 </html>
