@@ -375,25 +375,34 @@
      "koeder" sind Steine, die nicht gebraucht werden - sonst waere die
      Reihenfolge schon dadurch verraten, dass alle Steine reinmuessen.
      ===================================================================== */
+  /* "auch" sind weitere Wortfolgen, die dieselben Steine ergeben und genauso
+     richtig sind. Ohne sie haette Helena einen tadellosen englischen Satz
+     bauen koennen und ein rotes Kreuz dafuer bekommen - beim Umstellen von
+     "to Croatia with his grandparents" auf "with his grandparents to Croatia"
+     zum Beispiel. Wer hier eine Aufgabe dazunimmt, geht die moeglichen
+     Umstellungen einmal durch: Alles, was nur mit einem GROSSGESCHRIEBENEN
+     Stein am Satzanfang ginge, faellt von selbst weg. */
   var STICHWORT = [
     { frage:"Where did you go?", notiz:["Ben","Croatia","grandparents"],
       satz:["He","went","to","Croatia","with","his","grandparents","."],
+      auch:[["He","went","with","his","grandparents","to","Croatia","."]],
       koeder:["go","her"], merkmal:"aus stichworten einen satz",
       regel:"Ben ist ein Junge → he und his. Und das Verb geht mit in die Vergangenheit." },
     { frage:"What did you do?", notiz:["Amira","surfing","every morning"],
       satz:["She","went","surfing","every","morning","."],
       koeder:["goes","his"], merkmal:"aus stichworten einen satz",
       regel:"„go surfing / go swimming“ – das Verb davor wandert, nicht das Wort mit -ing." },
-    { frage:"Who went with you?", notiz:["Theo","two friends","his sister"],
-      satz:["Two","friends","and","his","sister","came","with","him","."],
+    { frage:"Who went with you?", notiz:["Theo","his cousin"],
+      satz:["His","cousin","came","with","him","."],
       koeder:["come","her"], merkmal:"aus stichworten einen satz",
-      regel:"Wenn du mit den Personen anfängst, steht das Verb danach – und trotzdem in der Vergangenheit." },
+      regel:"come → came. Und Theo ist ein Junge: his, him." },
     { frage:"What was the best day?", notiz:["Chloe","boat trip","Friday"],
       satz:["Her","best","day","was","the","boat","trip","on","Friday","."],
       koeder:["were","is"], merkmal:"was oder were",
       regel:"Ein Tag ist einer → was, nicht were." },
     { frage:"Where did you stay?", notiz:["Noah","small village","ten days"],
       satz:["He","stayed","in","a","small","village","for","ten","days","."],
+      auch:[["He","stayed","for","ten","days","in","a","small","village","."]],
       koeder:["stay","since"], merkmal:"regelmaessige verben",
       regel:"Eine Dauer bekommt „for“: for ten days. „since“ nennt einen Zeitpunkt." },
     { frage:"Did you like the food?", notiz:["Ida","food","not"],
@@ -642,8 +651,11 @@
     } else if (lauf.art === "bauen"){
       lauf.versuch++;
       var gebaut = gebauterSatz();
-      var passt = gebaut.length === a.satz.length &&
-                  gebaut.every(function(w2, i){ return w2 === a.satz[i]; });
+      var gleich = function(soll){
+        return gebaut.length === soll.length &&
+               gebaut.every(function(w2, i){ return w2 === soll[i]; });
+      };
+      var passt = gleich(a.satz) || (a.auch || []).some(gleich);
       $("bauzeile").classList.toggle("richtig", passt);
       $("bauzeile").classList.toggle("falsch", !passt);
       if (passt){
