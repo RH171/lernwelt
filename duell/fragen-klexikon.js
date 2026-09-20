@@ -462,4 +462,14 @@ export const KLEXIKON = [
   [1, "natur", "🏜️", "Wodurch entsteht eine Düne?", ["Durch Wind", "Durch Regen", "Durch Frost", "Durch Wellen"], "Manche Dünen wandern langsam weiter, weil der Wind den Sand immer wieder verschiebt.", null, "Düne"],
   [3, "technik", "🚲", "Wie heißt der kleine Generator am Fahrrad?", ["Dynamo", "Motor", "Turbine", "Akku"], "Ein Fahrrad-Dynamo wird von den Beinen des Fahrers angetrieben und macht daraus Licht.", null, "Generator"],
   [2, "welt", "🏙️", "Wovon zeigt eine Skyline die Ansicht?", ["Von einer Stadt", "Von einem Wald", "Von einem See", "Von einem Fluss"], "Die Skyline zeigt vor allem hohe Häuser und Türme, die man von weitem sieht.", null, "Skyline"],
+
+  // Nachschub vom 20.09.2026
+  [1, "tiere", "🦏", "Welches Tier hat Hörner?", ["Ziege", "Hund", "Katze", "Fisch"], "Hörner bestehen innen aus Knochen und außen aus einer Hautschicht.", null, "Horn"],
+  [4, "musik", "📯", "Woraus besteht ein Alphorn?", ["Holz", "Metall", "Knochen", "Plastik"], "Ein modernes Horn aus Metall hat Ventile, mit denen man die Tonhöhe verändert.", null, "Horn"],
+  [2, "natur", "🌍", "Was gehört zur Natur?", ["Baum", "Auto", "Haus", "Straße"], "Alles, was Menschen bauen, nennt man nicht Natur, sondern Kultur.", null, "Natur"],
+  [3, "welt", "🌉", "Was bedeutet der Name „Golden Gate Bridge“?", ["Brücke über das goldene Tor", "Brücke aus reinem Gold", "Tor zur goldenen Stadt", "Weg zum goldenen Strand"], "Die berühmte Brücke führt über die Bucht von San Francisco am Pazifischen Ozean.", null, "San Francisco"],
+  [2, "welt", "🚋", "Wie fährt die Cable Car die Hügel hoch?", ["Kabel", "Pferde", "Motor", "Segel"], "Ein unterirdisches Kabel zieht die kleine Bahn die steilen Straßen hinauf.", null, "San Francisco"],
+  [3, "kurios", "🖼️", "Wo fand man die ersten Sammelbilder?", ["In Schokolade", "In Zeitungen", "In Büchern", "In Briefen"], "Die ersten Sammelbilder steckten in Schokoladenpackungen, damit Kinder wieder eine neue Packung kaufen wollten.", null, "Sammelbild"],
+  [2, "pflanzen", "🌸", "Woraus wächst eine Lilie?", ["Zwiebel", "Samen", "Frucht", "Knolle"], "Die Zwiebel einer Lilie kann bis zu zwölf Zentimeter lang werden.", null, "Lilien"],
+  [4, "wissen", "🦇", "Womit orientieren sich Fledermäuse?", ["Mit Ultraschall", "Mit Infraschall", "Mit den Augen", "Mit der Nase"], "Diese sehr hohen Töne, die Menschen nicht hören können, nennt man Ultraschall.", null, "Schall"],
 ];
