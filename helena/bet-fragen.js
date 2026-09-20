@@ -41,6 +41,87 @@ window.BET_TEXTE = {
 window.BET_RUNDEN = [
 
 /* ------------------------------------------------------------------ */
+/* Teil II B des echten Tests ist genau das hier: ein zusammenhaengender
+   Text, und zu jeder Luecke gibt es drei Moeglichkeiten zur Auswahl
+   (belegt am ISB-Originaltest 2025, "Being offline", 10 von 60 BE).
+   Die Fehlertypen sind dem Original nachgebaut: Konnektoren, Zeitform,
+   want sb to do, too much/many, phrasal verbs, Apostroph. */
+{ k: "luecken", n: "Lückentext", ic: "📝", unter: "wie Teil II im echten Test",
+  fragen: [
+  { text: "MY WEEK WITHOUT A PHONE\n\nLast week I left my phone at home ___ I wanted to see what happens.",
+    frage: "Welches Wort passt in die Lücke?",
+    antworten: ["because", "although", "so that", "however"], richtig: 0,
+    erklaerung: "because nennt den Grund. although wäre ein Gegensatz, so that eine Absicht.",
+    merkmal: "Konnektoren – because/although/so that" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nI didn't get bored, ___ I had thought it would be terrible.",
+    frage: "Welches Wort passt in die Lücke?",
+    antworten: ["although", "because", "so that", "if"], richtig: 0,
+    erklaerung: "although = obwohl. Es steht ein Gegensatz zwischen den beiden Satzteilen.",
+    merkmal: "Konnektoren – because/although/so that" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nI took a book with me ___ I wouldn't be bored on the bus.",
+    frage: "Welches Wort passt in die Lücke?",
+    antworten: ["so that", "because", "although", "while"], richtig: 0,
+    erklaerung: "so that nennt die Absicht: damit mir nicht langweilig wird.",
+    merkmal: "Konnektoren – because/although/so that" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nThe number of people without a smartphone ___ much in the last years.",
+    frage: "Welche Form passt in die Lücke?",
+    antworten: ["hasn't grown", "doesn't grow", "didn't grew", "isn't growing"], richtig: 0,
+    erklaerung: "in the last years reicht bis heute → present perfect (has/have + 3. Form).",
+    merkmal: "Zeitform in der Lücke" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nMy mum ___ me to try it for seven days.",
+    frage: "Welche Form passt in die Lücke?",
+    antworten: ["wanted", "wanted that", "want", "wants that"], richtig: 0,
+    erklaerung: "want somebody to do something: She wanted me to try. 'wanted that I try' gibt es im Englischen nicht.",
+    merkmal: "want somebody to do something" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\n___ I said goodbye to my phone, I checked it about fifty times a day.",
+    frage: "Welches Wort passt in die Lücke?",
+    antworten: ["Before", "After", "While", "Until"], richtig: 0,
+    erklaerung: "Das Checken war vorher – also before. after wäre danach.",
+    merkmal: "before / while / after" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nI think many of us are online ___ .",
+    frage: "Welcher Ausdruck passt in die Lücke?",
+    antworten: ["too often", "too many", "too much people", "too strong"], richtig: 0,
+    erklaerung: "Wie oft etwas passiert: too often. too many braucht ein zählbares Nomen dahinter.",
+    merkmal: "too much / too many / too often" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nWithout a map on my phone I had to ___ the way to the station on my own.",
+    frage: "Welcher Ausdruck passt in die Lücke?",
+    antworten: ["look for", "look after", "look at", "look up to"], richtig: 0,
+    erklaerung: "look for = suchen. look after = sich kümmern um, look at = anschauen.",
+    merkmal: "Phrasal verbs – look for/after/at" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nMy little sister wanted me to ___ her bike while she was at her friend's house.",
+    frage: "Welcher Ausdruck passt in die Lücke?",
+    antworten: ["look after", "look for", "look at", "look out"], richtig: 0,
+    erklaerung: "look after = auf etwas aufpassen.",
+    merkmal: "Phrasal verbs – look for/after/at" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nAll my ___ numbers were on that phone, so I couldn't call anyone.",
+    frage: "Welche Form passt in die Lücke?",
+    antworten: ["friends'", "friend's", "friends", "friends's"], richtig: 0,
+    erklaerung: "Mehrere Freunde → Apostroph hinter dem -s: my friends' numbers.",
+    merkmal: "Apostroph – friend's / friends'" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nMy grandma is going to ___ me how to read a real map.",
+    frage: "Welches Wort passt in die Lücke?",
+    antworten: ["teach", "learn", "study", "make"], richtig: 0,
+    erklaerung: "teach = beibringen, learn = selbst lernen. Sie bringt es mir bei.",
+    merkmal: "teach / learn" },
+
+  { text: "MY WEEK WITHOUT A PHONE\n\nTry it yourself: stay offline for ___ two hours a day.",
+    frage: "Welcher Ausdruck passt in die Lücke?",
+    antworten: ["at least", "not less", "a few of", "at last"], richtig: 0,
+    erklaerung: "at least = mindestens. at last heißt 'endlich' und passt hier nicht.",
+    merkmal: "at least / at last" }
+]},
+
+/* ------------------------------------------------------------------ */
 { k: "zeiten", n: "Zeiten", ic: "⏱", unter: "present simple, progressive, past, going to",
   fragen: [
   { frage: "She ___ to school every day.",
@@ -318,7 +399,7 @@ window.BET_RUNDEN = [
 ]},
 
 /* ------------------------------------------------------------------ */
-{ k: "lesen", n: "Leseverstehen", ic: "📖", unter: "Texte: Einzelheiten, Wortbedeutung, Hauptaussage",
+{ k: "lesen", n: "Texte verstehen", ic: "📖", unter: "hilft bei Teil II – Einzelheiten, Wortbedeutung, Hauptaussage",
   fragen: [
   { textId: "lucy", frage: "How did Lucy get to the lake?",
     antworten: ["By bike.", "By car.", "By bus.", "She walked."], richtig: 0,
@@ -443,7 +524,40 @@ window.BET_RUNDEN = [
   { frage: "Welcher Satz ist richtig?",
     antworten: ["I'm looking forward to the holidays.", "I'm looking forward the holidays.", "I look forward on the holidays.", "I'm looking forward for the holidays."], richtig: 0,
     erklaerung: "look forward to something – das 'to' gehört fest dazu.",
-    merkmal: "feste Wendungen" }
+    merkmal: "feste Wendungen" },
+
+  /* Ab hier die Fehlertypen aus dem echten Teil II A (ISB-Originaltest 2025,
+     "Not an easy task!"): there/their, who/which, as ... as, Apostroph im
+     Plural, Fragebildung im past, unregelmaessige Verben, Steigerung. */
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["They turned off their phones.", "They turned off there phones.", "They turned off they're phones.", "They turned off thier phones."], richtig: 0,
+    erklaerung: "their = ihr/ihre. there = dort, they're = they are.",
+    merkmal: "their / there / they're" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["She knows which spider is the most dangerous.", "She knows who spider is the most dangerous.", "She knows what spider is the most dangerousest.", "She knows which is the more dangerous spider of all."], richtig: 0,
+    erklaerung: "who steht für Menschen, which für Tiere und Dinge.",
+    merkmal: "who / which" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["He isn't as strong as his brother.", "He isn't as strong like his brother.", "He isn't so strong as like his brother.", "He isn't as stronger as his brother."], richtig: 0,
+    erklaerung: "Gleichheit: as … as. Mit 'like' wird daraus ein Fehler, den der Test gern versteckt.",
+    merkmal: "as ... as" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["We learned a lot about our kids' talents.", "We learned a lot about our kids talents.", "We learned a lot about our kid's talents, both of them.", "We learned a lot about our kids's talents."], richtig: 0,
+    erklaerung: "Mehrere Kinder → Apostroph hinter dem -s: our kids' talents.",
+    merkmal: "Apostroph – friend's / friends'" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["Did she play her favourite game that week?", "Played she her favourite game that week?", "Did she played her favourite game that week?", "She did play her favourite game that week?"], richtig: 0,
+    erklaerung: "Frage im past: did + Person + Grundform. Die deutsche Wortstellung 'Spielte sie …' gibt es nicht.",
+    merkmal: "Fragen im simple past" },
+
+  { frage: "Welcher Satz ist richtig?",
+    antworten: ["Then we chose to try new things and it got easier.", "Then we choosed to try new things and it got more easy.", "Then we chosed to try new things and it got easier.", "Then we choose to try new things and it got easyer."], richtig: 0,
+    erklaerung: "choose – chose – chosen, und easy wird zu easier (nicht 'more easy').",
+    merkmal: "simple past – unregelmäßige Verben" }
 ]},
 
 /* ------------------------------------------------------------------ */
@@ -509,6 +623,96 @@ window.BET_RUNDEN = [
                 "Hello, I am Helena. Give me Tom.", "Hello, here speaks Helena for Tom."], richtig: 0,
     erklaerung: "Am Telefon sagt man this is …, nicht 'here is'. Und Can I speak to …, please?",
     merkmal: "Sprachhandlung – telefonieren" }
+]},
+
+/* ------------------------------------------------------------------ */
+/* Teil III ist ein Drittel der Punkte (20 von 60 BE): eine E-Mail von rund
+   140 Woertern, bewertet mit Inhalt 4 BE + Sprache 6 BE, mal zwei.
+   Schreiben selbst geht nicht per Multiple Choice - die Bausteine schon:
+   Anrede, Aufbau, Verknuepfen, Zeitform im Erlebnisteil, Schluss. */
+{ k: "email", n: "E-Mail schreiben", ic: "✉️", unter: "Teil III – Bausteine für deinen Text",
+  fragen: [
+  { frage: "Du schreibst eine E-Mail an Jack, einen Austauschschüler. Wie fängst du an?",
+    antworten: ["Hi Jack,", "Dear Sir or Madam,", "Hello Mr Jack!", "Good day Jack."], richtig: 0,
+    erklaerung: "An jemanden in deinem Alter: Hi Jack, oder Dear Jack,. 'Dear Sir or Madam' ist für Briefe an Fremde in einer Firma.",
+    merkmal: "E-Mail – Anrede" },
+
+  { frage: "Nach der Anrede kommt ein Komma. Wie geht es weiter?",
+    antworten: ["mit einem kleinen Buchstaben in der nächsten Zeile", "mit einem großen Buchstaben",
+                "mit einem Doppelpunkt", "ohne Zeilenumbruch, direkt dahinter"], richtig: 0,
+    erklaerung: "Anders als im Deutschen? Nein – hier ist es gleich: nach 'Hi Jack,' geht es klein weiter. Im Englischen sieht man auch Großschreibung, aber klein ist nie falsch.",
+    merkmal: "E-Mail – Aufbau" },
+
+  { frage: "Der erste Satz soll sagen, warum du schreibst. Was passt?",
+    antworten: ["I'm writing to tell you about our school trip next month.",
+                "I write you for saying about the trip.",
+                "This mail is for the information of the trip.",
+                "I want that you know about the trip."], richtig: 0,
+    erklaerung: "I'm writing to tell you about … ist die Standardeinleitung und zeigt sofort das Thema.",
+    merkmal: "E-Mail – Einleitung" },
+
+  { frage: "Du erzählst von einem Erlebnis vom LETZTEN Jahr. In welcher Zeit schreibst du?",
+    antworten: ["im simple past", "im present simple", "im present perfect", "im will-future"], richtig: 0,
+    erklaerung: "Ein abgeschlossenes Erlebnis mit Zeitangabe (last year) steht im simple past.",
+    merkmal: "E-Mail – Zeitform im Erlebnisteil" },
+
+  { frage: "Du schreibst über den Ausflug, der noch kommt. Was passt?",
+    antworten: ["We are going to visit the festival on Friday.",
+                "We visit the festival last Friday.",
+                "We have visited the festival on Friday.",
+                "We will visiting the festival on Friday."], richtig: 0,
+    erklaerung: "Etwas Geplantes in der Zukunft: are going to + Grundform.",
+    merkmal: "E-Mail – Zeitform für Geplantes" },
+
+  { frage: "Welches Wort verknüpft zwei Gedanken am besten: „I liked the music workshop ___ I love playing the guitar.“",
+    antworten: ["because", "although", "but", "so that"], richtig: 0,
+    erklaerung: "Du nennst den Grund, warum du ihn magst → because.",
+    merkmal: "E-Mail – verknüpfen" },
+
+  { frage: "Was macht deinen Text besser?",
+    antworten: ["Wörter wie first, then, after that, finally",
+                "möglichst viele Ausrufezeichen",
+                "jeden Satz mit 'and' beginnen",
+                "alles in einem einzigen langen Satz"], richtig: 0,
+    erklaerung: "Verknüpfungswörter zeigen die Reihenfolge – dafür gibt es in der Bewertung Punkte bei 'Sprache'.",
+    merkmal: "E-Mail – verknüpfen" },
+
+  { frage: "In der Aufgabe stehen drei Punkte (z. B. vorstellen, begründen, erzählen). Was tust du?",
+    antworten: ["Alle drei bearbeiten – jeder Punkt bringt Inhaltspunkte.",
+                "Den ersten Punkt sehr ausführlich, die anderen weglassen.",
+                "Nur den Punkt, den du am besten kannst.",
+                "Die Punkte abschreiben und dann frei schreiben."], richtig: 0,
+    erklaerung: "Die Inhaltspunkte werden einzeln gezählt. Ein fehlender Punkt kostet sicher Punkte, ein kurzer Absatz dazu bringt welche.",
+    merkmal: "E-Mail – alle Aufgabenpunkte" },
+
+  { frage: "Wie beendest du die E-Mail an Jack?",
+    antworten: ["See you soon,\nHelena", "Yours faithfully,\nHelena", "With friendly greetings,\nHelena", "Goodbye and thank you for reading my mail."], richtig: 0,
+    erklaerung: "Unter Freunden: See you soon, / Best wishes, / Love,. 'Yours faithfully' gehört in einen förmlichen Brief.",
+    merkmal: "E-Mail – Schluss" },
+
+  { frage: "Gefordert sind ungefähr 140 Wörter. Was ist richtig?",
+    antworten: ["Ungefähr so viele schreiben – deutlich weniger kostet Punkte.",
+                "So viel wie möglich, mindestens 300.",
+                "Genau 140, keines mehr und keines weniger.",
+                "Die Zahl ist nur ein Vorschlag, 50 reichen auch."], richtig: 0,
+    erklaerung: "„ca. 140“ heißt: ein bisschen mehr oder weniger ist in Ordnung – aber wer die Hälfte schreibt, kann die Inhaltspunkte nicht abdecken.",
+    merkmal: "E-Mail – Länge" },
+
+  { frage: "Du hast zehn Minuten übrig. Was bringt die meisten Punkte?",
+    antworten: ["Den Text auf -s bei he/she/it, Zeitformen und Rechtschreibung durchlesen.",
+                "Noch zwei Sätze anhängen.",
+                "Den Text schöner abschreiben.",
+                "Die Aufgabenstellung noch einmal lesen und nichts ändern."], richtig: 0,
+    erklaerung: "6 von 10 Punkten sind Sprache. Ein gefundener Fehler ist sicherer Gewinn, ein neuer Satz ist neues Risiko.",
+    merkmal: "E-Mail – nachlesen" },
+
+  { frage: "Welcher Satz ist in einer E-Mail am besten?",
+    antworten: ["I hope you can come – it's going to be great!",
+                "I hope you can coming, it is will be great!",
+                "I hope that you can to come, it becomes great!",
+                "I hope you can came, it will be great!"], richtig: 0,
+    erklaerung: "Nach can steht die Grundform, und 'es wird toll' heißt it's going to be great – nicht 'it becomes'.",
+    merkmal: "E-Mail – typische Fehler" }
 ]}
 
 ];
