@@ -96,7 +96,7 @@
 
   <div id="kopf">
     <div id="anzeigen">
-      <div class="pille" id="herzen">❤️❤️❤️</div>
+      <div class="pille" id="geloestzaehler">✅ 0</div>
       <div class="pille" id="stationszaehler">1 / 8</div>
       <div class="pille" id="punkte">⭐ 0</div>
     </div>
@@ -206,6 +206,28 @@
      wieder gespielt statt neu gebaut. Ein Spiel kostet echtes Geld und
      90 Sekunden Warten; beides gespart, wenn zum Thema schon etwas
      bereitliegt. Erkannt wird das ueber "quelle", nie ueber den Titel.
+
+     WARUM HIER NICHTS WEGGENOMMEN WIRD (Meldung csnzy24mrm, 20.09.2026)
+     Paul, mit einem Bild vom Schloss ueber seiner Figur: "ich will nicht
+     das das nochmal pasiert in der spiel scchmiede" - und zwei Nachfragen
+     spaeter: "es hat dan schon geklappt aber ich habe hals ein herz
+     verloren". Er hat das Raetsel-Tor also geschafft und trotzdem etwas
+     verloren.
+
+     Dennys Bauregeln vom 04.09.2026 sagen dazu: "Kein Druck ueber
+     Verlustangst: keine 'Serie ist weg'-Meldung, kein Countdown, keine
+     knappe Ressource, die das Lernen bremst." Fuer die Gegner war das
+     laengst umgesetzt (sie kosten Sterne, keine Herzen) - fuer die
+     ANTWORTEN nicht, und genau dort tut es weh: Wer sich beim Rechnen
+     vertut, verliert ein Leben, und das Spiel endet frueher.
+
+     Seit dem 20.09.2026 gibt es die Herzen nicht mehr. An ihrer Stelle
+     steht oben, wie viele Aufgaben schon geloest sind (Haken) - eine Zahl,
+     die waechst, statt einer, die schrumpft. Eine falsche Antwort ruettelt,
+     klingt und bringt Erklaerung und Loesung; mehr passiert nicht. Am
+     Raetsel-Tor gibt es weiter zwei Versuche, der zweite jetzt MIT Hinweis.
+     Wer das wieder umdreht, dreht eine Entscheidung von Denny um, nicht
+     nur eine Einstellung.
      ===================================================================== */
 
   function $(id){ return document.getElementById(id); }
@@ -320,13 +342,13 @@
   }
   function standMerken(){
     try {
-      if (!spiel || !spiel.id || !aufgaben.length || herzen <= 0) return;
+      if (!spiel || !spiel.id || !aufgaben.length) return;
       if (zustand !== "spielt" && zustand !== "pause") return;
       // Steht die Loesung schon da, ist diese Aufgabe erledigt.
       var nr = aufgabeNr + (station && station.geloest ? 1 : 0);
       if (nr >= aufgaben.length) return;
       var neu = JSON.stringify({ spielId: spiel.id, titel: spiel.titel || "", aufgabeNr: nr,
-        gesamt: aufgaben.length, punkte: punkte, herzen: herzen, geloest: geloest });
+        gesamt: aufgaben.length, punkte: punkte, geloest: geloest });
       if (neu !== localStorage.getItem(STAND)) localStorage.setItem(STAND, neu);
     } catch(e){}
   }
@@ -336,7 +358,7 @@
     zeigen($("weiterspielen"), !!st);
     if (!st) return;
     $("ws-info").textContent = (st.titel ? "„" + st.titel + "“ – " : "") + "Aufgabe " + (st.aufgabeNr + 1) +
-      " von " + st.gesamt + " · ⭐ " + st.punkte + " · " + "❤️".repeat(Math.max(1, Math.min(3, st.herzen)));
+      " von " + st.gesamt + " · ⭐ " + st.punkte + " · ✅ " + Math.max(0, st.geloest | 0);
   }
   var fortsetzen = null;
 
@@ -736,7 +758,7 @@
   var held = { x:0, y:0, vx:0, vy:0, w:44, h:52, amBoden:true, blickRechts:true,
                unverwundbar:0, lauf:0, spruenge:0 };
   var TASTE = { links:false, rechts:false, hoch:false };
-  var kamera = 0, punkte = 0, herzen = 3, geloest = 0, ruettel = 0;
+  var kamera = 0, punkte = 0, geloest = 0, ruettel = 0;
   var sterne = [], gegner = [], partikel = [], schmuck = [];
   var naechsteWeltX = 0, rennRichtung = 1;
   var aufgaben = [], aufgabeNr = 0, station = null, protokoll = [], aufgabeBegonnen = 0;
@@ -775,7 +797,7 @@
     passeGroesse();
     var w = welt();
     G = w.G; SPRUNGKRAFT = w.sprung;
-    punkte = 0; herzen = 3; geloest = 0; ruettel = 0;
+    punkte = 0; geloest = 0; ruettel = 0;
     sterne = []; gegner = []; partikel = [];
     kamera = 0; naechsteWeltX = 0; rennRichtung = 1;
     aufgabeNr = 0; station = null; protokoll = [];
@@ -783,7 +805,6 @@
     if (st && spiel && st.spielId === spiel.id && st.aufgabeNr < aufgaben.length){
       aufgabeNr = Math.max(0, st.aufgabeNr | 0);
       punkte = Math.max(0, st.punkte | 0);
-      herzen = Math.max(1, Math.min(3, st.herzen | 0));
       geloest = Math.max(0, Math.min(aufgabeNr, st.geloest | 0));
     }
     held.x = 110; held.y = bodenY - held.h; held.vx = 0; held.vy = 0;
@@ -955,7 +976,7 @@
   }
 
   function anzeigenAuffrischen(){
-    $("herzen").textContent = herzen > 0 ? new Array(herzen+1).join("❤️") : "💔";
+    $("geloestzaehler").textContent = "✅ " + geloest;
     $("punkte").textContent = "⭐ " + punkte;
     $("stationszaehler").textContent = Math.min(aufgabeNr+1, aufgaben.length) + " / " + aufgaben.length;
   }
@@ -1111,7 +1132,7 @@
         if (rechteck(held.x,held.y,held.w,held.h, it.x,by,it.w,it.h)){
           if (it.korrekt) ballonRichtig(it, by);
           else { it.weg = true; funken(it.x + it.w/2, by, "#ef4444", 12);
-                 antwortMelden(false, it.text); herzVerlieren();
+                 antwortMelden(false, it.text); danebenSchubsen();
                  loesungZeigen(false, station.aufgabe); }
         }
       }
@@ -1133,8 +1154,11 @@
     loesungZeigen(true, station.aufgabe);
   }
 
-  function herzVerlieren(){
-    herzen--; held.unverwundbar = 80; ruettel = 14; sndFalsch(); anzeigenAuffrischen();
+  /* Daneben heisst: es ruettelt, es klingt, und danach kommt die Loesung mit
+     der Erklaerung. Es heisst NICHT, dass etwas weggenommen wird - siehe den
+     Absatz "Warum hier nichts weggenommen wird" im Kopf dieser Datei. */
+  function danebenSchubsen(){
+    held.unverwundbar = 80; ruettel = 14; sndFalsch(); anzeigenAuffrischen();
   }
 
   function funken(x,y,farbe,n){
@@ -1206,13 +1230,31 @@
     if (raetselFehler >= 2){
       $("schirm-raetsel").classList.add("weg");
       station.geloest = true; station.offen = true;
-      herzVerlieren();
+      danebenSchubsen();
       antwortMelden(false, eingabe);
       loesungZeigen(false, a);
     } else {
+      // Der zweite Versuch bekommt einen Hinweis. Ohne ihn waere er nur ein
+      // zweites Raten - ueberall sonst in der Lernwelt steht dort ein Tipp,
+      // der sagt, WORAN man es erkennt, nie die Loesung selbst.
+      torTippZeigen(a);
       setTimeout(function(){ feld.classList.remove("schlecht"); feld.value = ""; try{feld.focus();}catch(e){} }, 600);
     }
   }
+  /* Der Tipp kommt aus dem, was der Baumeister ohnehin mitliefert: erst
+     "merke" (die Faustregel, traegt auch bei der naechsten Aufgabe), sonst
+     "weg" (der Rechenweg dieser Aufgabe). Gibt es beides nicht, steht
+     wenigstens ein Anstupser da - ein leeres Feld waere schlimmer als ein
+     allgemeiner Satz. Die Loesung steht hier NIE. */
+  function torTippZeigen(a){
+    var tipp = (a.merke && String(a.merke).trim()) ? String(a.merke).trim()
+             : ((a.weg && String(a.weg).trim()) ? String(a.weg).trim() : "");
+    var el = $("raetsel-weg");
+    el.textContent = tipp ? ("💡 Tipp: " + tipp)
+                          : "💡 Lies die Frage noch einmal in Ruhe – du hast noch einen Versuch.";
+    zeigen(el, true);
+  }
+
   $("raetsel-pruefen").addEventListener("click", raetselPruefen);
   $("raetsel-feld").addEventListener("keydown", function(e){ if (e.key === "Enter") raetselPruefen(); });
 
@@ -1236,7 +1278,7 @@
   $("loesung-weiter").addEventListener("click", function(){
     $("schirm-loesung").classList.add("weg");
     aufgabeNr++;
-    if (aufgabeNr >= aufgaben.length || herzen <= 0){ spielEnde(); return; }
+    if (aufgabeNr >= aufgaben.length){ spielEnde(); return; }
     var naechstes = Math.max(held.x + 520, (station ? station.torX : held.x) + 420);
     station = null;
     zustand = "spielt";
@@ -1272,18 +1314,16 @@
   function spielEnde(){
     zustand = "ende";
     standWeg();
-    var geschafft = herzen > 0;
+    // Ein Lauf endet nur noch, wenn alle Aufgaben durch sind. Ein vorzeitiges
+    // "Alle Herzen weg" gibt es nicht mehr - Meldung csnzy24mrm, 20.09.2026.
     var alles = geloest >= aufgaben.length;
-    $("ende-titel").textContent = !geschafft ? "Alle Herzen weg 💔"
-                               : alles ? "Alles richtig! 🎉" : "Durch! 💪";
-    $("ende-text").textContent = geschafft
-      ? ("Du hast " + geloest + " von " + aufgaben.length + " Aufgaben gelöst.")
-      : ("Du bist bis Aufgabe " + Math.min(aufgabeNr+1, aufgaben.length) + " gekommen. Nochmal?");
+    $("ende-titel").textContent = alles ? "Alles richtig! 🎉" : "Durch! 💪";
+    $("ende-text").textContent = "Du hast " + geloest + " von " + aufgaben.length + " Aufgaben gelöst.";
     $("ende-punkte").textContent = punkte;
     if (punkte > rekord){ rekord = punkte; merken(); $("ende-rekord").textContent = "Neue Bestleistung! 🏆"; }
     else $("ende-rekord").textContent = "Deine Bestleistung: " + rekord;
     $("schirm-ende").classList.remove("weg");
-    if (geschafft) fxKonfetti();
+    fxKonfetti();
     rundeMelden();
     lernstandSenden();
   }
