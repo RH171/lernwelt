@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Holiday Report</title>
+<!--
+  Helenas Uebung zum Englisch-Klassenspaziergang "My last holidays"
+  (Hausaufgabe/Meldung kcdpn9g2br, 20.09.2026). Sie schrieb:
+
+    "Bau mir eine Uebung dazu und sag mir, was ich davon noch ueben sollte.
+     ... Fuer mich war es am Ende zu wenig Zeit zuzuhoeren und dann aehnlich
+     aufschreiben ... es wirde nicht kontrolliert"
+
+  UEBEN, NICHT LOESEN (Dennys Regel vom 16.09.2026). In dieser Datei steht
+  KEIN Satz von ihrem Blatt und keine Verbesserung davon. Alle Namen, Laender
+  und Saetze hier sind erfunden; sie ueben dasselbe, was das Blatt verlangt
+  hat. Wer hier Aufgaben ergaenzt, haelt sich daran - sonst bekommt sie ihre
+  eigene Hausaufgabe zurueckkorrigiert statt einer Uebung.
+
+  WAS GEUEBT WIRD - und warum genau das:
+  Auf dem Blatt stehen die Fragen sauber im simple past ("What did you do...?",
+  "Where did you go?"), und auch "was/were" sitzt. In den *Antworten* rutscht
+  das Verb in die Grundform zurueck. Das ist der eine Stolperstein, und er hat
+  drei Gesichter - darum drei Stationen:
+
+    1) Die Form ueberhaupt bilden (go -> went, travel -> travelled).
+    2) Die Form im Bericht einsetzen, inklusive Verneinung
+       (don't -> didn't + Grundform) und besitzanzeigendem Fuerwort.
+    3) Aus Stichworten hinterher einen ganzen Satz bauen - das ist ihre
+       Antwort auf "zu wenig Zeit": in den 7 Minuten nur Stichworte, Saetze
+       danach. Station 3 braucht darum keine Tastatur.
+
+  GEBAUT FUER IHR HANDY (360x643, und 360x699 mit eingefahrener Browserleiste).
+  Station 1 ist die einzige mit Tastatur; dafuer @media (max-height:520px).
+  Messung: mess-schritte-holiday-report.js.
+
+  Lernzeit: KEIN LERNSTAND_SCHREIBT_SELBST - lernstand.js misst die Runde und
+  meldet sie selbst (siehe lernwelt/CLAUDE.md, "Flag ohne Begruendung ist ein
+  Befund"). Jede Aufgabe meldet zusaetzlich ihr Merkmal.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740; --line:#2a3350;
+    --ink:#eef2fb; --muted:#8a92a8; --brand:#a78bfa; --ok:#49d6bd; --no:#ff7a6b; --gold:#ffce5c;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:radial-gradient(900px 500px at 85% -10%,rgba(167,139,250,.16),transparent 60%),
+               radial-gradient(800px 460px at -10% 0%,rgba(73,214,189,.10),transparent 55%),
+               linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed;-webkit-font-smoothing:antialiased;
+    padding:14px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .wrap{max-width:560px;margin:0 auto}
+  .verborgen{display:none!important}
+
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  h1{font:800 20px/1.1 var(--round);margin:0;flex:1;min-width:0}
+  .chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:10px 14px;font:800 14px/1 var(--round);color:var(--ink);text-decoration:none;
+    min-height:44px;min-width:44px;cursor:pointer}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;
+    padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+  .panel h2{font:800 23px/1.2 var(--round);margin:0 0 8px}
+  .panel p{color:var(--muted);font-size:14.5px;line-height:1.55;margin:0 0 12px}
+  .panel p b{color:var(--ink)}
+
+  .station{display:block;width:100%;text-align:left;background:var(--surface2);
+    border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:10px;
+    color:var(--ink);cursor:pointer;min-height:64px;font-family:var(--font)}
+  .station:active{transform:scale(.99)}
+  .station b{font:800 16px/1.3 var(--round);display:block}
+  .station span{color:var(--muted);font-size:13.5px;line-height:1.4;display:block;margin-top:3px}
+  .station .stand{float:right;color:var(--ok);font:800 13px/1.3 var(--round);margin-left:10px}
+
+  .fortschritt{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:0 0 12px}
+  .fortschritt i{display:block;height:100%;width:0;transition:width .3s;
+    background:linear-gradient(90deg,var(--brand),#7c5cff)}
+  .meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);
+    font-size:13px;font-weight:700;margin-bottom:10px}
+
+  .karte{background:linear-gradient(160deg,#232c47,#1a2138);border:1px solid var(--line);
+    border-radius:22px;padding:18px;margin-bottom:12px}
+  .auftrag{color:var(--brand);font:800 12px/1 var(--font);letter-spacing:.08em;
+    text-transform:uppercase;margin:0 0 10px}
+  .zitat{background:rgba(255,255,255,.05);border-left:3px solid var(--brand);
+    border-radius:0 12px 12px 0;padding:11px 13px;margin:0 0 13px;
+    font-size:16px;line-height:1.5}
+  .zitat .wer{display:block;color:var(--muted);font-size:12.5px;font-weight:700;margin-bottom:3px}
+  .satz{font:700 19px/1.45 var(--font);margin:0 0 4px;word-wrap:break-word}
+  .satz .luecke{display:inline-block;min-width:74px;border-bottom:2.5px dashed var(--brand);
+    text-align:center;color:var(--brand);font-weight:800}
+  .satz .luecke.voll{border-bottom-style:solid;color:var(--ink)}
+  .notiz{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 13px}
+  .notiz i{font-style:normal;background:var(--surface2);border:1px solid var(--line);
+    border-radius:9px;padding:6px 10px;font-size:13.5px;color:var(--muted);font-weight:700}
+
+  .wahl{display:grid;gap:9px;margin-top:6px}
+  .wahl button{width:100%;min-height:50px;border-radius:14px;cursor:pointer;
+    background:var(--surface2);border:1.5px solid var(--line);color:var(--ink);
+    font:800 17px/1.3 var(--font);padding:12px 14px;transition:.14s}
+  .wahl button:disabled{cursor:default}
+  .wahl button.richtig{border-color:var(--ok);background:rgba(73,214,189,.15);color:var(--ok)}
+  .wahl button.falsch{border-color:var(--no);background:rgba(255,122,107,.15);color:var(--no)}
+
+  .tippzeile{display:flex;gap:9px;align-items:stretch}
+  .tippzeile input{flex:1;min-width:0;min-height:52px;border-radius:14px;padding:12px 14px;
+    background:var(--surface2);border:1.5px solid var(--line);color:var(--ink);
+    font:800 19px/1.2 var(--font);outline:none;-webkit-appearance:none}
+  .tippzeile input:focus{border-color:var(--brand)}
+  .tippzeile input.richtig{border-color:var(--ok);color:var(--ok)}
+  .tippzeile input.falsch{border-color:var(--no);color:var(--no)}
+
+  .bauzeile{min-height:62px;background:var(--surface2);border:1.5px dashed var(--line);
+    border-radius:14px;padding:9px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start;
+    margin-bottom:11px}
+  .bauzeile:empty::before{content:"Tippe die Wörter der Reihe nach an.";color:var(--muted);
+    font-size:13.5px;font-weight:700;align-self:center}
+  .bauzeile.richtig{border-style:solid;border-color:var(--ok)}
+  .bauzeile.falsch{border-style:solid;border-color:var(--no)}
+  .steine{display:flex;flex-wrap:wrap;gap:8px}
+  .stein{min-height:46px;border-radius:12px;padding:10px 13px;cursor:pointer;
+    background:var(--surface2);border:1.5px solid var(--line);color:var(--ink);
+    font:800 16px/1.2 var(--font);font-family:var(--font)}
+  .stein.weg{opacity:.28;pointer-events:none}
+  .bauzeile .stein{background:rgba(167,139,250,.16);border-color:var(--brand)}
+
+  .weiter{width:100%;min-height:54px;margin-top:12px;border:none;border-radius:16px;cursor:pointer;
+    font:800 17px/1 var(--round);color:#150f2e;
+    background:linear-gradient(150deg,var(--brand),#7c5cff);box-shadow:0 10px 26px rgba(124,92,255,.4)}
+  .weiter.grau{background:var(--surface2);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+  .zweitreihe{display:flex;gap:9px;margin-top:9px}
+  .zweitreihe button{flex:1;min-height:46px;border-radius:14px;cursor:pointer;
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    font:700 14px/1.2 var(--font)}
+
+  .rueck{border-radius:14px;padding:12px 14px;margin-top:12px;font-size:14.5px;line-height:1.5}
+  .rueck.gut{background:rgba(73,214,189,.13);border:1px solid rgba(73,214,189,.4);color:var(--ok)}
+  .rueck.schlecht{background:rgba(255,122,107,.12);border:1px solid rgba(255,122,107,.38);color:#ffb3a8}
+  .rueck b{color:var(--ink)}
+  .rueck .regel{display:block;margin-top:7px;color:var(--muted);font-size:13.5px;font-weight:600}
+
+  .bilanz{display:grid;gap:9px;margin:14px 0 4px}
+  .bilanz div{display:flex;justify-content:space-between;gap:12px;background:var(--surface2);
+    border:1px solid var(--line);border-radius:13px;padding:12px 14px;font-size:14.5px}
+  .bilanz div b{font-family:var(--round)}
+  .bilanz .zahl{font:800 15px/1 var(--round);white-space:nowrap}
+  .bilanz .zahl.gut{color:var(--ok)} .bilanz .zahl.mittel{color:var(--gold)} .bilanz .zahl.uebe{color:var(--no)}
+  .rat{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.35);border-radius:14px;
+    padding:13px 15px;margin-top:12px;font-size:14.5px;line-height:1.55}
+  .rat b{display:block;font:800 15px/1.3 var(--round);margin-bottom:5px;color:var(--brand)}
+
+  /* Station 1 ist die einzige mit Tastatur. Auf Helenas Handy bleiben dann
+     rund 360 px Hoehe - der Pruefen-Knopf muss trotzdem sichtbar sein.
+     Es tritt nur Beiwerk zurueck; kein Knopf wird verschoben oder geklebt. */
+  @media (max-height:520px){
+    body{padding:9px}
+    header{margin-bottom:8px}
+    h1{font-size:17px}
+    .panel,.karte{padding:12px}
+    .karte{margin-bottom:8px}
+    .zitat{margin-bottom:9px;padding:8px 11px;font-size:15px}
+    .satz{font-size:17px}
+    .auftrag{margin-bottom:7px}
+    .hinweiszeile{display:none}
+    .weiter{min-height:48px;margin-top:9px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="chip" href="spiele.html" title="Zurück zu Helenas Spielen">‹</a>
+    <h1>🏖️ Holiday Report</h1>
+    <button class="chip" id="raus" title="Zurück zur Übersicht">✕</button>
+  </header>
+
+  <!-- ---------- Startschirm ---------- -->
+  <section class="panel" id="start">
+    <h2>Über die Ferien berichten</h2>
+    <p>Beim Klassenspaziergang fragst du auf Englisch – und schreibst danach auf,
+       was die anderen gesagt haben. Dabei muss das Verb <b>mitwandern</b>: Die
+       Frage steht in der Vergangenheit, also die Antwort auch.</p>
+    <p class="hinweiszeile">Drei Stationen. Du kannst jede einzeln machen, es gibt
+       keine Uhr und kein Verlieren. Bei „daneben“ bekommst du einen Hinweis und
+       darfst es nochmal versuchen.</p>
+
+    <button class="station" data-station="formen">
+      <span class="stand" id="stand-formen"></span>
+      <b>1 · Past forms</b>
+      <span>go → ? · travel → ? — die Form selbst bilden. Hier tippst du.</span>
+    </button>
+    <button class="station" data-station="report">
+      <span class="stand" id="stand-report"></span>
+      <b>2 · Report it</b>
+      <span>Jemand sagt etwas – setz es in deinen Bericht. Antippen, kein Tippen.</span>
+    </button>
+    <button class="station" data-station="stichwort">
+      <span class="stand" id="stand-stichwort"></span>
+      <b>3 · Aus Stichworten</b>
+      <span>Nur Notizen da, Satz fehlt noch. Wörter in die richtige Reihenfolge.</span>
+    </button>
+
+    <div class="rat">
+      <b>Der 7-Minuten-Trick</b>
+      Zuhören und gleichzeitig ganze Sätze schreiben schafft niemand. Schreib
+      während des Gesprächs nur Stichworte – Land, Person, ein Verb. Die Sätze
+      baust du hinterher. Genau das ist Station 3.
+    </div>
+  </section>
+
+  <!-- ---------- Spielschirm ---------- -->
+  <section id="spiel" class="verborgen">
+    <div class="fortschritt"><i id="balken"></i></div>
+    <div class="meta"><span id="metalinks">–</span><span id="metarechts">–</span></div>
+
+    <div class="karte" id="karte"></div>
+
+    <button class="weiter" id="weiter">Prüfen</button>
+    <div class="zweitreihe">
+      <button id="hinweis">💡 Hinweis</button>
+      <button id="abbrechen">Zurück zur Übersicht</button>
+    </div>
+  </section>
+
+  <!-- ---------- Schlussschirm ---------- -->
+  <section class="panel verborgen" id="ende">
+    <h2 id="endekopf">Geschafft</h2>
+    <p id="endetext"></p>
+    <div class="bilanz" id="bilanz"></div>
+    <div class="rat" id="uebeRat"></div>
+    <button class="weiter" id="nochmal">Noch eine Runde</button>
+    <div class="zweitreihe"><button id="zurUebersicht">Zur Übersicht</button></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =====================================================================
+     STATION 1 - die Form bilden.
+     Ausgewaehlt sind die Verben, die in einem Ferienbericht wirklich
+     vorkommen. "travel" steht bewusst drin: britisch mit doppeltem l,
+     amerikanisch mit einem - beides wird angenommen, weil beides richtig
+     ist und Helena sonst fuer etwas bestraft wuerde, das keine Regel ist.
+     ===================================================================== */
+  var FORMEN = [
+    { grund:"go",     past:["went"],                    satz:"Last summer we ___ to the mountains.", art:"unregelmäßig",
+      tipp:"Unregelmäßig. Die Form hat mit „go“ keinen Buchstaben gemeinsam – die muss man können." },
+    { grund:"travel", past:["travelled","traveled"],    satz:"They ___ to Ireland by ferry.",        art:"regelmäßig",
+      tipp:"Regelmäßig: + -ed. Britisch verdoppelt sich das l, amerikanisch nicht – beides zählt." },
+    { grund:"come",   past:["came"],                    satz:"My cousins ___ with us.",              art:"unregelmäßig",
+      tipp:"Unregelmäßig. o wird zu a – wie bei „become → became“." },
+    { grund:"have",   past:["had"],                     satz:"We ___ a small flat near the beach.",  art:"unregelmäßig",
+      tipp:"Unregelmäßig, und ganz kurz. Nur ein Wort, vier Buchstaben." },
+    { grund:"buy",    past:["bought"],                  satz:"She ___ a postcard for her grandma.",  art:"unregelmäßig",
+      tipp:"Unregelmäßig. Es endet auf -ought, wie bei „think → thought“." },
+    { grund:"see",    past:["saw"],                     satz:"We ___ dolphins on the second day.",   art:"unregelmäßig",
+      tipp:"Unregelmäßig. Drei Buchstaben, beginnt mit s – nicht „seen“, das ist die dritte Form." },
+    { grund:"take",   past:["took"],                    satz:"He ___ hundreds of photos.",           art:"unregelmäßig",
+      tipp:"Unregelmäßig. a wird zu oo – wie bei „shake → shook“." },
+    { grund:"eat",    past:["ate"],                     satz:"I ___ ice cream every single day.",    art:"unregelmäßig",
+      tipp:"Unregelmäßig. Drei Buchstaben, klingt wie der Buchstabe A." },
+    { grund:"swim",   past:["swam"],                    satz:"The whole family ___ in the lake.",    art:"unregelmäßig",
+      tipp:"Unregelmäßig. i wird zu a – wie bei „begin → began“." },
+    { grund:"fly",    past:["flew"],                    satz:"They ___ home on a Sunday.",           art:"unregelmäßig",
+      tipp:"Unregelmäßig. Kein -ed, obwohl es so aussieht. Es reimt sich auf „blue“." },
+    { grund:"stay",   past:["stayed"],                  satz:"We ___ at a campsite for ten nights.", art:"regelmäßig",
+      tipp:"Regelmäßig: + -ed. Vor dem y steht ein Vokal, also bleibt das y stehen." },
+    { grund:"visit",  past:["visited"],                 satz:"She ___ her aunt in Manchester.",      art:"regelmäßig",
+      tipp:"Regelmäßig: + -ed. Das t am Ende bleibt, es kommt nur -ed dazu." },
+    { grund:"meet",   past:["met"],                     satz:"I ___ two girls from Portugal.",       art:"unregelmäßig",
+      tipp:"Unregelmäßig. Genau ein e weniger als in der Grundform." },
+    { grund:"write",  past:["wrote"],                   satz:"He ___ a diary every evening.",        art:"unregelmäßig",
+      tipp:"Unregelmäßig. i wird zu o – wie bei „drive → drove“." },
+    { grund:"sleep",  past:["slept"],                   satz:"We ___ in a tent for a week.",         art:"unregelmäßig",
+      tipp:"Unregelmäßig. Aus dem langen ee wird ein kurzes e, und hinten kommt t." },
+    { grund:"carry",  past:["carried"],                 satz:"She ___ her own rucksack all week.",   art:"regelmäßig",
+      tipp:"Regelmäßig, aber Achtung: Vor dem y steht ein Mitlaut – y wird zu i, dann -ed." }
+  ];
+
+  /* =====================================================================
+     STATION 2 - dasselbe im Bericht, mit Auswahl statt Tastatur.
+     Drin sind genau die vier Faelle, die man beim Berichten braucht:
+     Verb in die Vergangenheit, Verneinung (didn't + Grundform), was/were,
+     und das besitzanzeigende Fuerwort, das von "my" auf "her/his" wechselt.
+     ===================================================================== */
+  var REPORT = [
+    { wer:"Mia",   zitat:"I went to Greece with my cousins.",
+      vorn:"She ", hinten:" to Greece with her cousins.",
+      wahl:["went","go","goes"], loesung:"went", merkmal:"simple past im bericht",
+      regel:"Ihre Frage stand in der Vergangenheit, also steht deine Antwort auch dort." },
+    { wer:"Tom",   zitat:"I don't like long flights.",
+      vorn:"He ", hinten:" like long flights.",
+      wahl:["didn't","don't","doesn't"], loesung:"didn't", merkmal:"verneinung im past",
+      regel:"Verneinung in der Vergangenheit: didn't + Grundform. Nach didn't kommt NIE nochmal eine Vergangenheitsform." },
+    { wer:"Lisa",  zitat:"My brother came with me.",
+      vorn:"Her brother ", hinten:" with her.",
+      wahl:["came","come","comes"], loesung:"came", merkmal:"simple past im bericht",
+      regel:"come → came. Hör auf den Klang: o wird zu a." },
+    { wer:"Sam",   zitat:"I bought a surfboard.",
+      vorn:"He ", hinten:" a surfboard.",
+      wahl:["bought","buyed","buys"], loesung:"bought", merkmal:"unregelmaessige verben",
+      regel:"buy ist unregelmäßig – „buyed“ gibt es nicht, auch wenn es logisch klingt." },
+    { wer:"Ella",  zitat:"We stayed in a small hotel.",
+      vorn:"They ", hinten:" in a small hotel.",
+      wahl:["stayed","stay","staied"], loesung:"stayed", merkmal:"regelmaessige verben",
+      regel:"Vor dem y steht ein Vokal (a), also bleibt das y und es kommt nur -ed dazu." },
+    { wer:"Ben",   zitat:"I was in Poland for two weeks.",
+      vorn:"He ", hinten:" in Poland for two weeks.",
+      wahl:["was","is","were"], loesung:"was", merkmal:"was oder were",
+      regel:"Eine Person → was. Mehrere → were." },
+    { wer:"Ana",   zitat:"My friends were really funny.",
+      vorn:"Her friends ", hinten:" really funny.",
+      wahl:["were","was","are"], loesung:"were", merkmal:"was oder were",
+      regel:"„friends“ sind mehrere, also were." },
+    { wer:"Leo",   zitat:"I didn't have a camera with me.",
+      vorn:"He ", hinten:" a camera with him.",
+      wahl:["didn't have","didn't had","don't have"], loesung:"didn't have", merkmal:"verneinung im past",
+      regel:"Die Vergangenheit steckt schon in didn't – das Verb dahinter bleibt in der Grundform." },
+    { wer:"Nina",  zitat:"I went there with my sister.",
+      vorn:"She went there with ", hinten:" sister.",
+      wahl:["her","my","his"], loesung:"her", merkmal:"besitzanzeigendes fuerwort",
+      regel:"Aus „my“ wird im Bericht „her“ oder „his“ – je nachdem, wer erzählt hat." },
+    { wer:"Jonas", zitat:"I lost my passport on the way home.",
+      vorn:"He lost ", hinten:" passport on the way home.",
+      wahl:["his","her","my"], loesung:"his", merkmal:"besitzanzeigendes fuerwort",
+      regel:"Jonas ist ein Junge, also „his“. Das Wort richtet sich nach dem Besitzer, nicht nach dem Ding." },
+    { wer:"Ruby",  zitat:"I travelled by train.",
+      vorn:"She ", hinten:" by train.",
+      wahl:["travelled","travel","travels"], loesung:"travelled", merkmal:"regelmaessige verben",
+      regel:"Auch regelmäßige Verben müssen mitwandern – die Grundform reicht nicht." },
+    { wer:"Max",   zitat:"I ate a lot of ice cream.",
+      vorn:"He ", hinten:" a lot of ice cream.",
+      wahl:["ate","eat","eated"], loesung:"ate", merkmal:"unregelmaessige verben",
+      regel:"eat → ate. Und „eated“ gibt es nicht." }
+  ];
+
+  /* =====================================================================
+     STATION 3 - aus Stichworten einen Satz bauen. Ohne Tastatur.
+     "koeder" sind Steine, die nicht gebraucht werden - sonst waere die
+     Reihenfolge schon dadurch verraten, dass alle Steine reinmuessen.
+     ===================================================================== */
+  var STICHWORT = [
+    { frage:"Where did you go?", notiz:["Ben","Croatia","grandparents"],
+      satz:["He","went","to","Croatia","with","his","grandparents","."],
+      koeder:["go","her"], merkmal:"aus stichworten einen satz",
+      regel:"Ben ist ein Junge → he und his. Und das Verb geht mit in die Vergangenheit." },
+    { frage:"What did you do?", notiz:["Amira","surfing","every morning"],
+      satz:["She","went","surfing","every","morning","."],
+      koeder:["goes","his"], merkmal:"aus stichworten einen satz",
+      regel:"„go surfing / go swimming“ – das Verb davor wandert, nicht das Wort mit -ing." },
+    { frage:"Who went with you?", notiz:["Theo","two friends","his sister"],
+      satz:["Two","friends","and","his","sister","came","with","him","."],
+      koeder:["come","her"], merkmal:"aus stichworten einen satz",
+      regel:"Wenn du mit den Personen anfängst, steht das Verb danach – und trotzdem in der Vergangenheit." },
+    { frage:"What was the best day?", notiz:["Chloe","boat trip","Friday"],
+      satz:["Her","best","day","was","the","boat","trip","on","Friday","."],
+      koeder:["were","is"], merkmal:"was oder were",
+      regel:"Ein Tag ist einer → was, nicht were." },
+    { frage:"Where did you stay?", notiz:["Noah","small village","ten days"],
+      satz:["He","stayed","in","a","small","village","for","ten","days","."],
+      koeder:["stay","since"], merkmal:"regelmaessige verben",
+      regel:"Eine Dauer bekommt „for“: for ten days. „since“ nennt einen Zeitpunkt." },
+    { frage:"Did you like the food?", notiz:["Ida","food","not"],
+      satz:["She","didn't","like","the","food","."],
+      koeder:["liked","doesn't"], merkmal:"verneinung im past",
+      regel:"didn't + Grundform. „didn't liked“ wäre doppelt gemoppelt." }
+  ];
+
+  var STATIONEN = {
+    formen:    { titel:"Past forms",       daten:FORMEN,    art:"tippen" },
+    report:    { titel:"Report it",        daten:REPORT,    art:"wahl"   },
+    stichwort: { titel:"Aus Stichworten",  daten:STICHWORT, art:"bauen"  }
+  };
+
+  var SPEICHER = "helena-holiday-report";
+  var $ = function(id){ return document.getElementById(id); };
+  var zeigen = function(el, ja){ el.classList.toggle("verborgen", !ja); };
+
+  function standLesen(){
+    try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; }
+    catch(e){ return {}; }
+  }
+  function standSchreiben(s){
+    try { localStorage.setItem(SPEICHER, JSON.stringify(s)); } catch(e){}
+  }
+
+  function mischen(a){
+    var b = a.slice();
+    for (var i = b.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var h = b[i]; b[i] = b[j]; b[j] = h;
+    }
+    return b;
+  }
+
+  /* Nur trimmen und Kleinschreibung - NICHT die Rechtschreibung glaetten.
+     Wer hier grosszuegig wird, nimmt Helena die Rueckmeldung weg, auf die
+     es ankommt. Erlaubt ist nur der Apostroph in seinen drei Formen,
+     weil Handytastaturen den je nach Einstellung anders setzen. */
+  function normal(t){
+    return String(t || "").trim().toLowerCase()
+      .replace(/[‘’ʼ]/g, "'")
+      .replace(/\s+/g, " ");
+  }
+
+  var lauf = null;   // { schluessel, liste, nr, richtig, versuch, fehler:{merkmal:n} }
+
+  function starten(schluessel){
+    var st = STATIONEN[schluessel];
+    lauf = { schluessel: schluessel, art: st.art, liste: mischen(st.daten),
+             nr: 0, richtig: 0, versuch: 0, fehler: {}, gesamt: {} };
+    zeigen($("start"), false); zeigen($("ende"), false); zeigen($("spiel"), true);
+    try { window.lernstand && window.lernstand.uhrZuruecksetzen(); } catch(e){}
+    aufgabeZeigen();
+  }
+
+  function aufgabeZeigen(){
+    var a = lauf.liste[lauf.nr];
+    lauf.versuch = 0;
+    $("balken").style.width = Math.round(lauf.nr / lauf.liste.length * 100) + "%";
+    $("metalinks").textContent = STATIONEN[lauf.schluessel].titel + " · " +
+      (lauf.nr + 1) + " von " + lauf.liste.length;
+    $("metarechts").textContent = "✓ " + lauf.richtig;
+    $("hinweis").disabled = false;
+    $("hinweis").style.opacity = "1";
+    var w = $("weiter");
+    w.textContent = "Prüfen"; w.classList.add("grau"); w.disabled = true;
+
+    if (lauf.art === "tippen")      tippenBauen(a);
+    else if (lauf.art === "wahl")   wahlBauen(a);
+    else                            bauenBauen(a);
+  }
+
+  /* ---------- Station 1 ---------- */
+  function tippenBauen(a){
+    var k = $("karte");
+    k.innerHTML =
+      '<p class="auftrag">Simple past</p>' +
+      '<div class="zitat"><span class="wer">Grundform</span><b>' + a.grund + '</b>' +
+        ' &nbsp;·&nbsp; <span style="color:var(--muted);font-weight:700">' + a.art + '</span></div>' +
+      '<p class="satz">' + a.satz.replace("___", '<span class="luecke" id="luecke">?</span>') + '</p>' +
+      '<div class="tippzeile" style="margin-top:13px">' +
+        '<input id="feld" type="text" autocomplete="off" autocapitalize="none" ' +
+               'autocorrect="off" spellcheck="false" inputmode="text" ' +
+               'aria-label="Vergangenheitsform eingeben" placeholder="…">' +
+      '</div>' +
+      '<div id="rueck"></div>';
+    var f = $("feld");
+    f.addEventListener("input", function(){
+      $("luecke").textContent = f.value.trim() || "?";
+      $("luecke").classList.toggle("voll", !!f.value.trim());
+      knopfFrei(!!f.value.trim());
+    });
+    f.addEventListener("keydown", function(e){
+      if (e.key === "Enter" && !$("weiter").disabled) $("weiter").click();
+    });
+    setTimeout(function(){ try { f.focus(); } catch(e){} }, 60);
+  }
+
+  /* ---------- Station 2 ---------- */
+  function wahlBauen(a){
+    var k = $("karte");
+    var knoepfe = mischen(a.wahl).map(function(w){
+      return '<button type="button" data-wert="' + w.replace(/"/g, "&quot;") + '">' + w + '</button>';
+    }).join("");
+    k.innerHTML =
+      '<p class="auftrag">Report it</p>' +
+      '<div class="zitat"><span class="wer">' + a.wer + ' sagt:</span>„' + a.zitat + '“</div>' +
+      '<p class="satz">' + a.vorn + '<span class="luecke" id="luecke">?</span>' + a.hinten + '</p>' +
+      '<div class="wahl" id="wahl">' + knoepfe + '</div>' +
+      '<div id="rueck"></div>';
+    Array.prototype.forEach.call(k.querySelectorAll("#wahl button"), function(b){
+      b.addEventListener("click", function(){ wahlPruefen(b, a); });
+    });
+  }
+
+  function wahlPruefen(knopf, a){
+    if (knopf.disabled) return;
+    var stimmt = knopf.dataset.wert === a.loesung;
+    lauf.versuch++;
+    $("luecke").textContent = knopf.dataset.wert;
+    $("luecke").classList.add("voll");
+    if (stimmt){
+      knopf.classList.add("richtig");
+      alleWahlSperren();
+      auswerten(true, a, knopf.dataset.wert, a.loesung, a.regel);
+    } else {
+      knopf.classList.add("falsch"); knopf.disabled = true;
+      if (lauf.versuch === 1){
+        rueckmelden(false, "Noch nicht. Schau dir an, in welcher Zeit " + a.wer +
+          " erzählt hat – und lies den Satz nochmal von vorn.", "");
+      } else {
+        alleWahlSperren();
+        auswerten(false, a, knopf.dataset.wert, a.loesung, a.regel);
+      }
+    }
+  }
+  function alleWahlSperren(){
+    Array.prototype.forEach.call($("karte").querySelectorAll("#wahl button"),
+      function(b){ b.disabled = true; });
+  }
+
+  /* ---------- Station 3 ---------- */
+  function bauenBauen(a){
+    var alle = mischen(a.satz.concat(a.koeder));
+    var k = $("karte");
+    k.innerHTML =
+      '<p class="auftrag">Aus Stichworten</p>' +
+      '<div class="zitat"><span class="wer">Deine Frage war</span>„' + a.frage + '“</div>' +
+      '<div class="notiz">' + a.notiz.map(function(n){ return "<i>" + n + "</i>"; }).join("") + '</div>' +
+      '<div class="bauzeile" id="bauzeile"></div>' +
+      '<div class="steine" id="steine">' +
+        alle.map(function(w, i){
+          return '<button type="button" class="stein" data-i="' + i + '">' + w + "</button>";
+        }).join("") +
+      '</div>' +
+      '<div id="rueck"></div>';
+    Array.prototype.forEach.call(k.querySelectorAll("#steine .stein"), function(b){
+      b.addEventListener("click", function(){
+        if (b.classList.contains("weg")) return;
+        b.classList.add("weg");
+        var kopie = document.createElement("button");
+        kopie.type = "button"; kopie.className = "stein";
+        kopie.textContent = b.textContent;
+        kopie.addEventListener("click", function(){
+          if ($("bauzeile").classList.contains("richtig")) return;
+          kopie.remove(); b.classList.remove("weg");
+          $("bauzeile").classList.remove("falsch");
+          knopfFrei($("bauzeile").children.length > 0);
+        });
+        $("bauzeile").appendChild(kopie);
+        knopfFrei(true);
+      });
+    });
+  }
+
+  function gebauterSatz(){
+    return Array.prototype.map.call($("bauzeile").children, function(e){ return e.textContent; });
+  }
+
+  /* ---------- gemeinsam ---------- */
+  function knopfFrei(ja){
+    var w = $("weiter");
+    w.disabled = !ja;
+    w.classList.toggle("grau", !ja);
+  }
+
+  function rueckmelden(gut, text, regel){
+    $("rueck").innerHTML = '<div class="rueck ' + (gut ? "gut" : "schlecht") + '">' + text +
+      (regel ? '<span class="regel">' + regel + "</span>" : "") + "</div>";
+  }
+
+  function auswerten(stimmt, a, gegeben, richtig, regel){
+    var merkmal = a.merkmal || (a.art === "regelmäßig" ? "regelmaessige verben" : "unregelmaessige verben");
+    lauf.gesamt[merkmal] = (lauf.gesamt[merkmal] || 0) + 1;
+    // Fuer die Eltern-Auswertung zaehlt der ERSTE Versuch - sonst saehe jede
+    // Aufgabe richtig aus, die beim zweiten Mal saß.
+    var erstesMal = stimmt && lauf.versuch === 1;
+    if (!erstesMal) lauf.fehler[merkmal] = (lauf.fehler[merkmal] || 0) + 1;
+    if (stimmt && lauf.versuch === 1) lauf.richtig++;
+    try {
+      window.lernstand && window.lernstand.antwort(erstesMal, merkmal,
+        erstesMal ? "" : gegeben, richtig);
+    } catch(e){}
+
+    rueckmelden(stimmt,
+      stimmt ? (lauf.versuch === 1 ? "Richtig. " : "Jetzt stimmt es. ") +
+               "<b>" + richtig + "</b>"
+             : "Die Lösung ist <b>" + richtig + "</b>.",
+      regel);
+    $("hinweis").disabled = true;
+    $("hinweis").style.opacity = ".4";
+    var w = $("weiter");
+    w.disabled = false; w.classList.remove("grau");
+    w.textContent = (lauf.nr + 1 >= lauf.liste.length) ? "Fertig" : "Weiter";
+    w.dataset.modus = "weiter";
+  }
+
+  $("weiter").addEventListener("click", function(){
+    var w = $("weiter");
+    if (w.dataset.modus === "weiter"){
+      w.dataset.modus = "";
+      lauf.nr++;
+      if (lauf.nr >= lauf.liste.length) endeZeigen();
+      else aufgabeZeigen();
+      return;
+    }
+    var a = lauf.liste[lauf.nr];
+    if (lauf.art === "tippen"){
+      var f = $("feld"), wert = normal(f.value);
+      if (!wert) return;
+      lauf.versuch++;
+      var ok = a.past.some(function(p){ return normal(p) === wert; });
+      f.classList.toggle("richtig", ok); f.classList.toggle("falsch", !ok);
+      if (ok){
+        f.disabled = true;
+        auswerten(true, a, f.value, a.past[0], a.tipp);
+      } else if (lauf.versuch === 1){
+        rueckmelden(false, "Noch nicht. Versuch es nochmal – ein Hinweis wartet unten.", "");
+        f.classList.remove("falsch");
+        setTimeout(function(){ f.select(); }, 40);
+      } else {
+        f.disabled = true;
+        auswerten(false, a, f.value, a.past[0], a.tipp);
+      }
+    } else if (lauf.art === "bauen"){
+      lauf.versuch++;
+      var gebaut = gebauterSatz();
+      var passt = gebaut.length === a.satz.length &&
+                  gebaut.every(function(w2, i){ return w2 === a.satz[i]; });
+      $("bauzeile").classList.toggle("richtig", passt);
+      $("bauzeile").classList.toggle("falsch", !passt);
+      if (passt){
+        auswerten(true, a, gebaut.join(" "), a.satz.join(" "), a.regel);
+      } else if (lauf.versuch === 1){
+        rueckmelden(false, "Noch nicht. Tipp ein Wort in der Zeile an, dann geht es zurück – " +
+          "und nicht alle Steine werden gebraucht.", "");
+      } else {
+        auswerten(false, a, gebaut.join(" "), a.satz.join(" "), a.regel);
+      }
+    }
+  });
+
+  $("hinweis").addEventListener("click", function(){
+    if ($("hinweis").disabled) return;
+    var a = lauf.liste[lauf.nr];
+    var text = (lauf.art === "tippen") ? a.tipp
+             : (lauf.art === "wahl")   ? a.regel
+             : a.regel;
+    rueckmelden(false, "💡 " + text, "");
+    // Ein benutzter Hinweis zaehlt wie ein Fehlversuch. Sonst waere er
+    // gratis, und die Auswertung fuer die Eltern waere geschoenigt.
+    if (lauf.versuch === 0) lauf.versuch = 1;
+  });
+
+  /* ---------- Schluss ---------- */
+  var MERKMAL_TEXT = {
+    "regelmaessige verben":       "Regelmäßige Verben (+ -ed)",
+    "unregelmaessige verben":     "Unregelmäßige Verben",
+    "simple past im bericht":     "Verb in die Vergangenheit setzen",
+    "verneinung im past":         "Verneinung: didn’t + Grundform",
+    "was oder were":              "was oder were",
+    "besitzanzeigendes fuerwort": "my → her / his",
+    "aus stichworten einen satz": "Aus Notizen einen Satz bauen"
+  };
+
+  function endeZeigen(){
+    zeigen($("spiel"), false); zeigen($("ende"), true);
+    var n = lauf.liste.length, r = lauf.richtig;
+
+    var st = standLesen();
+    var alt = st[lauf.schluessel] || 0;
+    if (r > alt){ st[lauf.schluessel] = r; standSchreiben(st); }
+
+    $("endekopf").textContent = r === n ? "Alles auf Anhieb 🎉"
+                              : r >= n * 0.7 ? "Das sitzt schon gut"
+                              : "Gut gearbeitet";
+    $("endetext").innerHTML = "<b>" + r + " von " + n + "</b> beim ersten Versuch. " +
+      (r > alt ? "Das ist dein bester Lauf an dieser Station." :
+                 "Dein bester Lauf hier: " + alt + " von " + n + ".");
+
+    var zeilen = Object.keys(lauf.gesamt).map(function(m){
+      var ges = lauf.gesamt[m], fe = lauf.fehler[m] || 0, gut = ges - fe;
+      var klasse = fe === 0 ? "gut" : (gut >= fe ? "mittel" : "uebe");
+      return { m:m, ges:ges, fe:fe, gut:gut, klasse:klasse };
+    }).sort(function(a,b){ return b.fe - a.fe; });
+
+    $("bilanz").innerHTML = zeilen.map(function(z){
+      return '<div><b>' + (MERKMAL_TEXT[z.m] || z.m) + '</b>' +
+             '<span class="zahl ' + z.klasse + '">' + z.gut + "/" + z.ges + "</span></div>";
+    }).join("");
+
+    var wackelt = zeilen.filter(function(z){ return z.fe > 0; });
+    $("uebeRat").innerHTML = wackelt.length
+      ? "<b>Das würde ich als Nächstes üben</b>" +
+        wackelt.slice(0, 2).map(function(z){
+          return "„" + (MERKMAL_TEXT[z.m] || z.m) + "“";
+        }).join(" und ") + ". Mach die Station einfach nochmal – die Aufgaben " +
+        "kommen in anderer Reihenfolge."
+      : "<b>Nichts offen</b>An dieser Station hat alles beim ersten Versuch " +
+        "gesessen. Probier die nächste.";
+  }
+
+  /* ---------- Verdrahtung ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".station"), function(b){
+    b.addEventListener("click", function(){ starten(b.dataset.station); });
+  });
+
+  function zurStart(){
+    zeigen($("spiel"), false); zeigen($("ende"), false); zeigen($("start"), true);
+    staendeZeigen();
+  }
+  $("abbrechen").addEventListener("click", zurStart);
+  $("zurUebersicht").addEventListener("click", zurStart);
+  $("nochmal").addEventListener("click", function(){ starten(lauf.schluessel); });
+  $("raus").addEventListener("click", function(){ location.href = "spiele.html"; });
+
+  function staendeZeigen(){
+    var st = standLesen();
+    Object.keys(STATIONEN).forEach(function(k){
+      var el = $("stand-" + k);
+      if (!el) return;
+      el.textContent = st[k] ? "★ " + st[k] + "/" + STATIONEN[k].daten.length : "";
+    });
+  }
+
+  staendeZeigen();
+})();
+</script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
