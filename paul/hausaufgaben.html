@@ -495,6 +495,7 @@
      weiter ueben und sich verbessern kann. Sprich: Das Spiel ist extra und
      separat nur fuer diese Hausaufgabe." */
   function spieleMalen(f){
+    knopfBeschriften();
     var box = $("f-spiele");
     if (!box) return;
     var liste = (f && Array.isArray(f.spiele)) ? f.spiele : [];
@@ -639,8 +640,18 @@
 
   // Übungsspiel: die Seiten dieser Hausaufgabe gehen an die Werkstatt, mit dem,
   // was im Gespräch noch gehakt hat. Danach startet das Spiel in der Werkstatt.
-  $("f-spiel").addEventListener("click", function(){
+  $("f-spiel").addEventListener("click", function(){ uebungsspiel(false); });
+
+  /* Liegt zu DIESER Hausaufgabe schon ein Spiel im Regal, wird es gespielt -
+     nicht noch einmal gebaut. So war es bei den Themenfeldern von Anfang an
+     gedacht. Denny am 20.09.2026: "Er baut es jetzt noch mal neu, anstatt das
+     Gespeicherte zu nutzen. Das war doch eigentlich der Plan dahinter."
+     Ein frisches Spiel gibt es weiterhin - aber nur auf ausdruecklichen
+     Wunsch: Jedes Bauen dauert anderthalb Minuten und kostet echtes Geld. */
+  function uebungsspiel(neuBauen){
     if (!offen) return;
+    var liegt = (Array.isArray(offen.spiele) ? offen.spiele : []).slice(-1)[0];
+    if (liegt && liegt.id && !neuBauen){ spielFertig(liegt, true); return; }
     var knopf = $("f-spiel"); knopf.disabled = true; fehler("f-fehler", "");
     var mitBild = offen.verlauf.filter(function(n){ return n.von !== "werkstatt" && n.hatBild; }).slice(-4);
     var letzteHilfe = offen.verlauf.filter(function(n){ return n.von === "werkstatt" && n.text; }).slice(-1)[0];
@@ -683,7 +694,7 @@
       clearInterval(uhr); knopf.disabled = false; knopf.textContent = "🎮 Übungsspiel dazu";
       fehler("f-fehler", (e && e.message) || "Ich konnte das Spiel nicht bauen.");
     });
-  });
+  }
 
   // Direkt eine Hausaufgabe öffnen: hausaufgaben.html?faden=<id>
   listeLaden().then(function(){
@@ -695,21 +706,24 @@
   window.__heft = { seiten: function(){ return seiten; }, nimm: nimm };
 
   /* Das fertige Uebungsspiel anbieten, statt es aufzudraengen. */
-  function spielFertig(spiel){
+  function spielFertig(spiel, ausRegal){
     var knopf = $("f-spiel");
-    if (knopf){ knopf.disabled = false; knopf.textContent = "\uD83C\uDFAE \u00DCbungsspiel dazu"; }
+    if (knopf){ knopf.disabled = false; knopfBeschriften(); }
     var alt = document.getElementById("spiel-frage");
     if (alt) alt.remove();
     var kasten = document.createElement("div");
     kasten.id = "spiel-frage";
     kasten.className = "karte";
     kasten.innerHTML =
-      '<div style="font:800 18px/1.25 var(--rund);margin-bottom:6px">\uD83C\uDFAE Dein \u00DCbungsspiel ist fertig</div>' +
+      '<div style="font:800 18px/1.25 var(--rund);margin-bottom:6px">\uD83C\uDFAE ' +
+      (ausRegal ? 'Dein \u00DCbungsspiel liegt bereit' : 'Dein \u00DCbungsspiel ist fertig') + '</div>' +
       '<p class="unter" style="margin:0 0 12px"><span id="spiel-titel"></span>' +
       '<br>Es bleibt gespeichert \u2013 du kannst auch sp\u00E4ter noch spielen.</p>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
       '<button class="knopf haupt" id="spiel-jetzt" type="button">Jetzt spielen</button>' +
-      '<button class="knopf" id="spiel-spaeter" type="button">Sp\u00E4ter spielen</button></div>';
+      '<button class="knopf" id="spiel-spaeter" type="button">Sp\u00E4ter spielen</button>' +
+      (ausRegal ? '<button class="knopf" id="spiel-neu" type="button">\uD83D\uDD28 Lieber ein neues bauen</button>' : '') +
+      '</div>';
     // Titel als Text setzen, nicht als HTML - er kommt vom Modell.
     kasten.querySelector("#spiel-titel").textContent =
       spiel.titel || "Eine \u00DCbung zu deiner Hausaufgabe";
@@ -722,6 +736,21 @@
     document.getElementById("spiel-spaeter").addEventListener("click", function(){
       kasten.remove();
     });
+    var neuKnopf = document.getElementById("spiel-neu");
+    if (neuKnopf) neuKnopf.addEventListener("click", function(){
+      kasten.remove();
+      uebungsspiel(true);
+    });
+  }
+
+  /* Der Knopf sagt, was er tut: Liegt schon etwas im Regal, wird gespielt -
+     sonst gebaut. Sonst tippt sie auf "bauen" und bekommt in Wahrheit das
+     alte Spiel, oder umgekehrt. */
+  function knopfBeschriften(){
+    var knopf = $("f-spiel");
+    if (!knopf) return;
+    var liegt = offen && Array.isArray(offen.spiele) && offen.spiele.length;
+    knopf.textContent = liegt ? "\u25B6\uFE0F \u00DCbungsspiel spielen" : "\uD83C\uDFAE \u00DCbungsspiel dazu";
   }
 
 })();
