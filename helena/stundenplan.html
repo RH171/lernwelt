@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Stundenplan</title>
+<!--
+  Helenas Stundenplan, Klasse 7B, Schuljahr 2026/27.
+  Abgetippt am 20.09.2026 aus sechs Screenshots ihrer Schul-App (KW 40).
+
+  Zwei Stellen waren im Plan mehrdeutig und sind von Denny entschieden:
+  - Französisch/F-Int gibt es in zwei Gruppen (Maar 7A / Grune 7D) -> Maar, B3.14.
+  - Mittwoch 5./6. stehen Ev. Religion, Ethik und Kath. Religion nebeneinander
+    -> Ethik bei Koczy.
+  Sport am Montag ist nach Jungen und Mädchen geteilt; hier steht die
+  Mädchen-Gruppe (Süßemilch, TH2).
+
+  Kein Kalender und keine Erinnerung - nur zum Nachschauen (siehe
+  [[keine-kalender-banner]]). Ändert sich der Plan: STUNDEN unten anpassen.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --surface2:#1f2740; --ink:#eef2fb;
+    --muted:#8a92a8; --line:#2a3350; --brand:#a78bfa;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+  .huelle{max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
+    font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:150px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+  .plan{width:100%;border-collapse:collapse;font-family:var(--rund)}
+  .plan th,.plan td{border:1px solid var(--line);padding:8px 5px;text-align:center;
+    font-size:clamp(12px,2.1vw,15px);vertical-align:middle}
+  .plan th{background:var(--surface2);font-weight:800}
+  .plan td.zeit{background:var(--surface2);font-weight:800;white-space:nowrap;font-size:clamp(11px,1.8vw,13.5px)}
+  .plan td.zeit small{display:block;color:var(--muted);font-weight:600;font-size:11px}
+  .plan .heute{background:#241f3d}
+  .plan th.heute{background:var(--brand);color:#141024}
+  .plan .pause td{background:#141a28;color:var(--muted);font-weight:700;font-size:12.5px}
+  .plan .fach{font-weight:800}
+  .plan .wo{display:block;color:var(--muted);font-weight:600;font-size:11.5px;margin-top:2px}
+  .unter{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px 0 0}
+  .hinweis{background:var(--surface2);border-radius:12px;padding:10px 12px;margin-top:10px;
+    font-size:14px;line-height:1.5;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/helena/">‹ Zurück</a>
+    <h1>📅 Mein Stundenplan</h1>
+  </header>
+
+  <div class="karte">
+    <table class="plan" id="plan" aria-label="Stundenplan Klasse 7B"></table>
+    <p class="unter" id="heute-text"></p>
+  </div>
+
+  <div class="karte">
+    <div style="font:800 17px/1.2 var(--rund)">Gut zu wissen</div>
+    <div class="hinweis">
+      <b>F-Int</b> ist die Französisch-Intensivierung bei Frau Maar, Raum B3.14 –
+      dienstags in der 7. Stunde und donnerstags in der 7./8.
+    </div>
+    <div class="hinweis">
+      <b>Sport</b> ist am Montag nach Gruppen geteilt. Hier steht deine Gruppe
+      bei Frau Süßemilch in der TH2.
+    </div>
+    <p class="unter">Klasse 7B, Schuljahr 2026/27 · Stand KW 40</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var TAGE = ["Mo", "Di", "Mi", "Do", "Fr"];
+  // Stunde, Zeit, dann je Tag: [Fach, Lehrkraft + Raum] oder "" für frei.
+  var STUNDEN = [
+    ["1", "7:55 – 8:40",
+      ["Sport", "Süßemilch · TH2"], ["Deutsch", "Brix · C2.24"], ["Musik", "Felde · A1.02"],
+      ["Informatik", "Reif · A2.02A"], ["Geographie", "Koch · B2.16"]],
+    ["2", "8:40 – 9:25",
+      ["Sport", "Süßemilch · TH2"], ["Deutsch", "Brix · C2.24"], ["Musik", "Felde · A1.02"],
+      ["Informatik", "Reif · A2.02A"], ["Geographie", "Koch · B2.16"]],
+    ["Pause", "9:25 – 9:45"],
+    ["3", "9:45 – 10:30",
+      ["Geschichte", "Mahler · C2.23"], ["Mathematik", "Zenger · B2.16"], ["Englisch", "Röher · 105"],
+      ["Französisch", "Maar · B3.14"], ["Kunst", "Dommer · 205"]],
+    ["4", "10:30 – 11:15",
+      ["Geschichte", "Mahler · C2.23"], ["Mathematik", "Zenger · B2.16"], ["Englisch", "Röher · 105"],
+      ["Französisch", "Maar · B3.14"], ["Kunst", "Dommer · 205"]],
+    ["Pause", "11:15 – 11:30"],
+    ["5", "11:30 – 12:15",
+      ["Englisch", "Röher · 209"], ["Französisch", "Maar · B3.14"], ["Ethik", "Koczy · B3.10"],
+      ["Mathematik", "Zenger · B2.16"], ["Deutsch", "Brix"]],
+    ["6", "12:15 – 13:00",
+      ["Englisch", "Röher · 209"], ["Französisch", "Maar · B3.14"], ["Ethik", "Koczy · B3.10"],
+      ["Mathematik", "Zenger · B2.16"], ["Deutsch", "Brix"]],
+    ["Pause", "13:00 – 13:15"],
+    ["7", "13:15 – 14:00",
+      "", ["F-Int", "Maar · B3.14"], "", ["F-Int", "Maar · B3.14"], ""],
+    ["8", "14:00 – 14:45",
+      "", "", "", ["F-Int", "Maar · B3.14"], ""]
+  ];
+
+  var heute = new Date().getDay() - 1;         // 0 = Montag
+  var tabelle = document.getElementById("plan");
+  var kopf = "<tr><th></th>" + TAGE.map(function(t, i){
+    return '<th class="' + (i === heute ? "heute" : "") + '">' + t + "</th>";
+  }).join("") + "</tr>";
+
+  var zeilen = STUNDEN.map(function(s){
+    if (s[0] === "Pause"){
+      return '<tr class="pause"><td class="zeit">Pause<small>' + s[1] +
+             '</small></td><td colspan="5">Pause</td></tr>';
+    }
+    return '<tr><td class="zeit">' + s[0] + '.<small>' + s[1] + "</small></td>" +
+      TAGE.map(function(_, i){
+        var f = s[i + 2];
+        var klasse = (i === heute ? "heute" : "");
+        if (!f) return '<td class="' + klasse + '">–</td>';
+        return '<td class="' + klasse + '"><span class="fach">' + f[0] +
+               '</span><span class="wo">' + f[1] + "</span></td>";
+      }).join("") + "</tr>";
+  }).join("");
+  tabelle.innerHTML = kopf + zeilen;
+
+  var t = document.getElementById("heute-text");
+  if (heute >= 0 && heute <= 4){
+    var faecher = STUNDEN.filter(function(s){ return s[0] !== "Pause" && s[heute + 2]; });
+    var namen = [];
+    faecher.forEach(function(s){
+      var n = s[heute + 2][0];
+      if (namen.indexOf(n) < 0) namen.push(n);
+    });
+    t.textContent = "Heute ist " + ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"][heute] +
+      ": " + namen.join(", ") + ".";
+  } else {
+    t.textContent = "Wochenende – keine Schule.";
+  }
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+</body>
+</html>
