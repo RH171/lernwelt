@@ -37,11 +37,12 @@
   body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
        padding-bottom:calc(20px + env(safe-area-inset-bottom))}
   .huelle{max-width:820px;margin:0 auto}
-  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
   .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
     background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
     font-weight:600;font-size:15px;min-height:44px}
-  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:150px}
+  h1{font-family:var(--rund);font-size:20px;margin:0;min-width:0;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .karte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:17px;margin-bottom:12px}
   h2{font:800 18px/1.25 var(--rund);margin:0 0 8px}
   .unter{color:var(--muted);font-size:14.5px;line-height:1.55;margin:8px 0 0}
@@ -131,9 +132,9 @@
   else if (tage === 0){ z.textContent = "heute"; t.textContent = "Viel Erfolg!"; }
   else { z.textContent = "geschafft"; t.textContent = "Der Test war am 1. Oktober 2026."; }
   if (tage > 0){
-    var wochen = Math.floor(tage / 7);
-    t.textContent = "Donnerstag, 1. Oktober 2026" +
-      (wochen >= 1 ? " · gut " + wochen + " Woche" + (wochen === 1 ? "" : "n") : "");
+    /* Kein "gut 1 Woche" bei 11 Tagen - das liest sich wie sieben und ist
+       irrefuehrend. Das Datum reicht; die Tageszahl steht schon darueber. */
+    t.textContent = "Donnerstag, 1. Oktober 2026";
   }
 
   /* Die Originaltests. Alle Adressen am 20.09.2026 geprüft (HTTP 200).
