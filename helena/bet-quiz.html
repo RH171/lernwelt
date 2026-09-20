@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BET-Fragerunden</title>
+<!--
+  Kurze Fragerunden zum BET Englisch 7 (20.09.2026).
+
+  Denny: "Baue doch hier verschiedene Quizze ein, bei denen sie immer einzelne
+  Fragen beantworten muss und nicht einen 50-minütigen Test machen soll. Der
+  wäre natürlich auch noch wichtig zu machen, aber erst mal einzelne
+  Fragespiele oder einzelne Fragerunden ... Gerne per Multiple Choice, damit
+  sie sich einfach tut."
+
+  Eine Runde = 8 Fragen, drei bis fünf Minuten. Der 50-Minuten-Originaltest
+  bleibt daneben stehen (bet.html) - er ist der Ernstfall, das hier ist das
+  tägliche Üben.
+
+  Die Fragen stehen fest in bet-fragen.js. Kein API-Aufruf, keine Kosten,
+  kein Warten, kein Schreibvorgang im Speicherkontingent.
+
+  Wiederholt wird nach LERNZIEL, nicht nach Frage: Was falsch war, kommt am
+  Ende derselben Runde noch einmal und danach bevorzugt wieder, bis es
+  dreimal in Folge saß (dieselbe Regel wie im täglichen Lernquiz).
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="/quiz/quiz.css">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
+    --akzent:#a78bfa; --akzent-hell:#241f3d; --akzent-auf:#141024; --akzent-text:#c9b8ff;
+    --gut:#49d6bd; --gut-hell:#13322f; --gut-text:#8ee0c2;
+    --schlecht:#ff7a6b; --schlecht-hell:#33191c; --schlecht-text:#ff9b91;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  /* minmax(0,1fr): sonst ist die Spalte so breit wie ihr breitester Inhalt
+     und die Kacheln stehen aus der Karte heraus (Paul, 15.09.2026). */
+  .runden{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:12px}
+  .runde{display:flex;align-items:center;gap:12px;min-width:0;width:100%;
+         border:2px solid var(--line);background:var(--card);color:var(--ink);
+         border-radius:16px;padding:14px;text-align:left;font:inherit;cursor:pointer}
+  .runde .ic{font-size:26px;line-height:1;flex:0 0 auto}
+  .runde .mitte{flex:1 1 auto;min-width:0}
+  .runde .titel{font:800 17px/1.25 var(--rund)}
+  .runde .unter2{color:var(--muted);font-size:14px;line-height:1.35;margin-top:2px}
+  .runde .stand{flex:0 0 auto;font:700 13px/1 var(--rund);color:var(--muted);text-align:right}
+  .runde .stand b{display:block;font-size:17px;color:var(--akzent-text);margin-bottom:3px}
+  .runde.fertig{border-color:var(--gut)}
+  .runde.fertig .stand b{color:var(--gut-text)}
+  .lesetext{white-space:pre-wrap;background:var(--akzent-auf);border:1px solid var(--line);
+            border-radius:14px;padding:13px 15px;margin:4px 0 12px;
+            font-size:15.5px;line-height:1.55}
+  .qantwort{text-align:left}
+  /* Handy mit offener Tastatur bzw. sehr flaches Fenster: Luft sparen,
+     damit "Weiter" nicht unter den Rand rutscht. */
+  @media (max-height:520px){
+    .karte{padding:13px;margin-bottom:9px}
+    .frage{font-size:18px}
+    .lesetext{max-height:34vh;overflow:auto;font-size:14.5px}
+    header{margin-bottom:6px}
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="bet.html">‹ Zurück</a>
+    <h1>🇬🇧 BET-Fragerunden</h1>
+    <span class="serie" id="q-serie"></span>
+  </header>
+
+  <!-- Start -->
+  <section id="sicht-start">
+    <div class="karte">
+      <h2>Such dir eine Runde aus</h2>
+      <p class="unter">Jede Runde sind 8 Fragen – das dauert ein paar Minuten, nicht eine Schulstunde. Was du falsch hast, kommt wieder.</p>
+      <div class="runden" id="q-runden"></div>
+    </div>
+    <div class="karte">
+      <h2>Oder alles gemischt</h2>
+      <p class="unter">Wie im echten Test: Grammatik, Wörter, Lesen und Sprechen durcheinander.</p>
+      <button class="knopf" id="q-gemischt" type="button">🎲 Gemischte Runde</button>
+      <button class="knopf still" id="q-offen" type="button">🔁 Nur das, was noch wackelt</button>
+      <p class="unter" id="q-offen-zahl"></p>
+    </div>
+  </section>
+
+  <!-- Spiel -->
+  <section id="sicht-spiel" class="verborgen">
+    <div class="leiste"><i id="q-balken"></i></div>
+    <div class="karte">
+      <div class="kopfzeile"><span id="q-nr"></span><span id="q-paket"></span></div>
+      <div class="lesetext verborgen" id="q-text"></div>
+      <div class="frage" id="q-frage"></div>
+      <div class="qantworten" id="q-antworten"></div>
+      <div class="erklaerung verborgen" id="q-erklaerung"></div>
+      <button class="knopf verborgen" id="q-weiter" type="button">Weiter</button>
+      <p class="unter" style="text-align:right"><span id="q-punkte"></span></p>
+    </div>
+    <button class="knopf still" id="q-abbruch" type="button">Runde beenden</button>
+  </section>
+
+  <!-- Ende -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <h2>Runde geschafft</h2>
+      <div class="endezahl" id="q-ende-zahl"></div>
+      <p class="unter" id="q-ende-text"></p>
+      <p class="unter" id="q-ende-serie"></p>
+      <div class="offen verborgen" id="q-ende-offen" style="text-align:left"></div>
+      <button class="knopf" id="q-nochmal" type="button">Noch eine Runde</button>
+      <a class="knopf still" href="bet.html" style="text-decoration:none">Zurück zum BET</a>
+    </div>
+  </section>
+</div>
+
+<script src="bet-fragen.js"></script>
+<script>
+(function () {
+  "use strict";
+  var RUNDEN = window.BET_RUNDEN || [];
+  var JE_RUNDE = 8;        // so viele Fragen hat eine Runde
+  var SITZT_AB = 3;        // dreimal richtig in Folge, dann gilt ein Lernziel als sicher
+  var SPEICHER = "helena-bet-quiz";
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+  function lese(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} }
+  function schreibe(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+  var stand = lese(SPEICHER, { sitzt:{}, gespielt:0, richtig:0, tage:[] });
+  if (!stand.sitzt || typeof stand.sitzt !== "object") stand.sitzt = {};
+  if (!Array.isArray(stand.tage)) stand.tage = [];
+
+  /* Jede Frage bekommt eine feste Kennung aus Paket + Platz. NEUE FRAGEN
+     IMMER HINTEN ANHÄNGEN - wer eine mittendrin einfügt, verschiebt alle
+     Kennungen dahinter und der gemerkte Lernstand zeigt auf die falsche. */
+  var ALLE = [];
+  RUNDEN.forEach(function (p) {
+    p.fragen.forEach(function (f, i) {
+      f.id = p.k + "-" + i; f.paket = p; ALLE.push(f);
+    });
+  });
+
+  function sitztZahl(f){ return stand.sitzt[f.id] || 0; }
+  function wackelt(f){ return sitztZahl(f) < SITZT_AB; }
+  function offeneAlle(){ return ALLE.filter(wackelt); }
+
+  /* ---------- Start ---------- */
+
+  function rundenMalen() {
+    var box = $("q-runden");
+    box.innerHTML = "";
+    RUNDEN.forEach(function (p) {
+      var sitzen = p.fragen.filter(function (f) { return !wackelt(f); }).length;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "runde" + (sitzen === p.fragen.length ? " fertig" : "");
+      b.innerHTML = '<span class="ic">' + p.ic + '</span>' +
+        '<span class="mitte"><span class="titel">' + esc(p.n) + '</span>' +
+        '<span class="unter2">' + esc(p.unter) + '</span></span>' +
+        '<span class="stand"><b>' + sitzen + "/" + p.fragen.length + "</b>sitzen</span>";
+      b.addEventListener("click", function () { starten(p.fragen, p.ic + " " + p.n); });
+      box.appendChild(b);
+    });
+    var o = offeneAlle().length;
+    $("q-offen-zahl").textContent = o
+      ? o + " von " + ALLE.length + " Fragen sitzen noch nicht sicher."
+      : "Alle " + ALLE.length + " Fragen sitzen. Stark – mach trotzdem ab und zu eine Runde.";
+    $("q-offen").disabled = o === 0;
+  }
+
+  function mischen(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var h = a[i]; a[i] = a[j]; a[j] = h;
+    }
+    return a;
+  }
+
+  /* Was noch wackelt, kommt zuerst - und innerhalb davon das, was am
+     wenigsten saß. Erst danach wird mit Sitzendem aufgefüllt, damit eine
+     Runde immer voll ist. */
+  function auswaehlen(quelle, wieviele) {
+    var wackelig = mischen(quelle.filter(wackelt)).sort(function (a, b) { return sitztZahl(a) - sitztZahl(b); });
+    var sicher = mischen(quelle.filter(function (f) { return !wackelt(f); }));
+    return wackelig.concat(sicher).slice(0, wieviele);
+  }
+
+  /* ---------- Eine Runde ---------- */
+
+  var liste = [], nr = 0, richtig = 0, log = [], wahlOffen = true, reihenfolge = [], nochmalDran = {}, titel = "";
+
+  function starten(quelle, wie) {
+    liste = auswaehlen(quelle, JE_RUNDE);
+    if (!liste.length) return;
+    nr = 0; richtig = 0; log = []; nochmalDran = {}; titel = wie;
+    zeige("spiel");
+    frageMalen();
+  }
+
+  function zeige(welche) {
+    ["start","spiel","ende"].forEach(function (x) {
+      $("sicht-" + x).classList.toggle("verborgen", x !== welche);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function frageMalen() {
+    var f = liste[nr];
+    if (!f) return endeMalen();
+    wahlOffen = true;
+    $("q-nr").textContent = "Frage " + (nr + 1) + " von " + liste.length;
+    $("q-paket").textContent = titel === "gemischt" ? f.paket.ic + " " + f.paket.n : titel;
+    var t = $("q-text");
+    if (f.text) { t.textContent = f.text; t.classList.remove("verborgen"); }
+    else { t.textContent = ""; t.classList.add("verborgen"); }
+    $("q-frage").textContent = f.frage;
+    $("q-erklaerung").classList.add("verborgen");
+    $("q-weiter").classList.add("verborgen");
+
+    reihenfolge = mischen(f.antworten.map(function (_, i) { return i; }));
+    var box = $("q-antworten");
+    box.innerHTML = "";
+    reihenfolge.forEach(function (original, platz) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "qantwort";
+      b.textContent = f.antworten[original];
+      b.addEventListener("click", function () { waehlen(platz, original, b); });
+      box.appendChild(b);
+    });
+    fortschritt();
+  }
+
+  function waehlen(platz, original, knopf) {
+    if (!wahlOffen) return;
+    wahlOffen = false;
+    var f = liste[nr];
+    var stimmt = original === f.richtig;
+    if (stimmt) richtig++;
+
+    Array.prototype.forEach.call($("q-antworten").children, function (b, i) {
+      b.disabled = true;
+      if (reihenfolge[i] === f.richtig) b.classList.add("richtig");
+    });
+    if (!stimmt) knopf.classList.add("falsch");
+
+    // Der Zähler je Frage: dreimal richtig in Folge, dann sitzt sie.
+    // Ein Fehler setzt zurück - wie bei Duolingo.
+    stand.sitzt[f.id] = stimmt ? Math.min(SITZT_AB, sitztZahl(f) + 1) : 0;
+
+    var e = $("q-erklaerung");
+    e.innerHTML = "<b>" + (stimmt ? "Richtig." : "Noch nicht.") + "</b> " + esc(f.erklaerung);
+    e.classList.remove("verborgen");
+    e.classList.toggle("gut", stimmt);
+
+    // Falsch? Dann kommt die Frage am Ende DIESER Runde noch einmal -
+    // aber nur einmal, sonst hängt man ewig an derselben fest.
+    if (!stimmt && !nochmalDran[f.id]) { nochmalDran[f.id] = true; liste.push(f); }
+
+    $("q-weiter").classList.remove("verborgen");
+    $("q-weiter").textContent = (nr + 1 >= liste.length) ? "Fertig" : "Weiter";
+    log.push({ merkmal: f.merkmal, stimmt: stimmt });
+    if (window.lernstand && window.lernstand.antwort)
+      window.lernstand.antwort(stimmt, f.merkmal, stimmt ? "" : f.antworten[original], f.antworten[f.richtig]);
+    fortschritt();
+  }
+
+  $("q-weiter").addEventListener("click", function () {
+    nr++;
+    if (nr >= liste.length) return endeMalen();
+    frageMalen();
+  });
+  $("q-abbruch").addEventListener("click", function () { if (log.length) endeMalen(); else zeige("start"); });
+
+  function fortschritt() {
+    $("q-balken").style.width = Math.round(((nr + (wahlOffen ? 0 : 1)) / Math.max(1, liste.length)) * 100) + "%";
+    $("q-punkte").textContent = richtig + " richtig";
+  }
+
+  /* ---------- Ende ---------- */
+
+  function endeMalen() {
+    var gesamt = log.length;
+    var quote = gesamt ? Math.round((richtig / gesamt) * 100) : 0;
+    $("q-ende-zahl").textContent = richtig + " von " + gesamt;
+    $("q-ende-text").textContent = gesamt === 0 ? "Keine Frage beantwortet."
+      : quote >= 80 ? "Stark. Das sitzt."
+      : quote >= 50 ? "Gut durchgehalten. Was noch nicht saß, kommt in der nächsten Runde wieder."
+      : "Das war schwer, und du bist drangeblieben. Genau diese Fragen kommen wieder, bis sie sitzen.";
+
+    var offen = {};
+    log.forEach(function (a) { if (!a.stimmt) offen[a.merkmal] = true; });
+    var namen = Object.keys(offen);
+    var box = $("q-ende-offen");
+    if (namen.length) {
+      box.innerHTML = "<b>Das üben wir weiter:</b><ul>" +
+        namen.map(function (m) { return "<li>" + esc(m) + "</li>"; }).join("") + "</ul>";
+      box.classList.remove("verborgen");
+    } else box.classList.add("verborgen");
+
+    stand.gespielt = (stand.gespielt || 0) + gesamt;
+    stand.richtig = (stand.richtig || 0) + richtig;
+    var heute = new Date().toISOString().slice(0, 10);
+    if (stand.tage[stand.tage.length - 1] !== heute) stand.tage.push(heute);
+    stand.tage = stand.tage.slice(-60);
+    schreibe(SPEICHER, stand);
+
+    $("q-ende-serie").textContent = serie() + " Tage in Folge geübt";
+    rundenMalen();
+    zeige("ende");
+  }
+
+  function serie() {
+    var n = 0, d = new Date();
+    for (;;) {
+      var s = d.toISOString().slice(0, 10);
+      if (stand.tage.indexOf(s) < 0) break;
+      n++; d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }
+
+  /* ---------- Aufbau ---------- */
+  $("q-gemischt").addEventListener("click", function () { starten(ALLE, "gemischt"); });
+  $("q-offen").addEventListener("click", function () { starten(offeneAlle(), "gemischt"); });
+  $("q-nochmal").addEventListener("click", function () { zeige("start"); });
+  rundenMalen();
+  if (serie()) $("q-serie").textContent = "🔥 " + serie() + " Tage in Folge";
+  zeige("start");
+})();
+</script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
