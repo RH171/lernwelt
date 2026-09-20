@@ -274,13 +274,13 @@ async function postVerarbeiten(context) {
     if (weitereSeiten.some(zuGross)) return json(400, { ok: false, fehler: "Ein Bild ist zu groß." });
 
     const nr = faden.verlauf.length;
-    if (bild) await env.PAUL_KV.put("meldung-bild:" + faden.id + ":" + nr, bild);
+    if (bild) await kvPut(env, "meldung-bild:" + faden.id + ":" + nr, bild);
 
     faden.verlauf.push({ von, text, zeit: new Date().toISOString(), hatBild: !!bild, nr,
                          ...(/^data:application\/pdf;/.test(bild) ? { pdf: true } : {}) });
     for (let i = 0; i < weitereSeiten.length; i++) {
       const n2 = faden.verlauf.length;
-      await env.PAUL_KV.put("meldung-bild:" + faden.id + ":" + n2, weitereSeiten[i]);
+      await kvPut(env, "meldung-bild:" + faden.id + ":" + n2, weitereSeiten[i]);
       faden.verlauf.push({ von, text: "Seite " + (i + 2), zeit: new Date().toISOString(), hatBild: true, nr: n2,
                            ...(/^data:application\/pdf;/.test(weitereSeiten[i]) ? { pdf: true } : {}) });
     }
@@ -343,9 +343,9 @@ async function postVerarbeiten(context) {
   if (weitere.some(zuGross)) return json(400, { ok: false, fehler: "Ein Bild ist zu groß." });
 
   const id = neueId();
-  if (bild) await env.PAUL_KV.put("meldung-bild:" + id + ":0", bild);
+  if (bild) await kvPut(env, "meldung-bild:" + id + ":0", bild);
   for (let i = 0; i < weitere.length; i++) {
-    await env.PAUL_KV.put("meldung-bild:" + id + ":" + (i + 1), weitere[i]);
+    await kvPut(env, "meldung-bild:" + id + ":" + (i + 1), weitere[i]);
   }
 
   liste.unshift({
@@ -477,7 +477,7 @@ async function loeschenVerarbeiten(context) {
   // sie doppelt zu halten, und der Text ist das, was verloren wehtut.
   if (faden) {
     try {
-      await env.PAUL_KV.put(PAPIERKORB + id,
+      await kvPut(env, PAPIERKORB + id,
         JSON.stringify({ faden, geloescht: new Date().toISOString(),
                          von: alsKindSelbst ? meins : "eltern" }),
         { expirationTtl: 60 * 60 * 24 * 90 });
@@ -521,12 +521,20 @@ async function listeHolen(env) {
 // Er sagt NICHT "angekommen", denn das waere gelogen.
 class SpeicherVoll extends Error {}
 
+/* JEDER Schreibvorgang geht hier durch. Vorher lagen die Bild-puts roh im
+   Ablauf (meldung-bild:...), und weil das Bild VOR der Liste gespeichert wird,
+   flog der Worker schon dort - noch bevor liste_speichern ueberhaupt dran war.
+   Helena hat das am 20.09.2026 gegen 15 Uhr zu sehen bekommen, als das
+   KV-Tageskontingent aufgebraucht war: "Unexpected token '<', '<!DOCTYPE'".
+   Das ist der Rohtext eines JavaScript-Fehlers - fuer ein Kind heisst er gar
+   nichts, und es weiss nicht, ob seine Hausaufgabe angekommen ist. */
+async function kvPut(env, schluessel, wert, opt) {
+  try { await env.PAUL_KV.put(schluessel, wert, opt); }
+  catch (e) { throw new SpeicherVoll(String((e && e.message) || e)); }
+}
+
 async function liste_speichern(env, liste) {
-  try {
-    await env.PAUL_KV.put(LISTE, JSON.stringify(liste.slice(0, MAX)));
-  } catch (e) {
-    throw new SpeicherVoll(String((e && e.message) || e));
-  }
+  await kvPut(env, LISTE, JSON.stringify(liste.slice(0, MAX)));
 }
 
 // Nimmt einen Handler und faengt genau diesen einen Fall ab.

@@ -257,12 +257,29 @@
   function post(daten){
     return fetch("/api/melden", { method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
                                   body: JSON.stringify(Object.assign({ kind: KIND }, daten)) })
-      .then(function(r){ return r.json().then(function(j){ if (r.status === 401) throw new Error("Bitte melde dich in deiner Lernwelt neu an."); return j; }); });
+      .then(function(r){ return alsJson(r).then(function(j){ if (r.status === 401) throw new Error("Bitte melde dich in deiner Lernwelt neu an."); return j; }); });
   }
+  /* Antworten, die KEIN JSON sind, kommen vom Server als Fehlerseite - typisch,
+     wenn der Speicher nichts mehr annimmt (KV-Tageskontingent). Ohne das hier
+     steht im Kinderfenster der Rohtext eines JavaScript-Fehlers:
+     "Unexpected token '<', "<!DOCTYPE "... is not valid JSON". Helena hatte
+     den am 20.09.2026 vor sich und wusste nicht, ob ihre Hausaufgabe
+     angekommen war. Wichtig: Der Satz sagt NICHT "angekommen". */
+  function alsJson(r){
+    return r.text().then(function(t){
+      try { return JSON.parse(t); }
+      catch(e){
+        throw new Error(r.status === 503 || r.status === 507
+          ? "Mein Speicher nimmt gerade nichts an. Deine Nachricht ist NICHT angekommen – bitte schick sie später noch einmal."
+          : "Bei mir ist gerade etwas schiefgegangen (Fehler " + r.status + "). Deine Nachricht ist NICHT angekommen – bitte versuch es gleich noch einmal.");
+      }
+    });
+  }
+
   var faeden = [];
   function listeLaden(){
     return fetch("/api/melden?meine=1&kind=" + KIND, { credentials:"same-origin" })
-      .then(function(r){ return r.json(); })
+      .then(alsJson)
       .then(function(j){
         // Denny am 18.09.2026: "immer die aktuellsten Ordner vorne" - sortiert
         // wird nach der LETZTEN Nachricht, nicht nach dem Anlegen.
