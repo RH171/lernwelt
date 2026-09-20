@@ -156,6 +156,23 @@
     padding:13px 15px;margin-top:12px;font-size:14.5px;line-height:1.55}
   .rat b{display:block;font:800 15px/1.3 var(--round);margin-bottom:5px;color:var(--brand)}
 
+  /* Handyhoehe ohne Tastatur. Station 3 ist der hoechste Zustand der Seite:
+     Die angetippten Woerter bleiben in der Auswahl stehen (nur blass), damit
+     die Steine nicht springen - die Bauzeile kommt also OBENDRAUF. Auf
+     Helenas 360x643 lag "Prüfen" damit 18 px unter dem Rand; gemessen am
+     20.09.2026 mit allen Woertern gelegt, also im echten Grenzfall. */
+  @media (max-height:700px){
+    .karte{padding:15px}
+    .zitat{margin-bottom:10px}
+    .notiz{margin-bottom:10px;gap:6px}
+    .bauzeile{margin-bottom:9px;min-height:56px;padding:8px}
+    .steine{gap:7px}
+    .stein{min-height:44px;padding:9px 11px;font-size:15.5px}
+    .weiter{min-height:50px;margin-top:10px}
+    .zweitreihe{margin-top:7px}
+    .zweitreihe button{min-height:44px}
+  }
+
   /* Station 1 ist die einzige mit Tastatur. Auf Helenas Handy bleiben dann
      rund 360 px Hoehe - der Pruefen-Knopf muss trotzdem sichtbar sein.
      Es tritt nur Beiwerk zurueck; kein Knopf wird verschoben oder geklebt. */
