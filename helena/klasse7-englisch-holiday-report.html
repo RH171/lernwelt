@@ -286,7 +286,7 @@
     { grund:"come",   past:["came"],                    satz:"My cousins ___ with us.",              art:"unregelmäßig",
       tipp:"Unregelmäßig. o wird zu a – wie bei „become → became“." },
     { grund:"have",   past:["had"],                     satz:"We ___ a small flat near the beach.",  art:"unregelmäßig",
-      tipp:"Unregelmäßig, und ganz kurz. Nur ein Wort, vier Buchstaben." },
+      tipp:"Unregelmäßig, und ganz kurz. Ein Wort, drei Buchstaben." },
     { grund:"buy",    past:["bought"],                  satz:"She ___ a postcard for her grandma.",  art:"unregelmäßig",
       tipp:"Unregelmäßig. Es endet auf -ought, wie bei „think → thought“." },
     { grund:"see",    past:["saw"],                     satz:"We ___ dolphins on the second day.",   art:"unregelmäßig",
@@ -481,8 +481,7 @@
     var k = $("karte");
     k.innerHTML =
       '<p class="auftrag">Simple past</p>' +
-      '<div class="zitat"><span class="wer">Grundform</span><b>' + a.grund + '</b>' +
-        ' &nbsp;·&nbsp; <span style="color:var(--muted);font-weight:700">' + a.art + '</span></div>' +
+      '<div class="zitat"><span class="wer">Grundform</span><b>' + a.grund + "</b></div>" +
       '<p class="satz">' + a.satz.replace("___", '<span class="luecke" id="luecke">?</span>') + '</p>' +
       '<div class="tippzeile" style="margin-top:13px">' +
         '<input id="feld" type="text" autocomplete="off" autocapitalize="none" ' +
@@ -621,7 +620,7 @@
     // Ist der Satz abgehakt, sind die Woerter unten nutzlos - und sie sind das
     // Hoechste an der Station. Auf Helenas Handy lag "Weiter" mit stehendem
     // Wortvorrat 115 px unter dem Rand (gemessen 20.09.2026). Weg damit.
-    
+    if (lauf.art === "bauen" && $("steine")) $("steine").style.display = "none";
     var w = $("weiter");
     w.disabled = false; w.classList.remove("grau");
     w.textContent = (lauf.nr + 1 >= lauf.liste.length) ? "Fertig" : "Weiter";
