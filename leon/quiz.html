@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Quiz</title>
+<!--
+  Leons tägliches Quiz (20.09.2026) - für einen Leseanfänger: kurze Fragen, große Schrift.
+
+  Denny am 20.09.2026: "Kannst du bei jedem Anwender noch ein Quiz bauen, wo die
+  Fragen zum Schulunterricht sind und nur die Fragen, die falsch beantwortet
+  werden, immer wiederholt werden? ... jeden Tag 5 bis 10 Minuten ... alle oder
+  nur gezielte Fächer ... 15 oder mehr Fragen oder endlos."
+
+  Der Motor steht EINMAL in /quiz/motor.js - hier stehen nur Kind, Fächer und
+  Farben. Wer am Motor etwas ändert, ändert es für alle drei und misst alle drei.
+
+  Die Fragen kommen aus /api/quiz: ein Vorrat je Kind, der nachwächst, gespeist
+  aus dem Lehrplan, den offenen Lernzielen und dem, was das Kind zuletzt aus
+  dem Unterricht fotografiert hat. Eine Frage wird nie zweimal gestellt - das
+  Lernziel dagegen so oft, bis es sitzt.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="/quiz/quiz.css">
+<style>
+  :root{
+    --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
+    --akzent:#10b981; --akzent-hell:#e7f8f1; --akzent-auf:#fff;
+    --gut:#0ea371; --gut-hell:#e7f8f1; --gut-text:#067647;
+    --schlecht:#d92d20; --schlecht-hell:#fff1f0; --schlecht-text:#a3251c;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/">‹ Zurück</a>
+    <h1>🎯 Mein Quiz</h1>
+    <span class="serie" id="q-serie"></span>
+  </header>
+
+  <!-- Start -->
+  <section id="sicht-start">
+    <div class="karte">
+      <h2>Was willst du üben?</h2>
+      <p class="unter">Tippe ein Fach an. Oder lass alles an – dann kommt von jedem etwas.</p>
+      <div class="qchips"><button class="qchip" type="button" id="q-alle">Alle Fächer</button></div>
+      <div class="qfaecher" id="q-faecher"></div>
+    </div>
+    <div class="karte">
+      <h2>Wie viele Fragen?</h2>
+      <div class="qchips" id="q-laenge"></div>
+      <button class="knopf" id="q-start" type="button">Los geht's</button>
+      <div class="laedt verborgen" id="q-laedt"><i></i><span>Ich suche Fragen für dich heraus …</span></div>
+      <div class="fehler" id="q-fehler"></div>
+    </div>
+  </section>
+
+  <!-- Spiel -->
+  <section id="sicht-spiel" class="verborgen">
+    <div class="leiste"><i id="q-balken"></i></div>
+    <div class="karte">
+      <div class="kopfzeile"><span id="q-nr"></span><span id="q-fach"></span></div>
+      <div class="frage" id="q-frage"></div>
+      <div class="qantworten" id="q-antworten"></div>
+      <div class="erklaerung verborgen" id="q-erklaerung"></div>
+      <button class="knopf verborgen" id="q-weiter" type="button">Weiter</button>
+      <p class="unter" style="text-align:right"><span id="q-punkte"></span></p>
+    </div>
+  </section>
+
+  <!-- Ende -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <h2>Geschafft</h2>
+      <div class="endezahl" id="q-ende-zahl"></div>
+      <p class="unter" id="q-ende-text"></p>
+      <p class="unter" id="q-ende-serie"></p>
+      <div class="offen verborgen" id="q-ende-offen" style="text-align:left"></div>
+      <button class="knopf" id="q-nochmal" type="button">Noch eine Runde</button>
+      <a class="knopf still" href="/leon/" style="text-decoration:none">Zurück</a>
+    </div>
+  </section>
+</div>
+
+<script>
+window.QUIZ = {
+  kind: "leon",
+  faecher: [
+    { k: "deutsch", n: "Deutsch", ic: "📘" },
+    { k: "mathe",   n: "Mathe",   ic: "🔢" },
+    { k: "hsu",     n: "Sachkunde", ic: "🌍" },
+    { k: "musik",   n: "Musik",   ic: "🎵" }
+  ]
+};
+</script>
+<script src="/quiz/motor.js" defer></script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>

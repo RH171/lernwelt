@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Lernquiz</title>
+<!--
+  Helenas tägliches Lernquiz (20.09.2026) - 7. Klasse Gymnasium, dunkles Farbschema wie ihr Bereich.
+
+  Denny am 20.09.2026: "Kannst du bei jedem Anwender noch ein Quiz bauen, wo die
+  Fragen zum Schulunterricht sind und nur die Fragen, die falsch beantwortet
+  werden, immer wiederholt werden? ... jeden Tag 5 bis 10 Minuten ... alle oder
+  nur gezielte Fächer ... 15 oder mehr Fragen oder endlos."
+
+  Der Motor steht EINMAL in /quiz/motor.js - hier stehen nur Kind, Fächer und
+  Farben. Wer am Motor etwas ändert, ändert es für alle drei und misst alle drei.
+
+  Die Fragen kommen aus /api/quiz: ein Vorrat je Kind, der nachwächst, gespeist
+  aus dem Lehrplan, den offenen Lernzielen und dem, was das Kind zuletzt aus
+  dem Unterricht fotografiert hat. Eine Frage wird nie zweimal gestellt - das
+  Lernziel dagegen so oft, bis es sitzt.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="/quiz/quiz.css">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
+    --akzent:#a78bfa; --akzent-hell:#241f3d; --akzent-auf:#141024; --akzent-text:#c9b8ff;
+    --gut:#49d6bd; --gut-hell:#13322f; --gut-text:#8ee0c2;
+    --schlecht:#ff7a6b; --schlecht-hell:#33191c; --schlecht-text:#ff9b91;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/helena/">‹ Zurück</a>
+    <h1>🎯 Mein Lernquiz</h1>
+    <span class="serie" id="q-serie"></span>
+  </header>
+
+  <!-- Start -->
+  <section id="sicht-start">
+    <div class="karte">
+      <h2>Welche Fächer?</h2>
+      <p class="unter">Mehrere gleichzeitig gehen auch. Ohne Auswahl kommt aus allen etwas.</p>
+      <div class="qchips"><button class="qchip" type="button" id="q-alle">Alle Fächer</button></div>
+      <div class="qfaecher" id="q-faecher"></div>
+    </div>
+    <div class="karte">
+      <h2>Wie viele Fragen?</h2>
+      <div class="qchips" id="q-laenge"></div>
+      <button class="knopf" id="q-start" type="button">Los geht's</button>
+      <div class="laedt verborgen" id="q-laedt"><i></i><span>Ich suche Fragen für dich heraus …</span></div>
+      <div class="fehler" id="q-fehler"></div>
+    </div>
+  </section>
+
+  <!-- Spiel -->
+  <section id="sicht-spiel" class="verborgen">
+    <div class="leiste"><i id="q-balken"></i></div>
+    <div class="karte">
+      <div class="kopfzeile"><span id="q-nr"></span><span id="q-fach"></span></div>
+      <div class="frage" id="q-frage"></div>
+      <div class="qantworten" id="q-antworten"></div>
+      <div class="erklaerung verborgen" id="q-erklaerung"></div>
+      <button class="knopf verborgen" id="q-weiter" type="button">Weiter</button>
+      <p class="unter" style="text-align:right"><span id="q-punkte"></span></p>
+    </div>
+  </section>
+
+  <!-- Ende -->
+  <section id="sicht-ende" class="verborgen">
+    <div class="karte" style="text-align:center">
+      <h2>Geschafft</h2>
+      <div class="endezahl" id="q-ende-zahl"></div>
+      <p class="unter" id="q-ende-text"></p>
+      <p class="unter" id="q-ende-serie"></p>
+      <div class="offen verborgen" id="q-ende-offen" style="text-align:left"></div>
+      <button class="knopf" id="q-nochmal" type="button">Noch eine Runde</button>
+      <a class="knopf still" href="/helena/" style="text-decoration:none">Zurück</a>
+    </div>
+  </section>
+</div>
+
+<script>
+window.QUIZ = {
+  kind: "helena",
+  faecher: [
+    { k: "deutsch",     n: "Deutsch",     ic: "📘" },
+    { k: "mathe",       n: "Mathematik",  ic: "🔢" },
+    { k: "englisch",    n: "Englisch",    ic: "🇬🇧" },
+    { k: "französisch", n: "Französisch", ic: "🇫🇷" },
+    { k: "geschichte",  n: "Geschichte",  ic: "🏛️" },
+    { k: "geographie",  n: "Geographie",  ic: "🌍" },
+    { k: "nt",          n: "Natur/Technik", ic: "🔬" },
+    { k: "ethik",       n: "Ethik",       ic: "🤔" }
+  ]
+};
+</script>
+<script src="/quiz/motor.js" defer></script>
+<script src="/spiel-navi.js" defer></script>
+<script src="/lernstand.js" defer></script>
+</body>
+</html>
