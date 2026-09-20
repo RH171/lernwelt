@@ -233,7 +233,10 @@
     $("q-nr").textContent = "Frage " + (nr + 1) + " von " + liste.length;
     $("q-paket").textContent = titel === "gemischt" ? f.paket.ic + " " + f.paket.n : titel;
     var t = $("q-text");
-    if (f.text) { t.textContent = f.text; t.classList.remove("verborgen"); }
+    /* Die Lesetexte stehen EINMAL in bet-fragen.js unter window.BET_TEXTE;
+       die Frage nennt nur ihren Schluessel. */
+    var lese = f.text || (window.BET_TEXTE || {})[f.textId] || "";
+    if (lese) { t.textContent = lese; t.classList.remove("verborgen"); }
     else { t.textContent = ""; t.classList.add("verborgen"); }
     $("q-frage").textContent = f.frage;
     $("q-erklaerung").classList.add("verborgen");
