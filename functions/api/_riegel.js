@@ -189,6 +189,12 @@ const BEREICHE = {
             farbe: "#475569", rgb: "71,85,105" },
   leon: { name: "Leons Lernwelt", satz: "Hier lernt Leon. Wenn du seinen Code kennst, kannst du rein.",
           farbe: "#10b981", rgb: "16,185,129" },
+  /* Fehlte bis zum 20.09.2026: Helena kam beim Zumachen ihres Bereichs in
+     GESCHUETZT, aber nicht hierher - und bekam deshalb die Anmeldeseite mit
+     dem Titel "Pauls Lernwelt". Wer seinen eigenen Bereich aufruft und fremden
+     Namen liest, denkt, er sei falsch. */
+  helena: { name: "Helenas Lernwelt", satz: "Hier lernt Helena. Wenn du ihren Code kennst, kannst du rein.",
+            farbe: "#a78bfa", rgb: "167,139,250" },
 };
 
 // Die Seite, die statt des Bereichs erscheint, solange niemand angemeldet ist.
