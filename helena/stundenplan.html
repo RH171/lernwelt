@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mein Stundenplan</title>
 <!--
-  Helenas Stundenplan, Klasse 7B, Schuljahr 2026/27.
+  Helenas Stundenplan, Klasse 7C, Schuljahr 2026/27.
   Abgetippt am 20.09.2026 aus sechs Screenshots ihrer Schul-App (KW 40).
+
+  Die Klasse stand hier zuerst als "7B". Helena am 20.09.2026 (Meldung
+  tf4qexmkn2, mit Foto der Fusszeile): "Ich bin in der 7c nicht b".
+  Sie ist die Quelle fuer ihre eigene Klasse - nicht raten und nicht aus den
+  Gruppennamen ableiten: Die Franzoesisch-Gruppen heissen unten "7A"/"7D",
+  das sind Gruppen, keine Klassen. Der Plan selbst kommt aus IHRER App und
+  bleibt deshalb, wie er ist; falsch war nur die Beschriftung.
 
   Zwei Stellen waren im Plan mehrdeutig und sind von Denny entschieden:
   - Französisch/F-Int gibt es in zwei Gruppen (Maar 7A / Grune 7D) -> Maar, B3.14.
@@ -41,13 +48,16 @@
   .plan th,.plan td{border:1px solid var(--line);padding:8px 5px;text-align:center;
     font-size:clamp(12px,2.1vw,15px);vertical-align:middle}
   .plan th{background:var(--surface2);font-weight:800}
-  .plan td.zeit{background:var(--surface2);font-weight:800;white-space:nowrap;font-size:clamp(11px,1.8vw,13.5px)}
-  .plan td.zeit small{display:block;color:var(--muted);font-weight:600;font-size:11px}
+  .plan td.zeit{background:var(--surface2);font-weight:800;white-space:nowrap;font-size:clamp(12px,1.8vw,13.5px)}
+  /* Nichts unter 12 px: auf Helenas 360er Handy waren die Uhrzeiten mit 11 px
+     zu klein (gemessen 20.09.2026, alle 13 Geraete). Der Bindestrich statt
+     des langen Gedankenstrichs spart die Breite, die das wieder kostet. */
+  .plan td.zeit small{display:block;color:var(--muted);font-weight:600;font-size:12px}
   .plan .heute{background:#241f3d}
   .plan th.heute{background:var(--brand);color:#141024}
   .plan .pause td{background:#141a28;color:var(--muted);font-weight:700;font-size:12.5px}
   .plan .fach{font-weight:800}
-  .plan .wo{display:block;color:var(--muted);font-weight:600;font-size:11.5px;margin-top:2px}
+  .plan .wo{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-top:2px}
   .unter{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px 0 0}
   .hinweis{background:var(--surface2);border-radius:12px;padding:10px 12px;margin-top:10px;
     font-size:14px;line-height:1.5;color:var(--muted)}
@@ -61,7 +71,7 @@
   </header>
 
   <div class="karte">
-    <table class="plan" id="plan" aria-label="Stundenplan Klasse 7B"></table>
+    <table class="plan" id="plan" aria-label="Stundenplan Klasse 7C"></table>
     <p class="unter" id="heute-text"></p>
   </div>
 
@@ -75,7 +85,7 @@
       <b>Sport</b> ist am Montag nach Gruppen geteilt. Hier steht deine Gruppe
       bei Frau Süßemilch in der TH2.
     </div>
-    <p class="unter">Klasse 7B, Schuljahr 2026/27 · Stand KW 40</p>
+    <p class="unter">Klasse 7C, Schuljahr 2026/27 · Stand KW 40</p>
   </div>
 </div>
 
