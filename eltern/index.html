@@ -782,9 +782,36 @@
     var istHeute = ANWESEND && t.tag === ANWESEND.heute;
     var gelernt = istHeute ? (((s.zeitraeume || {}).tag || {}).minuten || 0) : 0;
     var runden2 = istHeute ? runden : [];
-    var spanneMin = Math.max(1, inMinuten(t.bis) - inMinuten(t.von));
-    var lernBreite = Math.max(1.0, Math.min(breite, gelernt / spanneMin * breite));
     var art = gelernt ? "lernteil" : "nixteil";
+
+    /* Die Lernzeit gehört DORTHIN, wo gelernt wurde - nicht an den linken Rand
+       der Spanne. Am 21.09.2026 stand Leons blauer Balken bei 6:15, obwohl
+       seine vier Runden zwischen 16:18 und 16:46 lagen: Die erste Fassung
+       zeichnete einen Block ab dem Beginn der Spanne, weil ihr nur die SUMME
+       vorlag. Jetzt bekommt jede Runde ihren eigenen Abschnitt - aus ihrem
+       Zeitstempel und ihrer Dauer. */
+    var stuecke = "";
+    if (gelernt && runden2 && runden2.length){
+      runden2.forEach(function(r){
+        var d = new Date(r.zeit);
+        if (isNaN(d)) return;
+        var dauer = Math.max(3, Number(r.minuten) || Math.round((r.sekunden || 0) / 60) || 3);
+        // Der Zeitstempel ist das ENDE der Runde - sie begann entsprechend früher.
+        var endeMin = d.getHours() * 60 + d.getMinutes();
+        var vonMin = Math.max(0, endeMin - dauer);
+        var l = Math.max(0, Math.min(100, (vonMin - STRAHL_VON) / (STRAHL_BIS - STRAHL_VON) * 100));
+        var r2 = Math.max(0, Math.min(100, (endeMin - STRAHL_VON) / (STRAHL_BIS - STRAHL_VON) * 100));
+        stuecke += '<span class="lernteil" style="left:' + l.toFixed(1) +
+                   "%;width:" + Math.max(0.8, r2 - l).toFixed(1) + '%"></span>';
+      });
+    }
+    if (!stuecke){
+      // Keine einzelnen Runden bekannt (ältere Tage, nur Anwesenheit): dann
+      // die ganze Spanne in der jeweiligen Farbe, ohne so zu tun, als wüsste
+      // man wann.
+      stuecke = '<span class="' + art + '" style="left:' + links.toFixed(1) +
+                "%;width:" + breite.toFixed(1) + '%"></span>';
+    }
 
     var kopf = '<div class="strahlkopf"><b>' + esc(name || tagName(t.tag)) + "</b>" +
       '<span class="wann">' + esc(t.von) + "–" + esc(t.bis) + "</span>" +
@@ -807,8 +834,7 @@
     return '<div class="strahlzeile">' + kopf +
       '<div class="strahl"><span class="spanne" style="left:' + links.toFixed(1) +
       "%;width:" + breite.toFixed(1) + '%"></span>' +
-      (istHeute ? '<span class="' + art + '" style="left:' + links.toFixed(1) +
-        "%;width:" + (gelernt ? lernBreite : breite).toFixed(1) + '%"></span>' : "") +
+      (istHeute ? stuecke : "") +
       "</div>" +
       '<div class="strahlmarken"><span>6</span><span>10</span><span>14</span>' +
       "<span>18</span><span>22 Uhr</span></div>" +
