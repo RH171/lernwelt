@@ -529,8 +529,9 @@
     } else if (da){
       // Der wichtige Fall - und der Grund fuer diese Karte.
       klasse += " nurda";
-      zeile = "<b>" + anwesendMinuten(da) + " min da</b> (" + esc(da.von) + "\u2013" + esc(da.bis) +
-              "), aber keine Runde beendet";
+      // anwesendMinuten() haengt "min" schon an - ein zweites waere doppelt.
+      zeile = "<b>" + anwesendMinuten(da.viertelstunden) + " da</b> (" +
+              esc(da.von) + "\u2013" + esc(da.bis) + "), aber keine Runde beendet";
       liste = '<div class="mehr">Eine Runde z\u00E4hlt erst ab einer halben Minute ' +
               'und wird beim Verlassen der Seite gemeldet.</div>';
     } else {
