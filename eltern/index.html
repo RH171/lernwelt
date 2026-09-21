@@ -777,6 +777,7 @@
   }
 
   function strahlZeile(t, runden){
+    var duell = (t.duell || []).length;
     var links = anteil(t.von), rechts = anteil(t.bis);
     var breite = Math.max(1.2, rechts - links);
     var s = (DATEN && DATEN[KIND]) || {};
@@ -798,6 +799,12 @@
                 ? " · " + ((s.zeitraeume || {}).tag || {}).runden + " Runden" : "") + "</span>"
             : '<span class="nixda">nichts beendet</span>')
         : "") +
+      /* Das Quizduell taucht sonst nirgends auf - Denny wollte es am
+         21.09.2026 ausdruecklich sichtbar haben ("wie viel Zeit derjenige in
+         der Lernwelt verbracht hat"). Die Minuten selbst sind raus ("ohne da"),
+         der Hinweis bleibt: Ohne ihn saehe ein reiner Quizabend aus wie ein
+         Tag ohne jede Aktivitaet. */
+      (duell ? '<span class="wann">davon Quizduell ' + anwesendMinuten(duell) + "</span>" : "") +
       (geraetVonTag(t) ? '<span class="geraet">' + esc(geraetVonTag(t)) + "</span>" : "") +
       "</div>";
 
