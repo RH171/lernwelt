@@ -101,16 +101,19 @@
     .hauptweg .hwic{font-size:21px}
     .hauptweg .hwtext b{font-size:14.5px}
     .hauptweg .hwtext span{display:none}
-    /* Die drei Baender stehen hier NEBENEINANDER, nicht untereinander.
-       Gemessen am 21.09.2026 auf Helenas Handy (360x643): untereinander
-       kosten sie 164 px und schieben "Los geht's" 127 px unter den Rand -
-       nebeneinander sind es 66 px, und der Knopf rueckt sogar naeher heran
-       als vor den beiden neuen Baendern. Die Kopfzeile allein ist hier
-       239 px hoch; wer daran spart, gewinnt mehr als ueberall sonst.
+  }
 
-       Die Regeln muessen die von /ferienband.js ueberschreiben. Dessen
-       <style> haengt spaeter im <head>, darum steht hier ".baender" davor -
-       gleiche Spezifitaet wuerde verlieren. */
+  /* Die drei Baender stehen NEBENEINANDER, sobald der Platz nach unten knapp
+     wird - auf schmalen Schirmen UND auf flachen. Gemessen am 21.09.2026:
+     untereinander kosten sie 164 px und schoben "Los geht's" auf Helenas Handy
+     (360x643) 127 px und in einem flachen iPad-Fenster (1180x688) 7 px unter
+     den Rand; nebeneinander sind es 66 px. Die Kopfzeile allein ist auf dem
+     Handy 239 px hoch - wer daran spart, gewinnt mehr als ueberall sonst.
+
+     Die Regeln muessen die von /ferienband.js ueberschreiben. Dessen <style>
+     haengt spaeter im <head>, darum steht hier ".baender" davor - gleiche
+     Spezifitaet wuerde verlieren. */
+  @media (max-width:520px),(max-height:760px){
     .baender{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
              align-items:stretch;margin:0 0 10px}
     .baender>*{margin:0!important}
