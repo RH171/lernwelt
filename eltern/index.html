@@ -30,6 +30,13 @@
          padding:18px 20px;margin-bottom:16px}
   .karte h2{font-family:var(--rund);font-size:17px;margin:0 0 4px}
   .karte .unter{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+  .knopf-link{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;
+              border:1.5px solid var(--line);background:#fff;border-radius:11px;
+              text-decoration:none;color:var(--ink);font:600 15px/1 var(--rund)}
+  .karte table.termine{width:100%;border-collapse:collapse}
+  .karte table.termine td{padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .karte table.termine tr:last-child td{border-bottom:none}
+  .karte table.termine td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 
   /* Anwesenheitsband (19.09.2026): eine Spur aus 96 Viertelstunden je Tag.
      Die Stuecke duerfen beliebig schmal werden - sie sind reine Anzeige und
@@ -478,6 +485,24 @@
       'da war. Im Quizduell wird der Name am Spitznamen erkannt; wer sich anders nennt, taucht hier nicht auf.</p></div>';
   }
 
+  /* Was die Schule fuer dieses Kind angekuendigt hat. Denny am 21.09.2026 zum
+     Schreiben der Viertklasslehrkraefte: "Ich moechte, dass dieser Bereich
+     definitiv in den Elternbereich kommt, damit wir Bescheid wissen, was auf
+     uns zukommt." Die Karte haengt NICHT am Spielen - sie steht auch bei einem
+     Kind ohne Runden. */
+  function schulinfoKarte(){
+    if (KIND !== "paul") return "";
+    return '<div class="karte"><h2>Probearbeiten und Benotung – 4. Klasse</h2>' +
+      '<p class="unter">Elterninformation der Grundschule. Kein Zwischenzeugnis, ' +
+      'dafür drei Termine – und 18 schriftliche Leistungsnachweise.</p>' +
+      '<table class="termine" style="margin-bottom:12px">' +
+      '<tr><td><b>Zwischeninformation</b></td><td>Freitag, 22.01.2027</td></tr>' +
+      '<tr><td><b>Übertrittszeugnis</b></td><td>Montag, 03.05.2027</td></tr>' +
+      '<tr><td><b>Jahreszeugnis</b></td><td>Freitag, 30.07.2027</td></tr>' +
+      '</table>' +
+      '<a class="knopf-link" href="/eltern/probearbeiten.html">Alle Regeln ansehen</a></div>';
+  }
+
   function malen(){
     var d = DATEN[KIND] || {};
     var h = "";
@@ -492,12 +517,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = anwesenheitUeberblick() + anwesenheitKarte() +
+      $("inhalt").innerHTML = anwesenheitUeberblick() + anwesenheitKarte() + schulinfoKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += anwesenheitUeberblick() + anwesenheitKarte();
+    h += anwesenheitUeberblick() + anwesenheitKarte() + schulinfoKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
