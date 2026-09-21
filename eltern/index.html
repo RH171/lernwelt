@@ -23,6 +23,29 @@
   /* Die Reiter teilen sich die Zeile. Vorher waren es drei schmale Knoepfe am
      linken Rand - Denny am 21.09.2026: "ein bisschen groesser, sodass man sie
      gut anklicken kann." */
+  /* Drei Vorschauen unter den Reitern: was JEDES Kind heute gespielt hat.
+     Denny am 21.09.2026, nachdem "War Paul da? 15 min" und "Heute: Noch nichts
+     gespielt" nebeneinander standen: "Du zeigst mir aber an zwei Stellen an,
+     dass er heute nicht gespielt hat. Stimmt, nun?" - Beide Zahlen waren
+     richtig und meinten Verschiedenes. Diese Karte sagt beides in einem Satz. */
+  .vorschauen{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+              gap:12px;margin-bottom:20px}
+  .vor{background:var(--karte,#fff);border:1px solid var(--linie,#e4e7f0);border-radius:14px;
+       padding:14px 16px;min-width:0;cursor:pointer;text-align:left;font:inherit;color:inherit}
+  .vor:hover{border-color:var(--akzent)}
+  .vor h3{margin:0 0 2px;font-size:16px;display:flex;align-items:baseline;gap:8px}
+  .vor .zeile{font-size:13.5px;color:var(--grau,#71768a);margin:0 0 8px;line-height:1.45}
+  .vor .zeile b{color:var(--ink);font-weight:700}
+  .vor .runde{display:flex;gap:8px;align-items:baseline;font-size:13px;
+              padding:4px 0;border-top:1px solid var(--linie,#eef0f5);min-width:0}
+  .vor .runde .uhr{color:var(--grau,#71768a);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .vor .runde .was{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vor .runde .erg{white-space:nowrap;font-weight:700}
+  .vor .mehr{font-size:12.5px;color:var(--grau,#71768a);padding-top:6px}
+  /* Der wichtige Fall: da gewesen, aber nichts abgeschlossen. */
+  .vor.nurda{border-left:4px solid #f59e0b}
+  .vor.garnicht{opacity:.72}
+
   .reiter{display:flex;gap:10px;margin-bottom:20px}
   .reiter button{
     flex:1 1 0;min-width:0;min-height:52px;
@@ -226,6 +249,7 @@
          zweiter Anlauf: "Das wuerde ich gerne unter den drei Buttons schon
          gerne noch sehen." -->
     <div class="reiter" id="reiter"></div>
+    <div id="vorschauen"></div>
     <div id="heute"></div>
     <div id="inhalt"></div>
     <!-- Die Meldungen der Kinder stehen UNTER der Auswertung. Oben schoben 18
@@ -264,6 +288,7 @@
         anwesenheitLaden();
         notenLaden();
         reiterMalen();
+        vorschauenMalen();
         heuteMalen();
       })
       .catch(function(){ zeige("anmelden"); });
@@ -392,7 +417,7 @@
       var b = document.createElement("button");
       b.textContent = k.charAt(0).toUpperCase()+k.slice(1) +
                       (DATEN[k] && DATEN[k].runden ? " (" + DATEN[k].runden + ")" : "");
-      b.addEventListener("click", function(){ KIND = k; reiterMalen(); heuteMalen(); malen(); meldungenMalen(); });
+      b.addEventListener("click", function(){ KIND = k; reiterMalen(); vorschauenMalen(); heuteMalen(); malen(); meldungenMalen(); });
       if (k === KIND) b.classList.add("an");
       kasten.appendChild(b);
     });
@@ -444,6 +469,102 @@
      Reiter angetippt wurde. Genau so war die Karte beim Start unsichtbar, und
      die Messung hat es nicht gesehen, weil sie vorher immer einen Reiter
      anklickt (Denny: "Wer war heute da? Ist noch nicht zu sehen"). */
+  /* ---------- Die drei Vorschauen ----------
+     Was hat jedes Kind HEUTE gespielt, und wie ist es ausgegangen?
+
+     Der Anlass war ein scheinbarer Widerspruch (Denny, 21.09.2026): Das
+     Anwesenheitsband sagte "Paul heute da: 16:15-16:30, 15 Minuten", die
+     Statistik sagte "Noch nichts gespielt". Beides stimmte - die eine Zahl
+     kommt aus dem Puls, die andere aus abgeschlossenen Runden. Eine Runde
+     wird erst gemeldet, wenn sie mindestens 30 aktive Sekunden hatte UND die
+     Seite verlassen oder in den Hintergrund geschickt wurde (lernstand.js,
+     senden()). Wer eine Seite offen liegen lässt, ist anwesend, ohne dass je
+     eine Runde ankommt.
+
+     Darum nennt diese Karte beides nebeneinander und sagt den Unterschied
+     dazu, statt "nichts gespielt" zu behaupten. */
+  function heuteRunden(kind){
+    var d = DATEN && DATEN[kind];
+    if (!d || !d.letzte) return [];
+    var heute = (ANWESEND && ANWESEND.heute) || new Date().toLocaleDateString("sv-SE");
+    return d.letzte.filter(function(r){
+      // Der Zeitstempel steht in UTC - verglichen wird der ORTSTAG, sonst
+      // fallen die Abendrunden auf den nächsten Tag.
+      var t = new Date(r.zeit);
+      return !isNaN(t) && t.toLocaleDateString("sv-SE") === heute;
+    });
+  }
+
+  function anwesendHeute(kind){
+    if (!ANWESEND || !ANWESEND.kinder) return null;
+    var a = ANWESEND.kinder[kind];
+    if (!a) return null;
+    var t = (a.tage || []).filter(function(x){ return x.tag === ANWESEND.heute; })[0];
+    return t || null;
+  }
+
+  function vorschauKarte(kind){
+    var name = kind.charAt(0).toUpperCase() + kind.slice(1);
+    var d = (DATEN && DATEN[kind]) || {};
+    var tag = (d.zeitraeume && d.zeitraeume.tag) || {};
+    var runden = heuteRunden(kind);
+    var da = anwesendHeute(kind);
+    var klasse = "vor", zeile, liste = "";
+
+    if (runden.length || tag.runden){
+      var quote = tag.aufgaben ? tag.quote + " % richtig" : "ohne Aufgaben";
+      zeile = "<b>" + (tag.minuten || 0) + " min</b> gelernt \u00B7 " +
+              (tag.aufgaben || 0) + " Aufgaben \u00B7 " + esc(quote);
+      liste = runden.slice(0, 3).map(function(r){
+        var t = new Date(r.zeit);
+        var uhr = isNaN(t) ? "" : String(t.getHours()).padStart(2,"0") + ":" +
+                                  String(t.getMinutes()).padStart(2,"0");
+        var erg = r.aufgaben ? (r.richtig + "/" + r.aufgaben) : "\u2013";
+        return '<div class="runde"><span class="uhr">' + uhr + '</span>' +
+               '<span class="was">' + esc(r.titel || r.thema || "Runde") + '</span>' +
+               '<span class="erg">' + erg + '</span></div>';
+      }).join("");
+      if (runden.length > 3)
+        liste += '<div class="mehr">und ' + (runden.length - 3) + ' weitere</div>';
+    } else if (da){
+      // Der wichtige Fall - und der Grund fuer diese Karte.
+      klasse += " nurda";
+      zeile = "<b>" + anwesendMinuten(da) + " min da</b> (" + esc(da.von) + "\u2013" + esc(da.bis) +
+              "), aber keine Runde beendet";
+      liste = '<div class="mehr">Eine Runde z\u00E4hlt erst ab einer halben Minute ' +
+              'und wird beim Verlassen der Seite gemeldet.</div>';
+    } else {
+      klasse += " garnicht";
+      zeile = "heute noch nicht da";
+      if (ANWESEND_FEHLER) zeile = "<b>unsicher</b> \u2013 der Speicher hat nicht geantwortet";
+      else if (da === null && ANWESEND && ANWESEND.kinder && ANWESEND.kinder[kind] &&
+               ANWESEND.kinder[kind].unsicher)
+        zeile = "<b>unsicher</b> \u2013 der Speicher hat nicht vollst\u00E4ndig geantwortet";
+    }
+    return '<button class="' + klasse + '" data-kind="' + esc(kind) + '">' +
+           "<h3>" + esc(name) + "</h3>" +
+           '<p class="zeile">' + zeile + "</p>" + liste + "</button>";
+  }
+
+  function vorschauenMalen(){
+    var kasten = $("vorschauen");
+    if (!kasten) return;
+    if (!DATEN){ kasten.innerHTML = ""; return; }
+    // Ist ein Kind gewaehlt, steht nur dessen Vorschau da - darunter folgt
+    // ohnehin sein eigenes Anwesenheitsband ("War Paul da?").
+    var welche = KIND ? [KIND] : ["paul","leon","helena"];
+    kasten.innerHTML = '<div class="vorschauen">' +
+      welche.filter(function(k){ return DATEN[k] || (ANWESEND && ANWESEND.kinder && ANWESEND.kinder[k]); })
+            .map(vorschauKarte).join("") + "</div>";
+    Array.prototype.forEach.call(kasten.querySelectorAll(".vor"), function(b){
+      b.addEventListener("click", function(){
+        KIND = b.getAttribute("data-kind");
+        reiterMalen(); vorschauenMalen(); heuteMalen(); malen(); meldungenMalen();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+  }
+
   function heuteMalen(){
     var kasten = $("heute");
     if (!kasten) return;
@@ -468,6 +589,7 @@
       .catch(function(e){ ANWESEND_FEHLER = e.message || "Das ging nicht."; })
       .then(function(){
         if ($("sicht-daten").classList.contains("verborgen")) return;
+        vorschauenMalen();
         heuteMalen();
         malen();
       });
