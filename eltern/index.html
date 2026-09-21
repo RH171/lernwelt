@@ -222,6 +222,7 @@
         meldungenLaden();
         anwesenheitLaden();
         reiterMalen();
+        heuteMalen();
       })
       .catch(function(){ zeige("anmelden"); });
   }
@@ -396,6 +397,16 @@
     try { laden(); } finally { setTimeout(function(){ LAEUFT = false; }, 3000); }
   });
 
+  /* "Wer war heute da?" gehoert zu ALLEN Kindern und darf deshalb nicht in
+     malen() stehen - das steigt seit dem 21.09.2026 sofort aus, wenn noch kein
+     Reiter angetippt wurde. Genau so war die Karte beim Start unsichtbar, und
+     die Messung hat es nicht gesehen, weil sie vorher immer einen Reiter
+     anklickt (Denny: "Wer war heute da? Ist noch nicht zu sehen"). */
+  function heuteMalen(){
+    var kasten = $("heute");
+    if (kasten) kasten.innerHTML = anwesenheitUeberblick();
+  }
+
   function anwesenheitLaden(){
     ANWESEND_FEHLER = null;
     fetch("/api/anwesend?tage=14", {credentials:"same-origin"})
@@ -408,7 +419,11 @@
       })
       .then(function(j){ ANWESEND = j; })
       .catch(function(e){ ANWESEND_FEHLER = e.message || "Das ging nicht."; })
-      .then(function(){ if (!$("sicht-daten").classList.contains("verborgen")) malen(); });
+      .then(function(){
+        if ($("sicht-daten").classList.contains("verborgen")) return;
+        heuteMalen();
+        malen();
+      });
   }
 
   function tagName(iso){
@@ -552,13 +567,11 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("heute").innerHTML = anwesenheitUeberblick();
       $("inhalt").innerHTML = anwesenheitKarte() + schulinfoKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    $("heute").innerHTML = anwesenheitUeberblick();
     h += anwesenheitKarte() + schulinfoKarte();
 
     /* Überblick */
