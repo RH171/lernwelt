@@ -77,6 +77,9 @@
   .probe.lern{background:#2563eb}
   .probe.duell{background:#f59e0b}
   .probe.beides{background:#12a35f}
+  .fussliste{margin:8px 0 0;padding-left:17px;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .fussliste li{margin-bottom:2px}
+  .fussliste b{color:var(--ink);font-weight:600}
   @media (max-width:430px){
     .tagzeile{grid-template-columns:52px minmax(0,1fr)}
     .tagzeit{grid-column:2;justify-self:end}
@@ -571,12 +574,17 @@
     return '<div class="karte"><h2>War ' + esc(kindName(KIND)) + ' da?</h2>' + kopf + luecke +
       (zeilen ? '<div class="bandliste">' + zeilen + '</div>' : '') +
       '<p class="unter" style="margin-top:10px">' +
-      '<i class="probe lern"></i> in der Lernwelt &nbsp; <i class="probe duell"></i> im Quizduell' +
-      ' &nbsp; <i class="probe beides"></i> in beidem<br>' +
-      'Die fette Zahl ist die Zeit des Tages zusammen; jede Viertelstunde zählt darin nur einmal, ' +
-      'auch wenn beides dabei war. Die Uhrzeiten darunter sind der erste und der letzte Moment – ' +
-      'nicht eine durchgehende Zeit. Das ist <b>keine Lernzeit</b>, nur ob jemand ' +
-      'da war. Im Quizduell wird der Name am Spitznamen erkannt; wer sich anders nennt, taucht hier nicht auf.</p></div>';
+      '<i class="probe lern"></i> Lernwelt &nbsp; <i class="probe duell"></i> Quizduell' +
+      ' &nbsp; <i class="probe beides"></i> beides</p>' +
+      /* Kurze Stichpunkte statt Fliesstext. Denny am 21.09.2026: "Kuerze das ab
+         in kurzen Stichpunkten. Ich glaube, lange Saetze sind hier einfach nur
+         unnoetig." Jede Zusicherung bleibt drin - nur ohne Nebensaetze. */
+      '<ul class="fussliste">' +
+      '<li><b>Fette Zahl</b> = Zeit des Tages, jede Viertelstunde nur einmal</li>' +
+      '<li><b>Uhrzeiten</b> = erster und letzter Moment, nicht durchgehend</li>' +
+      '<li><b>Keine Lernzeit</b> – nur, ob jemand da war</li>' +
+      '<li><b>Quizduell</b> – erkannt am Spitznamen; wer sich anders nennt, fehlt hier</li>' +
+      '</ul></div>';
   }
 
   /* Was die Schule fuer dieses Kind angekuendigt hat. Denny am 21.09.2026 zum
