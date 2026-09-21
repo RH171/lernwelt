@@ -472,4 +472,14 @@ export const KLEXIKON = [
   [3, "kurios", "🖼️", "Wo fand man die ersten Sammelbilder?", ["In Schokolade", "In Zeitungen", "In Büchern", "In Briefen"], "Die ersten Sammelbilder steckten in Schokoladenpackungen, damit Kinder wieder eine neue Packung kaufen wollten.", null, "Sammelbild"],
   [2, "pflanzen", "🌸", "Woraus wächst eine Lilie?", ["Zwiebel", "Samen", "Frucht", "Knolle"], "Die Zwiebel einer Lilie kann bis zu zwölf Zentimeter lang werden.", null, "Lilien"],
   [4, "wissen", "🦇", "Womit orientieren sich Fledermäuse?", ["Mit Ultraschall", "Mit Infraschall", "Mit den Augen", "Mit der Nase"], "Diese sehr hohen Töne, die Menschen nicht hören können, nennt man Ultraschall.", null, "Schall"],
+
+  // Nachschub vom 21.09.2026
+  [1, "pflanzen", "🌴", "Wo hat eine Palme ihre Blätter?", ["Ganz oben", "Ganz unten", "Im Boden", "Unten am Stamm"], "Palmen tragen ihre Blätter nur ganz oben am Stamm, weiter unten sind sie längst abgefallen.", null, "Palmen"],
+  [2, "pflanzen", "🥥", "Welche Frucht wächst an einer Palme?", ["Kokosnuss", "Apfel", "Kirsche", "Birne"], "Manche Palmen tragen Kokosnüsse, andere Datteln oder Früchte, aus denen man Öl presst.", null, "Palmen"],
+  [2, "kurios", "🗿", "Woraus macht man oft berühmte Statuen?", ["Marmor", "Holz", "Pappe", "Wolle"], "Der berühmte David von Michelangelo wurde aus einem einzigen großen Marmorblock gemeißelt.", null, "Marmor"],
+  [4, "wissen", "🪨", "Warum findet man im Marmor keine Fossilien?", ["Hitze und Druck zerstören sie", "Sie sind zu klein", "Sie schwimmen weg", "Sie lösen sich auf"], "Marmor entsteht bei großer Hitze und hohem Druck, dabei würden eingeschlossene Fossilien zerstört.", null, "Marmor"],
+  [1, "wissen", "🍋", "Welche Frucht schmeckt besonders sauer?", ["Zitrone", "Banane", "Karotte", "Kartoffel"], "Zitronen, Orangen und auch Äpfel enthalten Säure, die für den sauren Geschmack sorgt.", null, "Säure"],
+  [5, "koerper", "🍊", "Welches Vitamin ist eigentlich eine Säure?", ["Vitamin C", "Vitamin A", "Vitamin D", "Vitamin B12"], "Vitamin C heißt eigentlich Ascorbinsäure und schützt unseren Körper vor Erkältungen.", null, "Säure"],
+  [4, "wissen", "⛏️", "Wonach suchen Archäologen meist in der Erde?", ["Alte Gegenstände", "Vergrabene Goldschätze", "Dinosaurierknochen", "Verstecktes Geld"], "Archäologen graben nach alten Ruinen, Werkzeugen oder Töpfen, die von früheren Menschen stammen.", null, "Archäologie"],
+  [6, "sprache", "🖋️", "Welchen Beruf übte Annette von Droste-Hülshoff aus?", ["Dichterin", "Malerin", "Sängerin", "Erfinderin"], "Annette von Droste-Hülshoff schrieb berühmte Gedichte und Erzählungen und lebte vor etwa 200 Jahren.", null, "Annette Droste-Hülshoff"],
 ];
