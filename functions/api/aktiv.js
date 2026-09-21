@@ -1,6 +1,6 @@
 // Wer spielt gerade? Damit nichts ausgerollt wird, während ein Kind übt.
 //
-// POST /api/aktiv   {kind:"leon"}            -> "ich bin da" (alle 3 Minuten)
+// POST /api/aktiv   {kind:"leon", seite:"quiz"}  -> "ich bin da" (alle 3 Minuten)
 // POST /api/aktiv   {kind:"leon", weg:true}  -> Seite geschlossen
 // GET  /api/aktiv                            -> {frei:true|false, seit:<Sekunden>}
 //
@@ -13,7 +13,7 @@
 // wir wollen wissen, ob jemand spielt, nicht wo die Maus steht.
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
-import { anwesendVermerken } from "./_anwesend.js";
+import { anwesendVermerken, woVermerken } from "./_anwesend.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const SCHLUESSEL = (kind) => "aktiv:" + kind;
@@ -180,6 +180,16 @@ export async function onRequestPost(context) {
    * bei einer wirklich neuen Viertelstunde.
    */
   try { await anwesendVermerken(env, kind, "lernwelt", Date.now(), offen); } catch (e) {}
+
+  /* Und WORAN gesessen wird - Denny am 21.09.2026: "Was machen die Kids in der
+   * Zeit?" Der Puls trug bisher nur "ich bin da"; stand daneben keine Runde,
+   * blieb offen, ob das Kind gespielt oder die Seite nur offen gelassen hat.
+   *
+   * Das laeuft in einem EIGENEN Eintrag (siehe _anwesend.js) und darf den Puls
+   * unter keinen Umstaenden abwuergen: Der hat die wichtigere Aufgabe, naemlich
+   * kein Ausrollen zuzulassen, waehrend ein Kind uebt. Geht es schief, fehlt
+   * eine Zeile in der Elternansicht - mehr nicht. */
+  try { await woVermerken(env, kind, Date.now(), daten.seite, offen); } catch (e) {}
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.

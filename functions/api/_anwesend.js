@@ -411,3 +411,141 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
   if (probleme.length && !entfernt) return { ok: false, fehler: probleme.join("; ") };
   return { ok: true, entfernt, unvollstaendig: probleme.length ? probleme.join("; ") : undefined };
 }
+
+/* ===========================================================================
+   Und WAS hat das Kind in dieser Viertelstunde gemacht? (21.09.2026)
+
+   Denny, nachdem bei Paul "15 min da" neben "Noch nichts gespielt" stand und
+   kurz darauf dasselbe bei Helena: "Ja, bitte bauen, weil wir bei Helena nun
+   das gleiche haben. Was machen die Kids in der Zeit?"
+
+   Das Band sagte bisher nur, DASS jemand da war. Wer eine Seite offen liegen
+   laesst oder unter einer halben Minute bleibt, erzeugt Anwesenheit ohne
+   Runde - und dann blieb die Frage offen, woran er gesessen hat.
+
+   EIGENER SCHLUESSEL, nicht im Band mit:
+   - Das Band ist die Stelle, an der derselbe Fehler in fuenf Pruefrunden
+     fuenfmal gefunden wurde. Es bleibt unberuehrt; ein Fehler hier kann es
+     nicht beschaedigen.
+   - Zwei Schreibvorgaenge je Viertelstunde statt einem sind vertretbar, seit
+     das Konto auf Workers Paid laeuft (unbegrenzt am Tag statt 1000).
+   - Faellt dieser Teil aus, bleibt die Anwesenheit trotzdem richtig.
+
+   Schluessel: wo:<kind>:<jjjj-mm>, Inhalt {"21":{"34":"quiz","35":"schmiede"}}
+   - Tag ohne fuehrende Null, Block als Text, Wert der Dateiname ohne Endung.
+   - Je Block EINE Seite: die zuletzt gemeldete. Wer in einer Viertelstunde
+     zwei Spiele anfasst, erscheint mit dem zweiten - das reicht fuer die
+     Frage "was macht er gerade", und alles andere kostet Platz und
+     Schreibvorgaenge fuer einen Unterschied, den niemand liest.
+   =========================================================================== */
+
+const WO_SCHLUESSEL = (kind, monat) => "wo:" + kind + ":" + monat;
+const SEITE_MAX = 40;
+
+/* Der Name kommt aus dem Browser und ist damit frei waehlbar - er wird
+   hart beschnitten. Erlaubt sind Kleinbuchstaben, Ziffern und Bindestriche;
+   alles andere faellt weg. Ein leerer Rest heisst "unbekannt" und wird nicht
+   gespeichert (ein leerer Eintrag saehe aus wie eine Auskunft). */
+export function seiteSaeubern(roh) {
+  const t = String(roh == null ? "" : roh).toLowerCase()
+    .replace(/\.html?$/, "")
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, SEITE_MAX)
+    .replace(/-+$/, "");
+  return t;
+}
+
+// {"21":{"34":"quiz"}} einlesen und dabei jeden Unsinn abfangen.
+export function woMonatLesen(roh) {
+  if (roh == null || roh === "") return {};
+  let d = null;
+  try { d = JSON.parse(roh); } catch (e) { return KAPUTT; }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return KAPUTT;
+  const raus = {};
+  for (const [tag, bloecke] of Object.entries(d)) {
+    if (!/^([1-9]|[12]\d|3[01])$/.test(tag)) continue;
+    if (!bloecke || typeof bloecke !== "object" || Array.isArray(bloecke)) continue;
+    const rein = {};
+    for (const [b, seite] of Object.entries(bloecke)) {
+      const n = Number(b);
+      if (!Number.isInteger(n) || n < 0 || n >= BLOECKE_PRO_TAG) continue;
+      const s = seiteSaeubern(seite);
+      if (s) rein[String(n)] = s;
+    }
+    if (Object.keys(rein).length) raus[tag] = rein;
+  }
+  return raus;
+}
+
+/* Vermerken, woran gerade gesessen wird.
+ *
+ * Schreibt nur, wenn fuer diese Viertelstunde noch nichts oder etwas ANDERES
+ * dasteht. Der Puls kommt alle 90 Sekunden; ohne diese Pruefung waeren es zehn
+ * Schreibvorgaenge je Viertelstunde statt einem.
+ *
+ * Der Deckel des Bandes gilt hier sinngemaess mit: Steht der Tag schon voller
+ * Eintraege, als ein wacher Tag lang ist, wird nichts mehr angenommen.
+ */
+export async function woVermerken(env, kind, jetztMs, seite, offen = true) {
+  if (!env || !env.PAUL_KV) return { geschrieben: false, fehler: "kein Speicher" };
+  if (!kindOk(kind)) return { geschrieben: false, fehler: "unbekanntes Kind" };
+  const s = seiteSaeubern(seite);
+  if (!s) return { geschrieben: false, fehler: "keine Seite genannt" };
+  const z = berlinZeit(jetztMs);
+  if (!z) return { geschrieben: false, fehler: "unbrauchbare Zeit" };
+
+  const schluessel = WO_SCHLUESSEL(String(kind).toLowerCase(), MONAT(z.tag));
+  const tagImMonat = TAG_IM_MONAT(z.tag);
+
+  let monat;
+  try { monat = woMonatLesen(await env.PAUL_KV.get(schluessel)); }
+  catch (e) { return { geschrieben: false, fehler: "Speicher antwortet nicht" }; }
+  if (monat === KAPUTT) return { geschrieben: false, fehler: "Eintrag ist unlesbar" };
+
+  const tag = monat[tagImMonat] || {};
+  if (tag[String(z.block)] === s) return { geschrieben: false, tag: z.tag, block: z.block };
+  if (Object.keys(tag).length >= (offen ? BLOECKE_OFFEN : BLOECKE_ANGEMELDET) &&
+      !(String(z.block) in tag))
+    return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Tagesdeckel erreicht" };
+
+  tag[String(z.block)] = s;
+  monat[tagImMonat] = tag;
+  try {
+    await env.PAUL_KV.put(schluessel, JSON.stringify(monat), { expirationTtl: HALTBAR_SEKUNDEN });
+  } catch (e) {
+    return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Speicher nimmt nichts an" };
+  }
+  return { geschrieben: true, tag: z.tag, block: z.block, seite: s };
+}
+
+/* Die Seiten mehrerer Monate holen.
+ *
+ * `unsicher` bedeutet dasselbe wie im Band: Der Speicher hat nicht geantwortet
+ * oder etwas Unlesbares geliefert. "Nichts gefunden" darf dann NICHT als "hat
+ * nichts gemacht" gelesen werden.
+ */
+export async function woLesen(env, kind, monate) {
+  const raus = { unsicher: false, monate: {} };
+  if (!env || !env.PAUL_KV) { raus.unsicher = true; return raus; }
+  if (!kindOk(kind)) return raus;
+  const k = String(kind).toLowerCase();
+  const antworten = await Promise.all(monate.map(async (m) => {
+    try {
+      const daten = woMonatLesen(await env.PAUL_KV.get(WO_SCHLUESSEL(k, m)));
+      if (daten === KAPUTT) return { m, fehler: true };
+      return { m, daten };
+    } catch (e) { return { m, fehler: true }; }
+  }));
+  for (const a of antworten) {
+    if (a.fehler) { raus.unsicher = true; continue; }
+    raus.monate[a.m] = a.daten;
+  }
+  return raus;
+}
+
+// Aus dem Ergebnis von woLesen einen einzelnen Tag herausziehen: {block: seite}.
+export function woTag(gelesen, tag) {
+  const m = (gelesen.monate || {})[MONAT(tag)] || {};
+  return m[TAG_IM_MONAT(tag)] || {};
+}
