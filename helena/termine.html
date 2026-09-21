@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schultermine · Helena</title>
+<!--
+  Alle Schultermine aus dem Jahresterminplan der Schule.
+
+  WOHER: hole-schultermine.py meldet sich im internen Bereich des Johannes-
+  Scharrer-Gymnasiums an, laedt das PDF und legt hier schultermine.json ab.
+  Wie das PDF gelesen wird, steht in lies_schultermine.py - das ist die
+  schwierige Stelle, nicht diese Seite.
+
+  WARUM HIER UND NICHT OFFEN: Der Plan liegt bei der Schule hinter einem
+  Passwort und nennt Lehrerkuerzel. /helena/ ist seit 20.09.2026 komplett
+  hinter HELENA_CODE (GESCHUETZT in functions/api/_riegel.js), also ist die
+  Datei hier so geschuetzt wie ihre Trainer.
+
+  KEINE LERNZEIT: Diese Seite bindet lernstand.js bewusst NICHT ein. Wer einen
+  Termin nachschaut, lernt nicht - das als Lernzeit zu zaehlen wuerde die Zahlen
+  im Elternbereich aufblaehen. (Regel dazu in CLAUDE.md, Abschnitt
+  LERNSTAND_SCHREIBT_SELBST.)
+-->
+<style>
+  :root{
+    --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740;
+    --line:#2a3350; --ink:#eef2fb; --muted:#8a92a8;
+    --brand:#a78bfa; --ok:#49d6bd; --no:#ff7a6b; --gold:#ffce5c; --pink:#f472b6;
+    --radius:20px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(167,139,250,.16), transparent 60%),
+      radial-gradient(800px 460px at -10% 0%, rgba(73,214,189,.10), transparent 55%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; align-items:center}
+  .wrap{width:100%; max-width:640px; padding:20px 16px 56px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .zurueck{display:grid;place-items:center;width:44px;height:44px;flex:none;
+    background:var(--surface);border:1px solid var(--line);border-radius:13px;
+    text-decoration:none;color:var(--ink);font-size:19px}
+  header h1{font-family:var(--round);font-weight:800;font-size:19px;margin:0;letter-spacing:-.01em}
+  header p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+
+  .band{display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:14px;
+    padding:11px 13px;margin:0 0 14px;min-height:56px}
+  .band .bic{font-size:21px;line-height:1}
+  .band .btext{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .band .btext b{font-size:14.5px;line-height:1.25}
+  .band .btext span{font-size:12.5px;color:var(--muted)}
+  .band .bzahl{font-family:var(--round);font-weight:800;font-size:13px;text-align:right;
+    color:var(--ok);white-space:nowrap;line-height:1.25}
+
+  .filter{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+  .filter button{font-family:var(--font);font-size:13.5px;font-weight:700;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:11px 15px;min-height:44px;cursor:pointer}
+  .filter button[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 22%,var(--surface2));
+    border-color:var(--brand)}
+
+  .monat{font-family:var(--round);font-weight:800;font-size:14px;color:var(--muted);
+    margin:20px 2px 8px;text-transform:uppercase;letter-spacing:.06em}
+  .monat:first-of-type{margin-top:4px}
+  .tag{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:10px 12px;margin-bottom:8px;display:flex;gap:12px}
+  .tag.heute{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 10%,var(--surface))}
+  .tag.frei{border-left:4px solid var(--ok)}
+  .datum{flex:none;width:46px;text-align:center;padding-top:2px}
+  .datum .wt{font-size:11px;color:var(--muted);display:block}
+  .datum .zahl{font-family:var(--round);font-weight:800;font-size:20px;line-height:1.1;display:block}
+  .tag.heute .datum .zahl{color:var(--brand)}
+  .eintraege{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+  .eintrag{display:flex;gap:8px;align-items:flex-start}
+  .punkt{width:8px;height:8px;border-radius:99px;flex:none;margin-top:6px}
+  .etext{flex:1;min-width:0;font-size:13.5px;line-height:1.4;overflow-wrap:anywhere}
+  .ezeit{font-size:12px;color:var(--muted);white-space:nowrap;padding-top:1px}
+  .eort{color:var(--muted);font-size:12px}
+
+  .leer{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px;line-height:1.6}
+  .quelle{color:var(--muted);font-size:11.5px;line-height:1.6;margin:26px 2px 0;
+    border-top:1px solid var(--line);padding-top:12px}
+
+  /* Auf dem Handy mit offener Tastatur (360x360) bleibt die Liste bedienbar:
+     Der Ferien-Countdown und die Quellenangabe treten zurueck. */
+  @media (max-height:520px){
+    .band{min-height:46px;padding:8px 11px;margin-bottom:9px}
+    .band .btext span{display:none}
+    .quelle{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="zurueck" href="./" aria-label="Zurück">←</a>
+    <div>
+      <h1>Meine Schultermine</h1>
+      <p id="unter">wird geladen …</p>
+    </div>
+  </header>
+
+  <div id="ferien"></div>
+
+  <div class="filter">
+    <button data-f="wichtig" aria-pressed="true">Wichtiges</button>
+    <button data-f="alles" aria-pressed="false">Alles</button>
+    <button data-f="frei" aria-pressed="false">Freie Tage</button>
+  </div>
+
+  <div id="liste"><div class="leer">wird geladen …</div></div>
+
+  <p class="quelle" id="quelle"></p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var FARBE = {frei:"#49d6bd", pruefung:"#ff7a6b", fahrt:"#ffce5c", zeugnis:"#f472b6",
+               aktion:"#a78bfa", schule:"#8a92a8", eltern:"#64748b", alltag:"#475569"};
+  // "Wichtiges" ist die Voreinstellung: Mensa-Essen und Notbetreuung stehen 28-mal
+  // im Plan und wuerden alles zuschuetten, was sie wirklich betrifft.
+  var UNWICHTIG = {alltag:1, eltern:1};
+  var WT = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+  var MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August",
+                "September","Oktober","November","Dezember"];
+
+  var alle = [], filter = "wichtig";
+  var heute = new Date(); heute.setHours(0,0,0,0);
+  var heuteISO = iso(heute);
+
+  function iso(d){
+    return d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0"+d.getDate()).slice(-2);
+  }
+  function alsDatum(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function tageBis(s){ return Math.round((alsDatum(s) - heute) / 86400000); }
+  function sauber(t){ return t.replace(/^voraussichtlich:\s*/i, ""); }
+
+  function passt(t){
+    if (filter === "frei") return t.art === "frei";
+    if (filter === "wichtig") return !UNWICHTIG[t.art];
+    return true;
+  }
+
+  function ferienBand(){
+    // Der erste Tag der naechsten Ferien - nicht irgendein freier Tag: Ein
+    // Feiertag mitten in der Woche ist kein Countdown-Ziel.
+    for (var i = 0; i < alle.length; i++){
+      var t = alle[i];
+      if (t.datum >= heuteISO && /ferien/i.test(t.anlass)) return t;
+    }
+    return null;
+  }
+
+  function malen(){
+    var liste = document.getElementById("liste");
+    var dran = alle.filter(function(t){ return t.datum >= heuteISO && passt(t); });
+    if (!dran.length){
+      liste.innerHTML = '<div class="leer">Hier steht nichts mehr.<br>' +
+        'Der Plan reicht bis zu den Osterferien.</div>';
+      return;
+    }
+    var html = "", monat = "", tag = "", offen = false;
+    dran.forEach(function(t){
+      var d = alsDatum(t.datum);
+      var m = MONATE[d.getMonth()] + " " + d.getFullYear();
+      if (m !== monat){
+        if (offen){ html += "</div></div>"; offen = false; tag = ""; }
+        monat = m;
+        html += '<div class="monat">' + m + "</div>";
+      }
+      if (t.datum !== tag){
+        if (offen) html += "</div></div>";
+        tag = t.datum;
+        offen = true;
+        var klasse = "tag" + (t.datum === heuteISO ? " heute" : "") +
+                     (t.art === "frei" ? " frei" : "");
+        html += '<div class="' + klasse + '"><div class="datum">' +
+                '<span class="wt">' + WT[d.getDay()] + '</span>' +
+                '<span class="zahl">' + d.getDate() + "</span></div>" +
+                '<div class="eintraege">';
+      }
+      html += '<div class="eintrag"><span class="punkt" style="background:' +
+              (FARBE[t.art] || FARBE.schule) + '"></span><span class="etext">' +
+              escape_(sauber(t.anlass)) +
+              (t.ort ? ' <span class="eort">· ' + escape_(t.ort) + "</span>" : "") +
+              "</span>" +
+              (t.zeit ? '<span class="ezeit">' + t.zeit + "</span>" : "") + "</div>";
+    });
+    if (offen) html += "</div></div>";
+    liste.innerHTML = html;
+  }
+
+  function escape_(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  fetch("schultermine.json", {cache:"no-cache"}).then(function(r){
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function(d){
+    alle = d.termine || [];
+    var kommend = alle.filter(function(t){ return t.datum >= heuteISO; });
+    document.getElementById("unter").textContent =
+      kommend.length + " Termine bis zu den Osterferien";
+
+    var f = ferienBand();
+    if (f){
+      var n = tageBis(f.datum), d2 = alsDatum(f.datum);
+      document.getElementById("ferien").innerHTML =
+        '<div class="band"><span class="bic">🏖️</span><span class="btext"><b>' +
+        escape_(f.anlass.split(":")[0]) + '</b><span>ab ' + d2.getDate() + ". " +
+        MONATE[d2.getMonth()] + '</span></span><span class="bzahl">noch<br>' +
+        (n === 1 ? "1 Tag" : n + " Tage") + "</span></div>";
+    }
+
+    if (d.stand && d.stand.length === 8){
+      document.getElementById("quelle").textContent =
+        "Aus dem Jahresterminplan der Schule, Stand " + d.stand.slice(6,8) + "." +
+        d.stand.slice(4,6) + "." + d.stand.slice(0,4) +
+        ". Hier steht, was die 7. Klasse betrifft — und alles, was für die ganze Schule gilt.";
+    }
+    malen();
+  }).catch(function(e){
+    // Ehrlich bleiben: Nicht "keine Termine" anzeigen, wenn die Datei fehlt.
+    document.getElementById("liste").innerHTML =
+      '<div class="leer">Die Termine lassen sich gerade nicht laden.<br>' +
+      "Das liegt nicht an dir — sag Denny Bescheid.</div>";
+    document.getElementById("unter").textContent = "Liste nicht erreichbar";
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".filter button"), function(b){
+    b.addEventListener("click", function(){
+      filter = b.getAttribute("data-f");
+      Array.prototype.forEach.call(document.querySelectorAll(".filter button"), function(x){
+        x.setAttribute("aria-pressed", x === b ? "true" : "false");
+      });
+      malen();
+    });
+  });
+})();
+</script>
+</body>
+</html>
