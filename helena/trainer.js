@@ -120,6 +120,17 @@
   // Die Zahl oben: Was steht heute an?
   function heuteMalen(){
     var z=faelligZaehlen();
+    /* Den Stand fuer die Uebersicht hinterlegen (21.09.2026). Helenas
+       Startseite ist seitdem nicht mehr der Trainer selbst, sondern eine
+       Uebersicht - und die soll sagen koennen, wie viel heute ansteht, ohne
+       den ganzen Vokabelbestand mitzuladen. Steht nichts da, sagt sie das
+       ehrlich, statt eine Zahl zu erfinden. */
+    try {
+      localStorage.setItem("helena-vokabelstand", JSON.stringify({
+        faellig: z.faellig, neu: z.neu, sprache: (window.HELENA_KONFIG||{}).sprache || "englisch",
+        stand: Date.now()
+      }));
+    } catch(e){}
     var zahl=$("#heuteZahl"), txt=$("#faelligText");
     if(!zahl||!txt) return;
     var offen=z.faellig;
