@@ -1,4 +1,6 @@
-// Prüft Pauls Code und setzt bei Erfolg das signierte Zugangs-Cookie.
+// Prüft den Code eines Bereichs und setzt bei Erfolg das signierte Zugangs-Cookie.
+// Angenommen werden zwei Codes: der eigene der Seite und der Hauptschlüssel
+// MASTER_CODE (Regel im Skill rh171web, 21.09.2026).
 import { gleich, ausweisBauen, ausweisKopfzeile, ausweisGueltig, geheimFuer,
          zuVieleFehlversuche, fehlversuchZaehlen, fehlversucheLoeschen } from "./_riegel.js";
 
@@ -28,7 +30,28 @@ export async function onRequestPost(context) {
   try { auftrag = await request.json(); code = String((auftrag && auftrag.code) || ""); } catch (e) {}
   const geheim = geheimFuer(env, kindAus(request, auftrag));
 
-  if (!gleich(code, geheim)) {
+  // Ohne hinterlegten Code bleibt der Bereich zu - auch fuer den Hauptschluessel.
+  // Es gaebe sonst nichts, womit der Ausweis signiert werden koennte, und ein
+  // mit etwas anderem signierter Ausweis wuerde ueberall sonst abgewiesen.
+  if (!geheim) {
+    return json(401, { ok: false, fehler: "Für diesen Bereich ist kein Code hinterlegt." });
+  }
+
+  // Zwei Wege hinein, seit 21.09.2026 (Denny: "Ich möchte mit meinem
+  // Master-Passwort auf jede Seite hineinkommen."): der eigene Code der Seite
+  // und der Hauptschlüssel MASTER_CODE. Der Ausweis wird trotzdem weiter mit
+  // `geheim` signiert - der Hauptschlüssel ist ein zweiter Weg zur Anmeldung,
+  // kein zweiter Ausweis. Ohne gesetztes MASTER_CODE bleibt alles wie vorher.
+  //
+  // Der leere Code muss ausdrücklich raus: gleich("", undefined) ist WAHR,
+  // weil beide Seiten zu "" werden. Ohne diese Prüfung käme man in einen
+  // Bereich ohne hinterlegten Code mit einem leeren Feld hinein - genau das
+  // Gegenteil dessen, was der Kommentar in geheimFuer() verspricht
+  // (nachgerechnet am 21.09.2026 beim Einbau des Hauptschlüssels).
+  const eigener = code !== "" && gleich(code, geheim);
+  const haupt = code !== "" && !!env.MASTER_CODE && gleich(code, env.MASTER_CODE);
+
+  if (!eigener && !haupt) {
     const n = await fehlversuchZaehlen(request, env);
     return json(401, { ok: false, fehler: "Der Code stimmt nicht.", uebrig: Math.max(0, 8 - n) });
   }
