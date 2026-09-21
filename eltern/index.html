@@ -176,6 +176,29 @@
                        border-radius:9px;padding:7px 13px;font-size:13.5px;cursor:pointer}
   .verborgen{display:none !important}
   @media(max-width:560px){ td,th{padding-left:4px;padding-right:4px} .balken{display:none} }
+  /* Noten (21.09.2026). Denny: "Beim Lernstand sollen auch bitte noch der
+     aktuelle Notenschluessel der Faecher zu sehen sein." Variante C aus den
+     drei Entwuerfen: Tabelle mit farbigen Chips. */
+  .ntab{width:100%;border-collapse:collapse}
+  .ntab th{text-align:left;font:700 11.5px/1.3 var(--rund);color:var(--muted);
+           text-transform:uppercase;letter-spacing:.04em;padding:0 8px 8px}
+  .ntab td{padding:11px 8px;border-top:1px solid var(--line);vertical-align:middle}
+  .ntab .z{text-align:right;white-space:nowrap}
+  .ntab .kl{color:var(--muted);font-size:13px}
+  .chip{display:inline-block;min-width:26px;min-height:26px;padding:3px 7px;border-radius:8px;
+        color:#fff;font:800 13px/1.35 var(--rund);text-align:center;margin:2px 3px 2px 0;
+        border:none;cursor:pointer}
+  .chip em{font-style:normal;font-size:9.5px;opacity:.85;margin-left:1px}
+  .chip.unsicher{box-shadow:inset 0 0 0 2px #fff, 0 0 0 2px #e05252}
+  .nschnitt{font-family:var(--rund);font-size:19px;font-weight:800}
+  .ntoepfe{display:block;color:var(--muted);font-size:11.5px;font-weight:600;margin-top:1px}
+  .nhoch{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .nhoch button{min-height:44px;border:1.5px solid var(--line);background:#fff;border-radius:11px;
+                padding:0 15px;font:600 14.5px/1 var(--rund);color:var(--ink);cursor:pointer}
+  .nhoch button.haupt{background:var(--akzent);border-color:var(--akzent);color:#fff}
+  .nvorschlag{border:1px solid #f0dca8;background:#fff8e6;border-radius:12px;padding:12px 14px;margin-top:12px}
+  .nvorschlag ul{margin:8px 0 10px;padding-left:18px;font-size:14px}
+  .nvorschlag li{margin-bottom:3px}
 </style>
 </head>
 <body>
@@ -236,6 +259,7 @@
         zeige("daten");
         meldungenLaden();
         anwesenheitLaden();
+        notenLaden();
         reiterMalen();
         heuteMalen();
       })
@@ -605,6 +629,214 @@
       '<a class="knopf-link" href="/eltern/probearbeiten.html">Alle Regeln ansehen</a></div>';
   }
 
+  /* ---------- Noten ---------- */
+  var NOTEN = null, NOTEN_FEHLER = null;
+
+  function notenLaden(){
+    NOTEN_FEHLER = null;
+    return fetch("/api/noten", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
+        NOTEN = j.kinder || {};
+      })
+      .catch(function(e){ NOTEN_FEHLER = e.message || "Das ging nicht."; })
+      .then(function(){ if (KIND && !$("sicht-daten").classList.contains("verborgen")) malen(); });
+  }
+
+  function notenfarbe(n){
+    return n <= 2 ? "#12a35f" : (n <= 3 ? "#e8a13a" : (n <= 4 ? "#ea7317" : "#e05252"));
+  }
+  function komma(x){ return (Math.round(x * 100) / 100).toFixed(2).replace(".", ","); }
+  function kurzDatum(iso){ var t = String(iso).split("-"); return t.length === 3 ? t[2] + "." + t[1] + "." : ""; }
+
+  function notenKarte(){
+    if (NOTEN_FEHLER){
+      return '<div class="karte"><h2>Noten</h2><p class="unter"><b>Die Noten kann ich gerade nicht laden.</b> ' +
+             esc(NOTEN_FEHLER) + '<br>Das heißt <b>nicht</b>, dass keine da sind.</p></div>';
+    }
+    if (!NOTEN) return "";
+    var d = NOTEN[KIND] || {};
+    if (d.kaputt){
+      return '<div class="karte"><h2>Noten</h2><p class="unter"><b>Der Speicher hat nicht geantwortet.</b> ' +
+             'Was hier fehlt, muss nicht bedeuten, dass keine Noten da sind.</p></div>';
+    }
+    var faecher = d.faecher || [];
+    var kopf = '<div class="karte"><h2>Noten</h2>';
+
+    if (!faecher.length){
+      kopf += '<p class="unter">Noch keine Noten eingetragen. Sie kommen von selbst, sobald ' +
+              esc(kindName(KIND)) + ' eine zurückgegebene Probe im Hausaufgaben-Heft fotografiert – ' +
+              'oder du trägst einen Notenstand hier ein.</p>';
+      return kopf + notenHochladen() + '</div>';
+    }
+
+    var zeilen = faecher.map(function(f){
+      var chips = f.noten.map(function(n){
+        var t = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || "?");
+        return '<button class="chip' + (n.sicher === false ? ' unsicher' : '') + '" data-note="' + esc(n.id) + '"' +
+               ' style="background:' + (typeof n.note === "number" ? notenfarbe(n.note) : "#6b7280") + '"' +
+               ' title="' + esc(n.anlass + " · " + kurzDatum(n.datum) + (n.sicher === false ? " · unsicher gelesen" : "")) + '">' +
+               esc(t) + (n.gewicht === 2 ? '<em>×2</em>' : '') + (n.art === "gross" ? '<em>SA</em>' : '') + '</button>';
+      }).join("");
+      var toepfe = "";
+      if (f.verhaeltnis) toepfe = '<span class="ntoepfe">groß ' + komma(f.gross) + ' · klein ' + komma(f.klein) + ' · ' + f.verhaeltnis + '</span>';
+      return '<tr><td><b>' + esc(f.fach.charAt(0).toUpperCase() + f.fach.slice(1)) + '</b></td>' +
+             '<td>' + chips + '</td>' +
+             '<td class="z"><span class="nschnitt" style="color:' +
+             (typeof f.schnitt === "number" ? notenfarbe(f.schnitt) : "#6b7280") + '">' +
+             (typeof f.schnitt === "number" ? komma(f.schnitt) : "–") + '</span>' + toepfe + '</td></tr>';
+    }).join("");
+
+    var regel = (d.regel && d.regel.schulaufgaben)
+      ? '<li><b>SA</b> = Schulaufgabe. Sie zählt als eigener Topf gegen alle kleinen Nachweise (GSO Art. 28: bei zwei Schulaufgaben 1:1, bei mehr 2:1)</li>'
+      : '<li>Jede Probe zählt <b>einfach</b> – so steht es im Schreiben der Schule</li>';
+
+    return kopf +
+      '<table class="ntab"><tr><th>Fach</th><th>Noten</th><th class="z">Schnitt</th></tr>' + zeilen + '</table>' +
+      '<ul class="fussliste">' +
+      '<li><b>Zahl im Kästchen</b> = Note, <b>×2</b> = doppelt gewichtet</li>' +
+      regel +
+      '<li><b>Roter Rand</b> = unsicher gelesen, bitte nachsehen</li>' +
+      '<li><b>Antippen</b> löscht eine Note</li>' +
+      '</ul>' + notenHochladen() + '</div>';
+  }
+
+  function notenHochladen(){
+    return '<div class="nhoch">' +
+      '<button class="haupt" id="n-blatt">📄 Notenstand hochladen</button>' +
+      '<button id="n-neu">✏️ Note von Hand eintragen</button>' +
+      '</div><div id="n-arbeit"></div>' +
+      '<input type="file" id="n-datei" accept="image/*,application/pdf" style="display:none">';
+  }
+
+  /* Alles, was man mit Noten tun kann. Die Karte wird per innerHTML neu
+     gebaut - deshalb EIN Zuhoerer auf dem Behaelter statt vieler auf Knoepfen,
+     die es gleich nicht mehr gibt. */
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    var chip = t.closest && t.closest(".chip[data-note]");
+    if (chip) return noteLoeschen(chip.getAttribute("data-note"));
+    if (t.id === "n-blatt"){ var f = $("n-datei"); if (f) f.click(); return; }
+    if (t.id === "n-neu") return noteVonHand();
+  });
+
+  var NOTEN_ARBEIT = false;
+
+  function notenMelde(html){
+    var k = $("n-arbeit");
+    if (k) k.innerHTML = html;
+  }
+
+  function noteLoeschen(id){
+    if (!window.confirm("Diese Note wirklich löschen?")) return;
+    fetch("/api/noten?kind=" + encodeURIComponent(KIND) + "&id=" + encodeURIComponent(id),
+          { method: "DELETE", credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
+        return notenLaden();
+      })
+      .catch(function(e){ notenMelde('<p class="unter" style="color:#b91c1c">' + esc(e.message) + '</p>'); });
+  }
+
+  function noteVonHand(){
+    var fach = window.prompt("Fach? (zum Beispiel: mathematik)");
+    if (!fach) return;
+    var note = window.prompt("Note? (1 bis 6, halbe gehen – oder leer lassen und nur Punkte angeben)");
+    var punkte = note ? "" : (window.prompt("Punkte? (zum Beispiel 18/20)") || "");
+    var anlass = window.prompt("Anlass? (zum Beispiel: Schulaufgabe 1)") || "Leistungsnachweis";
+    var datum = window.prompt("Datum? (JJJJ-MM-TT, leer = heute)") || "";
+    var gross = /schulaufgabe|klausur/i.test(anlass);
+    noteSenden({ fach: fach, note: note, punkte: punkte, anlass: anlass, datum: datum,
+                 art: gross ? "gross" : "klein", quelle: "eltern" });
+  }
+
+  function noteSenden(note){
+    return fetch("/api/noten", { method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: KIND, note: note }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
+        return notenLaden();
+      })
+      .catch(function(e){ notenMelde('<p class="unter" style="color:#b91c1c">' + esc(e.message) + '</p>'); });
+  }
+
+  /* Ein Notenstand von der Schule. Denny am 21.09.2026: "Helena bekommt jeden
+     Monat einen Notendurchschnitt mitgeteilt. Den kann ich dir dann auch
+     entsprechend hochladen." Gelesen wird von Claude - gespeichert wird erst
+     nach Dennys Klick. Ein falsch gelesener Notenstand waere schlimmer als
+     gar keiner. */
+  document.addEventListener("change", function(ev){
+    if (ev.target.id !== "n-datei") return;
+    var datei = ev.target.files && ev.target.files[0];
+    ev.target.value = "";
+    if (!datei || NOTEN_ARBEIT) return;
+    if (datei.size > 4 * 1024 * 1024)
+      return notenMelde('<p class="unter" style="color:#b91c1c">Das Blatt ist zu groß (höchstens 4 MB).</p>');
+
+    NOTEN_ARBEIT = true;
+    notenMelde('<p class="unter">Ich lese das Blatt … das dauert einen Moment.</p>');
+    var leser = new FileReader();
+    leser.onload = function(){
+      fetch("/api/noten", { method: "POST", credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: KIND, blatt: leser.result }) })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          NOTEN_ARBEIT = false;
+          if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
+          vorschlaegeZeigen(j.vorschlaege || []);
+        })
+        .catch(function(e){
+          NOTEN_ARBEIT = false;
+          notenMelde('<p class="unter" style="color:#b91c1c">' + esc(e.message) + '</p>');
+        });
+    };
+    leser.onerror = function(){ NOTEN_ARBEIT = false; notenMelde('<p class="unter" style="color:#b91c1c">Die Datei konnte ich nicht lesen.</p>'); };
+    leser.readAsDataURL(datei);
+  });
+
+  var VORSCHLAEGE = [];
+  function vorschlaegeZeigen(liste){
+    VORSCHLAEGE = liste;
+    if (!liste.length){
+      notenMelde('<p class="unter">Auf dem Blatt habe ich keine Note gefunden. Nichts gespeichert.</p>');
+      return;
+    }
+    var unsicher = liste.filter(function(n){ return n.sicher === false; }).length;
+    var zeilen = liste.map(function(n){
+      return '<li>' + esc(n.fach) + ': <b>' + esc(n.note !== undefined ? String(n.note).replace(".", ",") : (n.punkte || "?")) + '</b>' +
+             ' · ' + esc(n.anlass) + ' · ' + esc(kurzDatum(n.datum)) +
+             (n.art === "gross" ? ' · Schulaufgabe' : '') +
+             (n.gewicht === 2 ? ' · doppelt' : '') +
+             (n.sicher === false ? ' · <b style="color:#b91c1c">unsicher gelesen</b>' : '') + '</li>';
+    }).join("");
+    notenMelde('<div class="nvorschlag"><b>Gefunden: ' + liste.length + ' Note' + (liste.length === 1 ? '' : 'n') + '</b>' +
+      (unsicher ? ' – davon ' + unsicher + ' unsicher gelesen. Bitte vor dem Übernehmen prüfen.' : '') +
+      '<ul>' + zeilen + '</ul>' +
+      '<div class="nhoch" style="margin-top:0">' +
+      '<button class="haupt" id="n-uebernehmen">Alle übernehmen</button>' +
+      '<button id="n-verwerfen">Verwerfen</button></div>' +
+      '<p class="unter" style="margin:10px 0 0">Gespeichert ist noch nichts.</p></div>');
+  }
+
+  document.addEventListener("click", function(ev){
+    if (ev.target.id === "n-verwerfen"){ VORSCHLAEGE = []; notenMelde(""); return; }
+    if (ev.target.id !== "n-uebernehmen") return;
+    ev.target.disabled = true;
+    var offen = VORSCHLAEGE.slice();
+    (function weiter(){
+      if (!offen.length){
+        VORSCHLAEGE = [];
+        return notenLaden().then(function(){ notenMelde('<p class="unter">Übernommen.</p>'); });
+      }
+      noteSenden(offen.shift()).then(weiter);
+    })();
+  });
+
   function malen(){
     if (!KIND) return;
     var d = DATEN[KIND] || {};
@@ -620,12 +852,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = anwesenheitKarte() + schulinfoKarte() +
+      $("inhalt").innerHTML = anwesenheitKarte() + notenKarte() + schulinfoKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += anwesenheitKarte() + schulinfoKarte();
+    h += anwesenheitKarte() + notenKarte() + schulinfoKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
