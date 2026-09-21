@@ -620,6 +620,32 @@
      uns zukommt." Die Karte haengt NICHT am Spielen - sie steht auch bei einem
      Kind ohne Runden. */
   function schulinfoKarte(){
+    /* Jedes Kind bekommt, was seine Schule angekuendigt hat. Bis zum
+       21.09.2026 gab es die Karte nur bei Paul - Helenas Festlegungen lagen
+       seit einem Tag da und kamen im Elternbereich nie an. Denny: "Warum gibt
+       es das bei Helena nicht, wenn du die Informationen eigentlich seit
+       gestern hast?" */
+    if (KIND === "helena"){
+      var tage = Math.round((new Date(2026, 9, 1) - new Date(new Date().toDateString())) / 86400000);
+      return '<div class="karte"><h2>Schulaufgaben und Leistungstests – 7. Klasse</h2>' +
+        '<p class="unter">Festlegungen ihrer Schule. In allen vier Fächern mehr als zwei ' +
+        'Schulaufgaben – damit zählen große zu kleinen Nachweisen 2:1.</p>' +
+        '<table class="termine" style="margin-bottom:12px">' +
+        '<tr><td><b>Deutsch</b></td><td>3 Schulaufgaben</td></tr>' +
+        '<tr><td><b>Englisch</b></td><td>3 + 1 Projekt-Schulaufgabe</td></tr>' +
+        '<tr><td><b>Mathematik</b></td><td>4 Schulaufgaben</td></tr>' +
+        '<tr><td><b>Französisch</b></td><td>3 + 1 mündliche</td></tr>' +
+        '</table>' +
+        '<p class="unter" style="margin:0 0 12px"><b>Nächster Leistungstest:</b> BET 7 in Englisch am ' +
+        'Donnerstag, 01.10.2026' + (tage > 0 ? ' – in ' + tage + ' Tag' + (tage === 1 ? '' : 'en') : '') +
+        '. Verpflichtend, doppelt gewichteter kleiner Leistungsnachweis.</p>' +
+        '<a class="knopf-link" href="/eltern/pruefungen-helena.html">Alle Termine ansehen</a></div>';
+    }
+    if (KIND === "leon"){
+      return '<div class="karte"><h2>Noten</h2>' +
+        '<p class="unter" style="margin:0">Leon bekommt <b>erst im zweiten Halbjahr</b> Noten. ' +
+        'Bis dahin steht hier nichts – das ist kein Fehler.</p></div>';
+    }
     if (KIND !== "paul") return "";
     return '<div class="karte"><h2>Probearbeiten und Benotung – 4. Klasse</h2>' +
       '<p class="unter">Elterninformation der Grundschule. Kein Zwischenzeugnis, ' +
