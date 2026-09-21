@@ -89,13 +89,36 @@
     .hauptweg .hwic{font-size:21px}
     .hauptweg .hwtext b{font-size:14.5px}
     .hauptweg .hwtext span{display:none}
-    /* 44 px bleibt das Mindestmass fuer den Finger (WCAG 2.5.8). */
-    .bet{min-height:46px;padding:8px 12px;margin-bottom:6px}
-    .bet .bettext span{display:none}
-    /* Ferien- und Terminband kosten hier nur je eine Zeile - "Los geht's"
-       muss erreichbar bleiben (Messung 20.09.2026). Das Ferienband bringt
-       seine eigene kompakte Form mit, hier nur der Abstand. */
-    #ferienband{margin-bottom:6px}
+    /* Die drei Baender stehen hier NEBENEINANDER, nicht untereinander.
+       Gemessen am 21.09.2026 auf Helenas Handy (360x643): untereinander
+       kosten sie 164 px und schieben "Los geht's" 127 px unter den Rand -
+       nebeneinander sind es 66 px, und der Knopf rueckt sogar naeher heran
+       als vor den beiden neuen Baendern. Die Kopfzeile allein ist hier
+       239 px hoch; wer daran spart, gewinnt mehr als ueberall sonst.
+
+       Die Regeln muessen die von /ferienband.js ueberschreiben. Dessen
+       <style> haengt spaeter im <head>, darum steht hier ".baender" davor -
+       gleiche Spezifitaet wuerde verlieren. */
+    .baender{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+             align-items:stretch;margin:0 0 10px}
+    .baender>*{margin:0!important}
+    .baender .bet,
+    .baender #ferienband a,.baender #ferienband div.fb{
+      flex-direction:column;justify-content:center;gap:3px;text-align:center;
+      min-height:66px;padding:8px 6px;border-left-width:0;border-top:3px solid}
+    .bet{border-top-color:#f59e0b}
+    .bet.termin{border-top-color:var(--brand)}
+    .baender #ferienband a,.baender #ferienband div.fb{border-top-color:var(--ok)}
+    .baender .betic,.baender #ferienband .fbic{font-size:17px}
+    .baender .bettext,.baender #ferienband .fbtext{flex:none;width:100%;gap:0}
+    .baender .bettext b,.baender #ferienband .fbtext b{
+      font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      display:block;font-weight:700;color:var(--muted)}
+    .baender .bettext span,.baender #ferienband .fbtext span{display:none}
+    .baender .bettage,.baender #ferienband .fbtage{
+      font-size:12.5px;line-height:1.15;text-align:center;white-space:normal}
+    /* Ein leeres Band darf keine leere Spalte hinterlassen. */
+    .baender>#ferienband:empty{display:none}
   }
   .setup{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
     padding:18px; box-shadow:var(--shadow); margin-bottom:16px;}
@@ -403,6 +426,7 @@
   <!-- Kleine Kachel fuer den BET 7 am 01.10.2026. Denny: "Wann und wieviel
        Zeit noch bis dahin ist." Sie verschwindet von selbst, sobald der Test
        vorbei ist - kein Kalender, der alte Termine mitschleppt. -->
+  <div class="baender">
   <a class="bet" href="bet.html" id="bet-kachel">
     <span class="betic">🇬🇧</span>
     <span class="bettext"><b>BET 7 – Englischtest</b><span id="bet-wann">1. Oktober</span></span>
@@ -423,6 +447,7 @@
     <span class="bettext"><b id="termin-was"></b><span id="termin-wann"></span></span>
     <span class="bettage" id="termin-tage"></span>
   </a>
+  </div>
 
   <div class="hauptwege">
     <a class="hauptweg schule" href="hausaufgaben.html">
