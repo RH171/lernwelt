@@ -674,31 +674,26 @@
         '<p class="unter"><b>Das lässt sich gerade nicht sagen.</b> ' + esc(ANWESEND_FEHLER) +
         '<br>Das heißt <b>nicht</b>, dass niemand da war.</p></div>';
     if (!ANWESEND) return "";
+    /* Seit dem 21.09.2026 steht hier derselbe Zeitstrahl wie beim einzelnen
+       Kind - und zwar aus derselben Funktion. Vorher war nur die Kind-Karte
+       umgebaut, und Denny sah in der Uebersicht weiter die alten
+       "3 Viertelstunden · mit Pausen": "Hier ist das Update noch nicht
+       angekommen." Eine zweite Zeichenweise fuer dieselbe Sache laeuft immer
+       irgendwann auseinander. */
     var reihen = Object.keys(ANWESEND.kinder || {}).map(function(k){
       var a = ANWESEND.kinder[k] || {};
       var heute = (a.tage || []).filter(function(t){ return t.tag === ANWESEND.heute; })[0];
-      var text, klasse;
-      if (heute){
-        klasse = "war-da";
-        text = heute.von + "\u2013" + heute.bis + " \u00B7 " + heute.viertelstunden +
-               " Viertelstunde" + (heute.viertelstunden === 1 ? "" : "n") +
-               // Wie in der Karte darunter: eine Spanne mit Lücken darf nicht
-               // wie durchgehende Zeit aussehen (Prüfrunde 05).
-               (heute.amStueck === false ? " \u00B7 mit Pausen" : "") +
-               (heute.nurDuell ? " \u00B7 nur Quizduell" : "");
-      } else if (a.zuletzt){
-        klasse = "war-nicht";
-        text = "heute noch nicht \u00B7 zuletzt " + tagName(a.zuletzt.tag) + ", " + a.zuletzt.uhrzeit + " Uhr";
-      } else {
-        klasse = "war-nicht";
-        text = "keine Spur in den letzten 14 Tagen";
-      }
-      return '<div class="heute-zeile ' + klasse + '"><b>' + esc(k.charAt(0).toUpperCase() + k.slice(1)) +
-             '</b><span>' + esc(text) + '</span>' +
+      var name = k.charAt(0).toUpperCase() + k.slice(1);
+      if (heute) return strahlZeile(heute, heuteRunden(k), name, k);
+      var text = a.zuletzt
+        ? "heute noch nicht \u00B7 zuletzt " + tagName(a.zuletzt.tag) + ", " + a.zuletzt.uhrzeit + " Uhr"
+        : "keine Spur in den letzten 14 Tagen";
+      return '<div class="heute-zeile war-nicht"><b>' + esc(name) + '</b><span>' + esc(text) + '</span>' +
              (a.unsicher ? '<span class="luecke">Speicher hat nicht geantwortet</span>' : '') + '</div>';
     }).join("");
     return '<div class="karte heute-karte"><h2>Wer war heute da?</h2>' + reihen +
-           '<p class="unter" style="margin:10px 0 0">Das ist <b>keine Lernzeit</b> \u2013 nur, ob jemand da war.</p></div>';
+           '<p class="unter" style="margin:10px 0 0">Heller Balken = am Gerät \u00B7 ' +
+           'blau = wirklich gelernt \u00B7 orange = da, aber nichts beendet.</p></div>';
   }
 
   /* ---------- Der Zeitstrahl eines Tages ----------
@@ -776,11 +771,12 @@
     return "";
   }
 
-  function strahlZeile(t, runden){
+  function strahlZeile(t, runden, name, kind){
     var duell = (t.duell || []).length;
     var links = anteil(t.von), rechts = anteil(t.bis);
     var breite = Math.max(1.2, rechts - links);
-    var s = (DATEN && DATEN[KIND]) || {};
+    var welches = kind || KIND;
+    var s = (DATEN && DATEN[welches]) || {};
     // Lernzeit nur für HEUTE aus der Tagesstatistik - für ältere Tage gibt es
     // sie nicht je Tag, dann bleibt der Balken hell.
     var istHeute = ANWESEND && t.tag === ANWESEND.heute;
@@ -790,7 +786,7 @@
     var lernBreite = Math.max(1.0, Math.min(breite, gelernt / spanneMin * breite));
     var art = gelernt ? "lernteil" : "nixteil";
 
-    var kopf = '<div class="strahlkopf"><b>' + esc(tagName(t.tag)) + "</b>" +
+    var kopf = '<div class="strahlkopf"><b>' + esc(name || tagName(t.tag)) + "</b>" +
       '<span class="wann">' + esc(t.von) + "–" + esc(t.bis) + "</span>" +
       (istHeute
         ? (gelernt
