@@ -38,6 +38,15 @@
   header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
   .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;
     padding:10px 14px;font:800 14px/1 var(--round);color:var(--ink);text-decoration:none;min-height:44px}
+
+  /* Ein <a> ohne eigene Farbe nimmt das Blau des Browsers (#0000EE). Auf dem
+     dunklen Grund hier sind das 1,79:1 - gemessen am 21.09.2026, WCAG 2.2
+     verlangt 4,5:1. Denny: "die Schriften der Navigationen oben sind nicht
+     gut zu erkennen." Mit --ink sind es 14,96:1.
+     Die Regel steht NACH der .chip-Grundregel, sonst gewinnt die wieder. */
+  .chip, a.chip, a.chip:visited{color:var(--ink,#eef2fb); text-decoration:none;}
+  a.chip:hover{border-color:var(--brand,#a78bfa);}
+  a.chip:focus-visible{outline:2px solid var(--brand,#a78bfa); outline-offset:2px;}
   h1{font:800 20px/1.1 var(--round);margin:0;flex:1}
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
   .start h2{font:800 24px/1.2 var(--round);margin:0 0 6px}

@@ -50,6 +50,15 @@
     border-radius:999px; padding:7px 12px; font-family:var(--round); font-weight:800; font-size:13.5px;}
   .chip small{color:var(--muted); font-weight:600; font-size:12px;}
 
+
+  /* Ein <a> ohne eigene Farbe nimmt das Blau des Browsers (#0000EE). Auf dem
+     dunklen Grund hier sind das 1,79:1 - gemessen am 21.09.2026, WCAG 2.2
+     verlangt 4,5:1. Denny: "die Schriften der Navigationen oben sind nicht
+     gut zu erkennen." Mit --ink sind es 14,96:1.
+     Die Regel steht NACH der .chip-Grundregel, sonst gewinnt die wieder. */
+  .chip, a.chip, a.chip:visited{color:var(--ink,#eef2fb); text-decoration:none;}
+  a.chip:hover{border-color:var(--brand,#a78bfa);}
+  a.chip:focus-visible{outline:2px solid var(--brand,#a78bfa); outline-offset:2px;}
   /* Auf schmalen Schirmen lief der Kopf über: Der Titel brach dreizeilig um
      und die Chips wurden rechts abgeschnitten. Jetzt darf er umbrechen. */
   @media (max-width:560px){
