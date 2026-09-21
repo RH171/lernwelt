@@ -93,6 +93,63 @@ export async function ausweisGueltig(request, geheim, env) {
   return true;
 }
 
+/* ===========================================================================
+   Wer sitzt da eigentlich? (21.09.2026)
+
+   Denny: "Ich glaube, wenn ich in der leeren Welt der Kinder drin bin mit
+   meinem Passwort, wird die Anwesenheit getrackt. Deswegen haben sie heute
+   auch Zeit verbucht, aber ohne Aktionen. Das macht natuerlich keinen Sinn."
+
+   Genau so war es: lernstand.js bestimmt das Kind aus dem PFAD - wer /helena/
+   oeffnet, pulst als Helena, egal wer davorsitzt. Belegt am selben Tag: Um
+   17:23 Uhr hatte Helena "keine Spur", um 19:35 Uhr 17:30-19:45 - dazwischen
+   hat Denny ihre Seite angesehen.
+
+   Der Server kann das nur unterscheiden, wenn die ANMELDUNG eine Spur
+   hinterlaesst. Wer mit dem Hauptschluessel oder dem Eltern-Code in einen
+   Kinderbereich geht, bekommt deshalb ein zweites, SIGNIERTES Cookie. Es
+   traegt nichts Geheimes - es sagt nur "hier war ein Erwachsener".
+
+   Warum signiert: Sonst koennte ein Kind es selbst setzen und damit
+   unsichtbar werden. Paul ist zehn und technikinteressiert; das ist kein
+   theoretischer Fall.
+
+   Was es bewirkt: KEINE Anwesenheit, KEINE Lernrunde. Der Puls selbst laeuft
+   weiter - er haelt das Ausrollen an, und auch Denny soll die Seite nicht
+   unter den Fingern getauscht bekommen.
+   =========================================================================== */
+const BESUCH_COOKIE = "lw_besuch";
+
+export async function besuchKennung(geheim) {
+  const bis = Date.now() + TAGE * 86400000;
+  return `${bis}.${await signieren("eltern:" + bis, geheim)}`;
+}
+
+export function besuchKopfzeile(kennung, kind) {
+  const grund = `${BESUCH_COOKIE}=${encodeURIComponent(kennung)}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+  if (OHNE_GEDAECHTNIS.includes(String(kind || "").toLowerCase())) return grund;
+  return `${grund}; Max-Age=${TAGE * 86400}`;
+}
+
+/* Die Kennung wieder wegnehmen - sobald sich jemand mit dem EIGENEN Code des
+   Bereichs anmeldet, sitzt dort wieder das Kind. Ohne diese Zeile bliebe ein
+   Geraet, auf dem Denny einmal mit dem Hauptschluessel war, dreissig Tage lang
+   unsichtbar - und das waere schlimmer als das Problem, das hier geloest wird. */
+export function besuchLoeschenKopfzeile() {
+  return `${BESUCH_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+}
+
+export async function besuchIstEltern(request, geheim) {
+  if (!geheim) return false;
+  const roh = request.headers.get("cookie") || "";
+  const treffer = roh.match(new RegExp("(?:^|;\\s*)" + BESUCH_COOKIE + "=([^;]+)"));
+  if (!treffer) return false;
+  const [bis, sig] = decodeURIComponent(treffer[1]).split(".");
+  if (!bis || !sig) return false;
+  if (Number(bis) < Date.now()) return false;
+  return gleich(sig, await signieren("eltern:" + Number(bis), geheim));
+}
+
 export const STICHTAG = "werkstatt:abmelde-stichtag";
 
 // Setzt den Stichtag auf jetzt - danach muss sich jedes Gerät neu anmelden.

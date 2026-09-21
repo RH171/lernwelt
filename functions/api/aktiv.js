@@ -12,7 +12,7 @@
 // davon gibt es am Tag nur begrenzt viele. Alle 3 Minuten reicht vollkommen -
 // wir wollen wissen, ob jemand spielt, nicht wo die Maus steht.
 
-import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer, brauchtAusweis, besuchIstEltern } from "./_riegel.js";
 import { anwesendVermerken, woVermerken } from "./_anwesend.js";
 
 const KINDER = ["paul", "leon", "helena"];
@@ -179,6 +179,19 @@ export async function onRequestPost(context) {
    * durchgehend da war. Nachschauen kostet nichts; geschrieben wird drinnen nur
    * bei einer wirklich neuen Viertelstunde.
    */
+  /* Sitzt hier ein Erwachsener? Dann wird NICHTS vermerkt - weder Anwesenheit
+     noch die Seite. Denny am 21.09.2026: "wenn ich in der leeren Welt der
+     Kinder drin bin mit meinem Passwort, wird die Anwesenheit getrackt ... Das
+     macht natuerlich keinen Sinn."
+     Der Puls oben bleibt bewusst stehen: Er haelt das Ausrollen an, und auch
+     Denny soll die Seite nicht unter den Fingern getauscht bekommen. */
+  let alsEltern = false;
+  try { alsEltern = await besuchIstEltern(request, geheimFuer(env, kind)); } catch (e) {}
+  if (alsEltern) {
+    const w0 = await wunschLesen(env);
+    return json(200, { ok: true, alsEltern: true, updateWartet: w0.da, updateWas: w0.was });
+  }
+
   try { await anwesendVermerken(env, kind, "lernwelt", Date.now(), offen); } catch (e) {}
 
   /* Und WORAN gesessen wird - Denny am 21.09.2026: "Was machen die Kids in der

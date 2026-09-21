@@ -6,7 +6,7 @@
 // Liegt im selben KV wie alles andere, unter eigenem Präfix "lernstand:".
 // Der Fortschritt unter "paul-blob" wird nicht berührt.
 
-import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer, brauchtAusweis, besuchIstEltern } from "./_riegel.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const RUNDEN = (kind) => "lernstand:" + kind;
@@ -34,6 +34,17 @@ export async function onRequestPost(context) {
   // GESCHUETZT aufgenommen wird, gilt auch fuer sie der Ausweis.
   if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  /* Sitzt hier ein Erwachsener, wird die Runde NICHT dem Kind gutgeschrieben.
+     Dieselbe Begruendung wie beim Puls (aktiv.js): Wer mit dem Hauptschluessel
+     in einem Kinderbereich unterwegs ist, hinterlaesst seit dem 21.09.2026
+     eine signierte Spur. Ohne das verbucht ein Blick von Denny Lernzeit fuer
+     das Kind - und verfaelscht genau die Zahl, die er lesen will.
+     Die Antwort sagt es ehrlich, statt "gespeichert" zu melden. */
+  try {
+    if (await besuchIstEltern(request, geheimFuer(env, kind)))
+      return json(200, { ok: true, alsEltern: true, gespeichert: false });
+  } catch (e) {}
 
   const runde = saeubern(daten.runde);
   if (!runde) return json(400, { ok: false, fehler: "Die Runde war unvollständig." });

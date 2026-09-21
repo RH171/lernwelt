@@ -2,7 +2,8 @@
 // Angenommen werden zwei Codes: der eigene der Seite und der Hauptschlüssel
 // MASTER_CODE (Regel im Skill rh171web, 21.09.2026).
 import { gleich, ausweisBauen, ausweisKopfzeile, ausweisGueltig, geheimFuer,
-         zuVieleFehlversuche, fehlversuchZaehlen, fehlversucheLoeschen } from "./_riegel.js";
+         zuVieleFehlversuche, fehlversuchZaehlen, fehlversucheLoeschen,
+         besuchKennung, besuchKopfzeile, besuchLoeschenKopfzeile } from "./_riegel.js";
 
 // Welches Kind meldet sich an? Steht als ?kind=leon in der Adresse bzw. im Auftrag.
 function kindAus(request, auftrag) {
@@ -58,17 +59,32 @@ export async function onRequestPost(context) {
 
   await fehlversucheLoeschen(request, env);
   const ausweis = await ausweisBauen(geheim);
+
+  /* Wer mit dem Hauptschluessel hereinkommt, hinterlaesst eine Spur - sonst
+     zaehlt sein Besuch als Anwesenheit des Kindes (Denny, 21.09.2026: "Das
+     macht natuerlich keinen Sinn"). Wer den EIGENEN Code des Bereichs nimmt,
+     bekommt die Spur ausdruecklich wieder weggenommen: Sonst bliebe ein
+     Geraet, auf dem einmal der Hauptschluessel benutzt wurde, dreissig Tage
+     lang unsichtbar.
+     Der Elternbereich selbst braucht das nicht - er pulst ohnehin nicht. */
+  const kindHier = kindAus(request, auftrag);
+  const kekse = [ausweisKopfzeile(ausweis, kindHier)];
+  if (haupt && !eigener && kindHier !== "eltern") {
+    kekse.push(besuchKopfzeile(await besuchKennung(geheim), kindHier));
+  } else if (eigener) {
+    kekse.push(besuchLoeschenKopfzeile());
+  }
   // Das Kind muss mit: Wie lange die Anmeldung liegen bleibt, haengt davon ab,
   // wer sich anmeldet. Pauls Bereich bekommt seit dem 16.09.2026 ein
   // Sitzungs-Cookie (siehe ausweisKopfzeile in _riegel.js).
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "set-cookie": ausweisKopfzeile(ausweis, kindAus(request, auftrag)),
-    },
+  /* Zwei Set-Cookie-Zeilen gehen nur ueber Headers - ein Objekt kann denselben
+     Schluessel nicht zweimal tragen. */
+  const kopf = new Headers({
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
   });
+  for (const k of kekse) kopf.append("set-cookie", k);
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: kopf });
 }
 
 function json(status, daten) {
