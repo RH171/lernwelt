@@ -93,6 +93,30 @@ export function notePruefen(roh) {
   n.datum = /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : new Date().toISOString().slice(0, 10);
   n.art = roh.art === "gross" ? "gross" : "klein";
   n.gewicht = Number(roh.gewicht) === 2 ? 2 : 1;
+
+  /* Die zentralen Tests sind KLEINE Leistungsnachweise - auch wenn sie sich
+     anfuehlen wie eine Schulaufgabe und obwohl der BET doppelt zaehlt. Denny
+     am 21.09.2026: "Nicht, dass diese auch mit hinzugefuegt wird, weil derzeit
+     stehen: drei Schriftliche und eine Projekt-Schulaufgabe, aber der BET
+     fliesst ja auch mit ein."
+
+     Waere er als "gross" eingetragen, haette Englisch fuenf grosse Nachweise
+     statt vier - und der Schnitt waere falsch. Das steht auch im Auftrag ans
+     Modell, aber eine Bitte im Auftrag ist keine Pruefung: Hier wird es
+     mechanisch richtiggestellt.
+
+     Quelle: KMS vom 18.06.2026 - "BET 7: verpflichtend am 01.10.26, doppelt
+     gewichteter kleiner LN", ebenso BMT 8/10; BDT 6 einfach; Vera 8
+     "verpflichtend (wird aber nie bewertet)". */
+  const ZENTRAL = /\b(bet|bmt|bdt|vera)\s*-?\s*\d*\b|jahrgangsstufentest|jahrgangsstufenarbeit|englischtest|mathematiktest|deutschtest/i;
+  if (ZENTRAL.test(n.anlass)) {
+    n.art = "klein";
+    n.zentral = true;
+    // BET und BMT zaehlen doppelt, BDT einfach. Steht etwas anderes im
+    // Anlass, bleibt es beim Vorgeschlagenen.
+    if (/\b(bet|bmt)\b|englischtest|mathematiktest/i.test(n.anlass)) n.gewicht = 2;
+    else if (/\bbdt\b|deutschtest/i.test(n.anlass)) n.gewicht = 1;
+  }
   n.quelle = ["heft", "eltern", "blatt"].includes(roh.quelle) ? roh.quelle : "eltern";
   n.sicher = roh.sicher === false ? false : true;
   n.id = String(roh.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 12) || neueId();
