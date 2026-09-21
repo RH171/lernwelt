@@ -27,11 +27,11 @@
 
   .top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .home{display:flex;align-items:center;gap:7px;text-decoration:none;background:var(--card);
-    border:1px solid var(--line);border-radius:14px;padding:9px 13px;min-height:44px;font-weight:700;
+    border:1px solid var(--line);border-radius:14px;padding:9px 13px;font-weight:700;
     font-size:14px;color:var(--ink);box-shadow:var(--shadow);}
   .home:hover{transform:translateY(-1px);}
   .title{font-family:var(--round);font-weight:800;font-size:19px;letter-spacing:-.01em;flex:1;text-align:center;}
-  .ibtn{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:9px 12px;min-height:44px;
+  .ibtn{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:9px 12px;
     font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;box-shadow:var(--shadow);font-family:var(--font);}
   .ibtn:hover{transform:translateY(-1px);}
   .ibtn:active{transform:translateY(0);}
@@ -95,11 +95,6 @@
   .sbox{flex:1;background:#f6f9fc;border:1px solid var(--line);border-radius:16px;padding:13px 6px;}
   .sbox .sv{font-family:var(--round);font-weight:800;font-size:22px;}
   .sbox .sl{color:var(--muted);font-size:12px;margin-top:3px;}
-  /* Zeile im Marktbericht, die auf die naechste Bonusrunde zeigt
-     (Paul, 14.09.2026, Meldung 4gq38rd3ts). */
-  .repbonus{background:linear-gradient(150deg,#fff6df,#ffe1ad);border:1px solid #f0cf95;
-    border-radius:16px;padding:12px 14px;margin:0 0 18px;font-size:14px;line-height:1.45;color:#7a5a1c;}
-  .repbonus b{font-family:var(--round);font-weight:800;}
   .hidden{display:none;}
 
   /* MARKT (begehbar, 11x7) */
@@ -134,99 +129,15 @@
   .item .ibody{flex:1;min-width:0;}
   .item .iname{font-family:var(--round);font-weight:800;font-size:15px;}
   .item .idesc{color:var(--muted);font-size:12.5px;margin-top:1px;line-height:1.3;}
-  .buy{border:none;border-radius:13px;padding:10px 14px;min-height:44px;font-family:var(--round);font-weight:800;font-size:14px;color:#fff;cursor:pointer;white-space:nowrap;flex:none;background:linear-gradient(150deg,var(--gold),var(--gold2));box-shadow:0 6px 14px rgba(231,154,26,.32);}
+  .buy{border:none;border-radius:13px;padding:10px 14px;font-family:var(--round);font-weight:800;font-size:14px;color:#fff;cursor:pointer;white-space:nowrap;flex:none;background:linear-gradient(150deg,var(--gold),var(--gold2));box-shadow:0 6px 14px rgba(231,154,26,.32);}
   .buy:disabled{background:#dfe3ec;color:#9aa1b2;box-shadow:none;cursor:default;}
   .buy.owned{background:#e9fbf2;color:var(--mathe2);box-shadow:none;cursor:default;}
   .buy.maxed{background:#eef2f8;color:var(--muted);box-shadow:none;cursor:default;}
-
-  /* ===== Waage zum Ausprobieren + Markt-Tagebuch (Pauls Wunsch, 08.09.2026) =====
-     Paul: "Wenn du die Gewichte erst auf die Waage legen und wieder wegnehmen
-     darfst, kannst du in Ruhe tuefteln, statt gleich raten zu muessen." */
-  .opts.wide{display:block;}
-  .ivscale .ivbeam{transition:transform .38s cubic-bezier(.3,1.1,.4,1);}
-  .ivscale .ivpan{transition:transform .38s cubic-bezier(.3,1.1,.4,1);}
-  .ivread{display:flex;align-items:baseline;justify-content:center;gap:9px;flex-wrap:wrap;
-    margin:2px 0 12px;font-family:var(--round);font-weight:800;font-size:21px;}
-  .ivread .ivstat{font-size:13.5px;font-weight:700;color:var(--muted);}
-  .ivread.level{color:var(--mathe2);}
-  .ivread.level .ivstat{color:var(--mathe2);}
-  .ivlbl{color:var(--muted);font-size:12.5px;font-weight:700;margin:10px 2px 6px;}
-  .ivon{display:flex;flex-wrap:wrap;gap:7px;min-height:48px;align-items:center;}
-  .ivon .ivnone{color:var(--muted);font-size:13px;}
-  .ivchip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;
-    border:2px solid #b6975f;border-radius:13px;background:#efe0c4;color:#5a4527;
-    font-family:var(--round);font-weight:800;font-size:15px;cursor:pointer;}
-  .ivchip:active{transform:scale(.95);}
-  .ivchip .ivx{font-size:13px;color:#8a6b45;}
-  .ivchip:disabled{opacity:.6;cursor:default;}
-  .ivgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .ivw{position:relative;min-height:52px;border:2px solid var(--line);background:#fff;border-radius:14px;
-    font-family:var(--round);font-weight:800;font-size:15px;color:var(--ink);cursor:pointer;padding:8px 3px;}
-  .ivw:active{transform:scale(.96);background:#f3f7ff;}
-  .ivw .ivcnt{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:11px;
-    background:var(--mathe);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 5px;}
-  .ivw:disabled{opacity:.4;cursor:default;}
-  .ivdone{margin-top:13px;width:100%;min-height:52px;border:none;border-radius:15px;padding:14px;
-    font-family:var(--round);font-weight:800;font-size:16px;color:#fff;cursor:pointer;
-    background:linear-gradient(150deg,var(--mathe),var(--mathe2));}
-  .ivdone:disabled{background:#e7ebf3;color:#8d94a6;cursor:default;}
-
-  .tg-row{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:6px;}
-  .tg-card{flex:1 1 calc(50% - 5px);min-width:120px;background:var(--card);border:1px solid var(--line);
-    border-radius:16px;padding:12px 11px;box-shadow:var(--shadow);}
-  .tg-v{font-family:var(--round);font-weight:800;font-size:20px;line-height:1.15;}
-  .tg-c{color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.3;}
-  .tg-e{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);
-    border-radius:15px;padding:10px 12px;margin-bottom:8px;}
-  .tg-emj{font-size:25px;flex:none;}
-  .tg-b{flex:1;min-width:0;}
-  .tg-t{font-family:var(--round);font-weight:800;font-size:14.5px;}
-  .tg-s{color:var(--muted);font-size:12px;margin-top:1px;}
-  .tg-leer{text-align:center;color:var(--muted);font-size:14px;padding:24px 12px;line-height:1.55;}
-
-  /* ===== Markttafel am Stand (Pauls Wunsch, 12.09.2026, Meldung zjqgkp3xmg) =====
-     Paul: "Am Stand haengt eine Tafel, auf der steht, wie viele Kunden du schon
-     bedient hast und welche Gewichte du zuletzt genau getroffen hast, damit du
-     siehst, wie viel Uebung du schon gesammelt hast."
-     Sie haengt UNTER den beiden grossen Knoepfen, nicht ueber ihnen: auf Pauls
-     iPhone (375x640) liegt "Kunden bedienen" schon heute nur 22 px ueber der
-     Kante - eine Tafel darueber haette ihn unter den Rand geschoben. */
-  .tafel{background:linear-gradient(160deg,#33503c,#25392c);border:3px solid #8a6b45;
-    border-radius:16px;padding:11px 13px 12px;margin:10px 0 0;box-shadow:var(--shadow);color:#eaf3ec;}
-  .tafel-k{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
-  .tafel-t{font-family:var(--round);font-weight:800;font-size:13px;letter-spacing:.08em;color:#b9d7c3;}
-  .tafel-z{display:flex;flex-wrap:wrap;gap:5px 15px;font-size:13px;font-weight:700;color:#d7e8dc;}
-  .tafel-z b{font-family:var(--round);font-size:17px;color:#fff;margin-right:2px;}
-  .tafel-l{font-size:12px;font-weight:700;color:#a4c3af;margin:10px 0 6px;letter-spacing:.02em;}
-  .tafel-g{display:flex;flex-wrap:wrap;gap:6px;}
-  .tafel-w{background:#e7d3ad;color:#4a3720;border:1px solid #b6975f;border-radius:9px;
-    padding:4px 10px;font-family:var(--round);font-weight:800;font-size:13.5px;}
-  .tafel-w.neu{background:linear-gradient(150deg,#fff4d6,#ffe6ad);border-color:#e0b463;}
-  .tafel-leer{font-size:12.5px;color:#a4c3af;font-weight:600;line-height:1.45;}
-
-  /* ===== Bonusrunde (Pauls Wunsch, 14.09.2026, Meldung 4gq38rd3ts) =====
-     Paul: "das bei jeden 100 kunde eine bonus runde kommt und man in 2 minuten
-     ganz viele taler bekommt ... es soll NICHT nur 12 aufgaben sein sondern
-     undendlich viele"
-     Die Uhr hier schenkt nur: zwei Minuten lang doppelte Taler. Sie nimmt
-     nichts weg, und ein Fehler kostet keine Sekunde - beim Lesen der
-     Erklaerung haelt sie sogar an. Ein Countdown, an dem etwas verfaellt,
-     gehoert nach den Bauregeln nicht in dieses Spiel. */
-  .bonusbar{display:flex;align-items:center;gap:9px;background:linear-gradient(150deg,#fff6df,#ffe1ad);
-    border:2px solid #f2c877;border-radius:16px;padding:9px 13px;margin-bottom:11px;box-shadow:var(--shadow);}
-  .bonusbar.hidden{display:none;}
-  .bb-e{font-size:22px;line-height:1;flex:none;}
-  .bb-t{flex:1;min-width:0;}
-  .bb-n{font-family:var(--round);font-weight:800;font-size:14px;color:#8a5b12;letter-spacing:.05em;}
-  .bb-i{font-size:12px;font-weight:700;color:#a2741f;margin-top:1px;}
-  .bb-u{font-family:var(--round);font-weight:800;font-size:21px;color:#8a5b12;background:#fff;
-    border:1px solid #f2d488;border-radius:12px;padding:6px 11px;min-width:76px;text-align:center;flex:none;}
 
   canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60;}
   @media(max-width:420px){ .opt{font-size:17px;} .title{font-size:17px;} .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);} }
   @media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
 </style>
-<link rel="stylesheet" href="/beruehrung.css">
 </head>
 <body>
 <div class="wrap">
@@ -243,19 +154,6 @@
     <p>Bediene Kunden, verdiene <b>Taler</b> 🪙 und bau dir deinen eigenen Markt:<br>größere Kasse, Mitarbeiter, neue Stände und Deko!</p>
     <button class="big-btn" id="openBtn">Markt betreten 🏪</button>
     <div id="startRank" class="orderhint" style="margin-top:16px;"></div>
-  </section>
-
-  <!-- Marktbericht beim Oeffnen (Paul, 14.09.2026, Meldung 4gq38rd3ts) -->
-  <section id="reportScreen" class="hidden panel">
-    <div class="hero">📋</div>
-    <h2>Dein Marktbericht</h2>
-    <p id="reportText"></p>
-    <div class="summary">
-      <div class="sbox"><div class="sv" id="repTaler">0</div><div class="sl">🪙 Taler</div></div>
-      <div class="sbox"><div class="sv" id="repKunden">0</div><div class="sl">👥 Kunden bedient</div></div>
-    </div>
-    <div class="repbonus" id="repBonus"></div>
-    <button class="big-btn" id="reportBtn">Los geht’s! 🏪</button>
   </section>
 
   <section id="marketScreen" class="hidden">
@@ -282,23 +180,6 @@
       <button class="big-btn" id="serveBtn">🛒 Kunden bedienen</button>
       <button class="big-btn shopBtn" id="shopBtn">🏪 Shop</button>
     </div>
-    <div class="tafel" id="tafel"></div>
-    <button class="ghost-btn" id="diaryBtn">📓 Markt-Tagebuch</button>
-  </section>
-
-  <section id="diaryScreen" class="hidden">
-    <div class="rankbar">
-      <div class="rankrow">
-        <div class="rankemj" id="dRankEmj">📓</div>
-        <div class="ranktxt">
-          <div class="rankname">Markt-Tagebuch</div>
-          <div class="ranksub" id="dRankName">Markt-Lehrling</div>
-        </div>
-        <div class="wallet">🪙 <span id="dTaler">0</span></div>
-      </div>
-    </div>
-    <div id="diaryBody"></div>
-    <button class="ghost-btn" id="backFromDiary">◀ Zurück zum Markt</button>
   </section>
 
   <section id="shopScreen" class="hidden">
@@ -321,11 +202,6 @@
         <div class="wallet">🪙 <span id="pTaler">0</span></div>
       </div>
       <div class="xpbar"><div class="xpfill" id="xpFill"></div></div>
-    </div>
-    <div class="bonusbar hidden" id="bonusBar">
-      <div class="bb-e">🎉</div>
-      <div class="bb-t"><div class="bb-n">BONUSRUNDE</div><div class="bb-i" id="bonusInfo">doppelte Taler 🪙🪙</div></div>
-      <div class="bb-u" id="bonusUhr">2:00</div>
     </div>
     <div class="chips">
       <div class="chip"><div class="big" id="streakVal">0</div><div class="lbl">🔥 Serie</div></div>
@@ -358,17 +234,6 @@
     <button class="ghost-btn" id="againBtn">🛒 Gleich weiter bedienen</button>
     <button class="ghost-btn" id="trainBtn">🔁 Fehler üben (<span id="mistCount">0</span>)</button>
   </section>
-
-  <section id="bonusScreen" class="hidden panel">
-    <div class="hero" id="bonusHero">💯</div>
-    <h2 id="bonusTitle">Deine Bonusrunde!</h2>
-    <p id="bonusText"></p>
-    <div class="summary hidden" id="bonusSummary">
-      <div class="sbox"><div class="sv" id="bonusKundenV">0</div><div class="sl">👥 Kunden</div></div>
-      <div class="sbox"><div class="sv" id="bonusTalerV">+0</div><div class="sl">🪙 verdient</div></div>
-    </div>
-    <button class="big-btn" id="bonusBtn">Los geht’s! 🎉</button>
-  </section>
 </div>
 
 <canvas id="confetti"></canvas>
@@ -380,8 +245,7 @@
   /* HEILIG (bestehend): wiege-xp, wiege-best, wiege-served, wiege-mistakes, wiege-sound, wiege-games
      NEU: wiege-taler, wiege-shop, wiege-pos  (Sync sichert alle Keys automatisch) */
   var LS={ xp:"wiege-xp", best:"wiege-best", served:"wiege-served", mistakes:"wiege-mistakes",
-    sound:"wiege-sound", games:"wiege-games", taler:"wiege-taler", shop:"wiege-shop", pos:"wiege-pos",
-    rekorde:"wiege-rekorde", tagebuch:"wiege-tagebuch" };
+    sound:"wiege-sound", games:"wiege-games", taler:"wiege-taler", shop:"wiege-shop", pos:"wiege-pos" };
   function gi(k,d){ try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;} }
   function si(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
   function num(k){ var n=parseInt(gi(k,"0"),10); return isNaN(n)?0:n; }
@@ -548,460 +412,8 @@
         explain:"Eine Woche hat 7 Tage: "+per+" g · 7 = <b>"+correct+" g</b>."};
     }
   }
-  /* ================= Waage zum Ausprobieren (Paul, 08.09.2026) =================
-     Drei Wuensche aus seiner Meldung:
-       1. Gewichte auflegen UND wieder wegnehmen duerfen - in Ruhe tuefteln.
-       2. Kunden, die eine ganz genaue Menge wollen ("1 kg 250 g").
-       3. Ein Markt-Tagebuch mit seinen Wiege-Rekorden.
-     Die Waage neigt sich, solange es nicht stimmt. Fertig geht erst, wenn sie
-     gerade steht - hier kann man nichts falsch machen, nur tuefteln. */
-  /* Paul am 08.09.2026: "Bitte mache auch ganz kleine" - deshalb 5 g und 1 g.
-     Damit laesst sich jedes Gewicht bis aufs Gramm genau zusammenlegen. */
-  var STUECKE=[1000,500,200,100,50,20,10,5,1];
-  /* Beim Erraten eines Warengewichts bleiben die runden Stuecke unter sich:
-     "1007 g" waere zum Schaetzen nur aergerlich, nicht schwer. */
-  var GROB=[1000,500,200,100,50,20,10];
-  var MAXST=12;                      /* mehr passt weder aufs Bild noch in den Kopf */
-
-  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
-  function gLabel(g){
-    if(g>=1000) return (g%1000===0) ? (g/1000)+" kg" : Math.floor(g/1000)+" kg "+(g%1000)+" g";
-    return g+" g";
-  }
-  function summe(a){ var s=0; for(var i=0;i<a.length;i++) s+=a[i]; return s; }
-  function zerlegen(g){ var out=[],r=g;
-    for(var i=0;i<STUECKE.length;i++){ while(r>=STUECKE[i]){ out.push(STUECKE[i]); r-=STUECKE[i]; } }
-    return out; }
-  function zufallGewicht(minN,maxN){
-    var n=minN+Math.floor(Math.random()*(maxN-minN+1)),sum=0;
-    for(var i=0;i<n;i++){
-      var moeglich=[]; for(var k=0;k<GROB.length;k++) if(sum+GROB[k]<=2000) moeglich.push(GROB[k]);
-      if(!moeglich.length) break;
-      sum+=pick(moeglich);
-    }
-    return sum<20?60:sum;
-  }
-
-  /* ---- Rekorde und Tagebuch ---- */
-  function loadRek(){
-    var d={schwer:0,stuecke:0,dran:0,verdient:0,gelegt:0,auftraege:0,kunden:0,eilig:0,kopf:0,
-           um:0,bonusStufe:0};
-    try{ var s=JSON.parse(gi(LS.rekorde,"null"));
-      if(s&&typeof s==="object") for(var k in d) if(typeof s[k]==="number") d[k]=s[k];
-    }catch(e){}
-    /* Wer schon vorher gespielt hat, faengt nicht bei null an. */
-    if(!d.kunden) d.kunden=num(LS.served);
-    return d;
-  }
-  var rek=loadRek();
-  function saveRek(){ si(LS.rekorde, JSON.stringify(rek)); }
-  function loadDiary(){ try{ var a=JSON.parse(gi(LS.tagebuch,"[]")); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
-  function saveDiary(a){ si(LS.tagebuch, JSON.stringify(a.slice(-30))); }
-  function zwei(n){ return (n<10?"0":"")+n; }
-  function heute(){ var d=new Date();
-    return zwei(d.getDate())+"."+zwei(d.getMonth()+1)+"."+d.getFullYear(); }
-
-  /* ---- Die Waage selbst ---- */
-  function ivScaleHTML(){
-    return '<svg class="ivscale" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg"'
-      +' role="img" aria-label="Balkenwaage zum Ausprobieren">'
-      +'<rect x="110" y="200" width="100" height="14" rx="7" fill="#9a7b52"/>'
-      +'<rect x="152" y="60" width="16" height="145" rx="5" fill="#b8935f"/>'
-      +'<g class="ivbeam"><rect x="52" y="57" width="216" height="10" rx="5" fill="#c39a63"/></g>'
-      +'<circle cx="160" cy="62" r="9" fill="#8a6b45"/>'
-      +'<g class="ivpan ivpanL">'
-        +'<line x1="0" y1="0" x2="0" y2="46" stroke="#8a6b45" stroke-width="2"/>'
-        +'<path d="M-32 46 Q0 72 32 46" fill="none" stroke="#8a6b45" stroke-width="2.5"/>'
-        +'<ellipse cx="0" cy="46" rx="34" ry="8" fill="#e7d3ad" stroke="#b6975f" stroke-width="1.5"/>'
-        +'<text class="ivware" x="0" y="42" text-anchor="middle" font-size="34"></text>'
-        +'<text class="ivwunsch" x="0" y="66" text-anchor="middle" font-size="12.5" font-weight="800" fill="#5a4527"></text>'
-      +'</g>'
-      +'<g class="ivpan ivpanR">'
-        +'<line x1="0" y1="0" x2="0" y2="46" stroke="#8a6b45" stroke-width="2"/>'
-        +'<path d="M-32 46 Q0 72 32 46" fill="none" stroke="#8a6b45" stroke-width="2.5"/>'
-        +'<ellipse cx="0" cy="46" rx="34" ry="8" fill="#e7d3ad" stroke="#b6975f" stroke-width="1.5"/>'
-        +'<g class="ivstack"></g>'
-      +'</g></svg>';
-  }
-  function ivStackHTML(list){
-    var s=list.slice().sort(function(a,b){ return b-a; }),h="",zeig=Math.min(s.length,4);
-    for(var i=0;i<zeig;i++){ var y=39-i*12;
-      h+='<g transform="translate(0,'+y+')">'
-        +'<rect x="-25" y="-6.5" width="50" height="13" rx="3.5" fill="#d8be92" stroke="#b6975f" stroke-width="1"/>'
-        +'<text x="0" y="3.5" text-anchor="middle" font-size="9.5" font-weight="800" fill="#5a4527">'+gLabel(s[i])+'</text></g>';
-    }
-    if(s.length>zeig) h+='<text x="0" y="'+(39-zeig*12-3)+'" text-anchor="middle" font-size="9.5" font-weight="800" fill="#8a6b45">+'+(s.length-zeig)+' mehr</text>';
-    return h;
-  }
-  function ivPanelHTML(){
-    var h='<div class="ivread"><span class="ivsum">?</span><span class="ivstat">Leg ein Gewicht auf.</span></div>'
-      +'<div class="ivlbl">Auf der Waage – tippen nimmt wieder weg</div>'
-      +'<div class="ivon"></div>'
-      +'<div class="ivlbl">Gewichtsstücke – tippen legt auf</div>'
-      +'<div class="ivgrid">';
-    for(var i=0;i<STUECKE.length;i++) h+='<button type="button" class="ivw" data-w="'+STUECKE[i]+'">'+gLabel(STUECKE[i])+'</button>';
-    return h+'</div><button type="button" class="ivdone" disabled>Die Waage steht noch schief</button>';
-  }
-  function ivFind(){
-    var w=el.work,o=el.opts;
-    return { beam:w.querySelector(".ivbeam"), panL:w.querySelector(".ivpanL"), panR:w.querySelector(".ivpanR"),
-      ware:w.querySelector(".ivware"), wunsch:w.querySelector(".ivwunsch"), stack:w.querySelector(".ivstack"),
-      read:o.querySelector(".ivread"), sum:o.querySelector(".ivsum"), stat:o.querySelector(".ivstat"),
-      on:o.querySelector(".ivon"), grid:o.querySelector(".ivgrid"), done:o.querySelector(".ivdone") };
-  }
-  function ivRender(){
-    var d=ivFind(); if(!d.beam) return;
-    var sum=summe(cur._legt), diff=sum-cur.ziel, leer=cur._legt.length===0;
-
-    /* Neigung: klein anfangen, aber gleich sichtbar - 10 g darf man sehen. */
-    var t=0;
-    if(diff!==0) t=(diff>0?1:-1)*12*Math.min(1,Math.sqrt(Math.abs(diff)/400));
-    var rad=t*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad);
-    d.beam.setAttribute("transform","rotate("+t.toFixed(2)+",160,62)");
-    d.panL.setAttribute("transform","translate("+(160-88*cs).toFixed(1)+","+(62-88*sn).toFixed(1)+")");
-    d.panR.setAttribute("transform","translate("+(160+88*cs).toFixed(1)+","+(62+88*sn).toFixed(1)+")");
-    d.ware.textContent=cur.panLinks||"";
-    /* panZeigt schlaegt panLabel: der Mitdenk-Kunde nennt seine Menge nur in
-       Worten, auf der Schale steht ein Denk-Gesicht statt der Zahl. */
-    d.wunsch.textContent=cur.geheim?"?":(cur.panZeigt!=null?cur.panZeigt:(cur.panLabel||""));
-    d.stack.innerHTML=ivStackHTML(cur._legt);
-
-    /* Gefragt, ob die Waage die Summe anzeigen soll, hat Paul am 08.09.2026
-       geantwortet: "Selber mitrechnen". Also steht hier ein Fragezeichen,
-       solange getueftelt wird - die Zahl kommt erst, wenn die Waage steht. */
-    var gerade=(diff===0&&!leer);
-    d.sum.textContent=gerade?gLabel(sum):"?";
-    var stat;
-    if(leer) stat=cur.geheim?"Leg los und probier aus!":"Leg Gewichte auf, bis es passt.";
-    else if(diff<0) stat=cur.geheim?"Die Ware ist noch schwerer ⬇️":"Noch zu leicht ⬇️";
-    else if(diff>0) stat=cur.geheim?"Zu viel – die Ware ist leichter ⬆️":"Zu schwer ⬆️";
-    else stat="Die Waage steht gerade! ⚖️";
-    d.stat.textContent=stat;
-    d.read.className=gerade?"ivread level":"ivread";
-
-    var h="";
-    if(leer) h='<span class="ivnone">Noch nichts drauf – such dir ein Stück aus.</span>';
-    else { var s=cur._legt;
-      for(var i=0;i<s.length;i++) h+='<button type="button" class="ivchip" data-off="'+i+'"'
-        +(cur._fertig?" disabled":"")+'>'+gLabel(s[i])+' <span class="ivx">✕</span></button>';
-    }
-    d.on.innerHTML=h;
-    if(!cur._fertig) d.on.querySelectorAll(".ivchip").forEach(function(c){
-      c.addEventListener("click",function(){ ivAb(parseInt(c.getAttribute("data-off"),10)); }); });
-
-    var voll=cur._legt.length>=MAXST;
-    d.grid.querySelectorAll(".ivw").forEach(function(b){
-      var w=parseInt(b.getAttribute("data-w"),10),n=0;
-      for(var i=0;i<cur._legt.length;i++) if(cur._legt[i]===w) n++;
-      var bad=b.querySelector(".ivcnt");
-      if(n>0){ if(!bad){ bad=document.createElement("span"); bad.className="ivcnt"; b.appendChild(bad); } bad.textContent=n; }
-      else if(bad) bad.parentNode.removeChild(bad);
-      b.disabled=cur._fertig||voll;
-    });
-    if(voll&&!gerade&&!cur._fertig) d.stat.textContent = diff<0
-      ? "Voller geht die Waage nicht – tausch kleine Stücke gegen ein großes."
-      : "Voller geht die Waage nicht – nimm etwas wieder runter.";
-
-    d.done.disabled=!gerade||cur._fertig;
-    d.done.textContent=gerade?"Passt! Kunde bedienen ✓":"Die Waage steht noch schief";
-  }
-  function ivAuf(w){
-    if(cur._fertig||cur._legt.length>=MAXST) return;
-    cur._legt.push(w); cur._legt.sort(function(a,b){ return b-a; });
-    sClick(); ivRender();
-  }
-  function ivAb(i){
-    if(cur._fertig||i<0||i>=cur._legt.length) return;
-    cur._legt.splice(i,1); cur._abgenommen++;
-    tone(420,.08,0,"triangle",.1); ivRender();
-  }
-  function ivBind(){
-    var d=ivFind();
-    d.grid.querySelectorAll(".ivw").forEach(function(b){
-      b.addEventListener("click",function(){ ivAuf(parseInt(b.getAttribute("data-w"),10)); }); });
-    d.done.addEventListener("click",ivFertig);
-  }
-  function ivFertig(){
-    if(cur._fertig) return;
-    if(summe(cur._legt)!==cur.ziel||!cur._legt.length) return;   /* Knopf ist sonst aus */
-    /* Der Umentscheider meldet sich genau jetzt - im Moment, in dem Paul
-       glaubt, fertig zu sein. Genau das hat er sich gewuenscht. */
-    if(cur.um&&!cur._umDurch){ ivUmentscheiden(); return; }
-    cur._fertig=true; ivRender();
-    try{ window.lernstand && window.lernstand.antwort(true, "gewichte legen"); }catch(e){}
-    ivBuchen(); onCorrect();
-  }
-  /* "Nicht aufgegeben" heisst hier: es ging nicht auf Anhieb auf, ein Stueck
-     musste wieder runter - und Paul ist trotzdem drangeblieben. */
-  function ivBuchen(){
-    /* "Drangeblieben" heisst: es ging nicht auf Anhieb auf. Beim Umentscheider
-       zaehlt darum nur, was VOR seinem Sinneswandel passiert ist - hinterher
-       muss bei "250 g weniger" ja jeder etwas abnehmen. */
-    var n=cur._legt.length;
-    var dran=(cur._umDurch ? (cur._dranSchon?1:0) : (cur._abgenommen>0?1:0));
-    rek.auftraege++; rek.gelegt+=n;
-    /* Nach der KUNDENART zaehlen, nicht nach dem Zuschlag: seit es die
-       Mitdenk-Kunden gibt, haben zwei Sorten einen Bonus, und "eilige Kunden
-       geschafft" im Tagebuch soll weiter nur die eiligen meinen. */
-    if(cur.kind==="eilig") rek.eilig++;
-    if(cur.kind==="kopf") rek.kopf++;
-    if(cur.kind==="umdenk") rek.um++;
-    if(cur.ziel>rek.schwer) rek.schwer=cur.ziel;
-    if(n>rek.stuecke) rek.stuecke=n;
-    if(dran) rek.dran++;
-    saveRek();
-    var d=loadDiary();
-    d.push({d:heute(), t:cur.panLabel||gLabel(cur.ziel), g:cur.ziel, n:n, dran:dran,
-            eil:cur.kind==="eilig"?1:0, kop:cur.kind==="kopf"?1:0,
-            um:cur.kind==="umdenk"?1:0, e:cur.panLinks||"⚖️"});
-    saveDiary(d);
-    /* Woran sich der naechste "200 g mehr als eben"-Kunde erinnert. */
-    letzteWiegung=cur.ziel;
-  }
-
-  /* ---- Eilige Kunden: halbe Kilos, Kilo und Gramm zusammendenken ----
-     Paul am 08.09.2026: "Wenn manche Kunden 1,5 kg oder 250 g wollen, musst du
-     Gramm und Kilo zusammendenken - und dafuer gibt es extra viele Taler."
-     Eilig heisst hier NUR: mehr Taler. Keine Uhr, nichts laeuft ab. Druck ueber
-     Verlustangst gehoert nicht in dieses Spiel; die Belohnung kommt hinterher. */
-  var EIL_ZUSCHLAG=3;
-  var EILIG=[
-    {l:"0,25 kg",g:250},{l:"0,5 kg",g:500},{l:"0,75 kg",g:750},{l:"0,1 kg",g:100},
-    {l:"0,125 kg",g:125},{l:"0,375 kg",g:375},{l:"0,6 kg",g:600},{l:"0,8 kg",g:800},
-    {l:"1,5 kg",g:1500},{l:"1,25 kg",g:1250},{l:"1,75 kg",g:1750},{l:"1,05 kg",g:1050},
-    {l:"1,1 kg",g:1100},{l:"2,5 kg",g:2500},{l:"2,25 kg",g:2250},{l:"1,2 kg",g:1200},
-    {l:"250 g",g:250},{l:"750 g",g:750},{l:"1250 g",g:1250},{l:"1500 g",g:1500},
-    {l:"1750 g",g:1750},{l:"2500 g",g:2500},{l:"125 g",g:125},{l:"375 g",g:375},
-    {l:"600 g",g:600},{l:"1100 g",g:1100},{l:"1050 g",g:1050},{l:"2250 g",g:2250}
-  ];
-  var EIL_GRUND=["Mein Bus f\u00e4hrt gleich","Ich muss zum Zug","Meine Suppe kocht schon",
-    "Ich werde erwartet","Der Kuchen muss in den Ofen","Draussen wartet mein Hund"];
-  function genEilig(){
-    var g=pick(GOODS), e=pick(EILIG);
-    return {kind:"eilig", mode:"waage", ziel:e.g, panLinks:g, panLabel:e.l, geheim:false, work:"",
-      bonus:EIL_ZUSCHLAG, bonusText:"Eil-Zuschlag \u23f1\ufe0f",
-      bubble:"\u23f1\ufe0f "+pick(EIL_GRUND)+"! Schnell genau "+e.l+" "+g
-            +" \u2013 daf\u00fcr zahle ich extra Taler. Lass dir ruhig Zeit beim Legen.",
-      speak:"Ich habe es eilig. Bitte genau "+e.l+". Daf\u00fcr gibt es extra Taler.",
-      explain:"<b>"+e.l+" sind "+e.g+" g</b> \u2013 zum Beispiel "+zerlegen(e.g).map(gLabel).join(" + ")+"."};
-  }
-
-  /* ---- Die beiden neuen Kundentypen ---- */
-  function genErwiegen(){
-    var g=pick(GOODS), ziel=zufallGewicht(2,4);
-    return {kind:"erwiegen", mode:"waage", ziel:ziel, panLinks:g, panLabel:"", geheim:true, work:"",
-      bubble:"Wie schwer ist meine Ware "+g+"? Leg Gewichte auf, bis die Waage gerade steht!",
-      speak:"Wie schwer ist meine Ware? Leg Gewichtsstücke auf, bis die Waage gerade steht.",
-      explain:"Die Ware wiegt <b>"+gLabel(ziel)+"</b> – zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
-  }
-  /* Kleine Mengen, fuer die es die 5-g- und 1-g-Stuecke wirklich braucht.
-     Jede geht mit hoechstens fuenf Stuecken auf - nachgerechnet, nicht geraten. */
-  var FEIN=[3,6,7,8,12,13,16,21,26,31,35,36,45,55,56,61,66,71,75,76,85,86,91,95,96];
-  var FEINGUT=["\ud83e\uddc2","\ud83c\udf36\ufe0f","\ud83c\udf6b","\u2615","\ud83e\uded8","\ud83e\uddc4","\ud83c\udf3f"];
-  function genWunsch(){
-    var g=pick(GOODS), r=Math.random(), ziel, txt;
-    if(r<0.32){ var kg=1+Math.floor(Math.random()*2), rest=pick([50,100,150,200,250,300,350,500,750]);
-      ziel=kg*1000+rest; txt=kg+" kg "+rest+" g"; }
-    else if(r<0.55){ var f=pick([{l:"¼ kg",g:250},{l:"½ kg",g:500},{l:"¾ kg",g:750},{l:"1½ kg",g:1500}]);
-      ziel=f.g; txt=f.l; }
-    else if(r<0.78){ ziel=pick(FEIN); txt=ziel+" g"; g=pick(FEINGUT); }
-    else { ziel=zufallGewicht(2,4); txt=ziel+" g"; }
-    return {kind:"wunsch", mode:"waage", ziel:ziel, panLinks:g, panLabel:txt, geheim:false, work:"",
-      bubble:"Ich möchte genau "+txt+" "+g+" – stell mir die Gewichte dafür ein!",
-      speak:"Ich möchte genau "+txt+". Stell mir die Gewichte dafür ein.",
-      explain:"<b>"+txt+" sind "+ziel+" g</b> – zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
-  }
-
-  /* ============ Mitdenk-Kunden (Paul, 12.09.2026, Meldung zjqgkp3xmg) ==========
-     Paul: "Manche Kunden sagen nur 'ein halbes Kilo Aepfel' oder '200 g mehr
-     als eben', da musst du selbst mitdenken statt nur abzulesen - und diese
-     Kunden geben mehr Taler."
-
-     Zwei Sorten Kunde:
-       a) bestellt in WORTEN - keine Ziffer zum Ablesen, erst umrechnen.
-       b) bestellt im VERGLEICH - "200 g mehr als eben".
-
-     "Eben" heisst hier immer: das Gewicht, das zuletzt an dieser Waage
-     gestimmt hat, und der Satz sagt es ausdruecklich dazu ("als das, was du
-     gerade eben gewogen hast"). Damit faellt die Frage weg, ob der Kunde
-     davor oder die letzte Wiegung gemeint ist - in diesem Spiel ist beides
-     dasselbe, und Paul muss nicht raten, was gemeint war.
-
-     Auf der Waagschale steht bei diesen Kunden keine Zahl, sondern ein
-     Denk-Gesicht - sonst waere das Mitdenken wieder nur Ablesen. Schief
-     stehen darf die Waage weiter sichtbar: wer sich verrechnet, sieht es und
-     legt nach. Falsch machen kann man auch hier nichts, es gibt keine Uhr
-     und nichts geht verloren - der Zuschlag kommt hinterher obendrauf. */
-  var KOPF_ZUSCHLAG=4;
-  var letzteWiegung=null;
-
-  /* Alles in Worten, nichts zum Ablesen. Jede Menge geht mit hoechstens
-     vier Stuecken auf - nachgerechnet, nicht geschaetzt. */
-  var WORTMENGEN=[
-    {w:"ein halbes Kilo",g:500},{w:"ein viertel Kilo",g:250},
-    {w:"ein dreiviertel Kilo",g:750},{w:"ein ganzes Kilo",g:1000},
-    {w:"anderthalb Kilo",g:1500},{w:"zwei Kilo",g:2000},
-    {w:"zweieinhalb Kilo",g:2500},{w:"ein Kilo und ein viertel",g:1250},
-    {w:"ein halbes Kilo und hundert Gramm dazu",g:600},
-    {w:"dreihundert Gramm",g:300},{w:"zweihundertf\u00fcnfzig Gramm",g:250},
-    {w:"f\u00fcnfhundertf\u00fcnfzig Gramm",g:550},{w:"siebenhundert Gramm",g:700},
-    {w:"neunhundert Gramm",g:900},{w:"vierhundertzwanzig Gramm",g:420},
-    {w:"achtzig Gramm",g:80}
-  ];
-  var VERGLEICHE=[
-    {s:"200 g mehr als das, was du gerade eben gewogen hast", kurz:"200 g mehr als eben", f:function(a){return a+200;}},
-    {s:"100 g mehr als das, was du gerade eben gewogen hast", kurz:"100 g mehr als eben", f:function(a){return a+100;}},
-    {s:"250 g mehr als das, was du gerade eben gewogen hast", kurz:"250 g mehr als eben", f:function(a){return a+250;}},
-    {s:"50 g mehr als das, was du gerade eben gewogen hast",  kurz:"50 g mehr als eben",  f:function(a){return a+50;}},
-    {s:"100 g weniger als das, was du gerade eben gewogen hast", kurz:"100 g weniger als eben", f:function(a){return a-100;}},
-    {s:"200 g weniger als das, was du gerade eben gewogen hast", kurz:"200 g weniger als eben", f:function(a){return a-200;}},
-    {s:"50 g weniger als das, was du gerade eben gewogen hast",  kurz:"50 g weniger als eben",  f:function(a){return a-50;}},
-    {s:"das Doppelte von dem, was du gerade eben gewogen hast", kurz:"das Doppelte von eben", f:function(a){return a*2;}},
-    {s:"die H\u00e4lfte von dem, was du gerade eben gewogen hast", kurz:"die H\u00e4lfte von eben", f:function(a){return a/2;}}
-  ];
-  /* Ein Vergleich zaehlt nur, wenn er auch legbar bleibt: ganze Zahl, nicht
-     unter 20 g, nicht ueber 2500 g, auf 5 g glatt und mit den vorhandenen
-     Stuecken zu schaffen. Sonst faellt der Kunde auf eine Wort-Bestellung
-     zurueck - lieber eine leichtere Aufgabe als eine, die nicht aufgeht. */
-  function zielTaugt(z){
-    return z===Math.round(z) && z>=20 && z<=2500 && z%5===0 && zerlegen(z).length<=MAXST;
-  }
-  function vergleichTaugt(v,vor){ return zielTaugt(v.f(vor)); }
-  function genKopf(){
-    var g=pick(GOODS);
-    if(letzteWiegung){
-      var moeglich=VERGLEICHE.filter(function(v){ return vergleichTaugt(v,letzteWiegung); });
-      if(moeglich.length && Math.random()<0.5){
-        var v=pick(moeglich), vor=letzteWiegung, ziel=v.f(vor);
-        return {kind:"kopf", mode:"waage", ziel:ziel, panLinks:g, panLabel:v.kurz, panZeigt:"\ud83e\udd14",
-          geheim:false, work:"", bonus:KOPF_ZUSCHLAG, bonusText:"Mitdenk-Zuschlag \ud83e\udde0",
-          bubble:"\ud83e\udde0 Ich m\u00f6chte "+v.s+" \u2013 "+g+" bitte! Rechne selbst, daf\u00fcr zahle ich extra Taler.",
-          speak:"Ich m\u00f6chte "+v.s+". Rechne selbst, daf\u00fcr zahle ich extra Taler.",
-          explain:"Zuletzt hast du <b>"+gLabel(vor)+"</b> gewogen. <b>"+v.kurz+"</b> sind <b>"
-                 +gLabel(ziel)+"</b> \u2013 zum Beispiel "+zerlegen(ziel).map(gLabel).join(" + ")+"."};
-      }
-    }
-    var m=pick(WORTMENGEN);
-    return {kind:"kopf", mode:"waage", ziel:m.g, panLinks:g, panLabel:m.w, panZeigt:"\ud83e\udd14",
-      geheim:false, work:"", bonus:KOPF_ZUSCHLAG, bonusText:"Mitdenk-Zuschlag \ud83e\udde0",
-      bubble:"\ud83e\udde0 Ich h\u00e4tte gern "+m.w+" "+g+" \u2013 sag du mir, wie viel Gramm das sind!",
-      speak:"Ich h\u00e4tte gern "+m.w+". Sag du mir, wie viel Gramm das sind.",
-      explain:"<b>"+m.w+"</b> sind <b>"+m.g+" g</b> \u2013 zum Beispiel "+zerlegen(m.g).map(gLabel).join(" + ")+"."};
-  }
-
-  /* ====== Kunden, die sich umentscheiden (Paul, 14.09.2026, Meldung 4gq38rd3ts) ===
-     Paul: "Ein Kunde sagt 'Ach, mach doch lieber 250g mehr!' - dann musst du
-     dein Gewicht schnell anpassen, und das macht dich richtig flink im
-     Kopfrechnen mit Kilo und Gramm."
-
-     Er bestellt erst ganz normal. Erst wenn die Waage steht und Paul auf
-     "Passt! Kunde bedienen" tippt, faellt ihm etwas anderes ein. Die Stuecke
-     bleiben liegen - angepasst wird von dem, was schon drauf ist, und genau
-     darin steckt das Rechnen: von 800 g auf "250 g mehr" sind 1050 g.
-
-     Auf der Waagschale steht danach die AENDERUNG ("250 g mehr"), nie das
-     neue Gewicht - sonst waere es wieder nur Ablesen. Schiefstehen darf die
-     Waage weiter sichtbar. Verlieren kann man auch hier nichts: keine Uhr,
-     kein Abzug, der Zuschlag kommt hinterher obendrauf.
-
-     Grenze: nur einmal pro Kunde umentscheiden, und nur, wenn das neue
-     Gewicht auch wirklich legbar ist (zielTaugt). */
-  var UM_ZUSCHLAG=3;
-  var UM_START=[200,250,300,400,500,600,750,800,900,1000,1200,1250,1500];
-  var UMDENK=[
-    {kurz:"250 g mehr",   s:"Ach, mach doch lieber 250 g mehr!",                 f:function(a){return a+250;}},
-    {kurz:"200 g mehr",   s:"Halt, halt – leg lieber 200 g mehr drauf!",     f:function(a){return a+200;}},
-    {kurz:"100 g mehr",   s:"Oh, weißt du was: 100 g mehr bitte!",           f:function(a){return a+100;}},
-    {kurz:"50 g mehr",    s:"Ein klitzekleines bisschen mehr – 50 g mehr!",  f:function(a){return a+50;}},
-    {kurz:"500 g mehr",   s:"Ach, mach doch gleich ein halbes Kilo mehr draus!",  f:function(a){return a+500;}},
-    {kurz:"250 g weniger",s:"Moment – 250 g weniger reichen mir doch!",      f:function(a){return a-250;}},
-    {kurz:"100 g weniger",s:"Oje, das ist mir zu viel. Nimm 100 g weniger!",      f:function(a){return a-100;}},
-    {kurz:"50 g weniger", s:"Ein bisschen weniger bitte – 50 g weniger!",    f:function(a){return a-50;}},
-    {kurz:"das Doppelte", s:"Weißt du was? Nimm gleich das Doppelte!",       f:function(a){return a*2;}},
-    {kurz:"die Hälfte",s:"Oh, das ist zu viel für mich – nur die Hälfte, bitte!", f:function(a){return a/2;}},
-    {kurz:"aufs volle Kilo", s:"Mach doch bitte volle Kilo daraus – runde auf!",
-     f:function(a){ return Math.ceil((a+1)/1000)*1000; }}
-  ];
-  function genUmentscheider(){
-    var g=pick(GOODS), start=pick(UM_START);
-    var moeglich=UMDENK.filter(function(u){ return zielTaugt(u.f(start)); });
-    if(!moeglich.length) return genWunsch();       /* faellt nie an, aber sicher ist sicher */
-    var u=pick(moeglich), neu=u.f(start), txt=gLabel(start);
-    return {kind:"umdenk", mode:"waage", ziel:start, panLinks:g, panLabel:txt, geheim:false, work:"",
-      bonus:UM_ZUSCHLAG, bonusText:"Umentscheid-Zuschlag 🔄",
-      um:{kurz:u.kurz, s:u.s, ziel:neu, vorher:start},
-      bubble:"Ich hätte gern "+txt+" "+g+", bitte!",
-      speak:"Ich hätte gern "+txt+".",
-      explain:"<b>"+txt+"</b> sind "+start+" g – zum Beispiel "+zerlegen(start).map(gLabel).join(" + ")+"."};
-  }
-  function ivUmentscheiden(){
-    var u=cur.um;
-    cur._umDurch=true;
-    cur._dranSchon=cur._abgenommen>0;      /* was VOR dem Sinneswandel war */
-    cur.ziel=u.ziel;
-    cur.panZeigt=u.kurz;                   /* die Aenderung, nie das neue Gewicht */
-    cur.panLabel=gLabel(u.ziel);           /* nur fuers Tagebuch */
-    cur.bubble="🔄 "+u.s;
-    cur.speak=u.s;
-    cur.explain="Du hattest <b>"+gLabel(u.vorher)+"</b> liegen. <b>"+u.kurz+"</b> sind <b>"
-      +gLabel(u.ziel)+"</b> – zum Beispiel "+zerlegen(u.ziel).map(gLabel).join(" + ")+".";
-    el.bubble.textContent=cur.bubble;
-    el.fb.className="fb ok show";
-    el.fb.innerHTML="<b>Der Kunde überlegt es sich anders!</b> "+esc(u.s)
-      +" Rechne um und pass dein Gewicht an – was schon draufliegt, darf liegen bleiben.";
-    tone(523,.1,0,"triangle",.13); tone(660,.14,.1,"triangle",.13);
-    ivRender();
-  }
-
-  /* ---- Markt-Tagebuch ---- */
-  function tgCard(v,c){ return '<div class="tg-card"><div class="tg-v">'+esc(v)+'</div><div class="tg-c">'+c+'</div></div>'; }
-  function renderDiary(){
-    var rk=rankFor(num(LS.xp));
-    document.getElementById("dRankEmj").textContent=rk.cur.emj;
-    document.getElementById("dRankName").textContent=rk.cur.name;
-    document.getElementById("dTaler").textContent=wallet;
-    var h='<div class="tg-row">'
-      +tgCard(rek.kunden,"👥 Kunden bedient")
-      +tgCard(num(LS.games),"📅 Markttage geschafft")
-      +tgCard(rek.auftraege,"⚖️ Aufträge an der Waage")
-      +tgCard(rek.dran,"💪 nicht aufgegeben")
-      +tgCard(rek.schwer?gLabel(rek.schwer):"–","🏋️ schwerste Bestellung")
-      +tgCard(rek.stuecke||"–","🔢 meiste Gewichtsstücke auf einmal")
-      +tgCard(rek.eilig,"⏱️ eilige Kunden geschafft")
-      +tgCard(rek.kopf,"🧠 selbst mitgedacht")
-      +tgCard(rek.um,"🔄 Kunden umentschieden")
-      +tgCard(num(LS.best),"🔥 längste Serie")
-      +'</div>';
-    h+='<div class="ivlbl">📓 Deine letzten Wiege-Aufträge</div>';
-    var d=loadDiary().slice().reverse();
-    if(!d.length){
-      h+='<div class="tg-leer">Hier ist noch nichts drin.<br>Bedien einen Kunden an der Waage –<br>dann schreibt sich dein Tagebuch von selbst. ⚖️</div>';
-    } else {
-      for(var i=0;i<d.length&&i<15;i++){ var e=d[i], n=e.n||0;
-        h+='<div class="tg-e"><div class="tg-emj">'+esc(e.e||"⚖️")+'</div><div class="tg-b">'
-          +'<div class="tg-t">'+esc(e.t)+(e.dran?" 💪":"")+(e.eil?" ⏱️":"")+(e.kop?" 🧠":"")+(e.um?" 🔄":"")+'</div>'
-          +'<div class="tg-s">'+esc(e.d)+' · '+n+' Gewichtsstück'+(n===1?"":"e")+(e.dran?' · drangeblieben':'')+'</div>'
-          +'</div></div>';
-      }
-      if(rek.dran>0) h+='<div class="tg-leer">💪 heißt: es ging nicht sofort auf – du hast ein Stück wieder runtergenommen und weitergetüftelt.</div>';
-    }
-    document.getElementById("diaryBody").innerHTML=h;
-  }
-
-  /* Pauls Wuensche kommen doppelt in den Topf - er hat ausdruecklich danach
-     gefragt. Zweimal derselbe Kunde hintereinander aber nicht.
-     genKopf seit 12.09.2026 (Meldung zjqgkp3xmg),
-     genUmentscheider seit 14.09.2026 (Meldung 4gq38rd3ts). */
-  var GENS=[genErwiegen,genWunsch,genEilig,genKopf,genUmentscheider,
-            genWaage,genUmrechnen,genOrdnen,genUeberschlag,
-            genErwiegen,genWunsch,genEilig,genKopf,genUmentscheider];
-  var letzterGen=null;
-  function newQuestion(){
-    var g=pick(GENS),schutz=0;
-    while(g===letzterGen&&schutz<8){ g=pick(GENS); schutz++; }
-    letzterGen=g; return g();
-  }
+  var GENS=[genWaage,genUmrechnen,genOrdnen,genUeberschlag];
+  function newQuestion(){ return pick(GENS)(); }
 
   /* ================= SHOP-Daten (GRÖSSER) ================= */
   var KASSE_MAX=10, KASSE_PRICES=[20,40,70,110,160,230,320,430,560]; /* Level 1->2 ... 9->10 */
@@ -1093,36 +505,7 @@
     document.getElementById("mIncome").textContent="+"+talerPerSale()+" 🪙 pro Kunde";
     document.getElementById("mTaler").textContent=wallet;
   }
-  /* ---- Markttafel am Stand (Paul, 12.09.2026, Meldung zjqgkp3xmg) ----
-     "Am Stand haengt eine Tafel, auf der steht, wie viele Kunden du schon
-     bedient hast und welche Gewichte du zuletzt genau getroffen hast, damit du
-     siehst, wie viel Uebung du schon gesammelt hast."
-     Rueckschau, keine Vorgabe: hier steht, was Paul geschafft HAT - kein Ziel,
-     das er noch erreichen muesste, und nichts, was verfallen koennte. */
-  function renderTafel(){
-    var t=document.getElementById("tafel"); if(!t) return;
-    var h='<div class="tafel-k"><span>\ud83d\udccb</span><span class="tafel-t">MARKTTAFEL</span></div>'
-      +'<div class="tafel-z">'
-      +'<span><b>'+rek.kunden+'</b> Kunden bedient</span>'
-      +'<span><b>'+rek.auftraege+'</b> mal gewogen</span>'
-      +(rek.dran?'<span><b>'+rek.dran+'</b> mal drangeblieben \ud83d\udcaa</span>':'')
-      +(rek.kopf?'<span><b>'+rek.kopf+'</b> mal mitgedacht \ud83e\udde0</span>':'')
-      +(rek.um?'<span><b>'+rek.um+'</b> mal umgestellt \ud83d\udd04</span>':'')
-      +'</div>'
-      +'<div class="tafel-l">ZULETZT GENAU GETROFFEN</div>';
-    var d=loadDiary().slice(-6).reverse();
-    if(!d.length){
-      h+='<div class="tafel-leer">Noch nichts an der Tafel. Bedien einen Kunden an der Waage \u2013 '
-        +'dann haengt hier dein erstes Gewicht. \u2696\ufe0f</div>';
-    } else {
-      h+='<div class="tafel-g">';
-      for(var i=0;i<d.length;i++)
-        h+='<span class="tafel-w'+(i===0?' neu':'')+'">'+esc(gLabel(d[i].g||0))+'</span>';
-      h+='</div>';
-    }
-    t.innerHTML=h;
-  }
-  function renderMarket(){ buildFixtures(); safePlayerCell(); ensurePlayer(); paintMarketHeader(); renderTafel(); }
+  function renderMarket(){ buildFixtures(); safePlayerCell(); ensurePlayer(); paintMarketHeader(); }
 
   document.querySelectorAll(".dbtn[data-dir]").forEach(function(b){
     b.addEventListener("click",function(){ var d=b.getAttribute("data-dir");
@@ -1200,9 +583,7 @@
   var el={
     start:document.getElementById("startScreen"), market:document.getElementById("marketScreen"),
     shop:document.getElementById("shopScreen"), play:document.getElementById("playScreen"),
-    end:document.getElementById("endScreen"), diary:document.getElementById("diaryScreen"),
-    bonus:document.getElementById("bonusScreen"),
-    report:document.getElementById("reportScreen"),
+    end:document.getElementById("endScreen"),
     rankEmj:document.getElementById("rankEmj"), rankName:document.getElementById("rankName"),
     rankSub:document.getElementById("rankSub"), xpFill:document.getElementById("xpFill"),
     streak:document.getElementById("streakVal"), earn:document.getElementById("earnVal"),
@@ -1212,99 +593,7 @@
     fb:document.getElementById("fb"), next:document.getElementById("nextBtn"),
     pTaler:document.getElementById("pTaler")
   };
-  function show(elm){ [el.start,el.market,el.shop,el.play,el.end,el.diary,el.bonus,el.report].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
-
-  /* ================= Bonusrunde (Paul, 14.09.2026, Meldung 4gq38rd3ts) =========
-     Paul: "das bei jeden 100 kunde eine bonus runde kommt und man in 2 minuten
-     ganz viele taler bekommt bei denn talern soll es das doppelte sein wie
-     sonst immer und es soll NICHT nur 12 aufgaben sein sondern undendlich viele"
-
-     Also: Bei jedem 100. bedienten Kunden kommt eine Runde ueber zwei Minuten,
-     ohne feste Kundenzahl - es geht weiter, solange die Zeit laeuft - und jeder
-     Kunde zahlt das Doppelte.
-
-     Paul hatte ich gefragt, was ein Verrechnen kosten soll. Gebaut ist die
-     Antwort, die zu den Bauregeln passt: gar nichts. Es geht einfach zum
-     naechsten Kunden, und waehrend die Erklaerung dasteht, HAELT DIE UHR AN -
-     Lesen und Verstehen darf nie Zeit kosten. Es gibt nichts zu verlieren,
-     nur etwas zu gewinnen; Druck ueber Verlustangst gehoert nicht ins Spiel.
-
-     Die faellige Runde merkt sich rek.bonusStufe. Damit geht sie auch dann
-     nicht verloren, wenn der 100. Kunde beim Fehlerueben faellt oder Paul die
-     Seite zumacht - sie kommt dann beim naechsten Markttag. */
-  var BRUNDE_MS=120000, BRUNDE_ALLE=100;
-  var brAktiv=false, brVorbei=false, brRest=0, brUhr=null, brKunden=0, brTaler=0;
-  var brDanach=null, brSchirm="";   /* brSchirm: was der grosse Knopf gerade tut */
-
-  function brReif(){ return Math.floor(rek.kunden/BRUNDE_ALLE) > (rek.bonusStufe||0); }
-  function brMalen(){
-    var bar=document.getElementById("bonusBar");
-    if(!brAktiv){ bar.className="bonusbar hidden"; return; }
-    bar.className="bonusbar";
-    var sek=Math.ceil(brRest/1000), min=Math.floor(sek/60);
-    document.getElementById("bonusUhr").textContent=brVorbei?"Zeit um":(min+":"+zwei(sek-min*60));
-    document.getElementById("bonusInfo").textContent=brVorbei
-      ? "Diesen Kunden machst du noch fertig ✓"
-      : "doppelte Taler \ud83e\ude99\ud83e\ude99";
-  }
-  function brUhrAn(){
-    if(brUhr||brVorbei) return;
-    var zuletzt=Date.now();
-    brUhr=setInterval(function(){
-      var jetzt=Date.now(); brRest-=(jetzt-zuletzt); zuletzt=jetzt;
-      if(brRest<=0){ brRest=0; brVorbei=true; brUhrAus(); tone(523,.16,0,"triangle",.12); }
-      brMalen();
-    },250);
-    brMalen();
-  }
-  function brUhrAus(){ if(brUhr){ clearInterval(brUhr); brUhr=null; } }
-
-  function brAnsagen(danach){
-    brDanach=danach;
-    var n=Math.floor(rek.kunden/BRUNDE_ALLE)*BRUNDE_ALLE;
-    document.getElementById("bonusHero").textContent="\ud83d\udcaf";
-    document.getElementById("bonusTitle").textContent="Dein "+n+". Kunde!";
-    document.getElementById("bonusText").innerHTML=
-      "Der ganze Markt jubelt dir zu \u2013 jetzt kommt deine <b>Bonusrunde</b>:<br>"
-      +"<b>2 Minuten</b> lang so viele Kunden, wie du schaffst. Keine 8, keine 12 \u2013 "
-      +"es h\u00f6rt erst auf, wenn die Zeit um ist.<br>"
-      +"Und jeder Kunde zahlt <b>doppelt so viele Taler</b> wie sonst. \ud83e\ude99\ud83e\ude99<br>"
-      +"Verlieren kannst du nichts: Verrechnest du dich, geht es einfach weiter \u2013 "
-      +"und solange eine Erkl\u00e4rung dasteht, wartet die Uhr auf dich.";
-    document.getElementById("bonusSummary").className="summary hidden";
-    document.getElementById("bonusBtn").textContent="Los geht\u2019s! \ud83c\udf89";
-    brSchirm="ansage";
-    show(el.bonus); window.scrollTo(0,0); confetti(200);
-    sBuy();
-  }
-  function brStarten(){
-    rek.bonusStufe=Math.floor(rek.kunden/BRUNDE_ALLE); saveRek();
-    brAktiv=true; brVorbei=false; brKunden=0; brTaler=0; brRest=BRUNDE_MS;
-    brUhrAn();
-    cur=newQuestion(); renderQuestion(); show(el.play); window.scrollTo(0,0);
-  }
-  function brBeenden(){
-    brUhrAus(); brAktiv=false; brVorbei=false; brMalen();
-    document.getElementById("bonusHero").textContent=brKunden>=6?"\ud83c\udfc6":"\ud83c\udf89";
-    document.getElementById("bonusTitle").textContent="Bonusrunde vorbei!";
-    document.getElementById("bonusText").innerHTML= brKunden
-      ? "In zwei Minuten <b>"+brKunden+" Kunden</b> bedient \u2013 und jeder hat doppelt gezahlt. "
-        +"So flink im Kopf mit Kilo und Gramm: stark! \ud83d\udcaa"
-      : "Diesmal hat die Zeit nicht gereicht \u2013 macht gar nichts. "
-        +"Die n\u00e4chste Bonusrunde kommt bestimmt. \ud83d\ude42";
-    document.getElementById("bonusKundenV").textContent=brKunden;
-    document.getElementById("bonusTalerV").textContent="+"+brTaler;
-    document.getElementById("bonusSummary").className="summary";
-    document.getElementById("bonusBtn").textContent="Weiter am Stand \u2192";
-    brSchirm="ende";
-    show(el.bonus); window.scrollTo(0,0); confetti(brKunden>=6?220:140);
-  }
-  function brKnopfGedrueckt(){
-    if(brSchirm==="ansage"){ brSchirm=""; brStarten(); return; }
-    brSchirm=""; var f=brDanach; brDanach=null; if(f) f();
-  }
-  document.getElementById("bonusBtn").addEventListener("click",function(){
-    if(!brSchirm) return; sClick(); brKnopfGedrueckt(); });
+  function show(elm){ [el.start,el.market,el.shop,el.play,el.end].forEach(function(s){ s.classList.add("hidden"); }); elm.classList.remove("hidden"); }
 
   function paintRank(){
     var xp=num(LS.xp),rk=rankFor(xp);
@@ -1318,17 +607,11 @@
   function renderQuestion(){
     el.fb.className="fb"; el.fb.innerHTML=""; el.next.className="next";
     el.avatar.textContent=pick(CUSTOMERS); el.bubble.textContent=cur.bubble;
-    el.work.innerHTML=cur.work||""; el.opts.innerHTML=""; el.opts.className="opts"; el.orderHint.className="orderhint hidden";
-    malKopf();
-    if(brAktiv){ el.cust.textContent=(brKunden+1)+"/\u221e"; }
-    else { var totalN=trainQueue?trainQueue.total:DAY, curN=trainQueue?(trainQueue.total-trainQueue.list.length):(idx+1);
-      el.cust.textContent=curN+"/"+totalN; }
-    brMalen(); paintRank();
-    if(cur.mode==="waage"){
-      cur._legt=[]; cur._abgenommen=0; cur._fertig=false;
-      el.work.innerHTML=ivScaleHTML(); el.opts.className="opts wide";
-      el.opts.innerHTML=ivPanelHTML(); ivBind(); ivRender();
-    } else if(cur.mode==="choice"){
+    el.work.innerHTML=cur.work||""; el.opts.innerHTML=""; el.orderHint.className="orderhint hidden";
+    el.streak.textContent=streak; el.earn.textContent="+"+dayTaler; el.pTaler.textContent=wallet;
+    var totalN=trainQueue?trainQueue.total:DAY, curN=trainQueue?(trainQueue.total-trainQueue.list.length):(idx+1);
+    el.cust.textContent=curN+"/"+totalN; paintRank();
+    if(cur.mode==="choice"){
       cur.options.forEach(function(o){ var b=document.createElement("button"); b.className="opt"; b.textContent=o.label;
         b.addEventListener("click",function(){ answerChoice(b,o.correct); }); el.opts.appendChild(b); });
     } else {
@@ -1339,17 +622,9 @@
       el.opts.appendChild(box);
     }
   }
-  /* Eine Stelle fuer die Zahlen oben: in der Bonusrunde zeigt "heute" das,
-     was die Bonusrunde bringt, sonst den Markttag. */
-  function malKopf(){
-    el.streak.textContent=streak;
-    el.earn.textContent="+"+(brAktiv?brTaler:dayTaler);
-    el.pTaler.textContent=wallet;
-  }
   function lockChoices(){ var bs=el.opts.querySelectorAll(".opt"); for(var i=0;i<bs.length;i++) bs[i].disabled=true; }
   function answerChoice(btn,correct){
     lockChoices();
-    try{ window.lernstand && window.lernstand.antwort(!!correct, "gewichte umrechnen"); }catch(e){}
     if(correct){ btn.classList.add("right"); onCorrect(); }
     else { btn.classList.add("wrong"); var bs=el.opts.querySelectorAll(".opt");
       for(var i=0;i<bs.length;i++){ if(cur.options[i].correct) bs[i].classList.add("right"); } onWrong(); }
@@ -1363,66 +638,33 @@
   }
 
   function onCorrect(){
-    brUhrAus();                      /* die Uhr wartet, solange die Antwort dasteht */
     sRight(); sCoin(); streak++;
-    /* Eilige, Mitdenk- und Umentscheid-Kunden zahlen drauf - Pauls Wuensche vom
-       08.09., 12.09. und 14.09.2026. In der Bonusrunde verdoppelt sich alles,
-       der Zuschlag eingeschlossen. */
-    var extra=(cur&&cur.bonus)?cur.bonus:0, extraName=(cur&&cur.bonusText)||"Zuschlag";
-    var coins=talerPerSale()+extra;
-    if(brAktiv) coins*=2;
-    wallet+=coins; saveWallet();
-    if(brAktiv){ brTaler+=coins; brKunden++; } else { dayTaler+=coins; dayRight++; }
-    rek.verdient+=coins; rek.kunden++; saveRek();
-    var gain=12+(streak>=3?4:0); dayXp+=gain;
+    var coins=talerPerSale(); wallet+=coins; dayTaler+=coins; saveWallet();
+    var gain=12+(streak>=3?4:0); dayXp+=gain; dayRight++;
     si(LS.xp,String(num(LS.xp)+gain)); if(streak>num(LS.best)) si(LS.best,String(streak));
-    malKopf(); paintRank();
+    el.streak.textContent=streak; el.earn.textContent="+"+dayTaler; el.pTaler.textContent=wallet; paintRank();
     var msgs=["Super gewogen! 🎉","Genau richtig! 💪","Klasse gerechnet!","Perfekt! ⭐","Toll drangeblieben!"];
     el.fb.className="fb ok show";
-    el.fb.innerHTML="<b>"+pick(msgs)+"</b> +"+gain+" XP · +"+coins+" 🪙"
-      +(extra?" (davon "+extra+" "+extraName+")":"")
-      +(brAktiv?" · 🎉 doppelt!":"")
-      +(streak>=3?" · 🔥 Serie "+streak+"!":"");
+    el.fb.innerHTML="<b>"+pick(msgs)+"</b> +"+gain+" XP · +"+coins+" 🪙"+(streak>=3?" · 🔥 Serie "+streak+"!":"");
     confetti(streak>=5?150:90); showNext();
   }
   function onWrong(){
-    brUhrAus();                      /* Lesen und Verstehen kostet keine Sekunde */
     sWrong(); streak=0; el.streak.textContent=0;
     if(!trainQueue){ var m=getMist(); m.push({kind:cur.kind,bubble:cur.bubble,speak:cur.speak,work:cur.work,mode:cur.mode,options:cur.options,orderItems:cur.orderItems,target:cur.target,explain:cur.explain}); setMist(m); }
     el.fb.className="fb no show"; el.fb.innerHTML="Fast! Kein Problem – daraus lernen wir. "+cur.explain; showNext();
   }
-  function showNext(){
-    var txt;
-    if(brAktiv) txt = brVorbei ? "Bonusrunde beenden 🎉" : "Nächster Kunde →";
-    else if(!trainQueue && brReif()) txt="💯 Deine Bonusrunde! →";
-    else { var last=trainQueue?(trainQueue.list.length<=1):(idx>=DAY-1);
-      txt=last?"Fertig! ✓":"Nächster Kunde →"; }
-    el.next.textContent=txt; el.next.className="next show";
-  }
+  function showNext(){ var last=trainQueue?(trainQueue.list.length<=1):(idx>=DAY-1);
+    el.next.textContent=last?"Fertig! ✓":"Nächster Kunde →"; el.next.className="next show"; }
 
   el.next.addEventListener("click",function(){
     sClick();
-    if(brAktiv){
-      if(brVorbei){ brBeenden(); return; }
-      brUhrAn(); cur=newQuestion(); renderQuestion(); return;
-    }
     if(trainQueue){ trainQueue.list.shift(); if(trainQueue.list.length===0){ finishTraining(); return; } cur=trainQueue.list[0]; cur._clicks=[]; renderQuestion(); return; }
-    idx++;
-    if(brReif()){ brAnsagen(tagWeiter); return; }
-    tagWeiter();
+    idx++; if(idx>=DAY){ endDay(); return; } cur=newQuestion(); renderQuestion();
   });
-  /* Der Markttag geht dort weiter, wo er war - auch nach einer Bonusrunde. */
-  function tagWeiter(){
-    if(idx>=DAY){ endDay(); return; }
-    cur=newQuestion(); renderQuestion(); show(el.play); window.scrollTo(0,0);
-  }
 
   function startDay(){
     idx=0; dayRight=0; dayTaler=0; dayXp=0; streak=0; trainQueue=null;
-    /* Eine faellige Bonusrunde, die beim Fehlerueben oder nach dem Zumachen der
-       Seite liegengeblieben ist, kommt hier nach. */
-    if(brReif()){ brAnsagen(tagWeiter); return; }
-    tagWeiter();
+    cur=newQuestion(); renderQuestion(); show(el.play); window.scrollTo(0,0);
   }
   function endDay(){
     si(LS.served,String(num(LS.served)+DAY)); si(LS.games,String(num(LS.games)+1));
@@ -1455,45 +697,10 @@
   }
 
   function goMarket(){ renderMarket(); show(el.market); window.scrollTo(0,0); }
-
-  /* ===== Marktbericht beim Oeffnen (Paul, 14.09.2026, Meldung 4gq38rd3ts) =====
-     Paul: "ich will das du bevor ich in meinen markt komme einen kleinen
-     bericht bekomme zum beispiel du hast noch 142 taler und hast bis jetzt 167
-     kunden bedient". Auf die Frage, ob er von allein kommt oder auf Knopfdruck:
-     "wenn ich den markt öfnne". Auf die Frage, ob auch dastehen soll, wie weit
-     es bis zur naechsten Bonusrunde ist: "ja".
-
-     Reine Rueckschau: hier steht, was Paul geschafft HAT. Auch die Bonuszeile
-     ist ein Wegweiser und kein Ziel, das verfallen koennte - es geht nichts
-     verloren, wenn er heute aufhoert.
-
-     Nur beim Betreten von aussen, nicht bei jeder Rueckkehr aus Shop, Tagebuch
-     oder Markttag: sonst staende Paul nach jeder Runde wieder davor. */
-  function berichtZeigen(){
-    document.getElementById("repTaler").textContent=wallet;
-    document.getElementById("repKunden").textContent=rek.kunden;
-    document.getElementById("reportText").innerHTML = rek.kunden
-      /* "1 Kunden bedient" ist richtig - im Satz steht der Wenfall. */
-      ? "Du hast <b>"+wallet+" Taler</b> und hast bis jetzt <b>"+rek.kunden+" Kunden</b> bedient."
-      : "Dein Markt ist frisch aufgemacht – dein erster Kunde wartet schon. ⚖️";
-    var b=document.getElementById("repBonus");
-    if(brReif()){
-      b.innerHTML="🎉 <b>Deine Bonusrunde wartet auf dich!</b> Sie geht los, "
-        +"sobald du das nächste Mal Kunden bedienst.";
-    } else {
-      var fehlt=BRUNDE_ALLE-(rek.kunden%BRUNDE_ALLE);
-      b.innerHTML="💯 Noch <b>"+fehlt+(fehlt===1?" Kunde":" Kunden")
-        +"</b> bis zu deiner nächsten Bonusrunde.";
-    }
-    show(el.report); window.scrollTo(0,0);
-  }
-  document.getElementById("reportBtn").addEventListener("click",function(){ sClick(); goMarket(); });
-  document.getElementById("openBtn").addEventListener("click",function(){ sClick(); berichtZeigen(); });
+  document.getElementById("openBtn").addEventListener("click",function(){ sClick(); goMarket(); });
   document.getElementById("serveBtn").addEventListener("click",function(){ sClick(); startDay(); });
   document.getElementById("shopBtn").addEventListener("click",function(){ sClick(); renderShop(); show(el.shop); window.scrollTo(0,0); });
   document.getElementById("backToMarket").addEventListener("click",function(){ sClick(); goMarket(); });
-  document.getElementById("diaryBtn").addEventListener("click",function(){ sClick(); renderDiary(); show(el.diary); window.scrollTo(0,0); });
-  document.getElementById("backFromDiary").addEventListener("click",function(){ sClick(); goMarket(); });
   document.getElementById("toMarketBtn").addEventListener("click",function(){ sClick(); goMarket(); });
   document.getElementById("againBtn").addEventListener("click",function(){ sClick(); startDay(); });
   document.getElementById("trainBtn").addEventListener("click",function(){ sClick(); startTraining(); });
@@ -1505,6 +712,5 @@
 
 })();
 </script>
-<script src="/lernstand.js" defer></script>
 </body>
 </html>

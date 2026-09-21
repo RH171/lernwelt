@@ -86,7 +86,6 @@
   #flash { position:absolute; inset:0; z-index:8; pointer-events:none; opacity:0;
     background:#fff; transition:opacity .12s; }
 </style>
-<link rel="stylesheet" href="/beruehrung.css">
 </head>
 <body>
 <a href="index.html" id="hubHomeBtn" onclick="return hubGoHome(event)" aria-label="Zurueck zur Startseite">🏠 Startseite</a>
@@ -297,11 +296,7 @@ function buildLevel(){
 
     // Fragetor: drei Glühbirnen in verschiedenen Höhen, Energiebarriere
     const gx=x+60;
-    // Auch die Reihenfolge mischen, nicht nur die Höhen: Die richtige Antwort
-    // steht in den Daten immer an erster Stelle (correct:0). Vorher war sie
-    // damit IMMER die linke Birne - man konnte das Spiel gewinnen, ohne eine
-    // einzige Frage zu lesen.
-    const opts=qq.a.map((txt,idx)=>({txt,idx})).sort(()=>Math.random()-0.5);
+    const opts=qq.a.map((txt,idx)=>({txt,idx}));
     // Positionen der Birnen (verschiedene Höhen -> Doppelsprung nötig)
     const heights=[gy-90, gy-200, gy-310];
     // mische Höhen zufällig
@@ -701,11 +696,6 @@ function update(){
 
 function answerBulb(g,b){
   if(g.solved) return;
-  try{
-    var _stimmt = (b.idx===g.q.correct);
-    if((_stimmt || !b.wrong) && window.lernstand)
-      window.lernstand.antwort(_stimmt, "strom: " + String((g.q && g.q.topic) || "").toLowerCase());
-  }catch(e){}
   if(b.idx===g.q.correct){
     b.lit=true; g.solved=true; game.correct++; game.streak++;
     if(game.streak>SAVE.best){ SAVE.best=game.streak; }
@@ -859,6 +849,5 @@ loop();
 window.__STROM__={ buildLevel, RANKS, rankForLevel, QUESTIONS, SAVE, aabb };
 })();
 </script>
-<script src="/lernstand.js" defer></script>
 </body>
 </html>

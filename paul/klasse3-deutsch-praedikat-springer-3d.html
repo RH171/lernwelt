@@ -56,7 +56,6 @@
   .spur.falsch{border-color:#ef4444;background:#fee2e2;color:#b91c1c;}
   @media (max-width:560px){ .knopf{width:64px;height:64px;font-size:28px;} #knopf-sprung{width:78px;height:78px;} }
 </style>
-<link rel="stylesheet" href="/beruehrung.css">
 </head>
 <body>
 <a href="index.html" id="hubHomeBtn" onclick="return hubGoHome(event)" aria-label="Zurueck zur Startseite">🏠 Startseite</a>
@@ -290,8 +289,6 @@
       if(aktReihe.items[i].korrekt) richtig=aktReihe.items[i];
     }
     aktReihe.geloest = true;
-    try{ window.lernstand && window.lernstand.antwort(!!(gewaehlt && gewaehlt.korrekt), "praedikat finden",
-          String((gewaehlt&&gewaehlt.wort)||"nichts gewählt"), String((richtig&&richtig.wort)||"")); }catch(e){}
     if(gewaehlt && gewaehlt.korrekt){
       gewaehlt.gewonnen=true;
       punkte += 20; geloesteSaetze++;
@@ -648,6 +645,5 @@ function fxConfetti(){
   }catch(e){}
 }
 </script>
-<script src="/lernstand.js" defer></script>
 </body>
 </html>

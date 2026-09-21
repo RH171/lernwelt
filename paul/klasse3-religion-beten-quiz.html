@@ -130,7 +130,6 @@
   @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important;} }
   @media(max-width:480px){ h1{font-size:26px;} .qtext{font-size:20px;} }
 </style>
-<link rel="stylesheet" href="/beruehrung.css">
 </head>
 <body>
   <a class="home" id="homeBtn">🏠 Startseite</a>
@@ -419,7 +418,6 @@
 
   function choose(btn,opt,idx,item){
     if(locked) return; locked=true;
-    try{ window.lernstand && window.lernstand.antwort(!!opt.correct, "beten und gebete"); }catch(e){}
     const all=[...document.querySelectorAll(".ans")];
     all.forEach(a=>{ a.disabled=true; });
     const fb=$("feedback");
@@ -521,6 +519,5 @@
   paintStart();
 })();
 </script>
-<script src="/lernstand.js" defer></script>
 </body>
 </html>
