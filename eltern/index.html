@@ -350,7 +350,7 @@
       var b = document.createElement("button");
       b.textContent = k.charAt(0).toUpperCase()+k.slice(1) +
                       (DATEN[k] && DATEN[k].runden ? " (" + DATEN[k].runden + ")" : "");
-      b.addEventListener("click", function(){ KIND = k; reiterMalen(); malen(); meldungenMalen(); });
+      b.addEventListener("click", function(){ KIND = k; reiterMalen(); heuteMalen(); malen(); meldungenMalen(); });
       if (k === KIND) b.classList.add("an");
       kasten.appendChild(b);
     });
@@ -404,7 +404,12 @@
      anklickt (Denny: "Wer war heute da? Ist noch nicht zu sehen"). */
   function heuteMalen(){
     var kasten = $("heute");
-    if (kasten) kasten.innerHTML = anwesenheitUeberblick();
+    if (!kasten) return;
+    /* Nur solange kein Kind gewaehlt ist. Denny am 21.09.2026: "Wenn ich bei
+       den Kindern drin bin, brauche ich es natuerlich nicht mehr, weil ich es
+       schon auf der Startseite hatte." Beim Kind steht ohnehin sein eigenes
+       Anwesenheitsband. */
+    kasten.innerHTML = KIND ? "" : anwesenheitUeberblick();
   }
 
   function anwesenheitLaden(){
