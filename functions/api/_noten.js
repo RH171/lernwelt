@@ -26,6 +26,20 @@
 const SCHLUESSEL = (kind) => "noten:" + kind;
 const MAX = 400;
 
+/* Wie viele GROSSE Leistungsnachweise ein Fach im Schuljahr hat. Das
+   entscheidet ueber das Verhaeltnis der beiden Toepfe (GSO Art. 28) - und zwar
+   von Anfang an, nicht erst, wenn alle geschrieben sind. Ohne diese Zahl haette
+   Helena nach ihrer ersten Schulaufgabe ein 1:1 gesehen, obwohl in ihren
+   Faechern 2:1 gilt.
+
+   Quelle: "Festlegungen gemaess GSO: Zahl der grossen Leistungsnachweise ...
+   (KMS vom 18.06.26)", Stand 19.09.2026, Jahrgangsstufe 7 - liegt als Scan in
+   unterlagen/. Deutsch 3, Englisch 3 + 1 Projekt-Schulaufgabe, Mathematik 4,
+   Franzoesisch 3 + 1 muendliche. */
+export const SCHULAUFGABEN = {
+  helena: { deutsch: 3, englisch: 4, mathematik: 4, franzoesisch: 4 },
+};
+
 export const RECHNUNG = {
   // Grundschule: alles einfach, ein Topf.
   paul:   { schulaufgaben: false, quelle: "Schreiben der Viertklasslehrkräfte" },
@@ -97,7 +111,7 @@ const mittel = (liste) => {
 };
 
 /* Der Schnitt je Fach - und zwar so, wie die Schule ihn bildet. */
-export function fachSchnitt(kind, notenDesFachs) {
+export function fachSchnitt(kind, notenDesFachs, fach) {
   const regel = RECHNUNG[kind] || RECHNUNG.paul;
   const gross = notenDesFachs.filter((n) => n.art === "gross");
   const klein = notenDesFachs.filter((n) => n.art !== "gross");
@@ -108,8 +122,13 @@ export function fachSchnitt(kind, notenDesFachs) {
   }
   if (sK === null) return { schnitt: sG, gross: sG, klein: null, verhaeltnis: null };
 
-  // Zwei Schulaufgaben: 1:1. Mehr als zwei: 2:1 zugunsten der grossen.
-  const zwei = gross.length <= 2;
+  /* Zwei Schulaufgaben: 1:1. Mehr als zwei: 2:1 zugunsten der grossen.
+     Massgeblich ist die Zahl, die das Fach im ganzen Jahr HAT - nicht die,
+     die schon geschrieben ist. Sonst springt das Verhaeltnis mitten im Jahr um
+     und der Schnitt macht einen Satz, den niemand erklaeren kann. */
+  const soll = (SCHULAUFGABEN[kind] || {})[String(fach || "").toLowerCase()];
+  const zahl = soll || gross.length;
+  const zwei = zahl <= 2;
   const schnitt = zwei ? (sG + sK) / 2 : (2 * sG + sK) / 3;
   return { schnitt, gross: sG, klein: sK, verhaeltnis: zwei ? "1:1" : "2:1" };
 }
@@ -120,6 +139,7 @@ export function auswertung(kind, noten) {
   for (const n of noten) (faecher[n.fach] = faecher[n.fach] || []).push(n);
   return Object.keys(faecher).sort().map((fach) => {
     const liste = faecher[fach].slice().sort((a, b) => (a.datum < b.datum ? -1 : 1));
-    return { fach, noten: liste, ...fachSchnitt(kind, liste) };
+    return { fach, noten: liste, soll: (SCHULAUFGABEN[kind] || {})[fach] || null,
+             ...fachSchnitt(kind, liste, fach) };
   });
 }
