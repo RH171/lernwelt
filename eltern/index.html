@@ -185,9 +185,8 @@
   .ntab td{padding:11px 8px;border-top:1px solid var(--line);vertical-align:middle}
   .ntab .z{text-align:right;white-space:nowrap}
   .ntab .kl{color:var(--muted);font-size:13px}
-  .chip{display:inline-block;min-width:26px;min-height:26px;padding:3px 7px;border-radius:8px;
-        color:#fff;font:800 13px/1.35 var(--rund);text-align:center;margin:2px 3px 2px 0;
-        border:none;cursor:pointer}
+  .chip{display:inline-block;min-width:26px;padding:3px 7px;border-radius:8px;
+        color:#fff;font:800 13px/1.35 var(--rund);text-align:center;margin:2px 3px 2px 0}
   .chip em{font-style:normal;font-size:9.5px;opacity:.85;margin-left:1px}
   .chip.unsicher{box-shadow:inset 0 0 0 2px #fff, 0 0 0 2px #e05252}
   .nschnitt{font-family:var(--rund);font-size:19px;font-weight:800}
@@ -198,6 +197,10 @@
   .nhoch button.haupt{background:var(--akzent);border-color:var(--akzent);color:#fff}
   .nvorschlag{border:1px solid #f0dca8;background:#fff8e6;border-radius:12px;padding:12px 14px;margin-top:12px}
   .nvorschlag ul{margin:8px 0 10px;padding-left:18px;font-size:14px}
+  .nzeile{display:flex;align-items:center;justify-content:space-between;gap:12px;
+          padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+  .nzeile button{min-height:44px;padding:0 14px;border:1.5px solid var(--line);background:#fff;
+                 border-radius:10px;font:600 14px/1 var(--rund);color:#b91c1c;cursor:pointer}
   .nvorschlag li{margin-bottom:3px}
 </style>
 </head>
@@ -674,10 +677,13 @@
     var zeilen = faecher.map(function(f){
       var chips = f.noten.map(function(n){
         var t = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || "?");
-        return '<button class="chip' + (n.sicher === false ? ' unsicher' : '') + '" data-note="' + esc(n.id) + '"' +
+        /* Ein <span>, kein Knopf: Ein Tippziel muss 44 px hoch sein (WCAG 2.5.8),
+           und auf 26 px will niemand eine Note loeschen. Geaendert wird ueber
+           "Noten bearbeiten" darunter - dort ist jede Zeile gross genug. */
+        return '<span class="chip' + (n.sicher === false ? ' unsicher' : '') + '"' +
                ' style="background:' + (typeof n.note === "number" ? notenfarbe(n.note) : "#6b7280") + '"' +
                ' title="' + esc(n.anlass + " · " + kurzDatum(n.datum) + (n.sicher === false ? " · unsicher gelesen" : "")) + '">' +
-               esc(t) + (n.gewicht === 2 ? '<em>×2</em>' : '') + (n.art === "gross" ? '<em>SA</em>' : '') + '</button>';
+               esc(t) + (n.gewicht === 2 ? '<em>×2</em>' : '') + (n.art === "gross" ? '<em>SA</em>' : '') + '</span>';
       }).join("");
       var toepfe = "";
       if (f.verhaeltnis) toepfe = '<span class="ntoepfe">groß ' + komma(f.gross) + ' · klein ' + komma(f.klein) + ' · ' + f.verhaeltnis + '</span>';
@@ -698,7 +704,7 @@
       '<li><b>Zahl im Kästchen</b> = Note, <b>×2</b> = doppelt gewichtet</li>' +
       regel +
       '<li><b>Roter Rand</b> = unsicher gelesen, bitte nachsehen</li>' +
-      '<li><b>Antippen</b> löscht eine Note</li>' +
+      '<li><b>Ändern</b> geht unten über „Noten bearbeiten"</li>' +
       '</ul>' + notenHochladen() + '</div>';
   }
 
@@ -706,6 +712,7 @@
     return '<div class="nhoch">' +
       '<button class="haupt" id="n-blatt">📄 Notenstand hochladen</button>' +
       '<button id="n-neu">✏️ Note von Hand eintragen</button>' +
+      '<button id="n-bearbeiten">🗂 Noten bearbeiten</button>' +
       '</div><div id="n-arbeit"></div>' +
       '<input type="file" id="n-datei" accept="image/*,application/pdf" style="display:none">';
   }
@@ -715,8 +722,9 @@
      die es gleich nicht mehr gibt. */
   document.addEventListener("click", function(ev){
     var t = ev.target;
-    var chip = t.closest && t.closest(".chip[data-note]");
-    if (chip) return noteLoeschen(chip.getAttribute("data-note"));
+    var weg = t.closest && t.closest("[data-weg]");
+    if (weg) return noteLoeschen(weg.getAttribute("data-weg"));
+    if (t.id === "n-bearbeiten") return notenBearbeiten();
     if (t.id === "n-blatt"){ var f = $("n-datei"); if (f) f.click(); return; }
     if (t.id === "n-neu") return noteVonHand();
   });
@@ -738,6 +746,28 @@
         return notenLaden();
       })
       .catch(function(e){ notenMelde('<p class="unter" style="color:#b91c1c">' + esc(e.message) + '</p>'); });
+  }
+
+  /* Alle Noten des Kindes zum Durchsehen - jede Zeile mit einem Loeschknopf,
+     der mit dem Finger zu treffen ist. */
+  function notenBearbeiten(){
+    var d = (NOTEN || {})[KIND] || {};
+    var alle = [];
+    (d.faecher || []).forEach(function(f){ f.noten.forEach(function(n){ alle.push(n); }); });
+    if (!alle.length) return notenMelde('<p class="unter">Es sind noch keine Noten da.</p>');
+    alle.sort(function(a, b){ return a.datum < b.datum ? 1 : -1; });
+    var zeilen = alle.map(function(n){
+      var wert = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || "?");
+      return '<div class="nzeile"><span><b>' + esc(wert) + '</b> · ' +
+             esc(n.fach.charAt(0).toUpperCase() + n.fach.slice(1)) + ' · ' + esc(n.anlass) +
+             ' · ' + esc(kurzDatum(n.datum)) +
+             (n.art === "gross" ? ' · Schulaufgabe' : '') + (n.gewicht === 2 ? ' · doppelt' : '') +
+             (n.sicher === false ? ' · unsicher gelesen' : '') + '</span>' +
+             '<button data-weg="' + esc(n.id) + '">Löschen</button></div>';
+    }).join("");
+    notenMelde('<div class="nvorschlag" style="background:#fff;border-color:var(--line)">' +
+      '<b>Alle Noten von ' + esc(kindName(KIND)) + '</b>' + zeilen +
+      '<div class="nhoch" style="margin-top:10px"><button id="n-verwerfen">Fertig</button></div></div>');
   }
 
   function noteVonHand(){
