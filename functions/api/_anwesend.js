@@ -408,6 +408,27 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
       entfernt += wieviele;
     } catch (e) { probleme.push(q + ": Speicher nimmt nichts an"); }
   }
+  /* Die Spur "woran gesessen wurde" gehoert mit weg (21.09.2026). Wer einen
+     falschen Eintrag wegraeumt, will nicht, dass daneben weiter steht, welche
+     Seite offen war - bei Helena stand so noch "19:45 · Index" da, obwohl ihr
+     Band schon leer war. Geraeumt wird nur zusammen mit der Lernwelt-Quelle:
+     Das Quizduell traegt gar keine Seite bei. */
+  if (!quelle || quelle === "lernwelt") {
+    const woSchluessel = WO_SCHLUESSEL(k, MONAT(tag));
+    try {
+      const woMonat = woMonatLesen(await env.PAUL_KV.get(woSchluessel));
+      if (woMonat !== KAPUTT && woMonat[TAG_IM_MONAT(tag)]) {
+        delete woMonat[TAG_IM_MONAT(tag)];
+        if (Object.keys(woMonat).length) {
+          await env.PAUL_KV.put(woSchluessel, JSON.stringify(woMonat),
+                                { expirationTtl: HALTBAR_SEKUNDEN });
+        } else {
+          await env.PAUL_KV.delete(woSchluessel);
+        }
+      }
+    } catch (e) { probleme.push("Seiten: Speicher antwortet nicht"); }
+  }
+
   if (probleme.length && !entfernt) return { ok: false, fehler: probleme.join("; ") };
   return { ok: true, entfernt, unvollstaendig: probleme.length ? probleme.join("; ") : undefined };
 }
