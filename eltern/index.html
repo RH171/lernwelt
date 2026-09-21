@@ -60,17 +60,29 @@
   .tagzeile{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:8px}
   .tagname{font-size:12.5px;color:var(--muted);white-space:nowrap}
   .tagzeit{font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tagwerte{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tagwerte b{font-family:var(--rund);font-size:15px}
+  .tagje{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+  .tagje .probe{margin:0 3px 0 9px}
+  .tagje .probe:first-child{margin-left:0}
+  .tagspanne{grid-column:2/-1;margin:1px 0 9px 70px;color:var(--muted);font-size:12px;
+             font-variant-numeric:tabular-nums}
   .band{display:flex;gap:1px;min-width:0;height:13px;background:#f1f4f8;
         border-radius:4px;overflow:hidden;padding:2px}
   .band .stueck{flex:1 1 0;min-width:0;border-radius:1px;background:transparent}
   .band .stueck.lern{background:#2563eb}
   .band .stueck.duell{background:#f59e0b}
+  .band .stueck.beides{background:#12a35f}
   .probe{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px}
   .probe.lern{background:#2563eb}
   .probe.duell{background:#f59e0b}
+  .probe.beides{background:#12a35f}
   @media (max-width:430px){
     .tagzeile{grid-template-columns:52px minmax(0,1fr)}
     .tagzeit{grid-column:2;justify-self:end}
+    .tagwerte{grid-column:1/-1;text-align:left;margin-top:2px}
+    .tagje{display:inline;margin-left:8px}
+    .tagspanne{margin-left:0}
   }
   .zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
   .zahl{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:13px 14px}
@@ -445,11 +457,25 @@
   function bandMalen(tag){
     var s = "";
     for (var i = 0; i < 96; i++){
-      var art = tag.duell.indexOf(i) >= 0 ? " duell" : (tag.lernwelt.indexOf(i) >= 0 ? " lern" : "");
+      /* Drei Zustaende statt zwei: War jemand in derselben Viertelstunde in
+         beidem, hiess das Stueck bisher "duell" - und die Minuten sahen aus,
+         als muessten sie sich addieren. Paul war am 20.09.2026 195 Minuten in
+         der Lernwelt und 75 im Quizduell, zusammen aber 210: in 60 Minuten war
+         er in beidem. Genau das zeigt die dritte Farbe. */
+      var imDuell = tag.duell.indexOf(i) >= 0;
+      var imLern = tag.lernwelt.indexOf(i) >= 0;
+      var art = (imDuell && imLern) ? " beides" : (imDuell ? " duell" : (imLern ? " lern" : ""));
       s += '<i class="stueck' + art + '"></i>';
     }
     return '<div class="band" aria-hidden="true">' + s + '</div>';
   }
+
+  /* Minuten statt Viertelstunden. Denny am 21.09.2026: "sodass man sehen
+     wuerde, wie viel Zeit derjenige in der Lernwelt verbracht hat ... Ich
+     glaube, Minutenangaben wuerden reichen." Eine Viertelstunde, in der
+     mindestens ein Puls ankam, zaehlt als 15 Minuten Anwesenheit - das ist
+     weiterhin KEINE Lernzeit. */
+  function minuten(anzahl){ return anzahl * 15 + " min"; }
 
   /* Alle drei Kinder auf einen Blick, ueber den Reitern.
      Dennys freigegebener Wortlaut: "Im Elternbereich eine Zeile 'zuletzt
@@ -526,16 +552,26 @@
     }
 
     var zeilen = tage.map(function(t){
+      var lern = (t.lernwelt || []).length, duell = (t.duell || []).length;
+      var je = [];
+      if (lern) je.push('<i class="probe lern"></i>' + minuten(lern));
+      if (duell) je.push('<i class="probe duell"></i>' + minuten(duell));
       return '<div class="tagzeile"><span class="tagname">' + esc(tagName(t.tag)) + '</span>' +
-             bandMalen(t) + '<span class="tagzeit">' + esc(t.von) + '–' + esc(t.bis) + '</span></div>';
+             bandMalen(t) +
+             '<span class="tagwerte"><b>' + minuten(t.viertelstunden) + '</b>' +
+             '<span class="tagje">' + je.join(" ") + '</span></span></div>' +
+             '<div class="tagspanne">' + esc(t.von) + '–' + esc(t.bis) +
+             (t.amStueck === false ? ' · mit Pausen' : '') + '</div>';
     }).join("");
 
     return '<div class="karte"><h2>War ' + esc(kindName(KIND)) + ' da?</h2>' + kopf + luecke +
       (zeilen ? '<div class="bandliste">' + zeilen + '</div>' : '') +
       '<p class="unter" style="margin-top:10px">' +
-      '<i class="probe lern"></i> in der Lernwelt &nbsp; <i class="probe duell"></i> im Quizduell<br>' +
-      'Die Uhrzeiten sind der erste und der letzte Moment des Tages, nicht eine durchgehende Zeit – ' +
-      'wie lange wirklich, sagt die Zahl der Viertelstunden. Das ist <b>keine Lernzeit</b>, nur ob jemand ' +
+      '<i class="probe lern"></i> in der Lernwelt &nbsp; <i class="probe duell"></i> im Quizduell' +
+      ' &nbsp; <i class="probe beides"></i> in beidem<br>' +
+      'Die fette Zahl ist die Zeit des Tages zusammen; jede Viertelstunde zählt darin nur einmal, ' +
+      'auch wenn beides dabei war. Die Uhrzeiten darunter sind der erste und der letzte Moment – ' +
+      'nicht eine durchgehende Zeit. Das ist <b>keine Lernzeit</b>, nur ob jemand ' +
       'da war. Im Quizduell wird der Name am Spitznamen erkannt; wer sich anders nennt, taucht hier nicht auf.</p></div>';
   }
 
