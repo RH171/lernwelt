@@ -58,11 +58,9 @@
   .bet .bettext b{font-size:15.5px}
   .bet .bettext span{font-size:13px;color:var(--muted)}
   .bet .bettage{font:800 15px/1.2 var(--rund);color:#f59e0b;white-space:nowrap;text-align:right}
-  /* Dieselben Baender in zwei weiteren Farben: gruen fuer die naechsten Ferien,
-     violett fuer den naechsten Schultermin. Sie erben alles von .bet, damit es
-     auf dem Handy nicht auseinanderlaeuft - die @media-Regel unten greift mit. */
-  .bet.frei{border-left-color:var(--ok)}
-  .bet.frei .bettage{color:var(--ok)}
+  /* Das Band fuer den naechsten Schultermin erbt alles von .bet, damit es auf
+     dem Handy nicht auseinanderlaeuft - die @media-Regel unten greift mit. */
+  #ferienband{margin:0 0 10px}
   .bet.termin{border-left-color:var(--brand)}
   .bet.termin .bettage{color:var(--brand-ink)}
   .hauptwege{display:grid;gap:10px;margin:0 0 16px}
@@ -412,11 +410,10 @@
        sieht". Zwei Zeilen, mehr nicht - alles Weitere steht in termine.html.
        Beide Baender bleiben leer und unsichtbar, solange nichts geladen ist;
        eine leere Zeile ist besser als eine falsche. -->
-  <a class="bet frei" href="termine.html" id="ferien-band" style="display:none">
-    <span class="betic">🏖️</span>
-    <span class="bettext"><b id="ferien-name"></b><span id="ferien-wann"></span></span>
-    <span class="bettage" id="ferien-tage"></span>
-  </a>
+  <!-- Die Ferien zeichnet /ferienband.js - dasselbe Band haben Paul und Leon
+       (Denny, 21.09.2026). Die Daten kommen aus /ferien.json und gelten fuer
+       ganz Bayern. -->
+  <div id="ferienband"></div>
   <a class="bet termin" href="termine.html" id="termin-band" style="display:none">
     <span class="betic">📅</span>
     <span class="bettext"><b id="termin-was"></b><span id="termin-wann"></span></span>
@@ -3238,6 +3235,8 @@ window.HELENA_KONFIG = {
 ]
 };
 </script>
+<script>window.FERIENBAND = {ziel:"termine.html"};</script>
+<script src="/ferienband.js"></script>
 <script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
 <script src="/lernstand.js"></script>
 <script src="/helena/trainer.js"></script>
@@ -3278,12 +3277,12 @@ window.HELENA_KONFIG = {
   function alsDatum(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
   function wieLange(n){ return n === 0 ? "heute" : n === 1 ? "morgen" : "noch " + n + " Tage"; }
 
-  function zeigen(id, was, wann, tage){
-    var b = document.getElementById(id + "-band");
+  function zeigen(was, wann, tage){
+    var b = document.getElementById("termin-band");
     if (!b) return;
-    document.getElementById(id === "ferien" ? "ferien-name" : "termin-was").textContent = was;
-    document.getElementById(id + "-wann").textContent = wann;
-    document.getElementById(id + "-tage").innerHTML = tage.replace("noch ", "noch<br>");
+    document.getElementById("termin-was").textContent = was;
+    document.getElementById("termin-wann").textContent = wann;
+    document.getElementById("termin-tage").innerHTML = tage.replace("noch ", "noch<br>");
     b.style.display = "";
   }
 
@@ -3293,14 +3292,6 @@ window.HELENA_KONFIG = {
   }).then(function(d){
     var t = (d.termine || []).filter(function(x){ return x.datum >= heuteISO; });
 
-    var f = t.filter(function(x){ return /ferien/i.test(x.anlass); })[0];
-    if (f){
-      var fd = alsDatum(f.datum);
-      var n = Math.round((fd - heute) / 86400000);
-      zeigen("ferien", f.anlass.split(":")[0], "ab " + fd.getDate() + ". " + MONATE[fd.getMonth()],
-             wieLange(n));
-    }
-
     var naechster = t.filter(function(x){
       return !RAUS[x.art] && !/ferien|feiertag/i.test(x.anlass) &&
              !/jahrgangsstufentest|\bBET\b/i.test(x.anlass);
@@ -3308,7 +3299,7 @@ window.HELENA_KONFIG = {
     if (naechster){
       var nd = alsDatum(naechster.datum);
       var m = Math.round((nd - heute) / 86400000);
-      zeigen("termin", naechster.anlass.replace(/^voraussichtlich:\s*/i, ""),
+      zeigen(naechster.anlass.replace(/^voraussichtlich:\s*/i, ""),
              TAGE[nd.getDay()] + ", " + nd.getDate() + ". " + MONATE[nd.getMonth()] +
              (naechster.zeit ? " · " + naechster.zeit + " Uhr" : ""),
              wieLange(m));

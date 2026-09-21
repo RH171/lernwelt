@@ -1,0 +1,21 @@
+{
+ "quelle": "Bayerisches Staatsministerium für Unterricht und Kultus, km.bayern.de/termine/ferien-und-feiertage",
+ "geprueft": "2026-09-21",
+ "hinweis": "Gilt für ganz Bayern und damit für alle drei Kinder - Helenas Gymnasium und die Grundschule Seeackerstraße haben dieselben Ferien. Schulinterne unterrichtsfreie Tage stehen NICHT hier, die sind je Schule verschieden. Beim nächsten Schuljahr nachtragen: Die Liste endet mit den Sommerferien 2027.",
+ "ferien": [
+  {"name": "Herbstferien", "von": "2026-11-02", "bis": "2026-11-06"},
+  {"name": "Weihnachtsferien", "von": "2026-12-24", "bis": "2027-01-08"},
+  {"name": "Frühjahrsferien", "von": "2027-02-08", "bis": "2027-02-12"},
+  {"name": "Osterferien", "von": "2027-03-22", "bis": "2027-04-02"},
+  {"name": "Pfingstferien", "von": "2027-05-18", "bis": "2027-05-28"},
+  {"name": "Sommerferien", "von": "2027-08-02", "bis": "2027-09-13"}
+ ],
+ "frei": [
+  {"name": "Tag der Deutschen Einheit", "tag": "2026-10-03"},
+  {"name": "Allerheiligen", "tag": "2026-11-01"},
+  {"name": "Buß- und Bettag", "tag": "2026-11-18"},
+  {"name": "Tag der Arbeit", "tag": "2027-05-01"},
+  {"name": "Christi Himmelfahrt", "tag": "2027-05-06"},
+  {"name": "Pfingstmontag", "tag": "2027-05-17"}
+ ]
+}
