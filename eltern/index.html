@@ -246,14 +246,24 @@
   function meldungenLaden(){
     fetch("/api/melden", {credentials:"same-origin"})
       .then(function(r){ return r.json(); })
-      .then(function(j){ if (j && j.ok) meldungenMalen(j.meldungen || []); })
+      .then(function(j){ if (j && j.ok){ ALLE_MELDUNGEN = j.meldungen || []; meldungenMalen(); } })
       .catch(function(){});
   }
 
-  function meldungenMalen(liste){
+  /* Je Reiter nur das eine Kind. Denny am 21.09.2026: "getrennt haben in den
+     Reitern ... Paul: seine Informationen, Leon: seine Informationen, Helena:
+     ihre Informationen." Vorher standen alle Meldungen gemischt in einer Liste -
+     bei 18 Eintraegen von Helena fand man Pauls drei nicht mehr. Einzige
+     Ausnahme bleibt "Wer war heute da?" ganz oben: Die Karte soll ausdruecklich
+     alle drei auf einen Blick zeigen. */
+  var ALLE_MELDUNGEN = [];
+
+  function meldungenMalen(){
     var kasten = $("meldungen");
+    var liste = ALLE_MELDUNGEN.filter(function(m){ return !KIND || m.kind === KIND; });
     if (!liste.length){ kasten.innerHTML = ""; return; }
-    var h = '<div class="karte"><h2>Gemeldet von den Kindern (' + liste.length + ')</h2>' +
+    var wer = KIND ? esc(KIND.charAt(0).toUpperCase() + KIND.slice(1)) : "den Kindern";
+    var h = '<div class="karte"><h2>Gemeldet von ' + wer + ' (' + liste.length + ')</h2>' +
             '<p class="unter">Direkt aus dem Spiel geschickt.</p><div id="meldeliste"></div></div>';
     kasten.innerHTML = h;
     var ziel = $("meldeliste");
@@ -332,11 +342,11 @@
       var b = document.createElement("button");
       b.textContent = k.charAt(0).toUpperCase()+k.slice(1) +
                       (DATEN[k] && DATEN[k].runden ? " (" + DATEN[k].runden + ")" : "");
-      b.addEventListener("click", function(){ KIND = k; reiterMalen(); malen(); });
+      b.addEventListener("click", function(){ KIND = k; reiterMalen(); malen(); meldungenMalen(); });
       if (k === KIND) b.classList.add("an");
       kasten.appendChild(b);
     });
-    if (!KIND){ KIND = namen[0]; reiterMalen(); malen(); }
+    if (!KIND){ KIND = namen[0]; reiterMalen(); malen(); meldungenMalen(); }
   }
 
   /* ---------- War das Kind überhaupt da? ----------
