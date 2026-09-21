@@ -16,7 +16,7 @@
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { monateLesen, monatTag, monateFuer, letzteTage, blockUhrzeit, KINDER,
-         anwesendLoeschen, BAND_HAELT_TAGE } from "./_anwesend.js";
+         anwesendLoeschen, BAND_HAELT_TAGE, woLesen, woTag } from "./_anwesend.js";
 
 // Nicht weiter zurueck fragen, als die Baender sicher im Speicher liegen. Die
 // Zahl wird abgeleitet, nicht geraten: Sonst verfiele der aelteste Monat still,
@@ -53,6 +53,11 @@ export async function onRequestGet(context) {
     // Alle Monate dieses Kindes auf einmal - nicht jeden Tag einzeln. 14 Tage
     // kosteten vorher 85 Abfragen und knapp zehn Sekunden (Pruefrunde 02).
     const gelesen = await monateLesen(env, kind, monate);
+    /* Woran gesessen wurde - seit 21.09.2026. Faellt dieser Teil aus, bleibt
+       das Band trotzdem richtig; es steht dann nur nicht dabei, was gemacht
+       wurde. Deshalb wird sein `unsicher` GETRENNT gefuehrt: Ein Ausfall hier
+       darf nicht die Anwesenheit als unsicher erscheinen lassen. */
+    const woGelesen = await woLesen(env, kind, monate);
     let unsicher = gelesen.unsicher;
     for (const tag of liste) {
       const band = monatTag(gelesen, tag);
@@ -85,6 +90,13 @@ export async function onRequestGet(context) {
         // Zusammenhaengend heisst: keine Luecke zwischen erstem und letztem Block.
         amStueck: alle.length === alle[alle.length - 1] - alle[0] + 1,
         nurDuell: band.lernwelt.length === 0,
+        /* Was war in welcher Viertelstunde offen, und auf welchem Geraet?
+           {"34":{"seite":"quiz","geraet":"Mac · Chrome"}} - leer, wenn nichts
+           gemeldet wurde (alte Tage, Quizduell, Ausfall). Das Geraet ist die
+           Antwort auf "war das ueberhaupt das Kind?": Wer eine Kinderseite
+           oeffnet, pulst als dieses Kind, auch Denny. */
+        wo: woTag(woGelesen, tag),
+        woUnsicher: !!woGelesen.unsicher,
       });
       // Die Liste kommt von heute rueckwaerts, der erste Treffer ist also der
       // juengste Tag mit Anwesenheit.

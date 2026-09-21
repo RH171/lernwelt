@@ -934,6 +934,14 @@
   // der Browser weiß es. Bewusst nur eine kurze, lesbare Beschreibung und
   // keine vollständige Browser-Kennung: Die wäre ein Fingerabdruck, und für
   // Usability-Fragen reicht "iPad, 1024x768, Touch" vollkommen.
+  /* Nur "Mac \u00B7 Chrome" - fuer das Anwesenheitsband reicht das, und lange
+     Zeichenketten je Viertelstunde waeren Platzverschwendung im Speicher.
+     Die volle Angabe mit Fenstermassen bleibt bei den Lernrunden. */
+  function geraetKurz() {
+    var voll = geraet() || "";
+    return voll.split(" \u00B7 ").slice(0, 2).join(" \u00B7 ");
+  }
+
   function geraet() {
     try {
       var u = navigator.userAgent || "";
@@ -1110,7 +1118,16 @@
   var pulsNachholen = null;
 
   function pulsSchicken(weg, istWiederholung) {
-    var text = JSON.stringify({ kind: KIND, weg: !!weg });
+    /* Seite und Geraet gehen mit - Denny am 21.09.2026: "Was machen die Kids
+       in der Zeit?" Das Band sagte bisher nur, DASS jemand da war. Wer eine
+       Seite offen liegen laesst oder unter einer halben Minute bleibt, erzeugt
+       Anwesenheit ohne Runde, und dann blieb offen, woran er gesessen hat.
+
+       Das Geraet beantwortet gleich die naechste Frage, die er am selben Tag
+       gestellt hat: "Kann es auch sein, dass Du die Zeit erfasst von mir?" Ja -
+       wer eine Kinderseite oeffnet, pulst als dieses Kind, egal wer davorsitzt.
+       Mit "Mac · Chrome" daneben sieht man das auf einen Blick. */
+    var text = JSON.stringify({ kind: KIND, weg: !!weg, seite: DATEI, geraet: geraetKurz() });
     try {
       if (weg && navigator.sendBeacon) {
         navigator.sendBeacon("/api/aktiv", new Blob([text], { type: "application/json" }));

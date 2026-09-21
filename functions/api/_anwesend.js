@@ -441,6 +441,26 @@ export async function anwesendLoeschen(env, kind, tag, quelle) {
 
 const WO_SCHLUESSEL = (kind, monat) => "wo:" + kind + ":" + monat;
 const SEITE_MAX = 40;
+const GERAET_MAX = 28;
+
+/* Seite und Geraet stehen in EINEM Wert, getrennt durch einen senkrechten
+   Strich: "quiz|Mac \u00B7 Chrome". Zwei getrennte Karten je Block waeren
+   sauberer zu lesen und kosten das Doppelte an Platz und Tipparbeit - und ein
+   alter Eintrag ohne Strich wird weiterhin als reine Seite verstanden. */
+const TRENNER = "|";
+
+/* Das Geraet ist die Antwort auf Dennys Frage vom 21.09.2026: "Kann es auch
+   sein, dass Du die Zeit erfasst von mir - sprich mit meinem Login und nimmst
+   an, dass es Helena oder Paul ist?" Ja, genau so ist es: Wer eine Kinderseite
+   oeffnet, pulst als dieses Kind. Mit "Mac \u00B7 Chrome" neben der Uhrzeit
+   sieht man sofort, dass das nicht Helenas Handy war. */
+export function geraetSaeubern(roh) {
+  return String(roh == null ? "" : roh)
+    .replace(/[\u0000-\u001f\u007f|]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, GERAET_MAX);
+}
 
 /* Der Name kommt aus dem Browser und ist damit frei waehlbar - er wird
    hart beschnitten. Erlaubt sind Kleinbuchstaben, Ziffern und Bindestriche;
@@ -470,8 +490,11 @@ export function woMonatLesen(roh) {
     for (const [b, seite] of Object.entries(bloecke)) {
       const n = Number(b);
       if (!Number.isInteger(n) || n < 0 || n >= BLOECKE_PRO_TAG) continue;
-      const s = seiteSaeubern(seite);
-      if (s) rein[String(n)] = s;
+      const roh = String(seite == null ? "" : seite);
+      const teile = roh.split(TRENNER);
+      const s = seiteSaeubern(teile[0]);
+      const g = geraetSaeubern(teile[1]);
+      if (s) rein[String(n)] = g ? s + TRENNER + g : s;
     }
     if (Object.keys(rein).length) raus[tag] = rein;
   }
@@ -487,11 +510,13 @@ export function woMonatLesen(roh) {
  * Der Deckel des Bandes gilt hier sinngemaess mit: Steht der Tag schon voller
  * Eintraege, als ein wacher Tag lang ist, wird nichts mehr angenommen.
  */
-export async function woVermerken(env, kind, jetztMs, seite, offen = true) {
+export async function woVermerken(env, kind, jetztMs, seite, offen = true, geraet = "") {
   if (!env || !env.PAUL_KV) return { geschrieben: false, fehler: "kein Speicher" };
   if (!kindOk(kind)) return { geschrieben: false, fehler: "unbekanntes Kind" };
   const s = seiteSaeubern(seite);
   if (!s) return { geschrieben: false, fehler: "keine Seite genannt" };
+  const g = geraetSaeubern(geraet);
+  const wert = g ? s + TRENNER + g : s;
   const z = berlinZeit(jetztMs);
   if (!z) return { geschrieben: false, fehler: "unbrauchbare Zeit" };
 
@@ -504,19 +529,19 @@ export async function woVermerken(env, kind, jetztMs, seite, offen = true) {
   if (monat === KAPUTT) return { geschrieben: false, fehler: "Eintrag ist unlesbar" };
 
   const tag = monat[tagImMonat] || {};
-  if (tag[String(z.block)] === s) return { geschrieben: false, tag: z.tag, block: z.block };
+  if (tag[String(z.block)] === wert) return { geschrieben: false, tag: z.tag, block: z.block };
   if (Object.keys(tag).length >= (offen ? BLOECKE_OFFEN : BLOECKE_ANGEMELDET) &&
       !(String(z.block) in tag))
     return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Tagesdeckel erreicht" };
 
-  tag[String(z.block)] = s;
+  tag[String(z.block)] = wert;
   monat[tagImMonat] = tag;
   try {
     await env.PAUL_KV.put(schluessel, JSON.stringify(monat), { expirationTtl: HALTBAR_SEKUNDEN });
   } catch (e) {
     return { geschrieben: false, tag: z.tag, block: z.block, fehler: "Speicher nimmt nichts an" };
   }
-  return { geschrieben: true, tag: z.tag, block: z.block, seite: s };
+  return { geschrieben: true, tag: z.tag, block: z.block, seite: s, geraet: g };
 }
 
 /* Die Seiten mehrerer Monate holen.
@@ -544,8 +569,16 @@ export async function woLesen(env, kind, monate) {
   return raus;
 }
 
-// Aus dem Ergebnis von woLesen einen einzelnen Tag herausziehen: {block: seite}.
+/* Aus dem Ergebnis von woLesen einen Tag herausziehen:
+   {block: {seite, geraet}}. Ein alter Eintrag ohne Trenner kommt als reine
+   Seite zurueck - dann ist geraet einfach leer. */
 export function woTag(gelesen, tag) {
   const m = (gelesen.monate || {})[MONAT(tag)] || {};
-  return m[TAG_IM_MONAT(tag)] || {};
+  const roh = m[TAG_IM_MONAT(tag)] || {};
+  const raus = {};
+  for (const [b, wert] of Object.entries(roh)) {
+    const teile = String(wert).split(TRENNER);
+    raus[b] = { seite: teile[0] || "", geraet: teile[1] || "" };
+  }
+  return raus;
 }

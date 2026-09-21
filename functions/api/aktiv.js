@@ -189,7 +189,7 @@ export async function onRequestPost(context) {
    * unter keinen Umstaenden abwuergen: Der hat die wichtigere Aufgabe, naemlich
    * kein Ausrollen zuzulassen, waehrend ein Kind uebt. Geht es schief, fehlt
    * eine Zeile in der Elternansicht - mehr nicht. */
-  try { await woVermerken(env, kind, Date.now(), daten.seite, offen); } catch (e) {}
+  try { await woVermerken(env, kind, Date.now(), daten.seite, offen, daten.geraet); } catch (e) {}
 
   // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
   // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
