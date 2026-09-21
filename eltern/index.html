@@ -20,10 +20,14 @@
   header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px}
   h1{font-family:var(--rund);font-size:26px;margin:0;letter-spacing:-.01em}
   .stand{color:var(--muted);font-size:13.5px}
-  .reiter{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  /* Die Reiter teilen sich die Zeile. Vorher waren es drei schmale Knoepfe am
+     linken Rand - Denny am 21.09.2026: "ein bisschen groesser, sodass man sie
+     gut anklicken kann." */
+  .reiter{display:flex;gap:10px;margin-bottom:20px}
   .reiter button{
-    border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:9px 16px;
-    font-family:var(--rund);font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;
+    flex:1 1 0;min-width:0;min-height:52px;
+    border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:10px 12px;
+    font-family:var(--rund);font-size:17px;font-weight:700;color:var(--muted);cursor:pointer;
   }
   .reiter button.an{border-color:var(--akzent);color:var(--ink);background:#eef1f6}
   .karte{background:var(--karte);border:1px solid var(--line);border-radius:16px;
@@ -260,9 +264,10 @@
 
   function meldungenMalen(){
     var kasten = $("meldungen");
-    var liste = ALLE_MELDUNGEN.filter(function(m){ return !KIND || m.kind === KIND; });
+    if (!KIND){ kasten.innerHTML = ""; return; }
+    var liste = ALLE_MELDUNGEN.filter(function(m){ return m.kind === KIND; });
     if (!liste.length){ kasten.innerHTML = ""; return; }
-    var wer = KIND ? esc(KIND.charAt(0).toUpperCase() + KIND.slice(1)) : "den Kindern";
+    var wer = esc(kindName(KIND));
     var h = '<div class="karte"><h2>Gemeldet von ' + wer + ' (' + liste.length + ')</h2>' +
             '<p class="unter">Direkt aus dem Spiel geschickt.</p><div id="meldeliste"></div></div>';
     kasten.innerHTML = h;
@@ -346,7 +351,17 @@
       if (k === KIND) b.classList.add("an");
       kasten.appendChild(b);
     });
-    if (!KIND){ KIND = namen[0]; reiterMalen(); malen(); meldungenMalen(); }
+    /* KEINE Vorauswahl. Denny am 21.09.2026: "Ich moechte aber, dass weder
+       Paul, Leon noch Helena ... direkt angezeigt werden, sondern erst, wenn
+       ich es anklicke." Oben steht ohnehin, wer heute da war - das reicht als
+       Einstieg. */
+    if (!KIND){
+      $("inhalt").innerHTML =
+        '<div class="karte"><h2>Wen möchtest du ansehen?</h2>' +
+        '<p class="unter" style="margin:0">Tipp oben auf ein Kind – dann stehen hier ' +
+        'seine Anwesenheit, sein Lernstand und was es gemeldet hat.</p></div>';
+      $("meldungen").innerHTML = "";
+    }
   }
 
   /* ---------- War das Kind überhaupt da? ----------
@@ -460,7 +475,7 @@
     // Der Ausfall bekommt eine eigene Karte. Lieber "ich weiß es nicht" als
     // eine Lücke, die wie "war nicht da" aussieht.
     if (ANWESEND_FEHLER){
-      return '<div class="karte"><h2>War ' + esc(KIND) + ' da?</h2>' +
+      return '<div class="karte"><h2>War ' + esc(kindName(KIND)) + ' da?</h2>' +
         '<p class="unter"><b>Das lässt sich gerade nicht sagen.</b> ' + esc(ANWESEND_FEHLER) +
         '<br>Das heißt <b>nicht</b>, dass niemand da war – nur, dass die Auskunft nicht kam.</p></div>';
     }
@@ -493,7 +508,7 @@
              bandMalen(t) + '<span class="tagzeit">' + esc(t.von) + '–' + esc(t.bis) + '</span></div>';
     }).join("");
 
-    return '<div class="karte"><h2>War ' + esc(KIND) + ' da?</h2>' + kopf + luecke +
+    return '<div class="karte"><h2>War ' + esc(kindName(KIND)) + ' da?</h2>' + kopf + luecke +
       (zeilen ? '<div class="bandliste">' + zeilen + '</div>' : '') +
       '<p class="unter" style="margin-top:10px">' +
       '<i class="probe lern"></i> in der Lernwelt &nbsp; <i class="probe duell"></i> im Quizduell<br>' +
@@ -521,6 +536,7 @@
   }
 
   function malen(){
+    if (!KIND) return;
     var d = DATEN[KIND] || {};
     var h = "";
     /* Der Zeitpunkt des ABRUFS, nicht die aktuelle Uhr. Geholt wird genau
