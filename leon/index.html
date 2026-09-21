@@ -363,6 +363,11 @@
       <span class="bild">🎯</span><span><b>Mein Quiz</b><span>Ein paar Fragen. Was du nicht wusstest, kommt wieder.</span></span>
     </a>
 
+    <!-- Wann sind die naechsten Ferien? Dasselbe Band haben Paul und Helena
+         (Denny, 21.09.2026). Bei Leon groesser, weil er noch Leseanfaenger ist.
+         Daten: /ferien.json, gilt fuer ganz Bayern. -->
+    <div id="ferienband" style="margin:0 0 12px"></div>
+
     <a class="lesekarte" id="lesen" href="klasse2-deutsch-lesegeschichte.html">
       <span class="bild">&#128214;</span>
       <span class="text"><b>Meine Lesegeschichte</b><span id="lesen-stand">Deine Geschichte für heute wartet auf dich!</span></span>
@@ -1790,6 +1795,8 @@
   }
 })();
 </script>
+<script>window.FERIENBAND = {gross:true};</script>
+<script src="/ferienband.js"></script>
 <script src="/lernstand.js" defer></script>
 </body>
 </html>
