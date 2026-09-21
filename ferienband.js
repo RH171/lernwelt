@@ -62,9 +62,15 @@
     "#ferienband.gross .fbtext b{font-size:18px}" +
     "#ferienband.gross .fbtext span{font-size:15px}" +
     "#ferienband.gross .fbtage{font-size:17px}" +
-    /* Auf dem Handy mit offener Tastatur zählt jede Zeile. */
-    "@media (max-height:520px){#ferienband a,#ferienband div.fb{min-height:46px;padding:8px 12px}" +
-      "#ferienband .fbtext span{display:none}}";
+    /* Auf schmalen und auf flachen Schirmen zaehlt jede Zeile: In Helenas
+       Lernwelt muss "Los geht's" ohne Scrollen erreichbar bleiben, und mit
+       offener Tastatur bleiben 360 Punkte Hoehe. Das Band gibt dann seinen
+       Untertext auf, nicht seine Tippflaeche - 46 px bleiben stehen. */
+    "@media (max-height:520px),(max-width:520px){" +
+      "#ferienband a,#ferienband div.fb{min-height:46px;padding:8px 12px}" +
+      "#ferienband .fbtext span{display:none}" +
+      "#ferienband.gross .fbtext b{font-size:16px}" +
+      "#ferienband.gross .fbtage{font-size:15px}}";
   document.head.appendChild(stil);
 
   if (opt.gross) kasten.classList.add("gross");
