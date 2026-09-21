@@ -33,7 +33,11 @@
     background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 8px 22px rgba(124,92,255,.45); font-size:24px;}
   .logo h1{font-family:var(--round); font-weight:800; font-size:20px; margin:0; letter-spacing:-.01em;}
   .logo p{margin:1px 0 0; color:var(--muted); font-size:12.5px;}
-  .stats{display:flex; gap:8px;}
+  /* Umbrechen statt ueberstehen: Mit zehn Chips standen sie am 21.09.2026
+     auf dem Laptop 106 px aus der 640-px-Spalte heraus, und die Seite liess
+     sich seitlich schieben. Auf schmalen Schirmen wird daraus weiter unten
+     eine Zeile zum Wischen. */
+  .stats{display:flex; gap:8px; flex-wrap:wrap; max-width:100%;}
   .chip{display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line);
     border-radius:999px; padding:7px 12px; font-family:var(--round); font-weight:800; font-size:13.5px;}
   .chip small{color:var(--muted); font-weight:600; font-size:12px;}
