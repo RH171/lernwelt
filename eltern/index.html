@@ -357,11 +357,11 @@
        Paul, Leon noch Helena ... direkt angezeigt werden, sondern erst, wenn
        ich es anklicke." Oben steht ohnehin, wer heute da war - das reicht als
        Einstieg. */
+    /* Ohne Auswahl bleibt es leer. Eine Karte "Wen moechtest du ansehen?" stand
+       hier bis zum 21.09.2026 - Denny: "Dies kann ersatzlos gestrichen werden."
+       Die drei Reiter darueber sagen von selbst, was zu tun ist. */
     if (!KIND){
-      $("inhalt").innerHTML =
-        '<div class="karte"><h2>Wen möchtest du ansehen?</h2>' +
-        '<p class="unter" style="margin:0">Tipp oben auf ein Kind – dann stehen hier ' +
-        'seine Anwesenheit, sein Lernstand und was es gemeldet hat.</p></div>';
+      $("inhalt").innerHTML = "";
       $("meldungen").innerHTML = "";
     }
   }
