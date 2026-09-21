@@ -175,9 +175,16 @@
       <h1>Lernstand</h1>
       <span class="stand" id="stand"></span>
     </header>
-    <div id="meldungen"></div>
+    <!-- "Wer war heute da?" gehoert ueber die Reiter: Die Karte zeigt ALLE drei
+         Kinder und haengt nicht am gewaehlten Reiter. Denny am 21.09.2026 mit
+         Screenshot: "Das nach oben." -->
+    <div id="heute"></div>
     <div class="reiter" id="reiter"></div>
     <div id="inhalt"></div>
+    <!-- Die Meldungen der Kinder stehen UNTER der Auswertung. Oben schoben 18
+         Einträge alles andere aus dem Bild - Denny am 21.09.2026 mit Screenshot:
+         "Das soll bitte nach unten." -->
+    <div id="meldungen"></div>
   </div>
 
 </div>
@@ -517,12 +524,14 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = anwesenheitUeberblick() + anwesenheitKarte() + schulinfoKarte() +
+      $("heute").innerHTML = anwesenheitUeberblick();
+      $("inhalt").innerHTML = anwesenheitKarte() + schulinfoKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += anwesenheitUeberblick() + anwesenheitKarte() + schulinfoKarte();
+    $("heute").innerHTML = anwesenheitUeberblick();
+    h += anwesenheitKarte() + schulinfoKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
