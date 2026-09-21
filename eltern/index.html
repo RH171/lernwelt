@@ -713,6 +713,13 @@
       }).join("");
       var toepfe = "";
       if (f.verhaeltnis) toepfe = '<span class="ntoepfe">groß ' + komma(f.gross) + ' · klein ' + komma(f.klein) + ' · ' + f.verhaeltnis + '</span>';
+      /* Wie viele Schulaufgaben schon geschrieben sind. Damit sieht man, dass
+         der BET NICHT dazuzaehlt - Denny am 21.09.2026: "Nicht, dass diese
+         auch mit hinzugefuegt wird." */
+      if (f.soll){
+        var geschrieben = f.noten.filter(function(n){ return n.art === "gross"; }).length;
+        toepfe += '<span class="ntoepfe">' + geschrieben + ' von ' + f.soll + ' Schulaufgaben</span>';
+      }
       return '<tr><td><b>' + esc(f.fach.charAt(0).toUpperCase() + f.fach.slice(1)) + '</b></td>' +
              '<td>' + chips + '</td>' +
              '<td class="z"><span class="nschnitt" style="color:' +
@@ -730,6 +737,8 @@
       '<li><b>Zahl im Kästchen</b> = Note, <b>×2</b> = doppelt gewichtet</li>' +
       regel +
       '<li><b>Roter Rand</b> = unsicher gelesen, bitte nachsehen</li>' +
+      '<li><b>BET, BMT und BDT</b> sind kleine Nachweise – der BET zählt doppelt, ' +
+      'erhöht aber nicht die Zahl der Schulaufgaben</li>' +
       '<li><b>Ändern</b> geht unten über „Noten bearbeiten"</li>' +
       '</ul>' + notenHochladen() + '</div>';
   }
