@@ -58,6 +58,13 @@
   .bet .bettext b{font-size:15.5px}
   .bet .bettext span{font-size:13px;color:var(--muted)}
   .bet .bettage{font:800 15px/1.2 var(--rund);color:#f59e0b;white-space:nowrap;text-align:right}
+  /* Dieselben Baender in zwei weiteren Farben: gruen fuer die naechsten Ferien,
+     violett fuer den naechsten Schultermin. Sie erben alles von .bet, damit es
+     auf dem Handy nicht auseinanderlaeuft - die @media-Regel unten greift mit. */
+  .bet.frei{border-left-color:var(--ok)}
+  .bet.frei .bettage{color:var(--ok)}
+  .bet.termin{border-left-color:var(--brand)}
+  .bet.termin .bettage{color:var(--brand-ink)}
   .hauptwege{display:grid;gap:10px;margin:0 0 16px}
   @media (min-width:760px){ .hauptwege{grid-template-columns:repeat(3,minmax(0,1fr))} }
   .hauptweg{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);
@@ -398,6 +405,22 @@
     <span class="betic">🇬🇧</span>
     <span class="bettext"><b>BET 7 – Englischtest</b><span id="bet-wann">1. Oktober</span></span>
     <span class="bettage" id="bet-tage"></span>
+  </a>
+
+  <!-- Schultermine aus dem Jahresterminplan der Schule. Denny am 21.09.2026:
+       "wie du das in Helenas Welt verankern koenntest, damit sie das selber
+       sieht". Zwei Zeilen, mehr nicht - alles Weitere steht in termine.html.
+       Beide Baender bleiben leer und unsichtbar, solange nichts geladen ist;
+       eine leere Zeile ist besser als eine falsche. -->
+  <a class="bet frei" href="termine.html" id="ferien-band" style="display:none">
+    <span class="betic">🏖️</span>
+    <span class="bettext"><b id="ferien-name"></b><span id="ferien-wann"></span></span>
+    <span class="bettage" id="ferien-tage"></span>
+  </a>
+  <a class="bet termin" href="termine.html" id="termin-band" style="display:none">
+    <span class="betic">📅</span>
+    <span class="bettext"><b id="termin-was"></b><span id="termin-wann"></span></span>
+    <span class="bettage" id="termin-tage"></span>
   </a>
 
   <div class="hauptwege">
@@ -3231,6 +3254,68 @@ window.HELENA_KONFIG = {
     tage > 1 ? "noch " + tage + " Tage" : tage === 1 ? "morgen" : "heute";
   document.getElementById("bet-wann").textContent =
     tage === 0 ? "Heute – viel Erfolg!" : "Donnerstag, 1. Oktober";
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  // Zwei Baender aus schultermine.json: die naechsten Ferien und der naechste
+  // Termin, der sie wirklich betrifft. Die Datei legt hole-schultermine.py an.
+  //
+  // Der BET steht schon im Band darueber - er darf hier NICHT noch einmal
+  // auftauchen, sonst steht derselbe Termin zweimal untereinander.
+  var MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August",
+                "September","Oktober","November","Dezember"];
+  var TAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  // Was NICHT ins Band gehoert: Mensa und Ganztagsbetreuung (steht 28-mal drin),
+  // reine Elternsachen, der normale Unterricht - und Nachtermine fremder
+  // Pruefungen, die einzelne Schuelerinnen betreffen, nicht sie.
+  var RAUS = {alltag:1, eltern:1, schule:1};
+  var heute = new Date(); heute.setHours(0,0,0,0);
+  var heuteISO = heute.getFullYear() + "-" + ("0"+(heute.getMonth()+1)).slice(-2) +
+                 "-" + ("0"+heute.getDate()).slice(-2);
+
+  function alsDatum(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function wieLange(n){ return n === 0 ? "heute" : n === 1 ? "morgen" : "noch " + n + " Tage"; }
+
+  function zeigen(id, was, wann, tage){
+    var b = document.getElementById(id + "-band");
+    if (!b) return;
+    document.getElementById(id === "ferien" ? "ferien-name" : "termin-was").textContent = was;
+    document.getElementById(id + "-wann").textContent = wann;
+    document.getElementById(id + "-tage").innerHTML = tage.replace("noch ", "noch<br>");
+    b.style.display = "";
+  }
+
+  fetch("schultermine.json", {cache:"no-cache"}).then(function(r){
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function(d){
+    var t = (d.termine || []).filter(function(x){ return x.datum >= heuteISO; });
+
+    var f = t.filter(function(x){ return /ferien/i.test(x.anlass); })[0];
+    if (f){
+      var fd = alsDatum(f.datum);
+      var n = Math.round((fd - heute) / 86400000);
+      zeigen("ferien", f.anlass.split(":")[0], "ab " + fd.getDate() + ". " + MONATE[fd.getMonth()],
+             wieLange(n));
+    }
+
+    var naechster = t.filter(function(x){
+      return !RAUS[x.art] && !/ferien|feiertag/i.test(x.anlass) &&
+             !/jahrgangsstufentest|\bBET\b/i.test(x.anlass);
+    })[0];
+    if (naechster){
+      var nd = alsDatum(naechster.datum);
+      var m = Math.round((nd - heute) / 86400000);
+      zeigen("termin", naechster.anlass.replace(/^voraussichtlich:\s*/i, ""),
+             TAGE[nd.getDay()] + ", " + nd.getDate() + ". " + MONATE[nd.getMonth()] +
+             (naechster.zeit ? " · " + naechster.zeit + " Uhr" : ""),
+             wieLange(m));
+    }
+  }).catch(function(){
+    // Kein Band ist besser als ein falsches Band. Die Seite bleibt, wie sie war.
+  });
 })();
 </script>
 </body>
