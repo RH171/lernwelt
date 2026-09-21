@@ -33,11 +33,19 @@
     background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 8px 22px rgba(124,92,255,.45); font-size:24px;}
   .logo h1{font-family:var(--round); font-weight:800; font-size:20px; margin:0; letter-spacing:-.01em;}
   .logo p{margin:1px 0 0; color:var(--muted); font-size:12.5px;}
-  /* Umbrechen statt ueberstehen: Mit zehn Chips standen sie am 21.09.2026
-     auf dem Laptop 106 px aus der 640-px-Spalte heraus, und die Seite liess
-     sich seitlich schieben. Auf schmalen Schirmen wird daraus weiter unten
-     eine Zeile zum Wischen. */
-  .stats{display:flex; gap:8px; flex-wrap:wrap; max-width:100%;}
+  /* EINE Zeile zum Wischen - auf jedem Schirm. Gemessen am 21.09.2026 mit
+     zehn Chips: umbrechend wurden daraus auf Helenas Handy vier Zeilen und
+     189 px, fast ein Drittel des Schirms, und "Los geht's" lag darunter; ohne
+     Umbruch standen sie auf dem Laptop 106 px aus der Spalte heraus und die
+     Seite liess sich seitlich schieben. Beides faellt hier weg.
+     Der Verlauf rechts zeigt, dass es weitergeht - ohne ihn sieht eine
+     abgeschnittene Zeile aus wie das Ende. */
+  .stats{display:flex; gap:8px; max-width:100%; flex-wrap:nowrap; overflow-x:auto;
+         scrollbar-width:none; -webkit-overflow-scrolling:touch;
+         mask-image:linear-gradient(90deg,#000 92%,transparent);
+         -webkit-mask-image:linear-gradient(90deg,#000 92%,transparent);}
+  .stats::-webkit-scrollbar{display:none;}
+  .chip{flex:none;}
   .chip{display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line);
     border-radius:999px; padding:7px 12px; font-family:var(--round); font-weight:800; font-size:13.5px;}
   .chip small{color:var(--muted); font-weight:600; font-size:12px;}
@@ -50,18 +58,8 @@
     .logo h1{font-size:18px; white-space:nowrap;}
     .logo p{font-size:12px;}
     .mark{width:40px; height:40px; font-size:21px;}
-    /* Die neun Chips brachen hier auf VIER Zeilen um und waren zusammen
-       189 px hoch - fast ein Drittel des Schirms, bevor irgendetwas kommt.
-       Gemessen am 21.09.2026 auf Helenas Handy (360x643); "Los geht's" lag
-       dadurch unter dem Rand. Jetzt eine Zeile zum Wischen: 42 px.
-       Der Verlauf rechts zeigt, dass es weitergeht - ohne ihn sieht eine
-       abgeschnittene Zeile aus wie das Ende. */
-    .stats{width:100%; flex-wrap:nowrap; gap:7px; overflow-x:auto;
-           scrollbar-width:none; -webkit-overflow-scrolling:touch;
-           mask-image:linear-gradient(90deg,#000 88%,transparent);
-           -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);}
-    .stats::-webkit-scrollbar{display:none;}
-    .chip{padding:8px 11px; font-size:13px; flex:none;}
+    .stats{width:100%; gap:7px;}
+    .chip{padding:8px 11px; font-size:13px;}
   }
 
   .bet{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);
