@@ -3336,8 +3336,12 @@ window.HELENA_KONFIG = {
   }).then(function(d){
     var t = (d.termine || []).filter(function(x){ return x.datum >= heuteISO; });
 
+    // Nur Termine, in deren Gruppe ihre Jahrgangsstufe ausdruecklich steht
+    // (nur_sie). Ohne das stand hier am 21.09.2026 die "Besondere Pruefung
+    // (Nachtermin)" - eine Nachpruefung fuer einzelne Schueler. Ein Band, das
+    // fremde Termine als ihre ausgibt, ist schlimmer als kein Band.
     var naechster = t.filter(function(x){
-      return !RAUS[x.art] && !/ferien|feiertag/i.test(x.anlass) &&
+      return x.nur_sie && !RAUS[x.art] && !/ferien|feiertag/i.test(x.anlass) &&
              !/jahrgangsstufentest|\bBET\b/i.test(x.anlass);
     })[0];
     if (naechster){
