@@ -475,7 +475,11 @@
      glaube, Minutenangaben wuerden reichen." Eine Viertelstunde, in der
      mindestens ein Puls ankam, zaehlt als 15 Minuten Anwesenheit - das ist
      weiterhin KEINE Lernzeit. */
-  function minuten(anzahl){ return anzahl * 15 + " min"; }
+  /* NICHT "minuten" nennen: Diese Datei hat weiter unten schon ein minuten(m),
+     das Minuten formatiert ("3 h 30 min") und zur Lernzeit gehoert. Die
+     spaetere Deklaration gewinnt - am 21.09.2026 stand deshalb "6 min" am
+     Band statt "90 min". Heute der dritte Namensdoppelgaenger an einem Tag. */
+  function anwesendMinuten(bloecke){ return bloecke * 15 + " min"; }
 
   /* Alle drei Kinder auf einen Blick, ueber den Reitern.
      Dennys freigegebener Wortlaut: "Im Elternbereich eine Zeile 'zuletzt
@@ -554,11 +558,11 @@
     var zeilen = tage.map(function(t){
       var lern = (t.lernwelt || []).length, duell = (t.duell || []).length;
       var je = [];
-      if (lern) je.push('<i class="probe lern"></i>' + minuten(lern));
-      if (duell) je.push('<i class="probe duell"></i>' + minuten(duell));
+      if (lern) je.push('<i class="probe lern"></i>' + anwesendMinuten(lern));
+      if (duell) je.push('<i class="probe duell"></i>' + anwesendMinuten(duell));
       return '<div class="tagzeile"><span class="tagname">' + esc(tagName(t.tag)) + '</span>' +
              bandMalen(t) +
-             '<span class="tagwerte"><b>' + minuten(t.viertelstunden) + '</b>' +
+             '<span class="tagwerte"><b>' + anwesendMinuten(t.viertelstunden) + '</b>' +
              '<span class="tagje">' + je.join(" ") + '</span></span></div>' +
              '<div class="tagspanne">' + esc(t.von) + '–' + esc(t.bis) +
              (t.amStueck === false ? ' · mit Pausen' : '') + '</div>';
