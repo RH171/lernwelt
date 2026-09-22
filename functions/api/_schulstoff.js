@@ -336,6 +336,60 @@ export async function stoffLesen(env, kind, monate) {
   return { ok: true, heute, eintraege: alle };
 }
 
+/* Welche Faecher hat das Kind IN DIESEM SCHULJAHR im Heft?
+ *
+ * Denny am 23.09.2026 zum Lernquiz: "Prinzipiell sollte dort nur das Fach
+ * auftauchen, was er auch [in] der Zeit, in der er was hochgeladen hat" - und
+ * ausdruecklich: "ich würde dann auch beim Lernquiz Musik noch nicht anzeigen,
+ * sondern nur, wenn du im Heft-Eintrag auch was hast."
+ *
+ * AUSGEBLENDETE zaehlen nicht mit. Denny, als "HSU · 2 Blätter" dastand:
+ * "Es müsste derzeit nur noch ein Blatt sein" - er hatte eines aus der
+ * Ansicht genommen. Was Paul weggelegt hat, soll ihn nicht abfragen.
+ *
+ * Das Schuljahr beginnt am 1. September. Ein Blatt vom Juni gehoert zum
+ * vorigen und zaehlt nicht mehr.
+ */
+export function schuljahrStart(heute) {
+  const h = heute || heuteBerlin();
+  const jahr = Number(h.slice(0, 4));
+  // Vor September gehoert man noch zum Schuljahr, das im Vorjahr begann.
+  return (Number(h.slice(5, 7)) >= 9 ? jahr : jahr - 1) + "-09-01";
+}
+
+export async function faecherImHeft(env, kind) {
+  const e = await stoffLesen(env, kind, 13);       // gut ein Schuljahr
+  if (!e.ok) return { ok: false, fehler: e.fehler };
+  const ab = schuljahrStart(e.heute);
+
+  const zahl = {};
+  e.eintraege.forEach((x) => {
+    if (x.sichtbar === false) return;              // weggelegt zaehlt nicht
+    if (!x.datum || x.datum < ab) return;          // voriges Schuljahr
+    const f = x.fach || "";
+    if (!f || !FAECHER[f]) return;                 // ohne Fach nichts abfragen
+    zahl[f] = (zahl[f] || 0) + 1;
+  });
+
+  const faecher = Object.keys(zahl)
+    .map((f) => ({ fach: f, blaetter: zahl[f] }))
+    .sort((a, b) => b.blaetter - a.blaetter || a.fach.localeCompare(b.fach));
+  return { ok: true, ab, faecher };
+}
+
+/* Die Blaetter eines Fachs - damit Paul selbst aussuchen kann, welches
+ * abgefragt wird. Denny am 23.09.2026: "Das gibt ihm schon ein Stück weit
+ * Entscheidungsgewalt, anstatt dass ein Quiz erstellt wird über etwas, was er
+ * gerade gar nicht abgefragt werden möchte." */
+export async function blaetterImFach(env, kind, fach) {
+  const e = await stoffLesen(env, kind, 13);
+  if (!e.ok) return { ok: false, fehler: e.fehler };
+  const ab = schuljahrStart(e.heute);
+  const liste = e.eintraege.filter((x) =>
+    x.sichtbar !== false && x.datum >= ab && (x.fach || "") === fach);
+  return { ok: true, blaetter: liste };
+}
+
 export async function stoffBild(env, id, nr) {
   if (!/^[a-z0-9]{6,20}$/.test(String(id || ""))) return null;
   if (!env || !env.PAUL_KV) return null;
