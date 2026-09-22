@@ -330,7 +330,15 @@ async function bauLauf(context, vorgaben) {
     }),
   });
 
-  let antwort = await anfrageStellen();
+  let antwort;
+  try {
+    antwort = await anfrageStellen();
+  } catch (e) {
+    // Kommt die Anfrage gar nicht erst zustande, stand bisher nur ein
+    // allgemeines "Beim Bauen ist etwas schiefgegangen" da.
+    return { ok: false, status: 502,
+      text: "Ich komme gerade nicht zu Claude durch (" + String(e && e.message || e).slice(0, 60) + ")." };
+  }
 
   if (!antwort.ok) {
     const text = await antwort.text().catch(() => "");
@@ -338,7 +346,22 @@ async function bauLauf(context, vorgaben) {
     if (antwort.status === 401 || antwort.status === 403) return { ok: false, status: 500, text: "Der Server darf gerade nicht bei Claude anfragen. Denny muss den Schlüssel prüfen." };
     if (antwort.status === 429) return { ok: false, status: 503, text: "Gerade ist zu viel los. Bitte in einer Minute nochmal." };
     if (text.includes("credit") || text.includes("billing")) return { ok: false, status: 503, text: "Das Guthaben ist aufgebraucht oder das Monatslimit erreicht. Denny muss nachsehen." };
-    return { ok: false, status: 502, text: "Claude hat nicht geantwortet. Bitte nochmal versuchen." };
+    /* Den Statuscode MITNENNEN.
+     *
+     * Paul stand am 22.09.2026 um 20:14 Uhr vor "Claude hat nicht
+     * geantwortet" - und die Meldung sagte nicht, woran es lag. Genau so
+     * habe ich an diesem Abend dreimal geraten statt gemessen. Der Code und
+     * die Fehlerart der API sind unbedenklich: Sie verraten weder den
+     * Schluessel noch den Auftrag. Der ROHE Text bleibt draussen, der kann
+     * Auszuege des Auftrags enthalten. */
+    let art = "";
+    try {
+      const j = JSON.parse(text);
+      art = String((j && j.error && (j.error.type || j.error.message)) || "").slice(0, 80);
+    } catch (e) {}
+    return { ok: false, status: 502,
+      text: "Claude hat nicht geantwortet (Code " + antwort.status +
+            (art ? ", " + art : "") + "). Bitte nochmal versuchen." };
   }
 
   const daten = await antwort.json();
