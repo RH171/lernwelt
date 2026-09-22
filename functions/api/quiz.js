@@ -89,8 +89,32 @@ export async function onRequestGet(context) {
 
   let offen = vorrat.fragen.filter((f) => !gestellt.has(f.id) && passt(f));
 
-  // Reicht es nicht, wird nachgebaut. Der Aufruf dauert - darum sagt die
-  // Antwort ehrlich, dass gewartet wird, statt still nichts zu liefern.
+  /* WIEDERHOLEN STATT NEU BAUEN.
+   *
+   * Denny am 23.09.2026 zum Quiz je Blatt: "Es sollte dann aber im Quiz auch
+   * entsprechend das Spiel so liegen, dass wir es nicht zweimal oder dreimal
+   * bauen müssen."
+   *
+   * Uebt Paul dasselbe Blatt ein zweites Mal, sind alle Fragen dazu schon
+   * "gestellt" - und es wuerde fuer Geld neu gebaut, obwohl ein Dutzend
+   * fertiger Fragen daliegt. Bei einer Wiederholung ist das Wiedersehen aber
+   * genau der Zweck: Was man zweimal beantwortet, sitzt.
+   *
+   * Also: Erst nachsehen, was zur Auswahl ueberhaupt da ist. Reicht das,
+   * werden die am laengsten nicht gestellten wieder zugelassen - die
+   * juengsten zuletzt, damit es sich nicht wie dieselbe Runde anfuehlt. */
+  const alleDazu = vorrat.fragen.filter(passt);
+  let wiederholt = 0;
+  const gebraucht = Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB);
+  if (offen.length < gebraucht && alleDazu.length >= Math.min(gebraucht, 5)) {
+    const schonMal = alleDazu.filter((f) => gestellt.has(f.id));
+    // gestellteLesen() gibt die aeltesten zuerst - die kommen als erste dran.
+    offen = offen.concat(schonMal.slice(0, gebraucht - offen.length));
+    wiederholt = Math.min(schonMal.length, gebraucht - (offen.length - schonMal.length));
+  }
+
+  // Reicht es immer noch nicht, wird nachgebaut. Der Aufruf dauert - darum
+  // sagt die Antwort ehrlich, dass gewartet wird, statt still nichts zu liefern.
   let nachgebaut = false;
   if (offen.length < Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB)) {
     try {
@@ -113,7 +137,8 @@ export async function onRequestGet(context) {
 
   mischen(offen);
   const raus = anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40);
-  return json(200, { ok: true, fragen: raus, nachgebaut, vorrat: offen.length });
+  return json(200, { ok: true, fragen: raus, nachgebaut, vorrat: offen.length,
+                     ...(wiederholt ? { wiederholt } : {}) });
 }
 
 export async function onRequestPost(context) {
