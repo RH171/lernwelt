@@ -84,25 +84,15 @@
   </div>
 </div>
 
+<script src="stundenplan.js"></script>
 <script>
 (function(){
   "use strict";
-  var TAGE = ["Mo", "Di", "Mi", "Do", "Fr"];
-  // Stunde: [Nummer, Zeit, Mo, Di, Mi, Do, Fr] - "" heißt frei.
-  var STUNDEN = [
-    ["1", "8:00 – 8:45",   "X", "X", "X", "X", "X"],
-    ["2", "8:45 – 9:30",   "X", "X", "X", "X", "X"],
-    ["Pause", "9:30 – 9:50"],
-    ["3", "9:50 – 10:35",  "X", "X", "Englisch", "Rel./Eth", "X"],
-    ["4", "10:35 – 11:20", "WÜL", "WÜL", "WÜL", "X", "X"],
-    ["Pause", "11:20 – 11:30"],
-    ["5", "11:30 – 12:15", "Sport (14-tägig)", "Rel./Eth", "Schwimmen", "WÜL", "Musik"],
-    ["6", "12:15 – 13:00", "WG (14-tägig)", "Rel./Eth", "Schwimmen", "", ""],
-    ["Mittag", "13:00 – 13:15"],
-    ["7", "13:15 – 14:00", "", "Lernzeitinsel", "", "Lernzeitinsel", ""],
-    ["8", "14:00 – 14:45", "WÜL", "WÜL", "Kunst", "AG", ""],
-    ["9", "14:45 – 15:30", "X", "WÜL digital", "Kunst", "AG", ""]
-  ];
+  /* Die Daten stehen seit dem 22.09.2026 in stundenplan.js - EINMAL, weil
+     die Werkstatt sie auch braucht (sie schlaegt daraus das Fach vor).
+     Zwei Kopien laufen frueher oder spaeter auseinander. */
+  var TAGE = PAUL_PLAN.TAGE;
+  var STUNDEN = PAUL_PLAN.STUNDEN;
 
   var heute = new Date().getDay() - 1;         // 0 = Montag
   var tabelle = document.getElementById("plan");
