@@ -68,6 +68,10 @@
 
     return weiter().then(function (t) {
       if (t && t.status === "fertig" && t.spiel) return t.spiel;
+      /* "warum" ist die Diagnose fuer Erwachsene - sie geht in die Konsole,
+         nie auf den Schirm. Paul stand am 22.09.2026 vor einem halben
+         Bildschirm Entwicklertext und konnte nichts damit anfangen. */
+      if (t && t.warum) { try { console.warn("Bau abgebrochen:", t.warum); } catch (x) {} }
       throw new Error((t && t.fehler) || ABRISS);
     });
   }

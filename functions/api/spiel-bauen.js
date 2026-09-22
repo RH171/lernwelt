@@ -214,7 +214,8 @@ export async function onRequestPost(context) {
         const e = await bauLauf(context, vorgaben);
         clearInterval(puls); puls = null;
         await zeile(e.ok ? { status: "fertig", spiel: e.spiel, verbrauch: e.verbrauch || null }
-                         : { status: "fehler", fehler: e.text });
+                         : { status: "fehler", fehler: e.text,
+                             ...(e.warum ? { warum: e.warum } : {}) });
       } catch (err) {
         if (puls) clearInterval(puls);
         // Ein Absturz darf nicht heissen, dass das Kind ewig auf den
@@ -235,7 +236,13 @@ export async function onRequestPost(context) {
   }
 
   const ergebnis = await bauLauf(context, vorgaben);
-  if (!ergebnis.ok) return fehler(ergebnis.status, ergebnis.text);
+  if (!ergebnis.ok) {
+    return new Response(JSON.stringify({ ok: false, fehler: ergebnis.text,
+                                         ...(ergebnis.warum ? { warum: ergebnis.warum } : {}) }), {
+      status: ergebnis.status,
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
   return new Response(JSON.stringify({ ok: true, spiel: ergebnis.spiel, verbrauch: ergebnis.verbrauch }), {
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
@@ -441,10 +448,20 @@ async function bauLauf(context, vorgaben) {
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
-    const weg = (spiel.aussortiert || []).slice(0, 6).join(" | ");
+    /* WAS EIN KIND LIEST UND WAS NICHT.
+     *
+     * Am 22.09.2026 um 20:56 Uhr stand auf Pauls iPhone ein halber
+     * Bildschirm Entwicklertext: "nicht vom Blatt: Steigere richtig: … (die
+     * Antwort steht nicht im Beleg) | nicht vom Blatt: …". Die Diagnose war
+     * fuer MICH gedacht - fuer ihn ist sie unlesbar und sieht aus, als haette
+     * er etwas falsch gemacht.
+     *
+     * Ein Satz fuer das Kind, die Einzelheiten unter "warum" fuer den
+     * Elternbereich und werkstatt.sh. Die Oberflaeche zeigt nur "fehler". */
+    const weg = (spiel.aussortiert || []).slice(0, 8);
     return { ok: false, status: 502,
-      text: "Das Spiel kam unvollständig zurück (" + maengel[0] + ")." +
-            (weg ? " Aussortiert wurde: " + weg : "") + " Bitte nochmal versuchen." };
+      text: "Das hat diesmal nicht geklappt. Dein Foto ist noch da \u2013 tipp nochmal auf den Knopf.",
+      warum: maengel[0] + (weg.length ? " Aussortiert: " + weg.join(" | ") : "") };
   }
 
   // Bilder, die die Oberflaeche nicht zeichnen kann, gar nicht erst aufheben.
@@ -541,6 +558,22 @@ const RECHEN_FRAGE = /\d+\s*(?:\+|-|−|·|×|\*|:)\s*\d+/;
 // Auftrag. Bei Paul kann eine Schrittkette in Deutsch sinnvoll sein
 // (Satzglieder der Reihe nach), bei Leon nicht.
 export function fachfremd(a, spiel, kind) {
+  /* Auf einem Wissensblatt ist Rechnen IMMER fachfremd - unabhaengig vom
+     Alter. Regel 2b2 bittet darum; eine Bitte im Auftrag ist keine Pruefung.
+     Am 22.09.2026 kamen zu Pauls Stadtportraet vier Rechenaufgaben zurueck,
+     und Paul ist zehn - die Altersgrenze unten haette keine davon gefunden. */
+  if (istWissensblatt(spiel) && a) {
+    if (RECHEN_FRAGE.test(String(a.frage || ""))) return "rechnet auf einem Wissensblatt";
+    if ((a.art || "") === "teilschritte") return "ist eine Rechenkette auf einem Wissensblatt";
+    if (/\b(zerlegung|zerlege|stellenwert|\d+\s*(T|H|Z|E)\s*\+)/i.test(String(a.frage || "")))
+      return "uebt Stellenwerte auf einem Wissensblatt";
+    if (/\b(steigere|steigerung|komparativ|superlativ|wortart|praeteritum|präteritum)\b/i.test(String(a.frage || "")))
+      return "uebt Grammatik auf einem Wissensblatt";
+    // "Welcher Ort kam NICHT dazu?" - die Antwort steht dann gerade NICHT
+    // auf dem Blatt, das Kind kann sie unmoeglich wissen.
+    if (/\bNICHT\b/.test(String(a.frage || ""))) return "fragt nach etwas, das NICHT auf dem Blatt steht";
+  }
+
   const k = KINDER[kind];
   if (!k || k.alter > 8) return "";
   const fach = String((spiel && spiel.fach) || "").toLowerCase();
@@ -977,6 +1010,9 @@ DEINE REGELN
 1. ORDNE EIN. Erkenne, um welches Fach und welchen Lernbereich es geht. Passt nichts, setze lernbereich auf "unbekannt" - rate nicht.
 2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen. Nenne jede Aufgabe, die auf dem Blatt steht, kurz im Feld blatt_aufgaben (z. B. "34 + 27", "Unterstreiche das Prädikat: Der Hund bellt laut."). Ist es eine HAUSAUFGABE, gilt das doppelt: Das Spiel zeigt nach jeder Antwort die Lösung - eine Aufgabe vom Blatt darin würde die Hausaufgabe für das Kind lösen.
 2b. BEI EINEM WISSENSBLATT WIRD NUR GEFRAGT, WAS DARAUFSTEHT. Besteht der Stoff aus Tatsachen (Stadtporträt, Körperteile, Zeitleiste, Vokabeln, Begriffe), setze wissensblatt=true und schreibe JEDE Angabe vom Blatt in blatt_inhalt - auch das handschriftlich Ausgefüllte. Danach darfst du NUR daraus fragen, und zu jeder Aufgabe gehört beleg_nr - die Nummer der Zeile aus blatt_inhalt, in der die Antwort steht. Beispiel, was VERBOTEN ist: Auf dem Blatt steht "Regierungsbezirk: Mittelfranken", und du fragst "Wie viele Regierungsbezirke hat Bayern?" - das Kind war im Unterricht dabei und hat die Sieben nie gehört. Es hält sich für dumm, obwohl es alles gewusst hat, was drankam. Frage stattdessen nach dem, was dasteht: "In welchem Regierungsbezirk liegt Fürth?" Anders herum, WEITERES ist erlaubt: dieselbe Angabe anders herum fragen, zwei Angaben vom Blatt verbinden, aus einer Liste die Zahl abzählen. Bei einem Verfahren (Rechnen, Rechtschreibung, Satzbau) gilt das alles NICHT - dort sind eigene Zahlen und Sätze Pflicht, wissensblatt bleibt false.
+2b2. AUF EINEM WISSENSBLATT WIRD NICHT GERECHNET UND NICHT GRAMMATIK GEÜBT. Am 22.09.2026 kamen zu Pauls Stadtporträt sechs Aufgaben zurück, die alle raus mussten: "Der Weg vom Rathaus zum Marktplatz ist 2 m 40 cm breit - wie viele Zentimeter?", "Welche Zerlegung passt zu 132.000?", "9 T + 0 H + 7 Z + 6 E", "Steigere richtig: Fürth ist die ___ Stadt". Das ist Mathematik und Deutsch, hineingeschmuggelt in ein Sachfach - und keine einzige dieser Angaben stand auf dem Blatt. Frage NUR nach den Tatsachen aus blatt_inhalt. Auch KEINE Negativfragen ("Welcher Ort kam NICHT dazu?"): Die richtige Antwort ist dann etwas, das gerade nicht auf dem Blatt steht, und das kann das Kind unmöglich wissen.
+2b3. BAU 12 BIS 14 AUFGABEN, wenn wissensblatt=true. Ein volles Blatt gibt genug her, und was nicht belegt ist, wird hier aussortiert - lieber ein paar mehr, als dass am Ende zu wenige übrig bleiben.
+
 2c. BEI EINEM WISSENSBLATT IST JEDE AUFGABE art="wahl". Das Kind hatte den Stoff heute oder gestern - es kennt ihn wieder, kann ihn aber noch nicht aus dem Kopf aufschreiben. Vier Möglichkeiten zum Antippen sind die Stufe, auf der es anfängt. Die falschen Antworten kommen möglichst von woanders vom Blatt (eine andere Partnerstadt, ein anderer Stadtteil): So ist der Weg zur richtigen das Wiedererkennen, nicht das Ausschließen von Unsinn.
 
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
