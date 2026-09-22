@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Schulheft</title>
+<!--
+  Der Schaukasten. Denny am 22.09.2026: "Es wird ein digitaler Schaukasten
+  seiner täglichen Schularbeiten, selektiert nach Fach. Hier baust du im
+  Hintergrund eine Datenbank auf. Daraus können wir dann arbeiten und alles
+  Mögliche bauen."
+
+  Diese Seite ZEIGT nur. Gebaut wird nichts, es kostet nichts, und es läuft
+  kein Modell - alles kommt aus /api/schulstoff.
+
+  Keine Lernzeit: Sein Heft durchblättern ist kein Lernen, und eine gezählte
+  Minute hier würde die Statistik im Elternbereich fälschen. Deshalb bindet
+  die Seite lernstand.js bewusst NICHT ein.
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#6b7280; --line:#e4e7f0;
+    --paul:#4f46e5; --gut:#12b76a;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;--line:#2e3140}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--font);
+       padding:18px 16px 70px;-webkit-text-size-adjust:100%}
+  .huelle{max-width:720px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .zurueck{background:var(--karte);border-radius:999px;padding:9px 15px;text-decoration:none;
+           color:var(--ink);font-weight:600;font-size:15.5px;min-height:44px;display:flex;align-items:center}
+  h1{font:800 26px/1.2 var(--rund);margin:0}
+  .karte{background:var(--karte);border-radius:22px;padding:18px;
+         box-shadow:0 1px 2px rgba(20,22,40,.05),0 10px 28px rgba(20,22,40,.07)}
+  .karte+.karte{margin-top:14px}
+  .unter{color:var(--muted);font-size:15px;margin:4px 0 0}
+
+  .faecher{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+  .fach{appearance:none;border:1.5px solid var(--line);background:var(--karte);color:var(--ink);
+        border-radius:999px;padding:10px 14px;font:600 15.5px var(--font);cursor:pointer;min-height:44px}
+  .fach.an{background:var(--paul);border-color:var(--paul);color:#fff}
+  .fach .zahl{opacity:.65;margin-left:5px;font-weight:500}
+  .fach.an .zahl{opacity:.85}
+
+  .tag{font:800 17px var(--rund);margin:22px 0 10px;display:flex;align-items:baseline;gap:9px}
+  .tag small{font:500 14.5px var(--font);color:var(--muted)}
+  .blaetter{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .blatt{background:var(--karte);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(20,22,40,.06),0 6px 18px rgba(20,22,40,.07);
+         position:relative;cursor:pointer;border:none;padding:0;text-align:left;width:100%}
+  .blatt img{width:100%;height:150px;object-fit:cover;display:block;background:#f1f4fa}
+  .blatt .platzhalter{height:150px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#f1f4fa}
+  .blatt .fuss{padding:10px 12px}
+  .blatt .fuss b{display:block;font:700 15px var(--rund)}
+  .blatt .fuss span{color:var(--muted);font-size:13.5px}
+  .blatt .nr{position:absolute;top:8px;right:8px;background:rgba(20,22,40,.72);color:#fff;
+             border-radius:999px;padding:3px 9px;font:700 12.5px var(--rund)}
+  .blatt.versteckt{opacity:.45}
+
+  .leer{text-align:center;padding:26px 12px}
+  .leer .zeichen{font-size:44px}
+  .leer b{display:block;font:700 19px var(--rund);margin-top:8px}
+
+  /* Grossansicht */
+  .schau{position:fixed;inset:0;background:rgba(14,15,22,.93);display:none;
+         flex-direction:column;z-index:50;padding:14px}
+  .schau.auf{display:flex}
+  .schau-kopf{display:flex;gap:10px;align-items:center;color:#fff;flex-wrap:wrap}
+  .schau-kopf b{font:700 17px var(--rund)}
+  .schau-kopf .weg{margin-left:auto}
+  .schau img{flex:1;min-height:0;object-fit:contain;width:100%;margin:12px 0}
+  .schau .knoepfe{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+  .schau .fach{background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
+  .schau .fach.gefahr{background:#7f1d1d}
+  @media (prefers-color-scheme:dark){ .blatt img,.blatt .platzhalter{background:#262a38} }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/paul/">‹ Lernwelt</a>
+    <h1>📚 Mein Schulheft</h1>
+  </header>
+
+  <div class="karte" id="kopf">
+    <div style="font:600 19px var(--rund)">Alles, was du fotografiert hast</div>
+    <p class="unter" id="stand">Einen Moment …</p>
+  </div>
+
+  <div id="filter" class="faecher" style="margin-top:16px"></div>
+  <div id="inhalt"></div>
+</div>
+
+<div class="schau" id="schau" role="dialog" aria-label="Blatt ansehen">
+  <div class="schau-kopf">
+    <b id="schau-titel"></b>
+    <button class="fach weg" type="button" id="schau-zu">✕ Zurück</button>
+  </div>
+  <img id="schau-bild" alt="Dein Blatt">
+  <div class="knoepfe">
+    <button class="fach" type="button" id="schau-vor">‹ Seite</button>
+    <span id="schau-nr" style="color:#fff;align-self:center;font-weight:600"></span>
+    <button class="fach" type="button" id="schau-zurueck">Seite ›</button>
+    <button class="fach" type="button" id="schau-verstecken">🙈 Aus der Ansicht nehmen</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli",
+                "August","September","Oktober","November","Dezember"];
+  var TAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  var ZEICHEN = {mathe:"🔢", deutsch:"📖", hsu:"🌍", englisch:"🇬🇧",
+                 rel:"🕊️", musik:"🎵", anderes:"✏️", "":"📄"};
+  var KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
+              rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
+
+  var alles = [], heute = "", gewaehlt = "alle", offen = null, offenSeite = 0;
+
+  function lang(iso){
+    var t = String(iso||"").split("-");
+    if (t.length !== 3) return String(iso||"");
+    var d = new Date(+t[0], +t[1]-1, +t[2]);
+    return TAGE[d.getDay()] + ", " + (+t[2]) + ". " + MONATE[+t[1]-1] + " " + t[0];
+  }
+  function tagName(iso){
+    if (iso === heute) return "Heute";
+    var g = new Date(heute + "T12:00:00Z"); g.setUTCDate(g.getUTCDate()-1);
+    if (iso === g.toISOString().slice(0,10)) return "Gestern";
+    return lang(iso);
+  }
+
+  function filterMalen(){
+    var zahl = {};
+    alles.forEach(function(e){ zahl[e.fach||""] = (zahl[e.fach||""]||0) + 1; });
+    var html = '<button class="fach' + (gewaehlt==="alle"?" an":"") + '" data-f="alle">Alle' +
+               '<span class="zahl">' + alles.length + '</span></button>';
+    Object.keys(zahl).sort(function(a,b){ return zahl[b]-zahl[a]; }).forEach(function(f){
+      html += '<button class="fach' + (gewaehlt===f?" an":"") + '" data-f="' + f + '">' +
+              (ZEICHEN[f]||"📄") + " " + (KURZ[f]||f) +
+              '<span class="zahl">' + zahl[f] + '</span></button>';
+    });
+    $("filter").innerHTML = html;
+    Array.prototype.forEach.call($("filter").children, function(k){
+      k.addEventListener("click", function(){
+        gewaehlt = k.getAttribute("data-f");
+        filterMalen(); listeMalen();
+      });
+    });
+  }
+
+  function listeMalen(){
+    var zeigen = alles.filter(function(e){
+      return gewaehlt === "alle" || (e.fach||"") === gewaehlt;
+    });
+    if (!zeigen.length){
+      $("inhalt").innerHTML = '<div class="karte leer"><div class="zeichen">📸</div>' +
+        '<b>Hier ist noch nichts</b><p class="unter">Fotografier in der Werkstatt, ' +
+        'was du heute in der Schule gemacht hast – dann steht es hier.</p></div>';
+      return;
+    }
+    // Nach Tag gruppieren, neuester zuerst.
+    var tage = [], nach = {};
+    zeigen.forEach(function(e){
+      if (!nach[e.datum]){ nach[e.datum] = []; tage.push(e.datum); }
+      nach[e.datum].push(e);
+    });
+    var html = "";
+    tage.forEach(function(t){
+      html += '<div class="tag">' + tagName(t) +
+              '<small>' + nach[t].length + (nach[t].length===1?" Blatt":" Blätter") + '</small></div>' +
+              '<div class="blaetter">';
+      nach[t].forEach(function(e){
+        html += '<button class="blatt' + (e.sichtbar===false?" versteckt":"") + '" data-id="' + e.id + '">' +
+                '<div class="platzhalter" data-bild="' + e.id + '">' + (ZEICHEN[e.fach||""]||"📄") + '</div>' +
+                (e.seiten > 1 ? '<span class="nr">' + e.seiten + ' Seiten</span>' : '') +
+                '<div class="fuss"><b>' + (KURZ[e.fach||""]||"Ohne Fach") + '</b>' +
+                '<span>' + (e.notiz ? e.notiz.slice(0,40) : (e.thema||"").slice(0,40) || "angesehen") + '</span>' +
+                '</div></button>';
+      });
+      html += "</div>";
+    });
+    $("inhalt").innerHTML = html;
+
+    Array.prototype.forEach.call($("inhalt").querySelectorAll(".blatt"), function(k){
+      k.addEventListener("click", function(){ aufmachen(k.getAttribute("data-id")); });
+    });
+    // Vorschaubilder erst danach holen - so steht die Seite sofort.
+    Array.prototype.forEach.call($("inhalt").querySelectorAll("[data-bild]"), function(p){
+      bildHolen(p.getAttribute("data-bild"), 0).then(function(url){
+        if (!url) return;
+        var b = document.createElement("img");
+        b.src = url; b.alt = "Dein Blatt";
+        p.parentNode.replaceChild(b, p);
+      });
+    });
+  }
+
+  var bilder = {};
+  function bildHolen(id, nr){
+    var k = id + ":" + nr;
+    if (bilder[k]) return Promise.resolve(bilder[k]);
+    return fetch("/api/schulstoff?kind=paul&bild=" + encodeURIComponent(k), {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (j && j.ok && j.bild){ bilder[k] = j.bild; return j.bild; } return null; })
+      .catch(function(){ return null; });
+  }
+
+  function aufmachen(id){
+    offen = alles.filter(function(e){ return e.id === id; })[0];
+    if (!offen) return;
+    offenSeite = 0;
+    seiteZeigen();
+    $("schau").classList.add("auf");
+  }
+  function seiteZeigen(){
+    if (!offen) return;
+    $("schau-titel").textContent = (KURZ[offen.fach||""]||"Ohne Fach") + " · " + lang(offen.datum);
+    $("schau-nr").textContent = offen.seiten > 1 ? (offenSeite+1) + " von " + offen.seiten : "";
+    $("schau-vor").style.display = offen.seiten > 1 ? "" : "none";
+    $("schau-zurueck").style.display = offen.seiten > 1 ? "" : "none";
+    $("schau-verstecken").textContent = offen.sichtbar === false
+      ? "👁️ Wieder zeigen" : "🙈 Aus der Ansicht nehmen";
+    bildHolen(offen.id, offenSeite).then(function(url){
+      if (url) $("schau-bild").src = url;
+    });
+  }
+  $("schau-zu").addEventListener("click", function(){ $("schau").classList.remove("auf"); offen = null; });
+  $("schau-vor").addEventListener("click", function(){
+    if (!offen) return;
+    offenSeite = (offenSeite - 1 + offen.seiten) % offen.seiten; seiteZeigen();
+  });
+  $("schau-zurueck").addEventListener("click", function(){
+    if (!offen) return;
+    offenSeite = (offenSeite + 1) % offen.seiten; seiteZeigen();
+  });
+
+  /* Aus der Ansicht nehmen ist ein Tipp und umkehrbar - das Bild bleibt
+     liegen. Denny am 22.09.2026: "Er kann das aus seiner Ansicht
+     herausnehmen. Die alten Fotografien aber erst nach einem wiederholten
+     Fragen, ob er es wirklich löschen möchte, weil du darauf am Ende
+     gegebenenfalls prüfungsvorbereitende Fragen erarbeiten sollst." */
+  $("schau-verstecken").addEventListener("click", function(){
+    if (!offen) return;
+    var was = offen.sichtbar === false ? "zeigen" : "verstecken";
+    fetch("/api/schulstoff", {
+      method: "PATCH", credentials: "same-origin",
+      headers: {"content-type":"application/json"},
+      body: JSON.stringify({kind:"paul", id: offen.id, was: was})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      if (!j || !j.ok) return;
+      offen.sichtbar = (was === "zeigen");
+      seiteZeigen();
+      listeMalen();
+    }).catch(function(){});
+  });
+
+  function laden(){
+    fetch("/api/schulstoff?kind=paul&monate=6", {credentials:"same-origin"})
+      .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
+      .then(function(a){
+        if (a.status === 401){
+          $("stand").textContent = "Melde dich bitte erst in deiner Lernwelt an.";
+          return;
+        }
+        if (!a.j || !a.j.ok){
+          // Ehrlich bleiben: Nichts anzeigen heisst nicht "nichts da".
+          $("stand").textContent = (a.j && a.j.fehler) ||
+            "Ich komme gerade nicht an dein Heft. Probier es gleich nochmal.";
+          return;
+        }
+        heute = a.j.heute;
+        alles = a.j.eintraege || [];
+        var tage = {};
+        alles.forEach(function(e){ tage[e.datum] = 1; });
+        $("stand").textContent = alles.length
+          ? alles.length + (alles.length===1?" Blatt":" Blätter") + " aus " +
+            Object.keys(tage).length + (Object.keys(tage).length===1?" Schultag":" Schultagen") + "."
+          : "Noch nichts drin – fotografier dein erstes Blatt in der Werkstatt.";
+        filterMalen();
+        listeMalen();
+      })
+      .catch(function(){
+        $("stand").textContent = "Ich komme gerade nicht an dein Heft. Probier es gleich nochmal.";
+      });
+  }
+  laden();
+})();
+</script>
+</body>
+</html>
