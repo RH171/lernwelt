@@ -59,6 +59,10 @@
   .danach{margin-top:16px;border-radius:18px;background:#f0fdf4;border:1.5px solid #bbf7d0;padding:16px}
   .danach-kopf{font:700 19px var(--rund);color:#14532d}
   .danach-knoepfe{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .doppelt{margin-top:12px;border-radius:14px;background:#fffaf0;border:1.5px solid #fde3b8;
+           padding:12px 14px;font-size:15.5px}
+  .doppelt button{margin-top:10px}
+  @media (prefers-color-scheme:dark){ .doppelt{background:#2a2317;border-color:#4a3a1c} }
   .danach-knoepfe .fach{text-decoration:none;display:flex;align-items:center}
   @media (prefers-color-scheme:dark){
     .danach{background:#0f2c1c;border-color:#1f5137}
@@ -413,6 +417,10 @@
       <div class="danach verborgen" id="danach">
         <div class="danach-kopf">✅ Ist in deinem Heft.</div>
         <p class="unter" id="danach-text"></p>
+        <div class="doppelt verborgen" id="doppelt">
+          <div id="doppelt-text"></div>
+          <button class="fach" type="button" id="doppelt-weg">🗑️ Das neue wieder wegnehmen</button>
+        </div>
         <div class="danach-knoepfe">
           <a class="fach" id="zum-heft" href="schulstoff.html">📚 Mein Schulheft ansehen</a>
           <button class="fach" type="button" id="doch-spiel">🎮 Und jetzt ein Spiel dazu</button>
@@ -1338,6 +1346,20 @@
         return;
       }
       zuletztAbgelegt = a.j;
+      /* Liegt so ein Blatt schon da, wird gewarnt - nicht gesperrt (Dennys
+         Entscheidung, 22.09.2026). Paul entscheidet: Ein zweites Foto vom
+         verbesserten Blatt ist gewollt, ein versehentliches Doppel nicht. */
+      var z = a.j.schonDa;
+      var warnung = $("doppelt");
+      if (z){
+        $("doppelt-text").textContent =
+          "Das sieht aus wie „" + (z.titel || "dein Blatt") + "“ vom " + deutsch(z.datum) +
+          ", das schon in deinem Heft liegt.";
+        warnung.classList.remove("verborgen");
+        warnung.setAttribute("data-neu", a.j.id);
+      } else {
+        warnung.classList.add("verborgen");
+      }
       $("danach").classList.remove("verborgen");
       /* Hat das Blatt selbst ein Datum getragen, gilt das - aber Paul
          erfaehrt es. Denny am 22.09.2026 hat absichtlich ein falsches
@@ -1384,6 +1406,25 @@
   }
 
   $("los").addEventListener("click", function(){ ablegen(); });
+  $("doppelt-weg").addEventListener("click", function(){
+    var id = $("doppelt").getAttribute("data-neu");
+    if (!id) return;
+    $("doppelt-weg").disabled = true;
+    fetch("/api/schulstoff", {
+      method:"PATCH", credentials:"same-origin",
+      headers:{"content-type":"application/json"},
+      body: JSON.stringify({kind:"paul", id:id, was:"weg"})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      $("doppelt-weg").disabled = false;
+      if (!j || !j.ok){ $("doppelt-text").textContent = "Das hat nicht geklappt – probier es nochmal."; return; }
+      $("doppelt").innerHTML = "<div>✅ Wieder weggenommen. Das ältere liegt weiter in deinem Heft.</div>";
+      $("danach-text").textContent = "Es liegt jetzt nur das eine Blatt in deinem Heft.";
+    }).catch(function(){
+      $("doppelt-weg").disabled = false;
+      $("doppelt-text").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
+    });
+  });
+
   $("noch-eins").addEventListener("click", zurueckAufAnfang);
   $("doch-spiel").addEventListener("click", function(){ bauen(""); });
 
