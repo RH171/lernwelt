@@ -101,6 +101,49 @@
     });
   }
 
+  /* Das Foto wird kleiner gemacht, bevor es losgeht.
+   *
+   * Pauls Blatt kam als 1382 KB vom iPhone - als JSON sind das 1,8 MB, die
+   * ueber ein Handynetz hochmuessen. Genau daran ist er am 22.09.2026 um
+   * 20:46 Uhr haengengeblieben ("Load failed").
+   *
+   * Gemessen am selben Tag: Dasselbe Blatt mit 286 KB (1600 px lange Kante)
+   * hat das Modell GENAUSO vollstaendig gelesen - alle 13 Zeilen des
+   * Stadtportraets, inklusive Handschrift. Die Denkzeit haengt am Inhalt,
+   * nicht an den Bildpunkten.
+   *
+   * 1800 px sind bei einem A4-Blatt rund 210 dpi - genug fuer Handschrift
+   * und Bruchrechnung. PDFs bleiben unangetastet: Die kann der Browser
+   * nicht neu zeichnen, und sie sind ohnehin klein. */
+  var KANTE = 1800;
+
+  function kleiner(seite) {
+    return new Promise(function (fertig) {
+      if (!seite || typeof seite.data !== "string" ||
+          String(seite.media_type || "").indexOf("image/") !== 0) { fertig(seite); return; }
+      var bild = new Image();
+      bild.onload = function () {
+        try {
+          var f = Math.min(1, KANTE / Math.max(bild.width, bild.height));
+          if (f >= 1) { fertig(seite); return; }   // schon klein genug
+          var c = document.createElement("canvas");
+          c.width = Math.round(bild.width * f);
+          c.height = Math.round(bild.height * f);
+          c.getContext("2d").drawImage(bild, 0, 0, c.width, c.height);
+          var url = c.toDataURL("image/jpeg", 0.82);
+          var neu = url.split(",")[1];
+          // Nur nehmen, wenn es wirklich kleiner wurde - bei einem schon
+          // stark komprimierten Bild kann JPEG auch groesser werden.
+          fertig(neu && neu.length < seite.data.length
+            ? { media_type: "image/jpeg", data: neu }
+            : seite);
+        } catch (e) { fertig(seite); }
+      };
+      bild.onerror = function () { fertig(seite); };
+      bild.src = "data:" + seite.media_type + ";base64," + seite.data;
+    });
+  }
+
   function bauen(auftrag, haken) {
     haken = haken || {};
     var mit = {};
@@ -115,7 +158,10 @@
      * NETZfehler wird wiederholt: Sagt der Server etwas (zu gross, nicht
      * angemeldet, kein Spiel), waere ein zweiter Versuch dieselbe Absage
      * und nur mehr Wartezeit. */
-    return einmal(mit, haken).catch(function (e) {
+    return Promise.all((mit.seiten || []).map(kleiner)).then(function (seiten) {
+      mit.seiten = seiten;
+      return einmal(mit, haken);
+    }).catch(function (e) {
       var roh = String((e && e.message) || e || "");
       var vomServer = /melde dich|zu viel los|Guthaben|Claude hat nicht|zu gross|zu groß|unvollständig|unvollstaendig/i.test(roh);
       if (vomServer) throw new Error(fuerKinder(e));
