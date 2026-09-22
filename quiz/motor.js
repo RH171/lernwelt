@@ -317,9 +317,9 @@
 
   /* ---------- Aufbau ---------- */
   $("q-alle").addEventListener("click", function () {
-    stand.faecher = []; schreibe(SPEICHER, stand); faecherHolen();   // holt die Faecher aus dem Heft und zeichnet danach
+    stand.faecher = []; schreibe(SPEICHER, stand); fachkachelnMalen();
   });
-  fachkachelnMalen();
+  faecherHolen();   // holt die Faecher aus dem Heft und zeichnet danach
   laengeMalen();
   if (stand.tage && stand.tage.length) {
     $("q-serie").textContent = serie(stand.tage) ? "🔥 " + serie(stand.tage) + " Tage in Folge" : "";
