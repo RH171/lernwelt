@@ -61,8 +61,14 @@
   .danach-knoepfe{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
   .doppelt{margin-top:12px;border-radius:14px;background:#fffaf0;border:1.5px solid #fde3b8;
            padding:12px 14px;font-size:15.5px}
+  .datumfrage{margin-top:12px;border-radius:14px;background:#eef2ff;border:1.5px solid #c7d2fe;
+              padding:13px 15px;font-size:15.5px}
+  .datumfrage-knoepfe{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}
   .doppelt button{margin-top:10px}
-  @media (prefers-color-scheme:dark){ .doppelt{background:#2a2317;border-color:#4a3a1c} }
+  @media (prefers-color-scheme:dark){
+    .doppelt{background:#2a2317;border-color:#4a3a1c}
+    .datumfrage{background:#1b1f38;border-color:#33407a}
+  }
   .danach-knoepfe .fach{text-decoration:none;display:flex;align-items:center}
   @media (prefers-color-scheme:dark){
     .danach{background:#0f2c1c;border-color:#1f5137}
@@ -417,6 +423,18 @@
       <div class="danach verborgen" id="danach">
         <div class="danach-kopf">✅ Ist in deinem Heft.</div>
         <p class="unter" id="danach-text"></p>
+        <!-- Weicht das Datum vom Blatt um mehr als 14 Tage ab, wird gefragt
+             statt uebernommen. Denny am 23.09.2026: "Bei einer Anomalie von
+             mehr als 14 Tagen kommt von dir eine Rueckfrage, und du laesst
+             ihr das Datum noch mal bestaetigen." Der Lesefehler kann auch im
+             MONAT stecken - eine 9, die als 8 gelesen wird, sind 31 Tage. -->
+        <div class="datumfrage verborgen" id="datumfrage">
+          <div id="datumfrage-text"></div>
+          <div class="datumfrage-knoepfe">
+            <button class="fach" type="button" id="datum-ja"></button>
+            <button class="fach" type="button" id="datum-nein"></button>
+          </div>
+        </div>
         <div class="doppelt verborgen" id="doppelt">
           <div id="doppelt-text"></div>
           <button class="fach" type="button" id="doppelt-weg">🗑️ Das neue wieder wegnehmen</button>
@@ -1349,6 +1367,21 @@
       /* Liegt so ein Blatt schon da, wird gewarnt - nicht gesperrt (Dennys
          Entscheidung, 22.09.2026). Paul entscheidet: Ein zweites Foto vom
          verbesserten Blatt ist gewollt, ein versehentliches Doppel nicht. */
+      /* Das Datum vom Blatt weicht stark ab - Paul entscheidet. Übernommen
+         ist noch nichts; im Heft steht bis dahin sein gewähltes Datum. */
+      var f = a.j.datumFrage;
+      if (f){
+        $("datumfrage-text").textContent =
+          "Auf dem Blatt lese ich " + deutsch(f.gelesen) + " – das ist " +
+          (f.tage > 400 ? "über ein Jahr" : f.tage + " Tage") + " her. Stimmt das?";
+        $("datum-ja").textContent = "Ja, " + deutsch(f.gelesen);
+        $("datum-nein").textContent = "Nein, " + deutsch(f.gewaehlt);
+        $("datumfrage").classList.remove("verborgen");
+        $("datumfrage").setAttribute("data-id", a.j.id);
+      } else {
+        $("datumfrage").classList.add("verborgen");
+      }
+
       var z = a.j.schonDa;
       var warnung = $("doppelt");
       if (z){
@@ -1406,6 +1439,30 @@
   }
 
   $("los").addEventListener("click", function(){ ablegen(); });
+  function datumAntwort(was){
+    var id = $("datumfrage").getAttribute("data-id");
+    if (!id) return;
+    $("datum-ja").disabled = true; $("datum-nein").disabled = true;
+    fetch("/api/schulstoff", {
+      method:"PATCH", credentials:"same-origin",
+      headers:{"content-type":"application/json"},
+      body: JSON.stringify({kind:"paul", id:id, was:was})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      $("datum-ja").disabled = false; $("datum-nein").disabled = false;
+      if (!j || !j.ok){
+        $("datumfrage-text").textContent = "Das hat nicht geklappt – probier es nochmal.";
+        return;
+      }
+      $("datumfrage").innerHTML = "<div>✅ Alles klar – dein Blatt liegt unter dem " +
+        deutsch(j.datum) + ".</div>";
+    }).catch(function(){
+      $("datum-ja").disabled = false; $("datum-nein").disabled = false;
+      $("datumfrage-text").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
+    });
+  }
+  $("datum-ja").addEventListener("click", function(){ datumAntwort("datum-bestaetigen"); });
+  $("datum-nein").addEventListener("click", function(){ datumAntwort("datum-ablehnen"); });
+
   $("doppelt-weg").addEventListener("click", function(){
     var id = $("doppelt").getAttribute("data-neu");
     if (!id) return;
