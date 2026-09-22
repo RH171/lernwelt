@@ -61,6 +61,16 @@ export async function onRequestGet(context) {
 
   const gewuenschteFaecher = String(url.searchParams.get("faecher") || "")
     .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  /* Welche Blaetter aus dem Schulheft abgefragt werden sollen.
+   *
+   * Denny am 23.09.2026: "Ganz klar, nur aus seinen Blättern. Wenn du jetzt
+   * Paul plötzlich was zu Nürnberg fragst, obwohl er ein HSU heute Fürth
+   * hatte, versteht er ja die Welt nicht und kennt die Antworten nicht."
+   *
+   * Jede Frage, die aus einem Blatt gebaut wurde, traegt dessen id in
+   * f.blatt. Ohne Auswahl bleibt alles beim Alten - das ganze Fach. */
+  const gewuenschteBlaetter = String(url.searchParams.get("blaetter") || "")
+    .split(",").map((s) => s.trim()).filter(Boolean);
   const anzahlRoh = Number(url.searchParams.get("anzahl"));
   // 0 heisst "endlos" - dann wird geliefert, was da ist, und beim naechsten
   // Nachladen weiter.
@@ -69,31 +79,36 @@ export async function onRequestGet(context) {
   let vorrat = await vorratLesen(env, kind);
   const gestellt = new Set(await gestellteLesen(env, kind));
 
-  let offen = vorrat.fragen.filter((f) => !gestellt.has(f.id));
-  if (gewuenschteFaecher.length)
-    offen = offen.filter((f) => gewuenschteFaecher.includes(String(f.fach || "").toLowerCase()));
+  const passt = (f) => {
+    if (gewuenschteFaecher.length &&
+        !gewuenschteFaecher.includes(String(f.fach || "").toLowerCase())) return false;
+    if (gewuenschteBlaetter.length && !gewuenschteBlaetter.includes(String(f.blatt || ""))) return false;
+    return true;
+  };
+
+  let offen = vorrat.fragen.filter((f) => !gestellt.has(f.id) && passt(f));
 
   // Reicht es nicht, wird nachgebaut. Der Aufruf dauert - darum sagt die
   // Antwort ehrlich, dass gewartet wird, statt still nichts zu liefern.
   let nachgebaut = false;
   if (offen.length < Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB)) {
     try {
-      const neu = await nachschubBauen(env, kind, gewuenschteFaecher);
+      const neu = await nachschubBauen(env, kind, gewuenschteFaecher, gewuenschteBlaetter);
       if (neu.length) {
         vorrat.fragen = vorrat.fragen.concat(neu).slice(-200);
         vorrat.gebaut = new Date().toISOString();
         await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(vorrat));
         nachgebaut = true;
-        offen = vorrat.fragen.filter((f) => !gestellt.has(f.id));
-        if (gewuenschteFaecher.length)
-          offen = offen.filter((f) => gewuenschteFaecher.includes(String(f.fach || "").toLowerCase()));
+        offen = vorrat.fragen.filter((f) => !gestellt.has(f.id) && passt(f));
       }
     } catch (e) { /* Vorrat reicht vielleicht trotzdem */ }
   }
 
   if (!offen.length)
     return json(200, { ok: true, fragen: [], leer: true,
-      fehler: "Für diese Auswahl habe ich gerade keine neuen Fragen. Versuch es mit mehr Fächern." });
+      fehler: gewuenschteBlaetter.length
+        ? "Zu diesen Blättern habe ich gerade keine neuen Fragen. Nimm noch eines dazu."
+        : "Für diese Auswahl habe ich gerade keine neuen Fragen. Versuch es mit mehr Fächern." });
 
   mischen(offen);
   const raus = anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40);
