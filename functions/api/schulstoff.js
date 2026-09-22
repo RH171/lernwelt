@@ -23,7 +23,7 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
-  stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen,
+  stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -98,11 +98,27 @@ export async function onRequestPost(context) {
    * abgelegt. Das Ablegen bleibt damit weit unter den 90 Sekunden, um die es
    * hier eigentlich ging - und der Eintrag liegt ohnehin schon sicher im
    * Speicher, bevor dieser Aufruf startet. */
-  let titel = "";
+  let titel = "", vomBlattGelesen = "", weichtAb = false;
   if (env.ANTHROPIC_API_KEY) {
     try {
-      titel = await titelHolen(env, seiten[0]);
-      if (titel) await titelSetzen(env, kind, e.id, titel);
+      const gelesen = await blattLesen(env, seiten[0]);
+      titel = gelesen.titel;
+      /* Das Datum vom Blatt gilt - es weiss besser, wann das Blatt entstanden
+         ist, als eine Voreinstellung. ABER es wird nicht stillschweigend
+         getauscht: Weicht es von dem ab, was das Kind gewaehlt hat, steht das
+         in der Antwort, und die Seite sagt es ihm. Denny: "am Ende hilft es
+         natuerlich der Zuordnung" - ein heimlich geaendertes Datum hilft
+         niemandem. */
+      const geprueft = blattDatum(gelesen.datum, heute);
+      if (geprueft) {
+        vomBlattGelesen = geprueft;
+        weichtAb = geprueft !== e.datum;
+      }
+      if (titel || vomBlattGelesen) {
+        await titelSetzen(env, kind, e.id, titel,
+                          vomBlattGelesen && !weichtAb ? "Datum vom Blatt bestätigt" : "");
+      }
+      if (weichtAb) await datumSetzen(env, kind, e.id, vomBlattGelesen, e.datum);
     } catch (err) {
       // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
       try { await titelSetzen(env, kind, e.id, "", String(err && err.message || err).slice(0, 80)); }
@@ -110,8 +126,15 @@ export async function onRequestPost(context) {
     }
   }
 
-  return json(200, { ok: true, id: e.id, datum: e.datum, datumVonBlatt: !!vomBlatt,
-                     ...(titel ? { titel } : {}) });
+  return json(200, {
+    ok: true, id: e.id,
+    // Das Datum, das jetzt wirklich im Heft steht.
+    datum: weichtAb ? vomBlattGelesen : e.datum,
+    datumVonBlatt: !!(vomBlatt || vomBlattGelesen),
+    ...(titel ? { titel } : {}),
+    // Nur wenn es abweicht - die Seite sagt es dem Kind dann ausdrücklich.
+    ...(weichtAb ? { datumGeaendert: { von: e.datum, auf: vomBlattGelesen } } : {}),
+  });
 }
 
 const TITEL_MODELL = "claude-haiku-4-5-20251001";
@@ -119,11 +142,22 @@ const TITEL_MODELL = "claude-haiku-4-5-20251001";
 // ein Kind, das vor dem Ladebalken sitzt.
 const TITEL_GRENZE = 9000;
 
-async function titelHolen(env, seite) {
+/* EIN Blick aufs Bild - Titel und Datum zusammen.
+ *
+ * Denny am 22.09.2026: "Ich habe jetzt absichtlich ein falsches Datum
+ * gewählt. Du müsstest aber das Datum oben rechts oder oben links sehen."
+ * Und: "Da schon abgesehen, wird das Datum nicht so relevant sein, aber am
+ * Ende hilft es natürlich der Zuordnung."
+ *
+ * Der Aufruf lief ohnehin schon fuer den Titel - das Datum kostet nichts
+ * dazu. Auf einem Schulblatt steht es oben links oder oben rechts, oft
+ * abgekuerzt ("22.9.26").
+ */
+async function blattLesen(env, seite) {
   const komma = String(seite || "").indexOf(",");
   if (komma < 0) throw new Error("kein Bild dabei");
   const typ = String(seite).slice(5, String(seite).indexOf(";"));
-  if (typ.indexOf("image/") !== 0) return "";       // PDFs schaut dieser Weg nicht an
+  if (typ.indexOf("image/") !== 0) return { titel: "", datum: "" };
 
   const abbruch = new AbortController();
   const uhr = setTimeout(() => abbruch.abort(), TITEL_GRENZE);
@@ -139,17 +173,20 @@ async function titelHolen(env, seite) {
       },
       body: JSON.stringify({
         model: TITEL_MODELL,
-        max_tokens: 100,
+        max_tokens: 150,
         messages: [{
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: typ, data: String(seite).slice(komma + 1) } },
             { type: "text", text:
-              "Das ist ein Blatt aus dem Unterricht eines Grundschulkindes. Schreib mir NUR " +
-              "eine kurze Überschrift, worum es darauf geht - höchstens fünf Wörter, deutsch, " +
-              "ohne Anführungszeichen und ohne Satzzeichen am Ende. Beispiele: " +
-              "\"Stadtporträt von Fürth\", \"Schriftliche Multiplikation\", \"Wörtliche Rede\". " +
-              "Erkennst du es nicht sicher, schreib nur: unklar" },
+              "Das ist ein Blatt aus dem Unterricht eines Grundschulkindes. Antworte NUR mit zwei " +
+              "Zeilen, ohne weiteren Text:\n" +
+              "TITEL: eine kurze Überschrift, worum es geht - höchstens fünf Wörter, deutsch, " +
+              "ohne Anführungszeichen. Erkennst du es nicht sicher: unklar\n" +
+              "DATUM: das Datum, das auf dem Blatt steht - meist oben links oder oben rechts, " +
+              "oft abgekürzt wie 22.9.26. Schreib es genau so ab, wie es dasteht. " +
+              "Steht keines da: keins\n" +
+              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26" },
           ],
         }],
       }),
@@ -167,10 +204,20 @@ async function titelHolen(env, seite) {
 
   const d = await r.json();
   const roh = ((d.content || []).filter((c) => c.type === "text")[0] || {}).text || "";
-  const titel = roh.trim().replace(/^["'„]|["'"]$/g, "").slice(0, 60);
-  // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
-  // etwas Erfundenes.
-  return (!titel || /^unklar$/i.test(titel)) ? "" : titel;
+
+  const zeile = (name) => {
+    const m = roh.match(new RegExp("^\\s*" + name + "\\s*:\\s*(.+)$", "mi"));
+    return m ? m[1].trim().replace(/^["'„]|["'"]$/g, "") : "";
+  };
+  const titel = zeile("TITEL").slice(0, 60);
+  const datumRoh = zeile("DATUM").slice(0, 40);
+
+  return {
+    // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
+    // etwas Erfundenes.
+    titel: (!titel || /^unklar$/i.test(titel)) ? "" : titel,
+    datum: (!datumRoh || /^(keins|kein|keines|unklar)$/i.test(datumRoh)) ? "" : datumRoh,
+  };
 }
 
 export async function onRequestGet(context) {
