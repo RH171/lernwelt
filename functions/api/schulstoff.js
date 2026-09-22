@@ -24,7 +24,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
-  fingerabdruck, schonDa, nahGenug, BLATT_HOECHSTENS_TAGE,
+  fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -108,7 +108,7 @@ export async function onRequestPost(context) {
    * abgelegt. Das Ablegen bleibt damit weit unter den 90 Sekunden, um die es
    * hier eigentlich ging - und der Eintrag liegt ohnehin schon sicher im
    * Speicher, bevor dieser Aufruf startet. */
-  let titel = "", vomBlattGelesen = "", weichtAb = false;
+  let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
   if (env.ANTHROPIC_API_KEY) {
     try {
       const gelesen = await blattLesen(env, seiten[0]);
@@ -120,16 +120,23 @@ export async function onRequestPost(context) {
          natuerlich der Zuordnung" - ein heimlich geaendertes Datum hilft
          niemandem. */
       const geprueft = blattDatum(gelesen.datum, heute);
-      /* Nur uebernehmen, wenn es plausibel nah am heutigen Tag liegt. Das
-         Modell hat sich am 23.09.2026 in einer handgeschriebenen Jahreszahl
-         verlesen (26 -> 25); der Eintrag landete im Vorjahr und war aus dem
-         Heft verschwunden. Ein falsches Datum, das etwas unsichtbar macht,
-         ist schlimmer als gar keins. */
-      if (geprueft && nahGenug(geprueft, heute)) {
+      /* Drei Ausgaenge (Denny, 23.09.2026): nah dran -> still nehmen, mehr
+         als 14 Tage her -> das Kind fragen, Zukunft -> gar nicht. Das Modell
+         hatte sich in einer handgeschriebenen Jahreszahl verlesen (26 -> 25)
+         und der Eintrag war aus dem Heft verschwunden. */
+      const urteil = geprueft ? datumPruefen(geprueft, heute) : "nein";
+      if (urteil === "nehmen") {
         vomBlattGelesen = geprueft;
         weichtAb = geprueft !== e.datum;
+      } else if (urteil === "fragen" && geprueft !== e.datum) {
+        // NICHT setzen - erst bestaetigen lassen. Der Vorschlag wird am
+        // Eintrag vermerkt, damit nur genau dieses Datum bestaetigt werden
+        // kann (siehe PATCH weiter unten).
+        nachgefragt = { gelesen: geprueft, gewaehlt: e.datum, tage: tageDavor(geprueft, heute) };
+        await titelSetzen(env, kind, e.id, titel, "Datum unbestätigt: " + geprueft);
+        await vorschlagSetzen(env, kind, e.id, geprueft);
       }
-      if (titel || vomBlattGelesen) {
+      if ((titel || vomBlattGelesen) && !nachgefragt) {
         await titelSetzen(env, kind, e.id, titel,
                           vomBlattGelesen && !weichtAb ? "Datum vom Blatt bestätigt" : "");
       }
@@ -166,6 +173,8 @@ export async function onRequestPost(context) {
     ...(titel ? { titel } : {}),
     // Nur wenn es abweicht - die Seite sagt es dem Kind dann ausdrücklich.
     ...(weichtAb ? { datumGeaendert: { von: e.datum, auf: vomBlattGelesen } } : {}),
+    /* Mehr als 14 Tage Abstand: Das Kind bestätigt es selbst. */
+    ...(nachgefragt ? { datumFrage: nachgefragt } : {}),
   });
 }
 
@@ -379,6 +388,32 @@ export async function onRequestPatch(context) {
    * kuenftig - ein schon verschobener Eintrag braucht trotzdem einen Weg
    * zurueck. NUR mit Eltern-Ausweis: Ein Kind soll seine Blaetter nicht
    * umdatieren koennen. */
+  /* Das Kind bestätigt das gelesene Datum.
+   *
+   * Denny am 23.09.2026: "Bei einer Anomalie von mehr als 14 Tagen kommt von
+   * dir eine Rückfrage, und du lässt ihr das Datum noch mal bestätigen."
+   *
+   * Übernommen wird ausschliesslich der Vorschlag, den der Server selbst am
+   * Eintrag vermerkt hat - kein frei gewähltes Datum. Damit kann ein Kind
+   * seine Blätter nicht umdatieren, aber den Lesefehler bestätigen oder
+   * ablehnen. */
+  if (String(d.was || "") === "datum-bestaetigen" || String(d.was || "") === "datum-ablehnen") {
+    const bestand = await stoffLesen(env, kind, 14);
+    if (!bestand.ok) return json(503, { ok: false, fehler: bestand.fehler });
+    const x = bestand.eintraege.filter((y) => y.id === String(d.id || ""))[0];
+    if (!x) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+    if (!x.datumVorschlag) return json(400, { ok: false, fehler: "Dazu gibt es keine offene Frage." });
+
+    if (String(d.was) === "datum-ablehnen") {
+      await vorschlagSetzen(env, kind, x.id, "");
+      return json(200, { ok: true, datum: x.datum });
+    }
+    const r2 = await datumSetzen(env, kind, x.id, x.datumVorschlag, x.datum);
+    if (!r2.ok) return json(503, { ok: false, fehler: "Das hat nicht geklappt." });
+    await vorschlagSetzen(env, kind, x.id, "");
+    return json(200, { ok: true, datum: x.datumVorschlag });
+  }
+
   if (String(d.was || "") === "datum") {
     if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) {
       return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });

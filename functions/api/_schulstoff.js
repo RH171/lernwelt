@@ -94,27 +94,41 @@ function naechsterTag(tag) {
 const MONATSNAMEN = ["januar","februar","maerz","märz","april","mai","juni","juli",
                      "august","september","oktober","november","dezember"];
 
-/* Wie weit darf ein Blatt-Datum zurueckliegen?
+/* Wie weit darf ein Blatt-Datum zurueckliegen - und ab wann wird gefragt?
  *
  * In der Nacht vom 22. auf den 23.09.2026 hat das Modell in Pauls
  * Handschrift "22.9.26" als "22.9.25" gelesen - ein Jahr daneben. Der
- * Eintrag wanderte daraufhin in den September 2025 und war aus seinem Heft
+ * Eintrag wanderte in den September 2025 und war aus seinem Heft
  * verschwunden, weil die Ansicht nur drei Monate zurueckschaut.
  *
- * Ein Blatt, das ein Kind abends fotografiert, ist Tage alt, nicht ein Jahr.
- * Alles, was weiter zurueckliegt, ist mit hoher Wahrscheinlichkeit ein
- * Lesefehler - und ein falsches Datum, das den Eintrag unsichtbar macht, ist
- * schlimmer als gar keins. 60 Tage lassen Ferien und ein spaet nachgereichtes
- * Heft zu. */
-export const BLATT_HOECHSTENS_TAGE = 60;
+ * Erster Versuch war eine stumme Schranke bei 60 Tagen. Denny hat es besser
+ * entschieden: "Bei einer Anomalie von mehr als 14 Tagen kommt von dir eine
+ * Rueckfrage, und du laesst ihr das Datum noch mal bestaetigen."
+ *
+ * Damit kommt auch ein echt altes Blatt durch - es wird nur nicht mehr
+ * stillschweigend uebernommen.
+ */
+export const BLATT_OHNE_FRAGE_TAGE = 14;
 
-export function nahGenug(datum, bezug) {
-  if (!datum || !bezug) return false;
+/* Wie viele Tage liegt das Blatt-Datum vor dem Bezugstag?
+ * Negativ heisst: es liegt in der Zukunft. null bei Unsinn. */
+export function tageDavor(datum, bezug) {
+  if (!datum || !bezug) return null;
   const a = new Date(datum + "T12:00:00Z"), b = new Date(bezug + "T12:00:00Z");
-  if (isNaN(a.getTime()) || isNaN(b.getTime())) return false;
-  const tage = Math.round((b - a) / 86400000);
-  // Nach vorn gar nicht (ein Blatt von morgen gibt es nicht), nach hinten 60.
-  return tage >= -1 && tage <= BLATT_HOECHSTENS_TAGE;
+  if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
+  return Math.round((b - a) / 86400000);
+}
+
+/* Drei Ausgaenge:
+ *   "nehmen"  - nah genug, wird still uebernommen
+ *   "fragen"  - mehr als 14 Tage her: das Kind bestaetigt es
+ *   "nein"    - in der Zukunft oder gar kein gueltiges Datum
+ */
+export function datumPruefen(datum, bezug) {
+  const t = tageDavor(datum, bezug);
+  if (t === null) return "nein";
+  if (t < -1) return "nein";                       // ein Blatt von uebermorgen
+  return t <= BLATT_OHNE_FRAGE_TAGE ? "nehmen" : "fragen";
 }
 
 export function blattDatum(text, heute) {
@@ -417,6 +431,32 @@ export async function datumSetzen(env, kind, id, neuesDatum, altesDatum) {
   try { await env.PAUL_KV.put(LISTE(kind, altMonat), JSON.stringify(liste)); }
   catch (e) { return { ok: true, doppelt: true }; }   // steht jetzt zweimal - beim naechsten Lesen sichtbar
   return { ok: true, verschoben: true };
+}
+
+/* Den offenen Datums-Vorschlag am Eintrag vermerken (oder loeschen).
+ *
+ * Damit kann das Kind spaeter GENAU dieses Datum bestaetigen - und kein
+ * anderes. Ein leerer Wert raeumt die Frage weg. */
+export async function vorschlagSetzen(env, kind, id, datum) {
+  if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
+  const heute = heuteBerlin();
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try { roh = await env.PAUL_KV.get(LISTE(kind, monat)); } catch (e) { return { ok: false }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false };
+    const treffer = liste.findIndex((e) => e.id === id);
+    if (treffer < 0) continue;
+    if (datum) liste[treffer].datumVorschlag = String(datum).slice(0, 10);
+    else delete liste[treffer].datumVorschlag;
+    try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
+    catch (e) { return { ok: false }; }
+    return { ok: true };
+  }
+  return { ok: false };
 }
 
 /* Verstecken und Wiederholen - ein Tipp, umkehrbar, das Bild bleibt.
