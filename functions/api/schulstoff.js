@@ -372,6 +372,28 @@ export async function onRequestPatch(context) {
   if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
   if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
 
+  /* Ein verlesenes Datum von Hand richtigstellen.
+   *
+   * In der Nacht auf den 23.09.2026 hat das Modell "22.9.26" als "22.9.25"
+   * gelesen; der Eintrag lag danach im Vorjahr. Die Schranke verhindert das
+   * kuenftig - ein schon verschobener Eintrag braucht trotzdem einen Weg
+   * zurueck. NUR mit Eltern-Ausweis: Ein Kind soll seine Blaetter nicht
+   * umdatieren koennen. */
+  if (String(d.was || "") === "datum") {
+    if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) {
+      return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });
+    }
+    const ziel = String(d.datum || "");
+    if (!datumOk(ziel, heuteBerlin())) return json(400, { ok: false, fehler: "Das Datum ist unbrauchbar." });
+    const bestand = await stoffLesen(env, kind, 14);
+    if (!bestand.ok) return json(503, { ok: false, fehler: bestand.fehler });
+    const x = bestand.eintraege.filter((y) => y.id === String(d.id || ""))[0];
+    if (!x) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+    const r2 = await datumSetzen(env, kind, x.id, ziel, x.datum);
+    return r2.ok ? json(200, { ok: true, von: x.datum, auf: ziel })
+                 : json(503, { ok: false, fehler: "Das hat nicht geklappt." });
+  }
+
   const e = await stoffAendern(env, kind, String(d.id || ""), String(d.was || ""));
   if (!e.ok) return json(e.fehler === "Das finde ich nicht mehr." ? 404 : 503, { ok: false, fehler: e.fehler });
   return json(200, { ok: true, was: e.was });
