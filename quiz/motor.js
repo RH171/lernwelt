@@ -33,6 +33,46 @@
 
   /* ---------- Start ---------- */
 
+  /* Welche Faecher angeboten werden, entscheidet das SCHULHEFT - nicht eine
+   * feste Liste in der Seite.
+   *
+   * Denny am 23.09.2026: "Prinzipiell sollte dort nur das Fach auftauchen,
+   * was er auch [in] der Zeit, in der er was hochgeladen hat" - und
+   * ausdruecklich: "ich würde dann auch beim Lernquiz Musik noch nicht
+   * anzeigen, sondern nur, wenn du im Heft-Eintrag auch was hast."
+   *
+   * Ein weggelegtes Blatt zaehlt nicht mit, und das vorige Schuljahr auch
+   * nicht - das rechnet der Server (faecherImHeft).
+   *
+   * Kommt der Server nicht ans Heft, bleibt die Liste aus der Seite stehen.
+   * Ein Kind ohne Quiz waere schlechter als eines mit einem Fach zu viel. */
+  var ausHeft = null;    // [{fach, blaetter}] oder null = noch nicht geladen
+
+  function faecherHolen() {
+    return fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) + "&faecher=1",
+                 { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) return;
+        ausHeft = j.faecher || [];
+        // Nur die Faecher, die auch in der Seite beschrieben sind (Name, Zeichen).
+        var bekannt = {};
+        K.faecher.forEach(function (f) { bekannt[f.k] = f; });
+        var neu = [];
+        ausHeft.forEach(function (x) {
+          if (bekannt[x.fach]) neu.push(Object.assign({}, bekannt[x.fach], { blaetter: x.blaetter }));
+        });
+        if (neu.length) K.faecher = neu;
+        // Was nicht mehr angeboten wird, darf auch nicht mehr gewaehlt sein.
+        stand.faecher = stand.faecher.filter(function (k) {
+          return K.faecher.some(function (f) { return f.k === k; });
+        });
+        schreibe(SPEICHER, stand);
+      })
+      .catch(function () {})
+      .then(function () { fachkachelnMalen(); });
+  }
+
   function fachkachelnMalen() {
     var box = $("q-faecher");
     box.innerHTML = "";
@@ -40,7 +80,8 @@
       var b = document.createElement("button");
       b.type = "button";
       b.className = "qfach" + (stand.faecher.indexOf(f.k) >= 0 ? " an" : "");
-      b.innerHTML = '<span class="ic">' + f.ic + "</span><span>" + esc(f.n) + "</span>";
+      b.innerHTML = '<span class="ic">' + f.ic + "</span><span>" + esc(f.n) +
+        (f.blaetter ? ' <small style="opacity:.65">' + f.blaetter + "</small>" : "") + "</span>";
       b.addEventListener("click", function () {
         var i = stand.faecher.indexOf(f.k);
         if (i >= 0) stand.faecher.splice(i, 1); else stand.faecher.push(f.k);
@@ -276,7 +317,7 @@
 
   /* ---------- Aufbau ---------- */
   $("q-alle").addEventListener("click", function () {
-    stand.faecher = []; schreibe(SPEICHER, stand); fachkachelnMalen();
+    stand.faecher = []; schreibe(SPEICHER, stand); faecherHolen();   // holt die Faecher aus dem Heft und zeichnet danach
   });
   fachkachelnMalen();
   laengeMalen();

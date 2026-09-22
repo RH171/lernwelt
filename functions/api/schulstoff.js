@@ -25,6 +25,7 @@ import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen,
+  faecherImHeft, blaetterImFach, schuljahrStart,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -278,6 +279,22 @@ export async function onRequestGet(context) {
     if (!daten) return json(404, { ok: false, fehler: "Das Bild finde ich nicht." });
     // Als data-URL zurück, damit die Seite es direkt in ein <img> hängen kann.
     return json(200, { ok: true, bild: daten });
+  }
+
+  /* Welche Faecher liegen im Heft? Das Lernquiz fragt danach, damit es nur
+     anbietet, wozu Paul auch etwas hochgeladen hat (Denny, 23.09.2026). */
+  if (p.get("faecher") === "1") {
+    const f = await faecherImHeft(env, kind);
+    return f.ok ? json(200, { ok: true, ab: f.ab, faecher: f.faecher, namen: FAECHER })
+                : json(503, { ok: false, fehler: f.fehler });
+  }
+
+  /* Die Blaetter EINES Fachs - Paul sucht selbst aus, was abgefragt wird. */
+  const nurFach = p.get("fach");
+  if (nurFach) {
+    const b = await blaetterImFach(env, kind, nurFach);
+    return b.ok ? json(200, { ok: true, blaetter: b.blaetter })
+                : json(503, { ok: false, fehler: b.fehler });
   }
 
   const e = await stoffLesen(env, kind, Number(p.get("monate") || 3));
