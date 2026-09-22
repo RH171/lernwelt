@@ -238,6 +238,23 @@ export async function onRequestPost(context) {
   // Am 06.09.2026 kam ein Spiel mit einer einzigen Aufgabe zurueck - fuer ein
   // Kind ist das kein Spiel. Lieber ein ehrlicher Fehler als Murks im Regal.
   let maengel = pruefeSpiel(spiel, kind);
+
+  /* ERST aussortieren, DANN erst neu bauen.
+   *
+   * Am 22.09.2026 stand Paul vor "Ich konnte den Server nicht erreichen":
+   * Der neue Beleg-Riegel fand bei seinem HSU-Blatt Aufgaben ohne Beleg, und
+   * jeder einzelne Mangel loeste hier einen kompletten zweiten Bau aus. Aus
+   * 90 Sekunden wurden 180, und Safari auf dem iPad bricht vorher ab. Das
+   * Aussortieren stand schon da - aber erst NACH dem zweiten Anlauf, also an
+   * der teuersten Stelle.
+   *
+   * Ein Mangel, den man wegnehmen kann, braucht keinen neuen Bau. Der zweite
+   * Anlauf bleibt fuer die echten Aussetzer (kein Titel, zu wenige Aufgaben). */
+  if (maengel.length && maengel.every(aussortierbar)) {
+    aussortieren(spiel, kind);
+    maengel = pruefeSpiel(spiel, kind);
+  }
+
   if (maengel.length) {
     // Einmal nachfassen. Diese Aussetzer sind sporadisch, und ein Kind soll
     // nicht mit einer Fehlermeldung dastehen, wenn ein zweiter Anlauf reicht.
@@ -256,15 +273,8 @@ export async function onRequestPost(context) {
   // Deutsch-Spiel mit neun Deutsch-Aufgaben ist besser als eine Fehlermeldung
   // nach neunzig Sekunden Warten - und deutlich besser als zwölf Aufgaben,
   // von denen vier Mathe sind.
-  if (maengel.length && maengel.every((m) => m.startsWith(FACHFREMD_MARKE) ||
-                                               m.startsWith(RECHENFEHLER_MARKE) ||
-                                               m.startsWith(VOM_BLATT_MARKE) ||
-                                               m.startsWith(OHNE_BELEG_MARKE))) {
-    fachfremdeEntfernen(spiel, kind);
-    falschGerechneteEntfernen(spiel);
-    vomBlattEntfernen(spiel);
-    ohneBelegEntfernen(spiel);
-    aufWahlStellen(spiel);
+  if (maengel.length && maengel.every(aussortierbar)) {
+    aussortieren(spiel, kind);
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
@@ -328,6 +338,23 @@ const TITEL_MURKS = /^(platzhalter|titel|spiel|unbenannt|todo|beispiel|test|neue
 // "eingabe"-Aufgabe bauen will, landet darum schnell beim Rechnen. Erlaubt
 // bleibt nur, was aus dem Fach selbst kommt: Silben, Buchstaben, Nomen im Satz,
 // die fuenf Sinne, die vier Jahreszeiten.
+/* Maengel, die sich durch Wegnehmen beheben lassen - im Gegensatz zu "ohne
+ * Titel" oder "nur 3 statt 8 Aufgaben", wo wirklich neu gebaut werden muss. */
+export function aussortierbar(m) {
+  return m.startsWith(FACHFREMD_MARKE) || m.startsWith(RECHENFEHLER_MARKE) ||
+         m.startsWith(VOM_BLATT_MARKE) || m.startsWith(OHNE_BELEG_MARKE);
+}
+
+/* Die einzelnen Aufgaben rausnehmen, das Spiel behalten. Ein Deutsch-Spiel mit
+ * neun Aufgaben ist besser als eine Fehlermeldung nach neunzig Sekunden. */
+function aussortieren(spiel, kind) {
+  fachfremdeEntfernen(spiel, kind);
+  falschGerechneteEntfernen(spiel);
+  vomBlattEntfernen(spiel);
+  ohneBelegEntfernen(spiel);
+  aufWahlStellen(spiel);
+}
+
 const FACHFREMD_MARKE = "fachfremd: ";
 
 // Merkmale, die eine Rechenfertigkeit benennen. Bewusst NICHT das nackte
