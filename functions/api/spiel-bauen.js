@@ -207,7 +207,10 @@ export async function onRequestPost(context) {
       // Grosszuegig: Mit Bild und Merkmal je Aufgabe sind die Antworten lang
       // geworden, und ein abgeschnittenes Ergebnis kommt als leeres Spiel
       // zurueck. Am 6.9.2026 zweimal beobachtet, danach von 16000 auf 32000.
-      max_tokens: 32000,
+      // Gedeckelt am 22.09.2026: Pauls Bau mit Foto lief nach 115,9 s in
+      // HTTP 502, also in Cloudflares Zeitgrenze (ohne Foto: 66 s). 32000
+      // waren nur Luft nach oben - und Luft, die Zeit kostet.
+      max_tokens: 20000,
       thinking: { type: "adaptive" },
       output_config: { effort: "medium" },
       system: [{ type: "text", text: systemtext(kind, lehrplan), cache_control: { type: "ephemeral" } }],
@@ -502,7 +505,15 @@ export function ohneBeleg(a, spiel) {
     .map((x) => String(x || "")).filter(Boolean);
   if (!inhalt.length) return "";      // nichts zum Vergleichen - dann nicht raten
 
-  const beleg = String(a.beleg || "").trim();
+  /* Der Beleg kommt als NUMMER (beleg_nr, 1 = erste Zeile von blatt_inhalt).
+     Das spart je Aufgabe einen abgeschriebenen Satz - und genau diese Saetze
+     haben den Bau am 22.09.2026 ueber Cloudflares Zeitgrenze geschoben.
+     Ein Zitat im alten Feld beleg gilt weiter, damit gespeicherte Spiele
+     lesbar bleiben. */
+  const nr = Number(a.beleg_nr);
+  const ausNummer = (Number.isFinite(nr) && nr >= 1 && nr <= inhalt.length && nr === Math.floor(nr))
+    ? inhalt[nr - 1] : "";
+  const beleg = ausNummer || String(a.beleg || "").trim();
   if (!beleg) return OHNE_BELEG_MARKE + String(a.frage || "").slice(0, 70) + " (kein Beleg)";
 
   // Der Beleg muss WIRKLICH vom Blatt sein, sonst schreibt sich das Modell
@@ -744,7 +755,7 @@ DEINE REGELN
 
 1. ORDNE EIN. Erkenne, um welches Fach und welchen Lernbereich es geht. Passt nichts, setze lernbereich auf "unbekannt" - rate nicht.
 2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen. Nenne jede Aufgabe, die auf dem Blatt steht, kurz im Feld blatt_aufgaben (z. B. "34 + 27", "Unterstreiche das Prädikat: Der Hund bellt laut."). Ist es eine HAUSAUFGABE, gilt das doppelt: Das Spiel zeigt nach jeder Antwort die Lösung - eine Aufgabe vom Blatt darin würde die Hausaufgabe für das Kind lösen.
-2b. BEI EINEM WISSENSBLATT WIRD NUR GEFRAGT, WAS DARAUFSTEHT. Besteht der Stoff aus Tatsachen (Stadtporträt, Körperteile, Zeitleiste, Vokabeln, Begriffe), setze wissensblatt=true und schreibe JEDE Angabe vom Blatt in blatt_inhalt - auch das handschriftlich Ausgefüllte. Danach darfst du NUR daraus fragen, und zu jeder Aufgabe gehört der beleg. Beispiel, was VERBOTEN ist: Auf dem Blatt steht "Regierungsbezirk: Mittelfranken", und du fragst "Wie viele Regierungsbezirke hat Bayern?" - das Kind war im Unterricht dabei und hat die Sieben nie gehört. Es hält sich für dumm, obwohl es alles gewusst hat, was drankam. Frage stattdessen nach dem, was dasteht: "In welchem Regierungsbezirk liegt Fürth?" Anders herum, WEITERES ist erlaubt: dieselbe Angabe anders herum fragen, zwei Angaben vom Blatt verbinden, aus einer Liste die Zahl abzählen. Bei einem Verfahren (Rechnen, Rechtschreibung, Satzbau) gilt das alles NICHT - dort sind eigene Zahlen und Sätze Pflicht, wissensblatt bleibt false.
+2b. BEI EINEM WISSENSBLATT WIRD NUR GEFRAGT, WAS DARAUFSTEHT. Besteht der Stoff aus Tatsachen (Stadtporträt, Körperteile, Zeitleiste, Vokabeln, Begriffe), setze wissensblatt=true und schreibe JEDE Angabe vom Blatt in blatt_inhalt - auch das handschriftlich Ausgefüllte. Danach darfst du NUR daraus fragen, und zu jeder Aufgabe gehört beleg_nr - die Nummer der Zeile aus blatt_inhalt, in der die Antwort steht. Beispiel, was VERBOTEN ist: Auf dem Blatt steht "Regierungsbezirk: Mittelfranken", und du fragst "Wie viele Regierungsbezirke hat Bayern?" - das Kind war im Unterricht dabei und hat die Sieben nie gehört. Es hält sich für dumm, obwohl es alles gewusst hat, was drankam. Frage stattdessen nach dem, was dasteht: "In welchem Regierungsbezirk liegt Fürth?" Anders herum, WEITERES ist erlaubt: dieselbe Angabe anders herum fragen, zwei Angaben vom Blatt verbinden, aus einer Liste die Zahl abzählen. Bei einem Verfahren (Rechnen, Rechtschreibung, Satzbau) gilt das alles NICHT - dort sind eigene Zahlen und Sätze Pflicht, wissensblatt bleibt false.
 2c. BEI EINEM WISSENSBLATT IST JEDE AUFGABE art="wahl". Das Kind hatte den Stoff heute oder gestern - es kennt ihn wieder, kann ihn aber noch nicht aus dem Kopf aufschreiben. Vier Möglichkeiten zum Antippen sind die Stufe, auf der es anfängt. Die falschen Antworten kommen möglichst von woanders vom Blatt (eine andere Partnerstadt, ein anderer Stadtteil): So ist der Weg zur richtigen das Wiedererkennen, nicht das Ausschließen von Unsinn.
 
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
@@ -860,7 +871,7 @@ const WERKZEUG = {
       begruessung: { type: "string", description: "Ein Satz zum Start, der Lust macht." },
       blatt_aufgaben: { type: "array", items: { type: "string" }, description: "Jede Aufgabe, die auf dem Foto/der Datei steht, kurz abgeschrieben (z. B. \"34 + 27\"). Nur zum Abgleich, damit keine davon im Spiel landet. Ohne Foto leeres Array." },
       wissensblatt: { type: "boolean", description: "TRUE, wenn der Lernstoff auf dem Blatt aus Tatsachen besteht, die man sich merkt - Namen, Zahlen, Listen, Begriffe (z. B. ein Stadtporträt, Körperteile, Zeitleiste). FALSE, wenn es ein Verfahren ist, das man übt (Rechenweg, Rechtschreibregel, Satzglieder). Ohne Foto immer FALSE." },
-      blatt_inhalt: { type: "array", items: { type: "string" }, description: "NUR bei wissensblatt=true: JEDE Tatsache, die auf dem Blatt steht, als kurzer Satz mit der Angabe - auch das handschriftlich Ausgefüllte (z. B. \"Regierungsbezirk: Mittelfranken\", \"Einwohner: 132.000\", \"KFZ-Kennzeichen: FÜ\"). Das ist der einzige Vorrat, aus dem gefragt werden darf. Sonst leeres Array." },
+      blatt_inhalt: { type: "array", items: { type: "string" }, description: "NUR bei wissensblatt=true: die Tatsachen vom Blatt als KURZE Stichworte, höchstens 12 Zeilen und höchstens 10 Wörter je Zeile - auch das handschriftlich Ausgefüllte (z. B. \"Regierungsbezirk: Mittelfranken\", \"Einwohner: 132.000\"). Eine lange Aufzählung gehört in EINE Zeile. Das ist der einzige Vorrat, aus dem gefragt werden darf. Sonst leeres Array." },
       aufgaben: {
         type: "array",
         description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben. In der ART ABWECHSELN (siehe Regel 5). Durchgängig korrektes Deutsch mit Umlauten.",
@@ -869,7 +880,7 @@ const WERKZEUG = {
           properties: {
             art: { type: "string", enum: ["wahl", "eingabe", "teilschritte"], description: "Welche Aufgabenart - siehe Regel 5. Abwechseln!" },
             frage: { type: "string" },
-            beleg: { type: "string", description: "NUR bei wissensblatt=true, dann PFLICHT: die Stelle vom Blatt, auf die sich diese Frage stützt, wörtlich abgeschrieben - und die richtige Antwort MUSS darin vorkommen. Kannst du die Antwort nicht vom Blatt belegen, stelle die Frage nicht. Sonst leer." },
+            beleg_nr: { type: "integer", description: "NUR bei wissensblatt=true, dann PFLICHT: die Nummer der Zeile aus blatt_inhalt (1 = erste Zeile), in der die richtige Antwort steht. Kannst du die Antwort nicht vom Blatt belegen, stelle die Frage nicht. Sonst 0." },
             antworten: { type: "array", items: { type: "string" }, description: "NUR bei art=wahl: die vier Auswahlmöglichkeiten, die richtige MUSS dabei sein. Sonst leeres Array." },
             diagnosen: {
               type: "array",
