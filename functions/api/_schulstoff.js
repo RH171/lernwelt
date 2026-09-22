@@ -167,17 +167,32 @@ export async function stoffAblegen(env, kind, eintrag, seiten) {
   // Erst die Bilder, dann die Liste: Bricht es dazwischen ab, liegt ein Bild
   // ohne Eintrag herum (harmlos). Andersherum staende ein Eintrag ohne Bild in
   // seiner Woche und er tippt ins Leere.
+  /* JEDER Speicherzugriff wird gefangen.
+   *
+   * Am 14.09.2026 war das KV-Tageskontingent leer, und Wege ohne try/catch
+   * haben dem Kind die nackte Cloudflare-Seite "error code: 1101" gezeigt -
+   * es wusste nicht, ob sein Foto angekommen ist. Hier kommt stattdessen ein
+   * ehrlicher Satz zurueck, und der sagt NICHT "gespeichert".
+   * Gefunden hat das der Selbsttest pruefe-schulstoff.mjs, nicht ich. */
   const bilder = (seiten || []).slice(0, 6);
   for (let i = 0; i < bilder.length; i++) {
     if (!bilder[i]) continue;
-    await env.PAUL_KV.put(BILD(id, i), bilder[i]);   // KEINE Ablaufzeit: bleibt liegen
+    try {
+      await env.PAUL_KV.put(BILD(id, i), bilder[i]);   // KEINE Ablaufzeit: bleibt liegen
+    } catch (e) {
+      return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." };
+    }
   }
 
-  let liste = [];
-  const roh = await env.PAUL_KV.get(schluessel);
+  let roh;
+  try {
+    roh = await env.PAUL_KV.get(schluessel);
+  } catch (e) {
+    return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." };
+  }
   const gelesen = listeLesen(roh);
   if (gelesen === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
-  liste = gelesen;
+  const liste = gelesen;
 
   liste.unshift({
     id,
@@ -194,7 +209,13 @@ export async function stoffAblegen(env, kind, eintrag, seiten) {
     ...(eintrag.spiel ? { spiel: String(eintrag.spiel).slice(0, 40) } : {}),
   });
 
-  await env.PAUL_KV.put(schluessel, JSON.stringify(liste.slice(0, 300)));
+  try {
+    await env.PAUL_KV.put(schluessel, JSON.stringify(liste.slice(0, 300)));
+  } catch (e) {
+    // Die Bilder liegen schon - der Eintrag fehlt. Das ist die harmlosere
+    // Haelfte, aber das Kind muss es trotzdem erfahren.
+    return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." };
+  }
   return { ok: true, id, datum };
 }
 
@@ -210,7 +231,13 @@ export async function stoffLesen(env, kind, monate) {
   for (let i = 0; i < wieViele; i++) {
     const d = new Date(heute + "T12:00:00Z");
     d.setUTCMonth(d.getUTCMonth() - i);
-    const gelesen = listeLesen(await env.PAUL_KV.get(LISTE(kind, d.toISOString().slice(0, 7))));
+    let rohMonat;
+    try {
+      rohMonat = await env.PAUL_KV.get(LISTE(kind, d.toISOString().slice(0, 7)));
+    } catch (e) {
+      return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." };
+    }
+    const gelesen = listeLesen(rohMonat);
     if (gelesen === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
     alle.push(...gelesen);
   }
@@ -222,7 +249,11 @@ export async function stoffLesen(env, kind, monate) {
 export async function stoffBild(env, id, nr) {
   if (!/^[a-z0-9]{6,20}$/.test(String(id || ""))) return null;
   if (!env || !env.PAUL_KV) return null;
-  return await env.PAUL_KV.get(BILD(id, Math.max(0, Math.min(5, Number(nr) || 0))));
+  try {
+    return await env.PAUL_KV.get(BILD(id, Math.max(0, Math.min(5, Number(nr) || 0))));
+  } catch (e) {
+    return null;
+  }
 }
 
 /* Verstecken und Wiederholen - ein Tipp, umkehrbar, das Bild bleibt.
@@ -237,7 +268,12 @@ export async function stoffAendern(env, kind, id, was) {
     const d = new Date(heute + "T12:00:00Z");
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
-    const roh = await env.PAUL_KV.get(LISTE(kind, monat));
+    let roh;
+    try {
+      roh = await env.PAUL_KV.get(LISTE(kind, monat));
+    } catch (e) {
+      return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." };
+    }
     const liste = listeLesen(roh);
     if (liste === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
     const treffer = liste.findIndex((e) => e.id === id);
@@ -249,7 +285,13 @@ export async function stoffAendern(env, kind, id, was) {
     // Vor dem Schreiben pruefen, ob sich wirklich etwas aendert: ein put, das
     // denselben Wert schreibt, kostet genauso viel wie ein echtes.
     const neu = JSON.stringify(liste);
-    if (neu !== roh) await env.PAUL_KV.put(LISTE(kind, monat), neu);
+    if (neu !== roh) {
+      try {
+        await env.PAUL_KV.put(LISTE(kind, monat), neu);
+      } catch (e) {
+        return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." };
+      }
+    }
     return { ok: true, was };
   }
   return { ok: false, fehler: "Das finde ich nicht mehr." };
