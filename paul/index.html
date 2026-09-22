@@ -333,6 +333,18 @@
   .modal.wide{max-width:480px;max-height:82vh;overflow:auto;}
 
   /* ---------- Neues-Spiel-Karte ---------- */
+  /* Farbe und Unterstreichung gehoeren an die GRUNDregel, nicht an jede
+     Variante. Bis zum 23.09.2026 setzte jede Unterklasse (werkstatt,
+     stundenplan, quiz …) ihr eigenes text-decoration:none - die neue Karte
+     "Mein Schulheft" hatte keine und stand deshalb blau und unterstrichen da,
+     wie ein roher Link. Dieselbe Falle wie bei Helenas Chips am 21.09.2026:
+     Wer einem <a> eine eigene Optik gibt, gibt ihm auch eine eigene color
+     UND text-decoration. */
+  .createcard,
+  a.createcard, a.createcard:link, a.createcard:visited, a.createcard:hover, a.createcard:active{
+    color:#fff; text-decoration:none;
+  }
+  a.createcard:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
   .createcard{
     display:flex;align-items:center;gap:16px;width:100%;text-align:left;cursor:pointer;
     border:none;border-radius:22px;padding:18px 20px;margin:0 0 22px;
