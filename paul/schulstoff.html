@@ -159,10 +159,17 @@
   /* Was unter der Ueberschrift steht: erst Pauls eigene Notiz, sonst das
      Fach. Steht oben schon der gelesene Titel, gehoert das Fach darunter -
      sonst wuesste man nicht, wohin es einsortiert ist. */
+  /* Was unter der Ueberschrift steht.
+   *
+   * "angesehen" stand hier bis zum 22.09.2026 als Platzhalter, wenn ein
+   * Eintrag weder Titel noch Notiz hatte - Denny: "Es heisst nur 'HSU
+   * ansehen'." Das liest sich wie ein Zustand und sagt gar nichts. Jetzt
+   * steht dort etwas, das stimmt: die Zahl der Seiten, sonst nichts. */
   function untertext(e){
     var f = KURZ[e.fach||""] || "Ohne Fach";
-    if (e.titel) return e.notiz ? f + " · " + e.notiz.slice(0,34) : f;
-    return e.notiz ? e.notiz.slice(0,40) : "angesehen";
+    var seiten = e.seiten > 1 ? e.seiten + " Seiten" : "";
+    if (e.titel) return [f, e.notiz ? e.notiz.slice(0,34) : "", seiten].filter(Boolean).join(" · ");
+    return [e.notiz ? e.notiz.slice(0,40) : "", seiten].filter(Boolean).join(" · ");
   }
   // Was aus dem Speicher kommt, wird nie als HTML eingesetzt.
   function sicher(t){

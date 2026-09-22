@@ -47,6 +47,12 @@ async function darfRein(request, env, kind) {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+  try {
+    if (new URL(request.url).searchParams.get("nachtragen") === "1") {
+      return await nachtragen(context);
+    }
+  } catch (e) {}
+
   let d;
   try { d = await request.json(); } catch (e) { return json(400, { ok: false, fehler: "Die Anfrage war kein gültiges JSON." }); }
 
@@ -276,6 +282,56 @@ export async function onRequestGet(context) {
  * aus der Liste - DAS BILD BLEIBT LIEGEN und ist über seine Nummer weiter
  * lesbar. Nichts, was ein Kind fotografiert hat, verschwindet wirklich.
  */
+/* Fehlende Titel nachtragen.
+ *
+ * Denny am 22.09.2026 zu einem Blatt, das vor der Titel-Funktion abgelegt
+ * wurde: "Es heisst nur 'HSU ansehen'. Es hat aber keinen Titel gekommen bis
+ * jetzt." Ein Eintrag von gestern soll deshalb nicht fuer immer namenlos
+ * bleiben.
+ *
+ *   POST /api/schulstoff?nachtragen=1   {kind}
+ *
+ * Nur mit ELTERN-Ausweis - es kostet Geld (ein Haiku-Blick je Blatt, Bruch-
+ * teile eines Cents) und soll nicht versehentlich von einem Kind ausgeloest
+ * werden, das die Seite neu laedt. Hoechstens 12 auf einmal, damit der
+ * Aufruf in der Zeit bleibt; wer mehr hat, ruft nochmal.
+ */
+async function nachtragen(context) {
+  const { request, env } = context;
+  let d;
+  try { d = await request.json(); } catch (e) { d = {}; }
+  const kind = String(d.kind || "").toLowerCase();
+  if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+
+  if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) {
+    return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });
+  }
+  if (!env.ANTHROPIC_API_KEY) return json(503, { ok: false, fehler: "Auf dem Server fehlt der Schlüssel." });
+
+  const e = await stoffLesen(env, kind, 6);
+  if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
+
+  const offen = e.eintraege.filter((x) => !x.titel).slice(0, 12);
+  const getan = [];
+  for (const x of offen) {
+    const seite = await stoffBild(env, x.id, 0);
+    if (!seite) { getan.push({ id: x.id, warum: "kein Bild" }); continue; }
+    try {
+      const gelesen = await blattLesen(env, seite);
+      if (gelesen.titel) {
+        await titelSetzen(env, kind, x.id, gelesen.titel);
+        getan.push({ id: x.id, titel: gelesen.titel });
+      } else {
+        await titelSetzen(env, kind, x.id, "", "nicht erkannt");
+        getan.push({ id: x.id, warum: "nicht erkannt" });
+      }
+    } catch (err) {
+      getan.push({ id: x.id, warum: String(err && err.message || err).slice(0, 60) });
+    }
+  }
+  return json(200, { ok: true, offen: e.eintraege.filter((x) => !x.titel).length, getan });
+}
+
 export async function onRequestPatch(context) {
   const { request, env } = context;
   let d;
