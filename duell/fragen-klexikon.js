@@ -482,4 +482,14 @@ export const KLEXIKON = [
   [5, "koerper", "🍊", "Welches Vitamin ist eigentlich eine Säure?", ["Vitamin C", "Vitamin A", "Vitamin D", "Vitamin B12"], "Vitamin C heißt eigentlich Ascorbinsäure und schützt unseren Körper vor Erkältungen.", null, "Säure"],
   [4, "wissen", "⛏️", "Wonach suchen Archäologen meist in der Erde?", ["Alte Gegenstände", "Vergrabene Goldschätze", "Dinosaurierknochen", "Verstecktes Geld"], "Archäologen graben nach alten Ruinen, Werkzeugen oder Töpfen, die von früheren Menschen stammen.", null, "Archäologie"],
   [6, "sprache", "🖋️", "Welchen Beruf übte Annette von Droste-Hülshoff aus?", ["Dichterin", "Malerin", "Sängerin", "Erfinderin"], "Annette von Droste-Hülshoff schrieb berühmte Gedichte und Erzählungen und lebte vor etwa 200 Jahren.", null, "Annette Droste-Hülshoff"],
+
+  // Nachschub vom 22.09.2026
+  [1, "welt", "🏔️", "Wie heißt der höchste Berg der Welt?", ["Mount Everest", "Zugspitze", "Matterhorn", "Kilimandscharo"], "Der höchste Berg der Welt steht in Asien, im Himalaya-Gebirge.", null, "Mount Everest"],
+  [2, "welt", "🌊", "In welchem Land liegt der größte Teil vom Neusiedler See?", ["Österreich", "Deutschland", "Schweiz", "Ungarn"], "Am Neusiedler See leben viele besondere Pflanzen und Tiere, die dort geschützt werden.", null, "Neusiedler See"],
+  [2, "maerchen", "🧚", "In welchem Märchen kommt eine Fee vor?", ["Dornröschen", "Rotkäppchen", "Aschenputtel", "Rapunzel"], "Nach der Fee Morgan le Fay ist die besondere Luftspiegelung Fata Morgana benannt.", null, "Fee"],
+  [2, "wissen", "🤺", "Womit kämpften Musketiere weiter, wenn keine Zeit zum Nachladen blieb?", ["Mit dem Schwert", "Mit der Armbrust", "Mit dem Hammer", "Mit der Pistole"], "Der Name Musketier klingt wie „Tier“, hat aber nichts mit einem Tier zu tun.", null, "Musketier"],
+  [5, "wissen", "🧗", "In welchem Jahr wurde der Mount Everest zum ersten Mal bestiegen?", ["1953", "1901", "1975", "1932"], "Seit der ersten Besteigung 1953 haben schon Tausende Menschen den Gipfel des Mount Everest erreicht.", null, "Mount Everest"],
+  [4, "natur", "🦢", "Was ist am Neusiedler See ungewöhnlich für einen so großen See?", ["Er hat keinen Abfluss", "Er ist sehr tief", "Er hat viele Inseln", "Er friert nie zu"], "Wenn im Frühling zu viel Wasser da ist, fließt es über einen künstlichen Kanal in die Donau.", null, "Neusiedler See"],
+  [5, "technik", "💻", "Wie nennt man die Adresse einer Website auf Englisch auch?", ["Domain-Adresse", "IP-Adresse", "Serveradresse", "Netzwerkadresse"], "Alle Seiten einer Website liegen an einem Ort im Internet, den nur ihr Betreiber besitzt.", null, "Website"],
+  [3, "sprache", "✂️", "Womit endet eine Abkürzung meistens?", ["Mit einem Punkt", "Mit einem Komma", "Mit einem Strich", "Mit zwei Punkten"], "Sogar das Wort „Abkürzung“ hat selbst eine kurze Abkürzung: einfach „Abk.“.", null, "Abkürzung"],
 ];
