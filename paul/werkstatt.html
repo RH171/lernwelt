@@ -281,6 +281,7 @@
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
+<script src="/strom.js"></script>
 <script>
   // Seit 17.09.2026 laufen Hausaufgaben im Hausaufgaben-Heft. Paul kam am selben
   // Tag noch ueber eine offene alte Seite hierher - und bekam nebenbei ein
@@ -1130,33 +1131,29 @@
       $("schritt-unter").textContent = s[1];
     }, 8000);
 
-    fetch("/api/spiel-bauen", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {"content-type":"application/json"},
-      body: JSON.stringify({
-        kind: "paul",
-        quelle: HAUSAUFGABE ? "hausaufgabe" : (quelle || ""),
-        hausaufgabe: HAUSAUFGABE,
-        wunsch: mitFach(HAUSAUFGABE ? hausaufgabeWunsch() : $("wunsch").value.trim()),
-        /* Der Server schickt waehrend des Bauens alle fuenf Sekunden eine
-           Zeile. Paul stand am 22.09.2026 zweimal vor "Ich konnte den Server
-           nicht erreichen": Der Bau mit Foto dauert gemessen 90 bis 120
-           Sekunden, und Cloudflare brach die stille Leitung mit 502 ab.
-           Solange etwas fliesst, bricht nichts ab. */
-        strom: true,
-        seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
-      })
-    })
-    .then(function(r){
-      // Der Strom kommt zeilenweise. Kann der Browser ihn nicht lesen (sehr
-      // alt), faellt es auf den gewoehnlichen Weg zurueck - dann ist es
-      // wieder wie vorher, aber wenigstens nicht kaputt.
-      if (r.ok && r.body && r.body.getReader &&
-          (r.headers.get("content-type") || "").indexOf("ndjson") >= 0){
-        return stromLesen(r).then(function(j){ return {ok:j.ok, status:200, j:j}; });
+    /* Ueber LWStrom - EINMAL gebaut in /strom.js, damit nicht sechs Kopien
+       auseinanderlaufen (dieselbe Regel wie beim Ferien-Band und beim
+       Spielmotor). Der Server schickt waehrend des Bauens alle fuenf
+       Sekunden eine Zeile; ohne die bricht Cloudflare die Leitung mit 502
+       ab - Paul ist am 22.09.2026 dreimal daran haengengeblieben. */
+    LWStrom.bauen({
+      kind: "paul",
+      quelle: HAUSAUFGABE ? "hausaufgabe" : (quelle || ""),
+      hausaufgabe: HAUSAUFGABE,
+      wunsch: mitFach(HAUSAUFGABE ? hausaufgabeWunsch() : $("wunsch").value.trim()),
+      seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
+    }, {
+      // Erst ab zwanzig Sekunden eine Zahl zeigen - vorher liest sich das
+      // wie Druck, und die Schritte auf dem Ladeschirm reichen voellig.
+      laeuft: function(sek){
+        if (sek >= 20) $("schritt-unter").textContent = "Ich bin jetzt " + sek + " Sekunden dran.";
       }
-      return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; });
+    })
+    .then(function(spiel){ return {ok:true, status:200, j:{ok:true, spiel:spiel}}; })
+    .catch(function(e){
+      var s = String(e && e.message || "");
+      return {ok:false, status: s.indexOf("melde dich") >= 0 ? 401 : 200,
+              j:{ok:false, fehler:s}};
     })
     .then(function(a){
       clearInterval(takt); baeuft = false;
@@ -1188,45 +1185,6 @@
             "\u201eSpiel bauen\u201c, dann versuche ich es gleich weiter.", "fehler");
     });
   }
-  /* Den Strom zeilenweise lesen und die letzte Zeile zurueckgeben.
-   *
-   * Jede Zeile ist fuer sich ein JSON-Satz: {"status":"laeuft","seit":N}
-   * waehrend gebaut wird, am Ende {"status":"fertig","spiel":...} oder
-   * {"status":"fehler","fehler":...}. Eine Zeile kann mitten im Netz geteilt
-   * ankommen - deshalb wird gesammelt und erst am Zeilenende ausgewertet. */
-  function stromLesen(r){
-    var leser = r.body.getReader(), decoder = new TextDecoder(), rest = "", letzte = null;
-    var ABRISS = "Die Verbindung ist mittendrin abgerissen. Dein Foto ist noch da \u2013 tipp nochmal auf \u201eSpiel bauen\u201c.";
-    function zeileNehmen(t){
-      t = String(t || "").trim();
-      if (!t) return;
-      try { letzte = JSON.parse(t); } catch (e) { return; }
-      // Erst ab zwanzig Sekunden eine Zahl zeigen - vorher liest sich das
-      // wie Druck, und die Schritte auf dem Ladeschirm reichen voellig.
-      if (letzte.status === "laeuft" && typeof letzte.seit === "number" && letzte.seit >= 20){
-        $("schritt-unter").textContent = "Ich bin jetzt " + letzte.seit + " Sekunden dran.";
-      }
-    }
-    function weiter(){
-      return leser.read().then(function(stueck){
-        if (stueck.done){
-          zeileNehmen(rest); rest = "";
-          return letzte || {status:"fehler", fehler:ABRISS};
-        }
-        rest = rest + decoder.decode(stueck.value, {stream:true});
-        var teile = rest.split("\n");
-        rest = teile.pop();
-        teile.forEach(zeileNehmen);
-        return weiter();
-      });
-    }
-    return weiter().then(function(t){
-      if (t && t.status === "fertig" && t.spiel) return {ok:true, spiel:t.spiel};
-      return {ok:false, fehler:(t && t.fehler) || ABRISS};
-    });
-  }
-
-
   $("los").addEventListener("click", function(){ bauen(""); });
 
   /* ---------- Spielen ---------- */
