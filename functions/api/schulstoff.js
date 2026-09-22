@@ -85,72 +85,84 @@ export async function onRequestPost(context) {
 
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
 
-  /* Der Titel wird NACH der Antwort geholt.
+  /* Der Titel wird DIREKT geholt, nicht im Hintergrund.
    *
-   * Denny am 22.09.2026 zum Schaukasten: die Karten sollen sagen, worum es
-   * geht, statt "angesehen". Dafuer schaut ein kleines Modell kurz aufs
-   * Bild - Haiku, nicht Opus: gemessen kostet ein Spielbau rund 0,10 €,
-   * dieser Blick liegt bei Bruchteilen eines Cents.
+   * Der erste Entwurf nutzte context.waitUntil() - und nichts kam an, kein
+   * Titel und nicht einmal ein Grund. Dieselbe Grenze wie beim Spielbau am
+   * selben Tag: "waitUntil() can extend execution for up to 30 seconds after
+   * the response is sent" (Cloudflare Workers Limits, 22.09.2026), und was
+   * danach passiert, sieht niemand mehr.
    *
-   * Es laeuft in waitUntil, NACH der Antwort: Das Ablegen bleibt bei 1,4
-   * Sekunden, und das ist der Punkt der ganzen Uebung ("es geht doch erst
-   * mal darum, dass Paul seine Daten hochladen kann"). Kommt kein Titel
-   * zurueck - kein Schluessel, kein Guthaben, Modell langsam -, bleibt der
-   * Eintrag einfach ohne. Nichts haengt davon ab. */
+   * Also lieber ein paar Sekunden warten. Haiku mit einem verkleinerten Bild
+   * braucht wenige Sekunden; nach GRENZE ist Schluss und es wird ohne Titel
+   * abgelegt. Das Ablegen bleibt damit weit unter den 90 Sekunden, um die es
+   * hier eigentlich ging - und der Eintrag liegt ohnehin schon sicher im
+   * Speicher, bevor dieser Aufruf startet. */
+  let titel = "";
   if (env.ANTHROPIC_API_KEY) {
-    /* Der Grund wird MITGESCHRIEBEN, nicht verschluckt.
-     *
-     * Am 22.09.2026 kam kein Titel zurueck, und ich stand wieder vor einem
-     * leeren Feld ohne Hinweis - dasselbe Muster wie dreimal an diesem Abend.
-     * Ein stiller catch ist bequem und kostet beim Suchen Stunden. */
-    context.waitUntil(
-      titelNachtragen(env, kind, e.id, seiten[0])
-        .catch((err) => titelSetzen(env, kind, e.id, "", "Fehler: " + String(err && err.message || err).slice(0, 80)))
-        .catch(() => {})
-    );
+    try {
+      titel = await titelHolen(env, seiten[0]);
+      if (titel) await titelSetzen(env, kind, e.id, titel);
+    } catch (err) {
+      // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
+      try { await titelSetzen(env, kind, e.id, "", String(err && err.message || err).slice(0, 80)); }
+      catch (e2) {}
+    }
   }
 
-  return json(200, { ok: true, id: e.id, datum: e.datum, datumVonBlatt: !!vomBlatt });
+  return json(200, { ok: true, id: e.id, datum: e.datum, datumVonBlatt: !!vomBlatt,
+                     ...(titel ? { titel } : {}) });
 }
 
 const TITEL_MODELL = "claude-haiku-4-5-20251001";
+// Nach so vielen Sekunden wird ohne Titel abgelegt. Lieber kein Titel als
+// ein Kind, das vor dem Ladebalken sitzt.
+const TITEL_GRENZE = 9000;
 
-async function titelNachtragen(env, kind, id, seite) {
+async function titelHolen(env, seite) {
   const komma = String(seite || "").indexOf(",");
-  if (komma < 0) { await titelSetzen(env, kind, id, "", "kein Bild dabei"); return; }
+  if (komma < 0) throw new Error("kein Bild dabei");
   const typ = String(seite).slice(5, String(seite).indexOf(";"));
-  if (typ.indexOf("image/") !== 0) return;          // PDFs schaut dieser Weg nicht an
+  if (typ.indexOf("image/") !== 0) return "";       // PDFs schaut dieser Weg nicht an
 
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: TITEL_MODELL,
-      max_tokens: 200,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: typ, data: String(seite).slice(komma + 1) } },
-          { type: "text", text:
-            "Das ist ein Blatt aus dem Unterricht eines Grundschulkindes. Schreib mir NUR " +
-            "eine kurze Überschrift, worum es darauf geht - höchstens fünf Wörter, deutsch, " +
-            "ohne Anführungszeichen und ohne Satzzeichen am Ende. Beispiele: " +
-            "\"Stadtporträt von Fürth\", \"Schriftliche Multiplikation\", \"Wörtliche Rede\". " +
-            "Erkennst du es nicht sicher, schreib nur: unklar" },
-        ],
-      }],
-    }),
-  });
+  const abbruch = new AbortController();
+  const uhr = setTimeout(() => abbruch.abort(), TITEL_GRENZE);
+  let r;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      signal: abbruch.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: TITEL_MODELL,
+        max_tokens: 100,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: typ, data: String(seite).slice(komma + 1) } },
+            { type: "text", text:
+              "Das ist ein Blatt aus dem Unterricht eines Grundschulkindes. Schreib mir NUR " +
+              "eine kurze Überschrift, worum es darauf geht - höchstens fünf Wörter, deutsch, " +
+              "ohne Anführungszeichen und ohne Satzzeichen am Ende. Beispiele: " +
+              "\"Stadtporträt von Fürth\", \"Schriftliche Multiplikation\", \"Wörtliche Rede\". " +
+              "Erkennst du es nicht sicher, schreib nur: unklar" },
+          ],
+        }],
+      }),
+    });
+  } finally {
+    clearTimeout(uhr);
+  }
+
   if (!r.ok) {
     const roh = await r.text().catch(() => "");
     let art = "";
     try { const j = JSON.parse(roh); art = String((j.error && (j.error.type || j.error.message)) || ""); } catch (e) {}
-    await titelSetzen(env, kind, id, "", "HTTP " + r.status + (art ? " " + art.slice(0, 60) : ""));
-    return;
+    throw new Error("HTTP " + r.status + (art ? " " + art.slice(0, 60) : ""));
   }
 
   const d = await r.json();
@@ -158,12 +170,7 @@ async function titelNachtragen(env, kind, id, seite) {
   const titel = roh.trim().replace(/^["'„]|["'"]$/g, "").slice(0, 60);
   // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
   // etwas Erfundenes.
-  if (!titel || /^unklar$/i.test(titel)) {
-    await titelSetzen(env, kind, id, "", titel ? "unklar" : "leere Antwort");
-    return;
-  }
-
-  await titelSetzen(env, kind, id, titel);
+  return (!titel || /^unklar$/i.test(titel)) ? "" : titel;
 }
 
 export async function onRequestGet(context) {
