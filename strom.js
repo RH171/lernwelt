@@ -72,12 +72,21 @@
     });
   }
 
-  function bauen(auftrag, haken) {
-    haken = haken || {};
-    var mit = {};
-    for (var k in auftrag) if (Object.prototype.hasOwnProperty.call(auftrag, k)) mit[k] = auftrag[k];
-    mit.strom = true;
+  /* Was der Browser sagt, versteht kein Kind.
+   *
+   * Paul sah am 22.09.2026 um 20:46 Uhr "Load failed" - Safaris eigener Text
+   * fuer einen abgebrochenen fetch, englisch und ohne jeden Hinweis, was er
+   * tun soll. Hier wird daraus ein Satz, den er lesen kann. Der Originaltext
+   * bleibt in der Konsole, damit man ihn beim Suchen noch hat. */
+  function fuerKinder(e) {
+    var roh = String((e && e.message) || e || "");
+    try { if (roh) console.warn("Bau abgebrochen:", roh); } catch (x) {}
+    if (roh.indexOf("melde dich") >= 0) return roh;            // kommt schon aus unserem Haus
+    if (/^[A-ZÄÖÜ].{0,80}[.!?]$/.test(roh) && /[äöüß]|ich|dein|nochmal/i.test(roh)) return roh;
+    return "Die Verbindung ist abgerissen. Dein Foto ist noch da \u2013 tipp nochmal auf den Knopf.";
+  }
 
+  function einmal(mit, haken) {
     return fetch("/api/spiel-bauen", {
       method: "POST",
       credentials: "same-origin",
@@ -89,6 +98,31 @@
         return lesen(r, haken.laeuft);
       }
       return ausJson(r);
+    });
+  }
+
+  function bauen(auftrag, haken) {
+    haken = haken || {};
+    var mit = {};
+    for (var k in auftrag) if (Object.prototype.hasOwnProperty.call(auftrag, k)) mit[k] = auftrag[k];
+    mit.strom = true;
+
+    /* Ein abgebrochener Upload bekommt einen zweiten Versuch.
+     *
+     * Ein Foto ist gut ein Megabyte, und ein Handy wechselt beim Hochladen
+     * schon mal die Funkzelle. Dass die Verbindung einmal abreisst, ist
+     * normal - dass das Kind dafuer von vorne anfangen muss, nicht. Nur der
+     * NETZfehler wird wiederholt: Sagt der Server etwas (zu gross, nicht
+     * angemeldet, kein Spiel), waere ein zweiter Versuch dieselbe Absage
+     * und nur mehr Wartezeit. */
+    return einmal(mit, haken).catch(function (e) {
+      var roh = String((e && e.message) || e || "");
+      var vomServer = /melde dich|zu viel los|Guthaben|Claude hat nicht|zu gross|zu groß|unvollständig|unvollstaendig/i.test(roh);
+      if (vomServer) throw new Error(fuerKinder(e));
+      if (haken.laeuft) { try { haken.laeuft(0); } catch (x) {} }
+      return new Promise(function (r) { setTimeout(r, 2000); })
+        .then(function () { return einmal(mit, haken); })
+        .catch(function (e2) { throw new Error(fuerKinder(e2)); });
     });
   }
 
