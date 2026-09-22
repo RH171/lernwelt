@@ -52,6 +52,14 @@
      Gebaut wie Leons Themenwahl, nur mit Pauls Lehrplan und in seinen Farben. */
   .faecher{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
   .fachfrage{font:600 17px var(--rund);margin-top:18px}
+  .danach{margin-top:16px;border-radius:18px;background:#f0fdf4;border:1.5px solid #bbf7d0;padding:16px}
+  .danach-kopf{font:700 19px var(--rund);color:#14532d}
+  .danach-knoepfe{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .danach-knoepfe .fach{text-decoration:none;display:flex;align-items:center}
+  @media (prefers-color-scheme:dark){
+    .danach{background:#0f2c1c;border-color:#1f5137}
+    .danach-kopf{color:#b6f0cd}
+  }
   .fachfrage.fehlt{color:var(--paul)}
   .fach{border:1px solid var(--line);background:#fbfcff;border-radius:999px;
         padding:11px 17px;min-height:44px;font-family:var(--rund);font-size:15px;
@@ -374,7 +382,23 @@
       <div class="seiten" id="seiten"></div>
       <div id="meldung"></div>
 
-      <button class="los" id="los" disabled>Spiel bauen</button>
+      <!-- Denny am 22.09.2026: "Lass doch das Spiel erst mal weg - es geht
+           doch erst mal darum, dass Paul seine Daten hochladen kann." Und:
+           "Es wird ein digitaler Schaukasten seiner taeglichen Schularbeiten,
+           selektiert nach Fach."
+           Also: Der Hauptknopf legt ab und ist in zwei Sekunden fertig. Das
+           Spiel ist danach ein Angebot, kein Zwang - es kostet 90 Sekunden
+           und echtes Geld. -->
+      <button class="los" id="los" disabled>Ins Heft legen</button>
+      <div class="danach verborgen" id="danach">
+        <div class="danach-kopf">✅ Ist in deinem Heft.</div>
+        <p class="unter" id="danach-text"></p>
+        <div class="danach-knoepfe">
+          <a class="fach" id="zum-heft" href="schulstoff.html">📚 Mein Schulheft ansehen</a>
+          <button class="fach" type="button" id="doch-spiel">🎮 Und jetzt ein Spiel dazu</button>
+          <button class="fach" type="button" id="noch-eins">📸 Noch ein Blatt</button>
+        </div>
+      </div>
       <a class="ha-normal verborgen" id="ha-normal" href="werkstatt.html">Nur ein Spiel bauen, ohne Hausaufgabe ›</a>
     </div>
 
@@ -938,8 +962,11 @@
     $("los").textContent = fachFehlt
       ? "Sag mir noch, welches Fach"
       : seiten.length > 1
-        ? "Spiel aus " + seiten.length + " Seiten bauen"
-        : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Spiel bauen";
+        ? seiten.length + " Seiten ins Heft legen"
+        : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Ins Heft legen";
+    // Ohne Blatt, nur mit Wunsch, wird weiterhin direkt gebaut - da gibt es
+    // nichts abzulegen.
+    $("los").onclick = (seiten.length === 0 && wunsch) ? function(){ bauen(""); } : function(){ ablegen(); };
   }
   $("wunsch").addEventListener("input", knopfPruefen);
 
@@ -1185,7 +1212,87 @@
             "\u201eSpiel bauen\u201c, dann versuche ich es gleich weiter.", "fehler");
     });
   }
-  $("los").addEventListener("click", function(){ bauen(""); });
+  /* Ablegen statt bauen - der Normalfall.
+   *
+   * Es geht zuerst darum, dass der Schulstoff im Heft landet: ein Aufruf,
+   * zwei Sekunden, kein Modell und kein Geld. Erst danach fragt die Seite,
+   * ob auch ein Spiel daraus werden soll. */
+  var zuletztAbgelegt = null;
+
+  function ablegen(){
+    if (baeuft) return;
+    if (!seiten.length){ melde("Fotografier erst dein Blatt.", "fehler"); return; }
+    if (!fotoFach){ melde("Sag mir noch, zu welchem Fach das gehört.", "fehler"); return; }
+    baeuft = true;
+    $("los").disabled = true;
+    $("los").textContent = "Ich lege es ab …";
+    melde("", "");
+
+    fetch("/api/schulstoff", {
+      method: "POST", credentials: "same-origin",
+      headers: {"content-type":"application/json"},
+      body: JSON.stringify({
+        kind: "paul",
+        fach: fachKurz(),
+        datum: $("blatt-datum") ? $("blatt-datum").value : "",
+        notiz: $("wunsch").value.trim().slice(0, 400),
+        seiten: seiten.map(function(s){ return "data:" + s.media_type + ";base64," + s.data; })
+      })
+    })
+    .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
+    .then(function(a){
+      baeuft = false;
+      if (a.status === 401){
+        zeige("anmelden"); $("codefehler").textContent = "Bitte melde dich nochmal an."; $("code").focus();
+        return;
+      }
+      if (!a.j || !a.j.ok){
+        $("los").disabled = false; knopfPruefen();
+        melde((a.j && a.j.fehler) || "Das hat nicht geklappt. Dein Foto ist noch da – probier es nochmal.", "fehler");
+        return;
+      }
+      zuletztAbgelegt = a.j;
+      $("danach").classList.remove("verborgen");
+      $("danach-text").textContent =
+        (seiten.length > 1 ? seiten.length + " Seiten" : "Dein Blatt") + " vom " +
+        deutsch(a.j.datum) + " – abgelegt unter " + fachName() + ".";
+      $("los").classList.add("verborgen");
+      $("danach").scrollIntoView({behavior:"smooth", block:"nearest"});
+    })
+    .catch(function(){
+      baeuft = false; $("los").disabled = false; knopfPruefen();
+      melde("Die Verbindung ist abgerissen. Dein Foto ist noch da – tipp nochmal auf den Knopf.", "fehler");
+    });
+  }
+
+  function deutsch(iso){
+    var t = String(iso || "").split("-");
+    return t.length === 3 ? (+t[2]) + "." + (+t[1]) + "." + t[0] : String(iso || "");
+  }
+  // Der kurze Schluessel fuer den Speicher - das lange Wort steht im Chip.
+  var FACHKURZ = {"Mathematik":"mathe", "Deutsch":"deutsch",
+    "Heimat- und Sachunterricht (HSU)":"hsu", "Englisch":"englisch",
+    "Religion oder Ethik":"rel", "Musik":"musik", "einem anderen Fach":"anderes"};
+  function fachKurz(){ return FACHKURZ[fotoFach] || ""; }
+  function fachName(){
+    var k = document.querySelector("[data-foto-fach].an");
+    return k ? k.textContent.trim().replace(/^\S+\s/, "") : "deinem Fach";
+  }
+
+  function zurueckAufAnfang(){
+    seiten = [];
+    malSeiten();
+    $("wunsch").value = "";
+    $("danach").classList.add("verborgen");
+    $("los").classList.remove("verborgen");
+    melde("", "");
+    knopfPruefen();
+    document.querySelector(".karte").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  $("los").addEventListener("click", function(){ ablegen(); });
+  $("noch-eins").addEventListener("click", zurueckAufAnfang);
+  $("doch-spiel").addEventListener("click", function(){ bauen(""); });
 
   /* ---------- Spielen ---------- */
 
