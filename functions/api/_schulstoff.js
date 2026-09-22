@@ -149,6 +149,57 @@ export function listeLesen(roh) {
   } catch (e) { return KAPUTT; }
 }
 
+/* Der Fingerabdruck eines Bildes - damit dasselbe Blatt auffaellt.
+ *
+ * Denny am 22.09.2026: "Er hat nun zwei Heft-Einträge in HSU. Das sind zwei
+ * Doppelte." Gewaehlt hat er "warnen, nicht sperren": Zwei Seiten koennen
+ * sich aehneln, und ein zweites Foto vom VERBESSERTEN Blatt ist gewollt.
+ *
+ * SHA-256 ueber die Bilddaten, auf 16 Zeichen gekuerzt - das reicht bei ein
+ * paar hundert Blaettern bei weitem und haelt den Eintrag klein. Es trifft
+ * nur bei WIRKLICH derselben Datei; zwei getrennte Fotos desselben Blattes
+ * erkennt erst der Vergleich ueber Titel, Fach und Datum (siehe schulstoff.js). */
+export async function fingerabdruck(seite) {
+  const roh = String(seite || "");
+  const komma = roh.indexOf(",");
+  const daten = komma >= 0 ? roh.slice(komma + 1) : roh;
+  if (!daten) return "";
+  try {
+    const b = new TextEncoder().encode(daten);
+    const h = await crypto.subtle.digest("SHA-256", b);
+    return Array.from(new Uint8Array(h)).slice(0, 8)
+      .map((x) => x.toString(16).padStart(2, "0")).join("");
+  } catch (e) {
+    return "";
+  }
+}
+
+/* Liegt so ein Blatt schon im Heft?
+ *
+ * Zwei Wege, beide nur ein HINWEIS - entschieden wird nichts:
+ *   1. derselbe Fingerabdruck  -> sicher dieselbe Datei
+ *   2. gleicher Titel + Fach + Datum -> sehr wahrscheinlich dasselbe Blatt,
+ *      auch wenn zweimal fotografiert wurde
+ * Der zweite Weg braucht den Titel und laeuft deshalb erst, nachdem das
+ * Bild gelesen wurde. */
+export async function schonDa(env, kind, { abdruck, titel, fach, datum, ausser }) {
+  const e = await stoffLesen(env, kind, 3);
+  if (!e.ok) return null;
+  const alle = e.eintraege.filter((x) => x.id !== ausser);
+
+  if (abdruck) {
+    const t = alle.filter((x) => x.abdruck === abdruck)[0];
+    if (t) return { id: t.id, titel: t.titel || "", datum: t.datum, wie: "gleiches Bild" };
+  }
+  if (titel && fach) {
+    const t = alle.filter((x) =>
+      x.titel && x.titel.toLowerCase() === String(titel).toLowerCase() &&
+      (x.fach || "") === (fach || "") && x.datum === datum)[0];
+    if (t) return { id: t.id, titel: t.titel, datum: t.datum, wie: "gleicher Titel am selben Tag" };
+  }
+  return null;
+}
+
 export function neueId() {
   return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 }
@@ -202,6 +253,8 @@ export async function stoffAblegen(env, kind, eintrag, seiten) {
     titel: String(eintrag.titel || "").slice(0, 120),
     notiz: String(eintrag.notiz || "").slice(0, 400),
     seiten: bilder.length,
+    // Fingerabdruck der ersten Seite - daran faellt dasselbe Blatt auf.
+    ...(eintrag.abdruck ? { abdruck: eintrag.abdruck } : {}),
     // Wo das Datum herkommt - Paul soll sehen koennen, ob es geraten ist.
     datumVon: eintrag.datumVonBlatt ? "blatt" : "kind",
     angelegt: new Date().toISOString(),

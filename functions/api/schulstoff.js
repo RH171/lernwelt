@@ -24,6 +24,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
+  fingerabdruck, schonDa,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -74,8 +75,11 @@ export async function onRequestPost(context) {
   const vomBlatt = blattDatum(d.blattText || "", heute);
   const datum = vomBlatt || (datumOk(d.datum, heute) ? d.datum : heute);
 
+  const abdruck = await fingerabdruck(seiten[0]);
+
   const e = await stoffAblegen(env, kind, {
     datum,
+    abdruck,
     fach: String(d.fach || ""),
     thema: d.thema,
     titel: d.titel,
@@ -126,8 +130,25 @@ export async function onRequestPost(context) {
     }
   }
 
+  /* Warnen, nicht sperren (Dennys Entscheidung vom 22.09.2026).
+   *
+   * Das Blatt liegt zu diesem Zeitpunkt SCHON im Heft - nichts geht
+   * verloren, wenn die Pruefung schiefgeht. Findet sich ein Zwilling, sagt
+   * die Seite es Paul und bietet an, das neue wieder wegzunehmen. Er
+   * entscheidet: Ein zweites Foto vom verbesserten Blatt ist gewollt. */
+  let zwilling = null;
+  try {
+    zwilling = await schonDa(env, kind, {
+      abdruck, titel,
+      fach: String(d.fach || ""),
+      datum: weichtAb ? vomBlattGelesen : e.datum,
+      ausser: e.id,
+    });
+  } catch (err) {}
+
   return json(200, {
     ok: true, id: e.id,
+    ...(zwilling ? { schonDa: zwilling } : {}),
     // Das Datum, das jetzt wirklich im Heft steht.
     datum: weichtAb ? vomBlattGelesen : e.datum,
     datumVonBlatt: !!(vomBlatt || vomBlattGelesen),
