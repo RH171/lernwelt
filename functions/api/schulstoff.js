@@ -311,25 +311,48 @@ async function nachtragen(context) {
   const e = await stoffLesen(env, kind, 6);
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
 
-  const offen = e.eintraege.filter((x) => !x.titel).slice(0, 12);
+  /* Offen ist, wem der Titel fehlt ODER dessen Datum noch nie am Blatt
+     geprueft wurde. Sonst bliebe ein Eintrag, der gestern nur den Titel
+     bekommen hat, fuer immer falsch einsortiert. */
+  const offen = e.eintraege
+    .filter((x) => !x.titel || x.datumVon !== "blatt")
+    .slice(0, 12);
   const getan = [];
   for (const x of offen) {
     const seite = await stoffBild(env, x.id, 0);
     if (!seite) { getan.push({ id: x.id, warum: "kein Bild" }); continue; }
     try {
       const gelesen = await blattLesen(env, seite);
-      if (gelesen.titel) {
-        await titelSetzen(env, kind, x.id, gelesen.titel);
-        getan.push({ id: x.id, titel: gelesen.titel });
-      } else {
-        await titelSetzen(env, kind, x.id, "", "nicht erkannt");
-        getan.push({ id: x.id, warum: "nicht erkannt" });
-      }
+      /* Auch das DATUM nachtragen.
+       *
+       * Denny am 22.09.2026 mit einem Bild aus der Grossansicht: Oben stand
+       * "Montag, 21. September 2026", auf dem Blatt aber deutlich "22.9.26".
+       * Der Nachtrag hat das Datum gelesen und weggeworfen - dabei liefert
+       * blattLesen() es gratis mit. Ein Blatt, das sein Datum zeigt, soll
+       * auch nachtraeglich richtig einsortiert werden: "am Ende hilft es
+       * natuerlich der Zuordnung". */
+      const jetzt = heuteBerlin();
+      const ausBlatt = blattDatum(gelesen.datum, jetzt);
+      const datumNeu = (ausBlatt && ausBlatt !== x.datum) ? ausBlatt : "";
+
+      if (gelesen.titel) await titelSetzen(env, kind, x.id, gelesen.titel);
+      else await titelSetzen(env, kind, x.id, "", "nicht erkannt");
+      if (datumNeu) await datumSetzen(env, kind, x.id, datumNeu, x.datum);
+
+      getan.push({
+        id: x.id,
+        ...(gelesen.titel ? { titel: gelesen.titel } : { warum: "Titel nicht erkannt" }),
+        ...(datumNeu ? { datum: { von: x.datum, auf: datumNeu } } : {}),
+      });
     } catch (err) {
       getan.push({ id: x.id, warum: String(err && err.message || err).slice(0, 60) });
     }
   }
-  return json(200, { ok: true, offen: e.eintraege.filter((x) => !x.titel).length, getan });
+  return json(200, {
+    ok: true,
+    offen: e.eintraege.filter((x) => !x.titel || x.datumVon !== "blatt").length,
+    getan,
+  });
 }
 
 export async function onRequestPatch(context) {
