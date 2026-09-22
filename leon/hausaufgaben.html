@@ -244,6 +244,7 @@
   </section>
 </div>
 
+<script src="/strom.js"></script>
 <script>
 (function(){
   "use strict";
@@ -714,12 +715,16 @@
     })).then(function(urls){
       urls = urls.filter(Boolean);
       if (!urls.length) throw new Error("Ich finde kein Bild in dieser Hausaufgabe.");
-      return fetch("/api/spiel-bauen", { method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
-        body: JSON.stringify({ kind: KIND, quelle: "hausaufgabe", hausaufgabe: true,
+      /* Ueber LWStrom: Ein Bau mit Foto dauert 90 bis 120 Sekunden, und
+         Cloudflare bricht eine stille Leitung mit 502 ab - Paul ist am
+         22.09.2026 dreimal daran haengengeblieben. Der Leser steht EINMAL
+         in /strom.js. */
+      return LWStrom.bauen({ kind: KIND, quelle: "hausaufgabe", hausaufgabe: true,
           wunsch: ("Übe gezielt, was bei dieser Hausaufgabe noch nicht gesessen hat." +
                    (letzteHilfe ? " Die Werkstatt hat mir dazu geschrieben: " + letzteHilfe.text : "")).slice(0, 600),
-          seiten: urls.map(function(u){ return { media_type: u.slice(5, u.indexOf(";")), data: u.split(",")[1] }; }) }) })
-        .then(function(r){ return r.json(); });
+          seiten: urls.map(function(u){ return { media_type: u.slice(5, u.indexOf(";")), data: u.split(",")[1] }; }) })
+        .then(function(spiel){ return { ok: true, spiel: spiel }; })
+        .catch(function(e){ return { ok: false, fehler: e.message }; });
     }).then(function(j){
       clearInterval(uhr);
       if (!j || !j.ok || !j.spiel) throw new Error((j && j.fehler) || "Das Spiel kam nicht zurück. Probier es noch einmal.");

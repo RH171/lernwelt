@@ -616,17 +616,21 @@
       $("lade-unter").textContent = s[1];
     }, 8000);
 
-    fetch("/api/spiel-bauen", {
-      method:"POST", credentials:"same-origin",
-      headers:{"content-type":"application/json"},
-      body: JSON.stringify({
-        kind:K.kind,
-        quelle: eigenerWunsch ? "" : wahl.thema,
-        wunsch: text,
-        seiten: []
-      })
+    /* Ueber LWStrom (EINMAL gebaut in /strom.js). Hier gibt es zwar kein
+       Foto, aber auch ein Bau aus einem Wunsch dauert gemessen 55 bis 66
+       Sekunden - nah genug an der Grenze, an der Cloudflare eine stille
+       Leitung mit 502 abbricht. Gilt fuer Paul, Leon UND Helena. */
+    LWStrom.bauen({
+      kind:K.kind,
+      quelle: eigenerWunsch ? "" : wahl.thema,
+      wunsch: text,
+      seiten: []
     })
-    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
+    .then(function(spiel){ return {ok:true, status:200, j:{ok:true, spiel:spiel}}; })
+    .catch(function(e){
+      var s = String(e && e.message || "");
+      return {ok:false, status: s.indexOf("melde dich") >= 0 ? 401 : 200, j:{ok:false, fehler:s}};
+    })
     .then(function(a){
       clearInterval(takt); baeuft = false;
       if (a.status === 401){ sicht("anmelden"); $("code").focus(); return; }
