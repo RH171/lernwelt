@@ -84,14 +84,6 @@ const KINDER = {
 const MAX_BYTES = 24 * 1024 * 1024;   // Sicherheitsabstand zu den 32 MB
 const MAX_SEITEN = 20;                // Werkstatt-Grenze; Bücher kommen später
 
-// Ein Bauauftrag im Hintergrund. Eine Stunde reicht weit: Gemessen dauert der
-// laengste Bau gut zwei Minuten, und wer sein Spiel nach einer Stunde noch
-// nicht abgeholt hat, baut sich lieber ein neues.
-const BAU = (id) => "bau:" + id;
-const BAU_HAELT = 3600;
-function neueBauId() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-}
 
 // Die Bauformen, die die Werkstatt darstellen kann.
 const SPIELARTEN = ["quiz", "zuordnen", "luecken", "karteikarten", "sammeln"];
@@ -164,158 +156,17 @@ export async function onRequestPost(context) {
 
   const vorgaben = { kind, seiten, wunsch, quelle, hausaufgabe, auftrag };
 
-  /* Der Hintergrundweg: sofort antworten, im Stillen weiterbauen.
-   *
-   * Paul stand am 22.09.2026 zweimal vor "Ich konnte den Server nicht
-   * erreichen" - gemessen 90 bis 120 Sekunden Bauzeit mit Foto, und
-   * Cloudflare bricht die Verbindung vorher ab. Wer hier hereinkommt,
-   * bekommt eine Auftragsnummer und fragt damit nach. Der Bau laeuft in
-   * waitUntil() weiter, auch wenn die Antwort laengst draussen ist.
-   *
-   * KV-Kosten: zwei Schreibvorgaenge je Bau (Start und Ergebnis). Bei den
-   * paar Bauten am Tag faellt das neben dem Spiel selbst nicht ins Gewicht;
-   * die knappe Zahl sind 1000 am Tag. */
-  /* Der Weg, der traegt: waehrend gebaut wird, fliessen Lebenszeichen.
-   *
-   * Gemessen am 22.09.2026: Der Bau mit Foto dauert 90 bis 120 Sekunden, und
-   * Cloudflare brach die Verbindung mit HTTP 502 ab - Paul sah "Ich konnte
-   * den Server nicht erreichen". Der erste Versuch, im Hintergrund
-   * weiterzubauen (waitUntil), ist gescheitert: Die Doku sagt klar
-   * "waitUntil() can extend execution for up to 30 seconds after the response
-   * is sent" (Cloudflare Workers Limits, abgerufen 22.09.2026). Nachgemessen:
-   * Der Auftrag stand nach 622 Sekunden immer noch auf "laeuft", und im Regal
-   * lag nichts.
-   *
-   * Dieselbe Doku nennt aber den Weg: "There is no hard limit on duration for
-   * HTTP-triggered Workers. As long as the client remains connected, the
-   * Worker can continue processing, making subrequests, and streaming a
-   * response body." Der 502 kam also vom LEERLAUF auf der Leitung, nicht vom
-   * Worker. Wer alle fuenf Sekunden eine Zeile schickt, hat keinen Leerlauf.
-   *
-   * Geantwortet wird zeilenweise (NDJSON): {"status":"laeuft"} als Puls, am
-   * Ende {"status":"fertig","spiel":…} oder {"status":"fehler","fehler":…}.
-   * Wer kein strom:true schickt, bekommt weiter eine gewoehnliche Antwort -
-   * die Schmiede und das Hausaufgaben-Heft bleiben unberuehrt. */
-  if (auftrag.strom === true) {
-    const strom = new TransformStream();
-    const w = strom.writable.getWriter();
-    const enc = new TextEncoder();
-    const zeile = (o) => w.write(enc.encode(JSON.stringify(o) + "\n"));
-
-    // Nicht awaiten: Die Antwort geht sofort raus, der Rumpf fuellt sich.
-    (async () => {
-      let puls = null;
-      try {
-        await zeile({ status: "laeuft", seit: 0 });
-        const start = Date.now();
-        puls = setInterval(() => {
-          zeile({ status: "laeuft", seit: Math.round((Date.now() - start) / 1000) }).catch(() => {});
-        }, 5000);
-        const e = await bauLauf(context, vorgaben);
-        clearInterval(puls); puls = null;
-        await zeile(e.ok ? { status: "fertig", spiel: e.spiel, verbrauch: e.verbrauch || null }
-                         : { status: "fehler", fehler: e.text });
-      } catch (err) {
-        if (puls) clearInterval(puls);
-        // Ein Absturz darf nicht heissen, dass das Kind ewig auf den
-        // Ladeschirm guckt - es kommt eine ehrliche letzte Zeile.
-        try { await zeile({ status: "fehler", fehler: "Beim Bauen ist etwas schiefgegangen. Bitte nochmal versuchen." }); }
-        catch (e2) {}
-      }
-      try { await w.close(); } catch (e) {}
-    })();
-
-    return new Response(strom.readable, {
-      headers: {
-        "content-type": "application/x-ndjson; charset=utf-8",
-        "cache-control": "no-store",
-        // Ohne das puffert ein Zwischenspeicher die Zeilen und der ganze
-        // Sinn - keine Stille auf der Leitung - waere dahin.
-        "x-accel-buffering": "no",
-      },
-    });
-  }
-
-  if (auftrag.hintergrund === true) {
-    if (!env.PAUL_KV) return fehler(503, "Der Speicher ist gerade nicht da. Bitte gleich nochmal.");
-    const bauId = neueBauId();
-    try {
-      await env.PAUL_KV.put(BAU(bauId),
-        JSON.stringify({ status: "laeuft", kind, seit: Date.now() }), { expirationTtl: BAU_HAELT });
-    } catch (e) {
-      return fehler(503, "Ich konnte den Auftrag nicht annehmen. Bitte gleich nochmal.");
-    }
-
-    context.waitUntil((async () => {
-      let stand;
-      try {
-        const e = await bauLauf(context, vorgaben);
-        stand = e.ok
-          ? { status: "fertig", kind, spiel: e.spiel, verbrauch: e.verbrauch || null, fertig: Date.now() }
-          : { status: "fehler", kind, text: e.text, fertig: Date.now() };
-      } catch (e) {
-        // Ein Absturz hier darf nicht heissen, dass das Kind ewig wartet.
-        stand = { status: "fehler", kind, fertig: Date.now(),
-                  text: "Beim Bauen ist etwas schiefgegangen. Bitte nochmal versuchen." };
-      }
-      try { await env.PAUL_KV.put(BAU(bauId), JSON.stringify(stand), { expirationTtl: BAU_HAELT }); }
-      catch (e) {}
-    })());
-
-    return new Response(JSON.stringify({ ok: true, bauId }), {
-      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-    });
-  }
+  /* KEIN Hintergrundweg ueber waitUntil - er ist am 22.09.2026 gescheitert.
+   * Die Doku ist eindeutig: "waitUntil() can extend execution for up to 30
+   * seconds after the response is sent" (Cloudflare Workers Limits,
+   * abgerufen 22.09.2026). Nachgemessen: Die Annahme ging in 0,7 s raus, der
+   * Auftrag stand danach 622 Sekunden auf "laeuft", und im Regal lag nichts.
+   * Wer den Weg wieder aufmacht, braucht eine Queue oder ein Durable Object
+   * (dort gilt 15 Minuten Wanduhrzeit), nicht waitUntil. */
 
   const ergebnis = await bauLauf(context, vorgaben);
   if (!ergebnis.ok) return fehler(ergebnis.status, ergebnis.text);
   return new Response(JSON.stringify({ ok: true, spiel: ergebnis.spiel, verbrauch: ergebnis.verbrauch }), {
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-  });
-}
-
-/* Nachfragen, ob der Auftrag fertig ist: GET /api/spiel-bauen?bau=<id>
- *
- * Braucht denselben Ausweis wie das Bauen - ein fremder Aufruf soll nicht
- * das fertige Spiel eines Kindes mitlesen koennen. Nur LESEN, also kein
- * Schreibvorgang und kein Geld. */
-export async function onRequestGet(context) {
-  const { request, env } = context;
-  let bauId = "";
-  try { bauId = new URL(request.url).searchParams.get("bau") || ""; } catch (e) {}
-  if (!/^[a-z0-9]{6,24}$/.test(bauId)) return fehler(400, "Dazu fehlt mir die Auftragsnummer.");
-  if (!env.PAUL_KV) return fehler(503, "Der Speicher ist gerade nicht da.");
-
-  let roh = null;
-  try { roh = await env.PAUL_KV.get(BAU(bauId)); } catch (e) {
-    return fehler(503, "Ich komme gerade nicht an deinen Auftrag. Bitte gleich nochmal.");
-  }
-  /* "Nichts gefunden" heisst hier wirklich "gibt es nicht" - der Speicher hat
-     ja geantwortet. Dieselbe Unterscheidung wie beim Anwesenheitsband. */
-  if (!roh) return fehler(404, "Diesen Auftrag kenne ich nicht mehr.");
-
-  let stand;
-  try { stand = JSON.parse(roh); } catch (e) { return fehler(500, "Der Auftrag ist unlesbar."); }
-
-  const kind = KINDER[stand.kind] ? stand.kind : "paul";
-  const alsEltern = !!geheimFuer(env, "eltern") &&
-    (await ausweisGueltig(request, geheimFuer(env, "eltern"), env));
-  if (!alsEltern && !(await ausweisGueltig(request, geheimFuer(env, kind), env))) {
-    return fehler(401, "Bitte melde dich an.");
-  }
-
-  if (stand.status === "fertig") {
-    return new Response(JSON.stringify({ ok: true, status: "fertig", spiel: stand.spiel }), {
-      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-    });
-  }
-  if (stand.status === "fehler") {
-    return new Response(JSON.stringify({ ok: false, status: "fehler", fehler: stand.text }), {
-      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-    });
-  }
-  return new Response(JSON.stringify({ ok: true, status: "laeuft",
-                                       seit: Math.round((Date.now() - (stand.seit || Date.now())) / 1000) }), {
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
 }
