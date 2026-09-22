@@ -176,5 +176,18 @@
     });
   }
 
-  global.LWStrom = { bauen: bauen, ABRISS: ABRISS };
+  /* Auch andere Wege brauchen das Verkleinern - das Schulheft legt Blätter
+     ab, ohne ein Spiel zu bauen. Es steht deshalb hier zur Verfügung, statt
+     ein zweites Mal geschrieben zu werden. Nimmt data-URLs, gibt data-URLs. */
+  function kleinerMachen(urls) {
+    return Promise.all((urls || []).map(function (u) {
+      var komma = String(u).indexOf(",");
+      if (komma < 0) return Promise.resolve(u);
+      var typ = String(u).slice(5, String(u).indexOf(";"));
+      return kleiner({ media_type: typ, data: String(u).slice(komma + 1) })
+        .then(function (s) { return "data:" + s.media_type + ";base64," + s.data; });
+    }));
+  }
+
+  global.LWStrom = { bauen: bauen, kleinerMachen: kleinerMachen, ABRISS: ABRISS };
 })(window);

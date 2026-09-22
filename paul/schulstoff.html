@@ -18,6 +18,9 @@
   die Seite lernstand.js bewusst NICHT ein.
 -->
 <link rel="stylesheet" href="/beruehrung.css">
+<script src="/strom.js"></script>
+<script src="stundenplan.js"></script>
+<script src="/blatt-aufnehmen.js"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#6b7280; --line:#e4e7f0;
@@ -41,6 +44,11 @@
   .karte+.karte{margin-top:14px}
   .unter{color:var(--muted);font-size:15px;margin:4px 0 0}
 
+  .auf-zu{width:100%;margin-top:14px;border:none;border-radius:18px;
+          background:var(--paul);color:#fff;padding:15px;
+          font:700 17.5px var(--rund);cursor:pointer;min-height:52px}
+  #aufnehmen{margin-top:14px}
+  .verborgen{display:none}
   .faecher{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
   .fach{appearance:none;border:1.5px solid var(--line);background:var(--karte);color:var(--ink);
         border-radius:999px;padding:10px 14px;font:600 15.5px var(--font);cursor:pointer;min-height:44px}
@@ -95,6 +103,13 @@
     <div style="font:600 19px var(--rund)">Alles, was du fotografiert hast</div>
     <p class="unter" id="stand">Einen Moment …</p>
   </div>
+
+  <!-- Hochladen gehört ins Heft. Denny am 23.09.2026 zur Kachel "Heft
+       abfotografieren": "Ich glaube nicht, dass dies noch benötigt wird." -
+       stimmt, sobald das Aufnehmen hier zu Hause ist. Der Ablauf steht
+       EINMAL in /blatt-aufnehmen.js. -->
+  <button class="fach auf-zu" type="button" id="neues-blatt">📸 Neues Blatt</button>
+  <div id="aufnehmen" class="verborgen"></div>
 
   <div id="filter" class="faecher" style="margin-top:16px"></div>
   <div id="inhalt"></div>
@@ -353,6 +368,25 @@
       seiteZeigen();
       listeMalen();
     }).catch(function(){});
+  });
+
+  /* Der Aufnehmen-Kasten wird erst gebaut, wenn Paul ihn aufmacht - die
+     Seite soll zuerst zeigen, was schon da ist. */
+  var aufnehmer = null;
+  $("neues-blatt").addEventListener("click", function(){
+    var k = $("aufnehmen");
+    var zu = k.classList.contains("verborgen");
+    k.classList.toggle("verborgen", !zu);
+    $("neues-blatt").textContent = zu ? "✕ Doch nicht" : "📸 Neues Blatt";
+    if (zu && !aufnehmer){
+      aufnehmer = LWBlatt.einbauen(k, {
+        kind: "paul",
+        plan: window.PAUL_PLAN,
+        // Nach dem Ablegen steht das neue Blatt sofort in der Liste.
+        fertig: function(){ laden(); }
+      });
+    }
+    if (zu) k.scrollIntoView({behavior:"smooth", block:"nearest"});
   });
 
   function laden(){
