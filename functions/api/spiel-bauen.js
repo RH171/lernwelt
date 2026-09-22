@@ -1024,7 +1024,12 @@ const WERKZEUG = {
             merkmal: { type: "string", description: 'Was GENAU diese Aufgabe übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Damit sehen die Eltern später, wo es hakt. Sei spezifisch: nicht "rechnen", sondern "5er-reihe", "zehneruebergang plus", "halbe stunden", "muenzen erkennen", "zahlen zerlegen", "symmetrieachsen", "cm in m". Gleiche Sache = gleicher Schlüssel, damit man zählen kann.' },
             bild: { type: "string", description: 'Ein Bild zur Aufgabe, oder "" wenn keins hilft. NUR diese Formen: "uhr:STUNDE:MINUTE" (z. B. uhr:3:30), "strichliste:ANZAHL", "menge:ANZAHL:WAS" (was: ' + MENGE_DINGE.join(", ") + '), "form:NAME" (kreis, dreieck, quadrat, rechteck, fuenfeck, sechseck), "zahlenstrahl:VON:BIS:MARKE" (z. B. zahlenstrahl:0:100:47). Nichts anderes - andere Formate werden nicht gezeichnet.' },
           },
-          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke", "bild", "merkmal"],
+          // beleg_nr gehoert HIER hinein, nicht nur in die Beschreibung: Am
+          // 22.09.2026 fehlte es in dieser Liste, das Modell lieferte es
+          // folglich nie - und der Beleg-Riegel warf ALLE zwoelf Aufgaben
+          // weg ("nur 0 statt mindestens 5 Aufgaben"). Ein Pflichtfeld, das
+          // nicht in required steht, ist keine Pflicht.
+          required: ["art", "frage", "antworten", "diagnosen", "weg", "teilschritte", "richtig", "erklaerung", "merke", "bild", "merkmal", "beleg_nr"],
           additionalProperties: false,
         },
       },
