@@ -52,6 +52,10 @@
      Gebaut wie Leons Themenwahl, nur mit Pauls Lehrplan und in seinen Farben. */
   .faecher{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
   .fachfrage{font:600 17px var(--rund);margin-top:18px}
+  .wanndenn{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .wanndenn input[type=date]{font:600 16.5px var(--font);padding:10px 12px;border-radius:14px;
+    border:1.5px solid var(--line);background:var(--card,#fff);color:var(--ink);min-height:44px}
+  .fach.vorschlag{border-color:var(--paul);box-shadow:0 0 0 2px rgba(79,70,229,.12)}
   .danach{margin-top:16px;border-radius:18px;background:#f0fdf4;border:1.5px solid #bbf7d0;padding:16px}
   .danach-kopf{font:700 19px var(--rund);color:#14532d}
   .danach-knoepfe{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
@@ -289,6 +293,7 @@
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
 </style>
+<script src="stundenplan.js"></script>
 <script src="/strom.js"></script>
 <script>
   // Seit 17.09.2026 laufen Hausaufgaben im Hausaufgaben-Heft. Paul kam am selben
@@ -339,7 +344,22 @@
            22.09.2026 gegen paul/stundenplan.html) - Kunst, WG, Sport und
            Schwimmen stehen nicht dabei, weil es dort keinen Eintrag zum Ueben
            gibt; dafuer ist "Etwas anderes" da. -->
+      <!-- Wann war das? Denny am 22.09.2026: "Die Blätter, die Paul
+           fotografiert, werden ein Datum haben … Solltest du auf dem Foto
+           kein Datum finden, bitte frage Paul danach. Hierzu wäre ein
+           Kalender als Auswahl die beste Möglichkeit."
+           input type=date ist auf dem iPad der native Kalender - kein
+           Tippen. Vorbelegt mit heute, weil das der Normalfall ist; für ein
+           älteres Blatt steht "Gestern" daneben. -->
+      <div class="fachfrage">Wann war das?</div>
+      <div class="wanndenn">
+        <input type="date" id="blatt-datum" aria-label="Datum des Blattes">
+        <button class="fach an" type="button" data-tag="0">Heute</button>
+        <button class="fach" type="button" data-tag="1">Gestern</button>
+      </div>
+
       <div class="fachfrage" id="fachfrage">Zu welchem Fach gehört das?</div>
+      <p class="unter" id="planhinweis" style="margin:2px 0 0"></p>
       <div class="faecher" id="foto-faecher" role="group" aria-label="Zu welchem Fach gehört das?">
         <button class="fach" type="button" data-foto-fach="Mathematik">🔢 Mathe</button>
         <button class="fach" type="button" data-foto-fach="Deutsch">📖 Deutsch</button>
@@ -999,6 +1019,71 @@
   var brauch = "ueben";
   var fotoFach = "";   // leer = noch nicht gewaehlt; ohne Fach wird nicht gebaut
 
+  /* Welcher Tag - und was Paul an dem Tag laut Plan hatte.
+   *
+   * Vorgewählt wird NIE ein Fach: Denny am 22.09.2026 hat den Knopf
+   * "Weiß ich nicht" ausdrücklich streichen lassen, "weil Paul nicht mehr
+   * Fächer hat und er wissen muss, zu welchem Schulfach das gehört". Der
+   * Plan sortiert also nur - die wahrscheinlichen nach vorn, mit einem
+   * dünnen Rahmen - und nimmt ihm das Suchen ab, nicht das Wissen. */
+  function tagFeld(){ return $("blatt-datum"); }
+
+  function isoVonHeute(minus){
+    var d = new Date();
+    d.setDate(d.getDate() - (minus || 0));
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") +
+           "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function tagKnoepfe(){
+    var heute = isoVonHeute(0), gestern = isoVonHeute(1), jetzt = tagFeld().value;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-tag]"), function(k){
+      var soll = k.getAttribute("data-tag") === "0" ? heute : gestern;
+      k.classList.toggle("an", jetzt === soll);
+    });
+  }
+
+  function planVorschlag(){
+    var reihe = $("foto-faecher");
+    if (!reihe || !window.PAUL_PLAN) return;
+    var dran = PAUL_PLAN.faecherAmDatum(tagFeld().value || isoVonHeute(0));
+    var kurz = {mathe:"Mathematik", deutsch:"Deutsch",
+      hsu:"Heimat- und Sachunterricht (HSU)", englisch:"Englisch",
+      rel:"Religion oder Ethik", musik:"Musik", anderes:"einem anderen Fach"};
+    var chips = Array.prototype.slice.call(reihe.querySelectorAll("[data-foto-fach]"));
+    chips.forEach(function(c, i){ if (c.__platz === undefined) c.__platz = i; });
+    chips.sort(function(x, y){
+      var a = dran.indexOf(Object.keys(kurz).filter(function(k){ return kurz[k] === x.getAttribute("data-foto-fach"); })[0]);
+      var b = dran.indexOf(Object.keys(kurz).filter(function(k){ return kurz[k] === y.getAttribute("data-foto-fach"); })[0]);
+      if (a < 0) a = 99; if (b < 0) b = 99;
+      if (a !== b) return a - b;
+      return x.__platz - y.__platz;
+    });
+    chips.forEach(function(c){
+      var s = Object.keys(kurz).filter(function(k){ return kurz[k] === c.getAttribute("data-foto-fach"); })[0];
+      c.classList.toggle("vorschlag", dran.indexOf(s) >= 0 && !c.classList.contains("an"));
+      reihe.appendChild(c);
+    });
+
+    // Ein Satz, der sagt WARUM sie so stehen - sonst wirkt die Reihenfolge willkürlich.
+    var genannt = dran.filter(function(s){ return ["englisch","rel","musik"].indexOf(s) >= 0; })
+                      .map(function(s){ return {englisch:"Englisch", rel:"Religion/Ethik", musik:"Musik"}[s]; });
+    $("planhinweis").textContent = dran.length
+      ? (genannt.length ? "Laut deinem Stundenplan hattest du an dem Tag " + genannt.join(" und ") + "." : "")
+      : "";
+  }
+
+  tagFeld().value = isoVonHeute(0);
+  tagKnoepfe();
+  planVorschlag();
+  tagFeld().addEventListener("change", function(){ tagKnoepfe(); planVorschlag(); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tag]"), function(k){
+    k.addEventListener("click", function(){
+      tagFeld().value = isoVonHeute(k.getAttribute("data-tag") === "0" ? 0 : 1);
+      tagKnoepfe(); planVorschlag();
+    });
+  });
+
   Array.prototype.forEach.call(document.querySelectorAll("[data-foto-fach]"), function(k){
     k.addEventListener("click", function(){
       fotoFach = k.getAttribute("data-foto-fach");
@@ -1006,6 +1091,7 @@
         x.classList.toggle("an", x === k);
       });
       knopfPruefen();
+      planVorschlag();
     });
   });
 
