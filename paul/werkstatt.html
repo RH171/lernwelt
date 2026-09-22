@@ -1163,7 +1163,14 @@
     .catch(function(){
       clearInterval(takt); baeuft = false;
       zeige("aufnahme");
-      melde("Ich konnte den Server nicht erreichen. Bist du im Internet?", "fehler");
+      /* Paul am 22.09.2026 mit genau dieser Meldung vor dem iPad (Foto vom
+         Stadtportraet). Der Server war gesund - der Bau hatte nur zu lange
+         gedauert und Safari brach ab. Zwei Dinge musste die Meldung lernen:
+         sie darf nicht behaupten, das Internet sei schuld, und sie muss
+         sagen, dass sein Foto noch da ist. Sonst faengt er von vorne an -
+         oder hoert auf. */
+      melde("Das hat zu lange gedauert. Dein Foto ist noch da \u2013 tipp nochmal auf " +
+            "\u201eSpiel bauen\u201c, dann versuche ich es gleich weiter.", "fehler");
     });
   }
   $("los").addEventListener("click", function(){ bauen(""); });
