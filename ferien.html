@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alle Ferien</title>
+<!--
+  Denny am 22.09.2026: "Wenn Paul auf den Ferien-Button klickt, wo derzeit
+  'Ferien in 41 Tagen' steht, wuerde er dort auch erwarten, dass die restlichen
+  Ferien des Schuljahres dabei stehen."
+
+  EINE Seite fuer alle drei Kinder - dieselbe Regel wie beim Band selbst und
+  beim Spielmotor: Die Ferien sind fuer alle gleich. Sie liegt bewusst OFFEN
+  (nicht unter /paul/ oder /leon/): Ferientermine sind oeffentlich, hier steht
+  kein Name und keine Schule.
+
+  Keine Lernzeit: Diese Seite bindet lernstand.js nicht ein. Nachschauen, wann
+  Ferien sind, ist kein Lernen - eine gezaehlte Minute hier wuerde die
+  Statistik im Elternbereich faelschen.
+
+  Daten aus /ferien.json (km.bayern.de, geprueft 21.09.2026).
+-->
+<link rel="stylesheet" href="/beruehrung.css">
+<style>
+  :root{
+    --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#6b7280; --line:#e4e7f0;
+    --frei:#12b76a; --bald:#4f46e5;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;--line:#2e3140}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--font);
+       padding:18px 16px 60px;-webkit-text-size-adjust:100%}
+  .huelle{max-width:640px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .zurueck{background:var(--karte);border-radius:999px;padding:9px 15px;text-decoration:none;
+           color:var(--ink);font-weight:600;font-size:15.5px;min-height:44px;display:flex;align-items:center}
+  h1{font:800 27px/1.2 var(--rund);margin:0}
+  .karte{background:var(--karte);border-radius:22px;padding:20px;
+         box-shadow:0 1px 2px rgba(20,22,40,.05),0 10px 28px rgba(20,22,40,.07)}
+  .karte+.karte{margin-top:14px}
+  .jetzt{background:linear-gradient(135deg,#12b76a,#0e9f5c);color:#fff}
+  .naechste{background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff}
+  .gross{font:800 30px/1.15 var(--rund);margin:4px 0 0}
+  .klein{font-size:15.5px;opacity:.9;margin:6px 0 0}
+  h2{font:800 20px var(--rund);margin:0 0 4px}
+  .unter{color:var(--muted);font-size:15px;margin:0 0 12px}
+  .jetzt .unter,.naechste .unter{color:rgba(255,255,255,.85)}
+  ul.liste{list-style:none;margin:0;padding:0}
+  ul.liste li{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--line)}
+  ul.liste li:first-child{border-top:none}
+  .punkt{flex:0 0 42px;height:42px;border-radius:13px;background:#f1f4fa;text-align:center;
+         font-size:21px;line-height:42px}
+  li.vorbei .punkt{background:#f1f4fa;opacity:.5}
+  li.laeuft .punkt{background:#d6f5e4}
+  .was{flex:1;min-width:0}
+  .was b{font:700 17.5px var(--rund);display:block}
+  .wann{color:var(--muted);font-size:15px}
+  .tage{flex:0 0 auto;align-self:center;font:700 15px var(--rund);color:var(--bald);white-space:nowrap}
+  li.vorbei{opacity:.55}
+  li.vorbei .tage{color:var(--muted);font-weight:600}
+  li.laeuft .tage{color:var(--frei)}
+  .quelle{color:var(--muted);font-size:13.5px;margin:14px 0 0;line-height:1.45}
+  @media (prefers-color-scheme:dark){
+    .punkt{background:#262a38}li.laeuft .punkt{background:#14432b}
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" id="zurueck" href="/">‹ Zurück</a>
+    <h1>🌴 Alle Ferien</h1>
+  </header>
+  <div id="inhalt"><div class="karte"><p class="unter" style="margin:0">Einen Moment …</p></div></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli",
+                "August","September","Oktober","November","Dezember"];
+  var TAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  var heute = new Date(); heute.setHours(0,0,0,0);
+
+  // Woher Paul gekommen ist - damit "Zurück" dorthin führt, wo er war.
+  try {
+    var v = document.referrer && new URL(document.referrer);
+    if (v && v.origin === location.origin && /^\/(paul|leon|helena)\//.test(v.pathname)) {
+      document.getElementById("zurueck").href = v.pathname;
+    }
+  } catch(e){}
+
+  function alsDatum(s){ var p = String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function tageBis(d){ return Math.round((d - heute) / 86400000); }
+  function kurz(d){ return d.getDate() + ". " + MONATE[d.getMonth()]; }
+  function lang(d){ return TAGE[d.getDay()] + ", " + d.getDate() + ". " + MONATE[d.getMonth()] + " " + d.getFullYear(); }
+  function spanne(v, b){
+    if (v.getTime() === b.getTime()) return lang(v);
+    var gleicherMonat = v.getMonth() === b.getMonth() && v.getFullYear() === b.getFullYear();
+    return (gleicherMonat ? v.getDate() + "." : kurz(v)) + " bis " + kurz(b) +
+           (v.getFullYear() !== b.getFullYear() ? " " + b.getFullYear() : "");
+  }
+  function tageWort(n){ return n === 1 ? "1 Tag" : n + " Tage"; }
+  function zeichen(name){
+    var n = String(name).toLowerCase();
+    if (n.indexOf("weihnacht") >= 0) return "🎄";
+    if (n.indexOf("sommer") >= 0) return "☀️";
+    if (n.indexOf("oster") >= 0) return "🐣";
+    if (n.indexOf("herbst") >= 0) return "🍂";
+    if (n.indexOf("pfingst") >= 0) return "🌼";
+    if (n.indexOf("winter") >= 0 || n.indexOf("fasching") >= 0) return "⛄";
+    if (n.indexOf("buss") >= 0 || n.indexOf("buß") >= 0) return "🕯️";
+    return "🌴";
+  }
+
+  fetch("/ferien.json", {cache:"no-store"}).then(function(r){ return r.json(); }).then(function(d){
+    var liste = (d.ferien || []).map(function(f){
+      var von = alsDatum(f.von), bis = alsDatum(f.bis);
+      return { name: f.name, von: von, bis: bis,
+               bisTag: tageBis(von), endeIn: tageBis(bis),
+               dauer: Math.round((bis - von) / 86400000) + 1 };
+    }).sort(function(a,b){ return a.von - b.von; });
+
+    var laeuft  = liste.filter(function(f){ return f.bisTag <= 0 && f.endeIn >= 0; })[0];
+    var kommend = liste.filter(function(f){ return f.bisTag > 0; });
+    var html = "";
+
+    if (laeuft){
+      html += '<div class="karte jetzt"><h2>Es sind Ferien! 🎉</h2>' +
+              '<div class="gross">' + laeuft.name + '</div>' +
+              '<p class="klein">Noch ' + tageWort(laeuft.endeIn + 1) + ' frei – bis ' +
+              lang(laeuft.bis) + '.</p></div>';
+    } else if (kommend.length){
+      var n = kommend[0];
+      html += '<div class="karte naechste"><h2>Als Nächstes</h2>' +
+              '<div class="gross">' + n.name + '</div>' +
+              '<p class="klein">In ' + tageWort(n.bisTag) + ' geht es los – am ' + lang(n.von) +
+              '. Dann hast du ' + tageWort(n.dauer) + ' frei.</p></div>';
+    }
+
+    // Alles, was noch kommt: die eigentliche Antwort auf Pauls Frage.
+    html += '<div class="karte"><h2>Was dieses Schuljahr noch kommt</h2>';
+    if (kommend.length){
+      html += '<p class="unter">' + kommend.length + ' Mal Ferien, zusammen ' +
+              tageWort(kommend.reduce(function(s,f){ return s + f.dauer; }, 0)) + ' frei.</p><ul class="liste">';
+      kommend.forEach(function(f){
+        html += '<li><span class="punkt">' + zeichen(f.name) + '</span>' +
+                '<span class="was"><b>' + f.name + '</b>' +
+                '<span class="wann">' + spanne(f.von, f.bis) + ' · ' + tageWort(f.dauer) + '</span></span>' +
+                '<span class="tage">in ' + tageWort(f.bisTag) + '</span></li>';
+      });
+      html += "</ul>";
+    } else {
+      // Ehrlich bleiben: keine Ferien in der Liste heisst nicht "keine Ferien
+      // mehr", sondern "die Liste ist zu Ende". Sie endet mit den
+      // Sommerferien 2027 und muss dann nachgetragen werden.
+      html += '<p class="unter" style="margin:0">Hier stehen gerade keine weiteren Ferien. ' +
+              'Wahrscheinlich ist die Liste zu Ende – Denny trägt die nächsten nach.</p>';
+    }
+    html += "</div>";
+
+    var vorbei = liste.filter(function(f){ return f.endeIn < 0; });
+    if (vorbei.length){
+      html += '<div class="karte"><h2>Schon vorbei</h2><ul class="liste">';
+      vorbei.reverse().forEach(function(f){
+        html += '<li class="vorbei"><span class="punkt">' + zeichen(f.name) + '</span>' +
+                '<span class="was"><b>' + f.name + '</b>' +
+                '<span class="wann">' + spanne(f.von, f.bis) + '</span></span>' +
+                '<span class="tage">vorbei</span></li>';
+      });
+      html += "</ul></div>";
+    }
+
+    html += '<p class="quelle">Die Ferien gelten für ganz Bayern. Quelle: ' +
+            'Kultusministerium, geprüft am ' + (d.geprueft || "").split("-").reverse().join(".") + '. ' +
+            'Einzelne schulfreie Tage deiner Schule stehen hier nicht – die sind überall anders.</p>';
+
+    document.getElementById("inhalt").innerHTML = html;
+  }).catch(function(){
+    document.getElementById("inhalt").innerHTML =
+      '<div class="karte"><h2>Das hat gerade nicht geklappt</h2>' +
+      '<p class="unter" style="margin:0">Ich komme an die Ferienliste nicht heran. ' +
+      'Probier es gleich nochmal.</p></div>';
+  });
+})();
+</script>
+</body>
+</html>
