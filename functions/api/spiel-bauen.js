@@ -603,9 +603,45 @@ function belegForm(t) {
     .replace(/[.\u00b7\u2019']/g, "").replace(/[^a-z\u00e4\u00f6\u00fc\u00df0-9]+/g, " ").trim() + " ";
 }
 
+/* Steckt die Antwort im Beleg?
+ *
+ * NICHT als zusammenhaengende Wortfolge - daran ist der erste Entwurf am
+ * 22.09.2026 gescheitert: Auf Pauls Blatt stand "Wappen: dreiblaettriges
+ * Kleeblatt", die Antwort hiess "ein dreiblaettriges Kleeblatt", und das
+ * eine Woertchen "ein" liess acht von zwoelf Aufgaben durchfallen. Gefragt
+ * wird deshalb nach den SACHWOERTERN: Jedes muss im Beleg stehen,
+ * Fuellwoerter zaehlen nicht mit.
+ *
+ * Streng genug bleibt es trotzdem - die Sieben aus "Wie viele
+ * Regierungsbezirke hat Bayern?" steht in "Regierungsbezirk: Mittelfranken"
+ * nirgends, und genau das war der Anlass fuer den ganzen Riegel. */
+const FUELLWOERTER = new Set([
+  "ein", "eine", "einen", "einem", "einer", "eines", "der", "die", "das",
+  "den", "dem", "des", "und", "oder", "in", "im", "am", "an", "auf", "von",
+  "vom", "zu", "zum", "zur", "mit", "bei", "ist", "sind", "war", "waren",
+  "es", "er", "sie", "etwa", "ungefaehr", "ungefähr", "circa", "ca", "rund",
+  "heisst", "heißt", "liegt", "hat", "haben", "jahr", "jahre", "stadt",
+]);
+
+function sachwoerter(t) {
+  return belegForm(t).trim().split(/\s+/).filter((x) => x && !FUELLWOERTER.has(x));
+}
+
 function stehtDrin(grosser, kleiner) {
-  const g = belegForm(grosser), k = belegForm(kleiner).trim();
-  return k.length > 0 && g.includes(" " + k + " ");
+  const g = belegForm(grosser);
+  const imBeleg = g.trim().split(/\s+/);
+  const woerter = sachwoerter(kleiner);
+  if (!woerter.length) return false;
+  return woerter.every((x) => {
+    if (g.includes(" " + x + " ")) return true;
+    // Abkuerzungen: Auf dem Blatt steht "Königstr. 88", die Antwort heisst
+    // "die Königstraße 88". Ein gemeinsamer Anfang ab vier Buchstaben reicht.
+    // NUR bei Woertern - Zahlen muessen genau stimmen, sonst waere "7" durch
+    // "70" belegt und der ganze Riegel waere weich.
+    if (/\d/.test(x) || x.length < 4) return false;
+    return imBeleg.some((y) => !/\d/.test(y) && y.length >= 4 &&
+      (y.startsWith(x.slice(0, 4)) && (y.startsWith(x) || x.startsWith(y))));
+  });
 }
 
 export function ohneBeleg(a, spiel) {
