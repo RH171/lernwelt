@@ -291,6 +291,58 @@ export async function titelSetzen(env, kind, id, titel, warum) {
   return { ok: false };
 }
 
+/* Das Datum nachtragen, das auf dem Blatt stand.
+ *
+ * Denny am 22.09.2026, nachdem er absichtlich ein falsches gewaehlt hatte:
+ * "Du müsstest aber das Datum oben rechts oder oben links sehen." Und: "am
+ * Ende hilft es natürlich der Zuordnung."
+ *
+ * Der Eintrag WANDERT dabei unter Umstaenden in einen anderen Monat - die
+ * Liste ist nach Monat geschluesselt. Deshalb: aus der alten nehmen, in die
+ * neue legen. Was das Kind gewaehlt hatte, bleibt als datumGewaehlt stehen;
+ * ein stillschweigend getauschtes Datum waere schlimmer als ein falsches. */
+export async function datumSetzen(env, kind, id, neuesDatum, altesDatum) {
+  if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
+  if (!datumOk(neuesDatum)) return { ok: false };
+  const altMonat = monatVon(altesDatum || heuteBerlin());
+  const neuMonat = monatVon(neuesDatum);
+
+  let roh;
+  try { roh = await env.PAUL_KV.get(LISTE(kind, altMonat)); } catch (e) { return { ok: false }; }
+  const liste = listeLesen(roh);
+  if (liste === KAPUTT) return { ok: false };
+  const treffer = liste.findIndex((e) => e.id === id);
+  if (treffer < 0) return { ok: false };
+
+  const eintrag = liste[treffer];
+  eintrag.datumGewaehlt = eintrag.datum;     // was das Kind angegeben hatte
+  eintrag.datum = neuesDatum;
+  eintrag.datumVon = "blatt";
+
+  if (altMonat === neuMonat) {
+    liste.sort((x, y) => (y.datum || "").localeCompare(x.datum || ""));
+    try { await env.PAUL_KV.put(LISTE(kind, altMonat), JSON.stringify(liste)); }
+    catch (e) { return { ok: false }; }
+    return { ok: true };
+  }
+
+  // Ueber die Monatsgrenze: erst in die neue Liste, dann aus der alten.
+  // Andersherum waere der Eintrag bei einem Abbruch dazwischen weg.
+  let roh2;
+  try { roh2 = await env.PAUL_KV.get(LISTE(kind, neuMonat)); } catch (e) { return { ok: false }; }
+  const liste2 = listeLesen(roh2);
+  if (liste2 === KAPUTT) return { ok: false };
+  liste2.unshift(eintrag);
+  liste2.sort((x, y) => (y.datum || "").localeCompare(x.datum || ""));
+  try { await env.PAUL_KV.put(LISTE(kind, neuMonat), JSON.stringify(liste2.slice(0, 300))); }
+  catch (e) { return { ok: false }; }
+
+  liste.splice(treffer, 1);
+  try { await env.PAUL_KV.put(LISTE(kind, altMonat), JSON.stringify(liste)); }
+  catch (e) { return { ok: true, doppelt: true }; }   // steht jetzt zweimal - beim naechsten Lesen sichtbar
+  return { ok: true, verschoben: true };
+}
+
 /* Verstecken und Wiederholen - ein Tipp, umkehrbar, das Bild bleibt.
  * "weg" nimmt nur den Eintrag aus der Liste; die Bilder liegen weiter da. */
 export async function stoffAendern(env, kind, id, was) {

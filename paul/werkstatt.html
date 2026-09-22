@@ -1339,9 +1339,16 @@
       }
       zuletztAbgelegt = a.j;
       $("danach").classList.remove("verborgen");
+      /* Hat das Blatt selbst ein Datum getragen, gilt das - aber Paul
+         erfaehrt es. Denny am 22.09.2026 hat absichtlich ein falsches
+         gewaehlt, um zu sehen, was passiert; ein heimlich getauschtes Datum
+         waere die schlechteste Antwort darauf. */
+      var g = a.j.datumGeaendert;
       $("danach-text").textContent =
         (seiten.length > 1 ? seiten.length + " Seiten" : "Dein Blatt") + " vom " +
-        deutsch(a.j.datum) + " – abgelegt unter " + fachName() + ".";
+        deutsch(a.j.datum) + " – abgelegt unter " + fachName() + "." +
+        (g ? " Auf dem Blatt stand " + deutsch(g.auf) + " – das habe ich genommen." : "") +
+        (a.j.titel ? " Ich habe es „" + a.j.titel + "“ genannt." : "");
       $("los").classList.add("verborgen");
       $("danach").scrollIntoView({behavior:"smooth", block:"nearest"});
     })
