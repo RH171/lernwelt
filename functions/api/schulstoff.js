@@ -98,7 +98,16 @@ export async function onRequestPost(context) {
    * zurueck - kein Schluessel, kein Guthaben, Modell langsam -, bleibt der
    * Eintrag einfach ohne. Nichts haengt davon ab. */
   if (env.ANTHROPIC_API_KEY) {
-    context.waitUntil(titelNachtragen(env, kind, e.id, seiten[0]).catch(() => {}));
+    /* Der Grund wird MITGESCHRIEBEN, nicht verschluckt.
+     *
+     * Am 22.09.2026 kam kein Titel zurueck, und ich stand wieder vor einem
+     * leeren Feld ohne Hinweis - dasselbe Muster wie dreimal an diesem Abend.
+     * Ein stiller catch ist bequem und kostet beim Suchen Stunden. */
+    context.waitUntil(
+      titelNachtragen(env, kind, e.id, seiten[0])
+        .catch((err) => titelSetzen(env, kind, e.id, "", "Fehler: " + String(err && err.message || err).slice(0, 80)))
+        .catch(() => {})
+    );
   }
 
   return json(200, { ok: true, id: e.id, datum: e.datum, datumVonBlatt: !!vomBlatt });
@@ -108,7 +117,7 @@ const TITEL_MODELL = "claude-haiku-4-5-20251001";
 
 async function titelNachtragen(env, kind, id, seite) {
   const komma = String(seite || "").indexOf(",");
-  if (komma < 0) return;
+  if (komma < 0) { await titelSetzen(env, kind, id, "", "kein Bild dabei"); return; }
   const typ = String(seite).slice(5, String(seite).indexOf(";"));
   if (typ.indexOf("image/") !== 0) return;          // PDFs schaut dieser Weg nicht an
 
@@ -136,14 +145,23 @@ async function titelNachtragen(env, kind, id, seite) {
       }],
     }),
   });
-  if (!r.ok) return;
+  if (!r.ok) {
+    const roh = await r.text().catch(() => "");
+    let art = "";
+    try { const j = JSON.parse(roh); art = String((j.error && (j.error.type || j.error.message)) || ""); } catch (e) {}
+    await titelSetzen(env, kind, id, "", "HTTP " + r.status + (art ? " " + art.slice(0, 60) : ""));
+    return;
+  }
 
   const d = await r.json();
   const roh = ((d.content || []).filter((c) => c.type === "text")[0] || {}).text || "";
   const titel = roh.trim().replace(/^["'„]|["'"]$/g, "").slice(0, 60);
   // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
   // etwas Erfundenes.
-  if (!titel || /^unklar$/i.test(titel)) return;
+  if (!titel || /^unklar$/i.test(titel)) {
+    await titelSetzen(env, kind, id, "", titel ? "unklar" : "leere Antwort");
+    return;
+  }
 
   await titelSetzen(env, kind, id, titel);
 }

@@ -262,7 +262,7 @@ export async function stoffBild(env, id, nr) {
  * bleibt. Kostet einen Schreibvorgang - der vierte je Eintrag, bei 1000 am
  * Tag traegt das. Findet sich der Eintrag nicht mehr (Paul hat ihn in der
  * Zwischenzeit weggeraeumt), passiert nichts. */
-export async function titelSetzen(env, kind, id, titel) {
+export async function titelSetzen(env, kind, id, titel, warum) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   const heute = heuteBerlin();
   for (let i = 0; i < 2; i++) {          // dieser und der Vormonat reichen
@@ -278,7 +278,12 @@ export async function titelSetzen(env, kind, id, titel) {
     // Nur setzen, wenn noch keiner dasteht - ein von Hand geschriebener
     // Titel gewinnt immer gegen einen geratenen.
     if (liste[treffer].titel) return { ok: true, schon: true };
-    liste[treffer].titel = String(titel || "").slice(0, 60);
+    if (titel) liste[treffer].titel = String(titel).slice(0, 60);
+    /* Warum kein Titel dasteht, gehoert in den Eintrag - sonst sucht man
+       beim naechsten Mal wieder von vorn. Der Schaukasten zeigt es nicht,
+       nur werkstatt.sh und der Elternbereich koennen es lesen. */
+    else if (warum) liste[treffer].titelWarum = String(warum).slice(0, 100);
+    else return { ok: true, nichts: true };
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
     return { ok: true };
