@@ -229,8 +229,11 @@
 
     function melde(text, art) {
       var m = $(".lwb-melden");
+      if (!m) return;
       m.textContent = text || "";
-      m.className = "melden " + (art || "") + (text ? "" : " verborgen");
+      // Die Kennklasse MUSS bleiben - sonst findet der naechste Aufruf das
+      // Feld nicht mehr wieder (und die Messung auch nicht).
+      m.className = "lwb-melden melden " + (art || "") + (text ? "" : " verborgen");
     }
 
     function knopf() {
