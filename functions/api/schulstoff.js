@@ -24,7 +24,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
-  fingerabdruck, schonDa,
+  fingerabdruck, schonDa, nahGenug, BLATT_HOECHSTENS_TAGE,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -120,7 +120,12 @@ export async function onRequestPost(context) {
          natuerlich der Zuordnung" - ein heimlich geaendertes Datum hilft
          niemandem. */
       const geprueft = blattDatum(gelesen.datum, heute);
-      if (geprueft) {
+      /* Nur uebernehmen, wenn es plausibel nah am heutigen Tag liegt. Das
+         Modell hat sich am 23.09.2026 in einer handgeschriebenen Jahreszahl
+         verlesen (26 -> 25); der Eintrag landete im Vorjahr und war aus dem
+         Heft verschwunden. Ein falsches Datum, das etwas unsichtbar macht,
+         ist schlimmer als gar keins. */
+      if (geprueft && nahGenug(geprueft, heute)) {
         vomBlattGelesen = geprueft;
         weichtAb = geprueft !== e.datum;
       }
@@ -333,7 +338,10 @@ async function nachtragen(context) {
        * natuerlich der Zuordnung". */
       const jetzt = heuteBerlin();
       const ausBlatt = blattDatum(gelesen.datum, jetzt);
-      const datumNeu = (ausBlatt && ausBlatt !== x.datum) ? ausBlatt : "";
+      // Dieselbe Schranke wie beim Ablegen - sie ist hier sogar wichtiger,
+      // weil ein Nachtrag viele Blaetter auf einmal anfasst.
+      const datumNeu = (ausBlatt && ausBlatt !== x.datum && nahGenug(ausBlatt, jetzt))
+        ? ausBlatt : "";
 
       if (gelesen.titel) await titelSetzen(env, kind, x.id, gelesen.titel);
       else await titelSetzen(env, kind, x.id, "", "nicht erkannt");

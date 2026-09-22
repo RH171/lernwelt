@@ -94,6 +94,29 @@ function naechsterTag(tag) {
 const MONATSNAMEN = ["januar","februar","maerz","märz","april","mai","juni","juli",
                      "august","september","oktober","november","dezember"];
 
+/* Wie weit darf ein Blatt-Datum zurueckliegen?
+ *
+ * In der Nacht vom 22. auf den 23.09.2026 hat das Modell in Pauls
+ * Handschrift "22.9.26" als "22.9.25" gelesen - ein Jahr daneben. Der
+ * Eintrag wanderte daraufhin in den September 2025 und war aus seinem Heft
+ * verschwunden, weil die Ansicht nur drei Monate zurueckschaut.
+ *
+ * Ein Blatt, das ein Kind abends fotografiert, ist Tage alt, nicht ein Jahr.
+ * Alles, was weiter zurueckliegt, ist mit hoher Wahrscheinlichkeit ein
+ * Lesefehler - und ein falsches Datum, das den Eintrag unsichtbar macht, ist
+ * schlimmer als gar keins. 60 Tage lassen Ferien und ein spaet nachgereichtes
+ * Heft zu. */
+export const BLATT_HOECHSTENS_TAGE = 60;
+
+export function nahGenug(datum, bezug) {
+  if (!datum || !bezug) return false;
+  const a = new Date(datum + "T12:00:00Z"), b = new Date(bezug + "T12:00:00Z");
+  if (isNaN(a.getTime()) || isNaN(b.getTime())) return false;
+  const tage = Math.round((b - a) / 86400000);
+  // Nach vorn gar nicht (ein Blatt von morgen gibt es nicht), nach hinten 60.
+  return tage >= -1 && tage <= BLATT_HOECHSTENS_TAGE;
+}
+
 export function blattDatum(text, heute) {
   const h = heute || heuteBerlin();
   const roh = String(text || "").trim().toLowerCase();
