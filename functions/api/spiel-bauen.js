@@ -391,7 +391,10 @@ async function bauLauf(context, vorgaben) {
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
-    return { ok: false, status: 502, text: "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen." };
+    const weg = (spiel.aussortiert || []).slice(0, 6).join(" | ");
+    return { ok: false, status: 502,
+      text: "Das Spiel kam unvollständig zurück (" + maengel[0] + ")." +
+            (weg ? " Aussortiert wurde: " + weg : "") + " Bitte nochmal versuchen." };
   }
 
   // Bilder, die die Oberflaeche nicht zeichnen kann, gar nicht erst aufheben.
@@ -460,11 +463,18 @@ export function aussortierbar(m) {
 /* Die einzelnen Aufgaben rausnehmen, das Spiel behalten. Ein Deutsch-Spiel mit
  * neun Aufgaben ist besser als eine Fehlermeldung nach neunzig Sekunden. */
 function aussortieren(spiel, kind) {
-  fachfremdeEntfernen(spiel, kind);
-  falschGerechneteEntfernen(spiel);
-  vomBlattEntfernen(spiel);
-  ohneBelegEntfernen(spiel);
-  aufWahlStellen(spiel);
+  /* Was wegfliegt, wird mitgeschrieben - sonst steht man vor "nur 4 statt
+     mindestens 5 Aufgaben" und weiss nicht, ob das Modell Unsinn gebaut hat
+     oder der Riegel zu streng ist. Genau davor stand ich am 22.09.2026
+     dreimal hintereinander. */
+  const weg = []
+    .concat(fachfremdeEntfernen(spiel, kind) || [])
+    .concat(falschGerechneteEntfernen(spiel) || [])
+    .concat(vomBlattEntfernen(spiel) || [])
+    .concat(ohneBelegEntfernen(spiel) || [])
+    .concat(aufWahlStellen(spiel) || []);
+  if (weg.length) spiel.aussortiert = (spiel.aussortiert || []).concat(weg);
+  return weg;
 }
 
 const FACHFREMD_MARKE = "fachfremd: ";
