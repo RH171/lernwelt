@@ -712,7 +712,23 @@ export function aufWahlStellen(spiel) {
   spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
     if ((a.art || "wahl") === "wahl") return true;
     const richtig = String(a.richtig == null ? "" : a.richtig).trim();
-    const andere = vorrat.filter((x) => x.toLowerCase() !== richtig.toLowerCase()).slice(0, 12);
+
+    /* Zwei Fehler, die am 22.09.2026 in Pauls "Kleeblatt-Spur durch Fürth"
+       standen und beide aus dieser Funktion kamen:
+       - Auf "Wie viele Einwohner? Schreibe ohne Punkt" -> 132000 standen
+         "132.000" UND "132000" zur Wahl. Paul tippt die erste, sie ist
+         richtig, und das Spiel sagt falsch. Ein Ablenker, der dieselbe Zahl
+         ist, ist keiner.
+       - Auf "Zähle die Orte" -> 4 standen "dreiblättriges Kleeblatt" und
+         "132.000" daneben. Das ist kein Wiedererkennen mehr, sondern
+         Unsinn ausschliessen - genau was Regel 2c verbietet. Zu einer Zahl
+         gehoeren Zahlen. */
+    const nackt = (t) => String(t).toLowerCase().replace(/[^a-zäöüß0-9]/g, "");
+    const istZahl = (t) => /^[\d.,\s]*\d[\d.,\s]*$/.test(String(t).trim());
+    const andere = vorrat
+      .filter((x) => nackt(x) !== nackt(richtig))
+      .filter((x) => istZahl(richtig) ? istZahl(x) : !istZahl(x))
+      .slice(0, 12);
     if (!richtig || andere.length < 3) { raus.push(a.frage); return false; }
     // Immer dieselben drei waeren nach drei Aufgaben durchschaut; gewuerfelt
     // wird aus dem, was das Blatt hergibt.
