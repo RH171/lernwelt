@@ -30,6 +30,7 @@
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
+import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -192,8 +193,9 @@ const WERKZEUG = {
                          description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
             erklaerung: { type: "string", description: "Ein Satz, warum das stimmt. Für das Kind, nicht für Erwachsene." },
             merkmal: { type: "string", description: 'Was die Frage übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Gleiche Sache = gleicher Schlüssel, damit sich zählen lässt, ob es sitzt. Gut: "zehneruebergang plus", "m in cm", "steigerung adjektive", "passe compose". Schlecht: "Frage 3", "gemischt".' },
+            blatt_nr: { type: "integer", description: "Nummer des Blattes aus der Liste oben, auf dem diese Frage steht (1 = das erste). 0, wenn die Frage nicht von einem Blatt stammt." },
           },
-          required: ["fach", "frage", "antworten", "erklaerung", "merkmal"],
+          required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr"],
         },
       },
     },
@@ -201,7 +203,7 @@ const WERKZEUG = {
   },
 };
 
-async function nachschubBauen(env, kind, nurFaecher) {
+async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   if (!env.ANTHROPIC_API_KEY) return [];
   const k = KINDER[kind];
 
@@ -226,7 +228,9 @@ async function nachschubBauen(env, kind, nurFaecher) {
   try { schwaechen = await schwaechenHolen(env, kind, 6); } catch (e) {}
 
   // Und was zuletzt wirklich im Unterricht dran war (Fotos aus dem Heft).
-  const ausDerSchule = await letzterUnterricht(env, kind);
+  const schule = await letzterUnterricht(env, kind, nurBlaetter);
+  const ausDerSchule = schule.text;
+  const nurDaraus = !!(nurBlaetter && nurBlaetter.length && schule.blaetter.length);
 
   const auftrag = `Du baust Quizfragen für ein Kind, das jeden Tag fünf bis zehn Minuten üben will.
 
@@ -235,13 +239,24 @@ ${kind.charAt(0).toUpperCase() + kind.slice(1)}, ${k.alter} Jahre, ${k.stufe}, B
 
 FÄCHER UND LERNBEREICHE (Kürzel genau so ins Feld "fach")
 ${fachListe}
-${ausDerSchule ? `
+${ausDerSchule ? (nurDaraus ? `
+NUR AUS DIESEN BLÄTTERN FRAGEN
+Das Kind hat sich genau das ausgesucht:
+${ausDerSchule}
+Frage AUSSCHLIESSLICH nach dem, was auf diesen Blättern steht. Keine
+Zusatzfragen zum selben Thema, kein Allgemeinwissen, nichts aus dem Lehrplan
+drumherum. Steht auf dem Blatt "Fürth", dann frage nicht nach Nürnberg - das
+Kind war im Unterricht dabei und hat das andere nie gehört. Es hält sich sonst
+für dumm, obwohl es alles gewusst hat, was drankam.
+Trag zu JEDER Frage die Nummer des Blattes in das Feld "blatt_nr" ein.
+` : `
 DAS WAR ZULETZT WIRKLICH DRAN
 Das Kind hat aus dem Unterricht fotografiert:
 ${ausDerSchule}
 Nimm das als Schwerpunkt - dafür ist das Quiz da. Ein Lehrplan sagt, was
 irgendwann drankommt; das hier sagt, was diese Woche zählt.
-` : ""}${schwaechen.length ? `
+Trag zu jeder Frage, die daher stammt, die Nummer des Blattes in "blatt_nr" ein.
+`) : ""}${schwaechen.length ? `
 DAS HAT ZULETZT NICHT GESESSEN
 ${schwaechen.map((s) => `- "${s.merkmal}"${s.beispiel ? ` (zuletzt: ${s.beispiel})` : ""}`).join("\n")}
 Zu jedem dieser Punkte mindestens zwei Fragen, mit genau diesem Schlüssel im
@@ -299,7 +314,18 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
       richtig: 0,                       // die erste ist richtig; gemischt wird auf der Seite
       erklaerung: String(f.erklaerung || "").slice(0, 300),
       merkmal: String(f.merkmal || "").toLowerCase().slice(0, 40),
+      /* Aus welchem Blatt die Frage stammt - daran filtert /api/quiz, wenn
+         Paul einzelne Blaetter angehakt hat. Die Nummer aus dem Auftrag wird
+         hier zur echten id; eine Nummer daneben heisst lieber KEIN Blatt als
+         ein falsches. */
+      ...(blattVon(f.blatt_nr, schule.blaetter) ? { blatt: blattVon(f.blatt_nr, schule.blaetter) } : {}),
     }));
+}
+
+function blattVon(nr, liste) {
+  const n = Number(nr);
+  if (!Number.isFinite(n) || n < 1 || !liste || n > liste.length) return "";
+  return liste[n - 1].id || "";
 }
 
 function kennung() {
@@ -309,18 +335,36 @@ function kennung() {
 /* Was hat das Kind zuletzt aus dem Unterricht geschickt?
    Das ist der "immer aktuell"-Teil: Die Fotos aus dem Heft (Kachel "Das haben
    wir heute gemacht") sagen, was diese Woche wirklich dran war. */
-async function letzterUnterricht(env, kind) {
+/* Was zuletzt wirklich im Unterricht dran war - aus dem SCHULHEFT.
+ *
+ * Bis zum 23.09.2026 kam das aus den Hausaufgaben-Meldungen. Seit es das
+ * Schulheft gibt, steht es dort sauber mit Fach, Datum und Titel.
+ *
+ * Denny am 23.09.2026: "Ganz klar, nur aus seinen Blättern. Wenn du jetzt
+ * Paul plötzlich was zu Nürnberg fragst, obwohl er ein HSU heute Fürth hatte,
+ * versteht er ja die Welt nicht und kennt die Antworten nicht."
+ *
+ * Gibt nurBlaetter[] mit, wird NUR daraus gefragt - das ist Pauls eigene
+ * Auswahl im Quiz.
+ */
+async function letzterUnterricht(env, kind, nurBlaetter) {
   try {
-    const roh = await env.PAUL_KV.get("meldungen");
-    const alle = roh ? JSON.parse(roh) : [];
-    const grenze = Date.now() - 14 * 24 * 3600 * 1000;
-    const texte = (Array.isArray(alle) ? alle : [])
-      .filter((m) => m && m.kind === kind && m.art === "hausaufgabe")
-      .filter((m) => new Date(m.zeit || 0).getTime() >= grenze)
-      .flatMap((m) => (m.verlauf || [])
-        .filter((n) => n && n.von !== "werkstatt" && /^Unterricht in /.test(String(n.text || "")))
-        .map((n) => String(n.text).slice(0, 200)))
-      .slice(-6);
-    return texte.length ? texte.map((t) => "- " + t).join("\n") : "";
-  } catch (e) { return ""; }
+    const e = await stoffLesen(env, kind, 4);
+    if (!e.ok) return { text: "", blaetter: [] };
+    const ab = schuljahrStart(e.heute);
+    let liste = e.eintraege.filter((x) =>
+      x.sichtbar !== false && x.datum >= ab && x.titel);
+    if (nurBlaetter && nurBlaetter.length) {
+      liste = liste.filter((x) => nurBlaetter.includes(x.id));
+    }
+    liste = liste.slice(0, 8);
+    if (!liste.length) return { text: "", blaetter: [] };
+    return {
+      text: liste.map((x, i) =>
+        (i + 1) + ". " + x.titel + " (" + (FAECHER[x.fach] || x.fach || "?") +
+        ", " + x.datum + ")").join("\n"),
+      blaetter: liste,
+    };
+  } catch (e) { return { text: "", blaetter: [] }; }
+}catch (e) { return ""; }
 }
