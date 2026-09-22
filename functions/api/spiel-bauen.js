@@ -330,14 +330,41 @@ async function bauLauf(context, vorgaben) {
     }),
   });
 
+  /* Ein einzelner Aussetzer der API darf das Kind nicht kosten.
+   *
+   * Paul stand am 22.09.2026 um 20:14 Uhr vor "Claude hat nicht geantwortet"
+   * - mit seinem Foto, nach zwei Minuten Warten. Sieben Minuten spaeter lief
+   * derselbe Weg sauber durch. Es war also kein Guthaben und kein Fehler im
+   * Auftrag, sondern ein voruebergehender Aussetzer.
+   *
+   * Bei einem MANGEL im Spiel gab es laengst einen zweiten Anlauf; bei einem
+   * Fehler der Schnittstelle nicht - dabei ist der viel wahrscheinlicher
+   * voruebergehend. Wiederholt wird nur, was sich von selbst erholen kann
+   * (Ueberlastung, Serverfehler). Ein 401 oder ein kaputter Auftrag wird beim
+   * zweiten Mal genauso abgelehnt und wuerde nur Zeit kosten - waehrend das
+   * Kind auf den Ladeschirm guckt. */
+  const ERHOLT_SICH = new Set([408, 409, 425, 429, 500, 502, 503, 504, 529]);
+
   let antwort;
   try {
     antwort = await anfrageStellen();
+    if (!antwort.ok && ERHOLT_SICH.has(antwort.status)) {
+      // Kurz Luft holen - sofort nachsetzen trifft dieselbe Ueberlastung.
+      await new Promise((r) => setTimeout(r, 2500));
+      const zweiter = await anfrageStellen().catch(() => null);
+      if (zweiter) antwort = zweiter;
+    }
   } catch (e) {
     // Kommt die Anfrage gar nicht erst zustande, stand bisher nur ein
-    // allgemeines "Beim Bauen ist etwas schiefgegangen" da.
-    return { ok: false, status: 502,
-      text: "Ich komme gerade nicht zu Claude durch (" + String(e && e.message || e).slice(0, 60) + ")." };
+    // allgemeines "Beim Bauen ist etwas schiefgegangen" da. Auch hier ein
+    // zweiter Versuch, bevor das Kind eine Fehlermeldung bekommt.
+    await new Promise((r) => setTimeout(r, 2500));
+    try {
+      antwort = await anfrageStellen();
+    } catch (e2) {
+      return { ok: false, status: 502,
+        text: "Ich komme gerade nicht zu Claude durch (" + String(e2 && e2.message || e2).slice(0, 60) + ")." };
+    }
   }
 
   if (!antwort.ok) {
