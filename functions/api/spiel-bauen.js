@@ -175,6 +175,67 @@ export async function onRequestPost(context) {
    * KV-Kosten: zwei Schreibvorgaenge je Bau (Start und Ergebnis). Bei den
    * paar Bauten am Tag faellt das neben dem Spiel selbst nicht ins Gewicht;
    * die knappe Zahl sind 1000 am Tag. */
+  /* Der Weg, der traegt: waehrend gebaut wird, fliessen Lebenszeichen.
+   *
+   * Gemessen am 22.09.2026: Der Bau mit Foto dauert 90 bis 120 Sekunden, und
+   * Cloudflare brach die Verbindung mit HTTP 502 ab - Paul sah "Ich konnte
+   * den Server nicht erreichen". Der erste Versuch, im Hintergrund
+   * weiterzubauen (waitUntil), ist gescheitert: Die Doku sagt klar
+   * "waitUntil() can extend execution for up to 30 seconds after the response
+   * is sent" (Cloudflare Workers Limits, abgerufen 22.09.2026). Nachgemessen:
+   * Der Auftrag stand nach 622 Sekunden immer noch auf "laeuft", und im Regal
+   * lag nichts.
+   *
+   * Dieselbe Doku nennt aber den Weg: "There is no hard limit on duration for
+   * HTTP-triggered Workers. As long as the client remains connected, the
+   * Worker can continue processing, making subrequests, and streaming a
+   * response body." Der 502 kam also vom LEERLAUF auf der Leitung, nicht vom
+   * Worker. Wer alle fuenf Sekunden eine Zeile schickt, hat keinen Leerlauf.
+   *
+   * Geantwortet wird zeilenweise (NDJSON): {"status":"laeuft"} als Puls, am
+   * Ende {"status":"fertig","spiel":…} oder {"status":"fehler","fehler":…}.
+   * Wer kein strom:true schickt, bekommt weiter eine gewoehnliche Antwort -
+   * die Schmiede und das Hausaufgaben-Heft bleiben unberuehrt. */
+  if (auftrag.strom === true) {
+    const strom = new TransformStream();
+    const w = strom.writable.getWriter();
+    const enc = new TextEncoder();
+    const zeile = (o) => w.write(enc.encode(JSON.stringify(o) + "\n"));
+
+    // Nicht awaiten: Die Antwort geht sofort raus, der Rumpf fuellt sich.
+    (async () => {
+      let puls = null;
+      try {
+        await zeile({ status: "laeuft", seit: 0 });
+        const start = Date.now();
+        puls = setInterval(() => {
+          zeile({ status: "laeuft", seit: Math.round((Date.now() - start) / 1000) }).catch(() => {});
+        }, 5000);
+        const e = await bauLauf(context, vorgaben);
+        clearInterval(puls); puls = null;
+        await zeile(e.ok ? { status: "fertig", spiel: e.spiel, verbrauch: e.verbrauch || null }
+                         : { status: "fehler", fehler: e.text });
+      } catch (err) {
+        if (puls) clearInterval(puls);
+        // Ein Absturz darf nicht heissen, dass das Kind ewig auf den
+        // Ladeschirm guckt - es kommt eine ehrliche letzte Zeile.
+        try { await zeile({ status: "fehler", fehler: "Beim Bauen ist etwas schiefgegangen. Bitte nochmal versuchen." }); }
+        catch (e2) {}
+      }
+      try { await w.close(); } catch (e) {}
+    })();
+
+    return new Response(strom.readable, {
+      headers: {
+        "content-type": "application/x-ndjson; charset=utf-8",
+        "cache-control": "no-store",
+        // Ohne das puffert ein Zwischenspeicher die Zeilen und der ganze
+        // Sinn - keine Stille auf der Leitung - waere dahin.
+        "x-accel-buffering": "no",
+      },
+    });
+  }
+
   if (auftrag.hintergrund === true) {
     if (!env.PAUL_KV) return fehler(503, "Der Speicher ist gerade nicht da. Bitte gleich nochmal.");
     const bauId = neueBauId();
