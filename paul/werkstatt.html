@@ -311,44 +311,43 @@
   <!-- 1. Material sammeln -->
   <section id="sicht-aufnahme">
 
-    <!-- Themenfelder (Paul, 14.09.2026, Meldung 8fcenvfnsh) -->
-    <div class="karte" id="themen-karte">
-      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Worauf hast du Lust?</div>
-      <p class="unter">Tipp ein Feld an – dann baue ich dir ein Spiel dazu. Was schon fertig ist,
-      geht sofort los, ganz ohne Warten.</p>
-      <div class="faecher" id="faecher">
-        <button class="fach an" type="button" data-fach="mathe">🔢 Mathe</button>
-        <button class="fach" type="button" data-fach="deutsch">📖 Deutsch</button>
-        <button class="fach" type="button" data-fach="hsu">🌍 HSU</button>
-      </div>
-      <div class="themen" id="themen"></div>
-    </div>
-
-    <!-- Der Weg zum grossen Spiel (Paul, 14.09.2026, Meldung 8fcenvfnsh):
-         "ich rede mit dir gerade die ganze Zeit darüber, dass ich in der
-         Lernwerkstatt selber ein Spiel bauen kann, ein größeres" - und auf
-         die Rueckfrage, wie er gefragt werden will: "Schritt für Schritt,
-         bitte." Vorher stand hier nur der kurze Weg, und das grosse Spiel
-         verwies ihn an Denny. -->
-    <a class="karte schmiede" id="schmiede-karte" href="schmiede.html">
-      <div class="schmiede-kopf"><span class="zeichen">🛠️</span>Ein richtig großes Spiel bauen</div>
-      <p class="unter">Mit Springen, eigener Welt, eigener Figur und eigenen Tönen.
-      Ich frage dich Schritt für Schritt – und am Ende spielst du es sofort.</p>
-      <span class="schmiede-los">Schritt für Schritt bauen ›</span>
-    </a>
-
+    <!-- Ganz oben, weil hier der Schulstoff hereinkommt (Denny, 22.09.2026):
+         "Dieser Menuepunkt zaehlt erst mal darum, den aktuellen Tages- oder
+         Wochenbestand von seinen schulischen Aktivitaeten zu sehen und daraus
+         dann die entsprechenden Spiele, Aufgaben und Quizfragen zu bauen."
+         Die Spiele darunter sind nachgelagert. -->
     <div class="karte">
       <div style="font-family:var(--rund);font-size:20px;font-weight:600" id="foto-kopf">Was hast du heute gelernt?</div>
-      <p class="unter" id="foto-unter">Fotografier deinen Hefteintrag oder dein Arbeitsblatt – ich bau dir ein Spiel daraus.
-      Du kannst auch mehrere Seiten nehmen, dann wird <b>ein</b> Spiel daraus.</p>
+      <p class="unter" id="foto-unter">Fotografier, was du heute in der Schule gemacht hast – einen
+      Hefteintrag, einen Zettel, ein Arbeitsblatt. Ich schaue mir an, worum es geht, und baue dir
+      etwas zum Üben daraus. Mehrere Seiten gehören zusammen.</p>
+
+      <!-- Das Fach steht oben, weil es das Wichtigste an einem Eintrag ist:
+           Ohne Fach weiss der Baumeister nicht, was er ueben lassen soll.
+           Die Liste kommt aus Pauls echtem Stundenplan (Klasse 4bG, geprueft
+           22.09.2026 gegen paul/stundenplan.html) - Kunst, WG, Sport und
+           Schwimmen stehen nicht dabei, weil es dort keinen Eintrag zum Ueben
+           gibt; dafuer ist "Etwas anderes" da. -->
+      <div class="faecher" id="foto-faecher" role="group" aria-label="Aus welchem Fach ist das?">
+        <button class="fach an" type="button" data-foto-fach="">❓ Weiß ich nicht</button>
+        <button class="fach" type="button" data-foto-fach="Mathematik">🔢 Mathe</button>
+        <button class="fach" type="button" data-foto-fach="Deutsch">📖 Deutsch</button>
+        <button class="fach" type="button" data-foto-fach="Heimat- und Sachunterricht (HSU)">🌍 HSU</button>
+        <button class="fach" type="button" data-foto-fach="Englisch">🇬🇧 Englisch</button>
+        <button class="fach" type="button" data-foto-fach="Religion oder Ethik">🕊️ Religion/Ethik</button>
+        <button class="fach" type="button" data-foto-fach="Musik">🎵 Musik</button>
+        <button class="fach" type="button" data-foto-fach="einem anderen Fach">✏️ Etwas anderes</button>
+      </div>
       <div class="ha-regel verborgen" id="ha-regel">Deine Hausaufgabe löst du selbst – das schaffst du.
       Ich baue dir <b>ähnliche</b> Aufgaben zum Üben und schicke dein Blatt an die Werkstatt.
       Dort frage ich dich, was du noch brauchst, und baue dir eine eigene Übung dazu.</div>
 
       <div class="knoepfe">
+        <!-- Reihenfolge nach Dennys Ansage vom 22.09.2026: fotografieren ist
+             der Normalfall, dann der Scan, zuletzt ein schon gespeichertes Bild. -->
         <div class="knopf" id="k-kamera"><span class="zeichen">📸</span>Fotografieren</div>
-        <div class="knopf" id="k-bild"><span class="zeichen">🖼️</span>Bild auswählen</div>
         <div class="knopf ablage" id="k-datei"><span class="zeichen">📄</span>Datei oder PDF</div>
+        <div class="knopf" id="k-bild"><span class="zeichen">🖼️</span>Bild auswählen</div>
       </div>
 
       <input type="file" id="e-kamera" accept="image/*" capture="environment" class="verborgen">
@@ -375,6 +374,33 @@
       <button class="los" id="los" disabled>Spiel bauen</button>
       <a class="ha-normal verborgen" id="ha-normal" href="werkstatt.html">Nur ein Spiel bauen, ohne Hausaufgabe ›</a>
     </div>
+
+    <!-- Themenfelder (Paul, 14.09.2026, Meldung 8fcenvfnsh) -->
+    <div class="karte" id="themen-karte">
+      <div style="font-family:var(--rund);font-size:20px;font-weight:600">Worauf hast du Lust?</div>
+      <p class="unter">Tipp ein Feld an – dann baue ich dir ein Spiel dazu. Was schon fertig ist,
+      geht sofort los, ganz ohne Warten.</p>
+      <div class="faecher" id="faecher">
+        <button class="fach an" type="button" data-fach="mathe">🔢 Mathe</button>
+        <button class="fach" type="button" data-fach="deutsch">📖 Deutsch</button>
+        <button class="fach" type="button" data-fach="hsu">🌍 HSU</button>
+      </div>
+      <div class="themen" id="themen"></div>
+    </div>
+
+    <!-- Der Weg zum grossen Spiel (Paul, 14.09.2026, Meldung 8fcenvfnsh):
+         "ich rede mit dir gerade die ganze Zeit darüber, dass ich in der
+         Lernwerkstatt selber ein Spiel bauen kann, ein größeres" - und auf
+         die Rueckfrage, wie er gefragt werden will: "Schritt für Schritt,
+         bitte." Vorher stand hier nur der kurze Weg, und das grosse Spiel
+         verwies ihn an Denny. -->
+    <a class="karte schmiede" id="schmiede-karte" href="schmiede.html">
+      <div class="schmiede-kopf"><span class="zeichen">🛠️</span>Ein richtig großes Spiel bauen</div>
+      <p class="unter">Mit Springen, eigener Welt, eigener Figur und eigenen Tönen.
+      Ich frage dich Schritt für Schritt – und am Ende spielst du es sofort.</p>
+      <span class="schmiede-los">Schritt für Schritt bauen ›</span>
+    </a>
+
 
     <div class="wiederholen verborgen" id="wiederholen">
       <div class="kopf" id="wh-kopf"></div>
@@ -931,6 +957,26 @@
     pruefen: "Ich habe das Blatt fertig gelöst. Schau bitte drüber, wo ich noch mal hinschauen soll."
   };
   var brauch = "ueben";
+  var fotoFach = "";   // leer = Paul weiss es nicht, dann raet der Baumeister
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-foto-fach]"), function(k){
+    k.addEventListener("click", function(){
+      fotoFach = k.getAttribute("data-foto-fach");
+      Array.prototype.forEach.call(document.querySelectorAll("[data-foto-fach]"), function(x){
+        x.classList.toggle("an", x === k);
+      });
+    });
+  });
+
+  /* Das Fach wird dem Wunsch VORANGESTELLT, nicht angehaengt: Es ist die
+     wichtigste Angabe und darf nicht hinter einem langen Wunschsatz
+     untergehen. Ohne Auswahl steht gar nichts da - eine falsche Angabe
+     waere schlimmer als keine. */
+  function mitFach(text){
+    if (!fotoFach) return text;
+    var satz = "Das ist aus " + fotoFach + ".";
+    return text ? satz + " " + text : satz;
+  }
   var hausaufgabeGeschickt = false;
 
   if (HAUSAUFGABE){
@@ -1005,7 +1051,7 @@
           titel: "Meine Hausaufgabe",
           wo: "Werkstatt – Meine Hausaufgabe",
           geraet: LS() ? LS().geraet() : "",
-          text: "Meine Hausaufgabe. " + hausaufgabeWunsch() +
+          text: "Meine Hausaufgabe. " + mitFach(hausaufgabeWunsch()) +
                 (seiten.length > 4 ? " (Insgesamt " + seiten.length + " Seiten.)" : "") +
                 (pdfs ? " (Dazu " + pdfs + " PDF – das steckt im Übungsspiel.)" : ""),
           bild: bilder[0] || "",
@@ -1079,7 +1125,7 @@
         kind: "paul",
         quelle: HAUSAUFGABE ? "hausaufgabe" : (quelle || ""),
         hausaufgabe: HAUSAUFGABE,
-        wunsch: HAUSAUFGABE ? hausaufgabeWunsch() : $("wunsch").value.trim(),
+        wunsch: mitFach(HAUSAUFGABE ? hausaufgabeWunsch() : $("wunsch").value.trim()),
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
     })
