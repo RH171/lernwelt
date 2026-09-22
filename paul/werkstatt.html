@@ -925,10 +925,20 @@
       $("los").textContent = seiten.length === 0 ? "Erst dein Blatt fotografieren" : "Übungsspiel bauen";
       return;
     }
-    $("los").disabled = (seiten.length === 0 && !wunsch);
-    $("los").textContent = seiten.length > 1
-      ? "Spiel aus " + seiten.length + " Seiten bauen"
-      : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Spiel bauen";
+    /* Mit Blatt ist das Fach Pflicht (Denny, 22.09.2026): "Paul ... muss
+       wissen, zu welchem Schulfach das gehoert." Ohne Fach weiss der
+       Baumeister nicht, ob er ein Verfahren ueben lassen soll oder Tatsachen
+       vom Blatt abfragt - und genau daran haengt, ob Paul die Fragen
+       beantworten kann. Ein Wunsch OHNE Blatt braucht kein Fach: dort steht
+       im Wunsch selbst, worum es geht. */
+    var fachFehlt = seiten.length > 0 && !fotoFach;
+    $("fachfrage").classList.toggle("fehlt", fachFehlt);
+    $("los").disabled = (seiten.length === 0 && !wunsch) || fachFehlt;
+    $("los").textContent = fachFehlt
+      ? "Sag mir noch, welches Fach"
+      : seiten.length > 1
+        ? "Spiel aus " + seiten.length + " Seiten bauen"
+        : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Spiel bauen";
   }
   $("wunsch").addEventListener("input", knopfPruefen);
 
@@ -967,6 +977,7 @@
       Array.prototype.forEach.call(document.querySelectorAll("[data-foto-fach]"), function(x){
         x.classList.toggle("an", x === k);
       });
+      knopfPruefen();
     });
   });
 
