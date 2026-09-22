@@ -567,6 +567,13 @@ export function fachfremd(a, spiel, kind) {
     if ((a.art || "") === "teilschritte") return "ist eine Rechenkette auf einem Wissensblatt";
     if (/\b(zerlegung|zerlege|stellenwert|\d+\s*(T|H|Z|E)\s*\+)/i.test(String(a.frage || "")))
       return "uebt Stellenwerte auf einem Wissensblatt";
+    /* Groessen umrechnen ist Mathematik, auch ohne Rechenzeichen: "Der Weg
+       ist 2 m 40 cm breit. Wie viele Zentimeter sind das?" (22.09.2026, auf
+       Pauls Stadtportraet). Gefragt wird nach einer EINHEIT - "Wie viele
+       Stadtteile hat Fuerth?" bleibt davon unberuehrt. */
+    if (/wie\s+viele?\s+(zenti|milli|kilo)?(meter|gramm|liter|sekunden|minuten|stunden|cent|euro)\b/i
+        .test(String(a.frage || "")))
+      return "rechnet eine Groesse um, auf einem Wissensblatt";
     if (/\b(steigere|steigerung|komparativ|superlativ|wortart|praeteritum|präteritum)\b/i.test(String(a.frage || "")))
       return "uebt Grammatik auf einem Wissensblatt";
     // "Welcher Ort kam NICHT dazu?" - die Antwort steht dann gerade NICHT
