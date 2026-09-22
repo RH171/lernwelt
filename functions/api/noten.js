@@ -31,9 +31,62 @@ function kindAus(url, daten) {
   return KINDER.includes(k) ? k : null;
 }
 
+/* Wie viele Proben ein Kind im Schuljahr schreibt.
+ *
+ * Aus der Elterninformation der Grundschule Seeackerstrasse (Scan in
+ * unterlagen/, Januar 2026): 18 schriftliche Leistungsnachweise in der
+ * 4. Klasse, dazu drei Rueckmeldungen statt eines Zwischenzeugnisses.
+ * Die Termine stehen dort als REGEL, nicht als Datum - fuer 2026/27
+ * ausgerechnet, siehe eltern/probearbeiten.html.
+ */
+const PROBEN = {
+  paul: {
+    gesamt: 18,
+    faecher: { deutsch: 8, mathe: 5, hsu: 5 },
+    zeugnisse: [
+      { was: "Zwischeninformation", datum: "2027-01-22" },
+      { was: "Übertrittszeugnis",   datum: "2027-05-03" },
+      { was: "Jahreszeugnis",       datum: "2027-07-30" },
+    ],
+    keinZwischenzeugnis: true,
+  },
+};
+
+/* Das Kind darf SEINEN eigenen Stand sehen - Noten und wie viele Proben noch
+ * kommen. NICHT die Defizit-Auswertung: Denny am 20.09.2026 zum
+ * Noten-Manager - "sie müssen nicht unbedingt sehen, wo die Defizite waren".
+ *
+ * Am 23.09.2026 hat er dazu ergaenzt: "Paul hat derzeit noch nichts zu seinen
+ * Noten, und somit hat er auch keine Informationen, wie viele Prüfungen er
+ * schreiben muss. Das sollten wir auf jeden Fall bei ihm auch noch mit
+ * einbauen. Das interessiert ihn natürlich."
+ *
+ * Also: Zahlen und Termine ja, Schwaechenanalyse nein.
+ */
 export async function onRequestGet(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+
+  const url0 = new URL(request.url);
+  if (url0.searchParams.get("eigene") === "1") {
+    const k = String(url0.searchParams.get("kind") || "").toLowerCase();
+    if (!KINDER.includes(k)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+    const g = geheimFuer(env, k);
+    const alsEltern = geheimFuer(env, "eltern") && (await eltern(request, env));
+    if (!alsEltern && !(g && (await ausweisGueltig(request, g, env)))) {
+      return json(401, { ok: false, fehler: "Bitte melde dich an." });
+    }
+    const noten = await notenLesen(env, k);
+    if (noten === null) return json(503, { ok: false, fehler: "Ich komme gerade nicht an deine Noten." });
+
+    // Nur die nackten Noten mit Fach und Datum - keine Auswertung, kein
+    // "hier bist du schwach".
+    const meine = noten
+      .map((n) => ({ fach: n.fach, note: n.note, datum: n.datum, was: n.was || "" }))
+      .sort((x, y) => String(y.datum || "").localeCompare(String(x.datum || "")));
+    return json(200, { ok: true, noten: meine, proben: PROBEN[k] || null });
+  }
+
   if (!(await eltern(request, env))) return json(401, { ok: false, fehler: "Nur mit Elternausweis." });
 
   const url = new URL(request.url);
