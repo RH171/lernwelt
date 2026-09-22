@@ -21,6 +21,7 @@
  * kommt überall hinein.
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { fehlerJeFach } from "./_schwaechen.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
@@ -285,8 +286,30 @@ export async function onRequestGet(context) {
      anbietet, wozu Paul auch etwas hochgeladen hat (Denny, 23.09.2026). */
   if (p.get("faecher") === "1") {
     const f = await faecherImHeft(env, kind);
-    return f.ok ? json(200, { ok: true, ab: f.ab, faecher: f.faecher, namen: FAECHER })
-                : json(503, { ok: false, fehler: f.fehler });
+    if (!f.ok) return json(503, { ok: false, fehler: f.fehler });
+
+    /* "Was oft schiefging, zuerst" (Denny, 23.09.2026 - "Kann man probieren,
+       und ich warte auf sein Feedback").
+       Sortiert wird nach Fehlerquote, aber NUR wo genug Runden vorliegen:
+       Bei drei Aufgaben ist eine falsche Antwort keine Schwaeche, sondern
+       Zufall. Ohne Daten bleibt die Reihenfolge nach Blaetterzahl. */
+    let quote = {};
+    try { quote = await fehlerJeFach(env, kind); } catch (e) {}
+    const anteil = (fach) => {
+      const q = quote[fach];
+      return (q && q.gesamt >= 8) ? q.falsch / q.gesamt : -1;
+    };
+    const faecher = f.faecher.slice().sort((x, y) => {
+      const a2 = anteil(x.fach), b2 = anteil(y.fach);
+      if (a2 !== b2) return b2 - a2;              // mehr Fehler zuerst
+      return y.blaetter - x.blaetter || x.fach.localeCompare(y.fach);
+    }).map((x) => {
+      const q = quote[x.fach];
+      return (q && q.gesamt >= 8)
+        ? Object.assign({}, x, { falsch: q.falsch, gesamt: q.gesamt })
+        : x;
+    });
+    return json(200, { ok: true, ab: f.ab, faecher, namen: FAECHER });
   }
 
   /* Die Blaetter EINES Fachs - Paul sucht selbst aus, was abgefragt wird. */

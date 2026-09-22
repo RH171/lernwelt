@@ -35,6 +35,40 @@ const TAGE_ZURUECK = 21;
  * gesessen hat - wer eine Sache dreimal richtig hatte, muss sie nicht weiter
  * vorgesetzt bekommen.
  */
+/* Wie oft ging in welchem FACH etwas daneben?
+ *
+ * Denny am 23.09.2026 zu "Was oft schiefging, zuerst": "Kann man probieren,
+ * und ich warte auf sein Feedback."
+ *
+ * Gibt {fach: {falsch, gesamt}} zurueck - daraus sortiert das Quiz seine
+ * Kacheln. Ein Fach ohne Runden fehlt einfach; es wird nichts erfunden.
+ */
+export async function fehlerJeFach(env, kind) {
+  if (!env || !env.PAUL_KV) return {};
+  let liste = [];
+  try {
+    const roh = await env.PAUL_KV.get(RUNDEN(String(kind || "").toLowerCase()));
+    liste = roh ? JSON.parse(roh) : [];
+  } catch (e) { return {}; }
+  if (!Array.isArray(liste)) return {};
+
+  const grenze = Date.now() - TAGE_ZURUECK * 24 * 3600 * 1000;
+  const je = {};
+  liste
+    .filter((r) => r && !isNaN(new Date(r.zeit)) && new Date(r.zeit).getTime() >= grenze)
+    .forEach((r) => {
+      (r.aufgaben || []).forEach((a) => {
+        if (!a || a.art === "besuch") return;
+        const f = String(a.fach || r.fach || "").trim().toLowerCase();
+        if (!f) return;
+        const e = je[f] || (je[f] = { falsch: 0, gesamt: 0 });
+        e.gesamt++;
+        if (!a.stimmt) e.falsch++;
+      });
+    });
+  return je;
+}
+
 export async function schwaechenHolen(env, kind, wieViele = 5) {
   if (!env || !env.PAUL_KV) return [];
   let liste = [];
