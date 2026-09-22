@@ -53,6 +53,17 @@
   .strahltat b{color:var(--ink,#1b1c22);font-weight:600}
   .strahltat .erg{color:#2563eb;font-weight:700}
 
+  .stoff-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;margin-top:12px}
+  .stoff{border-radius:14px;overflow:hidden;background:#f6f8fc;position:relative;border:none;padding:0;
+         text-align:left;width:100%;cursor:pointer}
+  .stoff img{width:100%;height:104px;object-fit:cover;display:block;background:#eef1f7}
+  .stoff .platz{height:104px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#eef1f7}
+  .stoff .u{padding:8px 10px}
+  .stoff .u b{display:block;font-size:14px;line-height:1.3}
+  .stoff .u span{font-size:12.5px;opacity:.7}
+  .stoff .wer{position:absolute;top:6px;left:6px;background:rgba(20,22,40,.72);color:#fff;
+              border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
+  .stoff-leer{opacity:.75;font-size:15px;margin:8px 0 0}
   .vorschauen{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
               gap:12px;margin-bottom:20px}
   .vor{background:var(--karte,#fff);border:1px solid var(--linie,#e4e7f0);border-radius:14px;
@@ -275,6 +286,10 @@
          gerne noch sehen." -->
     <div class="reiter" id="reiter"></div>
     <div id="vorschauen"></div>
+    <!-- Was die Kinder heute hochgeladen haben (Denny, 22.09.2026). Der
+         Schaukasten liegt bei jedem Kind unter /<kind>/schulstoff.html;
+         hier steht, was heute dazukam. -->
+    <div id="schulstoff"></div>
     <div id="heute"></div>
     <div id="inhalt"></div>
     <!-- Die Meldungen der Kinder stehen UNTER der Auswertung. Oben schoben 18
@@ -314,6 +329,7 @@
         notenLaden();
         reiterMalen();
         vorschauenMalen();
+        stoffLaden();
         heuteMalen();
       })
       .catch(function(){ zeige("anmelden"); });
@@ -442,7 +458,7 @@
       var b = document.createElement("button");
       b.textContent = k.charAt(0).toUpperCase()+k.slice(1) +
                       (DATEN[k] && DATEN[k].runden ? " (" + DATEN[k].runden + ")" : "");
-      b.addEventListener("click", function(){ KIND = k; reiterMalen(); vorschauenMalen(); heuteMalen(); malen(); meldungenMalen(); });
+      b.addEventListener("click", function(){ KIND = k; reiterMalen(); vorschauenMalen(); schulstoffMalen(); heuteMalen(); malen(); meldungenMalen(); });
       if (k === KIND) b.classList.add("an");
       kasten.appendChild(b);
     });
@@ -572,6 +588,125 @@
            '<p class="zeile">' + zeile + "</p>" + liste + "</button>";
   }
 
+  /* Was heute im Schulheft ankam.
+   *
+   * Denny am 22.09.2026, nach den Optimierungsvorschlaegen: Er sieht bisher
+   * gar nicht, was die Kinder hochgeladen haben. Diese Karte holt die
+   * letzten Tage aus /api/schulstoff - fuer alle drei Kinder, mit dem
+   * Eltern-Ausweis.
+   *
+   * NUR LESEN: kein Schreibvorgang, kein Modell, kein Geld. Und keine
+   * Lernzeit - hochladen ist noch kein Lernen. */
+  var STOFF = null;        // {paul:[…], leon:[…], helena:[…]} oder null
+  var STOFF_KAPUTT = [];   // Kinder, deren Heft gerade nicht lesbar ist
+
+  function stoffLaden(){
+    var kinder = ["paul","leon","helena"];
+    return Promise.all(kinder.map(function(k){
+      return fetch("/api/schulstoff?kind=" + k + "&monate=2", {credentials:"same-origin"})
+        .then(function(r){ return r.json(); })
+        .then(function(j){ return {k:k, j:j}; })
+        .catch(function(){ return {k:k, j:null}; });
+    })).then(function(alle){
+      STOFF = {}; STOFF_KAPUTT = [];
+      alle.forEach(function(a){
+        if (a.j && a.j.ok) STOFF[a.k] = a.j.eintraege || [];
+        /* "Nichts gefunden" heisst nur dann "nichts hochgeladen", wenn der
+           Speicher geantwortet hat - dieselbe Regel wie beim
+           Anwesenheitsband. Sonst steht es als unsicher da. */
+        else { STOFF[a.k] = []; STOFF_KAPUTT.push(a.k); }
+      });
+      schulstoffMalen();
+    });
+  }
+
+  function stoffTage(){
+    // Heute und die zwei Tage davor - mehr passt nicht auf einen Blick.
+    var t = [], d = new Date();
+    for (var i = 0; i < 3; i++){
+      t.push(d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") +
+             "-" + String(d.getDate()).padStart(2,"0"));
+      d.setDate(d.getDate() - 1);
+    }
+    return t;
+  }
+
+  function schulstoffMalen(){
+    var kasten = $("schulstoff");
+    if (!kasten) return;
+    if (!STOFF){ kasten.innerHTML = ""; return; }
+
+    var ZEICHEN = {mathe:"🔢", deutsch:"📖", hsu:"🌍", englisch:"🇬🇧",
+                   rel:"🕊️", musik:"🎵", anderes:"✏️", "":"📄"};
+    var KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
+                rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
+    var tage = stoffTage();
+    var welche = KIND ? [KIND] : ["paul","leon","helena"];
+
+    var karten = [];
+    welche.forEach(function(k){
+      (STOFF[k] || []).forEach(function(e){
+        if (tage.indexOf(e.datum) < 0) return;
+        karten.push({kind:k, e:e});
+      });
+    });
+    karten.sort(function(a,b){
+      return (b.e.datum||"").localeCompare(a.e.datum||"") ||
+             (b.e.angelegt||"").localeCompare(a.e.angelegt||"");
+    });
+
+    var kopf = KIND ? "Was " + esc(kindName(KIND)) + " hochgeladen hat"
+                    : "Was die Kinder hochgeladen haben";
+    var h = '<div class="karte"><h2>' + kopf + '</h2>';
+
+    if (STOFF_KAPUTT.length){
+      h += '<p class="stoff-leer">⚠️ Von ' +
+           STOFF_KAPUTT.map(function(k){ return esc(kindName(k)); }).join(", ") +
+           ' komme ich gerade nicht an das Heft – das heißt nicht, dass nichts da ist.</p>';
+    }
+
+    if (!karten.length){
+      h += '<p class="stoff-leer">In den letzten drei Tagen kam nichts dazu.</p></div>';
+      kasten.innerHTML = h;
+      return;
+    }
+
+    h += '<div class="stoff-liste">' + karten.slice(0, 12).map(function(x){
+      var e = x.e;
+      var wann = e.datum === tage[0] ? "heute" : (e.datum === tage[1] ? "gestern" : deutschKurz(e.datum));
+      return '<button class="stoff" data-kind="' + x.kind + '" data-id="' + esc(e.id) + '">' +
+        '<div class="platz" data-bild="' + x.kind + ':' + esc(e.id) + '">' +
+          (ZEICHEN[e.fach||""]||"📄") + '</div>' +
+        (KIND ? "" : '<span class="wer">' + esc(kindName(x.kind)) + '</span>') +
+        '<div class="u"><b>' + esc(e.titel || KURZ[e.fach||""] || "Ohne Fach") + '</b>' +
+        '<span>' + esc(KURZ[e.fach||""] || "") + " · " + wann +
+        (e.sichtbar === false ? " · ausgeblendet" : "") + '</span></div></button>';
+    }).join("") + "</div>";
+
+    if (karten.length > 12) h += '<p class="stoff-leer">… und ' + (karten.length - 12) + " weitere.</p>";
+    h += '</div>';
+    kasten.innerHTML = h;
+
+    // Bilder erst danach holen, damit die Seite sofort steht.
+    Array.prototype.forEach.call(kasten.querySelectorAll("[data-bild]"), function(p){
+      var t = p.getAttribute("data-bild").split(":");
+      fetch("/api/schulstoff?kind=" + t[0] + "&bild=" + encodeURIComponent(t[1] + ":0"),
+            {credentials:"same-origin"})
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (!j || !j.ok || !j.bild) return;
+          var b = document.createElement("img");
+          b.src = j.bild; b.alt = "Hochgeladenes Blatt";
+          p.parentNode.replaceChild(b, p);
+        }).catch(function(){});
+    });
+  }
+
+  function deutschKurz(iso){
+    var t = String(iso||"").split("-");
+    return t.length === 3 ? (+t[2]) + "." + (+t[1]) + "." : String(iso||"");
+  }
+
   function vorschauenMalen(){
     var kasten = $("vorschauen");
     if (!kasten) return;
@@ -585,7 +720,7 @@
     Array.prototype.forEach.call(kasten.querySelectorAll(".vor"), function(b){
       b.addEventListener("click", function(){
         KIND = b.getAttribute("data-kind");
-        reiterMalen(); vorschauenMalen(); heuteMalen(); malen(); meldungenMalen();
+        reiterMalen(); vorschauenMalen(); schulstoffMalen(); heuteMalen(); malen(); meldungenMalen();
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     });
