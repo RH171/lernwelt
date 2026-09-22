@@ -84,6 +84,15 @@ const KINDER = {
 const MAX_BYTES = 24 * 1024 * 1024;   // Sicherheitsabstand zu den 32 MB
 const MAX_SEITEN = 20;                // Werkstatt-Grenze; Bücher kommen später
 
+// Ein Bauauftrag im Hintergrund. Eine Stunde reicht weit: Gemessen dauert der
+// laengste Bau gut zwei Minuten, und wer sein Spiel nach einer Stunde noch
+// nicht abgeholt hat, baut sich lieber ein neues.
+const BAU = (id) => "bau:" + id;
+const BAU_HAELT = 3600;
+function neueBauId() {
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+
 // Die Bauformen, die die Werkstatt darstellen kann.
 const SPIELARTEN = ["quiz", "zuordnen", "luecken", "karteikarten", "sammeln"];
 
@@ -153,6 +162,102 @@ export async function onRequestPost(context) {
     return fehler(400, `Zusammen ${(bytes / 1048576).toFixed(1)} MB - das ist zu viel für einen Rutsch. Bitte weniger oder kleinere Seiten.`);
   }
 
+  const vorgaben = { kind, seiten, wunsch, quelle, hausaufgabe, auftrag };
+
+  /* Der Hintergrundweg: sofort antworten, im Stillen weiterbauen.
+   *
+   * Paul stand am 22.09.2026 zweimal vor "Ich konnte den Server nicht
+   * erreichen" - gemessen 90 bis 120 Sekunden Bauzeit mit Foto, und
+   * Cloudflare bricht die Verbindung vorher ab. Wer hier hereinkommt,
+   * bekommt eine Auftragsnummer und fragt damit nach. Der Bau laeuft in
+   * waitUntil() weiter, auch wenn die Antwort laengst draussen ist.
+   *
+   * KV-Kosten: zwei Schreibvorgaenge je Bau (Start und Ergebnis). Bei den
+   * paar Bauten am Tag faellt das neben dem Spiel selbst nicht ins Gewicht;
+   * die knappe Zahl sind 1000 am Tag. */
+  if (auftrag.hintergrund === true) {
+    if (!env.PAUL_KV) return fehler(503, "Der Speicher ist gerade nicht da. Bitte gleich nochmal.");
+    const bauId = neueBauId();
+    try {
+      await env.PAUL_KV.put(BAU(bauId),
+        JSON.stringify({ status: "laeuft", kind, seit: Date.now() }), { expirationTtl: BAU_HAELT });
+    } catch (e) {
+      return fehler(503, "Ich konnte den Auftrag nicht annehmen. Bitte gleich nochmal.");
+    }
+
+    context.waitUntil((async () => {
+      let stand;
+      try {
+        const e = await bauLauf(context, vorgaben);
+        stand = e.ok
+          ? { status: "fertig", kind, spiel: e.spiel, verbrauch: e.verbrauch || null, fertig: Date.now() }
+          : { status: "fehler", kind, text: e.text, fertig: Date.now() };
+      } catch (e) {
+        // Ein Absturz hier darf nicht heissen, dass das Kind ewig wartet.
+        stand = { status: "fehler", kind, fertig: Date.now(),
+                  text: "Beim Bauen ist etwas schiefgegangen. Bitte nochmal versuchen." };
+      }
+      try { await env.PAUL_KV.put(BAU(bauId), JSON.stringify(stand), { expirationTtl: BAU_HAELT }); }
+      catch (e) {}
+    })());
+
+    return new Response(JSON.stringify({ ok: true, bauId }), {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+
+  const ergebnis = await bauLauf(context, vorgaben);
+  if (!ergebnis.ok) return fehler(ergebnis.status, ergebnis.text);
+  return new Response(JSON.stringify({ ok: true, spiel: ergebnis.spiel, verbrauch: ergebnis.verbrauch }), {
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+/* Nachfragen, ob der Auftrag fertig ist: GET /api/spiel-bauen?bau=<id>
+ *
+ * Braucht denselben Ausweis wie das Bauen - ein fremder Aufruf soll nicht
+ * das fertige Spiel eines Kindes mitlesen koennen. Nur LESEN, also kein
+ * Schreibvorgang und kein Geld. */
+export async function onRequestGet(context) {
+  const { request, env } = context;
+  let bauId = "";
+  try { bauId = new URL(request.url).searchParams.get("bau") || ""; } catch (e) {}
+  if (!/^[a-z0-9]{6,24}$/.test(bauId)) return fehler(400, "Dazu fehlt mir die Auftragsnummer.");
+  if (!env.PAUL_KV) return fehler(503, "Der Speicher ist gerade nicht da.");
+
+  let roh = null;
+  try { roh = await env.PAUL_KV.get(BAU(bauId)); } catch (e) {
+    return fehler(503, "Ich komme gerade nicht an deinen Auftrag. Bitte gleich nochmal.");
+  }
+  /* "Nichts gefunden" heisst hier wirklich "gibt es nicht" - der Speicher hat
+     ja geantwortet. Dieselbe Unterscheidung wie beim Anwesenheitsband. */
+  if (!roh) return fehler(404, "Diesen Auftrag kenne ich nicht mehr.");
+
+  let stand;
+  try { stand = JSON.parse(roh); } catch (e) { return fehler(500, "Der Auftrag ist unlesbar."); }
+
+  const kind = KINDER[stand.kind] ? stand.kind : "paul";
+  const alsEltern = !!geheimFuer(env, "eltern") &&
+    (await ausweisGueltig(request, geheimFuer(env, "eltern"), env));
+  if (!alsEltern && !(await ausweisGueltig(request, geheimFuer(env, kind), env))) {
+    return fehler(401, "Bitte melde dich an.");
+  }
+
+  if (stand.status === "fertig") {
+    return new Response(JSON.stringify({ ok: true, status: "fertig", spiel: stand.spiel }), {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+  if (stand.status === "fehler") {
+    return new Response(JSON.stringify({ ok: false, status: "fehler", fehler: stand.text }), {
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+  return new Response(JSON.stringify({ ok: true, status: "laeuft",
+                                       seit: Math.round((Date.now() - (stand.seit || Date.now())) / 1000) }), {
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
 
 /* ---- Der eigentliche Bau, losgeloest von der Antwort ---------------------
  *
