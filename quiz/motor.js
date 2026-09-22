@@ -70,7 +70,7 @@
         schreibe(SPEICHER, stand);
       })
       .catch(function () {})
-      .then(function () { fachkachelnMalen(); });
+      .then(function () { fachkachelnMalen(); blaetterMalen(); });
   }
 
   function fachkachelnMalen() {
@@ -87,6 +87,7 @@
         if (i >= 0) stand.faecher.splice(i, 1); else stand.faecher.push(f.k);
         schreibe(SPEICHER, stand);
         fachkachelnMalen();
+        blaetterMalen();
       });
       box.appendChild(b);
     });
@@ -95,6 +96,79 @@
     $("q-start").textContent = stand.faecher.length
       ? "Los geht's · " + stand.faecher.length + " Fach" + (stand.faecher.length === 1 ? "" : "er")
       : "Los geht's · alle Fächer";
+  }
+
+  /* Welche Blaetter abgefragt werden.
+   *
+   * Denny am 23.09.2026: "Ich würde es auch begrüßen, wenn Paul in dem Fall
+   * HSU auswählt und das Blatt selbstständig ausbringen kann, welches er für
+   * dieses Quiz haben kann. Das gibt ihm schon ein Stück weit
+   * Entscheidungsgewalt."
+   *
+   * Sichtbar wird die Liste erst, wenn GENAU EIN Fach gewaehlt ist - bei
+   * mehreren waere es eine Wand aus Kacheln. Ohne Auswahl gilt: alle
+   * Blaetter des Fachs; niemand muss erst etwas anhaken. */
+  var blaetter = [], blattFach = "";
+  if (!Array.isArray(stand.blaetter)) stand.blaetter = [];
+
+  function blaetterMalen() {
+    var kasten = $("q-blaetter");
+    if (!kasten) return;
+    var eins = stand.faecher.length === 1 ? stand.faecher[0] : "";
+    if (!eins) { kasten.classList.add("verborgen"); return; }
+
+    if (blattFach !== eins) {
+      blattFach = eins; blaetter = []; stand.blaetter = [];
+      $("q-blaetter-liste").innerHTML = "";
+      $("q-blaetter-kopf").textContent = "Ich schaue nach, was du dazu im Heft hast …";
+      kasten.classList.remove("verborgen");
+      fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
+            "&fach=" + encodeURIComponent(eins), { credentials: "same-origin" })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j || !j.ok) { kasten.classList.add("verborgen"); return; }
+          blaetter = j.blaetter || [];
+          blaetterZeichnen();
+        })
+        .catch(function () { kasten.classList.add("verborgen"); });
+      return;
+    }
+    blaetterZeichnen();
+  }
+
+  function blaetterZeichnen() {
+    var kasten = $("q-blaetter");
+    if (!blaetter.length) { kasten.classList.add("verborgen"); return; }
+    kasten.classList.remove("verborgen");
+    $("q-blaetter-kopf").textContent = stand.blaetter.length
+      ? "Daraus frage ich dich ab (" + stand.blaetter.length + " von " + blaetter.length + ")"
+      : "Woraus soll ich fragen? Ohne Auswahl nehme ich alle " + blaetter.length + ".";
+
+    var liste = $("q-blaetter-liste");
+    liste.innerHTML = "";
+    blaetter.forEach(function (b) {
+      var an = stand.blaetter.indexOf(b.id) >= 0;
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "qblatt" + (an ? " an" : "");
+      k.innerHTML = '<span class="haken">' + (an ? "✓" : "") + "</span>" +
+        '<span class="was"><b></b><span></span></span>';
+      k.querySelector("b").textContent = b.titel || "Ohne Titel";
+      k.querySelector(".was span").textContent =
+        deutschKurz(b.datum) + (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "");
+      k.addEventListener("click", function () {
+        var i = stand.blaetter.indexOf(b.id);
+        if (i >= 0) stand.blaetter.splice(i, 1); else stand.blaetter.push(b.id);
+        schreibe(SPEICHER, stand);
+        blaetterZeichnen();
+      });
+      liste.appendChild(k);
+    });
+  }
+
+  function deutschKurz(iso) {
+    var t = String(iso || "").split("-");
+    return t.length === 3 ? (+t[2]) + "." + (+t[1]) + "." : String(iso || "");
   }
 
   function laengeMalen() {
@@ -123,6 +197,14 @@
     var p = new URLSearchParams();
     p.set("kind", KIND);
     if (stand.faecher.length) p.set("faecher", stand.faecher.join(","));
+    /* Hat Paul einzelne Blaetter angehakt, wird NUR daraus gefragt. Denny am
+       23.09.2026: "Ganz klar, nur aus seinen Blättern. Wenn du jetzt Paul
+       plötzlich was zu Nürnberg fragst, obwohl er ein HSU heute Fürth hatte,
+       versteht er ja die Welt nicht und kennt die Antworten nicht."
+       Ohne Auswahl gilt weiter das ganze Fach. */
+    if (stand.blaetter && stand.blaetter.length && stand.faecher.length === 1) {
+      p.set("blaetter", stand.blaetter.join(","));
+    }
     p.set("anzahl", String(stand.laenge || 0));
     return fetch("/api/quiz?" + p.toString(), { credentials: "same-origin" })
       .then(function (r) { return r.json(); });
@@ -317,7 +399,8 @@
 
   /* ---------- Aufbau ---------- */
   $("q-alle").addEventListener("click", function () {
-    stand.faecher = []; schreibe(SPEICHER, stand); fachkachelnMalen();
+    stand.faecher = []; stand.blaetter = []; schreibe(SPEICHER, stand);
+    fachkachelnMalen(); blaetterMalen();
   });
   faecherHolen();   // holt die Faecher aus dem Heft und zeichnet danach
   laengeMalen();
