@@ -256,6 +256,36 @@ export async function stoffBild(env, id, nr) {
   }
 }
 
+/* Den Titel nachtragen, den das Modell vom Bild gelesen hat.
+ *
+ * Laeuft NACH der Antwort (waitUntil), damit das Ablegen bei 1,4 Sekunden
+ * bleibt. Kostet einen Schreibvorgang - der vierte je Eintrag, bei 1000 am
+ * Tag traegt das. Findet sich der Eintrag nicht mehr (Paul hat ihn in der
+ * Zwischenzeit weggeraeumt), passiert nichts. */
+export async function titelSetzen(env, kind, id, titel) {
+  if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
+  const heute = heuteBerlin();
+  for (let i = 0; i < 2; i++) {          // dieser und der Vormonat reichen
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try { roh = await env.PAUL_KV.get(LISTE(kind, monat)); } catch (e) { return { ok: false }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false };
+    const treffer = liste.findIndex((e) => e.id === id);
+    if (treffer < 0) continue;
+    // Nur setzen, wenn noch keiner dasteht - ein von Hand geschriebener
+    // Titel gewinnt immer gegen einen geratenen.
+    if (liste[treffer].titel) return { ok: true, schon: true };
+    liste[treffer].titel = String(titel || "").slice(0, 60);
+    try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
+    catch (e) { return { ok: false }; }
+    return { ok: true };
+  }
+  return { ok: false };
+}
+
 /* Verstecken und Wiederholen - ein Tipp, umkehrbar, das Bild bleibt.
  * "weg" nimmt nur den Eintrag aus der Liste; die Bilder liegen weiter da. */
 export async function stoffAendern(env, kind, id, was) {

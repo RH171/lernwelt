@@ -23,7 +23,7 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
-  stoffAblegen, stoffLesen, stoffBild, stoffAendern,
+  stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -84,7 +84,68 @@ export async function onRequestPost(context) {
   }, seiten);
 
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
+
+  /* Der Titel wird NACH der Antwort geholt.
+   *
+   * Denny am 22.09.2026 zum Schaukasten: die Karten sollen sagen, worum es
+   * geht, statt "angesehen". Dafuer schaut ein kleines Modell kurz aufs
+   * Bild - Haiku, nicht Opus: gemessen kostet ein Spielbau rund 0,10 €,
+   * dieser Blick liegt bei Bruchteilen eines Cents.
+   *
+   * Es laeuft in waitUntil, NACH der Antwort: Das Ablegen bleibt bei 1,4
+   * Sekunden, und das ist der Punkt der ganzen Uebung ("es geht doch erst
+   * mal darum, dass Paul seine Daten hochladen kann"). Kommt kein Titel
+   * zurueck - kein Schluessel, kein Guthaben, Modell langsam -, bleibt der
+   * Eintrag einfach ohne. Nichts haengt davon ab. */
+  if (env.ANTHROPIC_API_KEY) {
+    context.waitUntil(titelNachtragen(env, kind, e.id, seiten[0]).catch(() => {}));
+  }
+
   return json(200, { ok: true, id: e.id, datum: e.datum, datumVonBlatt: !!vomBlatt });
+}
+
+const TITEL_MODELL = "claude-haiku-4-5-20251001";
+
+async function titelNachtragen(env, kind, id, seite) {
+  const komma = String(seite || "").indexOf(",");
+  if (komma < 0) return;
+  const typ = String(seite).slice(5, String(seite).indexOf(";"));
+  if (typ.indexOf("image/") !== 0) return;          // PDFs schaut dieser Weg nicht an
+
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: TITEL_MODELL,
+      max_tokens: 200,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: typ, data: String(seite).slice(komma + 1) } },
+          { type: "text", text:
+            "Das ist ein Blatt aus dem Unterricht eines Grundschulkindes. Schreib mir NUR " +
+            "eine kurze Überschrift, worum es darauf geht - höchstens fünf Wörter, deutsch, " +
+            "ohne Anführungszeichen und ohne Satzzeichen am Ende. Beispiele: " +
+            "\"Stadtporträt von Fürth\", \"Schriftliche Multiplikation\", \"Wörtliche Rede\". " +
+            "Erkennst du es nicht sicher, schreib nur: unklar" },
+        ],
+      }],
+    }),
+  });
+  if (!r.ok) return;
+
+  const d = await r.json();
+  const roh = ((d.content || []).filter((c) => c.type === "text")[0] || {}).text || "";
+  const titel = roh.trim().replace(/^["'„]|["'"]$/g, "").slice(0, 60);
+  // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
+  // etwas Erfundenes.
+  if (!titel || /^unklar$/i.test(titel)) return;
+
+  await titelSetzen(env, kind, id, titel);
 }
 
 export async function onRequestGet(context) {

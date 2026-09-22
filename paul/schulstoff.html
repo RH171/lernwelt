@@ -156,6 +156,20 @@
     });
   }
 
+  /* Was unter der Ueberschrift steht: erst Pauls eigene Notiz, sonst das
+     Fach. Steht oben schon der gelesene Titel, gehoert das Fach darunter -
+     sonst wuesste man nicht, wohin es einsortiert ist. */
+  function untertext(e){
+    var f = KURZ[e.fach||""] || "Ohne Fach";
+    if (e.titel) return e.notiz ? f + " · " + e.notiz.slice(0,34) : f;
+    return e.notiz ? e.notiz.slice(0,40) : "angesehen";
+  }
+  // Was aus dem Speicher kommt, wird nie als HTML eingesetzt.
+  function sicher(t){
+    return String(t == null ? "" : t)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
   function listeMalen(){
     var zeigen = alles.filter(function(e){
       return gewaehlt === "alle" || (e.fach||"") === gewaehlt;
@@ -181,8 +195,8 @@
         html += '<button class="blatt' + (e.sichtbar===false?" versteckt":"") + '" data-id="' + e.id + '">' +
                 '<div class="platzhalter" data-bild="' + e.id + '">' + (ZEICHEN[e.fach||""]||"📄") + '</div>' +
                 (e.seiten > 1 ? '<span class="nr">' + e.seiten + ' Seiten</span>' : '') +
-                '<div class="fuss"><b>' + (KURZ[e.fach||""]||"Ohne Fach") + '</b>' +
-                '<span>' + (e.notiz ? e.notiz.slice(0,40) : (e.thema||"").slice(0,40) || "angesehen") + '</span>' +
+                '<div class="fuss"><b>' + sicher(e.titel || KURZ[e.fach||""] || "Ohne Fach") + '</b>' +
+                '<span>' + sicher(untertext(e)) + '</span>' +
                 '</div></button>';
       });
       html += "</div>";
@@ -222,7 +236,8 @@
   }
   function seiteZeigen(){
     if (!offen) return;
-    $("schau-titel").textContent = (KURZ[offen.fach||""]||"Ohne Fach") + " · " + lang(offen.datum);
+    $("schau-titel").textContent = (offen.titel ? offen.titel + " · " : "") +
+      (KURZ[offen.fach||""]||"Ohne Fach") + " · " + lang(offen.datum);
     $("schau-nr").textContent = offen.seiten > 1 ? (offenSeite+1) + " von " + offen.seiten : "";
     $("schau-vor").style.display = offen.seiten > 1 ? "" : "none";
     $("schau-zurueck").style.display = offen.seiten > 1 ? "" : "none";
