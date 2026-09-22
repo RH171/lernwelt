@@ -153,6 +153,29 @@ export async function onRequestPost(context) {
     return fehler(400, `Zusammen ${(bytes / 1048576).toFixed(1)} MB - das ist zu viel für einen Rutsch. Bitte weniger oder kleinere Seiten.`);
   }
 
+
+/* ---- Der eigentliche Bau, losgeloest von der Antwort ---------------------
+ *
+ * Am 22.09.2026 stand Paul zweimal vor "Ich konnte den Server nicht
+ * erreichen". Gemessen war es kein Netzfehler: Der Bau MIT Foto brauchte
+ * 90 bis 120 Sekunden, und Cloudflare bricht die Verbindung vorher ab
+ * (HTTP 502). Ohne Foto sind es 66 s - es lag also schon immer knapp unter
+ * der Grenze, und jedes etwas vollere Blatt kippt es.
+ *
+ * Am Bild lag es nicht: dasselbe Blatt mit 286 statt 1382 KB brauchte
+ * 120,3 s. Es ist die Denkzeit des Modells.
+ *
+ * Deshalb wird hier nur noch GEBAUT. Wer das Ergebnis sofort braucht,
+ * bekommt es zurueck; wer ueber den Hintergrundweg kommt, bekommt sofort
+ * eine Auftragsnummer und holt es spaeter ab. Der Bau darf dann so lange
+ * dauern, wie er braucht.
+ *
+ * Rueckgabe: { ok:true, spiel, verbrauch } oder { ok:false, status, text }.
+ */
+async function bauLauf(context, vorgaben) {
+  const { request, env } = context;
+  const { kind, seiten, wunsch, quelle, hausaufgabe } = vorgaben;
+  const auftrag = vorgaben.auftrag || {};
   // Lehrplan des Kindes holen (liegt als statische Datei neben der Seite).
   let lehrplan;
   try {
@@ -161,7 +184,7 @@ export async function onRequestPost(context) {
     if (!r.ok) throw new Error("HTTP " + r.status);
     lehrplan = await r.json();
   } catch (e) {
-    return fehler(500, "Der Lehrplan konnte nicht geladen werden.");
+    return { ok: false, status: 500, text: "Der Lehrplan konnte nicht geladen werden." };
   }
 
   const inhalt = [];
@@ -225,15 +248,15 @@ export async function onRequestPost(context) {
   if (!antwort.ok) {
     const text = await antwort.text().catch(() => "");
     // Nie den Schlüssel oder rohe API-Fehler nach außen geben.
-    if (antwort.status === 401 || antwort.status === 403) return fehler(500, "Der Server darf gerade nicht bei Claude anfragen. Denny muss den Schlüssel prüfen.");
-    if (antwort.status === 429) return fehler(503, "Gerade ist zu viel los. Bitte in einer Minute nochmal.");
-    if (text.includes("credit") || text.includes("billing")) return fehler(503, "Das Guthaben ist aufgebraucht oder das Monatslimit erreicht. Denny muss nachsehen.");
-    return fehler(502, "Claude hat nicht geantwortet. Bitte nochmal versuchen.");
+    if (antwort.status === 401 || antwort.status === 403) return { ok: false, status: 500, text: "Der Server darf gerade nicht bei Claude anfragen. Denny muss den Schlüssel prüfen." };
+    if (antwort.status === 429) return { ok: false, status: 503, text: "Gerade ist zu viel los. Bitte in einer Minute nochmal." };
+    if (text.includes("credit") || text.includes("billing")) return { ok: false, status: 503, text: "Das Guthaben ist aufgebraucht oder das Monatslimit erreicht. Denny muss nachsehen." };
+    return { ok: false, status: 502, text: "Claude hat nicht geantwortet. Bitte nochmal versuchen." };
   }
 
   const daten = await antwort.json();
   const block = (daten.content || []).find((b) => b.type === "tool_use");
-  if (!block || !block.input) return fehler(502, "Es kam kein brauchbares Spiel zurück. Bitte nochmal versuchen.");
+  if (!block || !block.input) return { ok: false, status: 502, text: "Es kam kein brauchbares Spiel zurück. Bitte nochmal versuchen." };
 
   const spiel = block.input;
 
@@ -281,7 +304,7 @@ export async function onRequestPost(context) {
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
-    return fehler(502, "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen.");
+    return { ok: false, status: 502, text: "Das Spiel kam unvollständig zurück (" + maengel[0] + "). Bitte nochmal versuchen." };
   }
 
   // Bilder, die die Oberflaeche nicht zeichnen kann, gar nicht erst aufheben.
@@ -315,10 +338,9 @@ export async function onRequestPost(context) {
     spiel.nichtGespeichert = true;
   }
 
-  return new Response(JSON.stringify({ ok: true, spiel, verbrauch: daten.usage || null }), {
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-  });
+  return { ok: true, spiel, verbrauch: daten.usage || null };
 }
+
 
 // Was ein Spiel mindestens erfuellen muss, damit es ein Kind vorgesetzt bekommt.
 const MIN_AUFGABEN = 5;
