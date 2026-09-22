@@ -505,8 +505,15 @@ export function aufWahlStellen(spiel) {
   if (!istWissensblatt(spiel)) return [];
   const vorrat = [];
   ((spiel.blatt_inhalt || []).concat(spiel.blatt_aufgaben || [])).forEach((z) => {
-    const teil = String(z || "").split(/[:;,]/).map((x) => x.trim()).filter((x) => x && x.length < 40);
-    teil.forEach((x) => { if (!vorrat.includes(x)) vorrat.push(x); });
+    // Nur die WERTE, nicht die Feldnamen: aus "Regierungsbezirk: Mittelfranken"
+    // wird "Mittelfranken". Sonst stuenden als falsche Antworten
+    // "Einwohner" und "Wappen" da - das waere zum Ausschliessen von Unsinn
+    // geraten, nicht zum Wiedererkennen.
+    const roh = String(z || "");
+    const wert = roh.includes(":") ? roh.slice(roh.indexOf(":") + 1) : roh;
+    wert.split(/[;,]| und /).map((x) => x.trim().replace(/\.$/, ""))
+      .filter((x) => x && x.length > 1 && x.length < 40)
+      .forEach((x) => { if (!vorrat.includes(x)) vorrat.push(x); });
   });
   const raus = [];
   spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
