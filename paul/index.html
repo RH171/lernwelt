@@ -455,7 +455,15 @@
     <input id="search" type="text" placeholder="Spiel suchen … (z. B. Strom, Beethoven, Springer)" autocomplete="off" aria-label="Spiel suchen">
   </div>
 
-  <button class="createcard" id="createBtn">
+  <!-- Die fünf großen Wege stehen in der Reihenfolge, in der Paul sie zuletzt
+       benutzt hat. Denny am 22.09.2026: "Paul hätte gerne, dass diese fünf
+       Reiter variabel sind und immer so sortiert sind, wie er sie als Letztes
+       verwendet hat."
+       Sortiert wird nur BEIM LADEN, nie während er hinschaut - eine Kachel,
+       die unter dem Finger wegspringt, ist schlimmer als eine feste
+       Reihenfolge. -->
+  <div id="hauptwege">
+  <button class="createcard" id="createBtn" data-weg="erfinden">
     <div class="cc-ic">🎮</div>
     <div>
       <div class="cc-t">Neues Spiel erfinden</div>
@@ -471,7 +479,7 @@
   <!-- Das taegliche Lernquiz (20.09.2026). Denny: "sodass die Kinder jeden Tag
        5 bis 10 Minuten lernen oder frueh morgens noch mal schnell mit einer
        Quizrunde". Fragen aus SEINEM Stoff, Fehler kommen wieder. -->
-  <a class="createcard quiz" href="quiz.html">
+  <a class="createcard quiz" href="quiz.html" data-weg="quiz">
     <div class="cc-ic">🎯</div>
     <div>
       <div class="cc-t">Mein Lernquiz</div>
@@ -480,7 +488,7 @@
     <div class="cc-arrow">›</div>
   </a>
 
-  <a class="createcard hausaufgabe" href="hausaufgaben.html">
+  <a class="createcard hausaufgabe" href="hausaufgaben.html" data-weg="hausaufgaben">
     <div class="cc-ic">📚</div>
     <div>
       <div class="cc-t">Mein Hausaufgaben-Heft</div>
@@ -489,7 +497,7 @@
     <div class="cc-arrow">›</div>
   </a>
 
-  <a class="createcard stundenplan" href="stundenplan.html">
+  <a class="createcard stundenplan" href="stundenplan.html" data-weg="stundenplan">
     <div class="cc-ic">📅</div>
     <div>
       <div class="cc-t">Mein Stundenplan</div>
@@ -498,7 +506,7 @@
     <div class="cc-arrow">›</div>
   </a>
 
-  <a class="createcard werkstatt" href="werkstatt.html">
+  <a class="createcard werkstatt" href="werkstatt.html" data-weg="werkstatt">
     <div class="cc-ic">📸</div>
     <div>
       <div class="cc-t">Heft abfotografieren</div>
@@ -506,6 +514,7 @@
     </div>
     <div class="cc-arrow">›</div>
   </a>
+  </div>
 
   <!-- Wann sind die naechsten Ferien? Dasselbe Band haben Leon und Helena
        (Denny, 21.09.2026: "Die Anzeige mit den Ferien finden Paul und Leon
@@ -1215,6 +1224,53 @@
     }
   }
   document.getElementById("report").addEventListener("click",()=>{ buildReport(); reportOv.classList.add("on"); blip(); });
+
+  /* ---- Die fünf Wege nach "zuletzt benutzt" ----------------------------
+     Paul am 22.09.2026 über Denny: "diese fünf Reiter … immer so sortiert,
+     wie er sie als Letztes verwendet hat."
+
+     Drei Entscheidungen, die daran hängen:
+     - Sortiert wird NUR beim Laden. Eine Kachel, die nach dem Antippen unter
+       dem Finger wegspringt, ist schlimmer als jede feste Reihenfolge.
+     - Nie benutzte Wege behalten ihre ursprüngliche Reihenfolge und stehen
+       dahinter - so sieht Paul am Anfang genau das, was er kennt.
+     - Gespeichert wird EIN Eintrag mit fünf Zahlen, nicht fünf Einträge:
+       Jeder Schreibvorgang geht über den Sync und zählt gegen das
+       Speicherkontingent. */
+  (function(){
+    var SCHLUESSEL = "paul-hauptwege";
+    var kasten = document.getElementById("hauptwege");
+    if (!kasten) return;
+
+    function lesen(){
+      try {
+        var d = JSON.parse(localStorage.getItem(SCHLUESSEL) || "{}");
+        return (d && typeof d === "object" && !Array.isArray(d)) ? d : {};
+      } catch (e){ return {}; }
+    }
+
+    // Beim Antippen merken - vor dem Seitenwechsel, damit es sicher ankommt.
+    Array.prototype.forEach.call(kasten.querySelectorAll("[data-weg]"), function(k){
+      k.addEventListener("click", function(){
+        var d = lesen();
+        d[k.getAttribute("data-weg")] = Date.now();
+        try { localStorage.setItem(SCHLUESSEL, JSON.stringify(d)); } catch (e){}
+      });
+    });
+
+    // Sortieren: zuletzt benutzt zuerst, danach die noch nie benutzten in
+    // ihrer ursprünglichen Reihenfolge.
+    var benutzt = lesen();
+    var karten = Array.prototype.slice.call(kasten.querySelectorAll("[data-weg]"));
+    karten.forEach(function(k, i){ k.__platz = i; });
+    karten.sort(function(a, b){
+      var za = benutzt[a.getAttribute("data-weg")] || 0;
+      var zb = benutzt[b.getAttribute("data-weg")] || 0;
+      if (za !== zb) return zb - za;          // jüngster zuerst
+      return a.__platz - b.__platz;           // sonst wie gebaut
+    });
+    karten.forEach(function(k){ kasten.appendChild(k); });
+  })();
 
   // ---- Neues Spiel erfinden -------------------------------------------
   const createOv = bindOverlay("createOverlay","closeCreate");
