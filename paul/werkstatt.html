@@ -51,6 +51,8 @@
      so ganz leichte spiele bauen bei leons lernwelt klappt das anscheinend".
      Gebaut wie Leons Themenwahl, nur mit Pauls Lehrplan und in seinen Farben. */
   .faecher{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+  .fachfrage{font:600 17px var(--rund);margin-top:18px}
+  .fachfrage.fehlt{color:var(--paul)}
   .fach{border:1px solid var(--line);background:#fbfcff;border-radius:999px;
         padding:11px 17px;min-height:44px;font-family:var(--rund);font-size:15px;
         font-weight:600;color:var(--ink);cursor:pointer}
@@ -328,8 +330,8 @@
            22.09.2026 gegen paul/stundenplan.html) - Kunst, WG, Sport und
            Schwimmen stehen nicht dabei, weil es dort keinen Eintrag zum Ueben
            gibt; dafuer ist "Etwas anderes" da. -->
-      <div class="faecher" id="foto-faecher" role="group" aria-label="Aus welchem Fach ist das?">
-        <button class="fach an" type="button" data-foto-fach="">❓ Weiß ich nicht</button>
+      <div class="fachfrage" id="fachfrage">Zu welchem Fach gehört das?</div>
+      <div class="faecher" id="foto-faecher" role="group" aria-label="Zu welchem Fach gehört das?">
         <button class="fach" type="button" data-foto-fach="Mathematik">🔢 Mathe</button>
         <button class="fach" type="button" data-foto-fach="Deutsch">📖 Deutsch</button>
         <button class="fach" type="button" data-foto-fach="Heimat- und Sachunterricht (HSU)">🌍 HSU</button>
@@ -957,7 +959,7 @@
     pruefen: "Ich habe das Blatt fertig gelöst. Schau bitte drüber, wo ich noch mal hinschauen soll."
   };
   var brauch = "ueben";
-  var fotoFach = "";   // leer = Paul weiss es nicht, dann raet der Baumeister
+  var fotoFach = "";   // leer = noch nicht gewaehlt; ohne Fach wird nicht gebaut
 
   Array.prototype.forEach.call(document.querySelectorAll("[data-foto-fach]"), function(k){
     k.addEventListener("click", function(){

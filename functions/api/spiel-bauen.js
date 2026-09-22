@@ -258,10 +258,13 @@ export async function onRequestPost(context) {
   // von denen vier Mathe sind.
   if (maengel.length && maengel.every((m) => m.startsWith(FACHFREMD_MARKE) ||
                                                m.startsWith(RECHENFEHLER_MARKE) ||
-                                               m.startsWith(VOM_BLATT_MARKE))) {
+                                               m.startsWith(VOM_BLATT_MARKE) ||
+                                               m.startsWith(OHNE_BELEG_MARKE))) {
     fachfremdeEntfernen(spiel, kind);
     falschGerechneteEntfernen(spiel);
     vomBlattEntfernen(spiel);
+    ohneBelegEntfernen(spiel);
+    aufWahlStellen(spiel);
     maengel = pruefeSpiel(spiel, kind);
   }
   if (maengel.length) {
@@ -424,6 +427,118 @@ function enthaeltGanz(text, m) {
   return false;
 }
 
+/* Eine Frage, die das Kind nicht wissen KANN.
+ *
+ * Paul hat am 22.09.2026 sein HSU-Blatt "Das Stadtporträt von Fürth"
+ * fotografiert. Auf dem Blatt steht in seiner Handschrift
+ * "Regierungsbezirk: Mittelfranken". Das gebaute Spiel fragte als erste
+ * Aufgabe: "Eine Stadt liegt in einem Regierungsbezirk. Wie viele
+ * Regierungsbezirke hat Bayern?" - die Sieben stand nirgends. Denny:
+ * "Woher soll Paul das dann wissen? ... du würdest ihn hiermit
+ * demotivieren, als würde er etwas nicht wissen."
+ *
+ * Regel 2b bittet darum. Eine Bitte im Auftrag ist keine Pruefung - dieselbe
+ * Lehre wie bei den Namen, beim Fachfremden und beim Rechnen. Also wird
+ * gemessen: Die richtige Antwort muss im beleg stehen, und der beleg muss
+ * vom Blatt sein.
+ *
+ * Geprueft wird NUR bei einem Wissensblatt mit Foto. Bei einem Verfahren
+ * (Rechnen, Rechtschreibung) waeren eigene Zahlen ja gerade Pflicht.
+ */
+const OHNE_BELEG_MARKE = "nicht vom Blatt: ";
+
+export function istWissensblatt(spiel) {
+  if (!spiel || !(spiel.blatt_aufgaben || spiel.blatt_inhalt)) return false;
+  // HSU mit Blatt gilt IMMER als Wissensblatt, auch wenn das Modell etwas
+  // anderes eintraegt: Genau dort kommt der Stoff als Tatsache vom Blatt,
+  // und genau dort ist Paul der Fehler passiert.
+  const fach = String(spiel.fach || "").toLowerCase();
+  const hatBlatt = (spiel.blatt_aufgaben || []).length > 0 || (spiel.blatt_inhalt || []).length > 0;
+  return spiel.wissensblatt === true || (hatBlatt && (fach === "hsu" || fach === "sachunterricht"));
+}
+
+/* Steht die Antwort so im Text? Verglichen werden Woerter und Zahlen ohne
+ * Satzzeichen; "132.000" und "132000" sind dasselbe, "FÜ" und "fü" auch. */
+function belegForm(t) {
+  return " " + String(t == null ? "" : t).toLowerCase()
+    .replace(/[.\u00b7\u2019']/g, "").replace(/[^a-z\u00e4\u00f6\u00fc\u00df0-9]+/g, " ").trim() + " ";
+}
+
+function stehtDrin(grosser, kleiner) {
+  const g = belegForm(grosser), k = belegForm(kleiner).trim();
+  return k.length > 0 && g.includes(" " + k + " ");
+}
+
+export function ohneBeleg(a, spiel) {
+  if (!istWissensblatt(spiel) || !a) return "";
+  const inhalt = ((spiel.blatt_inhalt || []).concat(spiel.blatt_aufgaben || []))
+    .map((x) => String(x || "")).filter(Boolean);
+  if (!inhalt.length) return "";      // nichts zum Vergleichen - dann nicht raten
+
+  const beleg = String(a.beleg || "").trim();
+  if (!beleg) return OHNE_BELEG_MARKE + String(a.frage || "").slice(0, 70) + " (kein Beleg)";
+
+  // Der Beleg muss WIRKLICH vom Blatt sein, sonst schreibt sich das Modell
+  // seinen eigenen Beleg und die Pruefung waere ein Papiertiger.
+  if (!inhalt.some((z) => stehtDrin(z, beleg) || stehtDrin(beleg, z)))
+    return OHNE_BELEG_MARKE + String(a.frage || "").slice(0, 70) + " (Beleg steht nicht auf dem Blatt)";
+
+  // Und die Antwort muss im Beleg stehen. Eine Zahl, die man aus einer Liste
+  // abzaehlt ("wie viele Partnerstaedte"), steht dort nicht - dafuer darf der
+  // Beleg die ganze Liste sein, dann traegt die naechste Zeile.
+  const richtig = String(a.richtig == null ? "" : a.richtig).trim();
+  if (!richtig) return "";
+  if (stehtDrin(beleg, richtig)) return "";
+  const n = Number(richtig.replace(/[^0-9]/g, ""));
+  if (Number.isFinite(n) && n > 0 && n <= 20 && belegForm(beleg).trim().split(/\s+/).length >= n) return "";
+  return OHNE_BELEG_MARKE + String(a.frage || "").slice(0, 70) + " (die Antwort steht nicht im Beleg)";
+}
+
+/* Nur die Art ist falsch? Dann umstellen statt wegwerfen.
+ *
+ * Aus einer Eingabe-Aufgabe wird eine Auswahl: die richtige Antwort plus drei
+ * andere Angaben VOM BLATT. Die falschen kommen damit aus demselben Stoff -
+ * genau wie es Regel 2c verlangt, und es bleibt beim Wiedererkennen statt beim
+ * Ausschliessen von Unsinn. Findet sich nichts Passendes, faellt die Aufgabe
+ * doch raus: lieber eine weniger als eine, die er nicht bedienen kann. */
+export function aufWahlStellen(spiel) {
+  if (!istWissensblatt(spiel)) return [];
+  const vorrat = [];
+  ((spiel.blatt_inhalt || []).concat(spiel.blatt_aufgaben || [])).forEach((z) => {
+    const teil = String(z || "").split(/[:;,]/).map((x) => x.trim()).filter((x) => x && x.length < 40);
+    teil.forEach((x) => { if (!vorrat.includes(x)) vorrat.push(x); });
+  });
+  const raus = [];
+  spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
+    if ((a.art || "wahl") === "wahl") return true;
+    const richtig = String(a.richtig == null ? "" : a.richtig).trim();
+    const andere = vorrat.filter((x) => x.toLowerCase() !== richtig.toLowerCase()).slice(0, 12);
+    if (!richtig || andere.length < 3) { raus.push(a.frage); return false; }
+    // Immer dieselben drei waeren nach drei Aufgaben durchschaut; gewuerfelt
+    // wird aus dem, was das Blatt hergibt.
+    const gewaehlt = [];
+    while (gewaehlt.length < 3 && andere.length) {
+      gewaehlt.push(andere.splice(Math.floor(Math.random() * andere.length), 1)[0]);
+    }
+    a.art = "wahl";
+    a.teilschritte = [];
+    a.antworten = gewaehlt.concat([richtig])
+      .map((v) => ({ v, r: Math.random() })).sort((x, y) => x.r - y.r).map((x) => x.v);
+    return true;
+  });
+  return raus;
+}
+
+export function ohneBelegEntfernen(spiel) {
+  const raus = [];
+  spiel.aufgaben = (spiel.aufgaben || []).filter((a) => {
+    const grund = ohneBeleg(a, spiel);
+    if (grund) { raus.push(grund); return false; }
+    return true;
+  });
+  return raus;
+}
+
 export function vomBlatt(a, spiel) {
   const muster = blattMuster(spiel);
   if (!muster.length || !a) return false;
@@ -467,6 +582,14 @@ export function pruefeSpiel(spiel, kind) {
     if (fremd) m.push(`${FACHFREMD_MARKE}Aufgabe ${nr} ${fremd}`);
     const krumm = rechenfehler(a);
     if (krumm) m.push(`${RECHENFEHLER_MARKE}Aufgabe ${nr}: ${krumm}`);
+    const unbelegt = ohneBeleg(a, spiel);
+    if (unbelegt) m.push(`${OHNE_BELEG_MARKE}Aufgabe ${nr}: ${unbelegt.slice(OHNE_BELEG_MARKE.length)}`);
+    /* Auf einem Wissensblatt wird angetippt, nicht getippt (Denny, 22.09.2026):
+       "Wenn Paul dir das fotografiert hat, hat er das heute oder gestern ... in
+       der Schule gehabt. Das heisst ja noch nicht, dass er das auch alles
+       auswendig kann." Vier Moeglichkeiten sind die Stufe, auf der er anfaengt. */
+    if (istWissensblatt(spiel) && (a.art || "wahl") !== "wahl")
+      m.push(`${OHNE_BELEG_MARKE}Aufgabe ${nr} muss zum Antippen sein, nicht zum Eintippen`);
     if (!a.frage || !String(a.frage).trim()) m.push(`Aufgabe ${nr} ohne Frage`);
     if (a.richtig === undefined || a.richtig === null || String(a.richtig).trim() === "")
       m.push(`Aufgabe ${nr} ohne Lösung`);
@@ -587,6 +710,9 @@ DEINE REGELN
 
 1. ORDNE EIN. Erkenne, um welches Fach und welchen Lernbereich es geht. Passt nichts, setze lernbereich auf "unbekannt" - rate nicht.
 2. SCHREIBE NICHTS AB. Das Bild sagt dir, WORUM es geht, nicht WAS gefragt wird. Erfinde eigene Aufgaben zum selben Thema und Niveau. Übernimm niemals die Aufgaben vom Blatt - weder Zahlen noch Formulierungen. Nenne jede Aufgabe, die auf dem Blatt steht, kurz im Feld blatt_aufgaben (z. B. "34 + 27", "Unterstreiche das Prädikat: Der Hund bellt laut."). Ist es eine HAUSAUFGABE, gilt das doppelt: Das Spiel zeigt nach jeder Antwort die Lösung - eine Aufgabe vom Blatt darin würde die Hausaufgabe für das Kind lösen.
+2b. BEI EINEM WISSENSBLATT WIRD NUR GEFRAGT, WAS DARAUFSTEHT. Besteht der Stoff aus Tatsachen (Stadtporträt, Körperteile, Zeitleiste, Vokabeln, Begriffe), setze wissensblatt=true und schreibe JEDE Angabe vom Blatt in blatt_inhalt - auch das handschriftlich Ausgefüllte. Danach darfst du NUR daraus fragen, und zu jeder Aufgabe gehört der beleg. Beispiel, was VERBOTEN ist: Auf dem Blatt steht "Regierungsbezirk: Mittelfranken", und du fragst "Wie viele Regierungsbezirke hat Bayern?" - das Kind war im Unterricht dabei und hat die Sieben nie gehört. Es hält sich für dumm, obwohl es alles gewusst hat, was drankam. Frage stattdessen nach dem, was dasteht: "In welchem Regierungsbezirk liegt Fürth?" Anders herum, WEITERES ist erlaubt: dieselbe Angabe anders herum fragen, zwei Angaben vom Blatt verbinden, aus einer Liste die Zahl abzählen. Bei einem Verfahren (Rechnen, Rechtschreibung, Satzbau) gilt das alles NICHT - dort sind eigene Zahlen und Sätze Pflicht, wissensblatt bleibt false.
+2c. BEI EINEM WISSENSBLATT IST JEDE AUFGABE art="wahl". Das Kind hatte den Stoff heute oder gestern - es kennt ihn wieder, kann ihn aber noch nicht aus dem Kopf aufschreiben. Vier Möglichkeiten zum Antippen sind die Stufe, auf der es anfängt. Die falschen Antworten kommen möglichst von woanders vom Blatt (eine andere Partnerstadt, ein anderer Stadtteil): So ist der Weg zur richtigen das Wiedererkennen, nicht das Ausschließen von Unsinn.
+
 3. VORGRIFF NUR STREIFEN. Schau in der üblichen Reihenfolge, was nach dem erkannten Thema kommt, und lass es beiläufig auftauchen - als Name, Bild, Sammelobjekt oder Nebensatz. NIEMALS als Aufgabe, die gelöst werden muss. Das Kind soll es später wiedererkennen, nicht daran scheitern.
 4. PASSENDE HÜRDE. Lösbar, aber nicht geschenkt. Bei Fehlern hilft die Erklärung weiter, statt nur "falsch" zu sagen.
 5. WECHSLE DIE AUFGABENART. Nicht zwölfmal dasselbe. Jede Aufgabe hat ein Feld "art":
@@ -699,6 +825,8 @@ const WERKZEUG = {
       spielart: { type: "string", enum: SPIELARTEN, description: "Welche Bauform passt." },
       begruessung: { type: "string", description: "Ein Satz zum Start, der Lust macht." },
       blatt_aufgaben: { type: "array", items: { type: "string" }, description: "Jede Aufgabe, die auf dem Foto/der Datei steht, kurz abgeschrieben (z. B. \"34 + 27\"). Nur zum Abgleich, damit keine davon im Spiel landet. Ohne Foto leeres Array." },
+      wissensblatt: { type: "boolean", description: "TRUE, wenn der Lernstoff auf dem Blatt aus Tatsachen besteht, die man sich merkt - Namen, Zahlen, Listen, Begriffe (z. B. ein Stadtporträt, Körperteile, Zeitleiste). FALSE, wenn es ein Verfahren ist, das man übt (Rechenweg, Rechtschreibregel, Satzglieder). Ohne Foto immer FALSE." },
+      blatt_inhalt: { type: "array", items: { type: "string" }, description: "NUR bei wissensblatt=true: JEDE Tatsache, die auf dem Blatt steht, als kurzer Satz mit der Angabe - auch das handschriftlich Ausgefüllte (z. B. \"Regierungsbezirk: Mittelfranken\", \"Einwohner: 132.000\", \"KFZ-Kennzeichen: FÜ\"). Das ist der einzige Vorrat, aus dem gefragt werden darf. Sonst leeres Array." },
       aufgaben: {
         type: "array",
         description: "8 bis 12 Aufgaben, selbst erfunden, nie vom Blatt abgeschrieben. In der ART ABWECHSELN (siehe Regel 5). Durchgängig korrektes Deutsch mit Umlauten.",
@@ -707,6 +835,7 @@ const WERKZEUG = {
           properties: {
             art: { type: "string", enum: ["wahl", "eingabe", "teilschritte"], description: "Welche Aufgabenart - siehe Regel 5. Abwechseln!" },
             frage: { type: "string" },
+            beleg: { type: "string", description: "NUR bei wissensblatt=true, dann PFLICHT: die Stelle vom Blatt, auf die sich diese Frage stützt, wörtlich abgeschrieben - und die richtige Antwort MUSS darin vorkommen. Kannst du die Antwort nicht vom Blatt belegen, stelle die Frage nicht. Sonst leer." },
             antworten: { type: "array", items: { type: "string" }, description: "NUR bei art=wahl: die vier Auswahlmöglichkeiten, die richtige MUSS dabei sein. Sonst leeres Array." },
             diagnosen: {
               type: "array",
@@ -746,7 +875,7 @@ const WERKZEUG = {
         },
       },
     },
-    required: ["titel", "fach", "lernbereich", "thema", "naechstes_thema", "welt", "spielart", "begruessung", "blatt_aufgaben", "aufgaben"],
+    required: ["titel", "fach", "lernbereich", "thema", "naechstes_thema", "welt", "spielart", "begruessung", "blatt_aufgaben", "wissensblatt", "blatt_inhalt", "aufgaben"],
     additionalProperties: false,
   },
 };
