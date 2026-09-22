@@ -366,5 +366,4 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
       blaetter: liste,
     };
   } catch (e) { return { text: "", blaetter: [] }; }
-}catch (e) { return ""; }
 }
