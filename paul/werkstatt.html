@@ -991,7 +991,6 @@
     return text ? satz + " " + text : satz;
   }
   var hausaufgabeGeschickt = false;
-  var laufTakt = null;   // der Ladeschirm-Takt, den nachfragen() aufraeumt
 
   if (HAUSAUFGABE){
     $("themen-karte").classList.add("verborgen");
@@ -1130,7 +1129,6 @@
       $("schritt").textContent = s[0];
       $("schritt-unter").textContent = s[1];
     }, 8000);
-    laufTakt = takt;
 
     fetch("/api/spiel-bauen", {
       method: "POST",
@@ -1141,29 +1139,31 @@
         quelle: HAUSAUFGABE ? "hausaufgabe" : (quelle || ""),
         hausaufgabe: HAUSAUFGABE,
         wunsch: mitFach(HAUSAUFGABE ? hausaufgabeWunsch() : $("wunsch").value.trim()),
-        /* Der Server antwortet sofort mit einer Auftragsnummer und baut im
-           Stillen weiter. Paul stand am 22.09.2026 zweimal vor "Ich konnte
-           den Server nicht erreichen": Der Bau mit Foto dauert gemessen 90
-           bis 120 Sekunden, und Cloudflare bricht die Verbindung vorher ab. */
-        hintergrund: true,
+        /* Der Server schickt waehrend des Bauens alle fuenf Sekunden eine
+           Zeile. Paul stand am 22.09.2026 zweimal vor "Ich konnte den Server
+           nicht erreichen": Der Bau mit Foto dauert gemessen 90 bis 120
+           Sekunden, und Cloudflare brach die stille Leitung mit 502 ab.
+           Solange etwas fliesst, bricht nichts ab. */
+        strom: true,
         seiten: seiten.map(function(s){ return {media_type:s.media_type, data:s.data}; })
       })
     })
-    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
+    .then(function(r){
+      // Der Strom kommt zeilenweise. Kann der Browser ihn nicht lesen (sehr
+      // alt), faellt es auf den gewoehnlichen Weg zurueck - dann ist es
+      // wieder wie vorher, aber wenigstens nicht kaputt.
+      if (r.ok && r.body && r.body.getReader &&
+          (r.headers.get("content-type") || "").indexOf("ndjson") >= 0){
+        return stromLesen(r).then(function(j){ return {ok:j.ok, status:200, j:j}; });
+      }
+      return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; });
+    })
     .then(function(a){
-      // Beim Hintergrundweg laeuft der Ladeschirm weiter - nachfragen()
-      // raeumt ihn auf, wenn das Spiel da ist.
-      if (!(a.ok && a.j && a.j.ok && a.j.bauId)){ clearInterval(takt); baeuft = false; }
+      clearInterval(takt); baeuft = false;
       if (a.status === 401){
         zeige("anmelden");
         $("codefehler").textContent = "Bitte melde dich nochmal an.";
         $("code").focus();
-        return;
-      }
-      if (a.ok && a.j.ok && a.j.bauId){
-        // Der Auftrag laeuft. Der Ladeschirm bleibt stehen und laeuft weiter,
-        // Paul merkt vom Unterschied nichts - ausser dass es jetzt ankommt.
-        nachfragen(a.j.bauId);
         return;
       }
       if (!a.ok || !a.j.ok || !a.j.spiel){
@@ -1188,58 +1188,44 @@
             "\u201eSpiel bauen\u201c, dann versuche ich es gleich weiter.", "fehler");
     });
   }
-  /* Alle drei Sekunden nachsehen, ob der Auftrag fertig ist.
+  /* Den Strom zeilenweise lesen und die letzte Zeile zurueckgeben.
    *
-   * Nur LESEN - das kostet im KV praktisch nichts, im Gegensatz zum
-   * Schreiben (1000 am Tag). Nach zehn Minuten wird aufgegeben; laenger
-   * als gut zwei Minuten hat noch kein Bau gebraucht, und ewiges Drehen
-   * waere schlimmer als eine ehrliche Meldung.
-   *
-   * Ein einzelner Fehlschlag beim Nachfragen beendet nichts: Im WLAN geht
-   * eine Abfrage schon mal daneben, und der Bau laeuft davon unbeirrt
-   * weiter. Erst nach fuenf Fehlschlaegen hintereinander wird abgebrochen. */
-  function nachfragen(bauId){
-    var seit = Date.now(), daneben = 0;
-    function aufhoeren(satz){
-      clearInterval(laufTakt); baeuft = false;
-      zeige("aufnahme"); melde(satz, "fehler");
-    }
-    var takt = setInterval(function(){
-      if (Date.now() - seit > 600000){
-        clearInterval(takt);
-        aufhoeren("Das hat zu lange gedauert. Dein Foto ist noch da \u2013 tipp nochmal auf \u201eSpiel bauen\u201c.");
-        return;
+   * Jede Zeile ist fuer sich ein JSON-Satz: {"status":"laeuft","seit":N}
+   * waehrend gebaut wird, am Ende {"status":"fertig","spiel":...} oder
+   * {"status":"fehler","fehler":...}. Eine Zeile kann mitten im Netz geteilt
+   * ankommen - deshalb wird gesammelt und erst am Zeilenende ausgewertet. */
+  function stromLesen(r){
+    var leser = r.body.getReader(), decoder = new TextDecoder(), rest = "", letzte = null;
+    var ABRISS = "Die Verbindung ist mittendrin abgerissen. Dein Foto ist noch da \u2013 tipp nochmal auf \u201eSpiel bauen\u201c.";
+    function zeileNehmen(t){
+      t = String(t || "").trim();
+      if (!t) return;
+      try { letzte = JSON.parse(t); } catch (e) { return; }
+      // Erst ab zwanzig Sekunden eine Zahl zeigen - vorher liest sich das
+      // wie Druck, und die Schritte auf dem Ladeschirm reichen voellig.
+      if (letzte.status === "laeuft" && typeof letzte.seit === "number" && letzte.seit >= 20){
+        $("schritt-unter").textContent = "Ich bin jetzt " + letzte.seit + " Sekunden dran.";
       }
-      fetch("/api/spiel-bauen?bau=" + encodeURIComponent(bauId), {credentials:"same-origin"})
-        .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
-        .then(function(a){
-          daneben = 0;
-          if (a.status === 404){
-            clearInterval(takt);
-            aufhoeren("Deinen Auftrag finde ich nicht mehr. Tipp nochmal auf \u201eSpiel bauen\u201c.");
-            return;
-          }
-          if (a.j && a.j.status === "fertig" && a.j.spiel){
-            clearInterval(takt); clearInterval(laufTakt); baeuft = false;
-            spiel = a.j.spiel;
-            sammlungLaden();
-            starteSpiel();
-            return;
-          }
-          if (a.j && a.j.status === "fehler"){
-            clearInterval(takt);
-            aufhoeren(a.j.fehler || "Da ist etwas schiefgegangen. Bitte nochmal versuchen.");
-          }
-        })
-        .catch(function(){
-          daneben = daneben + 1;
-          if (daneben >= 5){
-            clearInterval(takt);
-            aufhoeren("Ich komme gerade nicht an deinen Auftrag. Dein Foto ist noch da \u2013 tipp nochmal auf \u201eSpiel bauen\u201c.");
-          }
-        });
-    }, 3000);
+    }
+    function weiter(){
+      return leser.read().then(function(stueck){
+        if (stueck.done){
+          zeileNehmen(rest); rest = "";
+          return letzte || {status:"fehler", fehler:ABRISS};
+        }
+        rest = rest + decoder.decode(stueck.value, {stream:true});
+        var teile = rest.split("\n");
+        rest = teile.pop();
+        teile.forEach(zeileNehmen);
+        return weiter();
+      });
+    }
+    return weiter().then(function(t){
+      if (t && t.status === "fertig" && t.spiel) return {ok:true, spiel:t.spiel};
+      return {ok:false, fehler:(t && t.fehler) || ABRISS};
+    });
   }
+
 
   $("los").addEventListener("click", function(){ bauen(""); });
 
