@@ -164,6 +164,76 @@ export async function onRequestPost(context) {
    * Wer den Weg wieder aufmacht, braucht eine Queue oder ein Durable Object
    * (dort gilt 15 Minuten Wanduhrzeit), nicht waitUntil. */
 
+  /* Der Weg, der traegt: waehrend gebaut wird, fliessen Lebenszeichen.
+   *
+   * Gemessen am 22.09.2026: Der Bau MIT Foto dauert 90 bis 120 Sekunden, und
+   * Cloudflare brach die stille Leitung mit HTTP 502 ab - Paul sah "Ich
+   * konnte den Server nicht erreichen". Ohne Foto sind es 66 s; es lag also
+   * schon immer knapp unter der Grenze. Am Bild lag es nicht: dasselbe Blatt
+   * mit 286 statt 1382 KB brauchte 120,3 s. Es ist die Denkzeit des Modells.
+   *
+   * Die Doku nennt den Weg: "There is no hard limit on duration for
+   * HTTP-triggered Workers. As long as the client remains connected, the
+   * Worker can continue processing, making subrequests, and streaming a
+   * response body" (Cloudflare Workers Limits, 22.09.2026). Der 502 kam vom
+   * LEERLAUF auf der Leitung. Wer alle fuenf Sekunden eine Zeile schickt,
+   * hat keinen Leerlauf.
+   *
+   * Geantwortet wird zeilenweise (NDJSON): {"status":"laeuft","seit":N} als
+   * Puls, am Ende {"status":"fertig","spiel":...} oder
+   * {"status":"fehler","fehler":...}. Wer kein strom:true schickt, bekommt
+   * weiter eine gewoehnliche Antwort - die Schmiede und das
+   * Hausaufgaben-Heft bleiben unberuehrt. */
+  if (auftrag.strom === true) {
+    const strom = new TransformStream();
+    const w = strom.writable.getWriter();
+    const enc = new TextEncoder();
+
+    /* Jede Zeile wird auf gut 2 KB aufgefuellt.
+     *
+     * Ohne das kommt gar nichts an: Cloudflare sammelt kleine Antworten und
+     * schickt sie erst am Stueck ("Cloudflare buffers responses when they're
+     * really small", Cloudflare-Community, nachgelesen am 22.09.2026).
+     * Gemessen: Mit 40-Byte-Zeilen kamen nicht einmal die Kopfzeilen los,
+     * und nach 103,8 s stand wieder ein 502 da.
+     *
+     * Die Fuellung steht HINTER dem JSON und vor dem Umbruch - der Leser
+     * schneidet an "\n" und laesst Leerzeichen weg, sie stoert ihn nicht. */
+    const FUELLUNG = " ".repeat(2048);
+    const zeile = (o) => w.write(enc.encode(JSON.stringify(o) + FUELLUNG + "\n"));
+
+    // Nicht awaiten: Die Antwort geht sofort raus, der Rumpf fuellt sich.
+    (async () => {
+      let puls = null;
+      try {
+        await zeile({ status: "laeuft", seit: 0 });
+        const start = Date.now();
+        puls = setInterval(() => {
+          zeile({ status: "laeuft", seit: Math.round((Date.now() - start) / 1000) }).catch(() => {});
+        }, 5000);
+        const e = await bauLauf(context, vorgaben);
+        clearInterval(puls); puls = null;
+        await zeile(e.ok ? { status: "fertig", spiel: e.spiel, verbrauch: e.verbrauch || null }
+                         : { status: "fehler", fehler: e.text });
+      } catch (err) {
+        if (puls) clearInterval(puls);
+        // Ein Absturz darf nicht heissen, dass das Kind ewig auf den
+        // Ladeschirm guckt - es kommt eine ehrliche letzte Zeile.
+        try { await zeile({ status: "fehler", fehler: "Beim Bauen ist etwas schiefgegangen. Bitte nochmal versuchen." }); }
+        catch (e2) {}
+      }
+      try { await w.close(); } catch (e) {}
+    })();
+
+    return new Response(strom.readable, {
+      headers: {
+        "content-type": "application/x-ndjson; charset=utf-8",
+        "cache-control": "no-store",
+        "x-accel-buffering": "no",
+      },
+    });
+  }
+
   const ergebnis = await bauLauf(context, vorgaben);
   if (!ergebnis.ok) return fehler(ergebnis.status, ergebnis.text);
   return new Response(JSON.stringify({ ok: true, spiel: ergebnis.spiel, verbrauch: ergebnis.verbrauch }), {
