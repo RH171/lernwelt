@@ -516,10 +516,31 @@ function kennung() {
  * Ausgelagert und exportiert, damit es OHNE Modellaufruf pruefbar ist
  * (node pruefe-quiz-blatt.mjs). Sortiert eine Kopie, nicht das Original. */
 export function nachArt(liste) {
-  const RANG = { heft: 0, "": 1, uebung: 2 };
+  /* Vier Raenge, nicht mehr zwei (24.09.2026, nach der zweiten
+   * Rollen-Gegenpruefung durch eine Viertklasslehrkraft):
+   *
+   * 0  Hefteintrag - Paul sagt es beim Hochladen.
+   * 0  LERNZIELLISTE, egal was Paul angekreuzt hat. Sie wird ausgeteilt und
+   *    selten eingeklebt, also kreuzt er "Uebungsblatt" an - und genau das
+   *    Blatt, das dieses Konzept "die Probe in Worten" nennt, flog beim
+   *    Schnitt bei acht Blaettern als ERSTES raus.
+   * 1  probennahes Blatt - bringt nicht den Stoff, aber die Fragestellung.
+   *    "Eine Probeprobe bringt keinen Stoff, den das Heft nicht haette. Sie
+   *    bringt die Fragestellung" - und die ist oft notenentscheidend.
+   * 2  ohne Angabe - vor der Unterscheidung abgelegt, weder bevorzugt noch
+   *    benachteiligt.
+   * 3  gewoehnliches Uebungsblatt.
+   *
+   * Die Sorte kommt NICHT vom Kind, sondern aus der FORM des Blattes
+   * (Abhak-Kaestchen, Punktekaestchen) - siehe SORTEN in _schulstoff.js. */
+  const RANG = { heft: 0, "": 2, uebung: 3 };
   const rang = (x) => {
+    const s = (x && x.sorte) || "";
+    if (s === "lernziele") return 0;
     const r = RANG[(x && x.art) || ""];
-    return r === undefined ? 1 : r;        // unbekannte Art wie "ohne Angabe"
+    const nachArt_ = r === undefined ? 2 : r;   // unbekannte Art wie "ohne Angabe"
+    if (s === "probennah") return Math.min(nachArt_, 1);
+    return nachArt_;
   };
   return (liste || []).slice().sort((a, b) => {
     const ra = rang(a), rb = rang(b);

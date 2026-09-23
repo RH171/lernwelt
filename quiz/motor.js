@@ -210,7 +210,7 @@
         '<span class="was"><b></b><span></span></span>';
       k.querySelector("b").textContent = b.titel || "Ohne Titel";
       k.querySelector(".was span").textContent =
-        artKurz(b.art) + deutschKurz(b.datum) +
+        schildFuer(b) + deutschKurz(b.datum) +
         (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "");
       vorschauFuellen(k.querySelector(".qvor"), b);
       k.addEventListener("click", function (ev) {
@@ -241,7 +241,18 @@
    * Als Text im Untertitel, nicht als eigenes Schild: Er erbt damit Farbe
    * und Groesse der Zeile, und es kann keine Klasse kollidieren - genau
    * das ist am 23.09.2026 mit .qblatt passiert (1,01:1 Kontrast). */
-  function artKurz(art) {
+  /* Das Schild in der Blattauswahl. "sorte" schlaegt "art": Eine Lernzielliste
+ * ist eine Lernzielliste, auch wenn Paul sie als Uebungsblatt abgelegt hat -
+ * und der Server sortiert sie seit 24.09.2026 ganz nach vorn. Liefe die
+ * Anzeige anders, sae Paul eine andere Reihenfolge als das Quiz benutzt. */
+function schildFuer(b) {
+  var s = (b && b.sorte) || "";
+  if (s === "lernziele") return "\uD83D\uDCCB Lernziele \u00b7 ";
+  if (s === "probennah") return "\uD83D\uDCDD Wie eine Probe \u00b7 ";
+  return artKurz(b && b.art);
+}
+
+function artKurz(art) {
     if (art === "heft") return "\uD83D\uDCD3 Heft \u00b7 ";
     if (art === "uebung") return "\uD83D\uDCC4 \u00dcbung \u00b7 ";
     return "";                       // ohne Angabe: gar nichts behaupten
@@ -253,10 +264,15 @@
    * auseinanderlaufen. Es wird nichts weggelassen: Paul kann jedes Blatt
    * anhaken, es steht nur weiter unten. */
   function nachArtSortiert(liste) {
-    var RANG = { heft: 0, "": 1, uebung: 2 };
+    // Dieselben vier Raenge wie nachArt() in functions/api/quiz.js (24.09.2026).
+    var RANG = { heft: 0, "": 2, uebung: 3 };
     function rang(x) {
+      var s = (x && x.sorte) || "";
+      if (s === "lernziele") return 0;
       var r = RANG[(x && x.art) || ""];
-      return r === undefined ? 1 : r;
+      var a = r === undefined ? 2 : r;
+      if (s === "probennah") return Math.min(a, 1);
+      return a;
     }
     return (liste || []).slice().sort(function (a, b) {
       var ra = rang(a), rb = rang(b);
