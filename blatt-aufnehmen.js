@@ -106,7 +106,15 @@
     var faecher = opt.faecher || FAECHER;
     stilEinmal();
 
-    var seiten = [], fach = "", laeuft = false;
+    /* art: "heft" oder "uebung" - Dennys Entwurf vom 23.09.2026, zwei Kacheln
+       nach der Fachwahl. Der Grund steht in der Ansage der Lehrerin am
+       Elternabend: "Es wird das gefragt, was im Heft enthalten ist." Aus dem
+       Heft wird abgefragt, aus Uebungsblaettern wird geuebt - und diese
+       Unterscheidung kann kein Modell erraten, die weiss nur das Kind.
+       KEINE Vorauswahl, aus demselben Grund, aus dem am 22.09.2026 "Weiss ich
+       nicht" bei den Faechern gestrichen wurde: Paul soll wissen, wohin sein
+       Blatt gehoert. */
+    var seiten = [], fach = "", art = "", laeuft = false;
 
     kasten.className = "lwb";
     kasten.innerHTML =
@@ -121,6 +129,11 @@
       '<div class="frage">Zu welchem Fach gehört das?</div>' +
       '<p class="u lwb-plan" style="margin:2px 0 0"></p>' +
       '<div class="reihe lwb-faecher"></div>' +
+      '<div class="frage">Wo stand das?</div>' +
+      '<div class="knoepfe lwb-arten">' +
+        '<div class="knopf" data-art="heft"><span class="z">\uD83D\uDCD3</span>In meinem Schulheft</div>' +
+        '<div class="knopf" data-art="uebung"><span class="z">\uD83D\uDCC4</span>Ein Übungsblatt</div>' +
+      '</div>' +
       '<div class="knoepfe">' +
         '<div class="knopf" data-holen="kamera"><span class="z">📸</span>Fotografieren</div>' +
         '<div class="knopf" data-holen="datei"><span class="z">📄</span>Datei oder PDF</div>' +
@@ -151,6 +164,17 @@
         knopf();
       });
       reihe.appendChild(b);
+    });
+
+    // ---- Schulheft oder Uebungsblatt ------------------------------------
+    Array.prototype.forEach.call(kasten.querySelectorAll("[data-art]"), function (b) {
+      b.addEventListener("click", function () {
+        art = b.getAttribute("data-art");
+        Array.prototype.forEach.call(kasten.querySelectorAll("[data-art]"), function (x) {
+          x.classList.toggle("an", x === b);
+        });
+        knopf();
+      });
     });
 
     function planSortieren() {
@@ -252,13 +276,14 @@
       var l = $(".lwb-los");
       if (!seiten.length) { l.disabled = true; l.textContent = "Erst dein Blatt fotografieren"; return; }
       if (!fach) { l.disabled = true; l.textContent = "Sag mir noch, welches Fach"; return; }
+      if (!art) { l.disabled = true; l.textContent = "Schulheft oder Übungsblatt?"; return; }
       l.disabled = false;
       l.textContent = seiten.length > 1 ? seiten.length + " Seiten ins Heft legen" : "Ins Heft legen";
     }
 
     // ---- Ablegen --------------------------------------------------------
     $(".lwb-los").addEventListener("click", function () {
-      if (laeuft || !seiten.length || !fach) return;
+      if (laeuft || !seiten.length || !fach || !art) return;
       laeuft = true;
       var l = $(".lwb-los");
       l.disabled = true; l.textContent = "Ich lege es ab …";
@@ -274,7 +299,7 @@
         return fetch("/api/schulstoff", {
           method: "POST", credentials: "same-origin",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: kind, fach: fach, datum: datum.value, seiten: bilder })
+          body: JSON.stringify({ kind: kind, fach: fach, art: art, datum: datum.value, seiten: bilder })
         });
       })
       .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
@@ -285,7 +310,9 @@
           melde((a.j && a.j.fehler) || "Das hat nicht geklappt. Dein Foto ist noch da – probier es nochmal.", "fehler");
           return;
         }
-        seiten = []; malen(); knopf();
+        seiten = []; art = "";
+        Array.prototype.forEach.call(kasten.querySelectorAll("[data-art]"), function (x) { x.classList.remove("an"); });
+        malen(); knopf();
         melde("✅ Ist in deinem Heft – " + deutsch(a.j.datum) +
               (a.j.titel ? ", „" + a.j.titel + "“" : "") + ".", "gut");
         if (opt.fertig) { try { opt.fertig(a.j); } catch (e) {} }

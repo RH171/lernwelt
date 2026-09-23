@@ -41,6 +41,13 @@ export const FAECHER = {
   anderes:  "einem anderen Fach",
 };
 
+/* Die beiden Arten eines Eintrags. Bewusst nur zwei (Denny, 23.09.2026):
+   eine dritte Kachel waere ein dritter Gedanke bei jedem Hochladen. */
+export const ARTEN = {
+  heft:   "in meinem Schulheft",
+  uebung: "ein Übungsblatt",
+};
+
 const LISTE  = (kind, monat) => "stoff:" + kind + ":" + monat;
 const BILD   = (id, nr) => "stoffbild:" + id + ":" + nr;
 const MONATE_ZURUECK = 14;          // gut ein Schuljahr
@@ -286,6 +293,13 @@ export async function stoffAblegen(env, kind, eintrag, seiten) {
     id,
     datum,
     fach: FAECHER[eintrag.fach] ? eintrag.fach : "",
+    /* Wo das Blatt stand: im Schulheft oder auf einem Uebungsblatt.
+       Dennys Entwurf vom 23.09.2026, zwei Kacheln nach der Fachwahl. Grundlage
+       ist die Ansage der Lehrerin am Elternabend: "Es wird das gefragt, was im
+       Heft enthalten ist." Aus "heft" wird abgefragt, aus "uebung" geuebt.
+       Leer heisst: vor dieser Unterscheidung abgelegt - dann gilt nichts
+       davon, und es wird wie bisher behandelt. */
+    art: ARTEN[eintrag.art] ? eintrag.art : "",
     thema: String(eintrag.thema || "").slice(0, 160),
     titel: String(eintrag.titel || "").slice(0, 120),
     notiz: String(eintrag.notiz || "").slice(0, 400),
