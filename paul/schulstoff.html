@@ -25,6 +25,7 @@
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="stundenplan.js?v=cfad3cdc"></script>
 <script src="/blatt-aufnehmen.js?v=ce236bab"></script>
+<script src="/fundkarten.js?v=9db63aac"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#6b7280; --line:#e4e7f0;
@@ -112,6 +113,11 @@
        EINMAL in /blatt-aufnehmen.js. -->
   <button class="fach auf-zu" type="button" id="neues-blatt">📸 Neues Blatt</button>
   <div id="aufnehmen" class="verborgen"></div>
+
+  <!-- Die Fundkarten direkt nach dem Hochladen (Denny, 23.09.2026). Der
+       Bildschirm baut sich selbst auf; ohne Karten bleibt er leer und die
+       Seite laeuft weiter wie vorher. Motor: /fundkarten.js -->
+  <div id="fundkarten"></div>
 
   <div id="filter" class="faecher" style="margin-top:16px"></div>
   <div id="inhalt"></div>
@@ -384,8 +390,25 @@
       aufnehmer = LWBlatt.einbauen(k, {
         kind: "paul",
         plan: window.PAUL_PLAN,
-        // Nach dem Ablegen steht das neue Blatt sofort in der Liste.
-        fertig: function(){ laden(); }
+        /* Nach dem Ablegen kommen zuerst die Fundkarten - Paul sieht, was
+           von seinem Blatt gelesen wurde, und beantwortet es selbst. Die
+           Liste wird parallel neu geladen, damit sein Blatt schon dasteht,
+           wenn er "Weiter" tippt. */
+        fertig: function(antwort){
+          laden();
+          var f = document.getElementById("fundkarten");
+          var lief = window.LWFund && LWFund.zeigen(f, {
+            karten: antwort && antwort.karten,
+            kind: "paul",
+            was: antwort && antwort.titel,
+            blattId: antwort && antwort.id,
+            fertig: function(){
+              f.innerHTML = "";
+              f.scrollIntoView({behavior:"smooth", block:"nearest"});
+            }
+          });
+          if (lief) f.scrollIntoView({behavior:"smooth", block:"start"});
+        }
       });
     }
     if (zu) k.scrollIntoView({behavior:"smooth", block:"nearest"});
