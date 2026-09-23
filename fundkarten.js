@@ -54,13 +54,18 @@
    * #5b6270 hat 5,42:1 auf dem Grund und 6,13:1 auf der Karte.
    * Im Dunkeln bleibt --muted (#a0a6bd auf #1e2029 = 6,71:1) richtig. */
   var MUT = "var(--lwf-muted,#5b6270)";
-  var GUT = "var(--gut,#16a34a)";
+  /* Auch das Gruen bekommt eine eigene Fassung. Gemessen 23.09.2026: Pauls
+   * --gut (#12b76a) auf der hellgruenen Flaeche einer richtigen Antwort
+   * ergibt 2,42:1 - WCAG 2.2 (1.4.11) verlangt 3:1 fuer Symbole wie das
+   * Haekchen. #0b7a47 kommt auf 4,97:1. Im Dunkeln bleibt --gut (#4ade9b),
+   * das dort deutlich heraussticht. */
+  var GUT = "var(--lwf-gut,#0b7a47)";
   var AKZ = "var(--akzent,#4f46e5)";
   var AUF = "var(--akzent-auf,#fff)";
 
   var STIL = [
-    ":root{--lwf-muted:#5b6270}",
-    "html[data-theme=\"dark\"]{--lwf-muted:var(--muted,#a0a6bd)}",
+    ":root{--lwf-muted:#5b6270;--lwf-gut:#0b7a47}",
+    "html[data-theme=\"dark\"]{--lwf-muted:var(--muted,#a0a6bd);--lwf-gut:var(--gut,#4ade9b)}",
     ".lwf{margin-top:4px}",
     ".lwf .kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:" + MUT + "}",
     ".lwf h2{font:800 20px var(--rund,inherit);margin:2px 0 4px;color:" + INK + "}",
