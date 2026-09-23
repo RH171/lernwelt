@@ -49,7 +49,18 @@
 /*.json
   Cache-Control: public, max-age=0, must-revalidate
 
-# PROBE 23.09.2026: Greift ein exakter Pfad, wo "/*.js" nicht greift?
-# Gemessen: /ferien.json bekam die Regel, /thema.css und /quiz/motor.js nicht.
+# BEFUND 23.09.2026, zweimal gemessen an zwei Deployments:
+#
+#   /ferien.json    -> max-age=0, must-revalidate   (die Regel oben WIRKT)
+#   /thema.css      -> max-age=14400               (wirkt NICHT)
+#   /quiz/motor.js  -> max-age=14400               (wirkt NICHT)
+#
+# Cloudflare Pages nimmt Cache-Control aus dieser Datei bei .json an, bei .js
+# und .css nicht - auch dann nicht, wenn der Pfad EXAKT dasteht statt als
+# Platzhalter. Diese Zeile ist genau diese Gegenprobe; sie bleibt stehen,
+# damit niemand denselben Versuch ein zweites Mal macht.
+#
+# ETag-Revalidierung funktioniert (gemessen: 304 bei If-None-Match) - nur
+# fragt der Browser innerhalb der vier Stunden gar nicht erst nach.
 /thema.css
   Cache-Control: public, max-age=0, must-revalidate
