@@ -78,10 +78,17 @@
   .fach-inhalt li{margin:5px 0}
 
   ul.termine{list-style:none;margin:12px 0 0;padding:0}
-  ul.termine li{display:flex;gap:12px;align-items:baseline;padding:11px 0;border-top:1px solid var(--line)}
+  /* Denselben Fehler gab es am 15.09.2026 schon in Pauls Werkstatt: "white-space:
+   * nowrap" plus flex heisst, die Zeile ist so breit wie ihr Inhalt - sie
+   * schrumpft nicht, sie laeuft heraus. Auf Pauls iPhone stand deshalb
+   * "Übertrittszeugnis · Montag, 3. Mai 2027 · in 222 Tag" und der Rest lag
+   * ausserhalb der Karte (23.09.2026 im Browser gesehen).
+   * Jetzt darf die Zeile umbrechen: Name oben, Datum darunter. */
+  ul.termine li{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;
+                padding:11px 0;border-top:1px solid var(--line)}
   ul.termine li:first-child{border-top:none}
-  ul.termine b{flex:1;font:700 16px var(--rund)}
-  ul.termine span{color:var(--muted);font-size:15px;white-space:nowrap}
+  ul.termine b{flex:1 1 auto;min-width:0;font:700 16px var(--rund)}
+  ul.termine span{color:var(--muted);font-size:15px}
   ul.termine .bald{color:var(--paul);font-weight:700}
 
   .noten{display:flex;flex-direction:column;gap:9px;margin-top:12px}
