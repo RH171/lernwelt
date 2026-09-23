@@ -441,8 +441,28 @@ export function frageBelegt(f, schule, nurDaraus) {
      deren FRAGE sich aus dem Blatt speist und deren Antwort eine kleine
      Zahl ist. Das ist dieselbe Ausnahme wie in ohneBeleg(). */
   if (stehtAufBlatt(zeilen, richtig)) return true;
+
+  /* Die Ausnahme: eine Zahl, die man aus einer Liste ABZAEHLT.
+     "Wie viele Partnerstädte hat Fürth?" -> "4". Die Vier steht nirgends,
+     die vier Städte schon. Also muss eine Zeile zwei Dinge erfuellen: Sie
+     traegt ein kennzeichnendes Wort aus der Frage, UND sie hat mindestens
+     so viele Eintraege, wie die Antwort behauptet.
+     Beides zusammen ist noetig. Nur das Wort reicht nicht - sonst kaeme
+     "Wie viele Brücken hat Fürth? -> 17" durch, weil "Fürth" irgendwo steht.
+     Deshalb zaehlen nur Woerter ab sechs Buchstaben; "Fürth" und "viele"
+     fallen damit von selbst weg. */
   const n = Number(String(richtig == null ? "" : richtig).replace(/[^0-9]/g, ""));
-  if (Number.isFinite(n) && n > 0 && n <= 20 && stehtAufBlatt(zeilen, f.frage)) return true;
+  if (Number.isFinite(n) && n > 1 && n <= 20) {
+    const stichwoerter = String(f.frage || "").toLowerCase()
+      .split(/[^a-zäöüß]+/).filter((w) => w.length >= 6).map((w) => w.slice(0, 6));
+    const passt = zeilen.some((z) => {
+      const zk = String(z || "").toLowerCase();
+      if (!stichwoerter.some((w) => zk.includes(w))) return false;
+      const teile = String(z).split(/[;,]| und /).filter((x) => x.trim().length > 1);
+      return teile.length >= n;
+    });
+    if (passt) return true;
+  }
   return false;
 }
 
