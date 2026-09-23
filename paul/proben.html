@@ -74,6 +74,8 @@
   .fach-inhalt{margin:-2px 0 4px;padding:13px 15px;border-radius:14px;
                background:var(--vertief);font-size:15.5px;line-height:1.5}
   .fach-inhalt .kopf{font:700 14.5px var(--rund);color:var(--muted);margin-bottom:7px}
+  .fach-inhalt .ziel{font:700 15px/1.4 var(--rund,system-ui);color:var(--ink);background:var(--merk,#eef1ff);border-radius:10px;padding:8px 12px;margin:0 0 10px}
+  html[data-theme="dark"] .fach-inhalt .ziel{background:#1b1f38}
   .fach-inhalt ul{margin:0;padding-left:20px}
   .fach-inhalt li{margin:5px 0}
 
@@ -185,18 +187,35 @@
         var eintrag = p.faecher[f];
         var soll = (eintrag && typeof eintrag === "object") ? eintrag.anzahl : eintrag;
         var bereiche = (eintrag && typeof eintrag === "object" && eintrag.bereiche) || [];
+        /* Seit 24.09.2026 kommt zusaetzlich, was in DIESEM Schuljahr wirklich
+           drankommt - aus den Folien des Elternabends. Ein alter Server liefert
+           es nicht; dann bleibt einfach alles wie vorher. */
+        var themen   = (eintrag && typeof eintrag === "object" && eintrag.themen)   || [];
+        var ziel     = (eintrag && typeof eintrag === "object" && eintrag.ziel)     || "";
+        var aufklappbar = bereiche.length || themen.length;
         var gemacht = noten.filter(function(n){ return n.fach === f; }).length;
         h += '<button class="fzeile" type="button" data-fach="' + esc(f) + '"' +
              ' aria-expanded="false" aria-controls="was-' + esc(f) + '">' +
              "<b>" + esc(NAMEN[f] || f) + "</b>" +
              '<div class="bar"><i style="width:' + Math.min(100, Math.round(gemacht/soll*100)) + '%"></i></div>' +
              "<span>" + gemacht + " von " + soll + "</span>" +
-             (bereiche.length ? '<span class="pfeil">›</span>' : "") + "</button>";
-        if (bereiche.length){
-          h += '<div class="fach-inhalt verborgen" id="was-' + esc(f) + '">' +
-               '<div class="kopf">Das wird in ' + esc(NAMEN[f] || f) + ' gefragt</div><ul>' +
-               bereiche.map(function(b){ return "<li>" + esc(b) + "</li>"; }).join("") +
-               "</ul></div>";
+             (aufklappbar ? '<span class="pfeil">›</span>' : "") + "</button>";
+        if (aufklappbar){
+          h += '<div class="fach-inhalt verborgen" id="was-' + esc(f) + '">';
+          if (ziel){
+            h += '<div class="ziel">Ziel: ' + esc(ziel) + "</div>";
+          }
+          if (themen.length){
+            h += '<div class="kopf">Das kommt dieses Jahr dran</div><ul>' +
+                 themen.map(function(b){ return "<li>" + esc(b) + "</li>"; }).join("") +
+                 "</ul>";
+          }
+          if (bereiche.length){
+            h += '<div class="kopf">Worin du benotet wirst</div><ul>' +
+                 bereiche.map(function(b){ return "<li>" + esc(b) + "</li>"; }).join("") +
+                 "</ul>";
+          }
+          h += "</div>";
         }
       });
       h += "</div></div>";
