@@ -568,8 +568,10 @@ async function nachtragen(context) {
 
       if (gelesen.titel) await titelSetzen(env, kind, x.id, gelesen.titel);
       else await titelSetzen(env, kind, x.id, "", "nicht erkannt");
-      if (gelesen.inhalt && gelesen.inhalt.length) {
-        await inhaltSetzen(env, kind, x.id, gelesen.inhalt);
+      /* Die Fundkarten wandern auch beim Nachtrag mit - sonst haetten alte
+         Blaetter nie welche, und zwei Wege wuerden auseinanderlaufen. */
+      if ((gelesen.inhalt && gelesen.inhalt.length) || (gelesen.karten || []).length) {
+        await inhaltSetzen(env, kind, x.id, gelesen.inhalt, gelesen.karten);
       }
       if (datumNeu) await datumSetzen(env, kind, x.id, datumNeu, x.datum);
 
