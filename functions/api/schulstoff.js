@@ -212,6 +212,7 @@ const TITEL_GRENZE = 15000;
  * ganze Blatt zu verstehen. Reisst er die Grenze, bleibt die Schaetzung
  * aus dem ersten Aufruf; die Karte faellt nie deswegen weg. */
 const POSITION_GRENZE = 12000;
+const POSITION_MODELL = "claude-sonnet-5";
 
 /* EIN Blick aufs Bild - Titel und Datum zusammen.
  *
@@ -417,7 +418,12 @@ async function positionenHolen(env, seite, stichworte) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: TITEL_MODELL,
+        /* NICHT das Haiku-Modell des ersten Aufrufs. Live gemessen am
+           23.09.2026: Mit Haiku traf der zweite Blick 1 von 3 Baendern -
+           schlechter als die Schaetzung nebenbei (2 von 4) und doppelt so
+           langsam. Eine Stelle im Bild zu verorten ist eine andere Aufgabe
+           als ein Blatt zu lesen. */
+        model: POSITION_MODELL,
         max_tokens: 700,
         messages: [{
           role: "user",
