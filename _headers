@@ -48,3 +48,8 @@
 
 /*.json
   Cache-Control: public, max-age=0, must-revalidate
+
+# PROBE 23.09.2026: Greift ein exakter Pfad, wo "/*.js" nicht greift?
+# Gemessen: /ferien.json bekam die Regel, /thema.css und /quiz/motor.js nicht.
+/thema.css
+  Cache-Control: public, max-age=0, must-revalidate
