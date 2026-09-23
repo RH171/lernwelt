@@ -54,6 +54,16 @@ const PROBEN = {
      * gedreht: "Sprachgebrauch und Sprache untersuchen" sagt ihm nichts,
      * "Grammatik und Rechtschreiben" schon.
      *
+     * ERGAENZT am 24.09.2026 um "themen": Was in DIESEM Schuljahr wirklich
+     * drankommt. Quelle sind die drei Folien des Elternabends der 4bG vom
+     * 23.09.2026 (HSU, Mathematik, Deutsch), von Denny fotografiert. Die
+     * "bereiche" sind die Kategorien, in denen benotet wird; die "themen"
+     * sind der Stoff. Beides steht nebeneinander, weil beides eine andere
+     * Frage beantwortet: "Worin werde ich geprueft?" und "Was kommt dran?".
+     *
+     * Das ist die Lernzielliste des Schuljahrs - genau das, was die
+     * Lehrer-Gegenpruefung "die Probe, in Worten" genannt hat.
+     *
      * Wer die Elterninformation aendert, aendert BEIDE Stellen - hier steht
      * bewusst eine eigene Fassung und kein Verweis, weil Paul die Elternseite
      * nicht aufrufen darf. */
@@ -63,12 +73,29 @@ const PROBEN = {
         "Lesen – einen Text verstehen und damit umgehen",
         "Schreiben – einen Text planen, schreiben und überarbeiten",
         "Grammatik und Rechtschreiben",
+      ], themen: [
+        "Sprache untersuchen: Satzglieder, die 4 Fälle, Zeitformen, Wortarten",
+        "Richtig schreiben: Strategien und Lernwörter, diktierte Sätze (gemischte Probe)",
+        "Dein Fehlerwortschatzheft – damit übst du genau deine Wörter",
+        "Lesen: Erzählung und Sachtext, dazu der Lesepass",
+        "Schreiben: erzählend und sachlich · 1 Probe",
+        "Zuhören: Hörspiel und Podcast · 1 Probe",
       ] },
       mathe: { anzahl: 5, bereiche: [
         "Zahlen und Rechnen",
         "Raum und Form – Figuren, Körper, Zeichnen",
         "Größen und Messen – Länge, Gewicht, Zeit, Geld",
         "Daten und Zufall – Tabellen, Diagramme, Wahrscheinlichkeit",
+      ], ziel: "Die 4 Grundrechenarten sicher beherrschen", themen: [
+        "Plus und minus bis 1000 wiederholen",
+        "Das Einmaleins – zu Hause üben!",
+        "Der Zahlenraum bis 1 000 000: erschließen und darin rechnen",
+        "Halbschriftlich mal und geteilt",
+        "Schriftlich mal · schriftlich geteilt",
+        "Sachrechnen",
+        "Größen: Hohlmaße",
+        "Raumvorstellung und geometrische Körper",
+        "Mit dem Zirkel zeichnen (nach dem Übertritt)",
       ] },
       hsu: { anzahl: 5, bereiche: [
         "Demokratie und Gesellschaft",
@@ -77,6 +104,12 @@ const PROBEN = {
         "Zeit und Wandel",
         "Raum und Mobilität",
         "dazu ein Referat, eine Präsentation oder ein Erklärvideo",
+      ], themen: [
+        "Rad fahren: Theorie und Praxis – Prüfung nach den Pfingstferien, zu Hause üben!",
+        "Stadt Fürth → Landkreis → Mittelfranken → Bayern → Deutschland → Europa",
+        "Wasser: Wasserkreislauf, Wetter, Wasserversorgung",
+        "Wie der Mensch sich entwickelt (nach dem Übertritt)",
+        "Ein Referat mit digitaler Präsentation – das macht ihr in der Schule",
       ] },
     },
     zeugnisse: [
