@@ -636,7 +636,12 @@ async function blattLesen(env, seite) {
   /* Der Inhalt steht als Liste HINTER "INHALT:" - deshalb nicht ueber zeile(),
    * die nur bis zum Zeilenende liest. Was nicht mit "-" beginnt, faellt weg;
    * so kommt kein Fliesstext ins Feld, wenn das Modell doch etwas dazusagt. */
-  const nachInhalt = roh.split(/^\s*INHALT\s*:/mi)[1] || "";
+  /* ⚠️ Und VOR "KARTEN:" abschneiden. Die Kartenzeilen beginnen ebenfalls
+   * mit "- " und landeten sonst im Inhalt - gemessen am 23.09.2026 in Pauls
+   * Stadtportraet: zwei der vierzehn Zeilen waren Fundkarten. Das faelscht
+   * den Beleg-Riegel, gegen den jede Quizfrage geprueft wird, und verdraengt
+   * echte Blattzeilen aus dem Deckel. */
+  const nachInhalt = (roh.split(/^\s*INHALT\s*:/mi)[1] || "").split(/^\s*KARTEN\s*:/mi)[0];
   const inhalt = nachInhalt.split("\n")
     .map((z) => z.trim())
     .filter((z) => /^[-•*]\s+/.test(z))
