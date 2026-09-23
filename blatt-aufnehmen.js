@@ -48,11 +48,25 @@
     "  background:var(--karte,#fff);color:var(--ink,#1b1c22);border-radius:999px;",
     "  padding:10px 14px;font:600 15.5px inherit;cursor:pointer;min-height:44px}",
     ".lwb .chip.an{background:var(--paul,#4f46e5);border-color:var(--paul,#4f46e5);color:#fff}",
-    ".lwb .chip.vorschlag{border-color:var(--paul,#4f46e5);box-shadow:0 0 0 2px rgba(79,70,229,.12)}",
     ".lwb input[type=date]{font:600 16.5px inherit;padding:10px 12px;border-radius:14px;",
     "  border:1.5px solid var(--line,#e4e7f0);background:var(--karte,#fff);",
     "  color:var(--ink,#1b1c22);min-height:44px}",
-    ".lwb .knoepfe{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}",
+    ".lwb .knoepfe{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}",
+    /* Variante A, gewaehlt von Denny am 23.09.2026: Die Karte zerfaellt in drei
+       Abschnitte mit Trennlinie, und "Wo stand das?" bekommt eine ANDERE Form
+       als das Hochladen - breite Zeilen statt gestrichelter Kacheln. Denny:
+       "Es erscheint eigentlich, als wuerden die fuenf Kacheln zusammengehoeren."
+       Sie taten es optisch auch: beide Gruppen waren .knopf. */
+    ".lwb .trenn{height:1px;background:var(--line,#e4e7f0);margin:20px -18px 0}",
+    ".lwb .zeile{display:flex;align-items:center;gap:13px;width:100%;text-align:left;",
+    "  border:1.5px solid var(--line,#e4e7f0);background:var(--vertief,#f7f8fc);border-radius:16px;",
+    "  padding:13px 15px;margin-top:10px;cursor:pointer;color:var(--ink,#1b1c22);font:inherit;min-height:60px}",
+    ".lwb .zeile .z{font-size:26px;line-height:1}",
+    ".lwb .zeile b{display:block;font:700 16.5px var(--rund,inherit)}",
+    ".lwb .zeile small{color:var(--lwb-neben,#5b6270);font-size:14px}",
+    ".lwb .zeile .haken{margin-left:auto;font-size:19px;opacity:0;color:var(--paul,#4f46e5)}",
+    ".lwb .zeile.an{border-color:var(--paul,#4f46e5);background:rgba(79,70,229,.13)}",
+    ".lwb .zeile.an .haken{opacity:1}",
     ".lwb .knopf{border:2px dashed #cdd3e4;border-radius:16px;padding:15px 8px;text-align:center;",
     "  font:600 15px inherit;cursor:pointer;background:transparent;min-height:44px}",
     ".lwb .knopf .z{display:block;font-size:24px;margin-bottom:5px}",
@@ -70,6 +84,10 @@
     ".lwb .melden.fehler{background:#fef2f2;border:1.5px solid #fecaca;color:#7f1d1d}",
     ".lwb .melden.gut{background:#f0fdf4;border:1.5px solid #bbf7d0;color:#14532d}",
     ".lwb .verborgen{display:none}",
+    /* Eigene Nebenfarbe: --muted ist auf den hellen Seiten zu blass (4,27:1,
+       gemessen 23.09.2026 an den Fundkarten). 5,4:1 statt darunter. */
+    ".lwb{--lwb-neben:#5b6270}",
+    "html[data-theme=\"dark\"] .lwb{--lwb-neben:#a7adc4}",
     /* An der WAHL, nicht am Geraet (23.09.2026): Pauls Schulheft folgt
        data-theme wie seine uebrigen Seiten. Am Geraet zu haengen hiesse, dass
        der Aufnahme-Ablauf dunkel wird, waehrend die Seite um ihn herum hell
@@ -127,13 +145,21 @@
         '<button type="button" class="chip" data-tag="1">Gestern</button>' +
       '</div>' +
       '<div class="frage">Zu welchem Fach gehört das?</div>' +
-      '<p class="u lwb-plan" style="margin:2px 0 0"></p>' +
       '<div class="reihe lwb-faecher"></div>' +
+      '<div class="trenn"></div>' +
       '<div class="frage">Wo stand das?</div>' +
-      '<div class="knoepfe lwb-arten">' +
-        '<div class="knopf" data-art="heft"><span class="z">\uD83D\uDCD3</span>In meinem Schulheft</div>' +
-        '<div class="knopf" data-art="uebung"><span class="z">\uD83D\uDCC4</span>Ein Übungsblatt</div>' +
+      '<div class="lwb-arten">' +
+        '<button type="button" class="zeile" data-art="heft">' +
+          '<span class="z">\uD83D\uDCD3</span>' +
+          '<span><b>In meinem Schulheft</b><small>Daraus wird in der Probe gefragt</small></span>' +
+          '<span class="haken">✓</span></button>' +
+        '<button type="button" class="zeile" data-art="uebung">' +
+          '<span class="z">\uD83D\uDCC4</span>' +
+          '<span><b>Ein Übungsblatt</b><small>Zum Üben dazu</small></span>' +
+          '<span class="haken">✓</span></button>' +
       '</div>' +
+      '<div class="trenn"></div>' +
+      '<div class="frage">Und jetzt dein Blatt</div>' +
       '<div class="knoepfe">' +
         '<div class="knopf" data-holen="kamera"><span class="z">📸</span>Fotografieren</div>' +
         '<div class="knopf" data-holen="datei"><span class="z">📄</span>Datei oder PDF</div>' +
@@ -160,7 +186,6 @@
       b.addEventListener("click", function () {
         fach = f.schluessel;
         Array.prototype.forEach.call(reihe.children, function (x) { x.classList.toggle("an", x === b); });
-        planSortieren();
         knopf();
       });
       reihe.appendChild(b);
@@ -177,27 +202,28 @@
       });
     });
 
+    /* Die Reihenfolge der Faecher: haeufigstes im Stundenplan zuerst.
+     *
+     * Denny am 23.09.2026: "Die Ansortierung von den Faechern macht sicher Sinn
+     * nach Haeufigkeit im Stundenplan." Vorher standen die Faecher DES TAGES
+     * vorn und trugen dazu einen violetten Rahmen - am Mittwoch waren das vier
+     * von sieben, und Denny las sie als schon gewaehlt: "Ich finde es unschoen,
+     * dass Englisch, Mathe, Deutsch, HSU so aussehen, als waeren sie schon
+     * vorausgewaehlt."
+     *
+     * Jetzt steht die Reihe FEST - sie springt beim Datumswechsel nicht mehr,
+     * und keine Markierung behauptet eine Auswahl, die es nicht gibt.
+     * Gerechnet wird in stundenplan.js; ohne Plan bleibt die Grundreihenfolge. */
     function planSortieren() {
       var plan = opt.plan;
-      if (!plan || !plan.faecherAmDatum) return;
-      var dran = plan.faecherAmDatum(datum.value || iso(0));
+      if (!plan || !plan.nachHaeufigkeit) return;
       var chips = Array.prototype.slice.call(reihe.querySelectorAll("[data-fach]"));
-      chips.forEach(function (c, i) { if (c.__platz === undefined) c.__platz = i; });
-      chips.sort(function (x, y) {
-        var a = dran.indexOf(x.getAttribute("data-fach"));
-        var b = dran.indexOf(y.getAttribute("data-fach"));
-        if (a < 0) a = 99; if (b < 0) b = 99;
-        return a !== b ? a - b : x.__platz - y.__platz;
+      var reihenfolge = plan.nachHaeufigkeit(chips.map(function (c) {
+        return c.getAttribute("data-fach");
+      }));
+      reihenfolge.forEach(function (s) {
+        chips.forEach(function (c) { if (c.getAttribute("data-fach") === s) reihe.appendChild(c); });
       });
-      chips.forEach(function (c) {
-        var s = c.getAttribute("data-fach");
-        c.classList.toggle("vorschlag", dran.indexOf(s) >= 0 && !c.classList.contains("an"));
-        reihe.appendChild(c);
-      });
-      var genannt = dran.filter(function (s) { return ["englisch", "rel", "musik"].indexOf(s) >= 0; })
-        .map(function (s) { return { englisch: "Englisch", rel: "Religion/Ethik", musik: "Musik" }[s]; });
-      $(".lwb-plan").textContent = genannt.length
-        ? "Laut deinem Stundenplan hattest du an dem Tag " + genannt.join(" und ") + "." : "";
     }
 
     function tagKnoepfe() {
@@ -209,10 +235,10 @@
     Array.prototype.forEach.call(kasten.querySelectorAll("[data-tag]"), function (k) {
       k.addEventListener("click", function () {
         datum.value = iso(k.getAttribute("data-tag") === "0" ? 0 : 1);
-        tagKnoepfe(); planSortieren();
+        tagKnoepfe();
       });
     });
-    datum.addEventListener("change", function () { tagKnoepfe(); planSortieren(); });
+    datum.addEventListener("change", tagKnoepfe);
     tagKnoepfe(); planSortieren();
 
     // ---- Seiten ---------------------------------------------------------
