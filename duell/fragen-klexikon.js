@@ -492,4 +492,14 @@ export const KLEXIKON = [
   [4, "natur", "🦢", "Was ist am Neusiedler See ungewöhnlich für einen so großen See?", ["Er hat keinen Abfluss", "Er ist sehr tief", "Er hat viele Inseln", "Er friert nie zu"], "Wenn im Frühling zu viel Wasser da ist, fließt es über einen künstlichen Kanal in die Donau.", null, "Neusiedler See"],
   [5, "technik", "💻", "Wie nennt man die Adresse einer Website auf Englisch auch?", ["Domain-Adresse", "IP-Adresse", "Serveradresse", "Netzwerkadresse"], "Alle Seiten einer Website liegen an einem Ort im Internet, den nur ihr Betreiber besitzt.", null, "Website"],
   [3, "sprache", "✂️", "Womit endet eine Abkürzung meistens?", ["Mit einem Punkt", "Mit einem Komma", "Mit einem Strich", "Mit zwei Punkten"], "Sogar das Wort „Abkürzung“ hat selbst eine kurze Abkürzung: einfach „Abk.“.", null, "Abkürzung"],
+
+  // Nachschub vom 23.09.2026
+  [2, "tiere", "🐋", "Was frisst der Buckelwal am liebsten?", ["Krill", "Fische", "Algen", "Muscheln"], "Krill sind winzige Krebse, die in riesigen Schwärmen im Meer schwimmen und Buckelwalen als Hauptnahrung dienen.", null, "Buckelwal"],
+  [1, "tiere", "🐋", "Wie heißt ein Buckelwal-Baby?", ["Kalb", "Welpe", "Fohlen", "Küken"], "Ein Buckelwal-Kalb ist bei der Geburt schon vier Meter lang und bleibt etwa ein Jahr bei seiner Mutter.", null, "Buckelwal"],
+  [4, "tiere", "🐋", "Woher kommen die weißen Flecken auf der Haut von Buckelwalen?", ["Seepocken", "Sonnenlicht", "Alter", "Salzwasser"], "Seepocken sind kleine Krebse, die sich auf der Haut von Walen festsetzen und dort ihr Leben lang bleiben.", null, "Buckelwal"],
+  [1, "pflanzen", "🍁", "Was hat ein Laubbaum statt Nadeln?", ["Blätter", "Stacheln", "Federn", "Moos"], "Im Winter wirft ein Laubbaum seine Blätter ab, damit er weniger Wasser verliert und die Kälte übersteht.", null, "Laubbaum"],
+  [2, "natur", "🍂", "Wann verlieren Laubbäume bei uns ihre Blätter?", ["Im Herbst", "Im Frühling", "Im Sommer", "Nie"], "Ohne Blätter verdunstet ein Baum im Winter kaum noch Wasser, das spart ihm wertvolle Kraft.", null, "Laubbaum"],
+  [3, "wissen", "📚", "Wie heißt ein Buch fast nur mit Bildern für kleine Kinder?", ["Bilderbuch", "Wörterbuch", "Sachbuch", "Tagebuch"], "In Bilderbüchern helfen die Zeichnungen Kindern, sich die Geschichte besser vorzustellen, auch wenn sie noch nicht lesen können.", null, "Kinderbuch"],
+  [3, "pflanzen", "🌾", "Zu welcher Pflanzenart gehört Dinkel?", ["Getreide", "Gemüse", "Obst", "Pilze"], "Dinkel ist mit dem Weizen verwandt und wird manchmal sogar mit ihm gekreuzt, um neue Sorten zu erhalten.", null, "Dinkel"],
+  [3, "natur", "🦕", "Welche ausgestorbenen Tiere kennt fast jedes Kind?", ["Dinosaurier", "Wale", "Löwen", "Adler"], "Dinosaurier lebten lange vor den Menschen auf der Erde und sind heute nur noch als Fossilien bekannt.", null, "Aussterben"],
 ];
