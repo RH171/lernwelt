@@ -285,8 +285,11 @@ const WERKZEUG = {
             erklaerung: { type: "string", description: "Ein Satz, warum das stimmt. Für das Kind, nicht für Erwachsene." },
             merkmal: { type: "string", description: 'Was die Frage übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Gleiche Sache = gleicher Schlüssel, damit sich zählen lässt, ob es sitzt. Gut: "zehneruebergang plus", "m in cm", "steigerung adjektive", "passe compose". Schlecht: "Frage 3", "gemischt".' },
             blatt_nr: { type: "integer", description: "Nummer des Blattes aus der Liste oben, auf dem diese Frage steht (1 = das erste). 0, wenn die Frage nicht von einem Blatt stammt." },
+            tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Lösung NICHT enthält. Nenne nie die richtige Antwort, keine Zahl daraus, kein Wort daraus. Gut: \"Denk an die Zeile, in der die Postleitzahlen stehen - deine eigene steht ganz hinten.\" Schlecht: \"Es ist 90765.\" Und schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
+            merke: { type: "string", description: "ESELSBRÜCKE, die nach der Lösung stehenbleibt - etwas, woran das Kind es beim nächsten Mal wiedererkennt. Eine Merkregel, ein Bild, eine Verbindung zu etwas Bekanntem. Gut: \"FÜ wie die ersten zwei Buchstaben von FÜrth.\" Leer lassen, wenn dir nichts Tragfähiges einfällt - eine erfundene Eselsbrücke ist schlimmer als keine." },
+            zeile: { type: "string", description: "Nur bei Fragen von einem Blatt: das STICHWORT der Zeile, in der die Antwort steht, genau so wie es dort links steht (z. B. \"Einwohner\", \"Telefonvorwahl\", \"Eingemeindung\"). Damit kann das Kind auf seinem eigenen Foto nachschlagen. Leer, wenn die Frage nicht von einem Blatt kommt." },
           },
-          required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr"],
+          required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr", "tipp", "merke"],
         },
       },
     },
@@ -357,9 +360,16 @@ Wer die alte Frage wiedererkennt, lernt die Antwort auswendig statt der Regel.
 REGELN
 1. ${JE_LAUF} Fragen. Wenn mehrere Fächer dabei sind, verteile sie gleichmäßig.
 2. Eine Frage = ein Gedanke. Höchstens 20 Wörter, beantwortbar in unter 30 Sekunden.
-3. Die ERSTE Antwort ist die richtige. Die falschen müssen plausibel sein -
-   typische Fehler, nicht Unsinn. Eine Antwort, die niemand wählt, ist keine.
+3. Die ERSTE Antwort ist die richtige. Die falschen müssen AUS DERSELBEN ART
+   sein wie die richtige: Zahl gegen Zahl, Ort gegen Ort, Name gegen Name.
+   Steht als Antwort "90765", heissen die falschen "90762", "90768", "90756" -
+   NICHT "Kleeblatt" oder "132.000". Sonst schliesst das Kind Unsinn aus,
+   statt etwas zu wissen, und die richtige Antwort springt ins Auge.
 4. Alle Antworten ungefähr gleich lang. Sonst rät man nach Länge.
+4b. KEINE Verneinungsfragen. "Welcher Ort wurde NICHT eingemeindet?" prüft, ob
+   ein Kind das Wort "nicht" überliest - nicht, ob es etwas weiss. Frag positiv.
+4c. Keine zwei Fragen zur selben Zeile des Blattes. Nimm die genauere.
+4d. Frag nicht "ungefähr", wenn auf dem Blatt eine genaue Zahl steht.
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
