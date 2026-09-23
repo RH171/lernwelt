@@ -45,12 +45,22 @@
   var K = "var(--karte,var(--card,#fff))";
   var LINE = "var(--line,#e4e7f0)";
   var INK = "var(--ink,#1b1c22)";
-  var MUT = "var(--muted,#6b7280)";
+  /* Nebentexte bekommen eine EIGENE Farbe, nicht --muted.
+   *
+   * Gemessen am 23.09.2026: Pauls --muted (#6b7280) liegt auf dem hellen
+   * Seitengrund #eef1f7 bei 4,27:1 - WCAG 2.2 (1.4.3) verlangt 4,5:1. Das
+   * betrifft seine ganzen Seiten, nicht nur diesen Bildschirm, und wird
+   * dort gesondert gemessen; hier wird es nicht nebenbei mitgeaendert.
+   * #5b6270 hat 5,42:1 auf dem Grund und 6,13:1 auf der Karte.
+   * Im Dunkeln bleibt --muted (#a0a6bd auf #1e2029 = 6,71:1) richtig. */
+  var MUT = "var(--lwf-muted,#5b6270)";
   var GUT = "var(--gut,#16a34a)";
   var AKZ = "var(--akzent,#4f46e5)";
   var AUF = "var(--akzent-auf,#fff)";
 
   var STIL = [
+    ":root{--lwf-muted:#5b6270}",
+    "html[data-theme=\"dark\"]{--lwf-muted:var(--muted,#a0a6bd)}",
     ".lwf{margin-top:4px}",
     ".lwf .kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:" + MUT + "}",
     ".lwf h2{font:800 20px var(--rund,inherit);margin:2px 0 4px;color:" + INK + "}",
