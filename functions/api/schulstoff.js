@@ -255,6 +255,70 @@ function istZahl(s) {
   return /^[0-9][0-9.,\s]*$/.test(String(s || "").trim());
 }
 
+/* Einen Ablenker aus der richtigen Antwort bauen - nur bei Zahlen, und nur
+ * als Rettung, wenn das Modell einen unbrauchbaren geliefert hat.
+ *
+ * Live gemessen am 23.09.2026: Von vier Karten fielen zwei durch, weil das
+ * Modell zweimal dieselbe Zahl als Ablenker nannte ("0911" gegen "0911").
+ * Uebrig blieben zwei - zu wenig fuer einen Stapel, und damit waere der
+ * ganze Bildschirm ausgefallen. Dieselbe Lehre wie beim Fachfremden: Eine
+ * Karte, die man reparieren kann, braucht kein Wegwerfen.
+ *
+ * Gebaut wird ein ZAHLENDREHER, und das ist kein Zufall - genau daran ist
+ * Paul am 17.09.2026 haengengeblieben (siehe klasse3-mathe-dreher-jagd).
+ * Wer "90765" von "90756" unterscheiden will, muss die Ziffern lesen.
+ */
+export function dreher(wert, nummer) {
+  const s = String(wert || "");
+  const ziffern = [];
+  for (let i = 0; i < s.length; i++) if (s[i] >= "0" && s[i] <= "9") ziffern.push(i);
+  if (ziffern.length < 2) return "";
+  /* Von hinten tauschen: Die letzten Stellen sind die, die man ueberliest.
+   * nummer waehlt das Paar, damit zwei Ablenker verschieden ausfallen. */
+  for (let n = 0; n < ziffern.length - 1; n++) {
+    const k = (nummer + n) % (ziffern.length - 1);
+    const a = ziffern[ziffern.length - 2 - k], b = ziffern[ziffern.length - 1 - k];
+    if (s[a] === s[b]) continue;          // ein Tausch, der nichts aendert
+    const z = s.split("");
+    const hin = z[a]; z[a] = z[b]; z[b] = hin;
+    const neu = z.join("");
+    if (neu !== s) return neu;
+  }
+  return "";
+}
+
+/* Versucht, die Ablenker einer Karte brauchbar zu machen. Gibt die Karte
+ * zurueck, wenn es gelungen ist - sonst null. */
+export function karteRetten(k, inhalt) {
+  if (!k || !k.richtig) return null;
+  const gut = [];
+  const schon = new Set([knapp(k.richtig)]);
+  for (const f of (k.falsch || [])) {
+    const probe = Object.assign({}, k, { falsch: [f, f === gut[0] ? "" : (gut[0] || f)] });
+    const fk = knapp(f);
+    if (!fk || schon.has(fk)) continue;
+    // Steht er selbst auf dem Blatt, taugt er nicht.
+    let aufBlatt = false;
+    for (const z of (inhalt || [])) {
+      const teil = String(z).split(":").slice(1).join(":").trim() || String(z);
+      if (knapp(teil) === fk) { aufBlatt = true; break; }
+    }
+    if (aufBlatt) continue;
+    gut.push(f);
+    schon.add(fk);
+  }
+  // Auffuellen, solange die Antwort eine Zahl ist.
+  for (let n = 0; gut.length < 2 && n < 6; n++) {
+    const d = dreher(k.richtig, n);
+    if (!d || schon.has(knapp(d))) continue;
+    gut.push(d);
+    schon.add(knapp(d));
+  }
+  if (gut.length < 2) return null;
+  const neu = Object.assign({}, k, { falsch: gut.slice(0, 2) });
+  return karteOk(neu, inhalt) ? null : neu;
+}
+
 /* Gibt "" zurueck, wenn die Karte in Ordnung ist - sonst den Grund.
  * inhalt ist die Stichwortliste desselben Blattes. */
 export function karteOk(k, inhalt) {
@@ -324,9 +388,17 @@ export function kartenLesen(roh, inhalt) {
       richtig: f[4].slice(0, 60),
       falsch: [f[5].slice(0, 60), f[6].slice(0, 60)],
     };
+    let fertig = k;
     const grund = karteOk(k, inhalt);
-    if (grund) { verworfen.push(k.stichwort + ": " + grund); continue; }
-    karten.push(k);
+    if (grund) {
+      /* Erst retten, dann wegwerfen. Eine Karte weniger heisst bei vier
+         Karten, dass der ganze Stapel ausfaellt (er braucht drei). */
+      const gerettet = karteRetten(k, inhalt);
+      if (!gerettet) { verworfen.push(k.stichwort + ": " + grund); continue; }
+      fertig = gerettet;
+      verworfen.push(k.stichwort + ": " + grund + " (Ablenker ersetzt)");
+    }
+    karten.push(fertig);
     if (karten.length >= 8) break;
   }
   return { karten, verworfen };
