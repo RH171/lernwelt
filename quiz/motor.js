@@ -347,7 +347,11 @@
       stufeZeigen(f, 1);
       return;                       // wahlOffen bleibt true - er darf nochmal
     }
-    if (!stimmt && versuch === 2 && f.zeile && blattBild) {
+    /* Auch OHNE Bild: Der Zeilenname allein ist schon eine Hilfe ("schau in
+       die Zeile Regierungsbezirk"), und das Kind hat sein Heft oft daneben
+       liegen. Die Gegenprobe am 23.09.2026 hat gezeigt, dass Stufe 2 sonst
+       ganz wegfaellt, sobald der Speicher das Foto nicht liefert. */
+    if (!stimmt && versuch === 2 && f.zeile) {
       knopf.classList.add("daneben");
       setTimeout(function () { knopf.classList.remove("daneben"); }, 700);
       stufeZeigen(f, 2);
