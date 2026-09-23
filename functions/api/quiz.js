@@ -167,7 +167,9 @@ export async function onRequestDelete(context) {
   try { p = new URL(request.url).searchParams; } catch (e) { return json(400, { ok: false, fehler: "Kaputte Adresse." }); }
   const kind = String(p.get("kind") || "").toLowerCase();
   if (!KINDER[kind]) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
-  if (p.get("unbelegt") !== "1") return json(400, { ok: false, fehler: "Nichts zu tun." });
+  const ohneHilfe = p.get("ohnehilfe") === "1";
+  if (p.get("unbelegt") !== "1" && !ohneHilfe)
+    return json(400, { ok: false, fehler: "Nichts zu tun." });
 
   /* Eltern-Code, nicht der des Kindes: Ein Kind soll seinen eigenen Vorrat
      nicht leerraeumen koennen, wenn ihm eine Frage nicht gefaellt. */
@@ -194,9 +196,22 @@ export async function onRequestDelete(context) {
     if (!f || !f.blatt) return true;
     const nr = blaetter.findIndex((b) => b.id === f.blatt) + 1;
     if (!nr) return true;
-    if (frageBelegt({ blatt_nr: nr, frage: f.frage, antworten: f.antworten }, schule, true)) return true;
-    weg.push({ frage: String(f.frage || "").slice(0, 80), blatt: f.blatt });
-    return false;
+    if (!frageBelegt({ blatt_nr: nr, frage: f.frage, antworten: f.antworten }, schule, true)) {
+      weg.push({ frage: String(f.frage || "").slice(0, 80), warum: "nicht vom Blatt" });
+      return false;
+    }
+    /* Fragen aus der Zeit VOR der Hilfe in Stufen (23.09.2026): fachlich in
+       Ordnung, aber ohne Tipp und ohne Eselsbruecke. Sie werden bevorzugt
+       gestellt, weil sie noch nie dran waren - Paul bekaeme also ausgerechnet
+       die alten zuerst. Denny hat genau das erwischt: "Das ist ja komplett
+       falsch oder der alte Stand."
+       Der Vorrat waechst von selbst nach; eine Frage ohne Hilfe wegzuwerfen
+       kostet weniger als eine, die das Kind alleinlaesst. */
+    if (ohneHilfe && !f.tipp) {
+      weg.push({ frage: String(f.frage || "").slice(0, 80), warum: "ohne Tipp" });
+      return false;
+    }
+    return true;
   });
 
   if (!weg.length) return json(200, { ok: true, geprueft: vorrat.fragen.length, weg: 0 });
@@ -368,6 +383,16 @@ REGELN
 4. Alle Antworten ungefähr gleich lang. Sonst rät man nach Länge.
 4b. KEINE Verneinungsfragen. "Welcher Ort wurde NICHT eingemeindet?" prüft, ob
    ein Kind das Wort "nicht" überliest - nicht, ob es etwas weiss. Frag positiv.
+4b2. Bei einer Frage VOM BLATT kommen die falschen Antworten nach Moeglichkeit
+   AUCH VOM BLATT. Das Kind soll die richtige WIEDERERKENNEN, nicht drei
+   fremde Namen ausschliessen. Auf einem Stadtportraet stehen elf Stadtteile
+   und fuenf eingemeindete Orte - daraus lassen sich Ablenker bilden, die es
+   schon einmal gelesen hat. Erfinde nur dann welche, wenn das Blatt nichts
+   Passendes hergibt (bei einem einzelnen Namen etwa), und dann nah am
+   Original: "Dr. Thomas Jung" gegen "Dr. Thomas Lang".
+4b3. Frag im SINGULAR nur, wenn es auch eine einzige Antwort gibt. Stehen fuenf
+   Orte auf dem Blatt, heisst die Frage "Welcher DIESER Orte kam 1972 dazu?" -
+   nicht "Welcher Ort wurde eingemeindet?", denn darauf gibt es fuenf richtige.
 4c. Keine zwei Fragen zur selben Zeile des Blattes. Nimm die genauere.
 4d. Frag nicht "ungefähr", wenn auf dem Blatt eine genaue Zahl steht.
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
