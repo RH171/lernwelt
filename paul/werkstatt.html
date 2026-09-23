@@ -298,6 +298,19 @@
   .wiederholen .knopf:active{transform:scale(.99)}
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+  /* Die drei Farbverlaeufe sind auf Weiss gerechnet - im dunklen Modus lagen
+   * sie als heller Schleier ueber der Seite (23.09.2026 im Browser gesehen).
+   * Dieselbe Idee in dunklen Toenen: ein Hauch Farbe, kein Leuchten. */
+  html[data-theme="dark"] body{
+    background:radial-gradient(1100px 560px at 82% -12%,#241f3d 0,rgba(36,31,61,0) 55%),
+               radial-gradient(900px 460px at -8% 2%,#16273d 0,rgba(22,39,61,0) 52%), var(--bg);
+  }
+  html[data-theme="dark"] .karte.schmiede{
+    background:linear-gradient(135deg,#252146,#1d2540);border-color:#3a3566}
+  html[data-theme="dark"] .wiederholen{
+    background:linear-gradient(135deg,#1e2140,#241f42);border-color:#3a3566}
+  html[data-theme="dark"] .eintrag .loeschen:hover{background:#3a1d1b}
 </style>
 <script src="stundenplan.js"></script>
 <script src="/strom.js"></script>
