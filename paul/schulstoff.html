@@ -71,6 +71,12 @@
   .blatt .fuss span{color:var(--muted);font-size:13.5px}
   .blatt .nr{position:absolute;top:8px;right:8px;background:rgba(20,22,40,.72);color:#fff;
              border-radius:999px;padding:3px 9px;font:700 12.5px var(--rund)}
+  /* Schulheft oder Uebungsblatt - Denny am 23.09.2026: "Das ist ja ein
+     Hefteintrag, und ich finde, das sollte man hier auch erkennen ... Paul
+     sollte die Selektierung sehen." Auf dem Foto, nicht im Kleingedruckten:
+     Ein Kind liest die Karte am Bild, nicht an der Fusszeile. */
+  .blatt .art{position:absolute;top:8px;left:8px;background:rgba(20,22,40,.72);color:#fff;
+              border-radius:999px;padding:3px 9px;font:700 12.5px var(--rund)}
   .blatt.versteckt{opacity:.45}
 
   .leer{text-align:center;padding:26px 12px}
@@ -154,6 +160,10 @@
                  rel:"🕊️", musik:"🎵", anderes:"✏️", "":"📄"};
   var KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
               rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
+  /* Leer heisst: vor der Unterscheidung abgelegt (vor dem 23.09.2026). Dann
+     steht kein Schild da - erfunden wird nichts. */
+  var ART = {heft:  {kurz:"📓 Heft",  lang:"Aus meinem Schulheft"},
+             uebung:{kurz:"📄 Übung", lang:"Ein Übungsblatt"}};
 
   var alles = [], heute = "", gewaehlt = "alle", offen = null, offenSeite = 0;
 
@@ -234,6 +244,7 @@
       nach[t].forEach(function(e){
         html += '<button class="blatt' + (e.sichtbar===false?" versteckt":"") + '" data-id="' + e.id + '">' +
                 '<div class="platzhalter" data-bild="' + e.id + '">' + (ZEICHEN[e.fach||""]||"📄") + '</div>' +
+                (ART[e.art] ? '<span class="art">' + ART[e.art].kurz + '</span>' : '') +
                 (e.seiten > 1 ? '<span class="nr">' + e.seiten + ' Seiten</span>' : '') +
                 '<div class="fuss"><b>' + sicher(e.titel || KURZ[e.fach||""] || "Ohne Fach") + '</b>' +
                 '<span>' + sicher(untertext(e)) + '</span>' +
@@ -277,7 +288,9 @@
   function seiteZeigen(){
     if (!offen) return;
     $("schau-titel").textContent = (offen.titel ? offen.titel + " · " : "") +
-      (KURZ[offen.fach||""]||"Ohne Fach") + " · " + lang(offen.datum);
+      (KURZ[offen.fach||""]||"Ohne Fach") +
+      (ART[offen.art] ? " · " + ART[offen.art].lang : "") +
+      " · " + lang(offen.datum);
     $("schau-nr").textContent = offen.seiten > 1 ? (offenSeite+1) + " von " + offen.seiten : "";
     $("schau-vor").style.display = offen.seiten > 1 ? "" : "none";
     $("schau-zurueck").style.display = offen.seiten > 1 ? "" : "none";
