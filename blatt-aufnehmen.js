@@ -70,10 +70,14 @@
     ".lwb .melden.fehler{background:#fef2f2;border:1.5px solid #fecaca;color:#7f1d1d}",
     ".lwb .melden.gut{background:#f0fdf4;border:1.5px solid #bbf7d0;color:#14532d}",
     ".lwb .verborgen{display:none}",
-    "@media (prefers-color-scheme:dark){",
-    "  .lwb .knopf{border-color:#3a3e52}.lwb .seite{background:#262a38}",
-    "  .lwb .melden.fehler{background:#2a1416;border-color:#5b2226;color:#fecaca}",
-    "  .lwb .melden.gut{background:#0f2c1c;border-color:#1f5137;color:#b6f0cd}}"
+    /* An der WAHL, nicht am Geraet (23.09.2026): Pauls Schulheft folgt
+       data-theme wie seine uebrigen Seiten. Am Geraet zu haengen hiesse, dass
+       der Aufnahme-Ablauf dunkel wird, waehrend die Seite um ihn herum hell
+       ist - genau der Wechsel, den Denny beanstandet hat. */
+    "html[data-theme=\"dark\"] .lwb .knopf{border-color:#3a3e52}",
+    "html[data-theme=\"dark\"] .lwb .seite{background:#262a38}",
+    "html[data-theme=\"dark\"] .lwb .melden.fehler{background:#2a1416;border-color:#5b2226;color:#fecaca}",
+    "html[data-theme=\"dark\"] .lwb .melden.gut{background:#0f2c1c;border-color:#1f5137;color:#b6f0cd}"
   ].join("");
 
   function stilEinmal() {

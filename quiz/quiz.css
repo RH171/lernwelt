@@ -69,7 +69,13 @@ h2{font:800 19px/1.2 var(--rund);margin:0 0 4px}
 .blaetter-kopf{font:600 16px var(--rund,inherit);margin-bottom:9px}
 .blaetter-liste{display:flex;flex-direction:column;gap:8px}
 .qblatt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
-  border:1.5px solid var(--line,#e4e7f0);background:var(--karte,#fff);color:var(--ink,#1b1c22);
+  /* --card, nicht --karte: Alle drei Quiz-Seiten setzen --card. Der falsche
+     Name stand hier seit jeher; bei Paul und Leon fiel er nicht auf, weil der
+     Rueckfall #fff in ihrer hellen Welt richtig ist, und bei Helena hat ihn
+     der @media-Block ueberdeckt. Seit der Umstellung auf data-theme
+     (23.09.2026) greift der nicht mehr - ihre Blattauswahl waere weiss in
+     ihrer dunklen Welt geworden. */
+  border:1.5px solid var(--line,#e4e7f0);background:var(--card,#fff);color:var(--ink,#1b1c22);
   border-radius:14px;padding:10px 12px;cursor:pointer;min-height:44px;font:inherit}
 .qblatt.an{border-color:var(--paul,#4f46e5);box-shadow:0 0 0 2px rgba(79,70,229,.14)}
 .qblatt .haken{flex:0 0 22px;height:22px;border-radius:7px;border:2px solid var(--line,#e4e7f0);
