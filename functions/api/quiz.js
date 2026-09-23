@@ -31,6 +31,7 @@
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
+import { stehtAufBlatt } from "./spiel-bauen.js";
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -327,8 +328,45 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
   const fragen = (block && block.input && block.input.fragen) || [];
 
   const erlaubt = new Set(faecher.map((f) => String(f.kuerzel || "").toLowerCase()));
+  /* DER RIEGEL: Was nicht auf dem Blatt steht, wird nicht gefragt.
+   *
+   * Denny am 23.09.2026, mit Frage 2 aus Pauls HSU-Lauf ("Was ist weniger
+   * Wasser: 1 Liter oder 300 ml aus der Regnitz-Probe?"): "Diese Frage kommt
+   * auf dem Blatt nicht einmal hervor. Sprich: Diese Antwort gibt es dort drin
+   * gar nicht."
+   *
+   * Dieselbe Lehre wie beim Spielbau am 22.09.2026 und bei den Namen und beim
+   * Rechnen davor: Eine Bitte im Auftrag ist keine Pruefung. Geprueft wird die
+   * RICHTIGE Antwort - sie muss in den Stichwortzeilen des Blattes stehen, an
+   * dem die Frage haengt.
+   *
+   * Zwei Faelle bleiben bewusst ungeprueft, weil ein Fehlalarm hier eine
+   * richtige Frage wegwirft:
+   *   - Blaetter ohne gelesenen Inhalt (alte Eintraege) - nichts zum Vergleichen.
+   *   - Fragen ohne Blatt, wenn das Kind KEINE Blaetter angehakt hat. Dann ist
+   *     das Quiz ausdruecklich auch fuer Lehrplan-Fragen da.
+   * Hat das Kind dagegen Blaetter ausgesucht, muss JEDE Frage von einem davon
+   * stammen - dann ist eine Frage ohne Blatt schon der Fehler. */
+  const belegt = (f) => {
+    const blattId = blattVon(f.blatt_nr, schule.blaetter);
+    if (!blattId) return !nurDaraus;
+    const blatt = (schule.blaetter || []).find((b) => b.id === blattId);
+    const zeilen = (blatt && Array.isArray(blatt.inhalt)) ? blatt.inhalt : [];
+    if (!zeilen.length) return true;              // nichts zum Vergleichen
+    const richtig = (f.antworten || [])[0];
+    /* Steht die Antwort da? Eine Zahl, die man aus einer Liste abzaehlt,
+       steht dort nicht woertlich - deshalb gilt auch eine Frage als belegt,
+       deren FRAGE sich aus dem Blatt speist und deren Antwort eine kleine
+       Zahl ist. Das ist dieselbe Ausnahme wie in ohneBeleg(). */
+    if (stehtAufBlatt(zeilen, richtig)) return true;
+    const n = Number(String(richtig == null ? "" : richtig).replace(/[^0-9]/g, ""));
+    if (Number.isFinite(n) && n > 0 && n <= 20 && stehtAufBlatt(zeilen, f.frage)) return true;
+    return false;
+  };
+
   return fragen
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
+    .filter(belegt)
     // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
     .filter((f) => erlaubt.has(String(f.fach || "").toLowerCase()))
     .map((f) => ({
@@ -385,9 +423,22 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
     liste = liste.slice(0, 8);
     if (!liste.length) return { text: "", blaetter: [] };
     return {
-      text: liste.map((x, i) =>
-        (i + 1) + ". " + x.titel + " (" + (FAECHER[x.fach] || x.fach || "?") +
-        ", " + x.datum + ")").join("\n"),
+      /* MIT dem Inhalt, nicht nur mit dem Titel. Bis zum 23.09.2026 stand hier
+         allein "1. Stadtporträt von Fürth (HSU, 2026-09-22)" - und daneben im
+         Auftrag die Anweisung, ausschliesslich nach dem Blatt zu fragen. Das
+         Modell hat das Blatt nie gesehen und aus dem Titel geraten; heraus kam
+         eine Frage nach "300 ml aus der Regnitz-Probe", die es dort nicht
+         gibt. Eine Bitte, die sich gar nicht erfuellen laesst, ist schlimmer
+         als gar keine. */
+      text: liste.map((x, i) => {
+        const kopf = (i + 1) + ". " + x.titel + " (" +
+                     (FAECHER[x.fach] || x.fach || "?") + ", " + x.datum + ")";
+        const zeilen = Array.isArray(x.inhalt) ? x.inhalt : [];
+        return zeilen.length
+          ? kopf + "\n" + zeilen.map((z) => "   - " + z).join("\n")
+          : kopf + "\n   (Inhalt nicht gelesen - zu diesem Blatt nur ganz " +
+            "allgemein fragen, nichts Bestimmtes behaupten)";
+      }).join("\n"),
       blaetter: liste,
     };
   } catch (e) { return { text: "", blaetter: [] }; }
