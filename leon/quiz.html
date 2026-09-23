@@ -21,7 +21,7 @@
   Lernziel dagegen so oft, bis es sitzt.
 -->
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
-<link rel="stylesheet" href="/quiz/quiz.css?v=8f6112a3">
+<link rel="stylesheet" href="/quiz/quiz.css?v=0f5aa6f5">
 <style>
   :root{
     --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
@@ -64,6 +64,10 @@
     <div class="karte">
       <div class="kopfzeile"><span id="q-nr"></span><span id="q-fach"></span></div>
       <div class="frage" id="q-frage"></div>
+      <!-- Hilfe in Stufen: Tipp nach dem ersten Fehlversuch, das eigene
+           Blatt nach dem zweiten. Steht VOR den Antworten, damit das Kind
+           es liest, bevor es wieder tippt. -->
+      <div class="qhilfe verborgen" id="q-hilfe"></div>
       <div class="qantworten" id="q-antworten"></div>
       <div class="erklaerung verborgen" id="q-erklaerung"></div>
       <button class="knopf verborgen" id="q-weiter" type="button">Weiter</button>
@@ -96,7 +100,7 @@ window.QUIZ = {
   ]
 };
 </script>
-<script src="/quiz/motor.js?v=8207c376" defer></script>
+<script src="/quiz/motor.js?v=e8002a80" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
 </body>

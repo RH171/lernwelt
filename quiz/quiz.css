@@ -83,3 +83,31 @@ h2{font:800 19px/1.2 var(--rund);margin:0 0 4px}
   .qblatt{background:#1e2029;border-color:#2e3140}
   .qblatt .haken{border-color:#3a3e52}
 }
+
+/* ---------- Hilfe in Stufen (23.09.2026) ----------
+ * Denny: "Leicht helfen hier Bilder, kleine Eselsbrücken, wie man sich das
+ * besser merken kann." Der erste Fehlversuch nimmt nichts weg: Zwei falsche
+ * Antworten treten blass zurück (sie bleiben anklickbar - Wegnehmen wäre eine
+ * Strafe), ein Tipp erscheint, und beim zweiten Mal das eigene Blatt. */
+.qhilfe{margin:0 0 12px}
+.qtipp{background:var(--akzent-hell);border:1px solid var(--akzent);border-radius:13px;
+  padding:11px 13px;font-size:15.5px;line-height:1.5;color:var(--ink)}
+.qtipp b{color:var(--akzent-text,var(--akzent))}
+/* Das Foto liegt auf hellem Papier - der Rahmen ist deshalb immer hell,
+ * auch im dunklen Modus. Ein dunkler Rahmen um ein weißes Blatt flackert. */
+.qblatt{background:#f4f2ec;border-radius:12px;padding:7px;margin-top:9px}
+.qblatt img{width:100%;display:block;border-radius:8px}
+/* Zurückgetretene Antworten: noch da, noch tippbar, nur leiser. */
+.qantwort.zurueck{opacity:.38}
+/* Daneben: ein kurzes Rütteln, kein rotes Kreuz. */
+.qantwort.daneben{border-color:var(--schlecht);animation:qruettel .4s}
+@keyframes qruettel{
+  0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)}
+  75%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.qantwort.daneben{animation:none}}
+/* Die Eselsbrücke bleibt nach der Lösung stehen - sie ist der Teil, der beim
+ * nächsten Mal noch trägt. */
+.qmerke{margin-top:10px;background:var(--line);border-radius:11px;padding:10px 12px;
+  font-size:15px;line-height:1.5}
+.qmerke span{display:block;font:800 12.5px/1 var(--rund);text-transform:uppercase;
+  letter-spacing:.05em;opacity:.75;margin-bottom:4px}

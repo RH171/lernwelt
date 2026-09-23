@@ -280,6 +280,56 @@
     fortschrittMalen();
   }
 
+  /* ---------- Hilfe in Stufen ---------- */
+
+  /* Das eigene Blatt wird erst geholt, wenn es gebraucht wird - ein Foto sind
+     schnell 300 KB, und die meisten Fragen sitzen beim ersten Versuch.
+     Gemerkt wird es je Blatt-id, damit dasselbe Foto nicht zehnmal kommt. */
+  var blattBild = null, blattVonId = "", blattLaeuft = false;
+
+  function blattHolen(id) {
+    if (!id || blattVonId === id || blattLaeuft) return;
+    blattLaeuft = true;
+    fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
+          "&bild=" + encodeURIComponent(id) + ":0", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.ok && j.bild) { blattBild = j.bild; blattVonId = id; }
+      })
+      .catch(function () {})
+      .then(function () { blattLaeuft = false; });
+  }
+
+  function hilfeVerbergen() {
+    var h = $("q-hilfe");
+    if (h) { h.innerHTML = ""; h.classList.add("verborgen"); }
+  }
+
+  function stufeZeigen(f, stufe) {
+    var h = $("q-hilfe");
+    if (!h) return;
+    if (stufe === 1) {
+      h.innerHTML = '<div class="qtipp"><b>Denk nach:</b> ' +
+        esc(f.tipp || "Lies die Frage noch einmal in Ruhe.") + "</div>";
+      h.classList.remove("verborgen");
+      /* Zwei falsche Antworten treten zurueck - sie bleiben sichtbar und
+         anklickbar. Wegnehmen waere eine Strafe; blass werden ist eine Hilfe. */
+      var blass = 0;
+      Array.prototype.forEach.call($("q-antworten").children, function (b, i) {
+        if (reihenfolge[i] !== (f.richtig || 0) && blass < 2 &&
+            !b.classList.contains("daneben")) { b.classList.add("zurueck"); blass++; }
+      });
+      // Das Blatt schon mal holen, falls es eine dritte Stufe gibt.
+      if (f.zeile && f.blatt) blattHolen(f.blatt);
+    } else if (stufe === 2) {
+      h.innerHTML = '<div class="qtipp"><b>Schau auf dein Blatt:</b> Die Antwort steht in der Zeile <b>' +
+        esc(f.zeile) + "</b>.</div>" +
+        (blattBild ? '<div class="qblatt"><img src="' + blattBild +
+                     '" alt="Dein Blatt zum Nachschlagen"></div>' : "");
+      h.classList.remove("verborgen");
+    }
+  }
+
   function waehlen(platz, originalIndex, knopf) {
     if (!wahlOffen) return;
     var f = fragen[nr];
