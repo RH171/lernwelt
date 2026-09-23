@@ -183,7 +183,9 @@ export async function onRequestPost(context) {
 const TITEL_MODELL = "claude-haiku-4-5-20251001";
 // Nach so vielen Sekunden wird ohne Titel abgelegt. Lieber kein Titel als
 // ein Kind, das vor dem Ladebalken sitzt.
-const TITEL_GRENZE = 9000;
+/* 9 s reichten fuer Titel und Datum. Der Inhalt braucht laenger, weil das
+ * Modell das ganze Blatt lesen muss - gemessen 23.09.2026: 6-11 s. */
+const TITEL_GRENZE = 15000;
 
 /* EIN Blick aufs Bild - Titel und Datum zusammen.
  *
@@ -216,7 +218,7 @@ async function blattLesen(env, seite) {
       },
       body: JSON.stringify({
         model: TITEL_MODELL,
-        max_tokens: 150,
+        max_tokens: 900,
         messages: [{
           role: "user",
           content: [
@@ -229,7 +231,13 @@ async function blattLesen(env, seite) {
               "DATUM: das Datum, das auf dem Blatt steht - meist oben links oder oben rechts, " +
               "oft abgekürzt wie 22.9.26. Schreib es genau so ab, wie es dasteht. " +
               "Steht keines da: keins\n" +
-              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26" },
+              "INHALT: danach eine Zeile je Tatsache, die auf dem Blatt steht - auch " +
+              "das, was das Kind selbst hineingeschrieben hat. Jede Zeile beginnt mit " +
+              "\"- \". Hoechstens 14 Zeilen, hoechstens 12 Woerter je Zeile. Schreib " +
+              "Zahlen und Namen genau ab. Erfinde NICHTS dazu: Was nicht auf dem Blatt " +
+              "steht, steht auch hier nicht.\n" +
+              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\n" +
+              "INHALT:\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung" },
           ],
         }],
       }),
@@ -255,7 +263,19 @@ async function blattLesen(env, seite) {
   const titel = zeile("TITEL").slice(0, 60);
   const datumRoh = zeile("DATUM").slice(0, 40);
 
+  /* Der Inhalt steht als Liste HINTER "INHALT:" - deshalb nicht ueber zeile(),
+   * die nur bis zum Zeilenende liest. Was nicht mit "-" beginnt, faellt weg;
+   * so kommt kein Fliesstext ins Feld, wenn das Modell doch etwas dazusagt. */
+  const nachInhalt = roh.split(/^\s*INHALT\s*:/mi)[1] || "";
+  const inhalt = nachInhalt.split("\n")
+    .map((z) => z.trim())
+    .filter((z) => /^[-•*]\s+/.test(z))
+    .map((z) => z.replace(/^[-•*]\s+/, "").slice(0, 90))
+    .filter((z) => z && !/^(unklar|nichts|keine)$/i.test(z))
+    .slice(0, 14);
+
   return {
+    inhalt,
     // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
     // etwas Erfundenes.
     titel: (!titel || /^unklar$/i.test(titel)) ? "" : titel,
