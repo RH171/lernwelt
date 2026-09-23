@@ -207,6 +207,113 @@ const TITEL_GRENZE = 15000;
  * dazu. Auf einem Schulblatt steht es oben links oder oben rechts, oft
  * abgekuerzt ("22.9.26").
  */
+/* ---------------------------------------------------------------------------
+ * Fundkarten: der Bildschirm direkt nach dem Hochladen (Denny, 23.09.2026).
+ *
+ * "Sie koennen verifizieren, was Sie sehen und geschrieben haben, und dann
+ * selber beantworten, in dem Sie es selber noch mal gesehen haben."
+ *
+ * Eine Karte zeigt einen AUSSCHNITT aus Pauls eigenem Foto und fragt danach.
+ * Die Antwort ist auf dem Ausschnitt zu sehen - es geht ums Hinschauen, nicht
+ * ums Auswendigwissen. Deshalb duerfen die Ablenker nah dran sein: gerade das
+ * zwingt zum genauen Lesen der Ziffern.
+ *
+ * Der Auftrag BITTET das Modell um all das. Eine Bitte im Auftrag ist keine
+ * Pruefung - dieselbe Lehre wie bei den Namen, beim Fachfremden, beim Rechnen
+ * und beim Beleg-Riegel. Also prueft karteOk() es mechanisch nach.
+ * --------------------------------------------------------------------------- */
+
+/* Zum Vergleichen: Gross/klein, Punkte, Leerzeichen und Bindestriche weg.
+ * "132.000" und "132000" sind damit dasselbe - genau das soll nie als
+ * zwei verschiedene Antworten nebeneinander stehen (Dennys Fund vom
+ * 22.09.2026: "132.000 UND 132000" standen beide zur Wahl). */
+export function knapp(s) {
+  return String(s == null ? "" : s).toLowerCase()
+    .replace(/[\s.,''\u2019\u201a\u00b4`\-\u2013\u2014]/g, "")
+    .trim();
+}
+
+function istZahl(s) {
+  return /^[0-9][0-9.,\s]*$/.test(String(s || "").trim());
+}
+
+/* Gibt "" zurueck, wenn die Karte in Ordnung ist - sonst den Grund.
+ * inhalt ist die Stichwortliste desselben Blattes. */
+export function karteOk(k, inhalt) {
+  if (!k) return "leer";
+  const frage = String(k.frage || "").trim();
+  const richtig = String(k.richtig || "").trim();
+  const falsch = (k.falsch || []).map((x) => String(x || "").trim()).filter(Boolean);
+
+  if (frage.length < 8) return "keine Frage";
+  if (!richtig) return "keine Antwort";
+  if (falsch.length !== 2) return "nicht genau zwei Ablenker";
+
+  /* Keine Verneinungsfragen - dieselbe Regel wie im Lernquiz. Ein Kind, das
+     eine Zeile liest, soll sie wiederfinden, nicht ausschliessen. */
+  if (/\b(nicht|kein|keine|keinen|ausser|außer)\b/i.test(frage)) return "Verneinungsfrage";
+
+  const rk = knapp(richtig);
+  if (!rk) return "Antwort leer";
+  for (const f of falsch) {
+    if (knapp(f) === rk) return "Ablenker ist dieselbe Antwort: " + f;
+  }
+  if (knapp(falsch[0]) === knapp(falsch[1])) return "beide Ablenker gleich";
+
+  /* Ein Ablenker, der selbst auf dem Blatt steht, macht die Karte unloesbar:
+     beide Antworten waeren dann "richtig gelesen", nur an anderer Stelle. */
+  for (const f of falsch) {
+    const fk = knapp(f);
+    if (fk.length < 2) return "Ablenker zu kurz: " + f;
+    for (const z of (inhalt || [])) {
+      const teil = String(z).split(":").slice(1).join(":").trim() || String(z);
+      if (knapp(teil) === fk) return "Ablenker steht selbst auf dem Blatt: " + f;
+    }
+  }
+
+  /* "Zu einer Zahl gehoeren Zahlen" - Dennys Fund vom 22.09.2026, als neben
+     einer Zaehlfrage "dreiblaettriges Kleeblatt" zur Wahl stand. */
+  const rz = istZahl(richtig);
+  for (const f of falsch) {
+    if (istZahl(f) !== rz) return "Ablenker passt nicht zur Art der Antwort: " + f;
+  }
+
+  const von = Number(k.von), bis = Number(k.bis);
+  if (!isFinite(von) || !isFinite(bis)) return "keine Position";
+  if (von < 0 || bis > 100 || von >= bis) return "Position unmoeglich: " + von + "-" + bis;
+  if (bis - von < 2) return "Ausschnitt zu schmal";
+  /* Mehr als ein Viertel des Blattes ist kein Ausschnitt mehr, sondern das
+     halbe Blatt - dann steht die Antwort nicht mehr sichtbar heraus. */
+  if (bis - von > 28) return "Ausschnitt zu hoch";
+  return "";
+}
+
+/* Liest den KARTEN-Block und laesst nur durch, was karteOk() bestehen kann. */
+export function kartenLesen(roh, inhalt) {
+  const nach = String(roh || "").split(/^\s*KARTEN\s*:/mi)[1] || "";
+  const karten = [];
+  const verworfen = [];
+  for (const z of nach.split("\n")) {
+    const zeile = z.trim();
+    if (!/^[-\u2022*]\s+/.test(zeile)) continue;
+    const f = zeile.replace(/^[-\u2022*]\s+/, "").split("|").map((x) => x.trim());
+    if (f.length < 7) { verworfen.push(zeile.slice(0, 40) + " (nur " + f.length + " Felder)"); continue; }
+    const k = {
+      stichwort: f[0].slice(0, 30),
+      von: parseFloat(f[1]),
+      bis: parseFloat(f[2]),
+      frage: f[3].slice(0, 120),
+      richtig: f[4].slice(0, 60),
+      falsch: [f[5].slice(0, 60), f[6].slice(0, 60)],
+    };
+    const grund = karteOk(k, inhalt);
+    if (grund) { verworfen.push(k.stichwort + ": " + grund); continue; }
+    karten.push(k);
+    if (karten.length >= 8) break;
+  }
+  return { karten, verworfen };
+}
+
 async function blattLesen(env, seite) {
   const komma = String(seite || "").indexOf(",");
   if (komma < 0) throw new Error("kein Bild dabei");
@@ -227,7 +334,7 @@ async function blattLesen(env, seite) {
       },
       body: JSON.stringify({
         model: TITEL_MODELL,
-        max_tokens: 900,
+        max_tokens: 1600,
         messages: [{
           role: "user",
           content: [
@@ -245,8 +352,28 @@ async function blattLesen(env, seite) {
               "\"- \". Hoechstens 14 Zeilen, hoechstens 12 Woerter je Zeile. Schreib " +
               "Zahlen und Namen genau ab. Erfinde NICHTS dazu: Was nicht auf dem Blatt " +
               "steht, steht auch hier nicht.\n" +
+              "KARTEN: danach eine Zeile je Fundkarte, ebenfalls mit \"- \" beginnend, " +
+              "sieben Felder mit | getrennt:\n" +
+              "Stichwort | von | bis | Frage | richtige Antwort | falsch1 | falsch2\n" +
+              "* Stichwort: ein bis zwei Woerter, worum es geht (z. B. Einwohner).\n" +
+              "* von und bis: wo diese Stelle auf dem Blatt steht, als Prozent der " +
+              "BILDHOEHE von oben - 0 ist der obere Rand, 100 der untere. Zwei ganze " +
+              "Zahlen, von kleiner als bis. Nimm den Bereich etwas grosszuegig, damit " +
+              "die ganze Zeile darin liegt, aber hoechstens ein Viertel des Blattes.\n" +
+              "* Frage: eine kurze Frage an das Kind, die genau mit diesem Wert " +
+              "beantwortet wird. Keine Verneinung.\n" +
+              "* richtige Antwort: genau der Wert, wie er auf dem Blatt steht.\n" +
+              "* falsch1 und falsch2: zwei falsche Antworten. Sie muessen zur richtigen " +
+              "PASSEN - Zahl zu Zahl, Name zu Name, aehnliche Laenge - und nah dran " +
+              "sein: vertauschte Ziffern, ein anderes Jahrzehnt, ein aehnlicher Name. " +
+              "Sie duerfen NICHT selbst auf dem Blatt stehen und nie eine andere " +
+              "Schreibweise der richtigen Antwort sein.\n" +
+              "Hoechstens 8 Karten, nur fuer Stellen mit einem klaren kurzen Wert.\n" +
               "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\n" +
-              "INHALT:\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung" },
+              "INHALT:\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
+              "KARTEN:\n" +
+              "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000\n" +
+              "- Oberbürgermeister | 26 | 31 | Wie heißt der Oberbürgermeister? | Dr. Thomas Jung | Dr. Tobias Jung | Dr. Thomas Jungwirth" },
           ],
         }],
       }),
@@ -283,8 +410,12 @@ async function blattLesen(env, seite) {
     .filter((z) => z && !/^(unklar|nichts|keine)$/i.test(z))
     .slice(0, 14);
 
+  const kk = kartenLesen(roh, inhalt);
+
   return {
     inhalt,
+    karten: kk.karten,
+    kartenWarum: kk.karten.length ? "" : (kk.verworfen.slice(0, 3).join(" · ") || "keine geliefert"),
     // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
     // etwas Erfundenes.
     titel: (!titel || /^unklar$/i.test(titel)) ? "" : titel,
