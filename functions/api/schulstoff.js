@@ -214,6 +214,25 @@ const TITEL_GRENZE = 15000;
 const POSITION_GRENZE = 12000;
 const POSITION_MODELL = "claude-sonnet-5";
 
+/* ⚠️ AUS - und zwar nach vier Live-Messungen an Pauls Stadtportraet
+ * (23.09.2026), nicht nach Gefuehl:
+ *
+ *   ohne zweiten Blick    7,3 s   4 Karten   2 von 4 Baendern treffen
+ *   + Haiku              13,5 s   3 Karten   1 von 3
+ *   + Sonnet             13,3 s   2 Karten   2 von 2
+ *   + Sonnet + Rettung   15,9 s   4 Karten   2 von 4  (er lieferte NICHTS)
+ *
+ * Er verdoppelt die Wartezeit und liefert unzuverlaessig: einmal alles,
+ * einmal gar nichts. Eine Stelle in einem Foto zu verorten koennen die
+ * Modelle heute nicht gut genug - weder in Prozent noch in Streifen, weder
+ * nebenbei noch als eigene Frage.
+ *
+ * Der Code bleibt stehen, weil die Messung ihn belegt und weil ein
+ * spaeteres Modell es koennen kann. Wer ihn wieder einschaltet, misst die
+ * vier Zeilen dieser Tabelle nach - sonst ist es ein Rueckschritt mit
+ * gutem Gefuehl. */
+const ZWEITER_BLICK = false;
+
 /* EIN Blick aufs Bild - Titel und Datum zusammen.
  *
  * Denny am 22.09.2026: "Ich habe jetzt absichtlich ein falsches Datum
@@ -631,7 +650,7 @@ async function blattLesen(env, seite) {
      Der zweite Blick schaut gezielt nach - und ueberschreibt nur, was er
      wirklich gefunden hat. */
   let genauer = 0;
-  if (kk.karten.length) {
+  if (ZWEITER_BLICK && kk.karten.length) {
     try {
       const pos = await positionenHolen(env, seite, kk.karten.map((k) => k.stichwort));
       for (const k of kk.karten) {
