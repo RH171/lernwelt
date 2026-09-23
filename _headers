@@ -27,40 +27,29 @@
   Cache-Control: no-store
   X-Robots-Tag: noindex, nofollow
 
-# Skripte, Stile und Datendateien: immer nachfragen, nie blind aus dem Cache.
+# Skripte und Stile: hier ist NICHTS zu holen - der Wert kommt aus der Zone.
 #
-# Am 23.09.2026 um 02:00 Uhr stand in Pauls Lernquiz noch die alte Faecherliste
-# (fuenf Faecher), obwohl der Server laengst nur HSU anbot und /quiz/motor.js
-# den Filter enthielt. Gemessen: "cache-control: public, max-age=14400" - der
-# Browser haelt jedes Skript VIER STUNDEN fest. Die HTML-Seite kommt dagegen
-# mit "no-store" immer frisch. Neue Seite plus altes Skript ist schlimmer als
-# beides alt: Die Seite verspricht etwas, das ihr Skript nicht kann.
+# Am 23.09.2026 hielt der Browser jedes Skript vier Stunden fest, und eine
+# Regel hier half nicht. Zwei Messungen haben gezeigt, warum:
 #
-# "max-age=0, must-revalidate" heisst nicht "nicht cachen": Der Browser behaelt
-# die Datei und fragt nur kurz nach ("noch aktuell?"). Ist sie es, kommen 304
-# und keine Bytes. Kostet einen Rueckweg, spart den Download - und ein
-# Ausrollen wirkt sofort statt in vier Stunden.
-/*.js
-  Cache-Control: public, max-age=0, must-revalidate
-
-/*.css
-  Cache-Control: public, max-age=0, must-revalidate
-
-/*.json
-  Cache-Control: public, max-age=0, must-revalidate
-
-# BEFUND 23.09.2026, zweimal gemessen an zwei Deployments:
+#   dieselbe Datei, dasselbe Deployment, zwei Adressen
+#   lernwelt.rh171.de/quiz/motor.js  -> max-age=14400
+#   lernwelt.pages.dev/quiz/motor.js -> max-age=0, must-revalidate
 #
-#   /ferien.json    -> max-age=0, must-revalidate   (die Regel oben WIRKT)
-#   /thema.css      -> max-age=14400               (wirkt NICHT)
-#   /quiz/motor.js  -> max-age=14400               (wirkt NICHT)
+#   /robots.txt hat GAR KEINE Regel hier - und bekommt trotzdem 14400.
 #
-# Cloudflare Pages nimmt Cache-Control aus dieser Datei bei .json an, bei .js
-# und .css nicht - auch dann nicht, wenn der Pfad EXAKT dasteht statt als
-# Platzhalter. Diese Zeile ist genau diese Gegenprobe; sie bleibt stehen,
-# damit niemand denselben Versuch ein zweites Mal macht.
+# Der Wert stammt also nicht aus dieser Datei und nicht von Pages, sondern aus
+# der Zone rh171.de: "Browser Cache TTL: 4 hours" (Dashboard, Caching ->
+# Configuration, am 23.09.2026 nachgesehen). Cloudflare setzt ein kleineres
+# max-age vom Ursprung auf diesen Wert HOCH - nach unten geht es hier
+# grundsaetzlich nicht (developers.cloudflare.com/cache/how-to/
+# edge-browser-cache-ttl/, Stand 14.08.2026).
 #
-# ETag-Revalidierung funktioniert (gemessen: 304 bei If-None-Match) - nur
-# fragt der Browser innerhalb der vier Stunden gar nicht erst nach.
-/thema.css
-  Cache-Control: public, max-age=0, must-revalidate
+# .json kommt durch, weil Cloudflare JSON und HTML standardmaessig gar nicht
+# cacht; .js und .css stehen dagegen in der Endungsliste.
+#
+# Regeln fuer /*.js, /*.css und /*.json standen hier und haben nie etwas
+# bewirkt - sie wiederholten wortgleich, was Pages ohnehin sendet. Sie sind
+# raus. Geloest ist es ueber stempel.mjs: Jede eigene .js/.css-Adresse traegt
+# einen Stempel aus ihrem Inhalt, eine geaenderte Datei hat damit eine neue
+# Adresse - und die liegt in keinem Cache.
