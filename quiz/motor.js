@@ -238,6 +238,14 @@
   /* ---------- Eine Frage ---------- */
 
   var wahlOffen = true, reihenfolge = [];
+  /* Hilfe in Stufen (23.09.2026, Denny: "Leicht helfen hier Bilder, kleine
+     Eselsbrücken, wie man sich das besser merken kann").
+       Versuch 1 -> nichts
+       Versuch 2 -> Tipp, zwei falsche Antworten fallen weg
+       Versuch 3 -> das eigene Blatt mit der Zeile, in der es steht
+     GEZAEHLT WIRD NUR DER ERSTE VERSUCH - sonst waere die Elternauswertung
+     geschoenkt. Dieselbe Regel wie beim Hinweis in Helenas Holiday Report. */
+  var versuch = 0, ersterFalsch = "";
 
   function frageMalen() {
     var f = fragen[nr];
@@ -248,6 +256,8 @@
     $("q-frage").textContent = f.frage;
     $("q-erklaerung").classList.add("verborgen");
     $("q-weiter").classList.add("verborgen");
+    versuch = 0; ersterFalsch = "";
+    hilfeVerbergen();
 
     // Die richtige Antwort steht an Stelle 0 - hier wird gemischt, damit sie
     // nicht immer oben steht.
@@ -272,10 +282,30 @@
 
   function waehlen(platz, originalIndex, knopf) {
     if (!wahlOffen) return;
-    wahlOffen = false;
     var f = fragen[nr];
     var stimmt = originalIndex === (f.richtig || 0);
-    if (stimmt) richtigGesamt++;
+    versuch++;
+
+    /* Daneben, und es gibt noch Hilfe? Dann ist es KEIN Fehler, sondern ein
+       Zwischenschritt: Der Knopf ruettelt, die naechste Stufe geht auf, und
+       das Kind darf noch einmal. Kein "falsch", nichts wird weggenommen -
+       dieselbe Bauregel wie in der Schmiede seit dem 20.09.2026. */
+    if (!stimmt && versuch === 1 && (f.tipp || f.zeile)) {
+      if (!ersterFalsch) ersterFalsch = f.antworten[originalIndex];
+      knopf.classList.add("daneben");
+      setTimeout(function () { knopf.classList.remove("daneben"); }, 700);
+      stufeZeigen(f, 1);
+      return;                       // wahlOffen bleibt true - er darf nochmal
+    }
+    if (!stimmt && versuch === 2 && f.zeile && blattBild) {
+      knopf.classList.add("daneben");
+      setTimeout(function () { knopf.classList.remove("daneben"); }, 700);
+      stufeZeigen(f, 2);
+      return;
+    }
+
+    wahlOffen = false;
+    if (stimmt && versuch === 1) richtigGesamt++;
 
     Array.prototype.forEach.call($("q-antworten").children, function (b, i) {
       b.disabled = true;
@@ -284,17 +314,26 @@
     if (!stimmt) knopf.classList.add("falsch");
 
     var e = $("q-erklaerung");
-    e.innerHTML = '<b>' + (stimmt ? "Richtig." : "Noch nicht.") + "</b> " + esc(f.erklaerung || "");
+    var kopf = stimmt
+      ? (versuch === 1 ? "Richtig." : "Jetzt stimmt es.")
+      : "Schau es dir an.";
+    e.innerHTML = "<b>" + kopf + "</b> " + esc(f.erklaerung || "") +
+      (f.merke ? '<div class="qmerke"><span>Damit du es behältst</span>' + esc(f.merke) + "</div>" : "");
     e.classList.remove("verborgen");
     e.classList.toggle("gut", stimmt);
     $("q-weiter").classList.remove("verborgen");
     $("q-weiter").textContent = (nr + 1 >= fragen.length || (stand.laenge && nr + 1 >= stand.laenge))
       ? "Fertig" : "Weiter";
 
-    antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmt });
+    /* Gezaehlt wird der ERSTE Versuch. Wer erst mit Tipp und Blatt darauf
+       kommt, hat es noch nicht gewusst - sonst zeigt der Elternbereich
+       lauter Erfolge, die keine sind. */
+    var stimmtEcht = stimmt && versuch === 1;
+    antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmtEcht });
     // Der Lernstand ist die Quelle für die Wiederholung - hier entsteht sie.
     if (window.lernstand && window.lernstand.antwort)
-      window.lernstand.antwort(stimmt, f.merkmal || "quiz", stimmt ? "" : f.antworten[originalIndex], f.antworten[f.richtig || 0]);
+      window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",
+        stimmtEcht ? "" : (ersterFalsch || f.antworten[originalIndex]), f.antworten[f.richtig || 0]);
     fortschrittMalen();
   }
 

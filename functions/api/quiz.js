@@ -427,6 +427,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
   return fragen
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
     .filter(belegt)
+    .filter((f) => !verneint(f.frage))
     // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
     .filter((f) => erlaubt.has(String(f.fach || "").toLowerCase()))
     .map((f) => ({
@@ -437,6 +438,13 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
       richtig: 0,                       // die erste ist richtig; gemischt wird auf der Seite
       erklaerung: String(f.erklaerung || "").slice(0, 300),
       merkmal: String(f.merkmal || "").toLowerCase().slice(0, 40),
+      /* Hilfe in Stufen (23.09.2026). Denny: "Leicht helfen hier Bilder, kleine
+         Eselsbrücken, wie man sich das besser merken kann." Der Tipp kommt nach
+         dem ersten Fehlversuch, die Eselsbrücke nach der Lösung, die Zeile
+         zeigt aufs eigene Blatt. */
+      ...(tippOk(f.tipp, f.antworten) ? { tipp: String(f.tipp).slice(0, 200) } : {}),
+      ...(f.merke ? { merke: String(f.merke).slice(0, 200) } : {}),
+      ...(f.zeile ? { zeile: String(f.zeile).slice(0, 40) } : {}),
       /* Aus welchem Blatt die Frage stammt - daran filtert /api/quiz, wenn
          Paul einzelne Blaetter angehakt hat. Die Nummer aus dem Auftrag wird
          hier zur echten id; eine Nummer daneben heisst lieber KEIN Blatt als
@@ -541,3 +549,46 @@ export function frageBelegt(f, schule, nurDaraus) {
   return false;
 }
 
+/* Eine Verneinungsfrage prueft, ob ein Kind "nicht" ueberliest - nicht, ob es
+ * etwas weiss. Regel 4b bittet darum; hier wird sie durchgesetzt, weil eine
+ * Bitte im Auftrag keine Pruefung ist (dieselbe Lehre wie bei den Namen, beim
+ * Fachfremden und beim Rechnen).
+ *
+ * Nur GROSS geschriebene Verneinungen und die eindeutigen Formen - "nicht" in
+ * normaler Schreibweise kommt in harmlosen Fragen vor ("Was gehoert nicht
+ * dazu" faengt die Grossschreibung ohnehin, und "Welche Zahl ist nicht
+ * gerade?" ist eine echte Matheaufgabe). */
+export function verneint(frage) {
+  const f = String(frage || "");
+  if (/\b(NICHT|KEIN|KEINE|FALSCH|AUSSER)\b/.test(f)) return true;
+  return /\b(nicht|kein|keine)\s+(zu|nach|in|an|auf)\b/i.test(f) &&
+         /^(welch|wer|was)/i.test(f.trim());
+}
+
+/* Ein Tipp, der die Loesung enthaelt, ist kein Tipp. Geprueft wird gegen die
+ * RICHTIGE Antwort (die erste) - steht sie oder eine Zahl daraus im Tipp,
+ * faellt er weg. Lieber kein Tipp als einer, der es verschenkt.
+ *
+ * Anlass: Mein eigener Entwurf vom 23.09.2026 schlug "Es war das Jahr der
+ * Olympischen Spiele in Muenchen" vor - wer das weiss, hat 1972. Denny hat
+ * beim Ansehen genau solche Details gefunden. */
+export function tippOk(tipp, antworten) {
+  const s = String(tipp || "").trim();
+  if (!s || s.length < 8) return false;
+  const richtig = String((antworten || [])[0] == null ? "" : antworten[0]).trim();
+  if (!richtig) return true;
+  const putzen = (x) => x.toLowerCase().replace(/[.,;:!?"'()]/g, " ").replace(/\s+/g, " ").trim();
+  const st = putzen(s), rt = putzen(richtig);
+  if (rt.length >= 2 && st.includes(rt)) return false;
+  // Jede Zahl der Antwort einzeln - "1972" darf nicht im Tipp stehen.
+  const zahlen = richtig.match(/\d[\d.\s]*\d|\d/g) || [];
+  for (const z of zahlen) {
+    const nackt = z.replace(/[^0-9]/g, "");
+    if (nackt.length >= 2 && s.replace(/[^0-9]/g, "").includes(nackt)) return false;
+  }
+  // Und jedes Sachwort ab fuenf Buchstaben.
+  for (const w of rt.split(" ")) {
+    if (w.length >= 5 && st.includes(w)) return false;
+  }
+  return true;
+}
