@@ -312,19 +312,19 @@
     background:linear-gradient(135deg,#1e2140,#241f42);border-color:#3a3566}
   html[data-theme="dark"] .eintrag .loeschen:hover{background:#3a1d1b}
 </style>
-<script src="stundenplan.js"></script>
-<script src="/strom.js"></script>
+<script src="stundenplan.js?v=cfad3cdc"></script>
+<script src="/strom.js?v=ccb1b4e5"></script>
 <script>
   // Seit 17.09.2026 laufen Hausaufgaben im Hausaufgaben-Heft. Paul kam am selben
   // Tag noch ueber eine offene alte Seite hierher - und bekam nebenbei ein
   // automatisch gebautes Spiel statt Hilfe beim Verbessern.
   if (/[?&]hausaufgabe=1/.test(location.search)) location.replace("hausaufgaben.html");
 </script>
-<link rel="stylesheet" href="/beruehrung.css">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
      Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
-<link rel="stylesheet" href="/thema.css">
+<link rel="stylesheet" href="/thema.css?v=28d4b3f1">
 </head>
 <body>
 <div class="huelle">
@@ -1947,6 +1947,6 @@
   }
 })();
 </script>
-<script src="/lernstand.js" defer></script>
+<script src="/lernstand.js?v=282ba79a" defer></script>
 </body>
 </html>
