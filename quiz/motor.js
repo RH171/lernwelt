@@ -136,6 +136,52 @@
     blaetterZeichnen();
   }
 
+  /* Die Vorschaubilder je Blatt - einmal geholt, dann gemerkt. Ein Foto sind
+     schnell 300 KB; ohne dieses Gedaechtnis kaeme es bei jedem Neuzeichnen der
+     Liste wieder (und die zeichnet bei jedem Anhaken neu). */
+  var vorschau = {};
+
+  function vorschauFuellen(kasten, b) {
+    if (!kasten || !b || !b.id) return;
+    if (vorschau[b.id]) { kasten.style.backgroundImage = 'url("' + vorschau[b.id] + '")'; return; }
+    if (vorschau[b.id] === false) return;          // schon versucht, ging nicht
+    fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
+          "&bild=" + encodeURIComponent(b.id) + ":0", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.bild) { vorschau[b.id] = false; return; }
+        vorschau[b.id] = j.bild;
+        /* Nach dem Laden steht die Liste vielleicht schon neu da - deshalb
+           nicht den gemerkten Knoten fuellen, sondern den aktuellen suchen. */
+        var jetzt = document.querySelector('#q-blaetter-liste [data-blatt="' + b.id + '"] .qvor');
+        (jetzt || kasten).style.backgroundImage = 'url("' + j.bild + '")';
+      })
+      .catch(function () { vorschau[b.id] = false; });
+  }
+
+  /* Gross ansehen. Bewusst kein eigenes Fenster und kein Verlassen der Seite:
+     Das Kind steht mitten in seiner Auswahl und soll dahin zurueck. */
+  function grossZeigen(b) {
+    var alt = document.getElementById("q-gross");
+    if (alt) alt.remove();
+    var hu = document.createElement("div");
+    hu.id = "q-gross";
+    hu.className = "qgross";
+    hu.innerHTML = '<div class="qgross-innen">' +
+      '<div class="qgross-kopf"><b></b><button type="button" class="qgross-zu">Fertig</button></div>' +
+      (vorschau[b.id] ? '<img alt="Dein Blatt">' : '<p class="qgross-leer">Das Bild kommt gerade nicht. Der Titel steht oben.</p>') +
+      "</div>";
+    hu.querySelector("b").textContent = b.titel || "Dein Blatt";
+    if (vorschau[b.id]) hu.querySelector("img").src = vorschau[b.id];
+    function zu() { hu.remove(); document.removeEventListener("keydown", aufTaste); }
+    function aufTaste(e) { if (e.key === "Escape") zu(); }
+    hu.addEventListener("click", function (e) { if (e.target === hu) zu(); });
+    hu.querySelector(".qgross-zu").addEventListener("click", zu);
+    document.addEventListener("keydown", aufTaste);
+    document.body.appendChild(hu);
+    hu.querySelector(".qgross-zu").focus();
+  }
+
   function blaetterZeichnen() {
     var kasten = $("q-blaetter");
     if (!blaetter.length) { kasten.classList.add("verborgen"); return; }
@@ -151,12 +197,28 @@
       var k = document.createElement("button");
       k.type = "button";
       k.className = "qblatt" + (an ? " an" : "");
+      k.setAttribute("data-blatt", b.id);
+      /* Eine Miniatur des eigenen Fotos, damit das Kind SIEHT, welches Blatt
+         das ist. Denny am 23.09.2026: "Ich würde es cool finden, wenn Paul
+         hier kurz sehen würde, welches Blatt das ist … er wird es meistens am
+         Tablet oder iPhone machen."
+         Deshalb keine Hover-Vorschau: Auf einem Finger-Gerät gibt es kein
+         Darüberfahren. Die Miniatur steht einfach da, und ein Tipp darauf
+         zeigt das Blatt gross - ohne dass die Auswahl umspringt. */
       k.innerHTML = '<span class="haken">' + (an ? "✓" : "") + "</span>" +
+        '<span class="qvor" aria-hidden="true"></span>' +
         '<span class="was"><b></b><span></span></span>';
       k.querySelector("b").textContent = b.titel || "Ohne Titel";
       k.querySelector(".was span").textContent =
         deutschKurz(b.datum) + (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "");
-      k.addEventListener("click", function () {
+      vorschauFuellen(k.querySelector(".qvor"), b);
+      k.addEventListener("click", function (ev) {
+        /* Ein Tipp auf die Miniatur vergroessert, statt an- oder abzuhaken -
+           sonst muesste man zum Ansehen die Auswahl aendern. */
+        if (ev.target.closest && ev.target.closest(".qvor")) {
+          ev.preventDefault(); ev.stopPropagation();
+          grossZeigen(b); return;
+        }
         var i = stand.blaetter.indexOf(b.id);
         if (i >= 0) stand.blaetter.splice(i, 1); else stand.blaetter.push(b.id);
         schreibe(SPEICHER, stand);
