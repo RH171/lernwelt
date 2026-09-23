@@ -26,6 +26,7 @@ import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
   inhaltSetzen,
+  HAND,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen,
   faecherImHeft, blaetterImFach, schuljahrStart,
 } from "./_schulstoff.js";
@@ -208,7 +209,7 @@ export async function onRequestPost(context) {
       kartenWarum = gelesen.kartenWarum || "";
       genauer = gelesen.genauer || 0;
       if ((gelesen.inhalt && gelesen.inhalt.length) || karten.length) {
-        await inhaltSetzen(env, kind, e.id, gelesen.inhalt, karten);
+        await inhaltSetzen(env, kind, e.id, gelesen.inhalt, karten, gelesen.sorte);
       }
     } catch (err) {
       // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
@@ -618,20 +619,20 @@ async function positionenHolen(env, seite, stichworte) {
  * zwei aehnliche Zeilen koennen zwei verschiedene Tatsachen sein.
  */
 export function inhalteZusammen(alle) {
-  const raus = [];
+  const hand = [], rest = [];
   const da = new Set();
   for (const seite of Array.isArray(alle) ? alle : []) {
     for (const z of (seite && Array.isArray(seite.inhalt) ? seite.inhalt : [])) {
-      const k = String(z == null ? "" : z).trim().toLowerCase();
+      const s = String(z == null ? "" : z).trim();
+      const k = s.toLowerCase();
       if (!k || da.has(k)) continue;
       da.add(k);
-      raus.push(z);
-      /* Der Deckel gilt fuer den ganzen Eintrag, nicht je Seite - sonst
-         waechst der Quiz-Auftrag mit jeder Seite ins Unbezahlbare. */
-      if (raus.length >= INHALT_MAX) return raus;
+      (s.indexOf(HAND) === 0 ? hand : rest).push(z);
     }
   }
-  return raus;
+  /* Handgeschriebenes zuerst, dann der Rest - damit der Deckel INHALT_MAX
+     nicht ausgerechnet die Randnotizen abschneidet (Befund 24.09.2026). */
+  return hand.concat(rest).slice(0, INHALT_MAX);
 }
 
 async function blattLesen(env, seite) {
@@ -667,11 +668,28 @@ async function blattLesen(env, seite) {
               "DATUM: das Datum, das auf dem Blatt steht - meist oben links oder oben rechts, " +
               "oft abgekürzt wie 22.9.26. Schreib es genau so ab, wie es dasteht. " +
               "Steht keines da: keins\n" +
+              "SORTE: eine von drei Angaben, was fuer ein Blatt das ist:\n" +
+              "* lernziele - es listet auf, was man koennen muss (\"Das musst du " +
+              "koennen\", \"Ich kann ...\", Kaestchen zum Abhaken vor Ich-Saetzen).\n" +
+              "* probennah - es sieht aus wie eine Probe: Punktekaestchen wie /3 oder " +
+              "___ / 20, nummerierte Aufgaben mit Arbeitsauftraegen, Platz zum " +
+              "Ausfuellen.\n" +
+              "* normal - alles andere.\n" +
               "INHALT: danach eine Zeile je Tatsache, die auf dem Blatt steht - auch " +
               "das, was das Kind selbst hineingeschrieben hat. Jede Zeile beginnt mit " +
               "\"- \". Hoechstens 14 Zeilen, hoechstens 12 Woerter je Zeile. Schreib " +
               "Zahlen und Namen genau ab. Erfinde NICHTS dazu: Was nicht auf dem Blatt " +
               "steht, steht auch hier nicht.\n" +
+              "WICHTIG - was UM das Blatt herum steht, gehoert dazu: Schau auch auf " +
+              "den Rand der Heftseite, ueber und unter ein eingeklebtes Blatt, und " +
+              "auf alles Handgeschriebene. Randnotizen, nachtraeglich dazugeschriebene " +
+              "Woerter, Verbesserungen mit rotem Stift und durchgestrichene Stellen " +
+              "mit ihrer Korrektur sind oft das Wichtigste auf der Seite - die " +
+              "Lehrkraft hat sie ergaenzt, weil sie im gedruckten Text gefehlt haben. " +
+              "Schreib jede solche Zeile mit auf und setz ein Ausrufezeichen direkt " +
+              "hinter den Strich, also \"- ! Regnitz\" statt \"- Regnitz\". Bei " +
+              "einer Verbesserung schreib die richtige Fassung, nicht die " +
+              "durchgestrichene.\n" +
               "KARTEN: danach eine Zeile je Fundkarte, ebenfalls mit \"- \" beginnend, " +
               "sieben Felder mit | getrennt:\n" +
               "Stichwort | von | bis | Frage | richtige Antwort | falsch1 | falsch2\n" +
@@ -689,8 +707,8 @@ async function blattLesen(env, seite) {
               "Sie duerfen NICHT selbst auf dem Blatt stehen und nie eine andere " +
               "Schreibweise der richtigen Antwort sein.\n" +
               "Hoechstens 8 Karten, nur fuer Stellen mit einem klaren kurzen Wert.\n" +
-              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\n" +
-              "INHALT:\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
+              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\nSORTE: normal\n" +
+              "INHALT:\n- ! Regnitz\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
               "KARTEN:\n" +
               "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000\n" +
               "- Oberbürgermeister | 26 | 31 | Wie heißt der Oberbürgermeister? | Dr. Thomas Jung | Dr. Tobias Jung | Dr. Thomas Jungwirth" },
@@ -728,12 +746,44 @@ async function blattLesen(env, seite) {
    * den Beleg-Riegel, gegen den jede Quizfrage geprueft wird, und verdraengt
    * echte Blattzeilen aus dem Deckel. */
   const nachInhalt = (roh.split(/^\s*INHALT\s*:/mi)[1] || "").split(/^\s*KARTEN\s*:/mi)[0];
-  const inhalt = nachInhalt.split("\n")
+  /* Handgeschriebenes bekommt HAND davor und steht VORN.
+   *
+   * Der Befund vom 24.09.2026 (zweite Rollen-Gegenpruefung): Auf Pauls
+   * Stadtportraet steht gedruckt "Fluesse: Pegnitz, Rednitz, Main-Donau-Kanal"
+   * und am Rand handschriftlich "Regnitz" - in keiner der zwoelf ausgelesenen
+   * Zeilen kam es vor. Rednitz und Pegnitz fliessen in Fuerth zur Regnitz
+   * zusammen; der Rand war die Korrektur der Lehrkraft.
+   *
+   * Warum die Reihenfolge zaehlt: Alle vierten Klassen schreiben laut
+   * Elterninformation dieselbe Probe. Was Pauls Klasse vom Parallelzug
+   * unterscheidet, steht also NUR in der Handschrift. Und es gibt zwei
+   * Deckel - 14 Zeilen je Seite hier, noch einmal 14 in inhaltSetzen() -,
+   * an denen sonst genau das wegfaellt. */
+  const rohZeilen = nachInhalt.split("\n")
     .map((z) => z.trim())
     .filter((z) => /^[-•*]\s+/.test(z))
-    .map((z) => z.replace(/^[-•*]\s+/, "").slice(0, 90))
-    .filter((z) => z && !/^(unklar|nichts|keine)$/i.test(z))
-    .slice(0, 14);
+    .map((z) => z.replace(/^[-•*]\s+/, ""))
+    .filter((z) => z && !/^(unklar|nichts|keine)$/i.test(z.replace(/^!\s*/, "")));
+  const hand = [], rest = [];
+  for (const z of rohZeilen) {
+    const istHand = /^!\s*/.test(z);
+    const text = z.replace(/^!\s*/, "").slice(0, 88);
+    if (!text) continue;
+    (istHand ? hand : rest).push(istHand ? HAND + text : text);
+  }
+  const inhalt = hand.concat(rest).slice(0, 14);
+
+  /* Was fuer ein Blatt das ist - eine FORM-Frage, keine Inhaltsfrage.
+   * Abhak-Kaestchen und Punktekaestchen sieht ein Modell zuverlaessig;
+   * was davon Lernstoff ist, koennte es nicht wissen. Gebraucht wird es in
+   * nachArt() (quiz.js): Eine Lernzielliste wird ausgeteilt, nicht
+   * eingeklebt - Paul kreuzt also "Uebungsblatt" an, und sie flog beim
+   * Achterschnitt als erstes raus, obwohl sie "die Probe in Worten" ist. */
+  const sorte = (() => {
+    const s = zeile("SORTE").toLowerCase();
+    return s.indexOf("lernziel") >= 0 ? "lernziele"
+         : s.indexOf("probennah") >= 0 ? "probennah" : "";
+  })();
 
   const kk = kartenLesen(roh, inhalt);
 
@@ -758,6 +808,7 @@ async function blattLesen(env, seite) {
 
   return {
     inhalt,
+    sorte,
     genauer,
     karten: kk.karten,
     /* Auch wenn Karten da sind: Was verworfen wurde, gehoert in die Antwort.
@@ -910,7 +961,7 @@ async function nachtragen(context) {
       /* Die Fundkarten wandern auch beim Nachtrag mit - sonst haetten alte
          Blaetter nie welche, und zwei Wege wuerden auseinanderlaufen. */
       if ((gelesen.inhalt && gelesen.inhalt.length) || (gelesen.karten || []).length) {
-        await inhaltSetzen(env, kind, x.id, gelesen.inhalt, gelesen.karten);
+        await inhaltSetzen(env, kind, x.id, gelesen.inhalt, gelesen.karten, gelesen.sorte);
       }
       if (datumNeu) await datumSetzen(env, kind, x.id, datumNeu, x.datum);
 

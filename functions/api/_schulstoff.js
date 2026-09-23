@@ -48,6 +48,27 @@ export const ARTEN = {
   uebung: "ein Übungsblatt",
 };
 
+/* Zeichen vor einer Inhaltszeile, die HANDGESCHRIEBEN auf dem Blatt stand -
+ * Randnotiz, nachtraegliche Ergaenzung, Verbesserung mit rotem Stift.
+ *
+ * Warum ein Zeichen und kein eigenes Feld: inhalt ist ein Array von
+ * Strings, an dem der Beleg-Riegel (beleg_nr), die Fundkarten und der
+ * Quiz-Auftrag haengen. Ein zweites Array waere beim Zusammenfuegen ueber
+ * Seiten und ueber zwei Deckel hinweg die naechste Stelle, an der etwas
+ * auseinanderlaeuft. Das Zeichen ist kein Wort und stoert deshalb weder
+ * ohneBeleg() noch karteOk(), die beide ueber Sachwoerter vergleichen. */
+export const HAND = "\u270D ";
+
+/* Sorten, die das Modell an der FORM des Blattes erkennt - nicht am Inhalt
+ * (Befund 24.09.2026, zweite Rollen-Gegenpruefung):
+ * - lernziele: "Das musst du koennen", Kaestchen vor Ich-Saetzen. Wird
+ *   ausgeteilt, nicht eingeklebt - Paul kreuzt also "Uebungsblatt" an, und
+ *   sie flog beim Achterschnitt als erstes raus, obwohl sie "die Probe in
+ *   Worten" ist.
+ * - probennah: Punktekaestchen, nummerierte Aufgaben. Bringt nicht den
+ *   Stoff, aber die Fragestellung - und die ist oft notenentscheidend. */
+export const SORTEN = { lernziele: 1, probennah: 1 };
+
 const LISTE  = (kind, monat) => "stoff:" + kind + ":" + monat;
 const BILD   = (id, nr) => "stoffbild:" + id + ":" + nr;
 const MONATE_ZURUECK = 14;          // gut ein Schuljahr
@@ -440,14 +461,20 @@ export async function stoffBild(env, id, nr) {
  * Eintrag. Schreibvorgaenge sind hier die knappe Zahl (1000 am Tag), nicht
  * der Platz - zwei Felder gehoeren deshalb in einen Schluessel, nicht in
  * zwei. */
-export async function inhaltSetzen(env, kind, id, inhalt, karten) {
+export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
-  const zeilen = (Array.isArray(inhalt) ? inhalt : [])
+  /* Handgeschriebenes zuerst - hier steht der ZWEITE Deckel (14), nachdem
+     inhalteZusammen() schon bei INHALT_MAX gekuerzt hat. Ohne diese Zeile
+     faellt der Rand genau hier weg (Befund 24.09.2026). */
+  const alleZ = (Array.isArray(inhalt) ? inhalt : [])
     .map((z) => String(z || "").trim().slice(0, 90))
-    .filter(Boolean)
+    .filter(Boolean);
+  const zeilen = alleZ.filter((z) => z.indexOf(HAND) === 0)
+    .concat(alleZ.filter((z) => z.indexOf(HAND) !== 0))
     .slice(0, 14);
+  const gutSorte = SORTEN[sorte] ? sorte : "";
   const hatKarten = Array.isArray(karten) && karten.length > 0;
-  if (!zeilen.length && !hatKarten) return { ok: true, nichts: true };
+  if (!zeilen.length && !hatKarten && !gutSorte) return { ok: true, nichts: true };
 
   const heute = heuteBerlin();
   for (let i = 0; i < 4; i++) {
@@ -460,11 +487,12 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten) {
     if (liste === KAPUTT) return { ok: false };
     const treffer = liste.findIndex((e) => e.id === id);
     if (treffer < 0) continue;
-    liste[treffer].inhalt = zeilen;
+    if (zeilen.length) liste[treffer].inhalt = zeilen;
+    if (gutSorte) liste[treffer].sorte = gutSorte;
     if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, 8);
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
-    return { ok: true, zeilen: zeilen.length };
+    return { ok: true, zeilen: zeilen.length, sorte: gutSorte };
   }
   return { ok: false, fehlt: true };
 }
