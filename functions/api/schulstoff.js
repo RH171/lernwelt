@@ -205,6 +205,10 @@ const TITEL_MODELL = "claude-haiku-4-5-20251001";
 /* 9 s reichten fuer Titel und Datum. Der Inhalt braucht laenger, weil das
  * Modell das ganze Blatt lesen muss - gemessen 23.09.2026: 6-11 s. */
 const TITEL_GRENZE = 15000;
+/* Der zweite Blick liest nur Zeilenanfaenge - das geht schneller als das
+ * ganze Blatt zu verstehen. Reisst er die Grenze, bleibt die Schaetzung
+ * aus dem ersten Aufruf; die Karte faellt nie deswegen weg. */
+const POSITION_GRENZE = 12000;
 
 /* EIN Blick aufs Bild - Titel und Datum zusammen.
  *
@@ -324,6 +328,126 @@ export function kartenLesen(roh, inhalt) {
   return { karten, verworfen };
 }
 
+/* Der zweite Blick: wo steht die Zeile wirklich?
+ *
+ * Gemessen am 23.09.2026 an Pauls Stadtportraet: Der erste Aufruf liefert
+ * die Positionen nur nebenbei, und der Fehler ist systematisch - je weiter
+ * unten die Zeile steht, desto weiter oben schaetzt das Modell. Von vier
+ * Baendern sassen zwei richtig; das Band zur Postleitzahl zeigte die
+ * Eingemeindung, 15 Prozentpunkte daneben.
+ *
+ * Deshalb ein zweiter, eng umrissener Aufruf - und er fragt BEWUSST NICHT
+ * nach Prozent:
+ *
+ *   - Das Blatt wird in 20 gleich hohe Streifen gedacht. Eine Streifennummer
+ *     ist eine Auswahl aus zwanzig Moeglichkeiten, ein Prozentwert eine
+ *     Schaetzung aus hundert.
+ *   - Das Modell listet ALLE Zeilen von oben nach unten auf, nicht nur die
+ *     gesuchten. Damit ist die Reihenfolge ein Anker, an dem sich jede
+ *     einzelne Angabe messen laesst - und Ausreisser fallen mechanisch auf.
+ *   - Es nennt zu jeder Zeile ihren Anfang. Wer den abschreiben muss, hat
+ *     hingesehen.
+ *
+ * Schlaegt der zweite Blick fehl, bleibt die Schaetzung aus dem ersten.
+ * Lieber ein ungefaehres Band als gar keine Karte.
+ */
+const STREIFEN = 20;
+
+/* Gibt {stichwort: [von, bis]} in Prozent zurueck - oder {} wenn nichts
+ * Brauchbares kam. Exportiert, damit es pruefbar ist. */
+export function streifenLesen(roh, stichworte) {
+  const zeilen = [];
+  for (const z of String(roh || "").split("\n")) {
+    const m = z.trim().match(/^[-\u2022*]?\s*(\d{1,2})\s*\|\s*(.+)$/);
+    if (!m) continue;
+    const nr = parseInt(m[1], 10);
+    if (!(nr >= 1 && nr <= STREIFEN)) continue;
+    zeilen.push({ nr, text: m[2].trim().slice(0, 60) });
+  }
+  if (zeilen.length < 2) return {};
+
+  /* Die Zeilen eines Blattes gehen von oben nach unten. Steigt die Liste
+   * nicht, hat das Modell nicht gelesen, sondern geraten - dann ist die
+   * ganze Antwort wertlos, nicht nur die eine Zeile. */
+  for (let i = 1; i < zeilen.length; i++) {
+    if (zeilen[i].nr < zeilen[i - 1].nr) return {};
+  }
+
+  const raus = {};
+  for (const s of (stichworte || [])) {
+    const sk = knapp(s);
+    if (!sk) continue;
+    /* Der Treffer muss die Zeile sein, die das Stichwort ENTHAELT. Ein
+     * Teiltreffer in beide Richtungen, weil "Postleitzahl" und
+     * "Postleitzahlen" dieselbe Zeile sind. */
+    const tr = zeilen.filter((z) => {
+      const zk = knapp(z.text);
+      return zk.indexOf(sk) >= 0 || (sk.length >= 5 && sk.indexOf(zk) >= 0);
+    });
+    if (tr.length !== 1) continue;        // nicht gefunden oder mehrdeutig
+    const nr = tr[0].nr;
+    // Streifen n von 20 deckt (n-1)*5 bis n*5 Prozent ab; ein Streifen
+    // nach oben und unten dazu, weil eine Zeile auf einer Grenze liegen kann.
+    raus[s] = [Math.max(0, (nr - 2) * 100 / STREIFEN),
+               Math.min(100, (nr + 1) * 100 / STREIFEN)];
+  }
+  return raus;
+}
+
+async function positionenHolen(env, seite, stichworte) {
+  if (!stichworte || !stichworte.length) return {};
+  const komma = String(seite || "").indexOf(",");
+  if (komma < 0) return {};
+  const typ = String(seite).slice(5, String(seite).indexOf(";"));
+  if (typ.indexOf("image/") !== 0) return {};
+
+  const abbruch = new AbortController();
+  const uhr = setTimeout(() => abbruch.abort(), POSITION_GRENZE);
+  let r;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      signal: abbruch.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: TITEL_MODELL,
+        max_tokens: 700,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: typ, data: String(seite).slice(komma + 1) } },
+            { type: "text", text:
+              "Teile dieses Blatt gedanklich in " + STREIFEN + " gleich hohe waagrechte " +
+              "Streifen. Streifen 1 ist ganz oben am Bildrand, Streifen " + STREIFEN +
+              " ganz unten am Bildrand.\n\n" +
+              "Geh das Blatt von OBEN nach UNTEN durch und schreib JEDE Textzeile auf, " +
+              "die du siehst - auch Ueberschriften und was von Hand dazugeschrieben " +
+              "wurde. Eine Zeile je Ausgabezeile, in dieser Form:\n" +
+              "<Streifennummer> | <die ersten Woerter der Zeile>\n\n" +
+              "Nichts anderes ausgeben, keine Ueberschrift, keine Erklaerung. Die " +
+              "Streifennummern muessen von oben nach unten groesser werden.\n\n" +
+              "Beispiel:\n4 | Einwohner 132.000\n5 | Oberbuergermeister Dr. Thomas Jung\n" +
+              "15 | Postleitzahlen 90762-90768" },
+          ],
+        }],
+      }),
+    });
+  } catch (e) {
+    return {};
+  } finally {
+    clearTimeout(uhr);
+  }
+  if (!r.ok) return {};
+  const d = await r.json().catch(() => null);
+  if (!d) return {};
+  const roh = ((d.content || []).filter((c) => c.type === "text")[0] || {}).text || "";
+  return streifenLesen(roh, stichworte);
+}
+
 async function blattLesen(env, seite) {
   const komma = String(seite || "").indexOf(",");
   if (komma < 0) throw new Error("kein Bild dabei");
@@ -422,10 +546,34 @@ async function blattLesen(env, seite) {
 
   const kk = kartenLesen(roh, inhalt);
 
+  /* Die Positionen aus dem ersten Aufruf sind nur eine Schaetzung nebenbei.
+     Der zweite Blick schaut gezielt nach - und ueberschreibt nur, was er
+     wirklich gefunden hat. */
+  let genauer = 0;
+  if (kk.karten.length) {
+    try {
+      const pos = await positionenHolen(env, seite, kk.karten.map((k) => k.stichwort));
+      for (const k of kk.karten) {
+        const p = pos[k.stichwort];
+        if (!p) continue;
+        const probe = Object.assign({}, k, { von: p[0], bis: p[1] });
+        // Auch der zweite Blick muss durch den Riegel.
+        if (karteOk(probe, inhalt)) continue;
+        k.von = p[0]; k.bis = p[1]; k.genau = true;
+        genauer++;
+      }
+    } catch (e) {}
+  }
+
   return {
     inhalt,
+    genauer,
     karten: kk.karten,
-    kartenWarum: kk.karten.length ? "" : (kk.verworfen.slice(0, 3).join(" · ") || "keine geliefert"),
+    /* Auch wenn Karten da sind: Was verworfen wurde, gehoert in die Antwort.
+       Sonst weiss niemand, ob das Modell nur vier lieferte oder vier durch
+       den Riegel gefallen sind - genau davor stand ich am 23.09.2026. */
+    kartenWarum: kk.verworfen.length ? kk.verworfen.slice(0, 4).join(" · ")
+                                     : (kk.karten.length ? "" : "keine geliefert"),
     // "unklar" ist eine ehrliche Antwort - dann steht lieber nichts da als
     // etwas Erfundenes.
     titel: (!titel || /^unklar$/i.test(titel)) ? "" : titel,
