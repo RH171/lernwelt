@@ -586,9 +586,12 @@ export function tippOk(tipp, antworten) {
     const nackt = z.replace(/[^0-9]/g, "");
     if (nackt.length >= 2 && s.replace(/[^0-9]/g, "").includes(nackt)) return false;
   }
-  // Und jedes Sachwort ab fuenf Buchstaben.
+  /* Und jedes Sachwort ab VIER Buchstaben. Fuenf waren zu lasch: "Der
+     Nachname klingt wie jung" haette die Antwort "Dr. Thomas Jung" verraten,
+     weil "jung" nur vier Buchstaben hat - beim Selbsttest am 23.09.2026
+     aufgefallen. Kuerzer als vier faengt zu viel Harmloses ("eine", "und"). */
   for (const w of rt.split(" ")) {
-    if (w.length >= 5 && st.includes(w)) return false;
+    if (w.length >= 4 && st.includes(w)) return false;
   }
   return true;
 }
