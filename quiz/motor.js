@@ -127,7 +127,7 @@
         .then(function (r) { return r.json(); })
         .then(function (j) {
           if (!j || !j.ok) { kasten.classList.add("verborgen"); return; }
-          blaetter = j.blaetter || [];
+          blaetter = nachArtSortiert(j.blaetter || []);
           blaetterZeichnen();
         })
         .catch(function () { kasten.classList.add("verborgen"); });
@@ -210,7 +210,8 @@
         '<span class="was"><b></b><span></span></span>';
       k.querySelector("b").textContent = b.titel || "Ohne Titel";
       k.querySelector(".was span").textContent =
-        deutschKurz(b.datum) + (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "");
+        artKurz(b.art) + deutschKurz(b.datum) +
+        (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "");
       vorschauFuellen(k.querySelector(".qvor"), b);
       k.addEventListener("click", function (ev) {
         /* Ein Tipp auf die Miniatur vergroessert, statt an- oder abzuhaken -
@@ -225,6 +226,42 @@
         blaetterZeichnen();
       });
       liste.appendChild(k);
+    });
+  }
+
+  /* Woraus gefragt wird, steht auf der Karte.
+   *
+   * Die Lehrerin am Elternabend der 4bG (23.09.2026, von Denny berichtet):
+   * "Es wird das gefragt, was im Heft enthalten ist." Damit ist ein
+   * Hefteintrag der Pruefungsstoff und ein Uebungsblatt die Uebung dazu -
+   * das Lernquiz bevorzugt seit dem 23.09.2026 das Heft (nachArt() in
+   * functions/api/quiz.js). Wenn es das tut, muss Paul es auch SEHEN,
+   * sonst waehlt er blind.
+   *
+   * Als Text im Untertitel, nicht als eigenes Schild: Er erbt damit Farbe
+   * und Groesse der Zeile, und es kann keine Klasse kollidieren - genau
+   * das ist am 23.09.2026 mit .qblatt passiert (1,01:1 Kontrast). */
+  function artKurz(art) {
+    if (art === "heft") return "\uD83D\uDCD3 Heft \u00b7 ";
+    if (art === "uebung") return "\uD83D\uDCC4 \u00dcbung \u00b7 ";
+    return "";                       // ohne Angabe: gar nichts behaupten
+  }
+
+  /* Hefteintraege zuerst, dann was ohne Angabe, dann Uebungsblaetter -
+   * innerhalb einer Gruppe das Neueste oben. Dieselbe Reihenfolge wie
+   * nachArt() auf dem Server, damit Auswahl und Fragenbau nicht
+   * auseinanderlaufen. Es wird nichts weggelassen: Paul kann jedes Blatt
+   * anhaken, es steht nur weiter unten. */
+  function nachArtSortiert(liste) {
+    var RANG = { heft: 0, "": 1, uebung: 2 };
+    function rang(x) {
+      var r = RANG[(x && x.art) || ""];
+      return r === undefined ? 1 : r;
+    }
+    return (liste || []).slice().sort(function (a, b) {
+      var ra = rang(a), rb = rang(b);
+      if (ra !== rb) return ra - rb;
+      return String(b.datum || "").localeCompare(String(a.datum || ""));
     });
   }
 
