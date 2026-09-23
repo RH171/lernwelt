@@ -92,16 +92,71 @@
      eine Rückfrage. Bernstein warnt, ohne zu erschrecken. */
   .schau .fach.gefahr.sicher{background:#b45309;font-weight:700;color:#fff}
   html[data-theme="dark"] .blatt img,html[data-theme="dark"] .blatt .platzhalter{background:#262a38}
-  html[data-theme="dark"] "use strict";
-  var $ = function(id){return document.getElementById(id);}
-  html[data-theme="dark"] ;
-  var MONATE = ["Januar",html[data-theme="dark"] "Februar",html[data-theme="dark"] "März",html[data-theme="dark"] "April",html[data-theme="dark"] "Mai",html[data-theme="dark"] "Juni",html[data-theme="dark"] "Juli",html[data-theme="dark"] "August",html[data-theme="dark"] "September",html[data-theme="dark"] "Oktober",html[data-theme="dark"] "November",html[data-theme="dark"] "Dezember"];
-  var TAGE = ["Sonntag",html[data-theme="dark"] "Montag",html[data-theme="dark"] "Dienstag",html[data-theme="dark"] "Mittwoch",html[data-theme="dark"] "Donnerstag",html[data-theme="dark"] "Freitag",html[data-theme="dark"] "Samstag"];
-  var ZEICHEN ={mathe:"🔢", deutsch:"📖", hsu:"🌍", englisch:"🇬🇧",
-                 rel:"🕊️", musik:"🎵", anderes:"✏️", "":"📄"}
-  html[data-theme="dark"] ;
-  var KURZ ={mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
-              rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/paul/">‹ Lernwelt</a>
+    <h1>📚 Mein Schulheft</h1>
+  </header>
+
+  <div class="karte" id="kopf">
+    <div style="font:600 19px var(--rund)">Alles, was du fotografiert hast</div>
+    <p class="unter" id="stand">Einen Moment …</p>
+  </div>
+
+  <!-- Hochladen gehört ins Heft. Denny am 23.09.2026 zur Kachel "Heft
+       abfotografieren": "Ich glaube nicht, dass dies noch benötigt wird." -
+       stimmt, sobald das Aufnehmen hier zu Hause ist. Der Ablauf steht
+       EINMAL in /blatt-aufnehmen.js. -->
+  <button class="fach auf-zu" type="button" id="neues-blatt">📸 Neues Blatt</button>
+  <div id="aufnehmen" class="verborgen"></div>
+
+  <div id="filter" class="faecher" style="margin-top:16px"></div>
+  <div id="inhalt"></div>
+</div>
+
+<div class="schau" id="schau" role="dialog" aria-label="Blatt ansehen">
+  <div class="schau-kopf">
+    <b id="schau-titel"></b>
+    <button class="fach weg" type="button" id="schau-zu">✕ Zurück</button>
+  </div>
+  <img id="schau-bild" alt="Dein Blatt">
+  <div class="knoepfe">
+    <button class="fach" type="button" id="schau-vor">‹ Seite</button>
+    <span id="schau-nr" style="color:#fff;align-self:center;font-weight:600"></span>
+    <button class="fach" type="button" id="schau-zurueck">Seite ›</button>
+    <button class="fach" type="button" id="schau-verstecken">🙈 Aus der Ansicht nehmen</button>
+    <!-- Wirklich wegräumen gibt es NUR bei einem ausgeblendeten Blatt, und
+         nur nach zweimaligem Fragen. Denny am 22.09.2026: "Die alten
+         Fotografien aber erst nach einem wiederholten Fragen, ob er es
+         wirklich löschen möchte, weil du darauf am Ende gegebenenfalls
+         prüfungs-vorbereitende Fragen erarbeiten sollst." -->
+    <button class="fach gefahr verborgen" type="button" id="schau-weg">🗑️ Ganz aus dem Heft nehmen</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli",
+                "August","September","Oktober","November","Dezember"];
+  var TAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  var ZEICHEN = {mathe:"🔢", deutsch:"📖", hsu:"🌍", englisch:"🇬🇧",
+                 rel:"🕊️", musik:"🎵", anderes:"✏️", "":"📄"};
+  var KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
+              rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
+
+  var alles = [], heute = "", gewaehlt = "alle", offen = null, offenSeite = 0;
+
+  function lang(iso){
+    var t = String(iso||"").split("-");
+    if (t.length !== 3) return String(iso||"");
+    var d = new Date(+t[0], +t[1]-1, +t[2]);
+    return TAGE[d.getDay()] + ", " + (+t[2]) + ". " + MONATE[+t[1]-1] + " " + t[0];
+  }
   function tagName(iso){
     if (iso === heute) return "Heute";
     var g = new Date(heute + "T12:00:00Z"); g.setUTCDate(g.getUTCDate()-1);
