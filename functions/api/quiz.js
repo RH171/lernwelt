@@ -302,6 +302,7 @@ const WERKZEUG = {
             blatt_nr: { type: "integer", description: "Nummer des Blattes aus der Liste oben, auf dem diese Frage steht (1 = das erste). 0, wenn die Frage nicht von einem Blatt stammt." },
             tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Lösung NICHT enthält. Nenne nie die richtige Antwort, keine Zahl daraus, kein Wort daraus. Gut: \"Denk an die Zeile, in der die Postleitzahlen stehen - deine eigene steht ganz hinten.\" Schlecht: \"Es ist 90765.\" Und schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
             merke: { type: "string", description: "ESELSBRÜCKE, die nach der Lösung stehenbleibt - etwas, woran das Kind es beim nächsten Mal wiedererkennt. Eine Merkregel, ein Bild, eine Verbindung zu etwas Bekanntem. Gut: \"FÜ wie die ersten zwei Buchstaben von FÜrth.\" Leer lassen, wenn dir nichts Tragfähiges einfällt - eine erfundene Eselsbrücke ist schlimmer als keine." },
+            symbol: { type: "string", description: "EIN Zeichen für die Merkkarte vor dem Quiz - nur wenn es eindeutig und sachlich richtig passt, sonst LEER lassen. Es muss zum Inhalt stimmen: Für ein dreiblättriges Kleeblatt ist ☘️ richtig und 🍀 falsch (das hat vier Blätter). Im Zweifel leer - ein Bild, das dem Blatt widerspricht, ist schlimmer als gar keines." },
             zeile: { type: "string", description: "Nur bei Fragen von einem Blatt: das STICHWORT der Zeile, in der die Antwort steht, genau so wie es dort links steht (z. B. \"Einwohner\", \"Telefonvorwahl\", \"Eingemeindung\"). Damit kann das Kind auf seinem eigenen Foto nachschlagen. Leer, wenn die Frage nicht von einem Blatt kommt." },
           },
           required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr", "tipp", "merke"],
@@ -470,6 +471,10 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
       ...(tippOk(f.tipp, f.antworten) ? { tipp: String(f.tipp).slice(0, 200) } : {}),
       ...(f.merke ? { merke: String(f.merke).slice(0, 200) } : {}),
       ...(f.zeile ? { zeile: String(f.zeile).slice(0, 40) } : {}),
+      /* Ein Zeichen fuer die Merkkarten-Runde vor dem Quiz. Hoechstens zwei
+         Zeichen (ein Emoji kann aus zwei Einheiten bestehen), damit kein
+         Wort hineinrutscht. */
+      ...(f.symbol && String(f.symbol).length <= 4 ? { symbol: String(f.symbol) } : {}),
       /* Aus welchem Blatt die Frage stammt - daran filtert /api/quiz, wenn
          Paul einzelne Blaetter angehakt hat. Die Nummer aus dem Auftrag wird
          hier zur echten id; eine Nummer daneben heisst lieber KEIN Blatt als
