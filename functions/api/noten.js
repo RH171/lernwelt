@@ -42,7 +42,43 @@ function kindAus(url, daten) {
 const PROBEN = {
   paul: {
     gesamt: 18,
-    faecher: { deutsch: 8, mathe: 5, hsu: 5 },
+    /* Was in jedem Fach geprueft wird - Denny am 23.09.2026, mit einem Bild
+     * von Pauls Proben-Seite: "Paul sollte hier auf die Faecher klicken
+     * koennen. Sprich, die Reiter muessen ein bisschen groesser werden, damit
+     * er auch sieht, was dann in den Faechern gefragt wird. Das war ja auf dem
+     * Blatt relativ deutlich ausgefuehrt. Er soll wissen, was auf ihn zukommt."
+     *
+     * Quelle ist die Elterninformation der Grundschule Seeackerstrasse, wie sie
+     * unter /eltern/probearbeiten.html steht. Die Lernbereiche sind woertlich
+     * von dort uebernommen, nur die Sprache ist auf einen Viertklaessler
+     * gedreht: "Sprachgebrauch und Sprache untersuchen" sagt ihm nichts,
+     * "Grammatik und Rechtschreiben" schon.
+     *
+     * Wer die Elterninformation aendert, aendert BEIDE Stellen - hier steht
+     * bewusst eine eigene Fassung und kein Verweis, weil Paul die Elternseite
+     * nicht aufrufen darf. */
+    faecher: {
+      deutsch: { anzahl: 8, bereiche: [
+        "Sprechen und Zuhören – Referat, Gedicht vortragen, Buch vorstellen",
+        "Lesen – einen Text verstehen und damit umgehen",
+        "Schreiben – einen Text planen, schreiben und überarbeiten",
+        "Grammatik und Rechtschreiben",
+      ] },
+      mathe: { anzahl: 5, bereiche: [
+        "Zahlen und Rechnen",
+        "Raum und Form – Figuren, Körper, Zeichnen",
+        "Größen und Messen – Länge, Gewicht, Zeit, Geld",
+        "Daten und Zufall – Tabellen, Diagramme, Wahrscheinlichkeit",
+      ] },
+      hsu: { anzahl: 5, bereiche: [
+        "Demokratie und Gesellschaft",
+        "Körper und Gesundheit",
+        "Natur und Umwelt",
+        "Zeit und Wandel",
+        "Raum und Mobilität",
+        "dazu ein Referat, eine Präsentation oder ein Erklärvideo",
+      ] },
+    },
     zeugnisse: [
       { was: "Zwischeninformation", datum: "2027-01-22" },
       { was: "Übertrittszeugnis",   datum: "2027-05-03" },

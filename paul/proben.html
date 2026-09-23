@@ -52,12 +52,30 @@
   .balken i{display:block;height:100%;background:linear-gradient(90deg,#7c5cff,#22c1c3)}
   .gross{font:800 30px/1.15 var(--rund);margin:2px 0 0}
 
+  /* Ein Fach ist ein Knopf, kein Balken zum Ansehen.
+   * Denny am 23.09.2026: "Paul sollte hier auf die Faecher klicken koennen.
+   * Sprich, die Reiter muessen ein bisschen groesser werden, damit er auch
+   * sieht, was dann in den Faechern gefragt wird."
+   * Deshalb 56 px hoch statt 11 - das Mindestmass fuer einen Finger sind 44. */
+  .verborgen{display:none!important}
   .fliste{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-  .fzeile{display:flex;align-items:center;gap:11px}
+  .fzeile{display:flex;align-items:center;gap:11px;width:100%;min-height:56px;
+          border:1.5px solid var(--line);background:var(--feld);border-radius:16px;
+          padding:11px 14px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+  .fzeile:hover{border-color:var(--paul)}
+  .fzeile.offen{border-color:var(--paul);background:var(--akzent-hell)}
   .fzeile b{flex:0 0 96px;font:700 15.5px var(--rund)}
   .fzeile .bar{flex:1;height:11px;border-radius:999px;background:var(--vertief);overflow:hidden}
   .fzeile .bar i{display:block;height:100%;background:var(--paul)}
   .fzeile span{flex:0 0 auto;font-size:14.5px;color:var(--muted);white-space:nowrap}
+  .fzeile .pfeil{flex:0 0 auto;font-size:14px;color:var(--muted);transition:transform .18s}
+  .fzeile.offen .pfeil{transform:rotate(90deg)}
+  /* Die Inhalte stehen direkt unter ihrem Fach, eingerueckt wie eine Antwort. */
+  .fach-inhalt{margin:-2px 0 4px;padding:13px 15px;border-radius:14px;
+               background:var(--vertief);font-size:15.5px;line-height:1.5}
+  .fach-inhalt .kopf{font:700 14.5px var(--rund);color:var(--muted);margin-bottom:7px}
+  .fach-inhalt ul{margin:0;padding-left:20px}
+  .fach-inhalt li{margin:5px 0}
 
   ul.termine{list-style:none;margin:12px 0 0;padding:0}
   ul.termine li{display:flex;gap:12px;align-items:baseline;padding:11px 0;border-top:1px solid var(--line)}
@@ -155,10 +173,24 @@
 
       h += '<div class="fliste">';
       Object.keys(p.faecher).forEach(function(f){
+        // Die Zahl stand frueher direkt da; jetzt kann auch {anzahl, bereiche}
+        // kommen. Beides lesen, damit ein alter Server nichts kaputt macht.
+        var eintrag = p.faecher[f];
+        var soll = (eintrag && typeof eintrag === "object") ? eintrag.anzahl : eintrag;
+        var bereiche = (eintrag && typeof eintrag === "object" && eintrag.bereiche) || [];
         var gemacht = noten.filter(function(n){ return n.fach === f; }).length;
-        h += '<div class="fzeile"><b>' + esc(NAMEN[f] || f) + '</b>' +
-             '<div class="bar"><i style="width:' + Math.min(100, Math.round(gemacht/p.faecher[f]*100)) + '%"></i></div>' +
-             '<span>' + gemacht + " von " + p.faecher[f] + "</span></div>";
+        h += '<button class="fzeile" type="button" data-fach="' + esc(f) + '"' +
+             ' aria-expanded="false" aria-controls="was-' + esc(f) + '">' +
+             "<b>" + esc(NAMEN[f] || f) + "</b>" +
+             '<div class="bar"><i style="width:' + Math.min(100, Math.round(gemacht/soll*100)) + '%"></i></div>' +
+             "<span>" + gemacht + " von " + soll + "</span>" +
+             (bereiche.length ? '<span class="pfeil">›</span>' : "") + "</button>";
+        if (bereiche.length){
+          h += '<div class="fach-inhalt verborgen" id="was-' + esc(f) + '">' +
+               '<div class="kopf">Das wird in ' + esc(NAMEN[f] || f) + ' gefragt</div><ul>' +
+               bereiche.map(function(b){ return "<li>" + esc(b) + "</li>"; }).join("") +
+               "</ul></div>";
+        }
       });
       h += "</div></div>";
 
@@ -197,6 +229,28 @@
          'über den Schulmanager und in deinem Hausaufgabenheft.</div>';
 
     document.getElementById("inhalt").innerHTML = h;
+
+    /* Ein Tipp auf ein Fach zeigt, was darin gefragt wird. Immer nur EINES
+     * offen - sonst steht Paul vor einer Wand aus Text und sieht die Balken
+     * nicht mehr, wegen derer er die Seite aufgemacht hat. */
+    Array.prototype.forEach.call(document.querySelectorAll(".fzeile[data-fach]"), function(knopf){
+      var was = document.getElementById("was-" + knopf.getAttribute("data-fach"));
+      if (!was) return;
+      knopf.addEventListener("click", function(){
+        var auf = was.classList.contains("verborgen");
+        Array.prototype.forEach.call(document.querySelectorAll(".fach-inhalt"), function(x){
+          x.classList.add("verborgen");
+        });
+        Array.prototype.forEach.call(document.querySelectorAll(".fzeile[data-fach]"), function(x){
+          x.classList.remove("offen"); x.setAttribute("aria-expanded", "false");
+        });
+        if (auf){
+          was.classList.remove("verborgen");
+          knopf.classList.add("offen");
+          knopf.setAttribute("aria-expanded", "true");
+        }
+      });
+    });
   }
 })();
 </script>
