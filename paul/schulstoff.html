@@ -47,14 +47,14 @@
   .unter{color:var(--muted);font-size:15px;margin:4px 0 0}
 
   .auf-zu{width:100%;margin-top:14px;border:none;border-radius:18px;
-          background:var(--paul);color:#fff;padding:15px;
+          background:var(--paul);color:var(--akzent-auf,#fff);padding:15px;
           font:700 17.5px var(--rund);cursor:pointer;min-height:52px}
   #aufnehmen{margin-top:14px}
   .verborgen{display:none}
   .faecher{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
   .fach{appearance:none;border:1.5px solid var(--line);background:var(--karte);color:var(--ink);
         border-radius:999px;padding:10px 14px;font:600 15.5px var(--font);cursor:pointer;min-height:44px}
-  .fach.an{background:var(--paul);border-color:var(--paul);color:#fff}
+  .fach.an{background:var(--paul);border-color:var(--paul);color:var(--akzent-auf,#fff)}
   .fach .zahl{opacity:.65;margin-left:5px;font-weight:500}
   .fach.an .zahl{opacity:.85}
 
@@ -63,8 +63,8 @@
   .blaetter{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
   .blatt{background:var(--karte);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(20,22,40,.06),0 6px 18px rgba(20,22,40,.07);
          position:relative;cursor:pointer;border:none;padding:0;text-align:left;width:100%}
-  .blatt img{width:100%;height:150px;object-fit:cover;display:block;background:#f1f4fa}
-  .blatt .platzhalter{height:150px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#f1f4fa}
+  .blatt img{width:100%;height:150px;object-fit:cover;display:block;background:var(--vertief)}
+  .blatt .platzhalter{height:150px;display:flex;align-items:center;justify-content:center;font-size:36px;background:var(--vertief)}
   .blatt .fuss{padding:10px 12px}
   .blatt .fuss b{display:block;font:700 15px var(--rund)}
   .blatt .fuss span{color:var(--muted);font-size:13.5px}

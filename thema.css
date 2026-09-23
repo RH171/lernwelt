@@ -71,3 +71,38 @@ html[data-theme="dark"]{ --akzent-auf:#151726; }
  * abhebt, ohne zu leuchten. */
 html[data-theme="dark"] img[src^="data:"],
 html[data-theme="dark"] .platzhalter{ background:#262a38; }
+
+/* Rollen statt Farbwerte.
+ *
+ * Die Seiten hatten ihre hellen Flaechen fest eingebaut (#fff, #fbfcff,
+ * #eef1f7 ...). Im dunklen Modus blieben sie weiss und leuchteten aus dem
+ * dunklen Rahmen heraus - schlimmer als eine durchgehend helle Seite. Jede
+ * dieser Flaechen hat hier einen NAMEN nach ihrer Aufgabe und zwei Werte.
+ *
+ * Diese Datei steht vor dem <style> der Seite. Gleiche Spezifitaet heisst:
+ * die Seite gewinnt. Das ist Absicht - eine Seite darf einen Wert noch
+ * eigens setzen. Die Namen hier sind neu, es gibt also nichts zu ueberschreiben.
+ */
+:root{
+  --akzent-auf:#fff;      /* Schrift AUF der Akzentflaeche */
+  --feld:#fbfcff;        /* Knopf- oder Eingabeflaeche, kaum abgesetzt */
+  --vertief:#eef1f7;     /* Rinne eines Balkens, Platz eines Bildes */
+  --tabelle:#f7f9fc;     /* Kopfzeile und Zeitspalte einer Tabelle */
+  --rand-akzent:#c7d2fe;
+  --rand-gut:#bbf7d0;
+  --rand-warn:#fde3b8;
+  --warn-hell:#fffaf0;
+  --gefahr-hell:#fee4e2;
+  --gefahr-text:#b42318;
+}
+html[data-theme="dark"]{
+  --feld:#232634;
+  --vertief:#262a38;
+  --tabelle:#212533;
+  --rand-akzent:#3a4280;
+  --rand-gut:#1f5137;
+  --rand-warn:#4a3a1c;
+  --warn-hell:#2a2317;
+  --gefahr-hell:#3a1d1b;
+  --gefahr-text:#ff9a90;
+}
