@@ -25,7 +25,7 @@
      Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
 <link rel="stylesheet" href="/thema.css?v=28d4b3f1">
-<link rel="stylesheet" href="/quiz/quiz.css?v=4d10049d">
+<link rel="stylesheet" href="/quiz/quiz.css?v=e06f91dc">
 <style>
   :root{
     --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
@@ -72,6 +72,24 @@
   </section>
 
   <!-- Spiel -->
+  <!-- Erst anschauen, dann abfragen (Entwurf C, 23.09.2026).
+       Eine kurze Runde Merkkarten VOR der ersten Frage: jede Tatsache mit
+       Eselsbrücke. Lernen vor Prüfen - überspringbar, wer gleich loslegen
+       will. Nur wenn es zu den Fragen auch Eselsbrücken gibt. -->
+  <section id="sicht-merken" class="verborgen">
+    <div class="karte">
+      <header>
+        <a class="zurueck" href="/paul/">‹ Zurück</a>
+        <h1>🧠 Kurz anschauen</h1>
+      </header>
+      <h2 id="m-kopf">Das kommt gleich dran</h2>
+      <p class="unter" id="m-unter">Schau es dir einmal an – danach frage ich dich.</p>
+      <div class="mkarten" id="m-karten"></div>
+      <button class="knopf" id="m-los" type="button">Los, frag mich ab</button>
+      <button class="knopf still" id="m-weiter" type="button">Überspringen</button>
+    </div>
+  </section>
+
   <section id="sicht-spiel" class="verborgen">
     <div class="leiste"><i id="q-balken"></i></div>
     <div class="karte">
@@ -114,7 +132,7 @@ window.QUIZ = {
   ]
 };
 </script>
-<script src="/quiz/motor.js?v=6d506393" defer></script>
+<script src="/quiz/motor.js?v=d4c4dc30" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
 </body>

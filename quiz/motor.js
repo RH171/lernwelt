@@ -247,10 +247,56 @@
   }
 
   function zeige(welche) {
-    ["start", "spiel", "ende"].forEach(function (x) {
+    ["start", "merken", "spiel", "ende"].forEach(function (x) {
+      if (!$("sicht-" + x)) return;      // nicht jede Seite hat jeden Schirm
       $("sicht-" + x).classList.toggle("verborgen", x !== welche);
     });
     window.scrollTo(0, 0);
+  }
+
+  /* ---------- Erst anschauen, dann abfragen (Entwurf C, 23.09.2026) ----------
+   *
+   * Denny: "Leicht helfen hier Bilder, kleine Eselsbrücken, wie man sich das
+   * besser merken kann." Die Eselsbrücken liegen ohnehin an jeder Frage - hier
+   * werden sie EINMAL vorher gezeigt, bevor irgendetwas zählt.
+   *
+   * Lernen vor Prüfen. Wer gleich loslegen will, überspringt.
+   * Gibt es keine Eselsbrücken (alte Fragen, andere Fächer), faellt der Schirm
+   * still weg - er waere dann eine leere Seite zum Wegklicken. */
+  function merkkartenZeigen() {
+    if (!$("sicht-merken")) return false;
+    var mit = fragen.filter(function (f) { return f.merke; });
+    if (mit.length < 3) return false;
+
+    var box = $("m-karten");
+    box.innerHTML = "";
+    /* Hoechstens sechs - mehr merkt sich niemand auf einmal, und die Runde
+       soll unter einer Minute bleiben. */
+    mit.slice(0, 6).forEach(function (f) {
+      var k = document.createElement("div");
+      k.className = "mkarte";
+      var richtig = f.antworten[f.richtig || 0];
+      k.innerHTML = (f.symbol ? '<div class="sym"></div>' : "") +
+        '<div class="wert"></div><div class="was"></div><div class="brue"></div>';
+      if (f.symbol) k.querySelector(".sym").textContent = f.symbol;
+      k.querySelector(".wert").textContent = richtig;
+      k.querySelector(".was").textContent = f.zeile || "";
+      k.querySelector(".brue").textContent = f.merke;
+      box.appendChild(k);
+    });
+    $("m-kopf").textContent = "Das kommt gleich dran";
+    $("m-unter").textContent = mit.length > 6
+      ? "Sechs davon zeige ich dir vorher – danach frage ich dich."
+      : "Schau es dir einmal an – danach frage ich dich.";
+    zeige("merken");
+    return true;
+  }
+
+  if ($("m-los")) {
+    $("m-los").addEventListener("click", function () { zeige("spiel"); frageMalen(); });
+  }
+  if ($("m-weiter")) {
+    $("m-weiter").addEventListener("click", function () { zeige("spiel"); frageMalen(); });
   }
 
   /* ---------- Fragen holen ---------- */
@@ -287,6 +333,8 @@
         return;
       }
       fragen = j.fragen; nr = 0; richtigGesamt = 0; antwortenLog = [];
+      /* Erst anschauen, dann abfragen - wenn es etwas anzuschauen gibt. */
+      if (merkkartenZeigen()) return;
       zeige("spiel");
       frageMalen();
     }).catch(function () {

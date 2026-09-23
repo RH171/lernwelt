@@ -149,3 +149,20 @@ html[data-theme="dark"] .qblatt .haken{border-color:#3a3e52}
   background:var(--akzent);color:var(--akzent-auf,#fff);font:800 15.5px var(--rund);cursor:pointer}
 .qgross img{width:100%;min-height:0;object-fit:contain;border-radius:10px;background:#f4f2ec}
 .qgross-leer{margin:0;padding:22px 8px;text-align:center;color:var(--muted);font-size:15.5px}
+
+/* ---------- Erst anschauen, dann abfragen (Entwurf C, 23.09.2026) ----------
+ * Eine Minute Merkkarten vor der ersten Frage. Jede Karte trägt den Wert groß,
+ * darunter, worum es geht, und die Eselsbrücke. Lernen vor Prüfen. */
+.mkarten{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:10px;margin:14px 0 4px}
+.mkarte{background:var(--card);border:1.5px solid var(--line);border-radius:16px;
+  padding:14px 12px;text-align:center;min-width:0}
+.mkarte .sym{font-size:30px;line-height:1.1;height:40px;display:flex;
+  align-items:center;justify-content:center}
+.mkarte .wert{font:800 18px/1.25 var(--rund);color:var(--ink);
+  overflow-wrap:anywhere;margin-top:2px}
+.mkarte .was{font-size:13px;color:var(--muted);margin-top:2px}
+/* Die Eselsbrücke ist der eigentliche Inhalt der Karte - sie steht abgesetzt,
+ * damit sie nicht wie eine Fußnote wirkt. */
+.mkarte .brue{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);
+  font-size:14px;line-height:1.45;color:var(--ink);text-align:left}
