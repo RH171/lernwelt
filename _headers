@@ -26,3 +26,25 @@
 /*.xlsx
   Cache-Control: no-store
   X-Robots-Tag: noindex, nofollow
+
+# Skripte, Stile und Datendateien: immer nachfragen, nie blind aus dem Cache.
+#
+# Am 23.09.2026 um 02:00 Uhr stand in Pauls Lernquiz noch die alte Faecherliste
+# (fuenf Faecher), obwohl der Server laengst nur HSU anbot und /quiz/motor.js
+# den Filter enthielt. Gemessen: "cache-control: public, max-age=14400" - der
+# Browser haelt jedes Skript VIER STUNDEN fest. Die HTML-Seite kommt dagegen
+# mit "no-store" immer frisch. Neue Seite plus altes Skript ist schlimmer als
+# beides alt: Die Seite verspricht etwas, das ihr Skript nicht kann.
+#
+# "max-age=0, must-revalidate" heisst nicht "nicht cachen": Der Browser behaelt
+# die Datei und fragt nur kurz nach ("noch aktuell?"). Ist sie es, kommen 304
+# und keine Bytes. Kostet einen Rueckweg, spart den Download - und ein
+# Ausrollen wirkt sofort statt in vier Stunden.
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.json
+  Cache-Control: public, max-age=0, must-revalidate
