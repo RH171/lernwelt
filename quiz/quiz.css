@@ -79,10 +79,8 @@ h2{font:800 19px/1.2 var(--rund);margin:0 0 4px}
 .qblatt .was b{display:block;font:700 15.5px var(--rund,inherit);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qblatt .was span{font-size:13.5px;opacity:.7}
-@media (prefers-color-scheme:dark){
-  .qblatt{background:#1e2029;border-color:#2e3140}
-  .qblatt .haken{border-color:#3a3e52}
-}
+html[data-theme="dark"] .qblatt{background:#1e2029;border-color:#2e3140}
+html[data-theme="dark"] .qblatt .haken{border-color:#3a3e52}
 
 /* ---------- Hilfe in Stufen (23.09.2026) ----------
  * Denny: "Leicht helfen hier Bilder, kleine Eselsbrücken, wie man sich das
@@ -95,8 +93,13 @@ h2{font:800 19px/1.2 var(--rund);margin:0 0 4px}
 .qtipp b{color:var(--akzent-text,var(--akzent))}
 /* Das Foto liegt auf hellem Papier - der Rahmen ist deshalb immer hell,
  * auch im dunklen Modus. Ein dunkler Rahmen um ein weißes Blatt flackert. */
-.qblatt{background:#f4f2ec;border-radius:12px;padding:7px;margin-top:9px}
-.qblatt img{width:100%;display:block;border-radius:8px}
+/* ACHTUNG, NAMENSKOLLISION (23.09.2026): ".qblatt" gab es hier schon fuer die
+ * Auswahl der Blaetter weiter oben. Meine neue Regel hat sie ueberschrieben -
+ * auf Dennys Bildschirm stand die Blattauswahl als weisser Kasten mit
+ * unlesbarem Text da. Das Foto heisst deshalb ".qfoto".
+ * Merksatz: Vor einer neuen Klasse in einer geteilten CSS-Datei erst greppen. */
+.qfoto{background:#f4f2ec;border-radius:12px;padding:7px;margin-top:9px}
+.qfoto img{width:100%;display:block;border-radius:8px}
 /* Zurückgetretene Antworten: noch da, noch tippbar, nur leiser. */
 .qantwort.zurueck{opacity:.38}
 /* Daneben: ein kurzes Rütteln, kein rotes Kreuz. */

@@ -324,7 +324,7 @@
     } else if (stufe === 2) {
       h.innerHTML = '<div class="qtipp"><b>Schau auf dein Blatt:</b> Die Antwort steht in der Zeile <b>' +
         esc(f.zeile) + "</b>.</div>" +
-        (blattBild ? '<div class="qblatt"><img src="' + blattBild +
+        (blattBild ? '<div class="qfoto"><img src="' + blattBild +
                      '" alt="Dein Blatt zum Nachschlagen"></div>' : "");
       h.classList.remove("verborgen");
     }
