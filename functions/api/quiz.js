@@ -519,28 +519,33 @@ export function nachArt(liste) {
   /* Vier Raenge, nicht mehr zwei (24.09.2026, nach der zweiten
    * Rollen-Gegenpruefung durch eine Viertklasslehrkraft):
    *
-   * 0  Hefteintrag - Paul sagt es beim Hochladen.
    * 0  LERNZIELLISTE, egal was Paul angekreuzt hat. Sie wird ausgeteilt und
    *    selten eingeklebt, also kreuzt er "Uebungsblatt" an - und genau das
    *    Blatt, das dieses Konzept "die Probe in Worten" nennt, flog beim
    *    Schnitt bei acht Blaettern als ERSTES raus.
-   * 1  probennahes Blatt - bringt nicht den Stoff, aber die Fragestellung.
+   *    Sie steht VOR dem Heft, nicht gleichauf: Es gibt je Einheit hoechstens
+   *    ein oder zwei davon, und sie sind oft aelter als die Blaetter der
+   *    laufenden Woche. Gleichauf mit dem Heft haette das Datum sie bei acht
+   *    frischen Hefteintraegen wieder hinausgedraengt - genau der Fall, den
+   *    der Selbsttest gefunden hat.
+   * 1  Hefteintrag - Paul sagt es beim Hochladen.
+   * 2  probennahes Blatt - bringt nicht den Stoff, aber die Fragestellung.
    *    "Eine Probeprobe bringt keinen Stoff, den das Heft nicht haette. Sie
    *    bringt die Fragestellung" - und die ist oft notenentscheidend.
-   * 2  ohne Angabe - vor der Unterscheidung abgelegt, weder bevorzugt noch
+   * 3  ohne Angabe - vor der Unterscheidung abgelegt, weder bevorzugt noch
    *    benachteiligt.
-   * 3  gewoehnliches Uebungsblatt.
+   * 4  gewoehnliches Uebungsblatt.
    *
    * Die Sorte kommt NICHT vom Kind, sondern aus der FORM des Blattes
    * (Abhak-Kaestchen, Punktekaestchen) - siehe SORTEN in _schulstoff.js. */
-  const RANG = { heft: 0, "": 2, uebung: 3 };
+  const RANG = { heft: 1, "": 3, uebung: 4 };
   const rang = (x) => {
     const s = (x && x.sorte) || "";
     if (s === "lernziele") return 0;
     const r = RANG[(x && x.art) || ""];
-    const nachArt_ = r === undefined ? 2 : r;   // unbekannte Art wie "ohne Angabe"
-    if (s === "probennah") return Math.min(nachArt_, 1);
-    return nachArt_;
+    const ausArt = r === undefined ? 3 : r;     // unbekannte Art wie "ohne Angabe"
+    if (s === "probennah") return Math.min(ausArt, 2);
+    return ausArt;
   };
   return (liste || []).slice().sort((a, b) => {
     const ra = rang(a), rb = rang(b);

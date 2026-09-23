@@ -264,14 +264,14 @@ function artKurz(art) {
    * auseinanderlaufen. Es wird nichts weggelassen: Paul kann jedes Blatt
    * anhaken, es steht nur weiter unten. */
   function nachArtSortiert(liste) {
-    // Dieselben vier Raenge wie nachArt() in functions/api/quiz.js (24.09.2026).
-    var RANG = { heft: 0, "": 2, uebung: 3 };
+    // Dieselben fuenf Raenge wie nachArt() in functions/api/quiz.js (24.09.2026).
+    var RANG = { heft: 1, "": 3, uebung: 4 };
     function rang(x) {
       var s = (x && x.sorte) || "";
       if (s === "lernziele") return 0;
       var r = RANG[(x && x.art) || ""];
-      var a = r === undefined ? 2 : r;
-      if (s === "probennah") return Math.min(a, 1);
+      var a = r === undefined ? 3 : r;
+      if (s === "probennah") return Math.min(a, 2);
       return a;
     }
     return (liste || []).slice().sort(function (a, b) {
