@@ -41,6 +41,11 @@ function json(status, daten) {
 // (strom.js bringt es auf 1800 px, rund 280 KB) - 2 MB sind reichlich Luft.
 const MAX_BILD = 2 * 1024 * 1024;
 const MAX_SEITEN = 6;
+/* So viele Inhaltszeilen behaelt EIN Eintrag, ueber alle seine Seiten zusammen.
+   Je Seite liest blattLesen() bis zu 14; bei sechs Seiten waeren das 84, und
+   der Quiz-Auftrag traegt den ganzen Inhalt mit (quiz.js, letzterUnterricht).
+   36 ist rund das Dreifache eines einzelnen Blattes und bleibt bezahlbar. */
+const INHALT_MAX = 36;
 
 async function darfRein(request, env, kind) {
   if (geheimFuer(env, "eltern") && (await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) return true;
@@ -115,7 +120,35 @@ export async function onRequestPost(context) {
   let karten = [], kartenWarum = "", genauer = 0;
   if (env.ANTHROPIC_API_KEY) {
     try {
-      const gelesen = await blattLesen(env, seiten[0]);
+      /* ALLE Seiten auslesen, nicht nur die erste.
+       *
+       * Denny am 23.09.2026, nachdem die Lehrerin am Elternabend gesagt hatte
+       * "es wird gefragt, was im Heft steht": "Paul oder ich werden alles
+       * fotografieren, was in diesem Heft ist." Bis dahin las diese Stelle
+       * blattLesen(env, seiten[0]) - bei sechs hochgeladenen Heftseiten kannte
+       * das System den Inhalt EINER davon, die anderen fuenf lagen als Bild da
+       * und waren fuer Quiz und Beleg-Riegel unsichtbar.
+       *
+       * Parallel, nicht nacheinander: sechs Seiten der Reihe nach waeren rund
+       * zwoelf Sekunden, nebeneinander sind es zwei bis drei. Jeder Aufruf hat
+       * ohnehin seine eigene Abbruchgrenze (TITEL_GRENZE).
+       *
+       * Titel, Datum und Fundkarten kommen weiter NUR von Seite 1:
+       * - Titel und Datum stehen oben auf der ersten Seite,
+       * - eine Fundkarte traegt Bildkoordinaten, und fundkarten.js holt dazu
+       *   immer Seite 0. Eine Karte von Seite 4 wuerde den Ausschnitt aus dem
+       *   falschen Bild zeigen.
+       * Der INHALT dagegen wird ueber alle Seiten aneinandergehaengt. Die
+       * beleg_nr des Quiz zaehlt einfach weiter - am Riegel aendert sich
+       * dadurch nichts. */
+      const alle = await Promise.all(
+        seiten.map((s) => blattLesen(env, s).catch(() => null))
+      );
+      const gelesen = alle[0] || { titel: "", datum: "", inhalt: [], karten: [] };
+      /* Zeilen der Folgeseiten anhaengen, doppelte weglassen: Ein Merkkasten,
+         den das Kind auf zwei Seiten fotografiert hat, soll nicht zweimal
+         abgefragt werden. */
+      gelesen.inhalt = inhalteZusammen(alle);
       titel = gelesen.titel;
       /* Das Datum vom Blatt gilt - es weiss besser, wann das Blatt entstanden
          ist, als eine Voreinstellung. ABER es wird nicht stillschweigend
@@ -546,6 +579,34 @@ async function positionenHolen(env, seite, stichworte) {
   if (!d) return {};
   const roh = ((d.content || []).filter((c) => c.type === "text")[0] || {}).text || "";
   return streifenLesen(roh, stichworte);
+}
+
+/* Die Inhaltszeilen aller Seiten eines Eintrags zu einer Liste.
+ *
+ * Eigene Funktion, damit sie ohne Modellaufruf pruefbar ist (pruefe-schulstoff.mjs).
+ * Reihenfolge bleibt die der Seiten - die beleg_nr des Quiz zaehlt darueber
+ * einfach weiter, am Riegel aendert sich nichts.
+ *
+ * Doppelte fallen weg: Ein Merkkasten, den das Kind auf zwei Seiten
+ * fotografiert hat, soll nicht zweimal abgefragt werden. Verglichen wird
+ * ohne Gross-/Kleinschreibung und ohne Randleerzeichen - mehr nicht, denn
+ * zwei aehnliche Zeilen koennen zwei verschiedene Tatsachen sein.
+ */
+export function inhalteZusammen(alle) {
+  const raus = [];
+  const da = new Set();
+  for (const seite of Array.isArray(alle) ? alle : []) {
+    for (const z of (seite && Array.isArray(seite.inhalt) ? seite.inhalt : [])) {
+      const k = String(z == null ? "" : z).trim().toLowerCase();
+      if (!k || da.has(k)) continue;
+      da.add(k);
+      raus.push(z);
+      /* Der Deckel gilt fuer den ganzen Eintrag, nicht je Seite - sonst
+         waechst der Quiz-Auftrag mit jeder Seite ins Unbezahlbare. */
+      if (raus.length >= INHALT_MAX) return raus;
+    }
+  }
+  return raus;
 }
 
 async function blattLesen(env, seite) {
