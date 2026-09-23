@@ -347,22 +347,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
    *     das Quiz ausdruecklich auch fuer Lehrplan-Fragen da.
    * Hat das Kind dagegen Blaetter ausgesucht, muss JEDE Frage von einem davon
    * stammen - dann ist eine Frage ohne Blatt schon der Fehler. */
-  const belegt = (f) => {
-    const blattId = blattVon(f.blatt_nr, schule.blaetter);
-    if (!blattId) return !nurDaraus;
-    const blatt = (schule.blaetter || []).find((b) => b.id === blattId);
-    const zeilen = (blatt && Array.isArray(blatt.inhalt)) ? blatt.inhalt : [];
-    if (!zeilen.length) return true;              // nichts zum Vergleichen
-    const richtig = (f.antworten || [])[0];
-    /* Steht die Antwort da? Eine Zahl, die man aus einer Liste abzaehlt,
-       steht dort nicht woertlich - deshalb gilt auch eine Frage als belegt,
-       deren FRAGE sich aus dem Blatt speist und deren Antwort eine kleine
-       Zahl ist. Das ist dieselbe Ausnahme wie in ohneBeleg(). */
-    if (stehtAufBlatt(zeilen, richtig)) return true;
-    const n = Number(String(richtig == null ? "" : richtig).replace(/[^0-9]/g, ""));
-    if (Number.isFinite(n) && n > 0 && n <= 20 && stehtAufBlatt(zeilen, f.frage)) return true;
-    return false;
-  };
+  const belegt = (f) => frageBelegt(f, schule, nurDaraus);
 
   return fragen
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
@@ -443,3 +428,21 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
     };
   } catch (e) { return { text: "", blaetter: [] }; }
 }
+
+export function frageBelegt(f, schule, nurDaraus) {
+  const blattId = blattVon(f.blatt_nr, schule.blaetter);
+  if (!blattId) return !nurDaraus;
+  const blatt = (schule.blaetter || []).find((b) => b.id === blattId);
+  const zeilen = (blatt && Array.isArray(blatt.inhalt)) ? blatt.inhalt : [];
+  if (!zeilen.length) return true;              // nichts zum Vergleichen
+  const richtig = (f.antworten || [])[0];
+  /* Steht die Antwort da? Eine Zahl, die man aus einer Liste abzaehlt,
+     steht dort nicht woertlich - deshalb gilt auch eine Frage als belegt,
+     deren FRAGE sich aus dem Blatt speist und deren Antwort eine kleine
+     Zahl ist. Das ist dieselbe Ausnahme wie in ohneBeleg(). */
+  if (stehtAufBlatt(zeilen, richtig)) return true;
+  const n = Number(String(richtig == null ? "" : richtig).replace(/[^0-9]/g, ""));
+  if (Number.isFinite(n) && n > 0 && n <= 20 && stehtAufBlatt(zeilen, f.frage)) return true;
+  return false;
+}
+
