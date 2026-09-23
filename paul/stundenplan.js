@@ -81,10 +81,52 @@
     return faecherAm(tag - 1);   // 0 = Sonntag -> -1, faellt durch
   }
 
+  /* Wie viele Wochenstunden jedes Fach im Plan hat.
+   *
+   * Denny am 23.09.2026: "Die Ansortierung von den Faechern macht sicher Sinn
+   * nach Haeufigkeit im Stundenplan." Damit steht die Reihe FEST - sie springt
+   * nicht mehr, wenn Paul das Datum wechselt, und braucht keinen erklaerenden
+   * Satz darunter. Eine "X"-Stunde zaehlt fuer alle drei Faecher dahinter: sie
+   * war sicher eines davon, nur welches weiss die Lehrerin.
+   *
+   * Gerechnet, nicht von Hand geschrieben - aendert sich der Plan oben,
+   * aendert sich die Reihenfolge mit. */
+  function stundenJeFach() {
+    var zahl = {};
+    STUNDEN.forEach(function (z) {
+      for (var tag = 0; tag <= 4; tag++) {
+        var f = z[2 + tag];
+        if (!f) continue;
+        if (f === "X") {
+          HINTER_X.forEach(function (s) { zahl[s] = (zahl[s] || 0) + 1; });
+          continue;
+        }
+        var s = ZUM_FACH[f];
+        if (s) zahl[s] = (zahl[s] || 0) + 1;
+      }
+    });
+    return zahl;
+  }
+
+  /* Die uebergebenen Schluessel nach Haeufigkeit sortiert, haeufigstes zuerst.
+   * Bei Gleichstand bleibt die mitgegebene Reihenfolge - so steht "Etwas
+   * anderes" (kommt im Plan nie vor) immer hinten. */
+  function nachHaeufigkeit(schluessel) {
+    var zahl = stundenJeFach();
+    return (schluessel || []).map(function (s, i) { return { s: s, i: i }; })
+      .sort(function (a, b) {
+        var x = zahl[a.s] || 0, y = zahl[b.s] || 0;
+        return x !== y ? y - x : a.i - b.i;
+      })
+      .map(function (e) { return e.s; });
+  }
+
   global.PAUL_PLAN = {
     TAGE: TAGE,
     STUNDEN: STUNDEN,
     faecherAm: faecherAm,
-    faecherAmDatum: faecherAmDatum
+    faecherAmDatum: faecherAmDatum,
+    stundenJeFach: stundenJeFach,
+    nachHaeufigkeit: nachHaeufigkeit
   };
 })(window);
