@@ -25,6 +25,7 @@ import { fehlerJeFach } from "./_schwaechen.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
+  inhaltSetzen,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen,
   faecherImHeft, blaetterImFach, schuljahrStart,
 } from "./_schulstoff.js";
@@ -143,6 +144,14 @@ export async function onRequestPost(context) {
                           vomBlattGelesen && !weichtAb ? "Datum vom Blatt bestätigt" : "");
       }
       if (weichtAb) await datumSetzen(env, kind, e.id, vomBlattGelesen, e.datum);
+
+      /* Was auf dem Blatt steht, gehoert an den Eintrag - sonst kann das
+         Lernquiz spaeter nur aus dem Titel raten (siehe inhaltSetzen). Das
+         laeuft unabhaengig vom Datums-Urteil: Ein Blatt mit unklarem Datum
+         hat trotzdem einen Inhalt. */
+      if (gelesen.inhalt && gelesen.inhalt.length) {
+        await inhaltSetzen(env, kind, e.id, gelesen.inhalt);
+      }
     } catch (err) {
       // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
       try { await titelSetzen(env, kind, e.id, "", String(err && err.message || err).slice(0, 80)); }
@@ -414,6 +423,9 @@ async function nachtragen(context) {
 
       if (gelesen.titel) await titelSetzen(env, kind, x.id, gelesen.titel);
       else await titelSetzen(env, kind, x.id, "", "nicht erkannt");
+      if (gelesen.inhalt && gelesen.inhalt.length) {
+        await inhaltSetzen(env, kind, x.id, gelesen.inhalt);
+      }
       if (datumNeu) await datumSetzen(env, kind, x.id, datumNeu, x.datum);
 
       getan.push({

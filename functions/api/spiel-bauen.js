@@ -744,6 +744,15 @@ function stehtDrin(grosser, kleiner) {
   });
 }
 
+/* Steht dieser Text auf dem Blatt? Gemeinsam benutzt von ohneBeleg() hier und
+ * vom Lernquiz (functions/api/quiz.js). Zwei Kopien dieser Logik wuerden
+ * auseinanderlaufen, und dann waere einer der beiden Riegel weich. */
+export function stehtAufBlatt(zeilen, text) {
+  const s = String(text == null ? "" : text).trim();
+  if (!s) return false;
+  return (zeilen || []).some((z) => stehtDrin(String(z || ""), s));
+}
+
 export function ohneBeleg(a, spiel) {
   if (!istWissensblatt(spiel) || !a) return "";
   const inhalt = ((spiel.blatt_inhalt || []).concat(spiel.blatt_aufgaben || []))

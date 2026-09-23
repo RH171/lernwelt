@@ -406,6 +406,49 @@ export async function stoffBild(env, id, nr) {
  * bleibt. Kostet einen Schreibvorgang - der vierte je Eintrag, bei 1000 am
  * Tag traegt das. Findet sich der Eintrag nicht mehr (Paul hat ihn in der
  * Zwischenzeit weggeraeumt), passiert nichts. */
+/* Was auf dem Blatt STEHT - Stichwortzeilen, wie sie blattLesen() liefert.
+ *
+ * Denny am 23.09.2026, mit einem Bild aus Pauls Lernquiz: "Wir haben doch
+ * vorhin ganz klar als Regel festgehalten, dass die Frage nur aus dem Blatt
+ * hervorkommen kann. … Diese Frage kommt auf dem Blatt nicht einmal hervor."
+ * Gefragt worden war nach "300 ml aus der Regnitz-Probe" - auf seinem
+ * Stadtporträt von Fürth steht davon kein Wort.
+ *
+ * Der Grund war nicht ein zu schwacher Riegel, sondern eine UNMOEGLICHE BITTE:
+ * /api/quiz gab dem Modell nur den TITEL des Blattes mit ("Stadtporträt von
+ * Fürth") und verlangte im selben Atemzug, ausschliesslich nach dem Blatt zu
+ * fragen. Es hat das Blatt nie gesehen. Also hat es aus dem Titel geraten, und
+ * das sah plausibel aus.
+ *
+ * Getrennt von titelSetzen(), weil das beim ersten gesetzten Titel aufhoert -
+ * sonst liesse sich zu einem alten Blatt nie ein Inhalt nachtragen. */
+export async function inhaltSetzen(env, kind, id, inhalt) {
+  if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
+  const zeilen = (Array.isArray(inhalt) ? inhalt : [])
+    .map((z) => String(z || "").trim().slice(0, 90))
+    .filter(Boolean)
+    .slice(0, 14);
+  if (!zeilen.length) return { ok: true, nichts: true };
+
+  const heute = heuteBerlin();
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try { roh = await env.PAUL_KV.get(LISTE(kind, monat)); } catch (e) { return { ok: false }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false };
+    const treffer = liste.findIndex((e) => e.id === id);
+    if (treffer < 0) continue;
+    liste[treffer].inhalt = zeilen;
+    try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
+    catch (e) { return { ok: false }; }
+    return { ok: true, zeilen: zeilen.length };
+  }
+  return { ok: false, fehlt: true };
+}
+
 export async function titelSetzen(env, kind, id, titel, warum) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   const heute = heuteBerlin();
