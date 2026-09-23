@@ -1402,6 +1402,16 @@
         $("datumfrage").classList.add("verborgen");
       }
 
+      /* Hat der Server Seiten abgeschnitten, erfaehrt Paul es - ein stiller
+         Verlust waere das Gegenteil dessen, wofuer das Heft gebaut ist.
+         Seit 23.09.2026 nimmt ein Eintrag zwei Seiten (ein Blatt, Vorder- und
+         Rueckseite); diese Seite laesst bis zu 20 waehlen. */
+      if (a.j.seitenAbgeschnitten > 0){
+        melde("Ins Heft gelegt habe ich " + (a.j.seitenMax || 2) + " Seiten - " +
+              a.j.seitenAbgeschnitten + " weitere nicht. Ein Blatt auf einmal, " +
+              "die naechsten legst du gleich danach dazu.");
+      }
+
       var z = a.j.schonDa;
       var warnung = $("doppelt");
       if (z){

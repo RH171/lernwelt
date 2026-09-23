@@ -234,6 +234,10 @@ export async function onRequestPost(context) {
   return json(200, {
     ok: true, id: e.id,
     ...(zwilling ? { schonDa: zwilling } : {}),
+    /* Wurden Seiten abgeschnitten, steht das hier - nie stillschweigend.
+       Seit dem 23.09.2026 nimmt ein Eintrag nur noch zwei Seiten (MAX_SEITEN),
+       die Werkstatt schickt aber bis zu zwanzig. */
+    ...(zuViel > 0 ? { seitenAbgeschnitten: zuViel, seitenMax: MAX_SEITEN } : {}),
     // Das Datum, das jetzt wirklich im Heft steht.
     datum: weichtAb ? vomBlattGelesen : e.datum,
     datumVonBlatt: !!(vomBlatt || vomBlattGelesen),
