@@ -25,7 +25,7 @@
      Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
 <link rel="stylesheet" href="/thema.css?v=28d4b3f1">
-<link rel="stylesheet" href="/quiz/quiz.css?v=e06f91dc">
+<link rel="stylesheet" href="/quiz/quiz.css?v=c995cbf9">
 <style>
   :root{
     --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
@@ -78,10 +78,8 @@
        will. Nur wenn es zu den Fragen auch Eselsbrücken gibt. -->
   <section id="sicht-merken" class="verborgen">
     <div class="karte">
-      <header>
-        <a class="zurueck" href="/paul/">‹ Zurück</a>
-        <h1>🧠 Kurz anschauen</h1>
-      </header>
+      <!-- Kein zweiter Zurück-Knopf: Die Kopfzeile der Seite hat schon einen,
+           und zwei nebeneinander lassen ein Kind raten, welcher welcher ist. -->
       <h2 id="m-kopf">Das kommt gleich dran</h2>
       <p class="unter" id="m-unter">Schau es dir einmal an – danach frage ich dich.</p>
       <div class="mkarten" id="m-karten"></div>

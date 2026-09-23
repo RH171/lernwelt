@@ -153,8 +153,12 @@ html[data-theme="dark"] .qblatt .haken{border-color:#3a3e52}
 /* ---------- Erst anschauen, dann abfragen (Entwurf C, 23.09.2026) ----------
  * Eine Minute Merkkarten vor der ersten Frage. Jede Karte trägt den Wert groß,
  * darunter, worum es geht, und die Eselsbrücke. Lernen vor Prüfen. */
-.mkarten{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:10px;margin:14px 0 4px}
+/* Auf dem Handy eine Spalte: Die Eselsbrücke ist der Inhalt der Karte, und
+ * zwei schmale Spalten machen daraus Wortsalat. Ab Tablet nebeneinander. */
+.mkarten{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0 4px}
+@media (min-width:620px){
+  .mkarten{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+}
 .mkarte{background:var(--card);border:1.5px solid var(--line);border-radius:16px;
   padding:14px 12px;text-align:center;min-width:0}
 .mkarte .sym{font-size:30px;line-height:1.1;height:40px;display:flex;
