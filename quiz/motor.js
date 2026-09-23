@@ -263,6 +263,43 @@
    * Lernen vor Prüfen. Wer gleich loslegen will, überspringt.
    * Gibt es keine Eselsbrücken (alte Fragen, andere Fächer), faellt der Schirm
    * still weg - er waere dann eine leere Seite zum Wegklicken. */
+  /* Ein Zeichen zur KATEGORIE, nicht zum Inhalt.
+   *
+   * Das Modell liefert "symbol" nur, wenn es sicher passt - und die Fragen aus
+   * dem Vorrat von vorher haben gar keines. Dann steht die Karte nackt da und
+   * sieht nicht aus wie das, was Denny am 23.09.2026 abgenommen hat.
+   *
+   * Diese Liste geht nach dem ZEILENNAMEN des Blattes ("Einwohner",
+   * "Telefonvorwahl"). Das ist die Kategorie und damit ungefaehrlich. Was vom
+   * INHALT abhaengt, steht bewusst NICHT drin: Beim Wappen entscheidet die
+   * Zahl der Blaetter, ob ☘️ oder 🍀 richtig ist - das kann nur das Modell
+   * wissen, das das Blatt gelesen hat. Lieber keine Karte mit Zeichen als eine
+   * mit dem falschen. */
+  var ZEICHEN = [
+    [/einwohner|bevoelker/i, "🏙️"],
+    [/telefon|vorwahl/i, "☎️"],
+    [/kfz|kennzeichen/i, "🚗"],
+    [/postleit|plz/i, "✉️"],
+    [/rathaus|adresse/i, "🏛️"],
+    [/buergermeister|bürgermeister/i, "👤"],
+    [/stadtteil|ortsteil/i, "🏘️"],
+    [/fluss|flüsse|fluesse|gewaesser/i, "🌊"],
+    [/partnerstadt|partnerstädte|partnerstaedte/i, "🤝"],
+    [/eingemeind|jahr|datum/i, "📅"],
+    [/regierungsbezirk|bezirk|land/i, "🗺️"],
+    [/schule|klasse/i, "🎒"],
+    [/tier|pflanze/i, "🌿"]
+  ];
+
+  function zeichenFuer(f) {
+    if (f.symbol) return f.symbol;              // das Modell weiss es besser
+    var z = String(f.zeile || "");
+    for (var i = 0; i < ZEICHEN.length; i++) {
+      if (ZEICHEN[i][0].test(z)) return ZEICHEN[i][1];
+    }
+    return "";
+  }
+
   function merkkartenZeigen() {
     if (!$("sicht-merken")) return false;
     var mit = fragen.filter(function (f) { return f.merke; });
@@ -276,9 +313,10 @@
       var k = document.createElement("div");
       k.className = "mkarte";
       var richtig = f.antworten[f.richtig || 0];
-      k.innerHTML = (f.symbol ? '<div class="sym"></div>' : "") +
+      var zeichen = zeichenFuer(f);
+      k.innerHTML = (zeichen ? '<div class="sym"></div>' : "") +
         '<div class="wert"></div><div class="was"></div><div class="brue"></div>';
-      if (f.symbol) k.querySelector(".sym").textContent = f.symbol;
+      if (zeichen) k.querySelector(".sym").textContent = zeichen;
       k.querySelector(".wert").textContent = richtig;
       k.querySelector(".was").textContent = f.zeile || "";
       k.querySelector(".brue").textContent = f.merke;
