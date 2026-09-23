@@ -142,6 +142,71 @@ export async function onRequestGet(context) {
                      ...(wiederholt ? { wiederholt } : {}) });
 }
 
+/* Den Vorrat gegen den heutigen Riegel halten.
+ *
+ *   DELETE /api/quiz?kind=paul&unbelegt=1     (nur mit Eltern-Code)
+ *
+ * Dieselbe Lehre wie bei pruefe-bestand.sh fuer die Spiele: Der Riegel laeuft
+ * nur beim BAUEN. Eine Frage, die vorher entstanden ist, kennt ihn nie - sie
+ * liegt im Vorrat und wird wieder gestellt.
+ *
+ * Anlass: Am 23.09.2026 um 03:21 Uhr stand in Pauls HSU-Lauf "Was ist weniger
+ * Wasser: 1 Liter oder 300 ml aus der Regnitz-Probe?" - auf seinem Blatt steht
+ * davon nichts. Denny: "Diese Antwort gibt es dort drin gar nicht." Der neue
+ * Riegel verhindert solche Fragen kuenftig; die schon gebauten holt er nicht
+ * ein. Dafuer ist dieser Weg da.
+ *
+ * Er LIEST die Blaetter und schreibt nur den Vorrat - ein Schreibvorgang, und
+ * nur, wenn wirklich etwas wegfaellt. Kostet kein Geld: Es wird nichts gebaut.
+ */
+export async function onRequestDelete(context) {
+  const { request, env } = context;
+  if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
+
+  let p;
+  try { p = new URL(request.url).searchParams; } catch (e) { return json(400, { ok: false, fehler: "Kaputte Adresse." }); }
+  const kind = String(p.get("kind") || "").toLowerCase();
+  if (!KINDER[kind]) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+  if (p.get("unbelegt") !== "1") return json(400, { ok: false, fehler: "Nichts zu tun." });
+
+  /* Eltern-Code, nicht der des Kindes: Ein Kind soll seinen eigenen Vorrat
+     nicht leerraeumen koennen, wenn ihm eine Frage nicht gefaellt. */
+  if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env)))
+    return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });
+
+  let vorrat;
+  try {
+    const roh = await env.PAUL_KV.get(VORRAT(kind));
+    vorrat = roh ? JSON.parse(roh) : null;
+  } catch (e) { return json(503, { ok: false, fehler: "Der Speicher antwortet gerade nicht." }); }
+  if (!vorrat || !Array.isArray(vorrat.fragen) || !vorrat.fragen.length)
+    return json(200, { ok: true, geprueft: 0, weg: 0 });
+
+  const schule = await letzterUnterricht(env, kind, null);
+  const blaetter = schule.blaetter || [];
+
+  /* Eine gespeicherte Frage traegt die id ihres Blattes (f.blatt), nicht die
+     Nummer aus dem Auftrag. frageBelegt() erwartet die Nummer - also hier
+     zurueckuebersetzen. Ohne Blatt oder ohne gelesenen Inhalt wird nicht
+     geurteilt: ein Fehlalarm wuerde eine richtige Frage wegwerfen. */
+  const weg = [];
+  const bleiben = vorrat.fragen.filter((f) => {
+    if (!f || !f.blatt) return true;
+    const nr = blaetter.findIndex((b) => b.id === f.blatt) + 1;
+    if (!nr) return true;
+    if (frageBelegt({ blatt_nr: nr, frage: f.frage, antworten: f.antworten }, schule, true)) return true;
+    weg.push({ frage: String(f.frage || "").slice(0, 80), blatt: f.blatt });
+    return false;
+  });
+
+  if (!weg.length) return json(200, { ok: true, geprueft: vorrat.fragen.length, weg: 0 });
+
+  vorrat.fragen = bleiben;
+  try { await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(vorrat)); }
+  catch (e) { return json(503, { ok: false, fehler: "Konnte den Vorrat nicht speichern." }); }
+  return json(200, { ok: true, geprueft: weg.length + bleiben.length, weg: weg.length, welche: weg.slice(0, 20) });
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
