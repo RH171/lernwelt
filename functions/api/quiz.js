@@ -365,6 +365,10 @@ Das Kind hat aus dem Unterricht fotografiert:
 ${ausDerSchule}
 Nimm das als Schwerpunkt - dafür ist das Quiz da. Ein Lehrplan sagt, was
 irgendwann drankommt; das hier sagt, was diese Woche zählt.
+Steht bei einem Blatt SCHULHEFT, ist es der Prüfungsstoff: Die Lehrerin hat
+gesagt, gefragt wird, was im Heft steht. Nimm von dort die meisten Fragen.
+Ein Übungsblatt ist die Übung dazu - daraus darfst du fragen, aber nicht
+bevorzugt. Ohne Angabe behandle es wie bisher.
 Trag zu jeder Frage, die daher stammt, die Nummer des Blattes in "blatt_nr" ein.
 `) : ""}${schwaechen.length ? `
 DAS HAT ZULETZT NICHT GESESSEN
@@ -508,6 +512,21 @@ function kennung() {
  * Gibt nurBlaetter[] mit, wird NUR daraus gefragt - das ist Pauls eigene
  * Auswahl im Quiz.
  */
+/* Hefteintraege zuerst, Uebungsblaetter danach - siehe letzterUnterricht().
+ * Ausgelagert und exportiert, damit es OHNE Modellaufruf pruefbar ist
+ * (node pruefe-quiz-blatt.mjs). Sortiert eine Kopie, nicht das Original. */
+export function nachArt(liste) {
+  const RANG = { heft: 0, "": 1, uebung: 2 };
+  const rang = (x) => {
+    const r = RANG[(x && x.art) || ""];
+    return r === undefined ? 1 : r;        // unbekannte Art wie "ohne Angabe"
+  };
+  return (liste || []).slice().sort((a, b) => {
+    const ra = rang(a), rb = rang(b);
+    return ra !== rb ? ra - rb : String(b.datum || "").localeCompare(String(a.datum || ""));
+  });
+}
+
 async function letzterUnterricht(env, kind, nurBlaetter) {
   try {
     const e = await stoffLesen(env, kind, 4);
@@ -530,13 +549,7 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
      * verdraengt worden. Jetzt entscheidet erst die Art, dann das Datum.
      * Blaetter aus der Zeit vor der Unterscheidung (art: "") stehen dazwischen:
      * Sie koennen beides sein, also weder bevorzugt noch benachteiligt. */
-    const RANG = { heft: 0, "": 1, uebung: 2 };
-    liste.sort((a, b) => {
-      const ra = RANG[a.art || ""] !== undefined ? RANG[a.art || ""] : 1;
-      const rb = RANG[b.art || ""] !== undefined ? RANG[b.art || ""] : 1;
-      return ra !== rb ? ra - rb : (b.datum || "").localeCompare(a.datum || "");
-    });
-    liste = liste.slice(0, 8);
+    liste = nachArt(liste).slice(0, 8);
     if (!liste.length) return { text: "", blaetter: [] };
     return {
       /* MIT dem Inhalt, nicht nur mit dem Titel. Bis zum 23.09.2026 stand hier
