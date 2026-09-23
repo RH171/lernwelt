@@ -274,13 +274,29 @@
         var breite = rahmen.clientWidth || 300;
         var nw = im.naturalWidth || 1, nh = im.naturalHeight || 1;
         var hoch = breite * nh / nw;                       // Bildhoehe bei voller Breite
-        var band = hoch * (k.bis - k.von) / 100;           // so hoch ist die Stelle
+        /* ⚠️ Das Modell verortet die Zeile nur ungefaehr - und der Fehler ist
+         * systematisch: je weiter unten, desto weiter oben schaetzt es.
+         * Gemessen am 23.09.2026 an Pauls Stadtportraet: von vier Baendern
+         * sassen die beiden oberen richtig, die unteren 6 bzw. 12
+         * Prozentpunkte zu hoch - der Ausschnitt zur Postleitzahl zeigte
+         * die Eingemeindung.
+         *
+         * Bis der zweite Blick das genauer macht, wird das Band auf
+         * mindestens ein Sechstel des Blattes aufgezogen, um die Mitte der
+         * Modellangabe herum. Dann liegt die gesuchte Zeile mit grosser
+         * Wahrscheinlichkeit drin - und dass man sie darin SUCHEN muss, ist
+         * kein Mangel: Nachschlagen ist Lesen (dieselbe Idee wie bei Leons
+         * Lesegeschichte und bei Stufe 2 im Lernquiz). */
+        var mitte = (k.von + k.bis) / 2;
+        var weit = Math.max(k.bis - k.von, 17);
+        var von = Math.max(0, Math.min(100 - weit, mitte - weit / 2));
+        var band = hoch * weit / 100;                      // so hoch ist die Stelle
         /* Ein schmales Band ueber die volle Breite ist winzig. Also so weit
          * vergroessern, dass es etwa 120 px hoch wird - hoechstens aber
          * 2,4-fach, sonst sieht man von der Zeile nur noch ein Stueck. */
-        var zoom = Math.max(1, Math.min(2.4, 120 / Math.max(band, 1)));
+        var zoom = Math.max(1, Math.min(1.8, 170 / Math.max(band, 1)));
         im.style.width = (breite * zoom) + "px";
-        im.style.marginTop = (-hoch * zoom * k.von / 100) + "px";
+        im.style.marginTop = (-hoch * zoom * von / 100) + "px";
         rahmen.style.height = Math.round(band * zoom) + "px";
         // Mittig starten, damit bei Vergroesserung beide Seiten gleich weit weg sind.
         rahmen.scrollLeft = (breite * zoom - breite) / 2;
@@ -289,7 +305,10 @@
       else { im.addEventListener("load", setzen); im.src = blattBild; }
       window.addEventListener("resize", setzen);
 
-      aussen.appendChild(el("div", "lwf-bu", "So steht es in deinem Heft"));
+      /* NICHT "So steht es in deinem Heft" - der Ausschnitt trifft die Zeile
+         nur ungefaehr, und eine Anzeige darf nie mehr behaupten, als
+         gemessen wurde. */
+      aussen.appendChild(el("div", "lwf-bu", "Irgendwo hier steht es – such es auf deinem Blatt"));
       var ganz = el("button", "lwf-ganz", "Das ganze Blatt ansehen");
       ganz.type = "button";
       ganz.addEventListener("click", grossZeigen);
@@ -385,7 +404,7 @@
             b.className = "lwf-chip daneben";
             b.disabled = true;
             sagt.className = "lwf-tipp";
-            sagt.textContent = "Das steht nicht in dem Ausschnitt. Schau noch mal genau hin.";
+            sagt.textContent = "Noch nicht. Schau dir den Ausschnitt noch mal genau an.";
           }
         });
         chips.appendChild(b);

@@ -294,7 +294,7 @@ export function karteOk(k, inhalt) {
   if (bis - von < 2) return "Ausschnitt zu schmal";
   /* Mehr als ein Viertel des Blattes ist kein Ausschnitt mehr, sondern das
      halbe Blatt - dann steht die Antwort nicht mehr sichtbar heraus. */
-  if (bis - von > 28) return "Ausschnitt zu hoch";
+  if (bis - von > 34) return "Ausschnitt zu hoch";
   return "";
 }
 
