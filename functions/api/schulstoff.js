@@ -397,8 +397,12 @@ async function nachtragen(context) {
   /* Offen ist, wem der Titel fehlt ODER dessen Datum noch nie am Blatt
      geprueft wurde. Sonst bliebe ein Eintrag, der gestern nur den Titel
      bekommen hat, fuer immer falsch einsortiert. */
+  /* Offen ist jetzt auch, wem der INHALT fehlt. Blaetter aus der Zeit vor dem
+     23.09.2026 tragen nur Titel und Datum - und genau daran ist Pauls
+     Lernquiz gescheitert: Ohne Inhalt kann es nur aus dem Titel raten. */
   const offen = e.eintraege
-    .filter((x) => !x.titel || x.datumVon !== "blatt")
+    .filter((x) => !x.titel || x.datumVon !== "blatt" ||
+                   !(Array.isArray(x.inhalt) && x.inhalt.length))
     .slice(0, 12);
   const getan = [];
   for (const x of offen) {
