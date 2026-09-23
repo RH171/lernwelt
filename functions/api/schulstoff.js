@@ -114,6 +114,8 @@ export async function onRequestPost(context) {
     datum,
     abdruck,
     fach: String(d.fach || ""),
+    // Schulheft oder Uebungsblatt - siehe ARTEN in _schulstoff.js.
+    art: String(d.art || ""),
     thema: d.thema,
     titel: d.titel,
     notiz: d.notiz,
