@@ -314,6 +314,7 @@
 </style>
 <script src="stundenplan.js?v=cfad3cdc"></script>
 <script src="/strom.js?v=ccb1b4e5"></script>
+<script src="/fundkarten.js?v=9db63aac"></script>
 <script>
   // Seit 17.09.2026 laufen Hausaufgaben im Hausaufgaben-Heft. Paul kam am selben
   // Tag noch ueber eine offene alte Seite hierher - und bekam nebenbei ein
@@ -433,6 +434,12 @@
            Spiel ist danach ein Angebot, kein Zwang - es kostet 90 Sekunden
            und echtes Geld. -->
       <button class="los" id="los" disabled>Ins Heft legen</button>
+      <!-- Zuerst die Fundkarten: Paul sieht, was von seinem Blatt gelesen
+           wurde, und beantwortet es selbst (Denny, 23.09.2026). Erst danach
+           kommt die Frage, ob auch ein Spiel daraus werden soll.
+           Motor: /fundkarten.js -->
+      <div id="fundkarten"></div>
+
       <div class="danach verborgen" id="danach">
         <div class="danach-kopf">✅ Ist in deinem Heft.</div>
         <p class="unter" id="danach-text"></p>
@@ -1406,7 +1413,24 @@
       } else {
         warnung.classList.add("verborgen");
       }
-      $("danach").classList.remove("verborgen");
+      /* Die Fundkarten gehen VOR den "danach"-Block. Laufen sie, bleibt der
+         so lange verborgen - sonst stuenden zwei Bildschirme uebereinander
+         und der Knopf "Und jetzt ein Spiel dazu" faenge das Kind ab, bevor
+         es sein eigenes Blatt angesehen hat. */
+      var fk = $("fundkarten");
+      var karten = window.LWFund && LWFund.zeigen(fk, {
+        karten: a.j.karten,
+        kind: "paul",
+        was: a.j.titel,
+        blattId: a.j.id,
+        fertig: function(){
+          fk.innerHTML = "";
+          $("danach").classList.remove("verborgen");
+          $("danach").scrollIntoView({behavior:"smooth", block:"nearest"});
+        }
+      });
+      if (karten) { fk.scrollIntoView({behavior:"smooth", block:"start"}); }
+      else { $("danach").classList.remove("verborgen"); }
       /* Hat das Blatt selbst ein Datum getragen, gilt das - aber Paul
          erfaehrt es. Denny am 22.09.2026 hat absichtlich ein falsches
          gewaehlt, um zu sehen, was passiert; ein heimlich getauschtes Datum
