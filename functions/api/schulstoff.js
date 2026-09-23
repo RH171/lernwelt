@@ -24,7 +24,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
-  stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen,
+  stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
   inhaltSetzen,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen,
   faecherImHeft, blaetterImFach, schuljahrStart,
@@ -970,6 +970,18 @@ export async function onRequestPatch(context) {
     if (!r2.ok) return json(503, { ok: false, fehler: "Das hat nicht geklappt." });
     await vorschlagSetzen(env, kind, x.id, "");
     return json(200, { ok: true, datum: x.datumVorschlag });
+  }
+
+  /* Die Art nachtragen - fuer Blaetter aus der Zeit vor der Unterscheidung.
+     Wie beim Datum nur mit Eltern-Ausweis: Was das Kind auf "Wo stand das?"
+     geantwortet hat, entscheidet, ob daraus gefragt wird. */
+  if (String(d.was || "") === "art") {
+    if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) {
+      return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });
+    }
+    const r3 = await artSetzen(env, kind, String(d.id || ""), String(d.art || ""));
+    if (!r3.ok) return json(r3.fehler === "Das finde ich nicht mehr." ? 404 : 400, { ok: false, fehler: r3.fehler });
+    return json(200, { ok: true, von: r3.von, auf: r3.auf });
   }
 
   if (String(d.was || "") === "datum") {

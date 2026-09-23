@@ -576,6 +576,55 @@ export async function vorschlagSetzen(env, kind, id, datum) {
   return { ok: false };
 }
 
+/* Die Art eines Eintrags nachtragen: Schulheft oder Uebungsblatt.
+ *
+ * Gebraucht fuer die Blaetter, die VOR der Unterscheidung abgelegt wurden -
+ * bei ihnen steht art auf "". Denny am 23.09.2026 zum HSU-Blatt im Schaukasten:
+ * "Das ist ja ein Hefteintrag, und ich finde, das sollte man hier auch
+ * erkennen ... Jedenfalls musst du das Blatt dann auch dementsprechend
+ * verschieben."
+ *
+ * NUR mit Eltern-Ausweis, wie beim Datum: Was das Kind beim Hochladen gewaehlt
+ * hat, ist seine Antwort auf "Wo stand das?" - und die entscheidet, ob daraus
+ * spaeter gefragt wird. Sie soll nicht nebenbei umgestellt werden koennen. */
+export async function artSetzen(env, kind, id, art) {
+  if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
+  if (!env || !env.PAUL_KV) return { ok: false, fehler: "Der Speicher ist gerade nicht da." };
+  if (!ARTEN[art]) return { ok: false, fehler: "Das kenne ich nicht." };
+
+  const heute = heuteBerlin();
+  for (let i = 0; i < MONATE_ZURUECK; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try {
+      roh = await env.PAUL_KV.get(LISTE(kind, monat));
+    } catch (e) {
+      return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." };
+    }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
+    const treffer = liste.findIndex((e) => e.id === id);
+    if (treffer < 0) continue;
+
+    const vorher = liste[treffer].art || "";
+    liste[treffer].art = art;
+    // Erst lesen, dann schreiben: ein put mit demselben Wert kostet genauso
+    // viel wie ein echtes, und das Tageskontingent ist die knappe Zahl.
+    const neu = JSON.stringify(liste);
+    if (neu !== roh) {
+      try {
+        await env.PAUL_KV.put(LISTE(kind, monat), neu);
+      } catch (e) {
+        return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." };
+      }
+    }
+    return { ok: true, von: vorher, auf: art };
+  }
+  return { ok: false, fehler: "Das finde ich nicht mehr." };
+}
+
 /* Verstecken und Wiederholen - ein Tipp, umkehrbar, das Bild bleibt.
  * "weg" nimmt nur den Eintrag aus der Liste; die Bilder liegen weiter da. */
 export async function stoffAendern(env, kind, id, was) {
