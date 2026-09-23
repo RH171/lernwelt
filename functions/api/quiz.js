@@ -518,6 +518,24 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
     if (nurBlaetter && nurBlaetter.length) {
       liste = liste.filter((x) => nurBlaetter.includes(x.id));
     }
+    /* Hefteintraege zuerst, Uebungsblaetter danach.
+     *
+     * Pauls Lehrerin am Elternabend (Denny, 23.09.2026): "Alles, was relevant
+     * ist, kommt ins Heft, und alles andere kommt in Uebungsblaettern. ES WIRD
+     * DAS GEFRAGT, WAS IM HEFT ENTHALTEN IST." Damit ist das Heft der
+     * Pruefungsstoff und ein Uebungsblatt die Uebung dazu.
+     *
+     * Die Acht-Blaetter-Grenze schnitt bisher rein nach Datum ab - ein
+     * Hefteintrag von Montag waere von drei Uebungsblaettern vom Dienstag
+     * verdraengt worden. Jetzt entscheidet erst die Art, dann das Datum.
+     * Blaetter aus der Zeit vor der Unterscheidung (art: "") stehen dazwischen:
+     * Sie koennen beides sein, also weder bevorzugt noch benachteiligt. */
+    const RANG = { heft: 0, "": 1, uebung: 2 };
+    liste.sort((a, b) => {
+      const ra = RANG[a.art || ""] !== undefined ? RANG[a.art || ""] : 1;
+      const rb = RANG[b.art || ""] !== undefined ? RANG[b.art || ""] : 1;
+      return ra !== rb ? ra - rb : (b.datum || "").localeCompare(a.datum || "");
+    });
     liste = liste.slice(0, 8);
     if (!liste.length) return { text: "", blaetter: [] };
     return {
@@ -529,8 +547,14 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
          gibt. Eine Bitte, die sich gar nicht erfuellen laesst, ist schlimmer
          als gar keine. */
       text: liste.map((x, i) => {
+        /* Die Art steht im Kopf, damit das Modell weiss, woraus gefragt
+           wird und woraus nur geuebt. Steht sie nicht dabei, wird nichts
+           behauptet - ein erfundenes "Schulheft" waere schlimmer als keins. */
+        const woher = x.art === "heft" ? ", SCHULHEFT"
+                    : x.art === "uebung" ? ", Uebungsblatt" : "";
         const kopf = (i + 1) + ". " + x.titel + " (" +
-                     (FAECHER[x.fach] || x.fach || "?") + ", " + x.datum + ")";
+                     (FAECHER[x.fach] || x.fach || "?") + ", " + x.datum +
+                     woher + ")";
         const zeilen = Array.isArray(x.inhalt) ? x.inhalt : [];
         return zeilen.length
           ? kopf + "\n" + zeilen.map((z) => "   - " + z).join("\n")
