@@ -287,8 +287,12 @@
          * Wahrscheinlichkeit drin - und dass man sie darin SUCHEN muss, ist
          * kein Mangel: Nachschlagen ist Lesen (dieselbe Idee wie bei Leons
          * Lesegeschichte und bei Stufe 2 im Lernquiz). */
+        /* Hat der zweite Blick die Stelle gezielt nachgeschlagen (k.genau),
+           bleibt das Band so schmal, wie er es angegeben hat - dann ist es
+           ein Ausschnitt und kein Bereich. Nur die Schaetzung aus dem
+           ersten Aufruf wird aufgezogen. */
         var mitte = (k.von + k.bis) / 2;
-        var weit = Math.max(k.bis - k.von, 17);
+        var weit = k.genau ? (k.bis - k.von) : Math.max(k.bis - k.von, 17);
         var von = Math.max(0, Math.min(100 - weit, mitte - weit / 2));
         var band = hoch * weit / 100;                      // so hoch ist die Stelle
         /* Ein schmales Band ueber die volle Breite ist winzig. Also so weit

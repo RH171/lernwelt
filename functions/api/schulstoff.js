@@ -112,7 +112,7 @@ export async function onRequestPost(context) {
    * hier eigentlich ging - und der Eintrag liegt ohnehin schon sicher im
    * Speicher, bevor dieser Aufruf startet. */
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
-  let karten = [], kartenWarum = "";
+  let karten = [], kartenWarum = "", genauer = 0;
   if (env.ANTHROPIC_API_KEY) {
     try {
       const gelesen = await blattLesen(env, seiten[0]);
@@ -152,6 +152,7 @@ export async function onRequestPost(context) {
          hat trotzdem einen Inhalt. */
       karten = gelesen.karten || [];
       kartenWarum = gelesen.kartenWarum || "";
+      genauer = gelesen.genauer || 0;
       if ((gelesen.inhalt && gelesen.inhalt.length) || karten.length) {
         await inhaltSetzen(env, kind, e.id, gelesen.inhalt, karten);
       }
@@ -195,7 +196,9 @@ export async function onRequestPost(context) {
     karten,
     // Warum keine da sind, steht drin. Kein stiller catch - derselbe Grund
     // wie bei titelWarum: sonst steht man vor einem leeren Feld ohne Hinweis.
-    ...(karten.length ? {} : (kartenWarum ? { kartenWarum } : {})),
+    ...(kartenWarum ? { kartenWarum } : {}),
+    // Wie viele Baender der zweite Blick genauer gesetzt hat.
+    ...(karten.length ? { genauer } : {}),
   });
 }
 
