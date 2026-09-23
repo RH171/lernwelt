@@ -40,12 +40,25 @@ function json(status, daten) {
 // Bis hierher darf ein Bild gehen. Ein Handyfoto kommt verkleinert an
 // (strom.js bringt es auf 1800 px, rund 280 KB) - 2 MB sind reichlich Luft.
 const MAX_BILD = 2 * 1024 * 1024;
-const MAX_SEITEN = 6;
+/* Hoechstens ZWEI Seiten je Eintrag - Vorder- und Rueckseite eines Blattes.
+ *
+ * Denny am 23.09.2026, nachdem gerechnet war, was ein Heft in einem Schwung
+ * kostet: "Ich wuerde das auch so anlegen, dass Paul maximal ein Blatt
+ * hochladen kann, gegebenenfalls Vorder- und Rueckseite. Hat den Vorteil, dass
+ * er selber gar nicht durcheinanderkommt ... Damit minimiert sich auch das
+ * Risiko von Verlust. Wenn man 25 Seiten liest, kann sicher was untergehen,
+ * bei ein bis zwei Seiten nicht. Auch fuer Paul ist das viel einfacher als die
+ * Frustration, eine ganze Woche nachzufragen."
+ *
+ * Stand vorher 6. Die Grenze ist damit KEIN technischer Deckel mehr, sondern
+ * eine Entscheidung ueber den Ablauf: ein Blatt, ein Eintrag, ein Thema. */
+const MAX_SEITEN = 2;
 /* So viele Inhaltszeilen behaelt EIN Eintrag, ueber alle seine Seiten zusammen.
-   Je Seite liest blattLesen() bis zu 14; bei sechs Seiten waeren das 84, und
-   der Quiz-Auftrag traegt den ganzen Inhalt mit (quiz.js, letzterUnterricht).
-   36 ist rund das Dreifache eines einzelnen Blattes und bleibt bezahlbar. */
-const INHALT_MAX = 36;
+   Je Seite liest blattLesen() bis zu 14, und der Quiz-Auftrag traegt den
+   ganzen Inhalt mit (quiz.js, letzterUnterricht).
+   Bei den erlaubten zwei Seiten sind es hoechstens 28 - der Deckel greift
+   also nur, wenn beide Seiten randvoll sind. */
+const INHALT_MAX = 28;
 
 async function darfRein(request, env, kind) {
   if (geheimFuer(env, "eltern") && (await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) return true;
@@ -68,7 +81,13 @@ export async function onRequestPost(context) {
   if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
   if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
 
-  const seiten = (Array.isArray(d.seiten) ? d.seiten : []).slice(0, MAX_SEITEN);
+  const seitenRoh = Array.isArray(d.seiten) ? d.seiten : [];
+  const seiten = seitenRoh.slice(0, MAX_SEITEN);
+  /* Wegwerfen ohne ein Wort waere das Gegenteil dessen, wofuer das Schulheft
+     gebaut ist ("was Paul hochlaedt, verschwindet nicht"). Wer mehr schickt,
+     erfaehrt es - die Werkstatt schickt bis zu 20 Seiten und wuesste sonst
+     nichts davon. */
+  const zuViel = seitenRoh.length - seiten.length;
   if (!seiten.length) return json(400, { ok: false, fehler: "Da war kein Bild dabei." });
   for (const s of seiten) {
     if (typeof s !== "string" || !s.startsWith("data:")) {

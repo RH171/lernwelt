@@ -205,7 +205,15 @@
     });
 
     function nehmen(datei) {
-      if (seiten.length >= 6) { melde("Mehr als sechs Seiten auf einmal gehen nicht.", "fehler"); return; }
+      /* Ein Blatt je Eintrag - hoechstens Vorder- und Rueckseite.
+         Denny am 23.09.2026: "Hat den Vorteil, dass er selber gar nicht
+         durcheinanderkommt ... Wenn man 25 Seiten liest, kann sicher was
+         untergehen, bei ein bis zwei Seiten nicht." Stand vorher bei 6,
+         der Server deckelt seit demselben Tag ebenfalls bei 2 (MAX_SEITEN). */
+      if (seiten.length >= 2) {
+        melde("Ein Blatt auf einmal - Vorder- und Rückseite. Das nächste legst du gleich danach ins Heft.", "fehler");
+        return;
+      }
       var leser = new FileReader();
       leser.onload = function () {
         seiten.push({ url: String(leser.result), name: datei.name || "" });
