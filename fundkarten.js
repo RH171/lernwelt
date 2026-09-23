@@ -152,6 +152,87 @@
     "}"
   ].join("");
 
+  /* Wo stehen die Textzeilen auf dem Blatt? Rein mechanisch aus dem Bild -
+   * kein Modell, keine Wartezeit, kein Geld.
+   *
+   * Das Bild wird klein auf ein Canvas gezeichnet, und je Bildzeile wird
+   * gezaehlt, wie viele Punkte deutlich dunkler sind als das Papier neben
+   * ihnen (der 85er-Perzentilwert der Zeile ist der Papierton - das haelt
+   * Schatten und schiefe Fotos aus). Zusammenhaengende Bereiche mit Tinte
+   * sind die Zeilen.
+   *
+   * WAS DAS LEISTET UND WAS NICHT - gemessen am 23.09.2026 an Pauls
+   * Stadtportraet, damit es niemand erneut ausprobieren muss:
+   *   ja   Der Ausschnitt schneidet nie mitten durch eine Zeile. Er zeigt
+   *        ganze Zeilen statt eines willkuerlichen Prozentbandes.
+   *   nein Er trifft dadurch NICHT oefter die richtige Stelle. Die
+   *        Trefferquote haengt allein an der Schaetzung des Modells; mit
+   *        Einrasten auf die naechste Zeile UND mit monotoner Zuordnung
+   *        ueber die Reihenfolge kamen beide Male dieselben 2 von 4 heraus.
+   * Wer das loesen will, braucht Texterkennung, nicht bessere Geometrie. */
+  function zeilenFinden(im) {
+    try {
+      var breite = 300;
+      var hoehe = Math.round(breite * im.naturalHeight / im.naturalWidth);
+      if (!(hoehe > 20)) return null;
+      var c = document.createElement("canvas");
+      c.width = breite; c.height = hoehe;
+      var ctx = c.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return null;
+      ctx.drawImage(im, 0, 0, breite, hoehe);
+      var d = ctx.getImageData(0, 0, breite, hoehe).data;
+      var profil = new Array(hoehe), reihe = new Array(breite), x, y, i;
+      for (y = 0; y < hoehe; y++) {
+        for (x = 0; x < breite; x++) {
+          i = (y * breite + x) * 4;
+          reihe[x] = (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000;
+        }
+        var sortiert = reihe.slice().sort(function (a, b) { return a - b; });
+        var papier = sortiert[Math.floor(breite * 0.85)];
+        var dunkel = 0;
+        for (x = 0; x < breite; x++) if (reihe[x] < papier - 55) dunkel++;
+        profil[y] = dunkel / breite;
+      }
+      var g = new Array(hoehe);
+      for (y = 0; y < hoehe; y++) {
+        var a = Math.max(0, y - 1), b = Math.min(hoehe - 1, y + 1), s = 0;
+        for (i = a; i <= b; i++) s += profil[i];
+        g[y] = s / (b - a + 1);
+      }
+      var zeilen = [], start = null;
+      for (y = 0; y < hoehe; y++) {
+        if (g[y] >= 0.035 && start === null) start = y;
+        else if (g[y] < 0.035 && start !== null) {
+          if (y - start >= 3) zeilen.push([start * 100 / hoehe, y * 100 / hoehe]);
+          start = null;
+        }
+      }
+      if (start !== null && hoehe - start >= 3) zeilen.push([start * 100 / hoehe, 100]);
+      return zeilen.length >= 3 ? zeilen : null;
+    } catch (e) {
+      /* Ein Bild anderer Herkunft macht das Canvas "unrein" und
+         getImageData wirft. Dann eben ohne - der Ausschnitt sitzt weiter
+         auf der Schaetzung. */
+      return null;
+    }
+  }
+
+  /* Das Band auf ganze Zeilen aufziehen: von der ersten Zeile, die es
+   * beruehrt, bis zur letzten. Beruehrt es keine (Leerraum, Bildbereich),
+   * bleibt es, wie es war. */
+  function einrasten(von, bis, zeilen) {
+    if (!zeilen) return [von, bis];
+    var lo = null, hi = null;
+    for (var i = 0; i < zeilen.length; i++) {
+      var z = zeilen[i];
+      if (z[1] < von || z[0] > bis) continue;
+      if (lo === null || z[0] < lo) lo = z[0];
+      if (hi === null || z[1] > hi) hi = z[1];
+    }
+    if (lo === null) return [von, bis];
+    return [Math.max(0, lo - 0.6), Math.min(100, hi + 0.6)];
+  }
+
   function el(tag, klasse, text) {
     var n = document.createElement(tag);
     if (klasse) n.className = klasse;
@@ -258,6 +339,8 @@
      * kein zweites Bild, kein Zuschneiden auf dem Server. Gerechnet wird
      * erst, wenn das Bild seine echten Masse kennt; vorher steht nur der
      * leere Rahmen da. */
+    /* Einmal je Bild gerechnet und gemerkt - nicht je Karte. */
+    var zeilen;
     function schnipsel(k) {
       var aussen = el("div");
       var rahmen = el("div", "lwf-schnipsel lwf-rolle");
@@ -271,6 +354,7 @@
       rahmen.appendChild(im);
 
       function setzen() {
+        if (zeilen === undefined) zeilen = zeilenFinden(im);
         var breite = rahmen.clientWidth || 300;
         var nw = im.naturalWidth || 1, nh = im.naturalHeight || 1;
         var hoch = breite * nh / nw;                       // Bildhoehe bei voller Breite
@@ -294,6 +378,10 @@
         var mitte = (k.von + k.bis) / 2;
         var weit = k.genau ? (k.bis - k.von) : Math.max(k.bis - k.von, 17);
         var von = Math.max(0, Math.min(100 - weit, mitte - weit / 2));
+        // Auf ganze Textzeilen aufziehen, damit der Schnitt nicht mitten
+        // durch einen Buchstaben laeuft.
+        var ein = einrasten(von, von + weit, zeilen);
+        von = ein[0]; weit = ein[1] - ein[0];
         var band = hoch * weit / 100;                      // so hoch ist die Stelle
         /* Ein schmales Band ueber die volle Breite ist winzig. Also so weit
          * vergroessern, dass es etwa 120 px hoch wird - hoechstens aber
