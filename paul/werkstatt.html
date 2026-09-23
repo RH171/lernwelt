@@ -65,15 +65,11 @@
               padding:13px 15px;font-size:15.5px}
   .datumfrage-knoepfe{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}
   .doppelt button{margin-top:10px}
-  @media (prefers-color-scheme:dark){
-    .doppelt{background:#2a2317;border-color:#4a3a1c}
-    .datumfrage{background:#1b1f38;border-color:#33407a}
-  }
+  html[data-theme="dark"] .doppelt{background:#2a2317;border-color:#4a3a1c}
+  html[data-theme="dark"] .datumfrage{background:#1b1f38;border-color:#33407a}
   .danach-knoepfe .fach{text-decoration:none;display:flex;align-items:center}
-  @media (prefers-color-scheme:dark){
-    .danach{background:#0f2c1c;border-color:#1f5137}
-    .danach-kopf{color:#b6f0cd}
-  }
+  html[data-theme="dark"] .danach{background:#0f2c1c;border-color:#1f5137}
+  html[data-theme="dark"] .danach-kopf{color:#b6f0cd}
   .fachfrage.fehlt{color:var(--paul)}
   .fach{border:1px solid var(--line);background:#fbfcff;border-radius:999px;
         padding:11px 17px;min-height:44px;font-family:var(--rund);font-size:15px;
@@ -312,6 +308,10 @@
   if (/[?&]hausaufgabe=1/.test(location.search)) location.replace("hausaufgaben.html");
 </script>
 <link rel="stylesheet" href="/beruehrung.css">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css">
 </head>
 <body>
 <div class="huelle">

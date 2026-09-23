@@ -18,6 +18,10 @@
   (Denny, 18.09.2026). Darum steht hier nichts Genaueres.
 -->
 <link rel="stylesheet" href="/beruehrung.css">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css">
 <style>
   :root{
     --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#667085; --line:#e3e7ee;

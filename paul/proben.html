@@ -22,6 +22,10 @@
   Keine Lernzeit: Nachschauen ist kein Lernen - lernstand.js bleibt draußen.
 -->
 <link rel="stylesheet" href="/beruehrung.css">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css">
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#6b7280; --line:#e4e7f0;
@@ -29,9 +33,7 @@
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
   }
-  @media (prefers-color-scheme:dark){
-    :root{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;--line:#2e3140}
-  }
+  html[data-theme="dark"]{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;--line:#2e3140}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--font);
        padding:18px 16px 70px;-webkit-text-size-adjust:100%}
@@ -73,11 +75,9 @@
   .note .was span{font-size:13.5px;color:var(--muted)}
   .merk{margin-top:14px;border-radius:14px;background:#eef2ff;border:1.5px solid #c7d2fe;
         padding:13px 15px;font-size:15.5px}
-  @media (prefers-color-scheme:dark){
-    .balken,.fzeile .bar{background:#262a38}
-    .note{background:#232634}
-    .merk{background:#1b1f38;border-color:#33407a}
-  }
+  html[data-theme="dark"] .balken,html[data-theme="dark"] .fzeile .bar{background:#262a38}
+  html[data-theme="dark"] .note{background:#232634}
+  html[data-theme="dark"] .merk{background:#1b1f38;border-color:#33407a}
 </style>
 </head>
 <body>

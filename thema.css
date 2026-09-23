@@ -1,0 +1,73 @@
+/* Hell oder dunkel - EINE Wahl fuer alle Seiten eines Kindes.
+ *
+ * Denny am 23.09.2026, mit zwei Bildern nebeneinander (Lernquiz hell,
+ * Schulheft dunkel): "Du wechselst hier zwischen Black- und White-Feldern
+ * hin- und herschweifen. Wenn Paul sich den Dark Mode aussucht, sollte es
+ * auch da bleiben, uebergreifend auf alle anderen Seiten."
+ *
+ * Vorher entschied das JEDE Seite fuer sich: Pauls Startseite hatte einen
+ * eigenen Schalter (localStorage "hub-theme", Standardwert dunkel), Schulheft
+ * und Proben folgten der SYSTEM-Einstellung des Geraets, Lernquiz, Stundenplan
+ * und Hausaufgaben waren fest hell. Auf einem Handy im dunklen Systemmodus kam
+ * so bei jedem zweiten Tipp ein weisses Blatt - nachts das, was blendet.
+ *
+ * Jetzt zaehlt nur noch "hub-theme". Die Seite setzt data-theme im <head>,
+ * BEVOR etwas gezeichnet wird (sonst blitzt kurz die falsche Farbe auf), und
+ * diese Datei setzt dazu die dunklen Werte.
+ *
+ * Es wird NICHT mehr nach prefers-color-scheme geschaut. Eine getroffene Wahl
+ * darf nicht davon abhaengen, wie das Geraet gerade steht - sonst waere sie
+ * keine Wahl. Wer nie etwas waehlt, bekommt dunkel; so stand Pauls Startseite
+ * seit jeher.
+ *
+ * Die Seiten benutzen durchweg dieselben Variablennamen, deshalb genuegt hier
+ * ein Block. --karte und --card sind dasselbe unter zwei Namen (Schulheft und
+ * Proben heissen es deutsch), beide werden gesetzt.
+ *
+ * Spezifitaet: html[data-theme="dark"] (0,1,1) schlaegt :root (0,1,0). Diese
+ * Datei gewinnt also auch dann, wenn die Seite ihre Farben spaeter setzt.
+ */
+html[data-theme="dark"]{
+  color-scheme: dark;
+
+  --bg:#14151c;
+  --card:#1e2029;
+  --karte:#1e2029;
+  --ink:#eef1f8;
+  --muted:#a0a6bd;
+  --line:#2e3140;
+
+  /* Die zarten Fuellfarben sind auf Weiss gerechnet und leuchten auf Schwarz
+   * viel zu stark. Dunkle Entsprechungen mit gleicher Rolle: */
+  --akzent-hell:#252a48;
+  --paul-hell:#252a48;
+  --leon-hell:#252a48;
+  --gut-hell:#10281f;
+  --gruen-hell:#10281f;
+  --schlecht-hell:#2e1a18;
+
+  /* Textfarben auf diesen Fuellungen - hell statt dunkel. */
+  --gut:#4ade9b;
+  --gut-text:#4ade9b;
+  --schlecht:#ff8f85;
+  --schlecht-text:#ff8f85;
+  --orange:#f0b45f;
+}
+
+/* Der Akzent bleibt derselbe Farbton, nur heller - #4f46e5 auf #14151c waere
+ * 2,6:1 und damit unter der Grenze von WCAG 2.2 (1.4.3: 4,5:1). */
+html[data-theme="dark"]{
+  --akzent:#a5b4ff;
+  --paul:#a5b4ff;
+  --leon:#a5b4ff;
+  --akzent-text:#a5b4ff;
+}
+
+/* Knoepfe, die den Akzent als FLAECHE benutzen, brauchen dunkle Schrift
+ * darauf - #a5b4ff ist hell. */
+html[data-theme="dark"]{ --akzent-auf:#151726; }
+
+/* Bilder und leere Platzhalter: ein Grau, das sich vom Kartenhintergrund
+ * abhebt, ohne zu leuchten. */
+html[data-theme="dark"] img[src^="data:"],
+html[data-theme="dark"] .platzhalter{ background:#262a38; }

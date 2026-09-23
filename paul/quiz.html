@@ -21,6 +21,10 @@
   Lernziel dagegen so oft, bis es sitzt.
 -->
 <link rel="stylesheet" href="/beruehrung.css">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css">
 <link rel="stylesheet" href="/quiz/quiz.css">
 <style>
   :root{
