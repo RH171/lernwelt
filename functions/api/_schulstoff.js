@@ -422,13 +422,18 @@ export async function stoffBild(env, id, nr) {
  *
  * Getrennt von titelSetzen(), weil das beim ersten gesetzten Titel aufhoert -
  * sonst liesse sich zu einem alten Blatt nie ein Inhalt nachtragen. */
-export async function inhaltSetzen(env, kind, id, inhalt) {
+/* Der Inhalt UND die Fundkarten wandern in EINEM Schreibvorgang an den
+ * Eintrag. Schreibvorgaenge sind hier die knappe Zahl (1000 am Tag), nicht
+ * der Platz - zwei Felder gehoeren deshalb in einen Schluessel, nicht in
+ * zwei. */
+export async function inhaltSetzen(env, kind, id, inhalt, karten) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   const zeilen = (Array.isArray(inhalt) ? inhalt : [])
     .map((z) => String(z || "").trim().slice(0, 90))
     .filter(Boolean)
     .slice(0, 14);
-  if (!zeilen.length) return { ok: true, nichts: true };
+  const hatKarten = Array.isArray(karten) && karten.length > 0;
+  if (!zeilen.length && !hatKarten) return { ok: true, nichts: true };
 
   const heute = heuteBerlin();
   for (let i = 0; i < 4; i++) {
@@ -442,6 +447,7 @@ export async function inhaltSetzen(env, kind, id, inhalt) {
     const treffer = liste.findIndex((e) => e.id === id);
     if (treffer < 0) continue;
     liste[treffer].inhalt = zeilen;
+    if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, 8);
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
     return { ok: true, zeilen: zeilen.length };

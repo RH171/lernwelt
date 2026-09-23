@@ -112,6 +112,7 @@ export async function onRequestPost(context) {
    * hier eigentlich ging - und der Eintrag liegt ohnehin schon sicher im
    * Speicher, bevor dieser Aufruf startet. */
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
+  let karten = [], kartenWarum = "";
   if (env.ANTHROPIC_API_KEY) {
     try {
       const gelesen = await blattLesen(env, seiten[0]);
@@ -149,8 +150,10 @@ export async function onRequestPost(context) {
          Lernquiz spaeter nur aus dem Titel raten (siehe inhaltSetzen). Das
          laeuft unabhaengig vom Datums-Urteil: Ein Blatt mit unklarem Datum
          hat trotzdem einen Inhalt. */
-      if (gelesen.inhalt && gelesen.inhalt.length) {
-        await inhaltSetzen(env, kind, e.id, gelesen.inhalt);
+      karten = gelesen.karten || [];
+      kartenWarum = gelesen.kartenWarum || "";
+      if ((gelesen.inhalt && gelesen.inhalt.length) || karten.length) {
+        await inhaltSetzen(env, kind, e.id, gelesen.inhalt, karten);
       }
     } catch (err) {
       // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
@@ -186,6 +189,13 @@ export async function onRequestPost(context) {
     ...(weichtAb ? { datumGeaendert: { von: e.datum, auf: vomBlattGelesen } } : {}),
     /* Mehr als 14 Tage Abstand: Das Kind bestätigt es selbst. */
     ...(nachgefragt ? { datumFrage: nachgefragt } : {}),
+    /* Die Fundkarten fuer den Bildschirm direkt danach (Denny, 23.09.2026).
+       Sie gehen in DIESER Antwort mit - ein zweiter Aufruf waere eine zweite
+       Wartezeit, und genau die soll hier nicht entstehen. */
+    karten,
+    // Warum keine da sind, steht drin. Kein stiller catch - derselbe Grund
+    // wie bei titelWarum: sonst steht man vor einem leeren Feld ohne Hinweis.
+    ...(karten.length ? {} : (kartenWarum ? { kartenWarum } : {})),
   });
 }
 
