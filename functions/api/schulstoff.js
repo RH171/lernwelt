@@ -836,7 +836,9 @@ async function blattLesen(env, seite) {
               "ohne Anführungszeichen. Erkennst du es nicht sicher: unklar\n" +
               "DATUM: das Datum, das auf dem Blatt steht - meist oben links oder oben rechts, " +
               "oft abgekürzt wie 22.9.26. Schreib es genau so ab, wie es dasteht. " +
-              "Steht keines da: keins\n" +
+              "Nur ein Datum, das jemand VON HAND eingetragen hat - ein gedrucktes " +
+              "Beispieldatum auf einer Vorlage (etwa \"So schreibe ich in mein Heft\") " +
+              "zaehlt nicht. Steht keines da: keins\n" +
               "SORTE: eine von drei Angaben, was fuer ein Blatt das ist:\n" +
               "* lernziele - es listet auf, was man koennen muss (\"Das musst du " +
               "koennen\", \"Ich kann ...\", Kaestchen zum Abhaken vor Ich-Saetzen).\n" +
@@ -849,6 +851,10 @@ async function blattLesen(env, seite) {
               "\"- \". Hoechstens 14 Zeilen, hoechstens 12 Woerter je Zeile. Schreib " +
               "Zahlen und Namen genau ab. Erfinde NICHTS dazu: Was nicht auf dem Blatt " +
               "steht, steht auch hier nicht.\n" +
+              "Was das Kind geschrieben hat, schreib WOERTLICH ab, auch mit seinen " +
+              "Fehlern - verbessere nichts still. Bist du SICHER, dass es sich " +
+              "verschrieben oder verrechnet hat, schreib: Kind schrieb X, richtig: Y. " +
+              "Bist du nicht sicher, schreib nur ab.\n" +
               "WICHTIG - was UM das Blatt herum steht, gehoert dazu: Schau auch auf " +
               "den Rand der Heftseite, ueber und unter ein eingeklebtes Blatt, und " +
               "auf alles Handgeschriebene. Randnotizen, nachtraeglich dazugeschriebene " +
@@ -876,6 +882,15 @@ async function blattLesen(env, seite) {
               "Sie duerfen NICHT selbst auf dem Blatt stehen und nie eine andere " +
               "Schreibweise der richtigen Antwort sein.\n" +
               "Hoechstens 8 Karten, nur fuer Stellen mit einem klaren kurzen Wert.\n" +
+              "* Karten nur zum LERNSTOFF. Keine Karte zu Name, Klasse, Datum, " +
+              "Kuerzel oder Lob der Lehrkraft, Stempel, Seitenzahl, und keine zur " +
+              "Lage auf dem Blatt (\"Welches Wort steht als erstes?\").\n" +
+              "* Geht es ums Zuordnen (Wortarten, Nomen oder nicht, Rechenart), sind " +
+              "die falschen Antworten die ANDEREN Gruppen desselben Blattes - bei " +
+              "einem Verb also Nomen und Adjektiv, nicht Woerter, die dort gar nicht " +
+              "vorkommen.\n" +
+              "* Frag so, dass die Antwort ein Treffer ist, nie ein Ausschluss: " +
+              "\"Welches Wort ist ein Nomen?\" statt \"Welches ist kein Nomen?\".\n" +
               "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\nSORTE: normal\n" +
               "INHALT:\n- ! Regnitz\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
               "KARTEN:\n" +
