@@ -433,7 +433,7 @@
            Also: Der Hauptknopf legt ab und ist in zwei Sekunden fertig. Das
            Spiel ist danach ein Angebot, kein Zwang - es kostet 90 Sekunden
            und echtes Geld. -->
-      <button class="los" id="los" disabled>Ins Heft legen</button>
+      <button class="los" id="los" disabled>In die Ablage legen</button>
       <!-- Zuerst die Fundkarten: Paul sieht, was von seinem Blatt gelesen
            wurde, und beantwortet es selbst (Denny, 23.09.2026). Erst danach
            kommt die Frage, ob auch ein Spiel daraus werden soll.
@@ -1028,8 +1028,8 @@
     $("los").textContent = fachFehlt
       ? "Sag mir noch, welches Fach"
       : seiten.length > 1
-        ? seiten.length + " Seiten ins Heft legen"
-        : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "Ins Heft legen";
+        ? seiten.length + " Seiten in die Ablage legen"
+        : (seiten.length === 0 && wunsch) ? "Spiel nach deinem Wunsch bauen" : "In die Ablage legen";
     // Ohne Blatt, nur mit Wunsch, wird weiterhin direkt gebaut - da gibt es
     // nichts abzulegen.
     $("los").onclick = (seiten.length === 0 && wunsch) ? function(){ bauen(""); } : function(){ ablegen(); };
@@ -1407,7 +1407,7 @@
          Seit 23.09.2026 nimmt ein Eintrag zwei Seiten (ein Blatt, Vorder- und
          Rueckseite); diese Seite laesst bis zu 20 waehlen. */
       if (a.j.seitenAbgeschnitten > 0){
-        melde("Ins Heft gelegt habe ich " + (a.j.seitenMax || 2) + " Seiten - " +
+        melde("In die Ablage gelegt habe ich " + (a.j.seitenMax || 2) + " Seiten - " +
               a.j.seitenAbgeschnitten + " weitere nicht. Ein Blatt auf einmal, " +
               "die naechsten legst du gleich danach dazu.");
       }

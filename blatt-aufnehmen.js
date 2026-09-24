@@ -261,7 +261,7 @@
          untergehen, bei ein bis zwei Seiten nicht." Stand vorher bei 6,
          der Server deckelt seit demselben Tag ebenfalls bei 2 (MAX_SEITEN). */
       if (seiten.length >= 2) {
-        melde("Ein Blatt auf einmal - Vorder- und Rückseite. Das nächste legst du gleich danach ins Heft.", "fehler");
+        melde("Ein Blatt auf einmal - Vorder- und Rückseite. Das nächste legst du gleich danach in die Ablage.", "fehler");
         return;
       }
       var leser = new FileReader();
@@ -304,7 +304,7 @@
       if (!fach) { l.disabled = true; l.textContent = "Sag mir noch, welches Fach"; return; }
       if (!art) { l.disabled = true; l.textContent = "Schulheft oder Übungsblatt?"; return; }
       l.disabled = false;
-      l.textContent = seiten.length > 1 ? seiten.length + " Seiten ins Heft legen" : "Ins Heft legen";
+      l.textContent = seiten.length > 1 ? seiten.length + " Seiten in die Ablage legen" : "In die Ablage legen";
     }
 
     // ---- Ablegen --------------------------------------------------------
