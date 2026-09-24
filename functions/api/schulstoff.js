@@ -70,8 +70,14 @@ async function darfRein(request, env, kind) {
 export async function onRequestPost(context) {
   const { request, env } = context;
   try {
-    if (new URL(request.url).searchParams.get("nachtragen") === "1") {
+    const such = new URL(request.url).searchParams;
+    if (such.get("nachtragen") === "1") {
       return await nachtragen(context);
+    }
+    /* Der zweite Schritt des zweistufigen Ablegens (Dennys Wahl 24.09.2026).
+       Paul darf ihn selbst aufrufen - es ist sein eigenes Blatt. */
+    if (such.get("lesen") === "1") {
+      return await blattNachlesen(context);
     }
   } catch (e) {}
 
@@ -192,6 +198,88 @@ export async function onRequestPost(context) {
     ...(kartenWarum ? { kartenWarum } : {}),
     // Wie viele Baender der zweite Blick genauer gesetzt hat.
     ...(karten.length ? { genauer } : {}),
+  });
+}
+
+/* Schritt 2 des zweistufigen Ablegens: das schon abgelegte Blatt lesen.
+ *
+ *   POST /api/schulstoff?lesen=1   {kind, id}
+ *
+ * Denny am 24.09.2026, nachdem gemessen war, dass Opus 5.5 rund 30 Sekunden
+ * braucht statt Haikus 1,5: Das Blatt soll nach ~2 s im Heft liegen, das
+ * Lesen holt die Seite danach nach. Paul wartet nicht darauf, dass sein
+ * Blatt ankommt - es ist schon da.
+ *
+ * ⚠️ Der Kostenriegel ist nicht der Ausweis, sondern der INHALT: Gelesen
+ * wird nur ein Blatt, dem der Inhalt noch fehlt. Damit kann derselbe Aufruf
+ * nicht wiederholt Geld verbrennen, auch nicht durch einen hängenden Browser,
+ * der es dreimal versucht. Wer ein FALSCH gelesenes Blatt neu lesen lassen
+ * will, nimmt ?nachtragen=1 mit einer id - das braucht den Eltern-Code.
+ *
+ * Antwortet mit denselben Feldern wie das einstufige Ablegen, damit die
+ * Seite beide Wege gleich behandeln kann.
+ */
+async function blattNachlesen(context) {
+  const { request, env } = context;
+  let d;
+  try { d = await request.json(); } catch (e) { d = {}; }
+  const kind = String(d.kind || "").toLowerCase();
+  if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+  if (!(await darfRein(request, env, kind))) {
+    return json(401, { ok: false, fehler: "Nicht angemeldet." });
+  }
+  if (!env.ANTHROPIC_API_KEY) return json(503, { ok: false, fehler: "Auf dem Server fehlt der Schlüssel." });
+
+  const id = String(d.id || "").trim();
+  if (!id) return json(400, { ok: false, fehler: "Welches Blatt denn?" });
+
+  const b = await stoffLesen(env, kind, 2);
+  if (!b.ok) return json(503, { ok: false, fehler: b.fehler });
+  const x = b.eintraege.filter((y) => y.id === id)[0];
+  if (!x) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+
+  /* Schon gelesen? Dann nichts tun und das sagen - kein zweiter Modellaufruf.
+     Das ist der Kostenriegel, nicht bloss eine Abkuerzung. */
+  if (Array.isArray(x.inhalt) && x.inhalt.length) {
+    return json(200, { ok: true, id, schonGelesen: true,
+                       ...(x.titel ? { titel: x.titel } : {}),
+                       karten: x.karten || [] });
+  }
+
+  const seiten = [];
+  for (let i = 0; i < MAX_SEITEN; i++) {
+    const s = await stoffBild(env, id, i);
+    if (!s) break;
+    seiten.push(s);
+  }
+  if (!seiten.length) return json(404, { ok: false, fehler: "Zu dem Blatt liegt kein Bild da." });
+
+  const heute = heuteBerlin();
+  const a = await blattAuswerten(env, kind, x, seiten, heute);
+
+  /* Die Zwillingspruefung braucht den Titel und lief deshalb beim Ablegen
+     nur ueber den Fingerabdruck. Jetzt, mit Titel, kann sie auch zwei
+     getrennte Fotos desselben Blattes finden - warnen, nicht sperren. */
+  let zwilling = null;
+  try {
+    if (a.titel) {
+      zwilling = await schonDa(env, kind, {
+        abdruck: x.abdruck || "", titel: a.titel, fach: x.fach || "",
+        datum: a.weichtAb ? a.vomBlattGelesen : x.datum, ausser: id,
+      });
+    }
+  } catch (err) {}
+
+  return json(200, {
+    ok: true, id,
+    ...(zwilling ? { schonDa: zwilling } : {}),
+    datum: a.weichtAb ? a.vomBlattGelesen : x.datum,
+    ...(a.titel ? { titel: a.titel } : {}),
+    ...(a.weichtAb ? { datumGeaendert: { von: x.datum, auf: a.vomBlattGelesen } } : {}),
+    ...(a.nachgefragt ? { datumFrage: a.nachgefragt } : {}),
+    karten: a.karten,
+    ...(a.kartenWarum ? { kartenWarum: a.kartenWarum } : {}),
+    ...(a.karten.length ? { genauer: a.genauer } : {}),
   });
 }
 
