@@ -1368,7 +1368,12 @@
         fach: fachKurz(),
         datum: $("blatt-datum") ? $("blatt-datum").value : "",
         notiz: $("wunsch").value.trim().slice(0, 400),
-        seiten: seiten.map(function(s){ return "data:" + s.media_type + ";base64," + s.data; })
+        seiten: seiten.map(function(s){ return "data:" + s.media_type + ";base64," + s.data; }),
+        /* Zweistufig (Dennys Wahl vom 24.09.2026): Das Blatt landet nach
+           ~2 s im Heft, das Lesen holt der zweite Aufruf nach. Seit Opus 5.5
+           das Blatt liest, dauert das rund 30 s statt 1,5 - darauf soll Paul
+           nicht warten, nur damit sein Blatt ankommt. */
+        zweistufig: true
       })
     })
     .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
@@ -1383,6 +1388,52 @@
         melde((a.j && a.j.fehler) || "Das hat nicht geklappt. Dein Foto ist noch da – probier es nochmal.", "fehler");
         return;
       }
+      /* Schritt 1 ist durch: Das Blatt liegt im Heft, das Bild ist sicher.
+         Alles Weitere haengt am Inhalt - und der kommt erst in Schritt 2. */
+      if (a.j.lesenOffen){
+        melde("✅ Ist in deinem Heft. Ich lese es gerade durch …", "gut");
+        lesenAnstossen(a.j);
+        return;
+      }
+      nachDemAblegen(a.j);
+    })
+    .catch(function(){
+      baeuft = false; $("los").disabled = false; knopfPruefen();
+      melde("Die Verbindung ist abgerissen. Dein Foto ist noch da – tipp nochmal auf den Knopf.", "fehler");
+    });
+  }
+
+  /* Schritt 2 des zweistufigen Ablegens.
+   *
+   * ⚠️ Das Blatt ist hier SCHON im Heft. Was schiefgeht, kostet nur den
+   * Inhalt - und den holt ./werkstatt.sh titel-nachtragen spaeter nach.
+   * Deshalb steht hier nie "Fehler", sondern ein Satz, der stimmt.
+   *
+   * Ein Versuch, kein zweiter: Der Server liest ein Blatt mit Inhalt ohnehin
+   * nicht noch einmal (Kostenriegel), ein Wiederholen waere nur Wartezeit. */
+  function lesenAnstossen(abgelegt){
+    fetch("/api/schulstoff?lesen=1", {
+      method: "POST", credentials: "same-origin",
+      headers: {"content-type":"application/json"},
+      body: JSON.stringify({kind:"paul", id: abgelegt.id})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j || !j.ok){ nachDemAblegen(abgelegt); return; }
+      /* Alles aus Schritt 2 ueber Schritt 1 legen - die id kommt aus 1,
+         Titel, Datum, Karten und Datumsfrage aus 2. */
+      var z = {}, k;
+      for (k in abgelegt) if (Object.prototype.hasOwnProperty.call(abgelegt, k)) z[k] = abgelegt[k];
+      for (k in j) if (Object.prototype.hasOwnProperty.call(j, k)) z[k] = j[k];
+      z.lesenOffen = false;
+      nachDemAblegen(z);
+    })
+    .catch(function(){ nachDemAblegen(abgelegt); });
+  }
+
+  function nachDemAblegen(a_j){
+    var a = { j: a_j };
+    melde("", "");
       zuletztAbgelegt = a.j;
       /* Liegt so ein Blatt schon da, wird gewarnt - nicht gesperrt (Dennys
          Entscheidung, 22.09.2026). Paul entscheidet: Ein zweites Foto vom
@@ -1453,11 +1504,6 @@
         (a.j.titel ? " Ich habe es „" + a.j.titel + "“ genannt." : "");
       $("los").classList.add("verborgen");
       $("danach").scrollIntoView({behavior:"smooth", block:"nearest"});
-    })
-    .catch(function(){
-      baeuft = false; $("los").disabled = false; knopfPruefen();
-      melde("Die Verbindung ist abgerissen. Dein Foto ist noch da – tipp nochmal auf den Knopf.", "fehler");
-    });
   }
 
   function deutsch(iso){
