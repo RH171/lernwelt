@@ -69,6 +69,21 @@
       <div class="laedt verborgen" id="q-laedt"><i></i><span>Ich suche Fragen für dich heraus …</span></div>
       <div class="fehler" id="q-fehler"></div>
     </div>
+    <!-- Das Such-Spiel (Denny, 25.09.2026: "eher als Quiz- und
+         Spielmoeglichkeit fuer Paul"). Die Fundkarten kamen bis dahin direkt
+         nach dem Hochladen - jetzt startet Paul sie selbst, zu einem Blatt
+         seiner Wahl. Die Karte erscheint nur, wenn ein Blatt genug Karten hat.
+         Motor: /fundkarten.js -->
+    <div class="karte verborgen" id="such-wahl">
+      <h2>🔎 Such-Spiel</h2>
+      <p class="unter">Such die Antwort auf deinem eigenen Blatt. Tipp ein Blatt an.</p>
+      <div class="blaetter-liste" id="such-liste"></div>
+    </div>
+  </section>
+
+  <section id="sicht-such" class="verborgen">
+    <div id="fundkarten"></div>
+    <button class="knopf still" id="such-zurueck" type="button">‹ Zurück zur Auswahl</button>
   </section>
 
   <!-- Spiel -->
@@ -129,6 +144,61 @@ window.QUIZ = {
     { k: "musik",    n: "Musik",    ic: "🎵" }
   ]
 };
+</script>
+<script src="/fundkarten.js?v=e5c459b1"></script>
+<script>
+/* Such-Spiel: Blaetter mit mindestens drei Fundkarten anbieten. Nur fuer
+   Paul, nicht im geteilten /quiz/motor.js - "Erst Paul fertig, dann
+   uebertragen" (Denny, 23.09.2026). Ohne Karten bleibt die Karte verborgen:
+   ein leeres Angebot waere schlimmer als keines. */
+(function(){
+  function $(i){ return document.getElementById(i); }
+  function datum(iso){ var t = String(iso || "").split("-"); return t.length === 3 ? (+t[2]) + "." + (+t[1]) + "." : ""; }
+  var FACH = { mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch", rel:"Religion", musik:"Musik" };
+  function zurueck(){
+    $("fundkarten").innerHTML = "";
+    $("sicht-such").classList.add("verborgen");
+    $("sicht-start").classList.remove("verborgen");
+    window.scrollTo(0, 0);
+  }
+  function starten(x){
+    var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
+      karten: x.karten, kind: "paul", was: x.titel, blattId: x.id,
+      fertigText: "Zurück zur Auswahl", fertig: zurueck
+    });
+    if (!ok) return;
+    $("sicht-start").classList.add("verborgen");
+    $("sicht-such").classList.remove("verborgen");
+    window.scrollTo(0, 0);
+  }
+  function laden(){
+    fetch("/api/schulstoff?kind=paul&monate=6", { credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var liste = ((j && j.eintraege) || []).filter(function(x){
+          return x && x.sichtbar !== false && Array.isArray(x.karten) && x.karten.length >= 3;
+        }).sort(function(a, b){ return String(b.datum).localeCompare(String(a.datum)); });
+        var box = $("such-liste"); box.innerHTML = "";
+        liste.forEach(function(x){
+          var b = document.createElement("button");
+          b.type = "button"; b.className = "qblatt such-blatt";
+          var w = document.createElement("span"); w.className = "was";
+          var t = document.createElement("b"); t.textContent = x.titel || "Dein Blatt";
+          var u = document.createElement("span");
+          u.textContent = [FACH[x.fach] || "", datum(x.datum), x.karten.length + " Karten"].filter(Boolean).join(" · ");
+          w.appendChild(t); w.appendChild(u); b.appendChild(w);
+          b.addEventListener("click", function(){ starten(x); });
+          box.appendChild(b);
+        });
+        $("such-wahl").classList.toggle("verborgen", !liste.length);
+      })
+      .catch(function(){ /* ohne Liste kein Such-Spiel - das Quiz laeuft weiter */ });
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    $("such-zurueck").addEventListener("click", zurueck);
+    laden();
+  });
+})();
 </script>
 <script src="/quiz/motor.js?v=27375608" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>

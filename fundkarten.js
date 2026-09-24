@@ -1,5 +1,11 @@
 /* Die Fundkarten - der Bildschirm direkt nach dem Hochladen eines Blattes.
  *
+ * ⚠️ Seit 25.09.2026 NICHT mehr nach dem Hochladen, sondern als Such-Spiel
+ * im Lernquiz (paul/quiz.html). Denny: "Brauchst du das, um die Zahlen zu
+ * verifizieren, oder ginge es auch ohne? Denn dann wuerde ich das Ganze gerne
+ * eher als Quiz- und Spielmoeglichkeit fuer Paul haben wollen." Zum Pruefen
+ * der Zahlen braucht der Server die Karten nicht - Paul startet sie selbst.
+ *
  * Denny am 23.09.2026, nach neun Entwuerfen: "Nach dem Hochladen eines
  * Bildes/Fotos soll so das Quiz starten - mit Entwurf 2." Und davor, worum
  * es geht: "Sie koennen verifizieren, was Sie sehen und geschrieben haben,
@@ -292,7 +298,7 @@
     wurzel.appendChild(box);
 
     var kopf = el("div");
-    kopf.appendChild(el("div", "kicker", "Hochgeladen" + (opt.was ? " · " + String(opt.was).slice(0, 40) : "")));
+    kopf.appendChild(el("div", "kicker", (opt.kicker || "Such-Spiel") + (opt.was ? " · " + String(opt.was).slice(0, 40) : "")));
     kopf.appendChild(el("h2", null, karten.length + " Fundkarten aus deinem Blatt"));
     kopf.appendChild(el("p", "u", "Ich habe dein Blatt gelesen und " + karten.length +
       " Stellen ausgeschnitten. Schau hin und tipp an, was dort steht."));
@@ -432,7 +438,7 @@
         fertig.appendChild(el("h2", null, karten.length + " von " + karten.length));
         fertig.appendChild(el("p", "u",
           "Alle Karten aus deinem Blatt liegen im Regal. Du hast dein Blatt jetzt einmal ganz durchgesehen."));
-        var b1 = el("button", "lwf-knopf", "Weiter");
+        var b1 = el("button", "lwf-knopf", opt.fertigText || "Weiter");
         b1.type = "button";
         b1.addEventListener("click", function () { if (opt.fertig) opt.fertig(); });
         fertig.appendChild(b1);
