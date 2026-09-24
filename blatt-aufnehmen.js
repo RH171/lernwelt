@@ -326,12 +326,12 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok) {
-          melde("✅ Ist in deinem Heft – " + deutsch(abgelegt.datum) +
+          melde("✅ Ist in deiner Ablage – " + deutsch(abgelegt.datum) +
                 ". Durchlesen hat gerade nicht geklappt, das hole ich nach.", "gut");
           if (opt.fertig) { try { opt.fertig(abgelegt); } catch (e) {} }
           return;
         }
-        melde("✅ Ist in deinem Heft – " + deutsch(j.datum) +
+        melde("✅ Ist in deiner Ablage – " + deutsch(j.datum) +
               (j.titel ? ", „" + j.titel + "“" : "") + ".", "gut");
         /* Alles, was Schritt 2 herausgefunden hat, geht an denselben
            Empfaenger wie beim einstufigen Weg - Fundkarten, Datumsfrage,
@@ -342,7 +342,7 @@
         }
       })
       .catch(function () {
-        melde("✅ Ist in deinem Heft – " + deutsch(abgelegt.datum) +
+        melde("✅ Ist in deiner Ablage – " + deutsch(abgelegt.datum) +
               ". Durchlesen hat gerade nicht geklappt, das hole ich nach.", "gut");
         if (opt.fertig) { try { opt.fertig(abgelegt); } catch (e) {} }
       });
@@ -388,7 +388,7 @@
         seiten = []; art = "";
         Array.prototype.forEach.call(kasten.querySelectorAll("[data-art]"), function (x) { x.classList.remove("an"); });
         malen(); knopf();
-        melde("✅ Ist in deinem Heft – " + deutsch(a.j.datum) +
+        melde("✅ Ist in deiner Ablage – " + deutsch(a.j.datum) +
               (a.j.titel ? ", „" + a.j.titel + "“" : "") + ".", "gut");
 
         if (!a.j.lesenOffen) {
@@ -398,7 +398,10 @@
         /* Schritt 2. Er darf scheitern, ohne dass etwas verloren geht -
            das Blatt ist abgelegt, und ?nachtragen=1 holt den Inhalt
            spaeter nach. Deshalb kein "Fehler", nur ein ehrlicher Satz. */
-        melde("✅ Ist in deinem Heft. Ich lese es gerade durch …", "gut");
+        melde("✅ Ist in deiner Ablage. Ich lese es gerade durch …", "gut");
+        /* Die Liste darunter sofort neu laden: Sonst stand dort "Alle 0",
+           waehrend oben "Ist in deiner Ablage" stand (Denny, 25.09.2026). */
+        if (opt.abgelegt) { try { opt.abgelegt(a.j); } catch (e) {} }
         lesenAnstossen(a.j);
       })
       .catch(function () {

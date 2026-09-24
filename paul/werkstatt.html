@@ -441,7 +441,7 @@
       <div id="fundkarten"></div>
 
       <div class="danach verborgen" id="danach">
-        <div class="danach-kopf">✅ Ist in deinem Heft.</div>
+        <div class="danach-kopf">✅ Ist in deiner Ablage.</div>
         <p class="unter" id="danach-text"></p>
         <!-- Weicht das Datum vom Blatt um mehr als 14 Tage ab, wird gefragt
              statt uebernommen. Denny am 23.09.2026: "Bei einer Anomalie von
@@ -1391,7 +1391,7 @@
       /* Schritt 1 ist durch: Das Blatt liegt im Heft, das Bild ist sicher.
          Alles Weitere haengt am Inhalt - und der kommt erst in Schritt 2. */
       if (a.j.lesenOffen){
-        melde("✅ Ist in deinem Heft. Ich lese es gerade durch …", "gut");
+        melde("✅ Ist in deiner Ablage. Ich lese es gerade durch …", "gut");
         lesenAnstossen(a.j);
         return;
       }
