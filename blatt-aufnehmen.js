@@ -170,6 +170,13 @@
       '<input type="file" class="lwb-datei verborgen" accept="image/*,application/pdf" multiple>' +
       '<div class="seiten lwb-seiten"></div>' +
       '<div class="melden verborgen lwb-melden"></div>' +
+      /* Die Datums-Rueckfrage (Denny, 23.09.2026: "Bei einer Anomalie von
+         mehr als 14 Tagen kommt von dir eine Rueckfrage"). Bis zum
+         25.09.2026 gab es sie nur in der Werkstatt - hier, auf Pauls
+         Hauptweg, kam die Antwort des Servers an und wurde nie gezeigt. */
+      '<div class="melden verborgen lwb-datumfrage"><div class="lwb-datumtext"></div>' +
+        '<div class="reihe"><button type="button" class="chip lwb-datum-ja"></button>' +
+        '<button type="button" class="chip lwb-datum-nein"></button></div></div>' +
       '<button class="los lwb-los" disabled>Erst dein Blatt fotografieren</button>';
 
     var $ = function (k) { return kasten.querySelector(k); };
@@ -317,6 +324,53 @@
      * Ein Versuch, kein zweiter: Der Server liest ein Blatt mit Inhalt
      * ohnehin nicht noch einmal (Kostenriegel), ein Wiederholen waere also
      * nur Wartezeit. */
+    /* Hat das Blatt selbst ein Datum getragen, gilt das - aber Paul erfaehrt
+       es (Denny, 22.09.2026: ein heimlich getauschtes Datum waere die
+       schlechteste Antwort). Bis 14 Tage Abstand uebernimmt der Server still. */
+    function datumSatz(j) {
+      var g = j && j.datumGeaendert;
+      return g ? " Auf dem Blatt stand " + deutsch(g.auf) + " – das habe ich genommen." : "";
+    }
+
+    /* Mehr als 14 Tage: uebernommen ist noch nichts, Paul entscheidet. */
+    function datumFrage(j, id) {
+      var box = $(".lwb-datumfrage");
+      var f = j && j.datumFrage;
+      if (!box) return;
+      if (!f || !id) { box.className = "melden verborgen lwb-datumfrage"; return; }
+      $(".lwb-datumtext").textContent = "Auf dem Blatt lese ich " + deutsch(f.gelesen) + " – das ist " +
+        (f.tage > 400 ? "über ein Jahr" : f.tage + " Tage") + " her. Stimmt das?";
+      var ja = $(".lwb-datum-ja"), nein = $(".lwb-datum-nein");
+      ja.textContent = "Ja, " + deutsch(f.gelesen);
+      nein.textContent = "Nein, " + deutsch(f.gewaehlt);
+      box.className = "melden lwb-datumfrage";
+      ja.parentNode.style.display = "";
+      function antwort(was) {
+        ja.disabled = true; nein.disabled = true;
+        fetch("/api/schulstoff", {
+          method: "PATCH", credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: kind, id: id, was: was })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (k) {
+          ja.disabled = false; nein.disabled = false;
+          if (!k || !k.ok) { $(".lwb-datumtext").textContent = "Das hat nicht geklappt – probier es nochmal."; return; }
+          box.className = "melden gut lwb-datumfrage";
+          // Nicht innerHTML ersetzen: Der Kasten muss fuer das naechste Blatt heil bleiben.
+          $(".lwb-datumtext").textContent = "✅ Alles klar – dein Blatt liegt unter dem " + deutsch(k.datum) + ".";
+          ja.parentNode.style.display = "none";
+          if (opt.abgelegt) { try { opt.abgelegt(k); } catch (e) {} }
+        })
+        .catch(function () {
+          ja.disabled = false; nein.disabled = false;
+          $(".lwb-datumtext").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
+        });
+      }
+      ja.onclick = function () { antwort("datum-bestaetigen"); };
+      nein.onclick = function () { antwort("datum-ablehnen"); };
+    }
+
     function lesenAnstossen(abgelegt) {
       fetch("/api/schulstoff?lesen=1", {
         method: "POST", credentials: "same-origin",
@@ -332,7 +386,8 @@
           return;
         }
         melde("✅ Ist in deiner Ablage – " + deutsch(j.datum) +
-              (j.titel ? ", „" + j.titel + "“" : "") + ".", "gut");
+              (j.titel ? ", „" + j.titel + "“" : "") + "." + datumSatz(j), "gut");
+        datumFrage(j, abgelegt.id);
         /* Alles, was Schritt 2 herausgefunden hat, geht an denselben
            Empfaenger wie beim einstufigen Weg - Fundkarten, Datumsfrage,
            Zwilling. Die id kommt aus Schritt 1. */
@@ -392,6 +447,9 @@
               (a.j.titel ? ", „" + a.j.titel + "“" : "") + ".", "gut");
 
         if (!a.j.lesenOffen) {
+          if (a.j.datumGeaendert) melde("✅ Ist in deiner Ablage – " + deutsch(a.j.datum) +
+            (a.j.titel ? ", „" + a.j.titel + "“" : "") + "." + datumSatz(a.j), "gut");
+          datumFrage(a.j, a.j.id);
           if (opt.fertig) { try { opt.fertig(a.j); } catch (e) {} }
           return;
         }
