@@ -813,7 +813,18 @@ async function blattLesen(env, seite) {
       },
       body: JSON.stringify({
         model: TITEL_MODELL,
-        max_tokens: 1600,
+        /* ⚠️ Opus 5.5 denkt von selbst (adaptive thinking), und die Denk-
+         * Tokens zaehlen in max_tokens. Mit 1600 hat es am 24.09.2026 auf
+         * Pauls dichtem HSU-Blatt ALLES verdacht: stop_reason max_tokens,
+         * 1600 von 1600 Tokens Denken, kein einziges Wort Text - also kein
+         * Inhalt und keine Fundkarten, und das ganz still. "disabled" lehnt
+         * das Modell ab (HTTP 400), gesteuert wird ueber effort.
+         * Gemessen mit effort "low" und 8000: 3 x HSU, 2 x Tausenderbuch,
+         * je 7-9 s, 0 Denk-Tokens, alle Handschrift-Zahlen richtig und alle
+         * Fundkarten-Ausschnitte auf der richtigen Zeile. */
+        max_tokens: 8000,
+        thinking: { type: "adaptive" },
+        output_config: { effort: "low" },
         messages: [{
           role: "user",
           content: [
