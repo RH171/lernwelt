@@ -267,7 +267,7 @@
   function blattHolen(kind, blattId, dann) {
     if (!blattId) { dann(""); return; }
     fetch("/api/schulstoff?kind=" + encodeURIComponent(kind) +
-          "&bild=" + encodeURIComponent(blattId + ":1"), { credentials: "same-origin" })
+          "&bild=" + encodeURIComponent(blattId + ":0"), { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) { dann((j && j.ok && j.bild) || ""); })
       .catch(function () { dann(""); });
