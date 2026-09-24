@@ -25,13 +25,25 @@
 // fotografiert hat. Das ist der "immer aktuell"-Teil: Nicht der Lehrplan
 // allein entscheidet, sondern was in der Woche wirklich dran war.
 //
-// Gestellte Fragen werden vermerkt und kommen nicht wieder - eine Frage wird
-// also nie zweimal gezeigt. Das LERNZIEL dagegen schon, sooft es nötig ist.
+// ⚠️ BIS ZUM 24.09.2026 stand hier: "Gestellte Fragen werden vermerkt und
+// kommen nicht wieder." Genau das hat die Gegenpruefung durch einen frischen
+// Gedaechtnisforscher als schwersten Befund herausgezogen: Damit bekam jeder
+// Lernpunkt im Jahr 0,18 bis 0,32 Fragen - und die gesamte zitierte Literatur
+// (Abrufuebung, verteiltes Ueben) misst den Nutzen von WIEDERHOLUNG.
+//
+// Jetzt schliesst nichts mehr aus. `_wiedervorlage.js` SORTIERT nur: was
+// faellig ist, kommt eher dran. Paul waehlt weiterhin Tag und Bereich selbst
+// (Dennys Beschluss vom 24.09.2026) - eine Faelligkeit ist ein Angebot, kein
+// Stapel, der abgearbeitet werden muss.
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
+import {
+  EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
+  punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
+} from "./_wiedervorlage.js";
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -88,30 +100,54 @@ export async function onRequestGet(context) {
     return true;
   };
 
-  let offen = vorrat.fragen.filter((f) => !gestellt.has(f.id) && passt(f));
-
-  /* WIEDERHOLEN STATT NEU BAUEN.
+  /* DIE AUSWAHL - seit dem 24.09.2026 sortiert sie, statt auszuschliessen.
    *
-   * Denny am 23.09.2026 zum Quiz je Blatt: "Es sollte dann aber im Quiz auch
-   * entsprechend das Spiel so liegen, dass wir es nicht zweimal oder dreimal
-   * bauen müssen."
+   * Vorher stand hier `filter((f) => !gestellt.has(f.id))`: Eine gestellte
+   * Frage war dauerhaft draussen, und Wiederholung gab es nur als Notbehelf
+   * bei leerem Vorrat - begruendet mit KOSTEN, nicht mit Lernwirkung.
    *
-   * Uebt Paul dasselbe Blatt ein zweites Mal, sind alle Fragen dazu schon
-   * "gestellt" - und es wuerde fuer Geld neu gebaut, obwohl ein Dutzend
-   * fertiger Fragen daliegt. Bei einer Wiederholung ist das Wiedersehen aber
-   * genau der Zweck: Was man zweimal beantwortet, sitzt.
+   * Jetzt:  neue Fragen  +  hoechstens `hoechstensWiederJeLauf` faellige.
+   * Reicht das nicht, kommen auch nicht-faellige dazu - denn Paul darf sein
+   * Blatt zum vierten Mal ueben, wenn er will (Dennys Beschluss 24.09.2026).
    *
-   * Also: Erst nachsehen, was zur Auswahl ueberhaupt da ist. Reicht das,
-   * werden die am laengsten nicht gestellten wieder zugelassen - die
-   * juengsten zuletzt, damit es sich nicht wie dieselbe Runde anfuehlt. */
+   * Gemischt wird danach ohnehin: Die Faelligkeit entscheidet, WELCHE Fragen
+   * dabei sind, nicht in welcher Reihenfolge sie kommen. */
+  const punkte = await punkteLesen(env, kind);
+  const jetzt = Date.now();
   const alleDazu = vorrat.fragen.filter(passt);
-  let wiederholt = 0;
   const gebraucht = Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB);
-  if (offen.length < gebraucht && alleDazu.length >= Math.min(gebraucht, 5)) {
-    const schonMal = alleDazu.filter((f) => gestellt.has(f.id));
-    // gestellteLesen() gibt die aeltesten zuerst - die kommen als erste dran.
-    offen = offen.concat(schonMal.slice(0, gebraucht - offen.length));
-    wiederholt = Math.min(schonMal.length, gebraucht - (offen.length - schonMal.length));
+  let wiederholt = 0;
+  let offen;
+
+  if (WV.an) {
+    const frisch = alleDazu.filter((f) => !gestellt.has(f.id));
+    // nachFaelligkeit() stellt die faelligen nach vorn, am laengsten her zuerst.
+    const schonMal = nachFaelligkeit(alleDazu.filter((f) => gestellt.has(f.id)), punkte, jetzt);
+    const faellig = schonMal.filter((f) => {
+      const s = punktSchluessel(f);
+      return s && punkte[s] && istFaellig(punkte[s], jetzt);
+    });
+    const grenze = WV.hoechstensWiederJeLauf;
+    const wieder = grenze == null ? faellig : faellig.slice(0, grenze);
+    offen = frisch.concat(wieder);
+    wiederholt = wieder.length;
+    /* Immer noch zu wenig? Dann auch, was noch nicht faellig ist - lieber
+       eine Frage zweimal als ein leeres Quiz oder ein Bau fuer Geld. */
+    if (offen.length < gebraucht) {
+      const drin = new Set(wieder.map((f) => f.id));
+      const rest = schonMal.filter((f) => !drin.has(f.id));
+      offen = offen.concat(rest.slice(0, gebraucht - offen.length));
+      wiederholt = offen.length - frisch.length;
+    }
+  } else {
+    /* Der alte Weg, Wort fuer Wort - damit `an: false` wirklich zurueckfaellt
+       und nicht bloss "ungefaehr wie frueher" ist. */
+    offen = alleDazu.filter((f) => !gestellt.has(f.id));
+    if (offen.length < gebraucht && alleDazu.length >= Math.min(gebraucht, 5)) {
+      const schonMal = alleDazu.filter((f) => gestellt.has(f.id));
+      offen = offen.concat(schonMal.slice(0, gebraucht - offen.length));
+      wiederholt = Math.min(schonMal.length, gebraucht - (offen.length - schonMal.length));
+    }
   }
 
   // Reicht es immer noch nicht, wird nachgebaut. Der Aufruf dauert - darum
@@ -125,7 +161,9 @@ export async function onRequestGet(context) {
         vorrat.gebaut = new Date().toISOString();
         await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(vorrat));
         nachgebaut = true;
-        offen = vorrat.fragen.filter((f) => !gestellt.has(f.id) && passt(f));
+        /* Frisch Gebautes war noch nie dran - hier genuegt der einfache Filter,
+           die Faelligkeit oben hat mit neuen Fragen nichts zu tun. */
+        offen = offen.concat(neu.filter(passt));
       }
     } catch (e) { /* Vorrat reicht vielleicht trotzdem */ }
   }
@@ -138,7 +176,13 @@ export async function onRequestGet(context) {
 
   mischen(offen);
   const raus = anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40);
+  /* `wartend` zaehlt ueber den GANZEN Vorrat, nicht nur ueber die Auswahl -
+     sonst staende an einem abgewaehlten Blatt nie eine Zahl. Was daraus auf
+     dem Schirm wird (Zahl, Punkt oder nichts), entscheidet `anzeige.wartend`
+     in _wiedervorlage.js, nicht der Motor. */
   return json(200, { ok: true, fragen: raus, nachgebaut, vorrat: offen.length,
+                     wiedervorlage: fuerDieSeite(),
+                     wartend: wartendJeBlatt(vorrat.fragen, punkte, jetzt),
                      ...(wiederholt ? { wiederholt } : {}) });
 }
 
@@ -245,6 +289,22 @@ export async function onRequestPost(context) {
   const gestellt = await gestellteLesen(env, kind);
   for (const a of antworten) if (a && a.frageId) gestellt.push(String(a.frageId).slice(0, 24));
   await env.PAUL_KV.put(GESTELLT(kind), JSON.stringify(gestellt.slice(-GESTELLT_MAX)));
+
+  /* Und den Lernpunkt fortschreiben (24.09.2026). Gezaehlt wird der ERSTE
+     Versuch (`stimmt`) - wer erst mit Tipp und Blatt daraufkommt, hat es noch
+     nicht gewusst. Dieselbe Regel wie `stimmtEcht` im Motor.
+     Ein zusaetzlicher Schreibvorgang JE LERNRUNDE, nicht je Frage - bei 1000
+     am Tag traegt das. `punkteSchreiben` schreibt nur bei echter Aenderung. */
+  if (WV.an) {
+    const vorher = await punkteLesen(env, kind);
+    const punkte = JSON.parse(JSON.stringify(vorher));
+    const nun = Date.now();
+    for (const a of antworten) {
+      if (!a || !a.blatt || !a.belegNr) continue;
+      punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr }, !!a.stimmt, nun);
+    }
+    await punkteSchreiben(env, kind, punkte, vorher);
+  }
 
   return json(200, { ok: true });
 }
@@ -484,6 +544,12 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
          hier zur echten id; eine Nummer daneben heisst lieber KEIN Blatt als
          ein falsches. */
       ...(blattVon(f.blatt_nr, schule.blaetter) ? { blatt: blattVon(f.blatt_nr, schule.blaetter) } : {}),
+      /* Die Zeilennummer des Blattes. Bis zum 24.09.2026 wurde sie nach dem
+         Belegen verworfen - damit gab es keinen stabilen Lernpunkt, und die
+         Wiedervorlage konnte nichts wiedererkennen. `blatt#belegNr` ist
+         mechanisch erzeugt und vom Modell unabhaengig, anders als `merkmal`,
+         das je Lauf neu erfunden wird. */
+      ...(Number(f.beleg_nr) >= 1 ? { belegNr: Math.floor(Number(f.beleg_nr)) } : {}),
     }));
 }
 
