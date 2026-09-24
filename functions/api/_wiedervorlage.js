@@ -174,8 +174,14 @@ export function istFaellig(p, jetzt, e) {
 export function nachFaelligkeit(fragen, punkte, jetzt, e) {
   const ein = e || EINSTELLUNGEN;
   const nun = jetzt || Date.now();
+  /* ⚠️ Der Schalter muss GANZ abschalten, nicht nur den Rang. Bis zum
+     24.09.2026 gab `rang()` bei an:false zwar ueberall 0 zurueck - der
+     zweite Schluessel `her` sortierte aber weiter, und die Reihenfolge kam
+     trotzdem umgestellt heraus. Gefunden hat das nicht der Selbsttest,
+     sondern Gegenprobe G: Seine Pruefdaten standen schon in
+     Faelligkeitsreihenfolge, er konnte den Fehler gar nicht erreichen. */
+  if (!ein.an) return (fragen || []).slice();
   const rang = (f) => {
-    if (!ein.an) return 0;
     const s = punktSchluessel(f);
     const p = s && punkte ? punkte[s] : null;
     if (!p || !p.z) return 0;
