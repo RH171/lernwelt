@@ -1014,9 +1014,22 @@ async function nachtragen(context) {
        * natuerlich der Zuordnung". */
       const jetzt = heuteBerlin();
       const ausBlatt = blattDatum(gelesen.datum, jetzt);
-      // Dieselbe Schranke wie beim Ablegen - sie ist hier sogar wichtiger,
-      // weil ein Nachtrag viele Blaetter auf einmal anfasst.
-      const datumNeu = (ausBlatt && ausBlatt !== x.datum && nahGenug(ausBlatt, jetzt))
+      /* Dieselbe Schranke wie beim Ablegen - sie ist hier sogar wichtiger,
+       * weil ein Nachtrag viele Blaetter auf einmal anfasst.
+       *
+       * ⚠️ Hier stand bis zum 24.09.2026 der Aufruf einer Funktion, die es
+       * NIE gab (sie hiess wie "nah genug", zusammengeschrieben). Jeder
+       * Nachtrag ist an dieser Zeile gescheitert, und zwar STILL: Der
+       * try/catch drumherum hat den ReferenceError gefangen und als "warum"
+       * an den Eintrag gehaengt. Von aussen sah es aus wie ein Blatt, das
+       * sich eben nicht lesen laesst.
+       *
+       * Gefunden hat es erst der erste echte Aufruf am 24.09.2026, als ein
+       * Weg entstand, ein bestimmtes Blatt neu lesen zu lassen. Dieselbe
+       * Lehre wie am 14.09.2026: Ein gefangener Fehler, der nur als Text
+       * weitergereicht wird, ist ein Fehler, den niemand sucht. */
+      const datumNeu = (ausBlatt && ausBlatt !== x.datum &&
+                        datumPruefen(ausBlatt, jetzt) === "nehmen")
         ? ausBlatt : "";
 
       if (gelesen.titel) await titelSetzen(env, kind, x.id, gelesen.titel);
