@@ -10,7 +10,7 @@
 // sagt ehrlich, wie es weitergeht. Alles andere wäre ein Versprechen an ein
 // Kind, das niemand einlöst.
 
-const MODELL = "claude-opus-5";
+const MODELL = "claude-opus-5-5";
 
 // Warum so viel Luft fuer eine Antwort von hoechstens 120 Woertern:
 // Claude Opus 5 denkt von sich aus nach, wenn man nichts anderes sagt, und
@@ -337,7 +337,7 @@ export async function antwortErzeugen(env, { kind, text, bild, bilder, seite, ge
         // eine Minute Warten ist besser als ein falsches "falsch".
         ...(art === "hausaufgabe"
           ? { max_tokens: 16000, thinking: { type: "adaptive" }, output_config: { effort: "high" } }
-          : { max_tokens: MAX_ANTWORT }),
+          : { max_tokens: MAX_ANTWORT, thinking: { type: "adaptive" }, output_config: { effort: "low" } }),  // Opus 5.5 denkt sonst von selbst in die Grenze
         system: art === "hausaufgabe" ? HAUSAUFGABE : REGELN,
         messages: [{ role: "user", content: inhalt }],
       }),

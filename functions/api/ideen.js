@@ -15,7 +15,7 @@
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 
-const MODELL = "claude-opus-5";
+const MODELL = "claude-opus-5-5";
 const KINDER = {
   paul:   { name: "Paul",   alter: "10 Jahre, 4. Klasse Grundschule" },
   leon:   { name: "Leon",   alter: "7 Jahre, 2. Klasse Grundschule, grosser Fan der SpVgg Greuther Fürth" },
@@ -113,10 +113,16 @@ export async function onRequestPost(context) {
       },
       body: JSON.stringify({
         model: MODELL,
-        max_tokens: 1200,
+        /* Opus 5.5 denkt von selbst, und das Denken zaehlt in max_tokens - beim
+           Blattlesen gingen am 24.09.2026 alle 1600 Tokens ins Denken, kein Wort
+           Text kam zurueck. Deshalb hier ausdruecklich effort und genug Luft. */
+        max_tokens: 4000,
+        thinking: { type: "adaptive" },
+        output_config: { effort: "low" },
         system: REGELN,
         tools: [SCHEMA],
-        tool_choice: { type: "tool", name: "vorschlaege" },
+        /* Opus 5.5 kann kein erzwungenes Werkzeug (24.09.2026: "tool_choice: type tool and any are not supported for this model") - auto, es ruft trotzdem. */
+      tool_choice: { type: "auto" },
         messages: [{ role: "user", content: frage }],
       }),
     });

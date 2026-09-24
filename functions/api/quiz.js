@@ -486,12 +486,13 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-opus-5",
+      model: "claude-opus-5-5",
       max_tokens: 16000,
       thinking: { type: "adaptive" },
       output_config: { effort: "low" },
       tools: [WERKZEUG],
-      tool_choice: { type: "tool", name: "quiz_fragen" },
+      /* Opus 5.5 kann kein erzwungenes Werkzeug (24.09.2026: "tool_choice: type tool and any are not supported for this model") - auto, es ruft trotzdem. */
+      tool_choice: { type: "auto" },
       messages: [{ role: "user", content: auftrag }],
     }),
   });

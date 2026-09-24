@@ -21,13 +21,13 @@ import { rechenfehler } from "./_rechnung.js";
 // den Zahlenraum ("214 cm + 214 cm" in der 2. Klasse), setzte weniger Bilder
 // und liess Merkhilfen weg. Haiku 4.5 lieferte gar nichts. Der Unterschied
 // waere rund 0,09 $ je Spiel gewesen - dafuer nicht die Qualitaet eintauschen.
-const MODELL = "claude-opus-5";
+const MODELL = "claude-opus-5-5";
 
 // Nur zum Nachmessen: Ein Auftrag darf ein anderes Modell verlangen, aber nur
 // aus dieser Liste. Die Oberflaeche sendet nichts davon - Leon und Paul bauen
 // immer mit MODELL.
 const MODELLE_ERLAUBT = {
-  "opus":   "claude-opus-5",
+  "opus":   "claude-opus-5-5",
   "sonnet": "claude-sonnet-5",
   "haiku":  "claude-haiku-4-5-20251001",
 };
@@ -332,7 +332,8 @@ async function bauLauf(context, vorgaben) {
       output_config: { effort: "medium" },
       system: [{ type: "text", text: systemtext(kind, lehrplan), cache_control: { type: "ephemeral" } }],
       tools: [WERKZEUG],
-      tool_choice: { type: "tool", name: "spiel_bauen" },
+      /* Opus 5.5 kann kein erzwungenes Werkzeug (24.09.2026: "tool_choice: type tool and any are not supported for this model") - auto, es ruft trotzdem. */
+      tool_choice: { type: "auto" },
       messages: [{ role: "user", content: inhalt }],
     }),
   });

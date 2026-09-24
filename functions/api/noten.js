@@ -16,7 +16,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId } from "./_noten.js";
 
 const KINDER = ["paul", "leon", "helena"];
-const MODELL = "claude-opus-5";
+const MODELL = "claude-opus-5-5";
 const MAX_BLATT = 4 * 1024 * 1024;
 
 const json = (status, daten) =>
@@ -264,7 +264,9 @@ Regeln:
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
-        model: MODELL, max_tokens: 4000,
+        // Opus 5.5 denkt von selbst, das Denken zaehlt in max_tokens (24.09.2026).
+        model: MODELL, max_tokens: 8000,
+        thinking: { type: "adaptive" }, output_config: { effort: "low" },
         messages: [{ role: "user", content: [
           { type: "text", text: auftrag },
           istPdf ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: roh } }
