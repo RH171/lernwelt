@@ -946,6 +946,8 @@ export async function onRequestGet(context) {
  * bleiben.
  *
  *   POST /api/schulstoff?nachtragen=1   {kind}
+ *   POST /api/schulstoff?nachtragen=1   {kind, id}  <- genau dieses Blatt,
+ *                                                      auch wenn ihm nichts fehlt
  *
  * Nur mit ELTERN-Ausweis - es kostet Geld (ein Haiku-Blick je Blatt, Bruch-
  * teile eines Cents) und soll nicht versehentlich von einem Kind ausgeloest
@@ -973,10 +975,29 @@ async function nachtragen(context) {
   /* Offen ist jetzt auch, wem der INHALT fehlt. Blaetter aus der Zeit vor dem
      23.09.2026 tragen nur Titel und Datum - und genau daran ist Pauls
      Lernquiz gescheitert: Ohne Inhalt kann es nur aus dem Titel raten. */
-  const offen = e.eintraege
-    .filter((x) => !x.titel || x.datumVon !== "blatt" ||
-                   !(Array.isArray(x.inhalt) && x.inhalt.length))
-    .slice(0, 12);
+  /* Mit einer id wird GENAU DIESES Blatt neu gelesen, auch wenn ihm nichts
+   * fehlt.
+   *
+   * Denny am 24.09.2026 mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei
+   * der Katze steht 787." Die Fundkarte bot 756 / 765 / 775 an - richtig
+   * ist 788. Das Blatt hatte Titel, Datum und Inhalt, war also nach der
+   * Regel oben "fertig" - nur eben falsch gelesen. Als Haiku am selben Tag
+   * durch Opus 5.5 ersetzt wurde, gab es keinen Weg, ein einmal falsch
+   * gelesenes Blatt noch einmal anzusehen.
+   *
+   * ⚠️ Das Bild wird dabei NICHT angefasst - es wird nur neu gelesen. Pauls
+   * Beschluss vom 22.09.2026 ("speichere weg, sodass es nicht geloescht
+   * werden kann") bleibt unberuehrt. */
+  const nurId = String(d.id || "").trim();
+  const offen = nurId
+    ? e.eintraege.filter((x) => x.id === nurId)
+    : e.eintraege
+        .filter((x) => !x.titel || x.datumVon !== "blatt" ||
+                       !(Array.isArray(x.inhalt) && x.inhalt.length))
+        .slice(0, 12);
+  if (nurId && !offen.length) {
+    return json(404, { ok: false, fehler: "Kein Blatt mit dieser id: " + nurId });
+  }
   const getan = [];
   for (const x of offen) {
     const seite = await stoffBild(env, x.id, 0);
