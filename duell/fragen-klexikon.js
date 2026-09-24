@@ -502,4 +502,14 @@ export const KLEXIKON = [
   [3, "wissen", "📚", "Wie heißt ein Buch fast nur mit Bildern für kleine Kinder?", ["Bilderbuch", "Wörterbuch", "Sachbuch", "Tagebuch"], "In Bilderbüchern helfen die Zeichnungen Kindern, sich die Geschichte besser vorzustellen, auch wenn sie noch nicht lesen können.", null, "Kinderbuch"],
   [3, "pflanzen", "🌾", "Zu welcher Pflanzenart gehört Dinkel?", ["Getreide", "Gemüse", "Obst", "Pilze"], "Dinkel ist mit dem Weizen verwandt und wird manchmal sogar mit ihm gekreuzt, um neue Sorten zu erhalten.", null, "Dinkel"],
   [3, "natur", "🦕", "Welche ausgestorbenen Tiere kennt fast jedes Kind?", ["Dinosaurier", "Wale", "Löwen", "Adler"], "Dinosaurier lebten lange vor den Menschen auf der Erde und sind heute nur noch als Fossilien bekannt.", null, "Aussterben"],
+
+  // Nachschub vom 24.09.2026
+  [1, "tiere", "🐕", "Welche Ohren hat ein Dackel?", ["Schlappohren", "Stehohren", "Kurzohren", "Rundohren"], "Dackel haben lange, weiche Schlappohren, die ihnen beim Schnüffeln helfen können.", null, "Dackel"],
+  [2, "tiere", "🦊", "Wofür wurde der Dackel früher benutzt?", ["Zum Jagen", "Zum Hüten", "Zum Ziehen", "Zum Bewachen"], "Schon die alten Ägypter, Griechen und Römer nutzten Dackel zur Jagd auf Dachse und Füchse.", null, "Dackel"],
+  [2, "wissen", "➕", "Wie heißt das Zusammenzählen in der Mathematik?", ["Addition", "Subtraktion", "Division", "Multiplikation"], "Das Pluszeichen wurde von einem Mathematiker erfunden, der es sich einfach ausgedacht hat.", null, "Grundrechenarten"],
+  [3, "wissen", "➖", "Wie heißt das Gegenteil vom Zusammenzählen?", ["Abziehen", "Malnehmen", "Teilen", "Verdoppeln"], "Beim Abziehen wird eine Zahl von einer anderen weggenommen, bis weniger übrig bleibt.", null, "Grundrechenarten"],
+  [1, "kurios", "✂️", "Woraus bastelt man ganz oft?", ["Papier", "Eisen", "Glas", "Stein"], "Das Wort Basteln kommt von Bast, den Fasern aus Baumrinde, mit denen man früher band.", null, "Basteln"],
+  [3, "kurios", "🎨", "Womit malen die meisten Künstler?", ["Mit Pinsel", "Mit Löffel", "Mit Gabel", "Mit Kamm"], "Manche Künstler malten sogar mit den Fingern oder bliesen Farbe durch ein Rohr.", null, "Malerei"],
+  [4, "kurios", "⚫", "Was entsteht, wenn alle Farben zusammenkommen?", ["Weiß", "Schwarz", "Grau", "Bunt"], "Schwarz und Weiß gelten in der Kunst als Farben, obwohl sie eigentlich keine sind.", null, "Schwarz-Weiß"],
+  [4, "musik", "🎺", "Womit erzeugt man den Ton bei einem Blasinstrument?", ["Mit Luft", "Mit den Händen", "Mit den Füßen", "Mit Wasser"], "Je länger die Luftsäule in einem Instrument ist, desto tiefer klingt der Ton.", null, "Blasinstrument"],
 ];
