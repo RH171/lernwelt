@@ -138,6 +138,76 @@ export async function onRequestPost(context) {
    * abgelegt. Das Ablegen bleibt damit weit unter den 90 Sekunden, um die es
    * hier eigentlich ging - und der Eintrag liegt ohnehin schon sicher im
    * Speicher, bevor dieser Aufruf startet. */
+  /* Zweistufig (Dennys Wahl vom 24.09.2026): Die Seite legt erst ab und
+     holt das Lesen mit ?lesen=1 nach. Ohne den Schalter bleibt alles wie
+     bisher - ein Browser mit altem, gecachtem Skript wartet dann eben. */
+  const zweistufig = d.zweistufig === true || String(d.zweistufig || "") === "1";
+  const a = zweistufig
+    ? { titel: "", vomBlattGelesen: "", weichtAb: false, nachgefragt: null,
+        karten: [], kartenWarum: "", genauer: 0 }
+    : await blattAuswerten(env, kind, e, seiten, heute);
+  const titel = a.titel, vomBlattGelesen = a.vomBlattGelesen, weichtAb = a.weichtAb;
+  const nachgefragt = a.nachgefragt, karten = a.karten;
+  const kartenWarum = a.kartenWarum, genauer = a.genauer;
+
+  /* Warnen, nicht sperren (Dennys Entscheidung vom 22.09.2026).
+   *
+   * Das Blatt liegt zu diesem Zeitpunkt SCHON im Heft - nichts geht
+   * verloren, wenn die Pruefung schiefgeht. Findet sich ein Zwilling, sagt
+   * die Seite es Paul und bietet an, das neue wieder wegzunehmen. Er
+   * entscheidet: Ein zweites Foto vom verbesserten Blatt ist gewollt. */
+  let zwilling = null;
+  try {
+    zwilling = await schonDa(env, kind, {
+      abdruck, titel,
+      fach: String(d.fach || ""),
+      datum: weichtAb ? vomBlattGelesen : e.datum,
+      ausser: e.id,
+    });
+  } catch (err) {}
+
+  return json(200, {
+    ok: true, id: e.id,
+    /* Die Seite weiss damit, dass sie das Lesen noch anstossen muss. */
+    ...(zweistufig ? { lesenOffen: true } : {}),
+    ...(zwilling ? { schonDa: zwilling } : {}),
+    /* Wurden Seiten abgeschnitten, steht das hier - nie stillschweigend.
+       Seit dem 23.09.2026 nimmt ein Eintrag nur noch zwei Seiten (MAX_SEITEN),
+       die Werkstatt schickt aber bis zu zwanzig. */
+    ...(zuViel > 0 ? { seitenAbgeschnitten: zuViel, seitenMax: MAX_SEITEN } : {}),
+    // Das Datum, das jetzt wirklich im Heft steht.
+    datum: weichtAb ? vomBlattGelesen : e.datum,
+    datumVonBlatt: !!(vomBlatt || vomBlattGelesen),
+    ...(titel ? { titel } : {}),
+    // Nur wenn es abweicht - die Seite sagt es dem Kind dann ausdrücklich.
+    ...(weichtAb ? { datumGeaendert: { von: e.datum, auf: vomBlattGelesen } } : {}),
+    /* Mehr als 14 Tage Abstand: Das Kind bestätigt es selbst. */
+    ...(nachgefragt ? { datumFrage: nachgefragt } : {}),
+    /* Die Fundkarten fuer den Bildschirm direkt danach (Denny, 23.09.2026).
+       Sie gehen in DIESER Antwort mit - ein zweiter Aufruf waere eine zweite
+       Wartezeit, und genau die soll hier nicht entstehen. */
+    karten,
+    // Warum keine da sind, steht drin. Kein stiller catch - derselbe Grund
+    // wie bei titelWarum: sonst steht man vor einem leeren Feld ohne Hinweis.
+    ...(kartenWarum ? { kartenWarum } : {}),
+    // Wie viele Baender der zweite Blick genauer gesetzt hat.
+    ...(karten.length ? { genauer } : {}),
+  });
+}
+
+/* Das Blatt vom Modell lesen lassen und alles nachtragen, was dabei
+ * herauskommt: Titel, Datum, Sorte, Inhalt, Fundkarten.
+ *
+ * ⚠️ Das steht seit dem 24.09.2026 in einer eigenen Funktion, weil es
+ * ZWEI Aufrufer hat. Mit Opus 5.5 dauert das Lesen rund 30 Sekunden statt
+ * 1,5 - Denny hat deshalb den zweistufigen Weg gewaehlt: Das Blatt landet
+ * sofort im Heft (das Bild ist damit sicher), und das Lesen holt die Seite
+ * gleich danach in einem zweiten Aufruf nach. Paul wartet nicht darauf,
+ * dass sein Blatt ankommt.
+ *
+ * Sie wirft nie - der Grund landet am Eintrag (titelWarum), damit niemand
+ * vor einem leeren Feld ohne Hinweis steht. */
+async function blattAuswerten(env, kind, eintrag, seiten, heute) {
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
   let karten = [], kartenWarum = "", genauer = 0;
   if (env.ANTHROPIC_API_KEY) {
@@ -186,20 +256,20 @@ export async function onRequestPost(context) {
       const urteil = geprueft ? datumPruefen(geprueft, heute) : "nein";
       if (urteil === "nehmen") {
         vomBlattGelesen = geprueft;
-        weichtAb = geprueft !== e.datum;
-      } else if (urteil === "fragen" && geprueft !== e.datum) {
+        weichtAb = geprueft !== eintrag.datum;
+      } else if (urteil === "fragen" && geprueft !== eintrag.datum) {
         // NICHT setzen - erst bestaetigen lassen. Der Vorschlag wird am
         // Eintrag vermerkt, damit nur genau dieses Datum bestaetigt werden
         // kann (siehe PATCH weiter unten).
-        nachgefragt = { gelesen: geprueft, gewaehlt: e.datum, tage: tageDavor(geprueft, heute) };
-        await titelSetzen(env, kind, e.id, titel, "Datum unbestätigt: " + geprueft);
-        await vorschlagSetzen(env, kind, e.id, geprueft);
+        nachgefragt = { gelesen: geprueft, gewaehlt: eintrag.datum, tage: tageDavor(geprueft, heute) };
+        await titelSetzen(env, kind, eintrag.id, titel, "Datum unbestätigt: " + geprueft);
+        await vorschlagSetzen(env, kind, eintrag.id, geprueft);
       }
       if ((titel || vomBlattGelesen) && !nachgefragt) {
-        await titelSetzen(env, kind, e.id, titel,
+        await titelSetzen(env, kind, eintrag.id, titel,
                           vomBlattGelesen && !weichtAb ? "Datum vom Blatt bestätigt" : "");
       }
-      if (weichtAb) await datumSetzen(env, kind, e.id, vomBlattGelesen, e.datum);
+      if (weichtAb) await datumSetzen(env, kind, eintrag.id, vomBlattGelesen, eintrag.datum);
 
       /* Was auf dem Blatt steht, gehoert an den Eintrag - sonst kann das
          Lernquiz spaeter nur aus dem Titel raten (siehe inhaltSetzen). Das
@@ -209,58 +279,16 @@ export async function onRequestPost(context) {
       kartenWarum = gelesen.kartenWarum || "";
       genauer = gelesen.genauer || 0;
       if ((gelesen.inhalt && gelesen.inhalt.length) || karten.length) {
-        await inhaltSetzen(env, kind, e.id, gelesen.inhalt, karten, gelesen.sorte);
+        await inhaltSetzen(env, kind, eintrag.id, gelesen.inhalt, karten, gelesen.sorte);
       }
     } catch (err) {
       // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
-      try { await titelSetzen(env, kind, e.id, "", String(err && err.message || err).slice(0, 80)); }
+      try { await titelSetzen(env, kind, eintrag.id, "", String(err && err.message || err).slice(0, 80)); }
       catch (e2) {}
     }
   }
-
-  /* Warnen, nicht sperren (Dennys Entscheidung vom 22.09.2026).
-   *
-   * Das Blatt liegt zu diesem Zeitpunkt SCHON im Heft - nichts geht
-   * verloren, wenn die Pruefung schiefgeht. Findet sich ein Zwilling, sagt
-   * die Seite es Paul und bietet an, das neue wieder wegzunehmen. Er
-   * entscheidet: Ein zweites Foto vom verbesserten Blatt ist gewollt. */
-  let zwilling = null;
-  try {
-    zwilling = await schonDa(env, kind, {
-      abdruck, titel,
-      fach: String(d.fach || ""),
-      datum: weichtAb ? vomBlattGelesen : e.datum,
-      ausser: e.id,
-    });
-  } catch (err) {}
-
-  return json(200, {
-    ok: true, id: e.id,
-    ...(zwilling ? { schonDa: zwilling } : {}),
-    /* Wurden Seiten abgeschnitten, steht das hier - nie stillschweigend.
-       Seit dem 23.09.2026 nimmt ein Eintrag nur noch zwei Seiten (MAX_SEITEN),
-       die Werkstatt schickt aber bis zu zwanzig. */
-    ...(zuViel > 0 ? { seitenAbgeschnitten: zuViel, seitenMax: MAX_SEITEN } : {}),
-    // Das Datum, das jetzt wirklich im Heft steht.
-    datum: weichtAb ? vomBlattGelesen : e.datum,
-    datumVonBlatt: !!(vomBlatt || vomBlattGelesen),
-    ...(titel ? { titel } : {}),
-    // Nur wenn es abweicht - die Seite sagt es dem Kind dann ausdrücklich.
-    ...(weichtAb ? { datumGeaendert: { von: e.datum, auf: vomBlattGelesen } } : {}),
-    /* Mehr als 14 Tage Abstand: Das Kind bestätigt es selbst. */
-    ...(nachgefragt ? { datumFrage: nachgefragt } : {}),
-    /* Die Fundkarten fuer den Bildschirm direkt danach (Denny, 23.09.2026).
-       Sie gehen in DIESER Antwort mit - ein zweiter Aufruf waere eine zweite
-       Wartezeit, und genau die soll hier nicht entstehen. */
-    karten,
-    // Warum keine da sind, steht drin. Kein stiller catch - derselbe Grund
-    // wie bei titelWarum: sonst steht man vor einem leeren Feld ohne Hinweis.
-    ...(kartenWarum ? { kartenWarum } : {}),
-    // Wie viele Baender der zweite Blick genauer gesetzt hat.
-    ...(karten.length ? { genauer } : {}),
-  });
+  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer };
 }
-
 /* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
  * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der
  * Katze steht 787." Die Fundkarte bot 756 / 765 / 775 an; richtig ist 788.
