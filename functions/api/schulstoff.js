@@ -261,12 +261,43 @@ export async function onRequestPost(context) {
   });
 }
 
-const TITEL_MODELL = "claude-haiku-4-5-20251001";
+/* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
+ * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der
+ * Katze steht 787." Die Fundkarte bot 756 / 765 / 775 an; richtig ist 788.
+ *
+ * Gemessen an genau diesem Blatt (1350x1800, 346 KB - das Bild, das der
+ * Server wirklich bekommen hat), 12 handgeschriebene dreistellige Zahlen:
+ *
+ *   Haiku 4.5            2-4 von 12   1,6-2,0 s   (5 Laeufe)
+ *   Sonnet 5 ohne Denken 0-12 von 12  13,9-16,7 s (2 Laeufe, einmal unlesbar)
+ *   Sonnet 5 mit Denken    12 von 12  13,2-23,7 s (3 Laeufe)
+ *   Opus 5                 12 von 12   8,1-14,7 s (5 Laeufe)
+ *   Opus 5.5               12 von 12   5,7-8,4 s  (6 Laeufe)  <- steht jetzt hier
+ *
+ * Haiku verwechselt dabei genau die Ziffern, die einem Kind schaden:
+ * 788->786, 998->986, 976->997, 967->957, 535->525.
+ *
+ * ⚠️ Und es liegt NICHT an der Aufloesung - meine erste These ist durch
+ * die eigene Gegenprobe widerlegt. Auf demselben kuenstlich auf 952 px
+ * verkleinerten Bild, bei dem Haiku 3 von 12 schafft, liest Opus 5 weiter
+ * 12 von 12 (1839 statt 1765 Eingabe-Tokens, also fast gleich viel Bild).
+ * Es ist das Modell, nicht das Bild.
+ *
+ * ⚠️ Haiku meldet seine Unsicherheit auch dann nicht, wenn man sie
+ * ausdruecklich erlaubt: Mit dem Zusatz "schreibe ? statt zu raten" kam in
+ * drei Laeufen KEIN einziges Fragezeichen - und trotzdem 9 bis 10 falsche
+ * Zahlen. Ein Modell, das hier raet, raet still.
+ *
+ * Wer das Modell wieder verkleinern will, misst diese Tabelle nach. */
+const TITEL_MODELL = "claude-opus-5-5";
 // Nach so vielen Sekunden wird ohne Titel abgelegt. Lieber kein Titel als
 // ein Kind, das vor dem Ladebalken sitzt.
-/* 9 s reichten fuer Titel und Datum. Der Inhalt braucht laenger, weil das
- * Modell das ganze Blatt lesen muss - gemessen 23.09.2026: 6-11 s. */
-const TITEL_GRENZE = 15000;
+/* 15 s waren auf Haiku bemessen. Opus 5.5 braucht fuer das blosse Ablesen
+ * der Zahlen 5,7-8,4 s; der volle Auftrag (Titel, Datum, Sorte, Inhalt,
+ * Fundkarten) ist deutlich groesser - Opus 5 brauchte dafuer am 24.09.2026
+ * 26,9 s. Die Grenze muss ueber diesem Wert liegen, sonst schneidet sie
+ * genau den Lauf ab, der endlich richtig liest. */
+const TITEL_GRENZE = 45000;
 /* Der zweite Blick liest nur Zeilenanfaenge - das geht schneller als das
  * ganze Blatt zu verstehen. Reisst er die Grenze, bleibt die Schaetzung
  * aus dem ersten Aufruf; die Karte faellt nie deswegen weg. */
@@ -282,9 +313,20 @@ const POSITION_MODELL = "claude-sonnet-5";
  *   + Sonnet + Rettung   15,9 s   4 Karten   2 von 4  (er lieferte NICHTS)
  *
  * Er verdoppelt die Wartezeit und liefert unzuverlaessig: einmal alles,
- * einmal gar nichts. Eine Stelle in einem Foto zu verorten koennen die
- * Modelle heute nicht gut genug - weder in Prozent noch in Streifen, weder
- * nebenbei noch als eigene Frage.
+ * einmal gar nichts.
+ *
+ * ⚠️ BERICHTIGT 24.09.2026: Hier stand "Eine Stelle in einem Foto zu
+ * verorten koennen die Modelle heute nicht gut genug". Das ist widerlegt.
+ * Alle vier Messungen oben liefen mit Haiku und Sonnet - OPUS WURDE NIE
+ * GETESTET. Nachgeholt am 24.09.2026 mit demselben Auftrag: Opus 5 lieferte
+ * 3 Karten in 26,9 s, alle drei inhaltlich richtig, und die Baender lagen
+ * PUNKTGENAU auf der gemeinten Zeile (nachgesehen, nicht geglaubt: die
+ * Streifen wurden ausgeschnitten und angeschaut). Sonnet mit Denkzeit traf
+ * eine Zeile zu tief, Haiku lieferte gar keine Karte.
+ *
+ * Richtig ist also: Haiku und Sonnet koennen es nicht gut genug. Der Satz
+ * "kein Modell kann das" war ein Schluss aus einer Messung, in der das
+ * entscheidende Modell fehlte.
  *
  * Der Code bleibt stehen, weil die Messung ihn belegt und weil ein
  * spaeteres Modell es koennen kann. Wer ihn wieder einschaltet, misst die
