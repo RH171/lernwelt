@@ -129,11 +129,46 @@
           if (!j || !j.ok) { kasten.classList.add("verborgen"); return; }
           blaetter = nachArtSortiert(j.blaetter || []);
           blaetterZeichnen();
+          wartendHolen();
         })
         .catch(function () { kasten.classList.add("verborgen"); });
       return;
     }
     blaetterZeichnen();
+  }
+
+  /* Was an einem Blatt wartet (24.09.2026).
+   *
+   * ⚠️ Der Motor entscheidet NICHT, wie das aussieht. Form, Text und Schwelle
+   * stehen in `EINSTELLUNGEN.anzeige` in functions/api/_wiedervorlage.js und
+   * kommen als `wiedervorlage` mit. Denny am 24.09.2026: "Baue es doch so,
+   * dass wir hier flexibel sind und jederzeit Aenderungen vornehmen koennen."
+   * Zwei Kopien derselben Entscheidung laufen auseinander - siehe der
+   * Stundenplan, der bis zum 22.09.2026 doppelt lag. */
+  var wartend = {};
+  var wvAnzeige = null;
+
+  function wartendHolen() {
+    fetch("/api/quiz?nurWartend=1&kind=" + encodeURIComponent(K.kind),
+          { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.wiedervorlage || !j.wiedervorlage.an) return;
+        wartend = j.wartend || {};
+        wvAnzeige = j.wiedervorlage.anzeige || null;
+        blaetterZeichnen();
+      })
+      .catch(function () { /* ohne Zahl ist die Auswahl genauso bedienbar */ });
+  }
+
+  /* Derselbe Text wie `wartendText()` auf dem Server - aber aus DEREN
+     Einstellungen, nicht aus eigenen Konstanten. */
+  function wartendText(n) {
+    if (!n || !wvAnzeige || wvAnzeige.wartend === "aus") return "";
+    if (wvAnzeige.wartend === "punkt") return "\u00b7";
+    if (wvAnzeige.zahlBis && n > wvAnzeige.zahlBis) return wvAnzeige.textViele || "";
+    var v = n === 1 ? wvAnzeige.textEins : wvAnzeige.textMehr;
+    return String(v || "").replace("{n}", String(n));
   }
 
   /* Die Vorschaubilder je Blatt - einmal geholt, dann gemerkt. Ein Foto sind
@@ -209,9 +244,15 @@
         '<span class="qvor" aria-hidden="true"></span>' +
         '<span class="was"><b></b><span></span></span>';
       k.querySelector("b").textContent = b.titel || "Ohne Titel";
+      /* Der Zusatz steht als TEXT im Untertitel, nicht als eigenes Element -
+         dieselbe Entscheidung wie beim Heft/Uebung-Schild am 23.09.2026: Er
+         erbt Farbe und Groesse der Zeile, und keine Klasse kann kollidieren
+         (mit .qblatt ist genau das passiert, 1,01:1 Kontrast). */
+      var wart = wartendText(wartend[b.id] || 0);
       k.querySelector(".was span").textContent =
         schildFuer(b) + deutschKurz(b.datum) +
-        (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "");
+        (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "") +
+        (wart ? " · " + wart : "");
       vorschauFuellen(k.querySelector(".qvor"), b);
       k.addEventListener("click", function (ev) {
         /* Ein Tipp auf die Miniatur vergroessert, statt an- oder abzuhaken -
@@ -277,6 +318,13 @@ function artKurz(art) {
     return (liste || []).slice().sort(function (a, b) {
       var ra = rang(a), rb = rang(b);
       if (ra !== rb) return ra - rb;
+      /* Innerhalb gleicher Sorte zuerst, was wartet - aber nur, wenn
+         `anzeige.sortiert` das sagt. Die Sorte entscheidet IMMER zuerst:
+         eine Lernzielliste gehoert nach oben, auch wenn nichts wartet. */
+      if (wvAnzeige && wvAnzeige.sortiert) {
+        var wa = wartend[a.id] || 0, wb = wartend[b.id] || 0;
+        if (wa !== wb) return wb - wa;
+      }
       return String(b.datum || "").localeCompare(String(a.datum || ""));
     });
   }
@@ -584,7 +632,11 @@ function artKurz(art) {
        kommt, hat es noch nicht gewusst - sonst zeigt der Elternbereich
        lauter Erfolge, die keine sind. */
     var stimmtEcht = stimmt && versuch === 1;
-    antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmtEcht });
+    /* blatt + belegNr sind der LERNPUNKT (24.09.2026). Ohne sie kann die
+       Wiedervorlage auf dem Server nichts wiedererkennen - `merkmal` taugt
+       dafuer nicht, es wird je Bau-Lauf neu erfunden. */
+    antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmtEcht,
+                        blatt: f.blatt || "", belegNr: f.belegNr || 0 });
     // Der Lernstand ist die Quelle für die Wiederholung - hier entsteht sie.
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",

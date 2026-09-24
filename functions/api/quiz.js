@@ -90,6 +90,16 @@ export async function onRequestGet(context) {
   // Nachladen weiter.
   const anzahl = Number.isFinite(anzahlRoh) ? Math.min(40, Math.max(0, Math.trunc(anzahlRoh))) : 15;
 
+  /* Nur nachsehen, was wartet - fuer die Blattauswahl, BEVOR das Quiz laeuft.
+     Zwei Leseabfragen, kein Schreibvorgang, kein Nachbau und kein Geld.
+     Lesen zaehlt im KV praktisch nicht, Schreiben schon. */
+  if (url.searchParams.get("nurWartend") === "1") {
+    const v = await vorratLesen(env, kind);
+    const pk = await punkteLesen(env, kind);
+    return json(200, { ok: true, wiedervorlage: fuerDieSeite(),
+                       wartend: wartendJeBlatt(v.fragen, pk, Date.now()) });
+  }
+
   let vorrat = await vorratLesen(env, kind);
   const gestellt = new Set(await gestellteLesen(env, kind));
 
