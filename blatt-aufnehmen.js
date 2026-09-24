@@ -307,6 +307,47 @@
       l.textContent = seiten.length > 1 ? seiten.length + " Seiten in die Ablage legen" : "In die Ablage legen";
     }
 
+    /* Schritt 2 des zweistufigen Ablegens.
+     *
+     * ⚠️ Das Blatt ist zu diesem Zeitpunkt SCHON im Heft. Was hier
+     * schiefgeht, kostet nur den Inhalt - und den holt ?nachtragen=1
+     * spaeter nach. Deshalb steht hier nie "Fehler", sondern ein Satz, der
+     * stimmt: sein Blatt ist da.
+     *
+     * Ein Versuch, kein zweiter: Der Server liest ein Blatt mit Inhalt
+     * ohnehin nicht noch einmal (Kostenriegel), ein Wiederholen waere also
+     * nur Wartezeit. */
+    function lesenAnstossen(abgelegt) {
+      fetch("/api/schulstoff?lesen=1", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: kind, id: abgelegt.id })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) {
+          melde("✅ Ist in deinem Heft – " + deutsch(abgelegt.datum) +
+                ". Durchlesen hat gerade nicht geklappt, das hole ich nach.", "gut");
+          if (opt.fertig) { try { opt.fertig(abgelegt); } catch (e) {} }
+          return;
+        }
+        melde("✅ Ist in deinem Heft – " + deutsch(j.datum) +
+              (j.titel ? ", „" + j.titel + "“" : "") + ".", "gut");
+        /* Alles, was Schritt 2 herausgefunden hat, geht an denselben
+           Empfaenger wie beim einstufigen Weg - Fundkarten, Datumsfrage,
+           Zwilling. Die id kommt aus Schritt 1. */
+        if (opt.fertig) {
+          try { opt.fertig(Object.assign({}, abgelegt, j, { lesenOffen: false })); }
+          catch (e) {}
+        }
+      })
+      .catch(function () {
+        melde("✅ Ist in deinem Heft – " + deutsch(abgelegt.datum) +
+              ". Durchlesen hat gerade nicht geklappt, das hole ich nach.", "gut");
+        if (opt.fertig) { try { opt.fertig(abgelegt); } catch (e) {} }
+      });
+    }
+
     // ---- Ablegen --------------------------------------------------------
     $(".lwb-los").addEventListener("click", function () {
       if (laeuft || !seiten.length || !fach || !art) return;
@@ -325,23 +366,40 @@
         return fetch("/api/schulstoff", {
           method: "POST", credentials: "same-origin",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: kind, fach: fach, art: art, datum: datum.value, seiten: bilder })
+          /* Zweistufig (Dennys Wahl vom 24.09.2026): erst ablegen, dann
+             lesen. Seit das Blatt mit Opus 5.5 gelesen wird, dauert das
+             Lesen rund 30 s statt 1,5 - und darauf soll Paul nicht warten,
+             nur damit sein Blatt ankommt. Es ist nach ~2 s da. */
+          body: JSON.stringify({ kind: kind, fach: fach, art: art, datum: datum.value,
+                                 seiten: bilder, zweistufig: true })
         });
       })
       .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
       .then(function (a) {
-        laeuft = false; l.disabled = false; knopf();
-        if (a.status === 401) { melde("Melde dich bitte nochmal an.", "fehler"); return; }
+        if (a.status === 401) { laeuft = false; l.disabled = false; knopf(); melde("Melde dich bitte nochmal an.", "fehler"); return; }
         if (!a.j || !a.j.ok) {
+          laeuft = false; l.disabled = false; knopf();
           melde((a.j && a.j.fehler) || "Das hat nicht geklappt. Dein Foto ist noch da – probier es nochmal.", "fehler");
           return;
         }
+        /* Das Blatt liegt JETZT im Heft - das Foto darf weg, der Knopf
+           frei werden. Was noch fehlt, ist nur der Inhalt. */
+        laeuft = false; l.disabled = false;
         seiten = []; art = "";
         Array.prototype.forEach.call(kasten.querySelectorAll("[data-art]"), function (x) { x.classList.remove("an"); });
         malen(); knopf();
         melde("✅ Ist in deinem Heft – " + deutsch(a.j.datum) +
               (a.j.titel ? ", „" + a.j.titel + "“" : "") + ".", "gut");
-        if (opt.fertig) { try { opt.fertig(a.j); } catch (e) {} }
+
+        if (!a.j.lesenOffen) {
+          if (opt.fertig) { try { opt.fertig(a.j); } catch (e) {} }
+          return;
+        }
+        /* Schritt 2. Er darf scheitern, ohne dass etwas verloren geht -
+           das Blatt ist abgelegt, und ?nachtragen=1 holt den Inhalt
+           spaeter nach. Deshalb kein "Fehler", nur ein ehrlicher Satz. */
+        melde("✅ Ist in deinem Heft. Ich lese es gerade durch …", "gut");
+        lesenAnstossen(a.j);
       })
       .catch(function () {
         laeuft = false; l.disabled = false; knopf();
