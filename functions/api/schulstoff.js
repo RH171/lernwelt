@@ -855,6 +855,10 @@ async function blattLesen(env, seite) {
               "Fehlern - verbessere nichts still. Bist du SICHER, dass es sich " +
               "verschrieben oder verrechnet hat, schreib: Kind schrieb X, richtig: Y. " +
               "Bist du nicht sicher, schreib nur ab.\n" +
+              "ROT schreibt nur die Lehrkraft (Haken, Verbesserungen, ihr Kuerzel wie " +
+              "\"Sy\"); das Kind schreibt blau oder mit Bleistift. Schreib Rotes als " +
+              "\"Lehrkraft: ...\". Auch eine rote Zahl kann falsch sein - rechne nach, " +
+              "und stimmt sie nicht: Lehrkraft schrieb X, richtig: Y.\n" +
               "WICHTIG - was UM das Blatt herum steht, gehoert dazu: Schau auch auf " +
               "den Rand der Heftseite, ueber und unter ein eingeklebtes Blatt, und " +
               "auf alles Handgeschriebene. Randnotizen, nachtraeglich dazugeschriebene " +
