@@ -169,7 +169,7 @@ window.QUIZ = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind: "paul", fund: liste.map(function(e){
         return { blatt: blattId, karte: e.karte, stimmt: e.stimmt }; }) })
-    }).catch(function(){ /* ohne Speicher geht nur die Wiedervorlage verloren */ });
+    }).catch(function(){ /* ohne Speicher merkt sich nur die Wiedervorlage diese Runde nicht */ });
   }
   function starten(x){
     var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
