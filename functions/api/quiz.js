@@ -43,7 +43,7 @@ import { stehtAufBlatt } from "./spiel-bauen.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
-  fundFaelligJeBlatt, wartendText,
+  fundFaelligJeBlatt, fundStandJeKarte, wartendText,
 } from "./_wiedervorlage.js";
 
 const KINDER = {
@@ -102,7 +102,8 @@ export async function onRequestGet(context) {
     for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
     return json(200, { ok: true, wiedervorlage: fuerDieSeite(),
                        wartend: wartendJeBlatt(v.fragen, pk, Date.now()),
-                       fundFaellig: fund, fundText });
+                       fundFaellig: fund, fundText,
+                       fundStand: fundStandJeKarte(pk, Date.now()) });
   }
 
   let vorrat = await vorratLesen(env, kind);

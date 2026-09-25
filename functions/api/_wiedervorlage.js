@@ -241,6 +241,25 @@ export function fundFaelligJeBlatt(punkte, jetzt, e) {
   return raus;
 }
 
+/* Der Stand JEDER gespielten Fundkarte, fuer die Tagesrunde (25.09.2026):
+   { "blatt#k:...": { r, f, faellig, tage } }. Nur lesen - die Seite waehlt
+   daraus die Mischung, der Server entscheidet dabei nichts.
+   r = richtig in Folge · f = zuletzt falsch · tage = seit dem letzten Mal. */
+export function fundStandJeKarte(punkte, jetzt, e) {
+  const ein = e || EINSTELLUNGEN;
+  const raus = {};
+  if (!ein.an) return raus;
+  const nun = jetzt || Date.now();
+  for (const s of Object.keys(punkte || {})) {
+    if (s.indexOf("#k:") < 1) continue;
+    const p = punkte[s] || {};
+    raus[s] = { r: Number(p.r) || 0, f: p.f ? 1 : 0,
+                faellig: istFaellig(p, nun, ein) ? 1 : 0,
+                tage: p.z ? Math.floor((nun - p.z) / TAG) : null };
+  }
+  return raus;
+}
+
 /* Eine Antwort verbuchen.
  *
  * `richtig` ist der ERSTE Versuch - wer erst mit Tipp und Blatt daraufkommt,
