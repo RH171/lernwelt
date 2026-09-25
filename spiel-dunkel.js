@@ -62,6 +62,12 @@
     html.removeAttribute("data-spiel-dunkel");
     var b = getComputedStyle(document.body);
     var farbe = b.backgroundColor, bild = b.backgroundImage;
+    if ((!farbe || farbe === "rgba(0, 0, 0, 0)") && bild && bild !== "none") {
+      /* Nur ein Verlauf, keine Grundfarbe: dessen letzte Farbe ist der
+         Grund (Himmel-Wiese-Erde im Zeit-Baumeister endet in Erde). */
+      var alle = bild.match(/rgba?\([^)]+\)/g);
+      if (alle) farbe = alle[alle.length - 1];
+    }
     if (!farbe || farbe === "rgba(0, 0, 0, 0)" || farbe === "transparent") {
       farbe = getComputedStyle(html).backgroundColor;
       if (!farbe || farbe === "rgba(0, 0, 0, 0)") farbe = "#ffffff";
