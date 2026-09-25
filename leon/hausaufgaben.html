@@ -86,7 +86,7 @@
 
   .knoepfe{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
   @media (max-width:560px){ .knoepfe{grid-template-columns:1fr} }
-  .aufnahme{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:2px dashed #cfd4ea;background:var(--feld,#fafbff);
+  .aufnahme{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;border:2px dashed var(--line,#cfd4ea);background:var(--feld,#fafbff);
     border-radius:16px;padding:14px;min-height:84px;cursor:pointer;font:700 15px/1.2 var(--rund);color:var(--ink)}
   .aufnahme .ic{font-size:28px}
   .seiten{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:12px}
@@ -108,10 +108,10 @@
   textarea{width:100%;min-height:74px;resize:vertical;border:2px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px;
     font:16px/1.5 var(--font);color:var(--ink);background:var(--feld,#fbfcff)}
   textarea:focus{outline:none;border-color:var(--paul)}
-  .regel{margin-top:12px;background:var(--gruen-hell);border:1px solid #b7ebd4;color:var(--gruen-text,#135c3f);border-radius:14px;padding:10px 13px;font-size:14.5px;line-height:1.5}
+  .regel{margin-top:12px;background:var(--gruen-hell);border:1px solid var(--line,#b7ebd4);color:var(--gruen-text,#135c3f);border-radius:14px;padding:10px 13px;font-size:14.5px;line-height:1.5}
   .hoerknopf{display:inline-flex;align-items:center;margin-top:10px;border:2px solid var(--line);background:var(--card,#fff);
     border-radius:999px;padding:8px 14px;min-height:44px;font:700 15px/1 var(--rund);color:var(--paul);cursor:pointer}
-  .fehler{margin-top:10px;background:var(--gefahr-hell,#fff1f0);color:var(--gefahr-text,#a3251c);border:1px solid #ffd5d1;border-radius:12px;padding:10px 12px;font-size:14.5px}
+  .fehler{margin-top:10px;background:var(--gefahr-hell,#fff1f0);color:var(--gefahr-text,#a3251c);border:1px solid var(--line,#ffd5d1);border-radius:12px;padding:10px 12px;font-size:14.5px}
 
   /* Das Gespräch */
   .verlauf{display:flex;flex-direction:column;gap:10px}
@@ -125,7 +125,7 @@
   .blase .bilder .pdfkachel{display:flex;align-items:center;justify-content:center;width:92px;height:122px;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px;font-size:13px}
   .denkt{align-self:flex-start;color:var(--muted);font:700 15px/1.4 var(--rund);padding:6px 4px}
   .denkt::before{content:"";display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-radius:50%;
-    border:3px solid #d0d5dd;border-top-color:var(--paul);animation:dreh 1s linear infinite}
+    border:3px solid var(--line,#d0d5dd);border-top-color:var(--paul);animation:dreh 1s linear infinite}
   @keyframes dreh{to{transform:rotate(360deg)}}
   .aktionen{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
   @media (max-width:560px){ .aktionen{grid-template-columns:1fr} }

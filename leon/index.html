@@ -19,7 +19,7 @@
   .themen{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}
   .thema{
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
-    background:#f6fdf8;border:2px solid #d6f0de;border-radius:20px;
+    background:var(--gruen-feld,#f6fdf8);border:2px solid var(--rand-gut,#d6f0de);border-radius:20px;
     padding:17px 10px;cursor:pointer;text-align:center;min-height:104px;
     font-family:var(--rund);font-size:15.5px;font-weight:600;line-height:1.25;
   }
@@ -27,7 +27,7 @@
   .thema .bild{font-size:31px;line-height:1}
   .thema.jetzt, .thema.jetzt.fertig{border-color:var(--leon);background:var(--gruen-feld,#eefbf2)}
   /* Zu diesem Thema liegt schon ein fertiges Spiel - startet ohne Warten. */
-  .thema.fertig{border-color:#bfe8cd;background:var(--gruen-feld,#f2fcf5)}
+  .thema.fertig{border-color:var(--rand-gut,#bfe8cd);background:var(--gruen-feld,#f2fcf5)}
   .thema .bereit{
     font-family:var(--font);font-size:11px;font-weight:700;color:var(--gruen-text,#0f9d58);
     letter-spacing:.03em;
@@ -88,7 +88,7 @@
   .anfassen-liste{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:14px}
   @media (max-width:640px){ .anfassen-liste{grid-template-columns:1fr} }
   .anfass{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink);
-    background:linear-gradient(160deg,#ecfdf3,#e0f2fe);border:2px solid #b7e4c7;border-radius:20px;padding:16px 10px;min-height:118px;
+    background:linear-gradient(160deg,#ecfdf3,#e0f2fe);border:2px solid var(--line,#b7e4c7);border-radius:20px;padding:16px 10px;min-height:118px;
     font-family:var(--rund);font-size:17px;font-weight:700;text-align:center;line-height:1.25}
   .anfass .bild{font-size:36px;line-height:1}
   .anfass .fachname{font-family:var(--font);font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
@@ -135,9 +135,9 @@
     transition:border-color .15s,background .15s,transform .1s;min-height:112px;
   }
   .knopf:active{transform:scale(.98)}
-  .knopf:hover{border-color:var(--leon);background:#f7f7ff}
+  .knopf:hover{border-color:var(--leon);background:var(--feld,#f7f7ff)}
   .knopf .zeichen{font-size:30px;line-height:1}
-  .ablage.drueber{border-color:var(--leon);background:#f2f2ff}
+  .ablage.drueber{border-color:var(--leon);background:var(--feld,#f2f2ff)}
 
   .wunschfeld{margin-top:18px}
   .wunschfeld label{
@@ -170,16 +170,16 @@
   .los:disabled{opacity:.4;cursor:default;box-shadow:none}
 
   .hinweis{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:14.5px;line-height:1.5}
-  .hinweis.warn{background:#fff6ea;color:#8a5a12;border:1px solid #ffe2bd}
-  .hinweis.fehler{background:var(--gefahr-hell,#fff1f0);color:var(--gefahr-text,#a3251c);border:1px solid #ffd5d1}
+  .hinweis.warn{background:var(--warn-hell,#fff6ea);color:var(--orange,#8a5a12);border:1px solid var(--line,#ffe2bd)}
+  .hinweis.fehler{background:var(--gefahr-hell,#fff1f0);color:var(--gefahr-text,#a3251c);border:1px solid var(--line,#ffd5d1)}
 
   .laden{text-align:center;padding:44px 22px}
   .kreis{width:54px;height:54px;margin:0 auto 20px;border-radius:50%;
-         border:4px solid #e7e9f5;border-top-color:var(--leon);animation:dreh 1s linear infinite}
+         border:4px solid var(--line,#e7e9f5);border-top-color:var(--leon);animation:dreh 1s linear infinite}
   @keyframes dreh{to{transform:rotate(360deg)}}
   .schritt{font-family:var(--rund);font-size:18px;font-weight:600}
 
-  .fortschritt{height:8px;background:#eceffa;border-radius:999px;overflow:hidden;margin:18px 0 4px}
+  .fortschritt{height:8px;background:var(--feld,#eceffa);border-radius:999px;overflow:hidden;margin:18px 0 4px}
   .fortschritt i{display:block;height:100%;background:var(--leon);border-radius:999px;transition:width .3s}
   .zaehler{font-size:13.5px;color:var(--muted);text-align:right}
 
@@ -192,8 +192,8 @@
   }
   .wahl button:active{transform:scale(.99)}
   .wahl button:hover:not(:disabled){border-color:var(--leon)}
-  .wahl button.gut{border-color:var(--gut);background:#eafaf1}
-  .wahl button.schlecht{border-color:var(--schlecht);background:#fef2f1}
+  .wahl button.gut{border-color:var(--gut);background:var(--gruen-feld,#eafaf1)}
+  .wahl button.schlecht{border-color:var(--schlecht);background:var(--gefahr-hell,#fef2f1)}
   .wahl button:disabled{cursor:default}
 
   /* Zahleneingabe */
@@ -205,8 +205,8 @@
     background:var(--feld,#fbfcff);color:var(--ink);font-variant-numeric:tabular-nums;
   }
   .eingabe input:focus{outline:none;border-color:var(--leon)}
-  .eingabe input.gut{border-color:var(--gut);background:#eafaf1}
-  .eingabe input.schlecht{border-color:var(--schlecht);background:#fef2f1}
+  .eingabe input.gut{border-color:var(--gut);background:var(--gruen-feld,#eafaf1)}
+  .eingabe input.schlecht{border-color:var(--schlecht);background:var(--gefahr-hell,#fef2f1)}
   .eingabe .pruefen{
     width:100%;border:none;border-radius:16px;padding:16px;
     background:var(--leon);color:#fff;font-family:var(--rund);font-size:17px;font-weight:700;cursor:pointer;
@@ -219,7 +219,7 @@
      Rechenweg in die Fensterecke geworfen. */
   .rechenweg{
     margin:2px 0 12px;padding:12px 15px;border-radius:13px;
-    background:#f1f2fa;color:var(--muted);font-size:15px;line-height:1.5;
+    background:var(--feld,#f1f2fa);color:var(--muted);font-size:15px;line-height:1.5;
   }
   .rechenweg b{color:var(--ink);font-family:var(--rund)}
   .kette{display:flex;flex-direction:column;gap:10px;margin-top:4px}
@@ -227,7 +227,7 @@
     display:flex;align-items:center;gap:12px;
     padding:13px 15px;border-radius:14px;border:1px solid var(--line);background:var(--feld,#fbfcff);
   }
-  .glied.erledigt{border-color:var(--gut);background:#eafaf1}
+  .glied.erledigt{border-color:var(--gut);background:var(--gruen-feld,#eafaf1)}
   .glied.dran{border-color:var(--leon);background:var(--card,#fff)}
   .glied .txt{flex:1;font-size:16px}
   .glied .zahl{
@@ -238,8 +238,8 @@
 
   .rueck{margin-top:18px;padding:16px 18px;border-radius:16px;font-size:16px;line-height:1.5;display:none}
   .rueck.zeigen{display:block}
-  .rueck.gut{background:#eafaf1;color:#08663c}
-  .rueck.schlecht{background:#fff7ed;color:#8a5a12}
+  .rueck.gut{background:var(--gruen-feld,#eafaf1);color:var(--gruen-text,#08663c)}
+  .rueck.schlecht{background:var(--warn-hell,#fff7ed);color:var(--orange,#8a5a12)}
   .rueck b{display:block;margin-bottom:7px;font-family:var(--rund);font-size:17px}
   .schritte{
     white-space:pre-line;               /* jede Zeile bleibt eine Zeile */
@@ -278,7 +278,7 @@
   .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
   .wiederholen{
     background:linear-gradient(135deg,#eef1ff,#f6f1ff);
-    border:1px solid #ddd9fb;border-radius:20px;padding:20px 22px;margin-bottom:16px;
+    border:1px solid var(--line,#ddd9fb);border-radius:20px;padding:20px 22px;margin-bottom:16px;
   }
   .wiederholen .kopf{font-family:var(--rund);font-size:18px;font-weight:700;margin-bottom:4px}
   .wiederholen .grund{color:var(--muted);font-size:14.5px;line-height:1.5}
@@ -292,7 +292,7 @@
      Keine Serie, die man verlieren kann - siehe Bauregeln. */
   .torstand{
     display:flex;align-items:center;gap:10px;margin-bottom:14px;
-    background:var(--gruen-feld,#eefbf2);border:1px solid #cdeedd;border-radius:15px;padding:11px 14px;
+    background:var(--gruen-feld,#eefbf2);border:1px solid var(--line,#cdeedd);border-radius:15px;padding:11px 14px;
   }
   .torstand .zahl{font-family:var(--rund);font-size:23px;font-weight:800;color:var(--gruen-text,#0f7a45)}
   .torstand .wort{font-size:14px;color:var(--gruen-text,#3d7a5c);line-height:1.35}
@@ -313,13 +313,13 @@
   }
   .spielkopf .weltbild{
     font-size:26px;line-height:1;flex:none;width:46px;height:46px;border-radius:14px;
-    display:grid;place-items:center;background:var(--gruen-feld,#f2fcf5);border:1px solid #d9f0e2;
+    display:grid;place-items:center;background:var(--gruen-feld,#f2fcf5);border:1px solid var(--line,#d9f0e2);
   }
   .spielkopf .spielname{
     font-family:var(--rund);font-weight:700;font-size:19px;line-height:1.25;
   }
   .nachspiel{
-    background:var(--gruen-feld,#eefbf2);border:1px solid #bfe8cd;border-radius:13px;
+    background:var(--gruen-feld,#eefbf2);border:1px solid var(--line,#bfe8cd);border-radius:13px;
     padding:9px 13px;margin:2px 0 12px;text-align:center;
     font-family:var(--rund);font-weight:700;font-size:14.5px;color:var(--gruen-text,#0f7a45);
   }
