@@ -653,6 +653,62 @@ export async function artSetzen(env, kind, id, art) {
   return { ok: false, fehler: "Das finde ich nicht mehr." };
 }
 
+/* Das Fach eines Eintrags aendern und/oder den Fach-Vorschlag vermerken.
+ *
+ * Denny am 25.09.2026: "Egal, welches Datum Paul eintritt, aber er ...
+ * klickt aus Versehen Mathe an und dabei war es HSU. Was passiert dann?" -
+ * Bis dahin: nichts. Das Blatt lag unter Mathe, das Quiz fragte es als Mathe
+ * ab, und umstellen ging nirgends. Gewaehlt: Rueckfrage UND Korrektur.
+ *
+ *   fach      - neues Fach setzen (undefined = unveraendert)
+ *   vorschlag - was das Modell gelesen hat ("" = Vorschlag loeschen,
+ *               undefined = unveraendert)
+ *
+ * Anders als die Art darf das KIND das Fach selbst umstellen: Ein falsch
+ * angetipptes Fach ist ein Versehen, keine Antwort auf "wo stand das?".
+ * Erst lesen, dann schreiben - ein gleicher Wert kostet keinen Schreibvorgang. */
+export async function fachSetzen(env, kind, id, { fach, vorschlag } = {}) {
+  if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
+  if (!env || !env.PAUL_KV) return { ok: false, fehler: "Der Speicher ist gerade nicht da." };
+  if (fach !== undefined && !FAECHER[fach]) return { ok: false, fehler: "Das Fach kenne ich nicht." };
+  if (vorschlag && !FAECHER[vorschlag]) return { ok: false, fehler: "Das Fach kenne ich nicht." };
+
+  const heute = heuteBerlin();
+  for (let i = 0; i < MONATE_ZURUECK; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try {
+      roh = await env.PAUL_KV.get(LISTE(kind, monat));
+    } catch (e) {
+      return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." };
+    }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
+    const treffer = liste.findIndex((e) => e.id === id);
+    if (treffer < 0) continue;
+
+    const x = liste[treffer];
+    const vorher = x.fach || "";
+    if (fach !== undefined) {
+      if (fach !== vorher && !x.fachGewaehlt) x.fachGewaehlt = vorher;   // Pauls erste Wahl bleibt
+      x.fach = fach;
+    }
+    if (vorschlag !== undefined) {
+      if (vorschlag) x.fachVorschlag = vorschlag;
+      else delete x.fachVorschlag;
+    }
+    const neu = JSON.stringify(liste);
+    if (neu !== roh) {
+      try { await env.PAUL_KV.put(LISTE(kind, monat), neu); }
+      catch (e) { return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." }; }
+    }
+    return { ok: true, von: vorher, auf: x.fach || "", eintrag: x };
+  }
+  return { ok: false, fehler: "Das finde ich nicht mehr." };
+}
+
 /* Verstecken und Wiederholen - ein Tipp, umkehrbar, das Bild bleibt.
  * "weg" nimmt nur den Eintrag aus der Liste; die Bilder liegen weiter da. */
 export async function stoffAendern(env, kind, id, was) {
