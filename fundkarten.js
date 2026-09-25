@@ -118,6 +118,10 @@
 
     ".lwf-tipp{font-size:14px;color:var(--orange,#b45309);margin:10px 2px 0;line-height:1.45}",
     ".lwf-lob{font-size:14px;color:" + GUT + ";margin:10px 2px 0;line-height:1.45}",
+    /* Die Merkhilfe (25.09.2026): getoente Flaeche mit Alpha, die Schrift erbt
+       die Kartenfarbe - so passt sie hell wie dunkel. */
+    ".lwf-merke{margin:10px 2px 0;padding:9px 12px;border-radius:12px;font-size:14.5px;line-height:1.45;" +
+      "background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.4)}",
     ".lwf-knopf{min-height:56px;width:100%;border:none;border-radius:16px;background:" + AKZ + ";",
     "  color:" + AUF + ";font:700 17px var(--rund,inherit);cursor:pointer;margin-top:13px}",
     ".lwf-knopf.leise{background:transparent;color:" + MUT + ";border:1px solid " + LINE + ";font-weight:600}",
@@ -526,6 +530,15 @@
       karte.appendChild(el("div", "lwf-frage", k.frage));
 
       var sagt = el("div", "lwf-tipp", "");
+      /* Merkhilfe: nach dem ersten falschen Tipp, dann auch nach der richtigen
+         Antwort zur Bestaetigung (Denny, 25.09.2026). Ohne Satz bleibt alles
+         wie vorher. */
+      var merk = null;
+      function merkZeigen() {
+        if (!k.merke || merk) return;
+        merk = el("div", "lwf-merke", "\uD83D\uDCA1 " + k.merke);
+        karte.insertBefore(merk, sagt.nextSibling);
+      }
       var chips = el("div", "lwf-chips");
       var fertigChip = false;
 
@@ -558,6 +571,7 @@
             });
             sagt.className = "lwf-lob";
             sagt.textContent = "Richtig gelesen. Die Karte kommt ins Regal.";
+            merkZeigen();
             var w = el("button", "lwf-knopf", "Karte ins Regal legen");
             w.type = "button";
             w.addEventListener("click", function () {
@@ -574,7 +588,9 @@
             b.className = "lwf-chip daneben";
             b.disabled = true;
             sagt.className = "lwf-tipp";
-            sagt.textContent = "Noch nicht. Schau dir den Ausschnitt noch mal genau an.";
+            sagt.textContent = k.merke ? "Noch nicht. Hier ist eine Hilfe - versuch es gleich nochmal."
+                                       : "Noch nicht. Schau dir den Ausschnitt noch mal genau an.";
+            merkZeigen();
           }
         });
         chips.appendChild(b);

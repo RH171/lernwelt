@@ -21,6 +21,7 @@
  * kommt überall hinein.
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { tippOk } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
@@ -695,6 +696,12 @@ export function kartenLesen(roh, inhalt) {
       richtig: f[4].slice(0, 60),
       falsch: [f[5].slice(0, 60), f[6].slice(0, 60)],
     };
+    /* Die Merkhilfe (Denny, 25.09.2026: "Was ist ein Nomen? Warum wird das
+       so geschrieben? … Hilfsbrücken"). Sie erscheint nach dem ersten
+       falschen Tipp, BEVOR Paul es nochmal versucht - darf die Antwort also
+       nicht verraten. Verraet sie sie, faellt nur der Satz weg, nie die Karte. */
+    const merke = String(f[7] || "").replace(/\s+/g, " ").trim().slice(0, 180);
+    if (merke && tippOk(merke, [k.richtig])) k.merke = merke;
     let fertig = k;
     const grund = karteOk(k, inhalt);
     if (grund) {
@@ -962,8 +969,8 @@ async function blattLesen(env, seite) {
               "einer Verbesserung schreib die richtige Fassung, nicht die " +
               "durchgestrichene.\n" +
               "KARTEN: danach eine Zeile je Fundkarte, ebenfalls mit \"- \" beginnend, " +
-              "sieben Felder mit | getrennt:\n" +
-              "Stichwort | von | bis | Frage | richtige Antwort | falsch1 | falsch2\n" +
+              "acht Felder mit | getrennt:\n" +
+              "Stichwort | von | bis | Frage | richtige Antwort | falsch1 | falsch2 | Merksatz\n" +
               "* Stichwort: ein bis zwei Woerter, worum es geht (z. B. Einwohner).\n" +
               "* von und bis: wo diese Stelle auf dem Blatt steht, als Prozent der " +
               "BILDHOEHE von oben - 0 ist der obere Rand, 100 der untere. Zwei ganze " +
@@ -986,6 +993,14 @@ async function blattLesen(env, seite) {
               "sein: vertauschte Ziffern, ein anderes Jahrzehnt, ein aehnlicher Name. " +
               "Sie duerfen NICHT selbst auf dem Blatt stehen und nie eine andere " +
               "Schreibweise der richtigen Antwort sein.\n" +
+              "* Merksatz: eine kurze Hilfsbruecke fuer ein Kind der 4. Klasse, hoechstens " +
+              "20 Woerter, die das Denken anstoesst, ohne die Antwort zu nennen. Bei " +
+              "Regeln die Regel mit einem EIGENEN Beispiel (\"Nomen sind Dinge, Lebewesen " +
+              "oder Gefuehle - davor passt der, die oder das, und man schreibt sie gross: " +
+              "der Hund, die Angst.\"), bei Rechnen der Rechenweg in Worten, bei Sachwissen " +
+              "eine Eselsbruecke oder ein Hinweis, wo es auf dem Blatt steht. Das Wort " +
+              "oder die Zahl der richtigen Antwort darf im Merksatz NICHT vorkommen. " +
+              "Freundlich, in du-Form, ohne \"falsch\".\n" +
               "So viele Karten, wie das Blatt hergibt: eine je Stelle mit einem klaren " +
               "kurzen Wert, keine mehr und keine weniger. Auch aus einer Liste darf eine " +
               "Karte werden, wenn die Frage genau eine Antwort hat (\"In welchem Land " +
@@ -1002,8 +1017,8 @@ async function blattLesen(env, seite) {
               "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\nFACH: hsu\nSORTE: normal\n" +
               "INHALT:\n- ! Regnitz\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
               "KARTEN:\n" +
-              "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000\n" +
-              "- Oberbürgermeister | 26 | 31 | Wie heißt der Oberbürgermeister? | Dr. Thomas Jung | Dr. Tobias Jung | Dr. Thomas Jungwirth" },
+              "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000 | Es sind über hunderttausend - schau auf die Zeile mit den Einwohnern.\n" +
+              "- Oberbürgermeister | 26 | 31 | Wie heißt der Oberbürgermeister? | Dr. Thomas Jung | Dr. Tobias Jung | Dr. Thomas Jungwirth | Der Oberbürgermeister ist der Chef der Stadt. Lies den Vornamen genau." },
           ],
         }],
       }),
