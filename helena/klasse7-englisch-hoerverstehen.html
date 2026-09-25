@@ -214,12 +214,35 @@
   var BASIS = "https://www.isb.bayern.de/fileadmin/user_upload/Gymnasium/Leistungserhebungen/Jahrgangsstufenarbeiten/Englisch/";
   /* dauer und mb sind gemessen (ffprobe ueber HTTP, 25.09.2026), damit schon
      VOR dem Laden etwas Ehrliches dasteht. */
+  /* pausen: jede Stille ab 10 Sekunden, gemessen mit ffmpeg silencedetect
+     (-40 dB, 2 s) am 25.09.2026 - siehe ../pruefe-hoermarken.mjs.
+     Alle vier Aufnahmen haben denselben Aufbau, und das ist gegengeprueft:
+     Ansage, Lesezeit, Teil A zum 1. Mal, Ausfuellzeit, Teil A zum 2. Mal,
+     Ansage Teil B, Lesezeit, Teil B zum 1. Mal, Ausfuellzeit, Teil B zum
+     2. Mal. Beide Durchgaenge sind jeweils gleich lang (Abweichung unter
+     3 %) - daran erkennt man, dass die Zuordnung stimmt.
+     Die Sprungmarken sind daraus abgeleitet: Ende der Pausen 1, 2, 4 und 5. */
   var JAHRE = [
-    { j:"2025", a:"2025/JT_2025_E7_Aufgaben.pdf", h:"2025/JT_2025_E7_Hoerverstehen.mp3", l:"2025/JT_2025_E7_Loesungen.pdf", dauer:783, mb:30 },
-    { j:"2024", a:"2024/JT_2024_E7_Aufgaben.pdf", h:"2024/JT_2024_E7_Hoerverstehen.mp3", l:"2024/JT_2024_E7_Loesungen.pdf", dauer:888, mb:27 },
-    { j:"2023", a:"2023/JT_2023_E7_Aufgaben.pdf", h:"2023/JT_2023_E7_Hoerverstehen.mp3", l:"2023/JT_2023_E7_Loesungen.pdf", dauer:916, mb:35 },
-    { j:"2022", a:"2022/2022_7_e_aufgaben.pdf",   h:"2022/2022_7_e_audio.mp3",           l:"2022/2022_7_e_loesungen.pdf",   dauer:908, mb:28 }
+    { j:"2025", a:"2025/JT_2025_E7_Aufgaben.pdf", h:"2025/JT_2025_E7_Hoerverstehen.mp3", l:"2025/JT_2025_E7_Loesungen.pdf", dauer:783, mb:30,
+      pausen:[[11.6,72.6],[250.7,292.0],[468.9,489.1],[496.2,536.7],[641.2,661.6],[764.1,774.9]] },
+    { j:"2024", a:"2024/JT_2024_E7_Aufgaben.pdf", h:"2024/JT_2024_E7_Hoerverstehen.mp3", l:"2024/JT_2024_E7_Loesungen.pdf", dauer:888, mb:27,
+      pausen:[[12.8,73.2],[296.2,326.7],[548.1,569.4],[576.3,616.8],[734.5,755.1],[871.3,882.0]] },
+    { j:"2023", a:"2023/JT_2023_E7_Aufgaben.pdf", h:"2023/JT_2023_E7_Hoerverstehen.mp3", l:"2023/JT_2023_E7_Loesungen.pdf", dauer:916, mb:35,
+      pausen:[[13.0,72.8],[273.7,314.4],[513.6,534.7],[539.7,600.2],[726.4,766.8],[890.4,910.5]] },
+    { j:"2022", a:"2022/2022_7_e_aufgaben.pdf",   h:"2022/2022_7_e_audio.mp3",           l:"2022/2022_7_e_loesungen.pdf",   dauer:908, mb:28,
+      pausen:[[14.7,74.7],[221.0,261.9],[407.1,428.2],[438.0,499.1],[667.1,709.0],[877.2,899.1]] }
   ];
+  var MARKEN = [
+    { p:0, n:"Teil A", u:"zum 1. Mal" },
+    { p:1, n:"Teil A", u:"zum 2. Mal" },
+    { p:3, n:"Teil B", u:"zum 1. Mal" },
+    { p:4, n:"Teil B", u:"zum 2. Mal" }
+  ];
+  function marken(x){
+    if (!x || !x.pausen) return [];
+    return MARKEN.filter(function(m){ return x.pausen[m.p]; })
+                 .map(function(m){ return { t:x.pausen[m.p][1], n:m.n, u:m.u }; });
+  }
   var SPEICHER = "helena-hoerverstehen";
 
   var ton = document.getElementById("ton");
@@ -300,6 +323,8 @@
     elDauer.textContent = mmss(d);
     knopfAb.textContent = ton.paused ? "▶" : "⏸";
     knopfAb.setAttribute("aria-label", ton.paused ? "Abspielen" : "Anhalten");
+    if (typeof markenMalen === "function") markenMalen();
+    if (typeof pausenZeigen === "function") pausenZeigen();
   }
 
   knopfAb.addEventListener("click", function(){
@@ -331,6 +356,57 @@
     zeichnen();
   }
   document.getElementById("zurueck10").addEventListener("click", function(){ springen(-10); });
+
+  /* --- Sprungmarken ---------------------------------------------------- */
+  var elMarken = document.getElementById("marken");
+  function markenMalen(){
+    elMarken.innerHTML = "";
+    var liste = marken(aktuell);
+    if (!liste.length){ elMarken.style.display = "none"; return; }
+    elMarken.style.display = "";
+    var t = ton.currentTime > 0 ? ton.currentTime : (wunschZeit || 0);
+    liste.forEach(function(m, i){
+      var naechste = liste[i+1] ? liste[i+1].t : Infinity;
+      var b = document.createElement("button");
+      b.type = "button";
+      if (t >= m.t && t < naechste) b.className = "jetzt";
+      b.innerHTML = "<span></span><br><span style='font-weight:600;opacity:.8'></span>";
+      var s = b.querySelectorAll("span");
+      s[0].textContent = m.n;
+      s[1].textContent = m.u + " · " + mmss(m.t);
+      b.addEventListener("click", function(){ setzeZeit(m.t); if (ton.paused) knopfAb.click(); });
+      elMarken.appendChild(b);
+    });
+  }
+
+  /* --- Die langen Stillen ---------------------------------------------- */
+  var elPbox = document.getElementById("pausenbox");
+  var elPtext = document.getElementById("pausentext");
+  function pauseJetzt(t){
+    if (!aktuell || !aktuell.pausen) return null;
+    for (var i = 0; i < aktuell.pausen.length; i++){
+      var p = aktuell.pausen[i];
+      if (t >= p[0] + 1 && t < p[1] - 1) return { bis:p[1], erste:(i === 0 || i === 3) };
+    }
+    return null;
+  }
+  function pausenZeigen(){
+    var t = ton.currentTime;
+    var p = ton.paused ? null : pauseJetzt(t);
+    if (!p){ elPbox.classList.remove("da"); return; }
+    var rest = Math.max(0, Math.round(p.bis - t));
+    elPtext.textContent = (p.erste
+      ? "Hier ist mit Absicht still: Das ist deine Zeit zum Lesen der Aufgaben."
+      : "Hier ist mit Absicht still: Das ist deine Zeit zum Ausfüllen.")
+      + " Noch " + rest + " Sekunden – der Ton ist nicht kaputt.";
+    elPbox.classList.add("da");
+    elPbox.dataset.bis = p.bis;
+  }
+  document.getElementById("pause-weiter").addEventListener("click", function(){
+    var bis = parseFloat(elPbox.dataset.bis || "0");
+    if (bis) setzeZeit(bis);
+    elPbox.classList.remove("da");
+  });
   document.getElementById("vor10").addEventListener("click", function(){ springen(10); });
 
   ["input","change"].forEach(function(e){

@@ -165,6 +165,18 @@
     <a class="knopf still" href="bet-quiz.html">🎯 Fragerunde zum BET</a>
   </div>
 
+  <!-- 25.09.2026, Meldung 6ahcrbde4e: Helena stand vor Part I mit Fragen zum
+       Council of Europe und schrieb "woher soll ich das alles wissen". Es ist
+       ein Hoerverstehen - die Aufnahme lag als schmaler Link daneben. Jetzt
+       steht sie als eigene Karte da, VOR den Tests. -->
+  <div class="karte">
+    <h2>Teil I: Hörverstehen</h2>
+    <p class="unter" style="margin-top:0">Beim Hörverstehen steht die Antwort <b>nirgends
+      zum Nachlesen</b> – sie kommt aus einer Aufnahme. Hier läuft sie direkt auf der
+      Seite, und das Aufgabenblatt ist einen Tipp entfernt.</p>
+    <a class="knopf" href="klasse7-englisch-hoerverstehen.html">🎧 Hörverstehen üben</a>
+  </div>
+
   <div class="karte">
     <h2>Echte Tests zum Üben</h2>
     <p class="unter" style="margin-top:0">Das sind die Originaltests der letzten Jahre, mit
@@ -218,7 +230,11 @@
       d.className = "jahr";
       d.innerHTML = "<b>Test " + x.j + "</b>" +
         '<a href="' + BASIS + x.a + '" target="_blank" rel="noopener">📄 Aufgaben</a>' +
-        '<a href="' + BASIS + x.h + '" target="_blank" rel="noopener">🎧 Hörverstehen</a>' +
+        /* Nicht mehr direkt auf die 30-MB-Datei: Helena hat am 25.09.2026
+           gemeldet, dass sie vor den Fragen stand und nicht wusste, woher
+           die Antworten kommen sollen (Meldung 6ahcrbde4e). Der Spieler
+           erklaert es und laesst die Aufnahme neben dem Blatt laufen. */
+        '<a href="klasse7-englisch-hoerverstehen.html?jahr=' + x.j + '">🎧 Hörverstehen anhören</a>' +
         '<a href="' + BASIS + x.l + '" target="_blank" rel="noopener">✅ Lösungen</a>';
       var b = document.createElement("button");
       b.type = "button";
