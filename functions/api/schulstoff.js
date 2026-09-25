@@ -26,7 +26,7 @@ import {
   FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
   inhaltSetzen,
-  HAND,
+  HAND, KARTEN_MAX,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen,
   faecherImHeft, blaetterImFach, schuljahrStart,
 } from "./_schulstoff.js";
@@ -464,10 +464,6 @@ const POSITION_MODELL = "claude-sonnet-5";
  * gutem Gefuehl. */
 const ZWEITER_BLICK = false;
 
-/* Technische Obergrenze fuer Fundkarten je Blatt - kein Lernziel. Ein Blatt
- * hat hoechstens 14 Inhaltszeilen je Seite; mehr Karten als 20 hiesse, das
- * Modell erfindet Stellen dazu. */
-const KARTEN_MAX = 20;
 
 /* EIN Blick aufs Bild - Titel und Datum zusammen.
  *
@@ -919,7 +915,9 @@ async function blattLesen(env, seite) {
               "die ganze Zeile darin liegt, aber hoechstens ein Viertel des Blattes.\n" +
               "* Frage: eine kurze Frage an das Kind, die genau mit diesem Wert " +
               "beantwortet wird. Keine Verneinung.\n" +
-              "* richtige Antwort: genau der Wert, wie er auf dem Blatt steht.\n" +
+              "* richtige Antwort: genau der Wert, wie er auf dem Blatt steht. Hat sich " +
+              "das Kind dort verschrieben (Kind schrieb X, richtig: Y), nimm die RICHTIGE " +
+              "Schreibweise - in Frage und Antwort.\n" +
               "* falsch1 und falsch2: zwei falsche Antworten. Sie muessen zur richtigen " +
               "PASSEN - Zahl zu Zahl, Name zu Name, aehnliche Laenge - und nah dran " +
               "sein: vertauschte Ziffern, ein anderes Jahrzehnt, ein aehnlicher Name. " +

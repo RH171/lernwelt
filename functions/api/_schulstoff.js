@@ -59,6 +59,12 @@ export const ARTEN = {
  * ohneBeleg() noch karteOk(), die beide ueber Sachwoerter vergleichen. */
 export const HAND = "\u270D ";
 
+/* Technische Obergrenze fuer Fundkarten je Blatt - kein Lernziel (Denny,
+ * 25.09.2026: "Was gibt das Blatt an Fragen her?"). Bis dahin stand hier und
+ * in schulstoff.js je eine feste 8; die zweite hat die erste Umstellung still
+ * wieder abgeschnitten. Jetzt steht die Zahl EINMAL. */
+export const KARTEN_MAX = 20;
+
 /* Sorten, die das Modell an der FORM des Blattes erkennt - nicht am Inhalt
  * (Befund 24.09.2026, zweite Rollen-Gegenpruefung):
  * - lernziele: "Das musst du koennen", Kaestchen vor Ich-Saetzen. Wird
@@ -489,7 +495,7 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte) {
     if (treffer < 0) continue;
     if (zeilen.length) liste[treffer].inhalt = zeilen;
     if (gutSorte) liste[treffer].sorte = gutSorte;
-    if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, 8);
+    if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, KARTEN_MAX);
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
     return { ok: true, zeilen: zeilen.length, sorte: gutSorte };
