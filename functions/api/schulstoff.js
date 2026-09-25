@@ -586,6 +586,15 @@ export function karteOk(k, inhalt) {
      eine Zeile liest, soll sie wiederfinden, nicht ausschliessen. */
   if (/\b(nicht|kein|keine|keinen|ausser|außer)\b/i.test(frage)) return "Verneinungsfrage";
 
+  /* Eine Karte fragt nach einer Tatsache, nicht nach einer Wirkung. "Was spart
+     man durch die Eingemeindung? -> Geld" (Pauls Blatt, 25.09.2026) ist mit
+     "Zeit" oder "Strom" daneben ein Ratespiel, keine Stelle zum Wiederfinden. */
+  if (/^(warum|wozu|weshalb|wieso)\b/i.test(frage) || /\bwas\s+(spart|bringt|nützt|nuetzt)\b/i.test(frage)) {
+    return "fragt nach einer Wirkung statt nach einer Tatsache";
+  }
+  const mehr = mehrdeutig(frage, richtig, inhalt);
+  if (mehr) return mehr;
+
   const rk = knapp(richtig);
   if (!rk) return "Antwort leer";
   for (const f of falsch) {
@@ -618,6 +627,53 @@ export function karteOk(k, inhalt) {
   /* Mehr als ein Viertel des Blattes ist kein Ausschnitt mehr, sondern das
      halbe Blatt - dann steht die Antwort nicht mehr sichtbar heraus. */
   if (bis - von > 34) return "Ausschnitt zu hoch";
+  return "";
+}
+
+/* Mehr als eine richtige Antwort? "Welcher Fluss fliesst in Fuerth? ->
+ * Regnitz" war falsch gestellt: Auf demselben Blatt stehen Pegnitz, Rednitz
+ * und der Main-Donau-Kanal - wer einen davon tippt, liegt richtig und bekommt
+ * trotzdem ein Nein (Denny, 25.09.2026). Gesucht wird eine Blattzeile, deren
+ * Kopf ("Fluesse in Fuerth:") dasselbe Sachwort traegt wie die Frage und deren
+ * Liste Eintraege hat, die die Frage nicht ausschliesst. "Welcher Fluss
+ * entsteht aus Pegnitz und Rednitz?" nennt zwei davon und bleibt deshalb
+ * stehen. Nur der Kopf zaehlt, damit "Stadt" nicht "Stadtteile" trifft. */
+function wortstamm(w) {
+  let s = String(w || "").toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o")
+    .replace(/ü/g, "u").replace(/ß/g, "ss").replace(/[^a-z]/g, "");
+  /* Nur die Mehrzahl ab: "Fluesse" -> "fluss", "Stadtteile" -> "stadtteil". */
+  return s.replace(/(en|e|n)$/, "");
+}
+export function mehrdeutig(frage, richtig, inhalt) {
+  const fl = String(frage || "").toLowerCase();
+  const fStamm = new Set(fl.split(/[^a-zäöüß]+/).filter((w) => w.length >= 4).map(wortstamm));
+  const rk = knapp(richtig);
+  /* Zahlen, Adressen, Postleitzahlen ("1972", "Königstr. 88, Fürth") sind
+     keine Eintraege einer Namensliste - das Komma darin ist keine Aufzaehlung. */
+  if (/\d/.test(richtig)) return "";
+  for (const roh of (inhalt || [])) {
+    /* "Kind schrieb X, richtig: Y" ist EINE Angabe, nicht zwei. */
+    const z = String(roh).replace(/^\u270d\s*/, "")
+      .replace(/(Kind|Lehrkraft) schrieb [^,]*,\s*richtig:\s*/g, "");
+    const i = z.indexOf(":");
+    if (i < 0) continue;
+    /* Nur das erste Wort des Kopfes ist das Sachwort ("Fluesse" in "Fluesse
+       in Fuerth") - sonst trifft jede Frage mit "Fuerth" die Flussliste. */
+    const kopf = wortstamm(z.slice(0, i).trim().split(/\s+/)[0]);
+    if (kopf.length < 4 || !fStamm.has(kopf)) continue;
+    const eintraege = z.slice(i + 1).split(/[,;]|\bund\b/).map((x) => x.trim())
+      .filter((x) => x && x.split(/\s+/).length <= 4);
+    if (eintraege.length < 2) continue;
+    let drin = false, offen = [];
+    for (const e of eintraege) {
+      const ek = knapp(e);
+      if (ek === rk || ek.includes(rk) || rk.includes(ek)) { drin = true; continue; }
+      const erstes = e.split(/\s+/)[0].toLowerCase();
+      if (erstes.length >= 3 && fl.includes(erstes)) continue;
+      offen.push(e);
+    }
+    if (offen.length >= (drin ? 1 : 2)) return "mehrdeutig: auch " + offen.slice(0, 2).join(", ") + " steht dort";
+  }
   return "";
 }
 
@@ -914,7 +970,12 @@ async function blattLesen(env, seite) {
               "Zahlen, von kleiner als bis. Nimm den Bereich etwas grosszuegig, damit " +
               "die ganze Zeile darin liegt, aber hoechstens ein Viertel des Blattes.\n" +
               "* Frage: eine kurze Frage an das Kind, die genau mit diesem Wert " +
-              "beantwortet wird. Keine Verneinung.\n" +
+              "beantwortet wird. Keine Verneinung. Es darf nur EINE Antwort vom Blatt " +
+              "passen: Stehen dort mehrere Fluesse, Stadtteile oder Staedte, grenze die " +
+              "Frage ein (\"Welcher Fluss entsteht aus Pegnitz und Rednitz?\" statt " +
+              "\"Welcher Fluss fliesst in Fuerth?\"). Frag nach einer Tatsache - Name, " +
+              "Zahl, Fachwort -, nie nach einer Wirkung oder einem Grund (\"Was spart " +
+              "man …?\", \"Warum …?\"). Wird daraus keine klare Frage, lass die Karte weg.\n" +
               "* richtige Antwort: genau der Wert, wie er auf dem Blatt steht. Hat sich " +
               "das Kind dort verschrieben (Kind schrieb X, richtig: Y), nimm die RICHTIGE " +
               "Schreibweise - in Frage und Antwort.\n" +
