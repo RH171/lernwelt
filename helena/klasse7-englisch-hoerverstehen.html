@@ -352,6 +352,7 @@
     elJetzt.textContent = mmss(wunschZeit || 0);
     zeichnen();
     jahreMalen();
+    pruefkastenMalen();
     sagen(wunschZeit
       ? "Test " + x.j + " – du warst bei " + mmss(wunschZeit) + ". Drück ▶, dann geht es dort weiter."
       : "Test " + x.j + " – rund " + Math.round(x.dauer/60) + " Minuten, etwa " + x.mb + " MB. Drück ▶.");
@@ -514,11 +515,245 @@
     this.classList.add("verborgen");
   });
 
+
+  /* --- Deine Antworten pruefen ------------------------------------------
+     Helena, Meldung 6ahcrbde4e: "Kannst du aber trotzdem korrigieren du
+     kannst ja auf den link gehen wo die Loesungen sind und dort gucken."
+     Sie hat das Hoerverstehen ausgefuellt und musste danach jede Zeile
+     selbst im Loesungs-PDF suchen.
+
+     Verglichen wird Wort gegen Wort (siehe bet-loesungen.js). Das kann
+     nicht alles: Wer denselben Gedanken mit ganz anderen Woertern
+     aufschreibt, faellt durch. Deshalb steht neben jeder Luecke, die nicht
+     getroffen hat, der Wortlaut der amtlichen Loesung UND ein Knopf
+     "zaehlt trotzdem" - sie entscheidet. Eine Pruefung, die sich fuer
+     schlauer haelt, als sie ist, waere hier das Schlimmste. */
+  var A_SPEICHER = "helena-hv-antworten";
+  var elListe = document.getElementById("pruef-liste");
+  var elOben = document.getElementById("pruef-oben");
+  var elLos = document.getElementById("pruef-los");
+  var elErg = document.getElementById("pruef-ergebnis");
+  var elNeu = document.getElementById("pruef-neu");
+  var antworten = {};
+  var gemeldet = {};          // schon an die Eltern-Statistik gemeldete Luecken
+  try { antworten = JSON.parse(localStorage.getItem(A_SPEICHER) || "{}") || {}; } catch(e){}
+  try { gemeldet = JSON.parse(localStorage.getItem(A_SPEICHER + "-gemeldet") || "{}") || {}; } catch(e){}
+
+  function antSichern(){
+    try {
+      localStorage.setItem(A_SPEICHER, JSON.stringify(antworten));
+      localStorage.setItem(A_SPEICHER + "-gemeldet", JSON.stringify(gemeldet));
+    } catch(e){}
+  }
+  function meine(){
+    if (!aktuell) return null;
+    if (!antworten[aktuell.j]) antworten[aktuell.j] = {};
+    return antworten[aktuell.j];
+  }
+  function zeigen(el, ja){ el.classList[ja ? "remove" : "add"]("verborgen"); }
+
+  function knopf(text, gedrueckt, beiKlick){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = text;
+    b.setAttribute("aria-pressed", gedrueckt ? "true" : "false");
+    b.addEventListener("click", beiKlick);
+    return b;
+  }
+
+  function lueckeMalen(l, schluessel){
+    var d = meine();
+    var kasten = document.createElement("div");
+    kasten.className = "luecke";
+    kasten.dataset.s = schluessel;
+    if (l.vor){
+      var v = document.createElement("span");
+      v.className = "vor";
+      v.textContent = l.vor + (l.nach ? " …  " + l.nach : "");
+      kasten.appendChild(v);
+    }
+    if (l.art === "text"){
+      var e = document.createElement("input");
+      e.type = "text";
+      e.autocapitalize = "off"; e.autocomplete = "off"; e.spellcheck = false;
+      e.setAttribute("aria-label", l.vor || "Deine Antwort");
+      e.placeholder = "Deine Antwort";
+      e.value = d[schluessel] || "";
+      e.addEventListener("input", function(){ d[schluessel] = e.value; antSichern(); });
+      kasten.appendChild(e);
+    } else {
+      var reihe = document.createElement("div");
+      reihe.className = "wahlen";
+      var namen = l.art === "tf" ? ["true","false"] : l.optionen;
+      if (l.art === "tf" || l.art === "buchstabe") reihe.className += " schmal";
+      namen.forEach(function(text, i){
+        var wert = (l.art === "tf") ? text
+                 : (l.art === "buchstabe") ? text : String(i);
+        var an = (l.art === "mehrfach")
+          ? ((d[schluessel] || []).indexOf(i) >= 0)
+          : (d[schluessel] === wert);
+        var b = knopf(text, an, function(){
+          if (l.art === "mehrfach"){
+            var liste = (d[schluessel] || []).slice();
+            var wo = liste.indexOf(i);
+            if (wo >= 0) liste.splice(wo, 1); else liste.push(i);
+            d[schluessel] = liste;
+            b.setAttribute("aria-pressed", wo >= 0 ? "false" : "true");
+          } else {
+            d[schluessel] = (d[schluessel] === wert) ? "" : wert;
+            Array.prototype.forEach.call(reihe.children, function(x){
+              x.setAttribute("aria-pressed", "false");
+            });
+            if (d[schluessel]) b.setAttribute("aria-pressed", "true");
+          }
+          antSichern();
+        });
+        reihe.appendChild(b);
+      });
+      kasten.appendChild(reihe);
+    }
+    var r = document.createElement("p");
+    r.className = "rueck verborgen";
+    kasten.appendChild(r);
+    return kasten;
+  }
+
+  function pruefkastenMalen(){
+    elListe.innerHTML = "";
+    elErg.classList.add("verborgen");
+    var test = aktuell && window.BETLOES ? window.BETLOES.TESTS[aktuell.j] : null;
+    if (!test){
+      elOben.textContent = aktuell
+        ? "Für diesen Test kann ich noch nicht vergleichen – nimm die Lösungen oben."
+        : "Such dir oben ein Jahr aus, dann kannst du hier deine Antworten eintragen.";
+      zeigen(elLos, false); zeigen(elNeu, false);
+      return;
+    }
+    elOben.textContent = "Trag hier ein, was du auf deinem Blatt stehen hast – "
+      + "dann vergleiche ich es mit der Lösung. Du musst nichts abtippen, was du "
+      + "nicht hast: Leere Zeilen zählen einfach nicht.";
+    test.aufgaben.forEach(function(a){
+      var box = document.createElement("div");
+      box.className = "aufg";
+      var h = document.createElement("h3");
+      var be = a.luecken.reduce(function(s, l){ return s + (l.be || 1); }, 0);
+      h.innerHTML = "<span></span><small></small>";
+      h.querySelector("span").textContent = "Teil " + a.teil + " · Aufgabe " + a.nr;
+      h.querySelector("small").textContent = be + " BE";
+      box.appendChild(h);
+      var p = document.createElement("p");
+      p.className = "auftrag";
+      p.textContent = a.auftrag;
+      box.appendChild(p);
+      a.luecken.forEach(function(l, i){
+        box.appendChild(lueckeMalen(l, a.nr + "." + i));
+      });
+      elListe.appendChild(box);
+    });
+    zeigen(elLos, true); zeigen(elNeu, true);
+  }
+
+  function melden(stimmt, l, antwort){
+    if (!window.lernstand || !window.lernstand.antwort) return;
+    var merkmal = l.art === "text" ? "hoerverstehen satz ergaenzen"
+                : l.art === "tf" ? "hoerverstehen true or false"
+                : l.art === "mehrfach" ? "hoerverstehen mehrfachauswahl"
+                : "hoerverstehen auswahl";
+    try {
+      if (stimmt) window.lernstand.antwort(true, merkmal);
+      else window.lernstand.antwort(false, merkmal,
+             l.art === "text" ? String(antwort || "").slice(0, 60) : "",
+             String(l.wortlaut || "").slice(0, 60));
+    } catch(e){}
+  }
+
+  elLos.addEventListener("click", function(){
+    var test = window.BETLOES && aktuell ? window.BETLOES.TESTS[aktuell.j] : null;
+    if (!test) return;
+    var d = meine(), be = 0, max = 0, offen = 0, leer = 0;
+    if (!gemeldet[aktuell.j]) gemeldet[aktuell.j] = {};
+    test.aufgaben.forEach(function(a){
+      a.luecken.forEach(function(l, i){
+        var s = a.nr + "." + i;
+        var kasten = elListe.querySelector('[data-s="' + s + '"]');
+        var e = window.BETLOES.pruefe(l, d[s]);
+        max += e.beMax;
+        be += e.be;
+        var r = kasten.querySelector(".rueck");
+        kasten.classList.remove("gut", "offen");
+        var alterKnopf = kasten.querySelector(".trotzdem");
+        if (alterKnopf) alterKnopf.remove();
+        r.classList.remove("verborgen");
+        r.innerHTML = "";
+        if (e.stimmt){
+          kasten.classList.add("gut");
+          r.innerHTML = "<b>✅ stimmt</b>";
+        } else {
+          kasten.classList.add("offen");
+          offen++;
+          if (!e.beantwortet) leer++;
+          var satz = !e.beantwortet ? "Hier steht noch nichts."
+                   : e.zuviel ? "Du hast mehr angekreuzt als verlangt – dafür gibt es im echten Test keine BE."
+                   : e.be > 0 ? "Eins davon stimmt, eins noch nicht."
+                   : "Noch nicht.";
+          var t1 = document.createElement("span");
+          t1.textContent = satz;
+          var t2 = document.createElement("span");
+          t2.className = "loes";
+          t2.textContent = "Lösung: " + l.wortlaut;
+          r.appendChild(t1); r.appendChild(t2);
+          if (e.beantwortet && l.art === "text"){
+            var bt = document.createElement("button");
+            bt.type = "button";
+            bt.className = "trotzdem";
+            bt.textContent = "Ich hatte es anders geschrieben – zählt trotzdem";
+            bt.addEventListener("click", function(){
+              kasten.classList.remove("offen");
+              kasten.classList.add("gut");
+              r.innerHTML = "<b>✅ zählt</b>";
+              bt.remove();
+              rechnen(be + 1, max, offen - 1);
+            });
+            r.appendChild(bt);
+          }
+        }
+        if (!gemeldet[aktuell.j][s] && e.beantwortet){
+          gemeldet[aktuell.j][s] = 1;
+          melden(e.stimmt, l, d[s]);
+        }
+      });
+    });
+    antSichern();
+    rechnen(be, max, offen, leer);
+    elErg.scrollIntoView({ block:"nearest", behavior:"smooth" });
+  });
+
+  function rechnen(be, max, offen, leer){
+    elErg.classList.remove("verborgen");
+    var satz = offen === 0
+      ? "Alles richtig. Das ist ein voller Part I."
+      : (leer === offen && leer > 0)
+        ? "Was du ausgefüllt hast, stimmt – der Rest ist noch leer."
+        : "Schau dir die gelb umrandeten Zeilen an. Daneben steht, was in der Lösung steht.";
+    elErg.innerHTML = "<span></span>";
+    elErg.insertBefore(document.createTextNode("Du hast " + be + " von " + max + " BE."), elErg.firstChild);
+    elErg.querySelector("span").textContent = satz;
+  }
+
+  elNeu.addEventListener("click", function(){
+    if (!aktuell) return;
+    delete antworten[aktuell.j];
+    delete gemeldet[aktuell.j];
+    antSichern();
+    pruefkastenMalen();
+  });
+
   /* ?jahr=2025 aus bet.html */
   var wunsch = (location.search.match(/[?&]jahr=(\d{4})/) || [])[1];
   var start = null;
   if (wunsch) start = JAHRE.filter(function(x){ return x.j === wunsch; })[0] || null;
   jahreMalen();
+  pruefkastenMalen();
   if (start) waehlen(start);
 })();
 </script>
