@@ -47,6 +47,15 @@
 
   <!-- Start -->
   <section id="sicht-start">
+    <!-- Die Tagesrunde (25.09.2026): eine kurze Runde am Tag aus seinen
+         Blaettern - was wieder dran ist, dazu etwas Neues, hoechstens 8.
+         Auswahl: /tagesrunde.js, Anzeige: /fundkarten.js. Erscheint nur,
+         wenn genug Karten da sind. -->
+    <div class="karte verborgen" id="heute-wahl">
+      <h2>☀️ Heute lernen</h2>
+      <p class="unter" id="heute-unter"></p>
+      <button class="knopf" id="heute-los" type="button">Los geht's</button>
+    </div>
     <div class="karte">
       <h2>Was möchtest du üben?</h2>
       <p class="unter">Ohne Auswahl kommt alles durcheinander – such dir aus, worauf du Lust hast.</p>
@@ -145,7 +154,8 @@ window.QUIZ = {
   ]
 };
 </script>
-<script src="/fundkarten.js?v=707a1367"></script>
+<script src="/fundkarten.js?v=832cc4d9"></script>
+<script src="/tagesrunde.js?v=b094ad1c"></script>
 <script>
 /* Such-Spiel: Blaetter mit mindestens drei Fundkarten anbieten. Nur fuer
    Paul, nicht im geteilten /quiz/motor.js - "Erst Paul fertig, dann
@@ -163,12 +173,12 @@ window.QUIZ = {
   }
   /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
-  var faellig = {}, faelligText = {};
+  var faellig = {}, faelligText = {}, fundStand = {}, heute = null;
   function merken(blattId, liste){
     fetch("/api/quiz", { method: "POST", credentials: "same-origin",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind: "paul", fund: liste.map(function(e){
-        return { blatt: blattId, karte: e.karte, stimmt: e.stimmt }; }) })
+        return { blatt: e.blatt || blattId, karte: e.karte, stimmt: e.stimmt }; }) })
     }).catch(function(){ /* ohne Speicher merkt sich nur die Wiedervorlage diese Runde nicht */ });
   }
   function starten(x){
@@ -186,8 +196,9 @@ window.QUIZ = {
   function laden(){
     fetch("/api/quiz?kind=paul&nurWartend=1", { credentials: "same-origin" })
       .then(function(r){ return r.json(); })
-      .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {}; })
-      .catch(function(){ faellig = {}; faelligText = {}; })
+      .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {};
+                         fundStand = (j && j.fundStand) || {}; })
+      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; })
       .then(function(){ return fetch("/api/schulstoff?kind=paul&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -209,10 +220,44 @@ window.QUIZ = {
           box.appendChild(b);
         });
         $("such-wahl").classList.toggle("verborgen", !liste.length);
+        heuteAnbieten((j && j.eintraege) || []);
       })
       .catch(function(){ /* ohne Liste kein Such-Spiel - das Quiz laeuft weiter */ });
   }
+  /* Heute lernen. Der Satz sagt ehrlich, was drin ist - ohne Rueckstand-Zahl:
+     "3 kommen wieder dran, 2 sind neu", nie "5 offen". */
+  var autostart = /[?&]heute=1\b/.test(location.search);
+  function heuteAnbieten(eintraege){
+    heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand) : null;
+    var da = !!(heute && heute.karten.length);
+    $("heute-wahl").classList.toggle("verborgen", !da);
+    if (!da) return;
+    var z = heute.zaehl, teile = [];
+    var wieder = z.wieder + z.wackler + z.sicher + z.ruht;
+    if (wieder) teile.push(wieder === 1 ? "1 Karte kommt wieder dran" : wieder + " Karten kommen wieder dran");
+    if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
+    $("heute-unter").textContent = heute.karten.length + " Karten aus deinen Blättern: " +
+      teile.join(", ") + ". Dauert ein paar Minuten.";
+    if (autostart) { autostart = false; heuteStarten(); }
+  }
+  function heuteStarten(){
+    if (!heute || !heute.karten.length || !window.LWFund) return;
+    var ok = LWFund.zeigen($("fundkarten"), {
+      karten: heute.karten, kind: "paul", mindestens: 1,
+      kicker: "Heute lernen", mitBlattTitel: heute.blaetter > 1,
+      ueberschrift: heute.karten.length + " Karten für heute",
+      unter: "Aus deinen Blättern. Schau auf den Ausschnitt und tipp an, was dort steht.",
+      fertigSatz: "Deine Runde für heute ist geschafft.",
+      ergebnis: function(liste){ merken("", liste); },
+      fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
+    });
+    if (!ok) return;
+    $("sicht-start").classList.add("verborgen");
+    $("sicht-such").classList.remove("verborgen");
+    window.scrollTo(0, 0);
+  }
   document.addEventListener("DOMContentLoaded", function(){
+    $("heute-los").addEventListener("click", heuteStarten);
     $("such-zurueck").addEventListener("click", function(){ zurueck(); laden(); });
     laden();
   });

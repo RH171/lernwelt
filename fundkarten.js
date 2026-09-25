@@ -306,7 +306,12 @@
 
     stilEinhaengen();
     var kind = opt.kind || "paul";
-    var blattBild = "";
+    /* Mehrere Blaetter in einem Stapel (Tagesrunde, 25.09.2026): Traegt eine
+       Karte ihr eigenes .blatt, kommt ihr Ausschnitt aus DIESEM Foto. Ohne
+       gilt opt.blattId wie bisher. Je Blatt ein Bild und eine Zeilensuche. */
+    var bilder = {}, zeilenJe = {};
+    function blattVon(k) { return (k && k.blatt) || opt.blattId || ""; }
+    function bildVon(k) { return bilder[blattVon(k)] || ""; }
     var i = 0, gefunden = 0;
     /* Gezaehlt wird der ERSTE Tipp je Karte - wer erst nach einem
        Danebentippen trifft, hat noch nachgeschaut. Dieselbe Regel wie
@@ -319,11 +324,11 @@
 
     var kopf = el("div");
     kopf.appendChild(el("div", "kicker", (opt.kicker || "Such-Spiel") + (opt.was ? " · " + String(opt.was).slice(0, 40) : "")));
-    kopf.appendChild(el("h2", null, karten.length + " Fundkarten aus deinem Blatt"));
+    kopf.appendChild(el("h2", null, opt.ueberschrift || (karten.length + " Fundkarten aus deinem Blatt")));
     kopf.appendChild(el("p", "u", opt.nurWackler
       ? "Das sind die Karten, bei denen du beim ersten Tipp noch nachschauen musstest."
-      : "Ich habe dein Blatt gelesen und " + karten.length +
-        " Stellen ausgeschnitten. Schau hin und tipp an, was dort steht."));
+      : (opt.unter || ("Ich habe dein Blatt gelesen und " + karten.length +
+        " Stellen ausgeschnitten. Schau hin und tipp an, was dort steht."))));
     box.appendChild(kopf);
 
     var stapel = el("div", "lwf-stapel");
@@ -348,7 +353,8 @@
     samm.appendChild(regal);
     box.appendChild(samm);
 
-    function grossZeigen() {
+    function grossZeigen(k) {
+      var blattBild = bildVon(k);
       if (!blattBild) return;
       var lage = el("div", "lwf-gross");
       var im = el("img"); im.src = blattBild; im.alt = "Dein ganzes Blatt";
@@ -368,8 +374,8 @@
      * erst, wenn das Bild seine echten Masse kennt; vorher steht nur der
      * leere Rahmen da. */
     /* Einmal je Bild gerechnet und gemerkt - nicht je Karte. */
-    var zeilen;
     function schnipsel(k) {
+      var blattBild = bildVon(k), bid = blattVon(k);
       var aussen = el("div");
       var rahmen = el("div", "lwf-schnipsel lwf-rolle");
       aussen.appendChild(rahmen);
@@ -382,7 +388,8 @@
       rahmen.appendChild(im);
 
       function setzen() {
-        if (zeilen === undefined) zeilen = zeilenFinden(im);
+        if (zeilenJe[bid] === undefined) zeilenJe[bid] = zeilenFinden(im);
+        var zeilen = zeilenJe[bid];
         var breite = rahmen.clientWidth || 300;
         var nw = im.naturalWidth || 1, nh = im.naturalHeight || 1;
         var hoch = breite * nh / nw;                       // Bildhoehe bei voller Breite
@@ -431,7 +438,7 @@
       aussen.appendChild(el("div", "lwf-bu", "Irgendwo hier steht es – such es auf deinem Blatt"));
       var ganz = el("button", "lwf-ganz", "Das ganze Blatt ansehen");
       ganz.type = "button";
-      ganz.addEventListener("click", grossZeigen);
+      ganz.addEventListener("click", function () { grossZeigen(k); });
       aussen.appendChild(ganz);
       return aussen;
     }
@@ -441,8 +448,8 @@
       if (!s) return;
       s.className = "lwf-slot voll";
       s.innerHTML = "";
-      if (blattBild) {
-        var im = el("img"); im.src = blattBild; im.alt = "";
+      if (bildVon(k)) {
+        var im = el("img"); im.src = bildVon(k); im.alt = "";
         /* Die Miniatur zeigt die Stelle, nicht das halbe Blatt: senkrecht
            genau dort, wo die Karte sass. */
         im.style.objectPosition = "50% " + Math.max(0, Math.min(100, (k.von + k.bis) / 2)) + "%";
@@ -460,14 +467,14 @@
           gemeldet = true;
           try {
             opt.ergebnis(karten.map(function (k, n) {
-              return { karte: schluessel(k), stimmt: erster[n] !== false };
+              return { blatt: blattVon(k), karte: schluessel(k), stimmt: erster[n] !== false };
             }));
           } catch (e) {}
         }
         var fertig = el("div", "lwf-karte rein");
         fertig.appendChild(el("div", "kicker", "Regal voll"));
         fertig.appendChild(el("h2", null, karten.length + " von " + karten.length));
-        fertig.appendChild(el("p", "u",
+        fertig.appendChild(el("p", "u", opt.fertigSatz ||
           "Alle Karten aus deinem Blatt liegen im Regal. Du hast dein Blatt jetzt einmal ganz durchgesehen."));
         if (wackler.length) {
           /* Kein Rot, keine Fehlerzahl - nur die Stichworte und ein Angebot.
@@ -511,7 +518,9 @@
       var karte = el("div", "lwf-karte rein");
       var num = el("div", "lwf-num");
       num.appendChild(el("div", "kicker", "Karte " + (i + 1) + " von " + karten.length));
-      num.appendChild(el("div", "kicker", k.stichwort || ""));
+      /* Aus mehreren Blaettern gemischt: dazusagen, aus welchem. */
+      num.appendChild(el("div", "kicker", (k.blattTitel && opt.mitBlattTitel
+        ? String(k.blattTitel).slice(0, 28) + " · " : "") + (k.stichwort || "")));
       karte.appendChild(num);
       karte.appendChild(schnipsel(k));
       karte.appendChild(el("div", "lwf-frage", k.frage));
@@ -565,9 +574,15 @@
     }
 
     zeichne();
-    blattHolen(kind, opt.blattId, function (b) {
-      blattBild = b;
-      if (b && i < karten.length) zeichne();   // jetzt mit Ausschnitt
+    var ids = {};
+    karten.forEach(function (k) { if (blattVon(k)) ids[blattVon(k)] = 1; });
+    Object.keys(ids).forEach(function (id) {
+      blattHolen(kind, id, function (b) {
+        bilder[id] = b;
+        /* Nur neu zeichnen, wenn die GERADE offene Karte davon profitiert -
+           sonst springt die Karte unter dem Finger. */
+        if (b && i < karten.length && blattVon(karten[i]) === id) zeichne();
+      });
     });
     return true;
   }
