@@ -971,9 +971,11 @@ async function blattLesen(env, seite) {
               "die ganze Zeile darin liegt, aber hoechstens ein Viertel des Blattes.\n" +
               "* Frage: eine kurze Frage an das Kind, die genau mit diesem Wert " +
               "beantwortet wird. Keine Verneinung. Es darf nur EINE Antwort vom Blatt " +
-              "passen: Stehen dort mehrere Fluesse, Stadtteile oder Staedte, grenze die " +
-              "Frage ein (\"Welcher Fluss entsteht aus Pegnitz und Rednitz?\" statt " +
-              "\"Welcher Fluss fliesst in Fuerth?\"). Frag nach einer Tatsache - Name, " +
+              "passen: Fragt sie nach irgendeinem Eintrag einer Liste, grenze sie ein " +
+              "(\"Welcher Fluss entsteht aus Pegnitz und Rednitz?\" statt \"Welcher " +
+              "Fluss fliesst in Fuerth?\"). Nennt die Frage den Eintrag schon (\"In " +
+              "welchem Land liegt Marmaris?\"), ist sie eindeutig - solche Karten " +
+              "gehoeren zu jedem Listeneintrag dazu. Frag nach einer Tatsache - Name, " +
               "Zahl, Fachwort -, nie nach einer Wirkung oder einem Grund (\"Was spart " +
               "man …?\", \"Warum …?\"). Wird daraus keine klare Frage, lass die Karte weg.\n" +
               "* richtige Antwort: genau der Wert, wie er auf dem Blatt steht. Hat sich " +
