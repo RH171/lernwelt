@@ -130,6 +130,9 @@
   <div id="aufnehmen" class="verborgen"></div>
 
   <div id="filter" class="faecher" style="margin-top:16px"></div>
+  <!-- Zweite Reihe: Heft oder Uebung (Denny, 25.09.2026: "Ich gehe auf Mathe
+       und möchte nur die Hefteinträge."). Wirkt zusammen mit dem Fach. -->
+  <div id="artfilter" class="faecher" style="margin-top:8px"></div>
   <div id="inhalt"></div>
 </div>
 
@@ -176,7 +179,7 @@
   var ART = {heft:  {kurz:"📓 Heft",  lang:"Aus meinem Schulheft"},
              uebung:{kurz:"📄 Übung", lang:"Ein Übungsblatt"}};
 
-  var alles = [], heute = "", gewaehlt = "alle", offen = null, offenSeite = 0;
+  var alles = [], heute = "", gewaehlt = "alle", artGewaehlt = "alle", offen = null, offenSeite = 0;
 
   function lang(iso){
     var t = String(iso||"").split("-");
@@ -208,6 +211,30 @@
         filterMalen(); listeMalen();
       });
     });
+    artFilterMalen();
+  }
+
+  /* Die Zahlen hier zaehlen nur im gewaehlten Fach - "Mathe" + "Heft" soll
+     sagen, wie viele Hefteintraege es in Mathe gibt. */
+  function imFach(e){ return gewaehlt === "alle" || (e.fach||"") === gewaehlt; }
+  function artFilterMalen(){
+    var basis = alles.filter(imFach), z = {heft:0, uebung:0};
+    basis.forEach(function(e){ if (z[e.art] != null) z[e.art]++; });
+    var reihe = [["alle","Heft und Übung", basis.length],
+                 ["heft","📓 Hefteinträge", z.heft],
+                 ["uebung","📄 Übungsblätter", z.uebung]];
+    var html = "";
+    reihe.forEach(function(r){
+      html += '<button class="fach' + (artGewaehlt===r[0]?" an":"") + '" data-a="' + r[0] + '">' +
+              r[1] + '<span class="zahl">' + r[2] + '</span></button>';
+    });
+    $("artfilter").innerHTML = html;
+    Array.prototype.forEach.call($("artfilter").children, function(k){
+      k.addEventListener("click", function(){
+        artGewaehlt = k.getAttribute("data-a");
+        artFilterMalen(); listeMalen();
+      });
+    });
   }
 
   /* Was unter der Ueberschrift steht: erst Pauls eigene Notiz, sonst das
@@ -233,8 +260,14 @@
 
   function listeMalen(){
     var zeigen = alles.filter(function(e){
-      return gewaehlt === "alle" || (e.fach||"") === gewaehlt;
+      return imFach(e) && (artGewaehlt === "alle" || e.art === artGewaehlt);
     });
+    if (!zeigen.length && alles.length){
+      $("inhalt").innerHTML = '<div class="karte leer"><div class="zeichen">🔎</div>' +
+        '<b>Dazu liegt noch kein Blatt da</b><p class="unter">Tipp oben auf „Alle“ ' +
+        'oder „Heft und Übung“, dann siehst du wieder alles.</p></div>';
+      return;
+    }
     if (!zeigen.length){
       $("inhalt").innerHTML = '<div class="karte leer"><div class="zeichen">📸</div>' +
         '<b>Hier ist noch nichts</b><p class="unter">Fotografier in der Werkstatt, ' +
@@ -424,7 +457,7 @@
       k.disabled = false;
       if (!j || !j.ok){ k.textContent = "Nochmal?"; return; }
       offen.art = ziel;
-      seiteZeigen(); listeMalen();
+      seiteZeigen(); artFilterMalen(); listeMalen();
     }).catch(function(){ k.disabled = false; k.textContent = "Nochmal?"; });
   });
 
