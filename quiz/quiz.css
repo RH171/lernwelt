@@ -68,6 +68,8 @@ h2{font:800 19px/1.2 var(--rund);margin:0 0 4px}
 .blaetter.verborgen{display:none}
 .blaetter-kopf{font:600 16px var(--rund,inherit);margin-bottom:9px}
 .blaetter-liste{display:flex;flex-direction:column;gap:8px}
+/* Heft oder Uebung (25.09.2026) - nur da, wo es beides gibt. */
+.qartwahl{margin:0 0 10px}
 .qblatt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
   /* --card, nicht --karte: Alle drei Quiz-Seiten setzen --card. Der falsche
      Name stand hier seit jeher; bei Paul und Leon fiel er nicht auf, weil der

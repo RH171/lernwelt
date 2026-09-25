@@ -217,17 +217,70 @@
     hu.querySelector(".qgross-zu").focus();
   }
 
+  /* Heft oder Uebung waehlen (Denny, 25.09.2026, mit einem Bild von Pauls
+     Mathe-Auswahl: "Hier wäre auch cool, wenn er noch selektieren könnte
+     zwischen Heft und Übungsblatt.") Die Reihe steht nur da, wenn es in dem
+     Fach BEIDES gibt - bei Leon und Helena ohne Art-Angaben also gar nicht.
+     Ohne Haken gilt: alle Blaetter, die der Filter zeigt. */
+  function artFilter() {
+    var a = stand.blattArt || "alle";
+    var hat = { heft: 0, uebung: 0 };
+    blaetter.forEach(function (b) { if (hat[b.art] !== undefined) hat[b.art]++; });
+    if (!hat.heft || !hat.uebung) return { art: "alle", hat: hat, zeigen: false };
+    return { art: a === "heft" || a === "uebung" ? a : "alle", hat: hat, zeigen: true };
+  }
+  function sichtbareBlaetter() {
+    var f = artFilter();
+    return f.art === "alle" ? blaetter : blaetter.filter(function (b) { return b.art === f.art; });
+  }
+
+  function artReiheMalen(kasten) {
+    var reihe = $("q-blatt-art");
+    if (!reihe) {
+      reihe = document.createElement("div");
+      reihe.id = "q-blatt-art";
+      reihe.className = "qchips qartwahl";
+      kasten.insertBefore(reihe, $("q-blaetter-liste"));
+    }
+    var f = artFilter();
+    reihe.style.display = f.zeigen ? "" : "none";
+    if (!f.zeigen) return;
+    reihe.innerHTML = "";
+    [["alle", "Heft und Übung", f.hat.heft + f.hat.uebung],
+     ["heft", "\uD83D\uDCD3 Heft", f.hat.heft],
+     ["uebung", "\uD83D\uDCC4 \u00dcbung", f.hat.uebung]].forEach(function (w) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "qchip" + (f.art === w[0] ? " an" : "");
+      k.setAttribute("data-art", w[0]);
+      k.setAttribute("aria-pressed", f.art === w[0] ? "true" : "false");
+      k.textContent = w[1] + " " + w[2];
+      k.addEventListener("click", function () {
+        stand.blattArt = w[0];
+        /* Angehakt bleibt nur, was man noch sieht - sonst fragte das Quiz
+           aus Blaettern, die gerade gar nicht dastehen. */
+        var sicht = sichtbareBlaetter().map(function (b) { return b.id; });
+        stand.blaetter = stand.blaetter.filter(function (id) { return sicht.indexOf(id) >= 0; });
+        schreibe(SPEICHER, stand);
+        blaetterZeichnen();
+      });
+      reihe.appendChild(k);
+    });
+  }
+
   function blaetterZeichnen() {
     var kasten = $("q-blaetter");
     if (!blaetter.length) { kasten.classList.add("verborgen"); return; }
     kasten.classList.remove("verborgen");
+    artReiheMalen(kasten);
+    var sicht = sichtbareBlaetter();
     $("q-blaetter-kopf").textContent = stand.blaetter.length
-      ? "Daraus frage ich dich ab (" + stand.blaetter.length + " von " + blaetter.length + ")"
-      : "Woraus soll ich fragen? Ohne Auswahl nehme ich alle " + blaetter.length + ".";
+      ? "Daraus frage ich dich ab (" + stand.blaetter.length + " von " + sicht.length + ")"
+      : "Woraus soll ich fragen? Ohne Auswahl nehme ich alle " + sicht.length + ".";
 
     var liste = $("q-blaetter-liste");
     liste.innerHTML = "";
-    blaetter.forEach(function (b) {
+    sicht.forEach(function (b) {
       var an = stand.blaetter.indexOf(b.id) >= 0;
       var k = document.createElement("button");
       k.type = "button";
@@ -451,6 +504,11 @@ function artKurz(art) {
        Ohne Auswahl gilt weiter das ganze Fach. */
     if (stand.blaetter && stand.blaetter.length && stand.faecher.length === 1) {
       p.set("blaetter", stand.blaetter.join(","));
+    } else if (stand.faecher.length === 1 && artFilter().art !== "alle") {
+      /* Nichts angehakt, aber nur Heft (oder nur Uebung) gewaehlt: dann
+         genau die Blaetter, die dastehen. */
+      var ids = sichtbareBlaetter().map(function (b) { return b.id; });
+      if (ids.length) p.set("blaetter", ids.join(","));
     }
     p.set("anzahl", String(stand.laenge || 0));
     return fetch("/api/quiz?" + p.toString(), { credentials: "same-origin" })
