@@ -213,7 +213,7 @@ window.QUIZ = {
       .catch(function(){ /* ohne Liste kein Such-Spiel - das Quiz laeuft weiter */ });
   }
   document.addEventListener("DOMContentLoaded", function(){
-    $("such-zurueck").addEventListener("click", zurueck);
+    $("such-zurueck").addEventListener("click", function(){ zurueck(); laden(); });
     laden();
   });
 })();
