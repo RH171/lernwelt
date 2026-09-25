@@ -535,6 +535,7 @@
   var elErg = document.getElementById("pruef-ergebnis");
   var elNeu = document.getElementById("pruef-neu");
   var antworten = {};
+  var letzter = { be:0, max:20, offen:0, leer:0 };   // Stand der letzten Pruefung
   var gemeldet = {};          // schon an die Eltern-Statistik gemeldete Luecken
   try { antworten = JSON.parse(localStorage.getItem(A_SPEICHER) || "{}") || {}; } catch(e){}
   try { gemeldet = JSON.parse(localStorage.getItem(A_SPEICHER + "-gemeldet") || "{}") || {}; } catch(e){}
@@ -707,12 +708,17 @@
             bt.type = "button";
             bt.className = "trotzdem";
             bt.textContent = "Ich hatte es anders geschrieben – zählt trotzdem";
+            /* Die Zahlen muessen aus dem LETZTEN Stand kommen, nicht aus
+               dem Zwischenstand dieser Schleifenrunde - sonst zaehlt der
+               Knopf ab der zweiten Luecke falsch. */
             bt.addEventListener("click", function(){
               kasten.classList.remove("offen");
               kasten.classList.add("gut");
               r.innerHTML = "<b>✅ zählt</b>";
               bt.remove();
-              rechnen(be + 1, max, offen - 1);
+              letzter.be += (l.be || 1);
+              letzter.offen = Math.max(0, letzter.offen - 1);
+              rechnen(letzter.be, letzter.max, letzter.offen, letzter.leer);
             });
             r.appendChild(bt);
           }
@@ -724,6 +730,7 @@
       });
     });
     antSichern();
+    letzter = { be:be, max:max, offen:offen, leer:leer };
     rechnen(be, max, offen, leer);
     elErg.scrollIntoView({ block:"nearest", behavior:"smooth" });
   });
