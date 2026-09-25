@@ -1,7 +1,7 @@
 /* Gemeinsames Aussehen der Spiel-Schmiede (Paul, Leon, Helena). Seit 16.09.2026
    ausgelagert aus paul/schmiede.html - siehe schmiede/motor.js. */
   :root{
-    --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
+    --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
     --paul:#4f46e5; --gut:#12b76a; --schlecht:#f04438; --gold:#fbbf24;
     --radius:24px; --schatten:0 1px 2px rgba(20,22,40,.05), 0 12px 34px rgba(20,22,40,.09);
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
@@ -215,7 +215,7 @@
   html[data-theme="dark"] #fragekarte,
   html[data-theme="dark"] .eckknopf,
   html[data-theme="dark"] .knopf{
-    --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0; --card:#fff;
+    --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0; --card:#fff;
     --paul:#4f46e5; --gut:#12b76a; --schlecht:#f04438; --akzent-auf:#fff;
     color-scheme:light;
   }
