@@ -512,4 +512,14 @@ export const KLEXIKON = [
   [3, "kurios", "🎨", "Womit malen die meisten Künstler?", ["Mit Pinsel", "Mit Löffel", "Mit Gabel", "Mit Kamm"], "Manche Künstler malten sogar mit den Fingern oder bliesen Farbe durch ein Rohr.", null, "Malerei"],
   [4, "kurios", "⚫", "Was entsteht, wenn alle Farben zusammenkommen?", ["Weiß", "Schwarz", "Grau", "Bunt"], "Schwarz und Weiß gelten in der Kunst als Farben, obwohl sie eigentlich keine sind.", null, "Schwarz-Weiß"],
   [4, "musik", "🎺", "Womit erzeugt man den Ton bei einem Blasinstrument?", ["Mit Luft", "Mit den Händen", "Mit den Füßen", "Mit Wasser"], "Je länger die Luftsäule in einem Instrument ist, desto tiefer klingt der Ton.", null, "Blasinstrument"],
+
+  // Nachschub vom 25.09.2026
+  [1, "tiere", "🦓", "Wie fährt man durch einen Safaripark?", ["Mit dem Auto", "Zu Fuß", "Mit dem Rad", "Auf dem Pferd"], "Im Auto sind Besucher vor Löwen und Leoparden gut geschützt.", null, "Tierpark"],
+  [2, "tiere", "🐾", "Welches Tier lebt oft in einem Streichelzoo?", ["Ziege", "Löwe", "Tiger", "Wolf"], "Auch ein Streichelzoo wird manchmal Tierpark genannt, dort darf man Tiere anfassen.", null, "Tierpark"],
+  [1, "welt", "🏙️", "Oslo ist die Hauptstadt von welchem Land?", ["Norwegen", "Schweden", "Dänemark", "Finnland"], "In Oslo wohnt der norwegische König in einem eigenen Schloss.", null, "Oslo"],
+  [2, "welt", "🌊", "Wodurch ist Oslo mit dem Meer verbunden?", ["Fjord", "Kanal", "Tunnel", "Fluss"], "Der Oslofjord bringt Schiffe mit Fracht und Passagieren direkt in die Stadt.", null, "Oslo"],
+  [2, "welt", "🗺️", "Wie heißt die größte deutsche Insel in der Ostsee?", ["Rügen", "Sylt", "Usedom", "Fehmarn"], "Rügen ist die größte Insel Deutschlands und liegt direkt an der Ostsee.", null, "Ostsee"],
+  [3, "natur", "💧", "Warum ist das Wasser der Ostsee weniger salzig als das der Nordsee?", ["Flüsse bringen Süßwasser", "Starker Regen fällt", "Gletscher schmelzen dort", "Wind mischt es"], "Flüsse wie die Oder liefern der Ostsee ständig frisches, salzarmes Süßwasser.", null, "Ostsee"],
+  [3, "welt", "🏰", "Wovon stammt der Name der Stadt Mönchengladbach ab?", ["Von Mönchen", "Von einem Fluss", "Von einem König", "Von einem Wald"], "Mönche gründeten dort einst ein Kloster und richteten einen Markt ein.", null, "Mönchengladbach"],
+  [4, "kurios", "🕵️", "Welches Instrument spielt der Detektiv Sherlock Holmes gern?", ["Geige", "Klavier", "Trompete", "Gitarre"], "Er raucht außerdem gern Pfeife und trägt eine karierte Jagdmütze.", null, "Sherlock Holmes"],
 ];
