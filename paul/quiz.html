@@ -145,7 +145,7 @@ window.QUIZ = {
   ]
 };
 </script>
-<script src="/fundkarten.js?v=e5c459b1"></script>
+<script src="/fundkarten.js?v=707a1367"></script>
 <script>
 /* Such-Spiel: Blaetter mit mindestens drei Fundkarten anbieten. Nur fuer
    Paul, nicht im geteilten /quiz/motor.js - "Erst Paul fertig, dann
@@ -161,10 +161,22 @@ window.QUIZ = {
     $("sicht-start").classList.remove("verborgen");
     window.scrollTo(0, 0);
   }
+  /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
+     jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
+  var faellig = {}, faelligText = {};
+  function merken(blattId, liste){
+    fetch("/api/quiz", { method: "POST", credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: "paul", fund: liste.map(function(e){
+        return { blatt: blattId, karte: e.karte, stimmt: e.stimmt }; }) })
+    }).catch(function(){ /* ohne Speicher geht nur die Wiedervorlage verloren */ });
+  }
   function starten(x){
     var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
       karten: x.karten, kind: "paul", was: x.titel, blattId: x.id,
-      fertigText: "Zurück zur Auswahl", fertig: zurueck
+      zuerst: faellig[x.id] || null,
+      ergebnis: function(liste){ merken(x.id, liste); },
+      fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
     });
     if (!ok) return;
     $("sicht-start").classList.add("verborgen");
@@ -172,7 +184,11 @@ window.QUIZ = {
     window.scrollTo(0, 0);
   }
   function laden(){
-    fetch("/api/schulstoff?kind=paul&monate=6", { credentials: "same-origin" })
+    fetch("/api/quiz?kind=paul&nurWartend=1", { credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {}; })
+      .catch(function(){ faellig = {}; faelligText = {}; })
+      .then(function(){ return fetch("/api/schulstoff?kind=paul&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
       .then(function(j){
         var liste = ((j && j.eintraege) || []).filter(function(x){
@@ -186,7 +202,9 @@ window.QUIZ = {
           var t = document.createElement("b"); t.textContent = x.titel || "Dein Blatt";
           var u = document.createElement("span");
           u.textContent = [FACH[x.fach] || "", datum(x.datum), x.karten.length + " Karten"].filter(Boolean).join(" · ");
-          w.appendChild(t); w.appendChild(u); b.appendChild(w);
+          w.appendChild(t); w.appendChild(u);
+          if (faelligText[x.id]) { var wt = document.createElement("span"); wt.className = "wartet"; wt.textContent = faelligText[x.id]; w.appendChild(wt); }
+          b.appendChild(w);
           b.addEventListener("click", function(){ starten(x); });
           box.appendChild(b);
         });

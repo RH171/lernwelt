@@ -140,6 +140,14 @@ const TAG = 86400000;
    wie vorher). */
 export function punktSchluessel(frage) {
   const blatt = String((frage && frage.blatt) || "").trim();
+  /* Fundkarten (Such-Spiel, 25.09.2026): Sie haben keine Zeilennummer, aber
+     eine feste Antwort. "blatt#k:<antwort>" haelt auch ein Neulesen des
+     Blattes aus, solange die Antwort gleich bleibt. Das "k:" trennt sie von
+     den Quiz-Punkten "blatt#<nr>" - wartendJeBlatt() zaehlt sie nicht mit. */
+  if (frage && frage.fund) {
+    const k = String(frage.fund).toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
+    return blatt && k ? blatt + "#k:" + k : "";
+  }
   const nr = Number(frage && frage.belegNr);
   if (!blatt || !Number.isFinite(nr) || nr < 1) return "";
   return blatt + "#" + Math.floor(nr);
@@ -213,6 +221,22 @@ export function wartendJeBlatt(fragen, punkte, jetzt, e) {
     gezaehlt.add(s);
     const blatt = String(f.blatt || "");
     raus[blatt] = (raus[blatt] || 0) + 1;
+  }
+  return raus;
+}
+
+/* Faellige Fundkarten je Blatt: { blatt: ["blatt#k:...", ...] }.
+   Nur was schon einmal gespielt wurde und wieder dran ist - eine nie
+   gespielte Karte "wartet" nicht, sie ist einfach neu. */
+export function fundFaelligJeBlatt(punkte, jetzt, e) {
+  const ein = e || EINSTELLUNGEN;
+  const raus = {};
+  if (!ein.an) return raus;
+  const nun = jetzt || Date.now();
+  for (const s of Object.keys(punkte || {})) {
+    const i = s.indexOf("#k:");
+    if (i < 1 || !istFaellig(punkte[s], nun, ein)) continue;
+    (raus[s.slice(0, i)] = raus[s.slice(0, i)] || []).push(s);
   }
   return raus;
 }

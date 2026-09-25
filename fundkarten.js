@@ -279,19 +279,39 @@
       .catch(function () { dann(""); });
   }
 
+  /* Der Lernpunkt einer Karte: die Antwort, vereinfacht. Dieselbe Regel
+     wie punktSchluessel() in functions/api/_wiedervorlage.js - der Server
+     vereinfacht noch einmal, eine Abweichung hier kostet also nichts. */
+  function schluessel(k) {
+    return String((k && k.richtig) || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
+  }
+
   function zeigen(wurzel, opt) {
     opt = opt || {};
     var karten = (opt.karten || []).filter(function (k) {
       return k && k.frage && k.richtig && k.falsch && k.falsch.length === 2;
     });
+    /* Wiedervorlage (25.09.2026): Was faellig ist, kommt zuerst - es wird
+       nichts weggelassen, nur umsortiert. opt.zuerst: Liste von Schluesseln. */
+    if (opt.zuerst && opt.zuerst.length) {
+      var vorn = {};
+      opt.zuerst.forEach(function (s) { vorn[String(s).split("#k:").pop()] = 1; });
+      karten = karten.map(function (k, n) { return { k: k, n: n, v: vorn[schluessel(k)] ? 0 : 1 }; })
+        .sort(function (a, b) { return (a.v - b.v) || (a.n - b.n); })
+        .map(function (x) { return x.k; });
+    }
     /* Unter drei Karten lohnt der Bildschirm nicht - dann ist es kein
        Stapel, sondern eine Unterbrechung. Lieber gar nicht zeigen. */
-    if (!wurzel || karten.length < 3) return false;
+    if (!wurzel || karten.length < (opt.mindestens || 3)) return false;
 
     stilEinhaengen();
     var kind = opt.kind || "paul";
     var blattBild = "";
     var i = 0, gefunden = 0;
+    /* Gezaehlt wird der ERSTE Tipp je Karte - wer erst nach einem
+       Danebentippen trifft, hat noch nachgeschaut. Dieselbe Regel wie
+       stimmtEcht im Lernquiz. Gemeldet wird einmal je Durchgang. */
+    var erster = {}, gemeldet = false;
 
     wurzel.innerHTML = "";
     var box = el("div", "lwf");
@@ -300,8 +320,10 @@
     var kopf = el("div");
     kopf.appendChild(el("div", "kicker", (opt.kicker || "Such-Spiel") + (opt.was ? " · " + String(opt.was).slice(0, 40) : "")));
     kopf.appendChild(el("h2", null, karten.length + " Fundkarten aus deinem Blatt"));
-    kopf.appendChild(el("p", "u", "Ich habe dein Blatt gelesen und " + karten.length +
-      " Stellen ausgeschnitten. Schau hin und tipp an, was dort steht."));
+    kopf.appendChild(el("p", "u", opt.nurWackler
+      ? "Das sind die Karten, bei denen du beim ersten Tipp noch nachschauen musstest."
+      : "Ich habe dein Blatt gelesen und " + karten.length +
+        " Stellen ausgeschnitten. Schau hin und tipp an, was dort steht."));
     box.appendChild(kopf);
 
     var stapel = el("div", "lwf-stapel");
@@ -433,11 +455,39 @@
     function zeichne() {
       halter.innerHTML = "";
       if (i >= karten.length) {
+        var wackler = karten.filter(function (k, n) { return erster[n] === false; });
+        if (!gemeldet && opt.ergebnis) {
+          gemeldet = true;
+          try {
+            opt.ergebnis(karten.map(function (k, n) {
+              return { karte: schluessel(k), stimmt: erster[n] !== false };
+            }));
+          } catch (e) {}
+        }
         var fertig = el("div", "lwf-karte rein");
         fertig.appendChild(el("div", "kicker", "Regal voll"));
         fertig.appendChild(el("h2", null, karten.length + " von " + karten.length));
         fertig.appendChild(el("p", "u",
           "Alle Karten aus deinem Blatt liegen im Regal. Du hast dein Blatt jetzt einmal ganz durchgesehen."));
+        if (wackler.length) {
+          /* Kein Rot, keine Fehlerzahl - nur die Stichworte und ein Angebot.
+             Die Karten kommen ausserdem in zwei Tagen von selbst wieder. */
+          var w1 = el("p", "u lwf-wackler", "Beim ersten Tipp noch nachgeschaut: " +
+            wackler.map(function (k) { return k.stichwort || k.richtig; }).join(", ") +
+            ". Die kommen in zwei Tagen wieder dran.");
+          fertig.appendChild(w1);
+          var bw = el("button", "lwf-knopf lwf-nochmal",
+            wackler.length === 1 ? "Die eine gleich nochmal" : "Die " + wackler.length + " gleich nochmal");
+          bw.type = "button";
+          bw.addEventListener("click", function () {
+            var neu = {}; for (var x in opt) neu[x] = opt[x];
+            neu.karten = wackler; neu.zuerst = null; neu.nurWackler = true;
+            /* Unter drei Karten zeigt zeigen() nichts - hier ist es gewollt. */
+            neu.mindestens = 1;
+            zeigen(wurzel, neu);
+          });
+          fertig.appendChild(bw);
+        }
         var b1 = el("button", "lwf-knopf", opt.fertigText || "Weiter");
         b1.type = "button";
         b1.addEventListener("click", function () { if (opt.fertig) opt.fertig(); });
@@ -445,7 +495,7 @@
         var b2 = el("button", "lwf-knopf leise", "Karten noch mal ansehen");
         b2.type = "button";
         b2.addEventListener("click", function () {
-          i = 0; gefunden = 0;
+          i = 0; gefunden = 0; erster = {}; gemeldet = false;
           slots.forEach(function (s) { s.className = "lwf-slot"; s.innerHTML = ""; s.appendChild(el("em", null, "·")); });
           zahl.textContent = "0 von " + karten.length;
           h1.style.opacity = ""; h2.style.opacity = "";
@@ -477,6 +527,7 @@
         b.appendChild(el("span", null, text));
         b.addEventListener("click", function () {
           if (fertigChip) return;
+          if (erster[i] === undefined) erster[i] = (text === String(k.richtig));
           if (text === String(k.richtig)) {
             fertigChip = true;
             b.className = "lwf-chip gut";
@@ -521,5 +572,5 @@
     return true;
   }
 
-  global.LWFund = { zeigen: zeigen };
+  global.LWFund = { zeigen: zeigen, schluessel: schluessel };
 })(window);

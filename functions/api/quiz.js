@@ -43,6 +43,7 @@ import { stehtAufBlatt } from "./spiel-bauen.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
+  fundFaelligJeBlatt, wartendText,
 } from "./_wiedervorlage.js";
 
 const KINDER = {
@@ -96,8 +97,12 @@ export async function onRequestGet(context) {
   if (url.searchParams.get("nurWartend") === "1") {
     const v = await vorratLesen(env, kind);
     const pk = await punkteLesen(env, kind);
+    const fund = fundFaelligJeBlatt(pk, Date.now());
+    const fundText = {};
+    for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
     return json(200, { ok: true, wiedervorlage: fuerDieSeite(),
-                       wartend: wartendJeBlatt(v.fragen, pk, Date.now()) });
+                       wartend: wartendJeBlatt(v.fragen, pk, Date.now()),
+                       fundFaellig: fund, fundText });
   }
 
   let vorrat = await vorratLesen(env, kind);
@@ -286,6 +291,22 @@ export async function onRequestPost(context) {
   if (!KINDER[kind]) return json(400, { ok: false, fehler: "Welches Kind denn?" });
   if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  /* Das Such-Spiel (Fundkarten, 25.09.2026) schickt nur `fund` - EIN
+     Schreibvorgang je Runde, keine gestellten Fragen, keine Lernzeit. */
+  const fund = Array.isArray(daten.fund) ? daten.fund.slice(0, 40) : [];
+  if (fund.length) {
+    if (!WV.an) return json(200, { ok: true });
+    const vorher = await punkteLesen(env, kind);
+    const punkte = JSON.parse(JSON.stringify(vorher));
+    const nun = Date.now();
+    for (const a of fund) {
+      if (!a || !a.blatt || !a.karte) continue;
+      punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun);
+    }
+    const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
+    return json(200, { ok: true, gemerkt: geschrieben });
+  }
 
   const antworten = Array.isArray(daten.antworten) ? daten.antworten.slice(0, 60) : [];
   if (!antworten.length) return json(200, { ok: true });
