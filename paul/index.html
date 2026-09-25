@@ -42,6 +42,7 @@
     --badgeearn:linear-gradient(165deg,#fff,#f3f6ff);
     --badgeline:#dbe3ff;
     --hintbg:#fff7ed; --hintline:#fed7aa; --hintink:#9a5b1e;
+    --sitzt:#1f9d6b; --sitzt-ink:#0b6b43; --noch:#4f7fe0; --noch-ink:#1d4fae; --neu-f:#e4e7f0;
     --inspobg:#f3f0ff; --inspoline:#e3dcff; --inspoink:#5b3ec8;
     --warn:#e8453c;
     --veil:rgba(20,22,40,.42);
@@ -69,6 +70,7 @@
     --badgeearn:linear-gradient(165deg,#33333a,#2a2a33);
     --badgeline:#4a4a58;
     --hintbg:#3a2f1f; --hintline:#5c4526; --hintink:#f0c48a;
+    --sitzt:#6ee7a8; --sitzt-ink:#6ee7a8; --noch:#8cb8ff; --noch-ink:#8cb8ff; --neu-f:#3a3a3f;
     --inspobg:#2e2a3d; --inspoline:#413a58; --inspoink:#c8bcff;
     --warn:#ff6b60;
     --veil:rgba(0,0,0,.6);
@@ -331,6 +333,30 @@
   .rephint{background:var(--hintbg);border:1px solid var(--hintline);border-radius:14px;padding:13px 14px;
     font-size:13px;color:var(--hintink);line-height:1.45;}
   .modal.wide{max-width:480px;max-height:82vh;overflow:auto;}
+  /* Mein Heft (Denny, 25.09.2026, Entwurf B): je Blatt ein Balken
+     sitzt · uebst du noch · neu. Kein Rot, kein Warnzeichen. */
+  .hfach{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px;}
+  .hfach h4{font-family:var(--round);font-weight:800;font-size:15px;margin:0;display:flex;align-items:center;gap:8px;}
+  .hfach h4 .rd{width:10px;height:10px;border-radius:50%;}
+  .hfach h4 .hz{margin-left:auto;color:var(--muted);font-weight:600;font-size:13px;}
+  .hleer{color:var(--muted);font-size:13.5px;margin:6px 0 0;}
+  .hblatt{margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line);}
+  .hblatt:first-of-type{border-top:none;padding-top:4px;}
+  .hblatt .ht{font-weight:700;font-size:14.5px;}
+  .hblatt .ht span{color:var(--muted);font-weight:500;}
+  .hbalken{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:var(--neu-f);}
+  .hbalken b{display:block;height:100%;}
+  .hbalken .s{background:var(--sitzt);} .hbalken .n{background:var(--noch);}
+  .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+  .hleg .ls{color:var(--sitzt-ink);font-weight:700;} .hleg .ln{color:var(--noch-ink);font-weight:700;}
+  .hlos{display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:10px;border-radius:14px;
+    background:var(--brand,#4f46e5);color:#fff;font-weight:800;text-decoration:none;font-size:15px;}
+  .alt{margin-top:14px;border:1px solid var(--line);border-radius:16px;padding:0 14px;}
+  .alt>summary{min-height:48px;display:flex;align-items:center;font-weight:700;cursor:pointer;list-style:none;}
+  .alt>summary::-webkit-details-marker{display:none;}
+  .alt>summary::after{content:"▾";margin-left:auto;color:var(--muted);}
+  .alt[open]>summary::after{content:"▴";}
+  .alt .repsub{margin-top:6px;}
 
   /* ---------- Neues-Spiel-Karte ---------- */
   /* Farbe und Unterstreichung gehoeren an die GRUNDregel, nicht an jede
@@ -641,8 +667,8 @@
 <!-- Modal: Lernbericht -->
 <div class="overlay" id="reportOverlay">
   <div class="modal wide">
-    <h3>📊 Lernbericht</h3>
-    <p class="lead">So läuft es bei Paul gerade:</p>
+    <h3>📊 Mein Heft</h3>
+    <p class="lead">Das kannst du schon aus deinem Heft:</p>
     <div id="reportBody"></div>
     <button class="close" id="closeReport">Schließen</button>
   </div>
@@ -1237,8 +1263,103 @@
   function lwProgress(file){
     try{ const raw=localStorage.getItem("lw-progress:"+file); if(!raw) return null; const o=JSON.parse(raw); return (o&&typeof o==="object")?o:null; }catch(e){ return null; }
   }
+  /* Mein Heft (Denny, 25.09.2026, aus drei Entwuerfen "B"): Paul sieht, was er
+     aus SEINEM Heft schon kann - vom Server, also auf iPad und iPhone gleich.
+     Eine Karte "sitzt", wenn er sie beim letzten Mal beim ersten Tipp wusste,
+     "uebst du noch", wenn nicht, "neu", wenn er sie noch nie hatte. Der Stand
+     kommt aus der Wiedervorlage (/api/quiz?nurWartend=1, fundStand), dieselbe
+     Quelle wie "Heute lernen". Kein Rot, kein Warnzeichen, keine Serie.
+     Die alten Klasse-3-Spiele (Werte nur auf diesem Geraet) stehen eingeklappt
+     darunter. */
+  const HEFT_FACH = {mathe:{n:"Mathe",c:"var(--mathe)"}, deutsch:{n:"Deutsch",c:"var(--deutsch)"},
+    hsu:{n:"HSU",c:"var(--hsu)"}, englisch:{n:"Englisch",c:"var(--englisch)"},
+    rel:{n:"Religion",c:"var(--religion)"}, musik:{n:"Musik",c:"var(--musik)"},
+    anderes:{n:"Anderes",c:"var(--spass)"}};
+  const HEFT_IMMER = ["mathe","deutsch","hsu"];
+  function kartenSchluessel(k){
+    return String((k && k.richtig) || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
+  }
+  function heftDatum(d){
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||""));
+    return m ? (+m[3]) + "." + (+m[2]) + "." : "";
+  }
+  function el(tag, cls, text){
+    const x = document.createElement(tag); if(cls) x.className = cls;
+    if(text != null) x.textContent = text; return x;
+  }
+  function heftZeichnen(box, eintraege, stand){
+    box.innerHTML = "";
+    const je = {};
+    (eintraege || []).forEach(function(x){
+      if(!x || x.sichtbar === false) return;
+      const f = HEFT_FACH[x.fach] ? x.fach : "anderes";
+      (je[f] = je[f] || []).push(x);
+    });
+    const faecher = Object.keys(HEFT_FACH).filter(function(f){ return je[f] || HEFT_IMMER.indexOf(f) >= 0; });
+    faecher.sort(function(a, b){ return (je[b] ? je[b].length : 0) - (je[a] ? je[a].length : 0); });
+    faecher.forEach(function(f){
+      const liste = (je[f] || []).slice().sort(function(a, b){ return String(b.datum).localeCompare(String(a.datum)); });
+      const k = el("div", "hfach"); k.dataset.fach = f;
+      const h = el("h4"); const rd = el("span", "rd"); rd.style.background = HEFT_FACH[f].c;
+      h.appendChild(rd); h.appendChild(document.createTextNode(HEFT_FACH[f].n));
+      h.appendChild(el("span", "hz", liste.length ? (liste.length === 1 ? "1 Blatt" : liste.length + " Blätter") : "noch kein Blatt"));
+      k.appendChild(h);
+      if(!liste.length) k.appendChild(el("p", "hleer", "Leg ein Blatt ins Heft, dann steht es hier."));
+      liste.forEach(function(x){
+        const b = el("div", "hblatt"); b.dataset.blatt = x.id;
+        const tt = el("div", "ht", x.titel || "Dein Blatt");
+        const d = heftDatum(x.datum); if(d) tt.appendChild(el("span", null, " · " + d));
+        b.appendChild(tt);
+        const karten = Array.isArray(x.karten) ? x.karten : [];
+        let s = 0, n = 0, neu = 0; const gesehen = {};
+        karten.forEach(function(c){
+          const key = x.id + "#k:" + kartenSchluessel(c);
+          if(!c || !c.richtig || gesehen[key]) return; gesehen[key] = 1;
+          const st = stand[key];
+          if(!st) neu++; else if(st.f) n++; else s++;
+        });
+        const alle = s + n + neu;
+        if(alle){
+          const bal = el("div", "hbalken");
+          const bs = el("b", "s"); bs.style.width = (100 * s / alle) + "%";
+          const bn = el("b", "n"); bn.style.width = (100 * n / alle) + "%";
+          bal.appendChild(bs); bal.appendChild(bn); b.appendChild(bal);
+          const leg = el("div", "hleg");
+          if(s) leg.appendChild(el("span", "ls", s + " " + (s === 1 ? "sitzt" : "sitzen")));
+          if(n) leg.appendChild(el("span", "ln", n + " übst du noch"));
+          if(neu) leg.appendChild(el("span", null, neu + " neu"));
+          b.appendChild(leg);
+        } else {
+          b.appendChild(el("p", "hleer", "Zu diesem Blatt gibt es noch keine Karten."));
+        }
+        if(karten.length >= 3){
+          const a = el("a", "hlos", s === alle ? "🔎 Nochmal suchen" : (s + n ? "🔎 Weiter suchen" : "🔎 Jetzt suchen"));
+          a.href = "quiz.html?blatt=" + encodeURIComponent(x.id);
+          b.appendChild(a);
+        }
+        k.appendChild(b);
+      });
+      box.appendChild(k);
+    });
+  }
+  function heftLaden(box){
+    box.innerHTML = '<p class="hleer">Dein Heft lädt …</p>';
+    let stand = {};
+    fetch("/api/quiz?kind=paul&nurWartend=1", { credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ stand = (j && j.fundStand) || {}; })
+      .catch(function(){ stand = {}; })
+      .then(function(){ return fetch("/api/schulstoff?kind=paul&monate=12", { credentials: "same-origin" }); })
+      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function(j){ heftZeichnen(box, (j && j.eintraege) || [], stand); })
+      .catch(function(){ box.innerHTML = '<p class="hleer">Dein Heft kommt gerade nicht. Versuch es gleich noch einmal.</p>'; });
+  }
   function buildReport(){
     const body=document.getElementById("reportBody"); body.innerHTML="";
+    const heft = el("div"); heft.id = "heftBericht"; body.appendChild(heft);
+    heftLaden(heft);
+    const alt = el("details", "alt"); alt.id = "altSpiele";
+    alt.appendChild(el("summary", null, "🎮 Deine Spiele aus Klasse 3"));
     let anyData=false;
     FACH_ORDER.forEach(function(fk){
       const tools=TOOLS.filter(t=>t.fach===fk && (REPORT[t.file] || lwProgress(t.file)));
@@ -1252,7 +1373,7 @@
             const v=repVal(row);
             if(v==null) return;
             anyData=true;
-            if(row.warn && v>0) parts.push('<span class="warn">⚠ '+v+' '+row.label+'</span>');
+            if(row.warn) { if(v>0) parts.push('<b>'+v+'</b> übst du noch'); }
             else parts.push('<b>'+v+'</b> '+row.label);
           });
         } else {
@@ -1260,7 +1381,7 @@
           if(p){
             if(typeof p.xp==="number"){ anyData=true; parts.push('<b>'+p.xp+'</b> XP'); }
             if(typeof p.best==="number"){ anyData=true; parts.push('<b>'+p.best+'</b> Bestlauf'); }
-            if(typeof p.uebung==="number" && p.uebung>0){ anyData=true; parts.push('<span class="warn">⚠ '+p.uebung+' zu üben</span>'); }
+            if(typeof p.uebung==="number" && p.uebung>0){ anyData=true; parts.push('<b>'+p.uebung+'</b> übst du noch'); }
           }
         }
         const row=document.createElement("div"); row.className="reprow";
@@ -1268,13 +1389,10 @@
           (parts.length?parts.join(" · "):"noch nicht gespielt")+'</span>';
         sub.appendChild(row);
       });
-      body.appendChild(sub);
+      alt.appendChild(sub);
     });
-    if(!anyData){
-      const h=document.createElement("div"); h.className="rephint";
-      h.innerHTML="📂 Hier erscheinen Pauls Zahlen (XP, Bestläufe, Üben-Listen), sobald er ein paar Spiele gespielt hat.";
-      body.insertBefore(h, body.firstChild);
-    }
+    if(!anyData) alt.appendChild(el("p", "hleer", "Auf diesem Gerät hast du die alten Spiele noch nicht gespielt."));
+    body.appendChild(alt);
   }
   document.getElementById("report").addEventListener("click",()=>{ buildReport(); reportOv.classList.add("on"); blip(); });
 

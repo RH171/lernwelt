@@ -219,6 +219,13 @@ window.QUIZ = {
           b.addEventListener("click", function(){ starten(x); });
           box.appendChild(b);
         });
+        /* Aus "Mein Heft" (Bericht auf der Startseite, 25.09.2026): ?blatt=<id>
+           startet das Such-Spiel zu genau diesem Blatt. Nur einmal. */
+        if (blattWahl) {
+          var ziel = liste.filter(function(x){ return x.id === blattWahl; })[0];
+          blattWahl = "";
+          if (ziel) { $("such-wahl").classList.remove("verborgen"); heuteAnbieten((j && j.eintraege) || [], true); starten(ziel); return; }
+        }
         $("such-wahl").classList.toggle("verborgen", !liste.length);
         heuteAnbieten((j && j.eintraege) || []);
       })
@@ -227,7 +234,9 @@ window.QUIZ = {
   /* Heute lernen. Der Satz sagt ehrlich, was drin ist - ohne Rueckstand-Zahl:
      "3 kommen wieder dran, 2 sind neu", nie "5 offen". */
   var autostart = /[?&]heute=1\b/.test(location.search);
-  function heuteAnbieten(eintraege){
+  var blattWahl = (/[?&]blatt=([^&#]+)/.exec(location.search) || [])[1];
+  blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
+  function heuteAnbieten(eintraege, ohneStart){
     heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand) : null;
     var da = !!(heute && heute.karten.length);
     $("heute-wahl").classList.toggle("verborgen", !da);
@@ -238,7 +247,7 @@ window.QUIZ = {
     if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
     $("heute-unter").textContent = heute.karten.length + " Karten aus deinen Blättern: " +
       teile.join(", ") + ". Dauert ein paar Minuten.";
-    if (autostart) { autostart = false; heuteStarten(); }
+    if (autostart && !ohneStart) { autostart = false; heuteStarten(); }
   }
   function heuteStarten(){
     if (!heute || !heute.karten.length || !window.LWFund) return;
