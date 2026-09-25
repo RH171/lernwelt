@@ -92,6 +92,20 @@
     border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;
     font:700 14px/1.2 var(--rund);padding:8px 10px}
   .tempo button.an{background:#fff;color:#241a4d;border-color:#fff}
+  .marken{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+  .marken button{min-height:48px;border-radius:12px;cursor:pointer;
+    border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;
+    font:700 13.5px/1.25 var(--rund);padding:7px 8px}
+  .marken button:disabled{opacity:.4}
+  .marken button.jetzt{background:#fff;color:#241a4d;border-color:#fff}
+  /* Der Hinweis in der Stille. Ohne ihn sieht eine Minute Lesezeit wie ein
+     kaputter Spieler aus - gemessen: 60 s Stille gleich nach der Ansage. */
+  .pausenbox{display:none;margin-top:10px;background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:11px 12px}
+  .pausenbox.da{display:block}
+  .pausenbox p{margin:0 0 8px;font-size:14px;line-height:1.5;color:#fff}
+  .pausenbox button{width:100%;min-height:48px;border-radius:12px;cursor:pointer;border:none;
+    background:#fff;color:#241a4d;font:800 14.5px/1.2 var(--rund)}
   .stand{color:#ded8ff;font-size:13.5px;line-height:1.5;margin:10px 0 0}
   .stand.schlecht{color:#ffd9d9}
 
@@ -156,6 +170,11 @@
     <div class="tempo">
       <button type="button" data-t="0.75">🐢 langsamer</button>
       <button type="button" data-t="1" class="an">▶ normal</button>
+    </div>
+    <div class="marken" id="marken"></div>
+    <div class="pausenbox" id="pausenbox">
+      <p id="pausentext"></p>
+      <button type="button" id="pause-weiter">⏭ Weiter, ich bin fertig</button>
     </div>
     <p class="stand" id="stand">Such dir oben ein Jahr aus.</p>
     <audio id="ton" preload="none"></audio>
