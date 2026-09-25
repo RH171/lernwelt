@@ -536,7 +536,19 @@
         b.appendChild(el("span", null, text));
         b.addEventListener("click", function () {
           if (fertigChip) return;
-          if (erster[i] === undefined) erster[i] = (text === String(k.richtig));
+          if (erster[i] === undefined) {
+            erster[i] = (text === String(k.richtig));
+            /* An die Statistik der Eltern (Denny, 25.09.2026, "gruppiert nach
+               Blatt"): eine Aufgabe je Karte, gezaehlt der ERSTE Tipp, sofort -
+               auch wenn Paul die Runde danach abbricht. Merkmal ist der
+               Blatttitel, nicht die Karte: 16 Karten je Blatt wuerden "Woran es
+               hakt" fluten. Ohne lernstand.js (Messung) passiert nichts. */
+            try {
+              if (window.lernstand && window.lernstand.antwort)
+                window.lernstand.antwort(erster[i],
+                  String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig);
+            } catch (e) {}
+          }
           if (text === String(k.richtig)) {
             fertigChip = true;
             b.className = "lwf-chip gut";
