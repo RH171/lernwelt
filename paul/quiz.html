@@ -55,6 +55,10 @@
       <h2>☀️ Heute lernen</h2>
       <p class="unter" id="heute-unter"></p>
       <button class="knopf" id="heute-los" type="button">Los geht's</button>
+      <!-- Nur wer von der Startseite kommt, sieht diesen Knopf (Denny,
+           25.09.2026: "ich komme von der Startseite rein, und dann geht es
+           gleich los"). Gewaehlt: Startschirm mit Wahl statt Sofortstart. -->
+      <button class="knopf still verborgen" id="heute-selbst" type="button">Lieber selbst aussuchen</button>
     </div>
     <div class="karte">
       <h2>Was möchtest du üben?</h2>
@@ -247,7 +251,9 @@ window.QUIZ = {
     if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
     $("heute-unter").textContent = heute.karten.length + " Karten aus deinen Blättern: " +
       teile.join(", ") + ". Dauert ein paar Minuten.";
-    if (autostart && !ohneStart) { autostart = false; heuteStarten(); }
+    /* Von der Startseite (?heute=1) geht es NICHT mehr sofort los: Paul
+       sieht erst, was kommt, und entscheidet selbst (25.09.2026). */
+    if (autostart && !ohneStart) $("heute-selbst").classList.remove("verborgen");
   }
   function heuteStarten(){
     if (!heute || !heute.karten.length || !window.LWFund) return;
@@ -267,6 +273,11 @@ window.QUIZ = {
   }
   document.addEventListener("DOMContentLoaded", function(){
     $("heute-los").addEventListener("click", heuteStarten);
+    $("heute-selbst").addEventListener("click", function(){
+      autostart = false;
+      $("heute-wahl").classList.add("verborgen");
+      window.scrollTo(0, 0);
+    });
     $("such-zurueck").addEventListener("click", function(){ zurueck(); laden(); });
     laden();
   });
