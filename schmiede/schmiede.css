@@ -220,3 +220,6 @@
     color-scheme:light;
   }
   html[data-theme="dark"] .tafel input{background:#fbfcff;color:#1b1c22}
+  html[data-theme="dark"] .zurueckschritt{background:#232633}
+  html[data-theme="dark"] .weiterspielen{background:#10281f;border-color:#1f5a3d}
+  html[data-theme="dark"] .kreis{border-color:#2e3140;border-top-color:var(--paul)}
