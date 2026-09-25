@@ -6,7 +6,7 @@
 <title>Leons Lernwelt</title>
 <script>/* Leons Wahl hell/dunkel (25.09.2026), Standard hell. Schalter auf seiner Startseite. */
 (function(){try{ if(localStorage.getItem("leon-theme")==="dark") document.documentElement.setAttribute("data-theme","dark"); }catch(e){}})();</script>
-<link rel="stylesheet" href="/thema.css?v=28d4b3f1">
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
 <style>
   :root{
     --bg:#eef1f7; --card:#fff; --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0;
@@ -25,11 +25,11 @@
   }
   .thema:active{transform:scale(.97)}
   .thema .bild{font-size:31px;line-height:1}
-  .thema.jetzt, .thema.jetzt.fertig{border-color:var(--leon);background:#eefbf2}
+  .thema.jetzt, .thema.jetzt.fertig{border-color:var(--leon);background:var(--gruen-feld,#eefbf2)}
   /* Zu diesem Thema liegt schon ein fertiges Spiel - startet ohne Warten. */
-  .thema.fertig{border-color:#bfe8cd;background:#f2fcf5}
+  .thema.fertig{border-color:#bfe8cd;background:var(--gruen-feld,#f2fcf5)}
   .thema .bereit{
-    font-family:var(--font);font-size:11px;font-weight:700;color:#0f9d58;
+    font-family:var(--font);font-size:11px;font-weight:700;color:var(--gruen-text,#0f9d58);
     letter-spacing:.03em;
   }
   .thema .dran{
@@ -47,7 +47,7 @@
   .faecher{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
   .fach{
     display:flex;align-items:center;justify-content:center;gap:9px;min-height:54px;
-    border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);
+    border:2px solid var(--line);border-radius:16px;background:var(--card,#fff);color:var(--ink);
     font-family:var(--rund);font-size:18px;font-weight:700;cursor:pointer;padding:0 6px;
   }
   @media (max-width:420px){ .fach{font-size:16px;gap:5px} .fach .zeichen{font-size:20px} }
@@ -75,14 +75,14 @@
   .minikachel.breit{width:100%}
   .zweikacheln{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
   @media (max-width:560px){ .zweikacheln{grid-template-columns:1fr} }
-  .minikachel{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);background:#fff;
+  .minikachel{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);background:var(--card,#fff);
     border:2px solid var(--line);border-radius:20px;padding:14px 16px;min-height:78px}
   .minikachel .bild{font-size:30px;line-height:1}
   .minikachel b{display:block;font-family:var(--rund);font-size:17px}
   .minikachel span span{font-size:14px;color:var(--muted);line-height:1.3}
   .minikachel:active{transform:scale(.98)}
   /* Frisch dazugekommen - faellt auf, ohne zu blinken. */
-  .anfass.neu{border-color:var(--leon);background:#f2fdf6;position:relative}
+  .anfass.neu{border-color:var(--leon);background:var(--gruen-feld,#f2fdf6);position:relative}
   .anfass.neu::after{content:"NEU";position:absolute;top:6px;right:8px;font-family:var(--font);font-size:10.5px;
     font-weight:800;letter-spacing:.06em;color:#fff;background:var(--leon);border-radius:999px;padding:3px 7px}
   .anfassen-liste{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:14px}
@@ -94,7 +94,7 @@
   .anfass .fachname{font-family:var(--font);font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
   .anfass:active{transform:scale(.97)}
   .fach .zeichen{font-size:24px;line-height:1}
-  .fach.an{border-color:var(--leon);background:#eefbf2;color:#067647}
+  .fach.an{border-color:var(--leon);background:var(--gruen-feld,#eefbf2);color:var(--gruen-text,#067647)}
   .fach:active{transform:scale(.97)}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -130,7 +130,7 @@
   .knoepfe{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px}
   .knopf{
     display:flex;flex-direction:column;align-items:center;gap:9px;justify-content:center;
-    border:2px dashed var(--line);background:#fbfcff;border-radius:20px;padding:22px 14px;
+    border:2px dashed var(--line);background:var(--feld,#fbfcff);border-radius:20px;padding:22px 14px;
     font-family:var(--rund);font-size:16px;font-weight:600;color:var(--ink);cursor:pointer;
     transition:border-color .15s,background .15s,transform .1s;min-height:112px;
   }
@@ -146,13 +146,13 @@
   .wunschfeld textarea{
     width:100%;min-height:78px;resize:vertical;
     border:2px solid var(--line);border-radius:16px;padding:14px 15px;
-    font-family:var(--font);font-size:16px;line-height:1.5;color:var(--ink);background:#fbfcff;
+    font-family:var(--font);font-size:16px;line-height:1.5;color:var(--ink);background:var(--feld,#fbfcff);
   }
   .wunschfeld textarea:focus{outline:none;border-color:var(--leon)}
   .wunschfeld .tipp{color:var(--muted);font-size:14px;margin-top:7px;line-height:1.5}
 
   .seiten{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px;margin-top:18px}
-  .seite{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#f7f8fc;aspect-ratio:3/4}
+  .seite{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--feld,#f7f8fc);aspect-ratio:3/4}
   .seite img{width:100%;height:100%;object-fit:cover;display:block}
   .seite .pdf{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:6px;font-size:13px;color:var(--muted);padding:8px;text-align:center}
   .seite .pdf .zeichen{font-size:28px}
@@ -171,7 +171,7 @@
 
   .hinweis{margin-top:14px;padding:13px 15px;border-radius:14px;font-size:14.5px;line-height:1.5}
   .hinweis.warn{background:#fff6ea;color:#8a5a12;border:1px solid #ffe2bd}
-  .hinweis.fehler{background:#fff1f0;color:#a3251c;border:1px solid #ffd5d1}
+  .hinweis.fehler{background:var(--gefahr-hell,#fff1f0);color:var(--gefahr-text,#a3251c);border:1px solid #ffd5d1}
 
   .laden{text-align:center;padding:44px 22px}
   .kreis{width:54px;height:54px;margin:0 auto 20px;border-radius:50%;
@@ -186,7 +186,7 @@
   .frage{font-family:var(--rund);font-size:22px;line-height:1.35;margin:14px 0 20px}
   .wahl{display:grid;gap:11px}
   .wahl button{
-    text-align:left;border:2px solid var(--line);background:#fbfcff;border-radius:16px;
+    text-align:left;border:2px solid var(--line);background:var(--feld,#fbfcff);border-radius:16px;
     padding:17px 18px;font-size:17px;font-family:var(--font);color:var(--ink);cursor:pointer;
     transition:border-color .12s,background .12s,transform .1s;
   }
@@ -202,7 +202,7 @@
     width:100%;max-width:260px;text-align:center;
     font-family:var(--rund);font-size:34px;font-weight:700;
     padding:16px 14px;border:2px solid var(--line);border-radius:18px;
-    background:#fbfcff;color:var(--ink);font-variant-numeric:tabular-nums;
+    background:var(--feld,#fbfcff);color:var(--ink);font-variant-numeric:tabular-nums;
   }
   .eingabe input:focus{outline:none;border-color:var(--leon)}
   .eingabe input.gut{border-color:var(--gut);background:#eafaf1}
@@ -225,10 +225,10 @@
   .kette{display:flex;flex-direction:column;gap:10px;margin-top:4px}
   .glied{
     display:flex;align-items:center;gap:12px;
-    padding:13px 15px;border-radius:14px;border:1px solid var(--line);background:#fbfcff;
+    padding:13px 15px;border-radius:14px;border:1px solid var(--line);background:var(--feld,#fbfcff);
   }
   .glied.erledigt{border-color:var(--gut);background:#eafaf1}
-  .glied.dran{border-color:var(--leon);background:#fff}
+  .glied.dran{border-color:var(--leon);background:var(--card,#fff)}
   .glied .txt{flex:1;font-size:16px}
   .glied .zahl{
     font-family:var(--rund);font-weight:700;font-size:19px;
@@ -263,7 +263,7 @@
   .weiter{margin-top:16px;width:100%;border:none;border-radius:16px;padding:16px;
           background:var(--ink);color:#fff;font-family:var(--rund);font-size:17px;font-weight:600;cursor:pointer}
 
-  .marke{display:inline-block;background:#f2f3fa;color:var(--muted);border-radius:999px;
+  .marke{display:inline-block;background:var(--tabelle,#f2f3fa);color:var(--muted);border-radius:999px;
          padding:5px 12px;font-size:12.5px;margin:0 6px 6px 0}
   .anmeldung{text-align:center;padding:34px 22px}
   .anmeldung .schloss{font-size:46px}
@@ -272,7 +272,7 @@
     width:190px;margin:20px auto 0;display:block;text-align:center;
     font-family:var(--rund);font-size:32px;letter-spacing:.24em;
     padding:15px 12px;border:2px solid var(--line);border-radius:16px;
-    background:#fbfcff;color:var(--ink);
+    background:var(--feld,#fbfcff);color:var(--ink);
   }
   .codefeld:focus{outline:none;border-color:var(--leon)}
   .codefehler{color:var(--schlecht);font-size:15px;margin-top:12px;min-height:22px}
@@ -292,19 +292,19 @@
      Keine Serie, die man verlieren kann - siehe Bauregeln. */
   .torstand{
     display:flex;align-items:center;gap:10px;margin-bottom:14px;
-    background:#eefbf2;border:1px solid #cdeedd;border-radius:15px;padding:11px 14px;
+    background:var(--gruen-feld,#eefbf2);border:1px solid #cdeedd;border-radius:15px;padding:11px 14px;
   }
-  .torstand .zahl{font-family:var(--rund);font-size:23px;font-weight:800;color:#0f7a45}
-  .torstand .wort{font-size:14px;color:#3d7a5c;line-height:1.35}
+  .torstand .zahl{font-family:var(--rund);font-size:23px;font-weight:800;color:var(--gruen-text,#0f7a45)}
+  .torstand .wort{font-size:14px;color:var(--gruen-text,#3d7a5c);line-height:1.35}
   .fragezeile{display:flex;align-items:flex-start;gap:10px}
   .fragezeile .frage{flex:1;cursor:pointer}
   .vorlesen{
     flex:none;width:48px;height:48px;border-radius:15px;margin-top:10px;
-    border:2px solid var(--line);background:#fbfcff;font-size:22px;
+    border:2px solid var(--line);background:var(--feld,#fbfcff);font-size:22px;
     cursor:pointer;line-height:1;display:grid;place-items:center;
     filter:grayscale(1);opacity:.5;transition:all .12s;
   }
-  .vorlesen.an{border-color:var(--leon);background:#eefbf2;filter:none;opacity:1}
+  .vorlesen.an{border-color:var(--leon);background:var(--gruen-feld,#eefbf2);filter:none;opacity:1}
   .vorlesen:active{transform:scale(.94)}
   .bild{display:flex;justify-content:center;margin:4px 0 16px}
   .bild svg{width:100%;height:auto;display:block}
@@ -313,18 +313,21 @@
   }
   .spielkopf .weltbild{
     font-size:26px;line-height:1;flex:none;width:46px;height:46px;border-radius:14px;
-    display:grid;place-items:center;background:#f2fcf5;border:1px solid #d9f0e2;
+    display:grid;place-items:center;background:var(--gruen-feld,#f2fcf5);border:1px solid #d9f0e2;
   }
   .spielkopf .spielname{
     font-family:var(--rund);font-weight:700;font-size:19px;line-height:1.25;
   }
   .nachspiel{
-    background:#eefbf2;border:1px solid #bfe8cd;border-radius:13px;
+    background:var(--gruen-feld,#eefbf2);border:1px solid #bfe8cd;border-radius:13px;
     padding:9px 13px;margin:2px 0 12px;text-align:center;
-    font-family:var(--rund);font-weight:700;font-size:14.5px;color:#0f7a45;
+    font-family:var(--rund);font-weight:700;font-size:14.5px;color:var(--gruen-text,#0f7a45);
   }
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+  /* Hell/dunkel (25.09.2026) */
+  header .modus{margin-left:auto;cursor:pointer;font:inherit;min-height:44px}
+  html[data-theme="dark"] .anfass{background:linear-gradient(160deg,#12291f,#132536);border-color:#1f5137}
 </style>
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 </head>
@@ -336,6 +339,10 @@
     <a class="zurueck" href="/" aria-label="Zur Lernwelt-Startseite">🏠</a>
     <a class="zurueck" id="zurueck" href="/leon/">‹ Zur Auswahl</a>
     <h1 id="kopfzeile">Leons Mathe</h1>
+    <!-- Hell oder dunkel (Denny, 25.09.2026: "Ja, jetzt übertragen"). Wie bei
+         Paul: der Schalter steht NUR hier, die Wahl gilt auf allen Seiten von
+         Leon (localStorage "leon-theme", Standard hell). -->
+    <button class="zurueck modus" id="modusBtn" type="button" aria-pressed="false" title="Hell oder dunkel">🌙 Dunkel</button>
   </header>
 
   <!-- 0. Anmelden -->
@@ -485,7 +492,7 @@
       <p class="unter" id="ende-text"></p>
       <button class="los" id="nochmal">Zurück zur Auswahl</button>
       <button class="weiter" id="neues-spiel" style="margin-top:10px">Ein ganz neues Spiel dazu bauen</button>
-      <button class="weiter" id="ende-zurueck" style="background:#f2f3fa;color:var(--ink);margin-top:10px">Zurück in die Lernwelt</button>
+      <button class="weiter" id="ende-zurueck" style="background:var(--tabelle,#f2f3fa);color:var(--ink);margin-top:10px">Zurück in die Lernwelt</button>
     </div>
   </section>
 
@@ -1801,5 +1808,21 @@
 <script>window.FERIENBAND = {gross:true, ziel:"/ferien"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
+<script>
+/* Leons Schalter hell/dunkel (25.09.2026). Die Wahl liegt unter "leon-theme"
+   und gilt fuer alle seine Seiten - die lesen sie im <head>. */
+(function(){
+  var b = document.getElementById("modusBtn"), h = document.documentElement;
+  function zeigen(){ var d = h.getAttribute("data-theme") === "dark";
+    b.textContent = d ? "☀️ Hell" : "🌙 Dunkel"; b.setAttribute("aria-pressed", d ? "true" : "false"); }
+  b.addEventListener("click", function(){
+    var d = h.getAttribute("data-theme") !== "dark";
+    if (d) h.setAttribute("data-theme", "dark"); else h.removeAttribute("data-theme");
+    try { localStorage.setItem("leon-theme", d ? "dark" : "light"); } catch (e) {}
+    zeigen();
+  });
+  zeigen();
+})();
+</script>
 </body>
 </html>
