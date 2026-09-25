@@ -102,6 +102,11 @@
   .schau .fachwahl{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
   .schau .fachwahl .fach.an{background:#fff;color:#161a2b;font-weight:700}
   .schau .fachwahl.verborgen{display:none}
+  /* Waehrend Paul ein Fach waehlt, tritt das Foto zurueck - sonst passen
+     die sieben Faecher auf dem iPhone nicht mehr ins Bild. Und die Ansicht
+     darf rollen, falls es trotzdem eng wird. */
+  .schau{overflow-y:auto}
+  .schau.fachoffen img{display:none}
   html[data-theme="dark"] .blatt img,html[data-theme="dark"] .blatt .platzhalter{background:#262a38}
 </style>
 </head>
@@ -304,6 +309,7 @@
        geht damit zwangslaeufig ueber "aus der Ansicht nehmen". */
     zeigeWeg(offen.sichtbar === false);
     $("schau-fachwahl").classList.add("verborgen");
+    $("schau").classList.remove("fachoffen");
     bildHolen(offen.id, offenSeite).then(function(url){
       if (url) $("schau-bild").src = url;
     });
@@ -371,7 +377,7 @@
   $("schau-fach").addEventListener("click", function(){
     if (!offen) return;
     var box = $("schau-fachwahl");
-    if (!box.classList.contains("verborgen")){ box.classList.add("verborgen"); return; }
+    if (!box.classList.contains("verborgen")){ box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return; }
     box.innerHTML = "";
     Object.keys(KURZ).filter(function(k){ return k; }).forEach(function(k){
       var b = document.createElement("button");
@@ -379,7 +385,7 @@
       b.setAttribute("data-fach", k);
       b.textContent = ZEICHEN[k] + " " + KURZ[k];
       b.addEventListener("click", function(){
-        if (!offen || (offen.fach||"") === k){ box.classList.add("verborgen"); return; }
+        if (!offen || (offen.fach||"") === k){ box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return; }
         b.disabled = true;
         fetch("/api/schulstoff", {
           method:"PATCH", credentials:"same-origin",
@@ -395,6 +401,7 @@
       box.appendChild(b);
     });
     box.classList.remove("verborgen");
+    $("schau").classList.add("fachoffen");
   });
 
   $("schau-zu").addEventListener("click", function(){ $("schau").classList.remove("auf"); offen = null; });
