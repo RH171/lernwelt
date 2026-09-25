@@ -448,6 +448,15 @@
             <button class="fach" type="button" id="datum-nein"></button>
           </div>
         </div>
+        <!-- Fach-Rueckfrage (Denny, 25.09.2026: "aus Versehen Mathe an und
+             dabei war es HSU"). Nie still getauscht - Paul entscheidet. -->
+        <div class="datumfrage verborgen" id="fachrueck">
+          <div id="fachrueck-text"></div>
+          <div class="datumfrage-knoepfe">
+            <button class="fach" type="button" id="fach-ja"></button>
+            <button class="fach" type="button" id="fach-nein"></button>
+          </div>
+        </div>
         <div class="doppelt verborgen" id="doppelt">
           <div id="doppelt-text"></div>
           <button class="fach" type="button" id="doppelt-weg">🗑️ Das neue wieder wegnehmen</button>
@@ -1445,6 +1454,18 @@
       } else {
         $("datumfrage").classList.add("verborgen");
       }
+      var ff = a.j.fachFrage;
+      if (ff){
+        $("fachrueck-text").textContent = "Dein Blatt sieht nach " + fachKurz(ff.gelesen) +
+          " aus, du hast " + fachKurz(ff.gewaehlt) + " gewählt. Welches stimmt?";
+        $("fach-ja").textContent = fachKurz(ff.gelesen);
+        $("fach-nein").textContent = fachKurz(ff.gewaehlt);
+        $("fachrueck").classList.remove("verborgen");
+        $("fachrueck").setAttribute("data-id", a.j.id);
+        $("fach-ja").parentNode.style.display = "";
+      } else {
+        $("fachrueck").classList.add("verborgen");
+      }
 
       /* Hat der Server Seiten abgeschnitten, erfaehrt Paul es - ein stiller
          Verlust waere das Gegenteil dessen, wofuer das Heft gebaut ist.
@@ -1531,6 +1552,32 @@
       $("datumfrage-text").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
     });
   }
+  var FACH_KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
+                   rel:"Religion/Ethik", musik:"Musik", anderes:"Etwas anderes"};
+  function fachKurz(k){ return FACH_KURZ[k] || k; }
+  function fachAntwort(was){
+    var id = $("fachrueck").getAttribute("data-id");
+    if (!id) return;
+    $("fach-ja").disabled = true; $("fach-nein").disabled = true;
+    fetch("/api/schulstoff", {
+      method:"PATCH", credentials:"same-origin",
+      headers:{"content-type":"application/json"},
+      body: JSON.stringify({kind:"paul", id:id, was:was})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      $("fach-ja").disabled = false; $("fach-nein").disabled = false;
+      if (!j || !j.ok){
+        $("fachrueck-text").textContent = "Das hat nicht geklappt – probier es nochmal.";
+        return;
+      }
+      $("fachrueck-text").textContent = "✅ Alles klar – dein Blatt liegt bei " + fachKurz(j.fach) + ".";
+      $("fach-ja").parentNode.style.display = "none";
+    }).catch(function(){
+      $("fach-ja").disabled = false; $("fach-nein").disabled = false;
+      $("fachrueck-text").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
+    });
+  }
+  $("fach-ja").addEventListener("click", function(){ fachAntwort("fach-bestaetigen"); });
+  $("fach-nein").addEventListener("click", function(){ fachAntwort("fach-ablehnen"); });
   $("datum-ja").addEventListener("click", function(){ datumAntwort("datum-bestaetigen"); });
   $("datum-nein").addEventListener("click", function(){ datumAntwort("datum-ablehnen"); });
 
