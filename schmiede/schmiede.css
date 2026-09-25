@@ -188,3 +188,35 @@
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
   /* Vorlese-Knopf in der Fragekarte (Leon) */
   #fragekarte #vorleseknopf{position:static;float:right;margin:-4px -6px 4px 10px;box-shadow:0 2px 0 rgba(0,0,0,.12);background:#eef2ff}
+
+  /* Dunkel (25.09.2026). Greift nur, wenn die Seite data-theme="dark" setzt -
+     das tut bisher nur Pauls Schmiede (Dennys Wahl: erst Paul fertig bauen,
+     dann uebertragen). Die Farben selbst kommen aus /thema.css.
+     Die Werkbank wird dunkel. Alles, was UEBER der Spielwelt liegt (Tafeln,
+     Fragekarte, Pillen, Knoepfe), bleibt hell: Es liegt auf einem bunten
+     Bild und ist darauf gerechnet. Deshalb bekommen diese Teile ihre hellen
+     Werte zurueck - sonst stuende helle Schrift auf weisser Tafel. */
+  html[data-theme="dark"] body{
+    background:radial-gradient(1100px 560px at 82% -12%,rgba(165,180,255,.10) 0,rgba(165,180,255,0) 55%), var(--bg);
+  }
+  html[data-theme="dark"] .feld,
+  html[data-theme="dark"] .fach,
+  html[data-theme="dark"] textarea,
+  html[data-theme="dark"] input{background:var(--feld,#1b1e27);color:var(--ink)}
+  html[data-theme="dark"] .feld:hover{background:#232741}
+  html[data-theme="dark"] .feld.an{background:#252a48;box-shadow:0 0 0 3px rgba(165,180,255,.22)}
+  html[data-theme="dark"] .fach.an,
+  html[data-theme="dark"] .los{color:var(--akzent-auf,#fff)}
+  html[data-theme="dark"] .hinweis.fehler{background:#2e1a18;color:#ff8f85;border-color:#5a2b26}
+  html[data-theme="dark"] .zettel{background:#1e2233;border-color:#3a3f66}
+  html[data-theme="dark"] .rekord{color:var(--muted)}
+  html[data-theme="dark"] .tafel,
+  html[data-theme="dark"] .pille,
+  html[data-theme="dark"] #fragekarte,
+  html[data-theme="dark"] .eckknopf,
+  html[data-theme="dark"] .knopf{
+    --ink:#1b1c22; --muted:#71768a; --line:#e4e7f0; --card:#fff;
+    --paul:#4f46e5; --gut:#12b76a; --schlecht:#f04438; --akzent-auf:#fff;
+    color-scheme:light;
+  }
+  html[data-theme="dark"] .tafel input{background:#fbfcff;color:#1b1c22}
