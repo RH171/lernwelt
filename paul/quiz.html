@@ -201,10 +201,10 @@ window.QUIZ = {
           var w = document.createElement("span"); w.className = "was";
           var t = document.createElement("b"); t.textContent = x.titel || "Dein Blatt";
           var u = document.createElement("span");
-          u.textContent = [FACH[x.fach] || "", datum(x.datum), x.karten.length + " Karten"].filter(Boolean).join(" · ");
-          w.appendChild(t); w.appendChild(u);
-          if (faelligText[x.id]) { var wt = document.createElement("span"); wt.className = "wartet"; wt.textContent = faelligText[x.id]; w.appendChild(wt); }
-          b.appendChild(w);
+          /* Wie im Motor: als Text im Untertitel, kein eigenes Element. */
+          u.textContent = [FACH[x.fach] || "", datum(x.datum), x.karten.length + " Karten",
+                           faelligText[x.id] || ""].filter(Boolean).join(" · ");
+          w.appendChild(t); w.appendChild(u); b.appendChild(w);
           b.addEventListener("click", function(){ starten(x); });
           box.appendChild(b);
         });
