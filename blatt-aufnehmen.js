@@ -177,6 +177,12 @@
       '<div class="melden verborgen lwb-datumfrage"><div class="lwb-datumtext"></div>' +
         '<div class="reihe"><button type="button" class="chip lwb-datum-ja"></button>' +
         '<button type="button" class="chip lwb-datum-nein"></button></div></div>' +
+      /* Die Fach-Rueckfrage (Denny, 25.09.2026: "aus Versehen Mathe an und
+         dabei war es HSU"). Das Modell liest das Fach mit; weicht es ab,
+         entscheidet Paul. Nie still getauscht. */
+      '<div class="melden verborgen lwb-fachfrage"><div class="lwb-fachtext"></div>' +
+        '<div class="reihe"><button type="button" class="chip lwb-fach-ja"></button>' +
+        '<button type="button" class="chip lwb-fach-nein"></button></div></div>' +
       '<button class="los lwb-los" disabled>Erst dein Blatt fotografieren</button>';
 
     var $ = function (k) { return kasten.querySelector(k); };
@@ -371,6 +377,48 @@
       nein.onclick = function () { antwort("datum-ablehnen"); };
     }
 
+    /* Das Fach auf dem Blatt passt nicht zu Pauls Wahl: fragen, nie tauschen. */
+    function fachName(k) {
+      var f = faecher.filter(function (x) { return x.schluessel === k; })[0];
+      return f ? f.text.replace(/^\S+\s+/, "") : k;
+    }
+    function fachFrage(j, id) {
+      var box = $(".lwb-fachfrage");
+      var f = j && j.fachFrage;
+      if (!box) return;
+      if (!f || !id) { box.className = "melden verborgen lwb-fachfrage"; return; }
+      $(".lwb-fachtext").textContent = "Dein Blatt sieht nach " + fachName(f.gelesen) +
+        " aus, du hast " + fachName(f.gewaehlt) + " gewählt. Welches stimmt?";
+      var ja = $(".lwb-fach-ja"), nein = $(".lwb-fach-nein");
+      ja.textContent = fachName(f.gelesen);
+      nein.textContent = fachName(f.gewaehlt);
+      box.className = "melden lwb-fachfrage";
+      ja.parentNode.style.display = "";
+      function antwort(was) {
+        ja.disabled = true; nein.disabled = true;
+        fetch("/api/schulstoff", {
+          method: "PATCH", credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: kind, id: id, was: was })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (k) {
+          ja.disabled = false; nein.disabled = false;
+          if (!k || !k.ok) { $(".lwb-fachtext").textContent = "Das hat nicht geklappt – probier es nochmal."; return; }
+          box.className = "melden gut lwb-fachfrage";
+          $(".lwb-fachtext").textContent = "✅ Alles klar – dein Blatt liegt bei " + fachName(k.fach) + ".";
+          ja.parentNode.style.display = "none";
+          if (opt.abgelegt) { try { opt.abgelegt(k); } catch (e) {} }
+        })
+        .catch(function () {
+          ja.disabled = false; nein.disabled = false;
+          $(".lwb-fachtext").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
+        });
+      }
+      ja.onclick = function () { antwort("fach-bestaetigen"); };
+      nein.onclick = function () { antwort("fach-ablehnen"); };
+    }
+
     function lesenAnstossen(abgelegt) {
       fetch("/api/schulstoff?lesen=1", {
         method: "POST", credentials: "same-origin",
@@ -388,6 +436,7 @@
         melde("✅ Ist in deiner Ablage – " + deutsch(j.datum) +
               (j.titel ? ", „" + j.titel + "“" : "") + "." + datumSatz(j), "gut");
         datumFrage(j, abgelegt.id);
+        fachFrage(j, abgelegt.id);
         /* Alles, was Schritt 2 herausgefunden hat, geht an denselben
            Empfaenger wie beim einstufigen Weg - Fundkarten, Datumsfrage,
            Zwilling. Die id kommt aus Schritt 1. */
@@ -450,6 +499,7 @@
           if (a.j.datumGeaendert) melde("✅ Ist in deiner Ablage – " + deutsch(a.j.datum) +
             (a.j.titel ? ", „" + a.j.titel + "“" : "") + "." + datumSatz(a.j), "gut");
           datumFrage(a.j, a.j.id);
+          fachFrage(a.j, a.j.id);
           if (opt.fertig) { try { opt.fertig(a.j); } catch (e) {} }
           return;
         }

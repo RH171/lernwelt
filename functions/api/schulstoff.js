@@ -27,7 +27,7 @@ import {
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
   inhaltSetzen,
   HAND,
-  fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen,
+  fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen,
   faecherImHeft, blaetterImFach, schuljahrStart,
 } from "./_schulstoff.js";
 
@@ -189,6 +189,7 @@ export async function onRequestPost(context) {
     ...(weichtAb ? { datumGeaendert: { von: e.datum, auf: vomBlattGelesen } } : {}),
     /* Mehr als 14 Tage Abstand: Das Kind bestätigt es selbst. */
     ...(nachgefragt ? { datumFrage: nachgefragt } : {}),
+    ...(a.fachFrage ? { fachFrage: a.fachFrage } : {}),
     /* Die Fundkarten fuer den Bildschirm direkt danach (Denny, 23.09.2026).
        Sie gehen in DIESER Antwort mit - ein zweiter Aufruf waere eine zweite
        Wartezeit, und genau die soll hier nicht entstehen. */
@@ -277,6 +278,7 @@ async function blattNachlesen(context) {
     ...(a.titel ? { titel: a.titel } : {}),
     ...(a.weichtAb ? { datumGeaendert: { von: x.datum, auf: a.vomBlattGelesen } } : {}),
     ...(a.nachgefragt ? { datumFrage: a.nachgefragt } : {}),
+    ...(a.fachFrage ? { fachFrage: a.fachFrage } : {}),
     karten: a.karten,
     ...(a.kartenWarum ? { kartenWarum: a.kartenWarum } : {}),
     ...(a.karten.length ? { genauer: a.genauer } : {}),
@@ -297,7 +299,7 @@ async function blattNachlesen(context) {
  * vor einem leeren Feld ohne Hinweis steht. */
 async function blattAuswerten(env, kind, eintrag, seiten, heute) {
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
-  let karten = [], kartenWarum = "", genauer = 0;
+  let karten = [], kartenWarum = "", genauer = 0, fachFrage = null;
   if (env.ANTHROPIC_API_KEY) {
     try {
       /* ALLE Seiten auslesen, nicht nur die erste.
@@ -359,6 +361,18 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       }
       if (weichtAb) await datumSetzen(env, kind, eintrag.id, vomBlattGelesen, eintrag.datum);
 
+      /* Das Fach: NIE still tauschen, immer fragen (Denny, 25.09.2026 -
+         "aus Versehen Mathe an und dabei war es HSU"). Anders als beim Datum
+         gibt es hier keinen Nah-dran-Fall: Ein Fach ist richtig oder falsch.
+         Der Vorschlag wird am Eintrag vermerkt, damit nur genau dieser
+         bestaetigt werden kann. Gelesen wird Seite 1 - dort steht die
+         Ueberschrift. */
+      const fachGelesen = gelesen.fach || "";
+      if (fachGelesen && eintrag.fach && fachGelesen !== eintrag.fach && eintrag.fach !== "anderes") {
+        const rf = await fachSetzen(env, kind, eintrag.id, { vorschlag: fachGelesen });
+        if (rf.ok) fachFrage = { gelesen: fachGelesen, gewaehlt: eintrag.fach };
+      }
+
       /* Was auf dem Blatt steht, gehoert an den Eintrag - sonst kann das
          Lernquiz spaeter nur aus dem Titel raten (siehe inhaltSetzen). Das
          laeuft unabhaengig vom Datums-Urteil: Ein Blatt mit unklarem Datum
@@ -375,7 +389,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       catch (e2) {}
     }
   }
-  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer };
+  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage };
 }
 /* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
  * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der
@@ -793,6 +807,19 @@ export function inhalteZusammen(alle) {
   return hand.concat(rest).slice(0, INHALT_MAX);
 }
 
+/* Die FACH-Zeile des Modells auf einen Schluessel aus FAECHER bringen.
+ * Alles, was nicht eindeutig passt ("unklar", Fliesstext, ein Fach, das es
+ * hier nicht gibt), wird zu "" - dann fragt niemand nach. Lieber keine
+ * Rueckfrage als eine falsche: Paul soll seiner eigenen Wahl nicht grundlos
+ * misstrauen lernen. Exportiert fuer pruefe-schulstoff.mjs. */
+export function fachAusText(s) {
+  const w = String(s || "").toLowerCase().trim().replace(/[^a-zäöüß]/g, " ").trim().split(/\s+/)[0] || "";
+  const ALIAS = { mathematik: "mathe", sachunterricht: "hsu", heimat: "hsu",
+                  religion: "rel", ethik: "rel", english: "englisch" };
+  const k = ALIAS[w] || w;
+  return (FAECHER[k] && k !== "anderes") ? k : "";
+}
+
 async function blattLesen(env, seite) {
   const komma = String(seite || "").indexOf(",");
   if (komma < 0) throw new Error("kein Bild dabei");
@@ -839,6 +866,10 @@ async function blattLesen(env, seite) {
               "Nur ein Datum, das jemand VON HAND eingetragen hat - ein gedrucktes " +
               "Beispieldatum auf einer Vorlage (etwa \"So schreibe ich in mein Heft\") " +
               "zaehlt nicht. Steht keines da: keins\n" +
+              "FACH: welches Schulfach das ist - genau eines dieser Woerter: mathe, " +
+              "deutsch, hsu (Heimat- und Sachunterricht: Natur, Technik, Ort, Geschichte), " +
+              "englisch, rel (Religion oder Ethik), musik, anderes. Bist du nicht " +
+              "sicher: unklar\n" +
               "SORTE: eine von drei Angaben, was fuer ein Blatt das ist:\n" +
               "* lernziele - es listet auf, was man koennen muss (\"Das musst du " +
               "koennen\", \"Ich kann ...\", Kaestchen zum Abhaken vor Ich-Saetzen).\n" +
@@ -895,7 +926,7 @@ async function blattLesen(env, seite) {
               "vorkommen.\n" +
               "* Frag so, dass die Antwort ein Treffer ist, nie ein Ausschluss: " +
               "\"Welches Wort ist ein Nomen?\" statt \"Welches ist kein Nomen?\".\n" +
-              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\nSORTE: normal\n" +
+              "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\nFACH: hsu\nSORTE: normal\n" +
               "INHALT:\n- ! Regnitz\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
               "KARTEN:\n" +
               "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000\n" +
@@ -1008,6 +1039,7 @@ async function blattLesen(env, seite) {
     // etwas Erfundenes.
     titel: (!titel || /^unklar$/i.test(titel)) ? "" : titel,
     datum: (!datumRoh || /^(keins|kein|keines|unklar)$/i.test(datumRoh)) ? "" : datumRoh,
+    fach: fachAusText(zeile("FACH")),
   };
 }
 
@@ -1243,6 +1275,28 @@ export async function onRequestPatch(context) {
     if (!r2.ok) return json(503, { ok: false, fehler: "Das hat nicht geklappt." });
     await vorschlagSetzen(env, kind, x.id, "");
     return json(200, { ok: true, datum: x.datumVorschlag });
+  }
+
+  /* Das Fach (Denny, 25.09.2026): Rueckfrage beantworten ODER selbst
+     umstellen. Beides darf das Kind - ein falsch angetipptes Fach ist ein
+     Versehen, und es ist sein Blatt. Bestaetigt werden kann nur der
+     Vorschlag, den der Server selbst vermerkt hat. */
+  if (String(d.was || "") === "fach-bestaetigen" || String(d.was || "") === "fach-ablehnen") {
+    const bestand = await stoffLesen(env, kind, 14);
+    if (!bestand.ok) return json(503, { ok: false, fehler: bestand.fehler });
+    const x = bestand.eintraege.filter((y) => y.id === String(d.id || ""))[0];
+    if (!x) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+    if (!x.fachVorschlag) return json(400, { ok: false, fehler: "Dazu gibt es keine offene Frage." });
+    const rf = String(d.was) === "fach-ablehnen"
+      ? await fachSetzen(env, kind, x.id, { vorschlag: "" })
+      : await fachSetzen(env, kind, x.id, { fach: x.fachVorschlag, vorschlag: "" });
+    if (!rf.ok) return json(503, { ok: false, fehler: rf.fehler });
+    return json(200, { ok: true, fach: rf.auf });
+  }
+  if (String(d.was || "") === "fach") {
+    const rf = await fachSetzen(env, kind, String(d.id || ""), { fach: String(d.fach || ""), vorschlag: "" });
+    if (!rf.ok) return json(rf.fehler === "Das finde ich nicht mehr." ? 404 : (/kenne/.test(rf.fehler) ? 400 : 503), { ok: false, fehler: rf.fehler });
+    return json(200, { ok: true, von: rf.von, auf: rf.auf });
   }
 
   /* Die Art nachtragen - fuer Blaetter aus der Zeit vor der Unterscheidung.

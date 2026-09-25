@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="/thema.css?v=28d4b3f1">
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="stundenplan.js?v=1b197a6e"></script>
-<script src="/blatt-aufnehmen.js?v=5c958a67"></script>
+<script src="/blatt-aufnehmen.js?v=eaca23f5"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#6b7280; --line:#e4e7f0;
@@ -97,6 +97,10 @@
      irreführend" - ein roter Balken sieht aus wie ein Fehler, dabei ist es
      eine Rückfrage. Bernstein warnt, ohne zu erschrecken. */
   .schau .fach.gefahr.sicher{background:#b45309;font-weight:700;color:#fff}
+  /* Fach umstellen (Denny, 25.09.2026): die Faecher als eigene Reihe unter
+     den Knoepfen, das aktuelle hervorgehoben. */
+  .schau .fachwahl{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .schau .fachwahl .fach.an{background:#fff;color:#161a2b;font-weight:700}
   html[data-theme="dark"] .blatt img,html[data-theme="dark"] .blatt .platzhalter{background:#262a38}
 </style>
 </head>
@@ -140,7 +144,11 @@
          wirklich löschen möchte, weil du darauf am Ende gegebenenfalls
          prüfungs-vorbereitende Fragen erarbeiten sollst." -->
     <button class="fach gefahr verborgen" type="button" id="schau-weg">🗑️ Ganz aus dem Heft nehmen</button>
+    <!-- Falsches Fach angetippt? Paul stellt es hier selbst um (Denny,
+         25.09.2026: "aus Versehen Mathe an und dabei war es HSU"). -->
+    <button class="fach" type="button" id="schau-fach">📚 Anderes Fach</button>
   </div>
+  <div class="fachwahl verborgen" id="schau-fachwahl"></div>
 </div>
 
 <script>
@@ -294,6 +302,7 @@
        also nach einem bewussten ersten Schritt. Wer ein Blatt loeschen will,
        geht damit zwangslaeufig ueber "aus der Ansicht nehmen". */
     zeigeWeg(offen.sichtbar === false);
+    $("schau-fachwahl").classList.add("verborgen");
     bildHolen(offen.id, offenSeite).then(function(url){
       if (url) $("schau-bild").src = url;
     });
@@ -353,6 +362,38 @@
       k.disabled = false; wegGefragt = false;
       k.textContent = "Ich komme gerade nicht dran – nochmal?";
     });
+  });
+
+  /* Fach umstellen: ein Tipp auf "Anderes Fach" klappt die Reihe auf, ein
+     Tipp auf ein Fach stellt um. Pauls erste Wahl bleibt am Eintrag
+     (fachGewaehlt), das Bild wird nicht angefasst. */
+  $("schau-fach").addEventListener("click", function(){
+    if (!offen) return;
+    var box = $("schau-fachwahl");
+    if (!box.classList.contains("verborgen")){ box.classList.add("verborgen"); return; }
+    box.innerHTML = "";
+    Object.keys(KURZ).filter(function(k){ return k; }).forEach(function(k){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "fach" + ((offen.fach||"") === k ? " an" : "");
+      b.setAttribute("data-fach", k);
+      b.textContent = ZEICHEN[k] + " " + KURZ[k];
+      b.addEventListener("click", function(){
+        if (!offen || (offen.fach||"") === k){ box.classList.add("verborgen"); return; }
+        b.disabled = true;
+        fetch("/api/schulstoff", {
+          method:"PATCH", credentials:"same-origin",
+          headers:{"content-type":"application/json"},
+          body: JSON.stringify({kind:"paul", id: offen.id, was:"fach", fach: k})
+        }).then(function(r){ return r.json(); }).then(function(j){
+          b.disabled = false;
+          if (!j || !j.ok){ b.textContent = "Nochmal?"; return; }
+          offen.fach = k; delete offen.fachVorschlag;
+          seiteZeigen(); filterMalen(); listeMalen();
+        }).catch(function(){ b.disabled = false; b.textContent = "Nochmal?"; });
+      });
+      box.appendChild(b);
+    });
+    box.classList.remove("verborgen");
   });
 
   $("schau-zu").addEventListener("click", function(){ $("schau").classList.remove("auf"); offen = null; });
