@@ -127,6 +127,40 @@
   .quelle a{color:var(--muted)}
   .verborgen{display:none}
 
+  /* Der Pruefkasten: Helenas Antworten eintragen und vergleichen lassen.
+     Aus ihrer Meldung 6ahcrbde4e - "weil ich das selber alles mach,
+     verschwinde ich richtig viel zeit". */
+  .aufg{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+  .aufg:first-child{border-top:none;padding-top:0;margin-top:0}
+  .aufg h3{font:800 15.5px/1.3 var(--rund);margin:0 0 2px;display:flex;gap:8px;
+    align-items:baseline;flex-wrap:wrap}
+  .aufg h3 small{font:600 12.5px/1 var(--font);color:var(--muted)}
+  .auftrag{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 9px}
+  .luecke{background:var(--surface2);border:2px solid transparent;border-radius:14px;
+    padding:10px 11px;margin-bottom:8px}
+  .luecke .vor{display:block;font-size:14.5px;line-height:1.5;margin-bottom:7px}
+  .luecke input[type=text]{width:100%;min-height:48px;border-radius:12px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+    padding:10px 12px;font:500 16px/1.4 var(--font)}
+  .luecke input[type=text]:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .wahlen{display:flex;gap:7px;flex-wrap:wrap}
+  .wahlen button{flex:1 1 auto;min-height:48px;min-width:64px;border-radius:12px;cursor:pointer;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+    font:700 15px/1.3 var(--rund);padding:9px 11px;text-align:left}
+  .wahlen.schmal button{flex:0 0 auto;min-width:64px;text-align:center}
+  .wahlen button[aria-pressed=true]{border-color:var(--brand);background:rgba(167,139,250,.18)}
+  .luecke.gut{border-color:rgba(73,214,189,.75)}
+  .luecke.offen{border-color:rgba(255,206,92,.7)}
+  .rueck{margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--ink)}
+  .rueck b{color:var(--gut)}
+  .rueck .loes{display:block;color:var(--warn);margin-top:3px}
+  .rueck .loes i{color:var(--muted);font-style:normal}
+  .trotzdem{margin-top:8px;min-height:44px;width:100%;border-radius:11px;cursor:pointer;
+    border:1px dashed var(--line);background:transparent;color:var(--muted);
+    font:600 13.5px/1.3 var(--font);padding:8px 10px}
+  .ergebnis{margin:12px 0 0;font:800 16px/1.45 var(--rund);color:var(--ink)}
+  .ergebnis span{display:block;font:500 14.5px/1.55 var(--font);color:var(--muted);margin-top:4px}
+
   /* Handy mit offener Tastatur gibt es hier nicht - aber flach wird der
      Schirm auch quer. Dann tritt die Erklaerung zurueck. */
   @media (max-height:520px){
@@ -188,6 +222,15 @@
     <a class="knopf" id="aufgaben" href="#" target="_blank" rel="noopener">📄 Aufgabenblatt öffnen</a>
     <button type="button" class="knopf leise" id="loesung-zeigen">Ich bin fertig – Lösungen zeigen</button>
     <a class="knopf still verborgen" id="loesungen" href="#" target="_blank" rel="noopener">✅ Lösungen öffnen</a>
+  </div>
+
+  <div class="karte" id="pruefkasten">
+    <h2>✍️ Deine Antworten</h2>
+    <p class="unter knapp-weg" style="margin-top:0" id="pruef-oben">Such dir oben ein Jahr aus.</p>
+    <div id="pruef-liste"></div>
+    <button type="button" class="knopf verborgen" id="pruef-los">Vergleich mit der Lösung</button>
+    <p class="ergebnis verborgen" id="pruef-ergebnis" aria-live="polite"></p>
+    <button type="button" class="knopf leise verborgen" id="pruef-neu">Noch einmal von vorn</button>
   </div>
 
   <div class="karte knapp-weg">
@@ -479,6 +522,7 @@
   if (start) waehlen(start);
 })();
 </script>
+<script src="bet-loesungen.js?v=b73da418"></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
 </body>
