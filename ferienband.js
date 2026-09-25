@@ -58,7 +58,10 @@
     "#ferienband .fbtext b{font-size:15.5px;line-height:1.25}" +
     "#ferienband .fbtext span{font-size:13px;color:var(--muted,#71768a)}" +
     "#ferienband .fbtage{font-family:var(--rund,var(--round,inherit));font-weight:800;" +
-      "font-size:15px;line-height:1.2;color:var(--ok,#10b981);white-space:nowrap;text-align:right}" +
+      "font-size:15px;line-height:1.2;color:var(--ok,#0b7a47);white-space:nowrap;text-align:right}" +
+    /* 25.09.2026: #10b981 hatte auf weisser Karte nur 2,5:1. Im Dunklen
+       (Pauls Wahl, data-theme) braucht es wieder ein helles Gruen. */
+    "html[data-theme=\"dark\"] #ferienband .fbtage{color:var(--ok,#6ee7a8)}" +
     "#ferienband.gross .fbtext b{font-size:18px}" +
     "#ferienband.gross .fbtext span{font-size:15px}" +
     "#ferienband.gross .fbtage{font-size:17px}" +
