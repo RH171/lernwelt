@@ -28,8 +28,17 @@
   "use strict";
   var el = document.currentScript;
   var sel = (el && el.getAttribute("data-flaeche")) || "";
-  var dunkel = true;
-  try { dunkel = localStorage.getItem("hub-theme") !== "light"; } catch (e) {}
+  /* Seit 25.09.2026 auch fuer Leon: eigener Schluessel je Kind (auf einem
+     geteilten Geraet soll Pauls Wahl nicht Leons Seiten umfaerben) und ein
+     eigener Standard - Leons Welt war immer hell, Pauls immer dunkel.
+       data-schluessel="leon-theme" data-standard="light" */
+  var schluessel = (el && el.getAttribute("data-schluessel")) || "hub-theme";
+  var standard = (el && el.getAttribute("data-standard")) || "dark";
+  var dunkel = standard !== "light";
+  try {
+    var w = localStorage.getItem(schluessel);
+    if (w === "light" || w === "dark") dunkel = (w === "dark");
+  } catch (e) {}
   if (!dunkel) return;
 
   var html = document.documentElement;
