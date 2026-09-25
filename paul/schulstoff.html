@@ -153,6 +153,9 @@
     <!-- Falsches Fach angetippt? Paul stellt es hier selbst um (Denny,
          25.09.2026: "aus Versehen Mathe an und dabei war es HSU"). -->
     <button class="fach" type="button" id="schau-fach">📚 Anderes Fach</button>
+    <!-- Heft oder Uebung umstellen, ein Tipp (Denny, 25.09.2026: "ich hätte
+         gerne die Möglichkeit, dass Paul das selber noch umswitchen kann"). -->
+    <button class="fach" type="button" id="schau-art">📓 Ist ein Hefteintrag</button>
   </div>
   <div class="fachwahl verborgen" id="schau-fachwahl"></div>
 </div>
@@ -308,6 +311,9 @@
        also nach einem bewussten ersten Schritt. Wer ein Blatt loeschen will,
        geht damit zwangslaeufig ueber "aus der Ansicht nehmen". */
     zeigeWeg(offen.sichtbar === false);
+    $("schau-art").textContent = offen.art === "heft"
+      ? "📄 Ist ein Übungsblatt" : "📓 Ist ein Hefteintrag";
+    $("schau-art").disabled = false;
     $("schau-fachwahl").classList.add("verborgen");
     $("schau").classList.remove("fachoffen");
     bildHolen(offen.id, offenSeite).then(function(url){
@@ -402,6 +408,24 @@
     });
     box.classList.remove("verborgen");
     $("schau").classList.add("fachoffen");
+  });
+
+  /* Heft <-> Uebung: ein Tipp stellt auf die andere Art um. Ein Blatt ohne
+     Angabe (vor dem 23.09.2026) wird damit zum Hefteintrag. */
+  $("schau-art").addEventListener("click", function(){
+    if (!offen) return;
+    var k = $("schau-art"), ziel = offen.art === "heft" ? "uebung" : "heft";
+    k.disabled = true;
+    fetch("/api/schulstoff", {
+      method:"PATCH", credentials:"same-origin",
+      headers:{"content-type":"application/json"},
+      body: JSON.stringify({kind:"paul", id: offen.id, was:"art", art: ziel})
+    }).then(function(r){ return r.json(); }).then(function(j){
+      k.disabled = false;
+      if (!j || !j.ok){ k.textContent = "Nochmal?"; return; }
+      offen.art = ziel;
+      seiteZeigen(); listeMalen();
+    }).catch(function(){ k.disabled = false; k.textContent = "Nochmal?"; });
   });
 
   $("schau-zu").addEventListener("click", function(){ $("schau").classList.remove("auf"); offen = null; });

@@ -1372,13 +1372,12 @@ export async function onRequestPatch(context) {
     return json(200, { ok: true, von: rf.von, auf: rf.auf });
   }
 
-  /* Die Art nachtragen - fuer Blaetter aus der Zeit vor der Unterscheidung.
-     Wie beim Datum nur mit Eltern-Ausweis: Was das Kind auf "Wo stand das?"
-     geantwortet hat, entscheidet, ob daraus gefragt wird. */
+  /* Heft oder Uebung umstellen (Denny, 25.09.2026): Das darf das Kind
+     selbst, wie beim Fach - "ich hätte gerne die Möglichkeit, dass Paul das
+     selber noch umswitchen kann. Er kann ja auch noch mal das Fach wechseln."
+     Ein falsch angetipptes "Übungsblatt" ist ein Versehen, und es ist sein
+     Blatt. Vorher (23.09.2026) ging das nur mit Eltern-Code. */
   if (String(d.was || "") === "art") {
-    if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) {
-      return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });
-    }
     const r3 = await artSetzen(env, kind, String(d.id || ""), String(d.art || ""));
     if (!r3.ok) return json(r3.fehler === "Das finde ich nicht mehr." ? 404 : 400, { ok: false, fehler: r3.fehler });
     return json(200, { ok: true, von: r3.von, auf: r3.auf });
