@@ -464,6 +464,11 @@ const POSITION_MODELL = "claude-sonnet-5";
  * gutem Gefuehl. */
 const ZWEITER_BLICK = false;
 
+/* Technische Obergrenze fuer Fundkarten je Blatt - kein Lernziel. Ein Blatt
+ * hat hoechstens 14 Inhaltszeilen je Seite; mehr Karten als 20 hiesse, das
+ * Modell erfindet Stellen dazu. */
+const KARTEN_MAX = 20;
+
 /* EIN Blick aufs Bild - Titel und Datum zusammen.
  *
  * Denny am 22.09.2026: "Ich habe jetzt absichtlich ein falsches Datum
@@ -649,7 +654,11 @@ export function kartenLesen(roh, inhalt) {
       verworfen.push(k.stichwort + ": " + grund + " (Ablenker ersetzt)");
     }
     karten.push(fertig);
-    if (karten.length >= 8) break;
+    /* Die Zahl gibt das Blatt vor, nicht eine feste Grenze (Denny, 25.09.2026:
+       "Was gibt das Blatt an Fragen her?"). Bis dahin standen hier und im
+       Auftrag "hoechstens 8" - von mir gesetzt, ohne Beleg. KARTEN_MAX ist nur
+       noch ein Schutz gegen ein ausuferndes Modell, keine Lernvorgabe. */
+    if (karten.length >= KARTEN_MAX) break;
   }
   return { karten, verworfen };
 }
@@ -916,7 +925,10 @@ async function blattLesen(env, seite) {
               "sein: vertauschte Ziffern, ein anderes Jahrzehnt, ein aehnlicher Name. " +
               "Sie duerfen NICHT selbst auf dem Blatt stehen und nie eine andere " +
               "Schreibweise der richtigen Antwort sein.\n" +
-              "Hoechstens 8 Karten, nur fuer Stellen mit einem klaren kurzen Wert.\n" +
+              "So viele Karten, wie das Blatt hergibt: eine je Stelle mit einem klaren " +
+              "kurzen Wert, keine mehr und keine weniger. Auch aus einer Liste darf eine " +
+              "Karte werden, wenn die Frage genau eine Antwort hat (\"In welchem Land " +
+              "liegt Marmaris?\"), nie eine Frage nach der ganzen Liste.\n" +
               "* Karten nur zum LERNSTOFF. Keine Karte zu Name, Klasse, Datum, " +
               "Kuerzel oder Lob der Lehrkraft, Stempel, Seitenzahl, und keine zur " +
               "Lage auf dem Blatt (\"Welches Wort steht als erstes?\").\n" +
