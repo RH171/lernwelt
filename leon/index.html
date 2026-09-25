@@ -325,9 +325,18 @@
   }
   .verborgen{display:none !important}
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+  /* Halb-weisse Kaesten und Knoepfe mit var(--ink) als Flaeche: im Dunklen
+     waere das weiss auf fast weiss. */
+  html[data-theme="dark"] .merke,
+  html[data-theme="dark"] .diagnose{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}
+  html[data-theme="dark"] .weiter{color:#14151c}
   /* Hell/dunkel (25.09.2026) */
   header .modus{margin-left:auto;cursor:pointer;font:inherit;min-height:44px}
   html[data-theme="dark"] .anfass{background:linear-gradient(160deg,#12291f,#132536);border-color:#1f5137}
+  /* Leons Farbe bleibt im Dunklen gruen (thema.css setzt sonst Pauls Lila),
+     und Schrift auf dieser Flaeche wird dunkel. 25.09.2026 */
+  html[data-theme="dark"]{--leon:#4ade9b}
+  html[data-theme="dark"] .los{color:#10281f}
 </style>
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 </head>
