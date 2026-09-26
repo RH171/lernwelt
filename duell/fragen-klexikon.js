@@ -522,4 +522,14 @@ export const KLEXIKON = [
   [3, "natur", "💧", "Warum ist das Wasser der Ostsee weniger salzig als das der Nordsee?", ["Flüsse bringen Süßwasser", "Starker Regen fällt", "Gletscher schmelzen dort", "Wind mischt es"], "Flüsse wie die Oder liefern der Ostsee ständig frisches, salzarmes Süßwasser.", null, "Ostsee"],
   [3, "welt", "🏰", "Wovon stammt der Name der Stadt Mönchengladbach ab?", ["Von Mönchen", "Von einem Fluss", "Von einem König", "Von einem Wald"], "Mönche gründeten dort einst ein Kloster und richteten einen Markt ein.", null, "Mönchengladbach"],
   [4, "kurios", "🕵️", "Welches Instrument spielt der Detektiv Sherlock Holmes gern?", ["Geige", "Klavier", "Trompete", "Gitarre"], "Er raucht außerdem gern Pfeife und trägt eine karierte Jagdmütze.", null, "Sherlock Holmes"],
+
+  // Nachschub vom 26.09.2026
+  [1, "tiere", "🦓", "Welche Farbe hatte der Rücken vom Quagga?", ["Rötlich braun", "Schwarz-weiß", "Grau", "Golden"], "Das Quagga sah aus wie eine Mischung aus Pferd und Zebra.", null, "Quagga"],
+  [2, "tiere", "🦓", "Wo waren beim Quagga die Streifen?", ["Kopf und Schultern", "Ganzer Körper", "Nur Beine", "Gar nicht"], "Beim Quagga waren nur Kopf und Schultern gestreift, der Rest war einfarbig.", null, "Quagga"],
+  [1, "technik", "💧", "Was holt man aus einem Brunnen?", ["Wasser", "Sand", "Öl", "Luft"], "Ein Brunnen ist ein tiefes Loch, mit dem Menschen Wasser aus der Erde holen.", null, "Brunnen"],
+  [2, "koerper", "🩺", "Was ist das Gegenteil von Krankheit?", ["Gesundheit", "Müdigkeit", "Hunger", "Kälte"], "Wer nicht krank ist, nennt man gesund - das ist das Gegenteil von Krankheit.", null, "Krankheit"],
+  [2, "sport", "⛵", "Was treibt ein Segelboot an?", ["Der Wind", "Ein Motor", "Die Sonne", "Ein Ruderer"], "Ein Segelschiff nutzt die Kraft des Windes, um über das Wasser zu fahren.", null, "Segeln"],
+  [3, "musik", "🎵", "Was ist ein Lied?", ["Gedicht mit Melodie", "Bild mit Rahmen", "Tanz ohne Musik", "Brief ohne Worte"], "Ein Lied ist ein Gedicht, das man singen kann, weil es eine Melodie hat.", null, "Lied"],
+  [4, "wissen", "🔨", "Wer bekommt bei einer Auktion den Gegenstand?", ["Wer am meisten bietet", "Wer zuerst da ist", "Wer am wenigsten bietet", "Wer der Auktionator ist"], "Bei einer Auktion bekommt derjenige den Gegenstand, der am meisten Geld dafür bietet.", null, "Auktion"],
+  [4, "wissen", "🏰", "Was war der Limes im Römischen Reich?", ["Eine Grenze", "Ein Tempel", "Ein Marktplatz", "Ein Hafen"], "Der Limes trennte vor etwa 2000 Jahren das Römische Reich vom Land der Germanen.", null, "Limes"],
 ];
