@@ -532,4 +532,14 @@ export const KLEXIKON = [
   [3, "musik", "🎵", "Was ist ein Lied?", ["Gedicht mit Melodie", "Bild mit Rahmen", "Tanz ohne Musik", "Brief ohne Worte"], "Ein Lied ist ein Gedicht, das man singen kann, weil es eine Melodie hat.", null, "Lied"],
   [4, "wissen", "🔨", "Wer bekommt bei einer Auktion den Gegenstand?", ["Wer am meisten bietet", "Wer zuerst da ist", "Wer am wenigsten bietet", "Wer der Auktionator ist"], "Bei einer Auktion bekommt derjenige den Gegenstand, der am meisten Geld dafür bietet.", null, "Auktion"],
   [4, "wissen", "🏰", "Was war der Limes im Römischen Reich?", ["Eine Grenze", "Ein Tempel", "Ein Marktplatz", "Ein Hafen"], "Der Limes trennte vor etwa 2000 Jahren das Römische Reich vom Land der Germanen.", null, "Limes"],
+
+  // Nachschub vom 27.09.2026
+  [1, "tiere", "🐻", "Was fängt der Braunbär gerne aus dem Fluss?", ["Lachs", "Frosch", "Aal", "Schnecke"], "Braunbären warten oft lange am Wasser, bis ein Lachs vorbeischwimmt.", null, "Braunbär"],
+  [2, "tiere", "🐻", "Wie schwer ist ein Bären-Baby bei der Geburt?", ["Ein halbes Kilo", "Zwei Kilo", "Fünf Kilo", "Zehn Kilo"], "Ein Bärenbaby ist bei der Geburt kaum größer als ein Lineal.", null, "Braunbär"],
+  [3, "welt", "⛰️", "Zwischen welchen zwei Ländern liegen die Pyrenäen?", ["Frankreich und Spanien", "Deutschland und Frankreich", "Spanien und Italien", "Frankreich und Italien"], "Die Pyrenäen ziehen sich wie eine steinerne Mauer über 400 Kilometer.", null, "Pyrenäen"],
+  [2, "kurios", "🏔️", "Welches kleine Land liegt mitten in den Pyrenäen?", ["Andorra", "Monaco", "Luxemburg", "Liechtenstein"], "Andorra liegt so hoch in den Bergen, dass man es leicht übersehen könnte.", null, "Pyrenäen"],
+  [1, "natur", "🪨", "Wie nennt man kleine, runde Steine am Fluss?", ["Kieselsteine", "Sandkörner", "Felsbrocken", "Lavasteine"], "Manche Kieselsteine sind rund, weil das Wasser sie jahrelang glatt geschliffen hat.", null, "Gestein"],
+  [3, "wissen", "🌋", "Was wird aus heißer Lava, wenn sie abkühlt?", ["Gestein", "Wasser", "Sand", "Erde"], "Wenn Lava sehr schnell abkühlt, kann das Gestein fast hart wie Glas werden.", null, "Gestein"],
+  [2, "welt", "🌊", "Wie heißen die tiefen Meeresbuchten in Norwegen?", ["Fjorde", "Lagunen", "Grotten", "Deltas"], "Manche Fjorde sind so tief und schmal, dass große Schiffe hindurchfahren können.", null, "Norwegen"],
+  [3, "wissen", "🛢️", "Was holt Norwegen aus der Nordsee, um Geld zu verdienen?", ["Erdöl", "Gold", "Kohle", "Diamanten"], "Aus dem tiefen Meer wird Erdöl geholt, das man für viele Dinge braucht.", null, "Norwegen"],
 ];
