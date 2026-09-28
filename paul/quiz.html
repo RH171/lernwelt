@@ -25,7 +25,7 @@
      Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
-<link rel="stylesheet" href="/quiz/quiz.css?v=b767269e">
+<link rel="stylesheet" href="/quiz/quiz.css?v=0fcd677a">
 <style>
   :root{
     --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#5b6070; --line:#e4e7f0;
@@ -178,6 +178,25 @@ window.QUIZ = {
   /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
   var faellig = {}, faelligText = {}, fundStand = {}, heute = null;
+  /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
+     Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
+     wo keine Blattliste steht (mehrere oder alle Faecher). */
+  var suchMap = {}, suchListe = [], blattListeDa = false;
+  window.QUIZ_BLATT_EXTRA = function(b){
+    var x = suchMap[b.id];
+    if (!x) return null;
+    var k = document.createElement("button");
+    k.type = "button"; k.className = "qsuch";
+    k.setAttribute("data-such", b.id);
+    k.setAttribute("aria-label", "Such-Spiel zu " + (x.titel || "diesem Blatt"));
+    k.textContent = "🔎 Suchen";
+    k.addEventListener("click", function(ev){ ev.stopPropagation(); starten(x); });
+    return k;
+  };
+  function suchKarteZeigen(){
+    $("such-wahl").classList.toggle("verborgen", !suchListe.length || blattListeDa);
+  }
+  window.QUIZ_NACH_BLAETTERN = function(da){ blattListeDa = !!da; suchKarteZeigen(); };
   function merken(blattId, liste){
     fetch("/api/quiz", { method: "POST", credentials: "same-origin",
       headers: { "content-type": "application/json" },
@@ -209,6 +228,9 @@ window.QUIZ = {
         var liste = ((j && j.eintraege) || []).filter(function(x){
           return x && x.sichtbar !== false && Array.isArray(x.karten) && x.karten.length >= 3;
         }).sort(function(a, b){ return String(b.datum).localeCompare(String(a.datum)); });
+        suchListe = liste; suchMap = {};
+        liste.forEach(function(x){ suchMap[x.id] = x; });
+        if (window.QUIZ_BLAETTER_NEU) window.QUIZ_BLAETTER_NEU();
         var box = $("such-liste"); box.innerHTML = "";
         liste.forEach(function(x){
           var b = document.createElement("button");
@@ -230,7 +252,7 @@ window.QUIZ = {
           blattWahl = "";
           if (ziel) { $("such-wahl").classList.remove("verborgen"); heuteAnbieten((j && j.eintraege) || [], true); starten(ziel); return; }
         }
-        $("such-wahl").classList.toggle("verborgen", !liste.length);
+        suchKarteZeigen();
         heuteAnbieten((j && j.eintraege) || []);
       })
       .catch(function(){ /* ohne Liste kein Such-Spiel - das Quiz laeuft weiter */ });
@@ -283,7 +305,7 @@ window.QUIZ = {
   });
 })();
 </script>
-<script src="/quiz/motor.js?v=0a4a6ff4" defer></script>
+<script src="/quiz/motor.js?v=a3d94563" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
 </body>

@@ -115,7 +115,7 @@
     var kasten = $("q-blaetter");
     if (!kasten) return;
     var eins = stand.faecher.length === 1 ? stand.faecher[0] : "";
-    if (!eins) { kasten.classList.add("verborgen"); return; }
+    if (!eins) { kasten.classList.add("verborgen"); nachBlaettern(); return; }
 
     if (blattFach !== eins) {
       blattFach = eins; blaetter = []; stand.blaetter = [];
@@ -326,9 +326,65 @@
         schreibe(SPEICHER, stand);
         blaetterZeichnen();
       });
-      liste.appendChild(k);
+      /* Entwurf A (Denny, 28.09.2026): Hinter jedem Blatt steht direkt eine
+         eigene Aktion, bei Paul "🔎 Suchen". Die Seite liefert sie ueber
+         window.QUIZ_BLATT_EXTRA(b); ohne den Haken bleibt alles wie vorher
+         (Leon, Helena). Ein Knopf darf nicht IN einem Knopf stehen - deshalb
+         die Zeile als Huelle um beide. */
+      var extra = typeof window.QUIZ_BLATT_EXTRA === "function" ? window.QUIZ_BLATT_EXTRA(b) : null;
+      if (extra) {
+        var zeile = document.createElement("div");
+        zeile.className = "qzeile";
+        zeile.appendChild(k); zeile.appendChild(extra);
+        liste.appendChild(zeile);
+      } else {
+        liste.appendChild(k);
+      }
     });
+    quizLeisteMalen(kasten);
+    nachBlaettern();
   }
+
+  /* Die Leiste unten: sobald ein Blatt angehakt ist, "Quiz aus N Blaettern"
+     mit 5/10/15 Fragen und Start (Entwurf A, 28.09.2026). Nur, wo die Seite
+     QUIZ_BLATT_EXTRA setzt - also erst bei Paul. */
+  function quizLeisteMalen(kasten) {
+    var l = $("q-quizleiste");
+    if (typeof window.QUIZ_BLATT_EXTRA !== "function" || !stand.blaetter.length) {
+      if (l) l.remove();
+      return;
+    }
+    if (!l) {
+      l = document.createElement("div");
+      l.id = "q-quizleiste";
+      l.className = "qquizleiste";
+      kasten.appendChild(l);
+    }
+    var n = stand.blaetter.length;
+    l.innerHTML = '<div class="qql-t"></div><div class="qql-zahl"></div>' +
+      '<button type="button" class="knopf qql-los"></button>';
+    l.querySelector(".qql-t").textContent = "\u2753 Quiz aus " + n + (n === 1 ? " Blatt" : " Bl\u00e4ttern");
+    [5, 10, 15].forEach(function (z) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "qchip" + (stand.laenge === z ? " an" : "");
+      b.setAttribute("data-laenge", String(z));
+      b.textContent = z + " Fragen";
+      b.addEventListener("click", function () {
+        stand.laenge = z; schreibe(SPEICHER, stand); laengeMalen(); quizLeisteMalen(kasten);
+      });
+      l.querySelector(".qql-zahl").appendChild(b);
+    });
+    var los = l.querySelector(".qql-los");
+    los.textContent = "Quiz starten" + (stand.laenge ? " \u00b7 " + stand.laenge + " Fragen" : "");
+    los.addEventListener("click", function () { $("q-start").click(); });
+  }
+  function nachBlaettern() {
+    if (typeof window.QUIZ_NACH_BLAETTERN === "function") {
+      try { window.QUIZ_NACH_BLAETTERN(!$("q-blaetter").classList.contains("verborgen")); } catch (e) {}
+    }
+  }
+  window.QUIZ_BLAETTER_NEU = function () { if (blaetter.length) blaetterZeichnen(); else nachBlaettern(); };
 
   /* Woraus gefragt wird, steht auf der Karte.
    *
