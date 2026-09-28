@@ -54,13 +54,15 @@ const MAX_BILD = 2 * 1024 * 1024;
  *
  * Stand vorher 6. Die Grenze ist damit KEIN technischer Deckel mehr, sondern
  * eine Entscheidung ueber den Ablauf: ein Blatt, ein Eintrag, ein Thema. */
-const MAX_SEITEN = 2;
+/* 4 seit 28.09.2026 (Denny, per Klickfrage): Eine Leseaufgabe mit zwei
+   Arbeitsblaettern gehoert in EINEN Eintrag. Vorher 2 (23.09.2026). */
+const MAX_SEITEN = 4;
 /* So viele Inhaltszeilen behaelt EIN Eintrag, ueber alle seine Seiten zusammen.
    Je Seite liest blattLesen() bis zu 14, und der Quiz-Auftrag traegt den
    ganzen Inhalt mit (quiz.js, letzterUnterricht).
    Bei den erlaubten zwei Seiten sind es hoechstens 28 - der Deckel greift
    also nur, wenn beide Seiten randvoll sind. */
-const INHALT_MAX = 28;
+const INHALT_MAX = 56;   // 4 volle Seiten a 14 Zeilen (28.09.2026)
 
 async function darfRein(request, env, kind) {
   if (geheimFuer(env, "eltern") && (await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) return true;

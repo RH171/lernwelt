@@ -273,8 +273,10 @@
          durcheinanderkommt ... Wenn man 25 Seiten liest, kann sicher was
          untergehen, bei ein bis zwei Seiten nicht." Stand vorher bei 6,
          der Server deckelt seit demselben Tag ebenfalls bei 2 (MAX_SEITEN). */
-      if (seiten.length >= 2) {
-        melde("Ein Blatt auf einmal - Vorder- und Rückseite. Das nächste legst du gleich danach in die Ablage.", "fehler");
+      /* Seit 28.09.2026 bis zu 4 Seiten: Lesetext und zwei Arbeitsblaetter
+         sind EINE Aufgabe (Denny, per Klickfrage). */
+      if (seiten.length >= 4) {
+        melde("Höchstens 4 Seiten, die zu einer Aufgabe gehören. Das nächste Blatt legst du gleich danach in die Ablage.", "fehler");
         return;
       }
       var leser = new FileReader();
