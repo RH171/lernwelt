@@ -426,7 +426,7 @@
     if (!offen) return;
     var box = $("schau-fachwahl");
     if (!box.classList.contains("verborgen") && box.getAttribute("data-wahl") !== "art"){ box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return; }
-    box.innerHTML = "";
+    box.innerHTML = ""; box.setAttribute("data-wahl", "fach");
     Object.keys(KURZ).filter(function(k){ return k; }).forEach(function(k){
       var b = document.createElement("button");
       b.type = "button"; b.className = "fach" + ((offen.fach||"") === k ? " an" : "");
