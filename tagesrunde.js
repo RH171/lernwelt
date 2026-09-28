@@ -64,7 +64,9 @@
   /* blaetter: [{id, titel, datum, sichtbar, karten:[...]}] aus /api/schulstoff
      stand:    fundStand aus /api/quiz?nurWartend=1
      Rueckgabe: { karten:[...mit .blatt, .blattTitel, .sorte], zaehl:{...} } */
-  function waehlen(blaetter, stand, opt) {
+  /* quiz: quizWackler aus /api/quiz?nurWartend=1 (28.09.2026) - faellige
+     Quizfragen, bei denen Paul zuletzt danebenlag. Sie zaehlen als Wackler. */
+  function waehlen(blaetter, stand, opt, quiz) {
     var e = {};
     for (var x in EIN) e[x] = EIN[x];
     for (var y in (opt || {})) e[y] = opt[y];
@@ -93,6 +95,16 @@
         if (c.sorte === "neu") neuHier.push(c); else topf[c.sorte].push(c);
       });
       if (neuHier.length) neuJeBlatt.push(neuHier);
+    });
+    var titel = {};
+    liste.forEach(function (b) { titel[b.id] = b.titel || ""; });
+    (quiz || []).forEach(function (q) {
+      if (!q || !q.frage || !q.richtig || !q.falsch || q.falsch.length !== 2) return;
+      if (!(q.blatt in titel)) return;          // ausgeblendetes Blatt: nicht abfragen
+      topf.wackler.push({ frage: q.frage, richtig: q.richtig, falsch: q.falsch,
+        merke: q.merke || "", stichwort: "Aus dem Quiz", blatt: q.blatt,
+        blattTitel: titel[q.blatt], sorte: "wackler",
+        quiz: { belegNr: q.belegNr, frageId: q.frageId }, _tage: q.tage || 0, _r: 0 });
     });
     // Am laengsten her zuerst; bei "sicher" das Unsicherste (wenig r) zuerst.
     topf.wackler.sort(function (a, b) { return b._tage - a._tage; });

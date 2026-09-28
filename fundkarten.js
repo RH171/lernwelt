@@ -381,6 +381,18 @@
     function schnipsel(k) {
       var blattBild = bildVon(k), bid = blattVon(k);
       var aussen = el("div");
+      /* Quizfrage in der Tagesrunde (28.09.2026): Sie hat keine Stelle im
+         Foto. Kein Ausschnitt, aber das ganze Blatt zum Nachsehen. */
+      if (k.quiz) {
+        aussen.appendChild(el("div", "lwf-bu", "Eine Frage aus deinem Quiz. Wenn du nachsehen willst: dein Blatt."));
+        if (blattBild) {
+          var gq = el("button", "lwf-ganz", "Das ganze Blatt ansehen");
+          gq.type = "button";
+          gq.addEventListener("click", function () { grossZeigen(k); });
+          aussen.appendChild(gq);
+        }
+        return aussen;
+      }
       var rahmen = el("div", "lwf-schnipsel lwf-rolle");
       aussen.appendChild(rahmen);
       if (!blattBild) {
@@ -452,7 +464,7 @@
       if (!s) return;
       s.className = "lwf-slot voll";
       s.innerHTML = "";
-      if (bildVon(k)) {
+      if (bildVon(k) && !k.quiz) {
         var im = el("img"); im.src = bildVon(k); im.alt = "";
         /* Die Miniatur zeigt die Stelle, nicht das halbe Blatt: senkrecht
            genau dort, wo die Karte sass. */
@@ -471,7 +483,9 @@
           gemeldet = true;
           try {
             opt.ergebnis(karten.map(function (k, n) {
-              return { blatt: blattVon(k), karte: schluessel(k), stimmt: erster[n] !== false };
+              var e1 = { blatt: blattVon(k), karte: schluessel(k), stimmt: erster[n] !== false };
+              if (k.quiz) e1.quiz = k.quiz;
+              return e1;
             }));
           } catch (e) {}
         }
@@ -589,7 +603,8 @@
             b.disabled = true;
             sagt.className = "lwf-tipp";
             sagt.textContent = k.merke ? "Noch nicht. Hier ist eine Hilfe - versuch es gleich nochmal."
-                                       : "Noch nicht. Schau dir den Ausschnitt noch mal genau an.";
+                                       : (k.quiz ? "Noch nicht. Versuch es gleich nochmal."
+                                                 : "Noch nicht. Schau dir den Ausschnitt noch mal genau an.");
             merkZeigen();
           }
         });

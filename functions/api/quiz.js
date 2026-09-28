@@ -103,7 +103,8 @@ export async function onRequestGet(context) {
     return json(200, { ok: true, wiedervorlage: fuerDieSeite(),
                        wartend: wartendJeBlatt(v.fragen, pk, Date.now()),
                        fundFaellig: fund, fundText,
-                       fundStand: fundStandJeKarte(pk, Date.now()) });
+                       fundStand: fundStandJeKarte(pk, Date.now()),
+                       quizWackler: quizWacklerListe(v.fragen, pk, Date.now()) });
   }
 
   let vorrat = await vorratLesen(env, kind);
@@ -339,6 +340,35 @@ export async function onRequestPost(context) {
   }
 
   return json(200, { ok: true });
+}
+
+/* Faellige Quizfragen, bei denen Paul beim letzten Mal danebenlag
+   (Dennys Beschluss 28.09.2026: sie kommen mit in "Heute lernen").
+   Je Lernpunkt eine Frage, als Karte fuer /fundkarten.js: eine richtige und
+   ZWEI falsche Antworten, wie jede Fundkarte. Am laengsten her zuerst. */
+export function quizWacklerListe(fragen, punkte, jetzt, max) {
+  if (!WV.an) return [];
+  const nun = jetzt || Date.now();
+  const raus = [], gesehen = new Set();
+  for (const f of fragen || []) {
+    const s = punktSchluessel(f);
+    if (!s || gesehen.has(s)) continue;
+    const p = punkte ? punkte[s] : null;
+    if (!p || !p.f || !istFaellig(p, nun)) continue;
+    const a = Array.isArray(f.antworten) ? f.antworten.map(String) : [];
+    const ri = Number(f.richtig) || 0;
+    if (a.length < 3 || !a[ri]) continue;
+    gesehen.add(s);
+    raus.push({
+      blatt: String(f.blatt), belegNr: f.belegNr, frageId: String(f.id || ""),
+      frage: String(f.frage || ""), richtig: a[ri],
+      falsch: a.filter((x, i) => i !== ri).slice(0, 2),
+      ...(f.merke ? { merke: String(f.merke) } : f.tipp ? { merke: String(f.tipp) } : {}),
+      tage: p.z ? Math.floor((nun - p.z) / 86400000) : 0,
+    });
+  }
+  raus.sort((x, y) => y.tage - x.tage);
+  return raus.slice(0, max || 6);
 }
 
 async function vorratLesen(env, kind) {

@@ -158,8 +158,8 @@ window.QUIZ = {
   ]
 };
 </script>
-<script src="/fundkarten.js?v=50914e99"></script>
-<script src="/tagesrunde.js?v=b094ad1c"></script>
+<script src="/fundkarten.js?v=e94dea15"></script>
+<script src="/tagesrunde.js?v=f86f74ae"></script>
 <script>
 /* Such-Spiel: Blaetter mit mindestens drei Fundkarten anbieten. Nur fuer
    Paul, nicht im geteilten /quiz/motor.js - "Erst Paul fertig, dann
@@ -177,7 +177,7 @@ window.QUIZ = {
   }
   /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
-  var faellig = {}, faelligText = {}, fundStand = {}, heute = null;
+  var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], heute = null;
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
@@ -202,11 +202,19 @@ window.QUIZ = {
   }
   window.QUIZ_NACH_BLAETTERN = function(da){ blattListeDa = !!da; suchKarteZeigen(); };
   function merken(blattId, liste){
-    fetch("/api/quiz", { method: "POST", credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ kind: "paul", fund: liste.map(function(e){
-        return { blatt: e.blatt || blattId, karte: e.karte, stimmt: e.stimmt }; }) })
-    }).catch(function(){ /* ohne Speicher merkt sich nur die Wiedervorlage diese Runde nicht */ });
+    /* Quizfragen aus der Tagesrunde (28.09.2026) gehen als Quiz-Antwort an
+       ihren Lernpunkt, Fundkarten wie bisher als "fund". */
+    var fund = liste.filter(function(e){ return !e.quiz; });
+    var quiz = liste.filter(function(e){ return e.quiz; });
+    function schicken(daten){
+      fetch("/api/quiz", { method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" }, body: JSON.stringify(daten)
+      }).catch(function(){ /* ohne Speicher merkt sich nur die Wiedervorlage diese Runde nicht */ });
+    }
+    if (fund.length) schicken({ kind: "paul", fund: fund.map(function(e){
+      return { blatt: e.blatt || blattId, karte: e.karte, stimmt: e.stimmt }; }) });
+    if (quiz.length) schicken({ kind: "paul", antworten: quiz.map(function(e){
+      return { frageId: e.quiz.frageId, blatt: e.blatt, belegNr: e.quiz.belegNr, stimmt: e.stimmt }; }) });
   }
   function starten(x){
     var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
@@ -224,8 +232,8 @@ window.QUIZ = {
     fetch("/api/quiz?kind=paul&nurWartend=1", { credentials: "same-origin" })
       .then(function(r){ return r.json(); })
       .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {};
-                         fundStand = (j && j.fundStand) || {}; })
-      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; })
+                         fundStand = (j && j.fundStand) || {}; quizWackler = (j && j.quizWackler) || []; })
+      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; })
       .then(function(){ return fetch("/api/schulstoff?kind=paul&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -267,7 +275,7 @@ window.QUIZ = {
   var blattWahl = (/[?&]blatt=([^&#]+)/.exec(location.search) || [])[1];
   blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
   function heuteAnbieten(eintraege, ohneStart){
-    heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand) : null;
+    heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, null, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
     $("heute-wahl").classList.toggle("verborgen", !da);
     if (!da) return;
