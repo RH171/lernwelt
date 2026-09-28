@@ -542,4 +542,14 @@ export const KLEXIKON = [
   [3, "wissen", "🌋", "Was wird aus heißer Lava, wenn sie abkühlt?", ["Gestein", "Wasser", "Sand", "Erde"], "Wenn Lava sehr schnell abkühlt, kann das Gestein fast hart wie Glas werden.", null, "Gestein"],
   [2, "welt", "🌊", "Wie heißen die tiefen Meeresbuchten in Norwegen?", ["Fjorde", "Lagunen", "Grotten", "Deltas"], "Manche Fjorde sind so tief und schmal, dass große Schiffe hindurchfahren können.", null, "Norwegen"],
   [3, "wissen", "🛢️", "Was holt Norwegen aus der Nordsee, um Geld zu verdienen?", ["Erdöl", "Gold", "Kohle", "Diamanten"], "Aus dem tiefen Meer wird Erdöl geholt, das man für viele Dinge braucht.", null, "Norwegen"],
+
+  // Nachschub vom 28.09.2026
+  [1, "technik", "🧰", "Womit schlägt man einen Nagel ein?", ["Mit dem Hammer", "Mit der Schere", "Mit dem Löffel", "Mit dem Pinsel"], "Die ersten Nägel waren aus Holz, nicht aus Metall wie heute.", null, "Nagel (Werkzeug)"],
+  [2, "technik", "🍽️", "Womit wird das Geschirr in der Maschine sauber?", ["Wasser und Spülmittel", "Eine Bürste", "Ein Schwamm", "Ein Lappen"], "In der Maschine gibt es keine Bürste oder Schwamm, nur Wasser und Spülmittel.", null, "Geschirrspülmaschine"],
+  [2, "koerper", "🦴", "Was braucht der Körper für starke Knochen?", ["Calcium", "Zucker", "Salz", "Öl"], "Calcium steckt vor allem in Milch, Käse und Joghurt und macht Knochen stark.", null, "Mineralstoff"],
+  [2, "maerchen", "🧝", "Wo wohnen manche Kobolde in Sagen?", ["In der Erde", "Im Weltall", "Im Kühlschrank", "Auf dem Mond"], "Manche Kobolde wohnen in kleinen Häusern, andere leben tief unten in der Erde.", null, "Kobold"],
+  [4, "welt", "🍇", "Woher hat das Burgenland seinen Namen?", ["Von vier Burgen", "Von einem Fluss", "Von einem König", "Von einem Wald"], "Die vier Burgen, nach denen das Bundesland benannt ist, liegen heute nicht mehr in Österreich.", null, "Burgenland"],
+  [4, "welt", "🌉", "Welcher Fluss fließt durch die Stadt Riga?", ["Die Düna", "Die Elbe", "Die Donau", "Der Rhein"], "Riga liegt an beiden Ufern des Flusses Düna, kurz bevor dieser in die Ostsee mündet.", null, "Riga"],
+  [5, "welt", "🌍", "Womit kann man am schnellsten die Welt umrunden?", ["Mit dem Flugzeug", "Mit dem Schiff", "Mit dem Fahrrad", "Mit dem Zug"], "Früher dauerte eine Weltreise mit dem Schiff mehrere Jahre, heute reicht dafür ein Flugzeug.", null, "Weltreise"],
+  [5, "sport", "⚽", "Woher hat der Fußballspieler Pelé seinen Spitznamen?", ["Von einem Torhüter", "Von seiner Oma", "Von einer Stadt", "Von seinem Trainer"], "Als Kind sprach Pelé den Namen eines Torhüters ungenau aus, so entstand sein berühmter Spitzname.", null, "Pelé"],
 ];
