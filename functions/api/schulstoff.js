@@ -969,6 +969,9 @@ async function blattLesen(env, seite, kind) {
               "\"Sy\"); das Kind schreibt blau oder mit Bleistift. Schreib Rotes als " +
               "\"Lehrkraft: ...\". Auch eine rote Zahl kann falsch sein - rechne nach, " +
               "und stimmt sie nicht: Lehrkraft schrieb X, richtig: Y.\n" +
+              "Ist es eine SCHULBUCHSEITE mit nummerierten Aufgaben, schreib je Aufgabe eine " +
+              "Zeile: Aufgabe <Nummer>: <Arbeitsauftrag in Kurzform> (<Form, z. B. Luecke fuellen, " +
+              "zuordnen, rechnen, Satz schreiben>). So sieht man spaeter, WIE die Aufgaben gestellt sind.\n" +
               "WICHTIG - was UM das Blatt herum steht, gehoert dazu: Schau auch auf " +
               "den Rand der Heftseite, ueber und unter ein eingeklebtes Blatt, und " +
               "auf alles Handgeschriebene. Randnotizen, nachtraeglich dazugeschriebene " +

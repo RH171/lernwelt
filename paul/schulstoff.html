@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="stundenplan.js?v=1b197a6e"></script>
-<script src="/blatt-aufnehmen.js?v=bb6b07ce"></script>
+<script src="/blatt-aufnehmen.js?v=86be212d"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
@@ -177,7 +177,8 @@
   /* Leer heisst: vor der Unterscheidung abgelegt (vor dem 23.09.2026). Dann
      steht kein Schild da - erfunden wird nichts. */
   var ART = {heft:  {kurz:"📓 Heft",  lang:"Aus meinem Schulheft"},
-             uebung:{kurz:"📄 Übung", lang:"Ein Übungsblatt"}};
+             uebung:{kurz:"📄 Übung", lang:"Ein Übungsblatt"},
+             buch:  {kurz:"📘 Buch",  lang:"Aus dem Schulbuch"}};
 
   var alles = [], heute = "", gewaehlt = "alle", artGewaehlt = "alle", offen = null, offenSeite = 0;
 
@@ -218,11 +219,12 @@
      sagen, wie viele Hefteintraege es in Mathe gibt. */
   function imFach(e){ return gewaehlt === "alle" || (e.fach||"") === gewaehlt; }
   function artFilterMalen(){
-    var basis = alles.filter(imFach), z = {heft:0, uebung:0};
+    var basis = alles.filter(imFach), z = {heft:0, uebung:0, buch:0};
     basis.forEach(function(e){ if (z[e.art] != null) z[e.art]++; });
-    var reihe = [["alle","Heft und Übung", basis.length],
+    var reihe = [["alle","Alles", basis.length],
                  ["heft","📓 Hefteinträge", z.heft],
-                 ["uebung","📄 Übungsblätter", z.uebung]];
+                 ["uebung","📄 Übungsblätter", z.uebung],
+                 ["buch","📘 Buchaufgaben", z.buch]];
     var html = "";
     reihe.forEach(function(r){
       html += '<button class="fach' + (artGewaehlt===r[0]?" an":"") + '" data-a="' + r[0] + '">' +
@@ -344,8 +346,9 @@
        also nach einem bewussten ersten Schritt. Wer ein Blatt loeschen will,
        geht damit zwangslaeufig ueber "aus der Ansicht nehmen". */
     zeigeWeg(offen.sichtbar === false);
-    $("schau-art").textContent = offen.art === "heft"
-      ? "📄 Ist ein Übungsblatt" : "📓 Ist ein Hefteintrag";
+    /* Drei Arten seit 28.09.2026 (Buch dazu): Der Knopf zeigt die jetzige
+       Art, ein Tipp klappt die Wahl auf. */
+    $("schau-art").textContent = (ART[offen.art] ? ART[offen.art].kurz : "📄 Ohne Angabe") + " · ändern";
     $("schau-art").disabled = false;
     $("schau-fachwahl").classList.add("verborgen");
     $("schau").classList.remove("fachoffen");
@@ -416,7 +419,7 @@
   $("schau-fach").addEventListener("click", function(){
     if (!offen) return;
     var box = $("schau-fachwahl");
-    if (!box.classList.contains("verborgen")){ box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return; }
+    if (!box.classList.contains("verborgen") && box.getAttribute("data-wahl") !== "art"){ box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return; }
     box.innerHTML = "";
     Object.keys(KURZ).filter(function(k){ return k; }).forEach(function(k){
       var b = document.createElement("button");
@@ -447,18 +450,35 @@
      Angabe (vor dem 23.09.2026) wird damit zum Hefteintrag. */
   $("schau-art").addEventListener("click", function(){
     if (!offen) return;
-    var k = $("schau-art"), ziel = offen.art === "heft" ? "uebung" : "heft";
-    k.disabled = true;
-    fetch("/api/schulstoff", {
-      method:"PATCH", credentials:"same-origin",
-      headers:{"content-type":"application/json"},
-      body: JSON.stringify({kind:"paul", id: offen.id, was:"art", art: ziel})
-    }).then(function(r){ return r.json(); }).then(function(j){
-      k.disabled = false;
-      if (!j || !j.ok){ k.textContent = "Nochmal?"; return; }
-      offen.art = ziel;
-      seiteZeigen(); artFilterMalen(); listeMalen();
-    }).catch(function(){ k.disabled = false; k.textContent = "Nochmal?"; });
+    var box = $("schau-fachwahl");
+    if (!box.classList.contains("verborgen") && box.getAttribute("data-wahl") === "art"){
+      box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return;
+    }
+    box.innerHTML = ""; box.setAttribute("data-wahl", "art");
+    ["heft","uebung","buch"].forEach(function(ziel){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "fach" + (offen.art === ziel ? " an" : "");
+      b.setAttribute("data-art", ziel);
+      b.textContent = ART[ziel].lang;
+      b.addEventListener("click", function(){
+        if (!offen || offen.art === ziel){ box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return; }
+        b.disabled = true;
+        fetch("/api/schulstoff", {
+          method:"PATCH", credentials:"same-origin",
+          headers:{"content-type":"application/json"},
+          body: JSON.stringify({kind:"paul", id: offen.id, was:"art", art: ziel})
+        }).then(function(r){ return r.json(); }).then(function(j){
+          b.disabled = false;
+          if (!j || !j.ok){ b.textContent = "Nochmal?"; return; }
+          offen.art = ziel;
+          box.classList.add("verborgen"); $("schau").classList.remove("fachoffen");
+          seiteZeigen(); artFilterMalen(); listeMalen();
+        }).catch(function(){ b.disabled = false; b.textContent = "Nochmal?"; });
+      });
+      box.appendChild(b);
+    });
+    box.classList.remove("verborgen");
+    $("schau").classList.add("fachoffen");
   });
 
   $("schau-zu").addEventListener("click", function(){ $("schau").classList.remove("auf"); offen = null; });

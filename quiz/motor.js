@@ -224,10 +224,12 @@
      Ohne Haken gilt: alle Blaetter, die der Filter zeigt. */
   function artFilter() {
     var a = stand.blattArt || "alle";
-    var hat = { heft: 0, uebung: 0 };
+    var hat = { heft: 0, uebung: 0, buch: 0 };
     blaetter.forEach(function (b) { if (hat[b.art] !== undefined) hat[b.art]++; });
-    if (!hat.heft || !hat.uebung) return { art: "alle", hat: hat, zeigen: false };
-    return { art: a === "heft" || a === "uebung" ? a : "alle", hat: hat, zeigen: true };
+    /* Die Reihe steht nur da, wenn es mindestens zwei Arten gibt (Buch seit 28.09.2026). */
+    var arten = (hat.heft ? 1 : 0) + (hat.uebung ? 1 : 0) + (hat.buch ? 1 : 0);
+    if (arten < 2) return { art: "alle", hat: hat, zeigen: false };
+    return { art: hat[a] ? a : "alle", hat: hat, zeigen: true };
   }
   function sichtbareBlaetter() {
     var f = artFilter();
@@ -246,9 +248,12 @@
     reihe.style.display = f.zeigen ? "" : "none";
     if (!f.zeigen) return;
     reihe.innerHTML = "";
-    [["alle", "Heft und Übung", f.hat.heft + f.hat.uebung],
+    [["alle", f.hat.buch ? "Alles" : "Heft und Übung", f.hat.heft + f.hat.uebung + f.hat.buch],
      ["heft", "\uD83D\uDCD3 Heft", f.hat.heft],
-     ["uebung", "\uD83D\uDCC4 \u00dcbung", f.hat.uebung]].forEach(function (w) {
+     ["uebung", "\uD83D\uDCC4 \u00dcbung", f.hat.uebung],
+     ["buch", "\uD83D\uDCD8 Buch", f.hat.buch]].filter(function (w) {
+       return w[0] === "alle" || w[0] === "heft" || w[0] === "uebung" || w[2];   // Buch nur, wenn es eins gibt
+     }).forEach(function (w) {
       var k = document.createElement("button");
       k.type = "button";
       k.className = "qchip" + (f.art === w[0] ? " an" : "");
@@ -349,6 +354,7 @@ function schildFuer(b) {
 function artKurz(art) {
     if (art === "heft") return "\uD83D\uDCD3 Heft \u00b7 ";
     if (art === "uebung") return "\uD83D\uDCC4 \u00dcbung \u00b7 ";
+    if (art === "buch") return "\uD83D\uDCD8 Buch \u00b7 ";
     return "";                       // ohne Angabe: gar nichts behaupten
   }
 
@@ -359,7 +365,7 @@ function artKurz(art) {
    * anhaken, es steht nur weiter unten. */
   function nachArtSortiert(liste) {
     // Dieselben fuenf Raenge wie nachArt() in functions/api/quiz.js (24.09.2026).
-    var RANG = { heft: 1, "": 3, uebung: 4 };
+    var RANG = { heft: 1, "": 3, uebung: 4, buch: 4 };
     function rang(x) {
       var s = (x && x.sorte) || "";
       if (s === "lernziele") return 0;

@@ -68,6 +68,9 @@ export const SCHUELER_JE_KIND = {
 export const ARTEN = {
   heft:   "in meinem Schulheft",
   uebung: "ein Übungsblatt",
+  /* Seit 28.09.2026 (Denny): Aufgaben aus dem Schulbuch, eigener Reiter.
+     Sie zeigen, WIE Aufgaben gestellt werden - Vorlage fuer eigene. */
+  buch:   "eine Seite aus dem Schulbuch",
 };
 
 /* Zeichen vor einer Inhaltszeile, die HANDGESCHRIEBEN auf dem Blatt stand -

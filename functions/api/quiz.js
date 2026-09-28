@@ -461,6 +461,9 @@ Steht bei einem Blatt SCHULHEFT, ist es der Prüfungsstoff: Die Lehrerin hat
 gesagt, gefragt wird, was im Heft steht. Nimm von dort die meisten Fragen.
 Ein Übungsblatt ist die Übung dazu - daraus darfst du fragen, aber nicht
 bevorzugt. Ohne Angabe behandle es wie bisher.
+Steht SCHULBUCH-Aufgaben dabei, zeigt das Blatt, WIE die Aufgaben im Unterricht
+gestellt werden (Arbeitsauftrag, Format, Schwierigkeit). Stell keine Aufgabe aus
+dem Buch nach, sondern baue neue derselben Art mit anderen Zahlen und Woertern.
 Trag zu jeder Frage, die daher stammt, die Nummer des Blattes in "blatt_nr" ein.
 `) : ""}${schwaechen.length ? `
 DAS HAT ZULETZT NICHT GESESSEN
@@ -637,7 +640,7 @@ export function nachArt(liste) {
    *
    * Die Sorte kommt NICHT vom Kind, sondern aus der FORM des Blattes
    * (Abhak-Kaestchen, Punktekaestchen) - siehe SORTEN in _schulstoff.js. */
-  const RANG = { heft: 1, "": 3, uebung: 4 };
+  const RANG = { heft: 1, "": 3, uebung: 4, buch: 4 };
   const rang = (x) => {
     const s = (x && x.sorte) || "";
     if (s === "lernziele") return 0;
@@ -689,7 +692,8 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
            wird und woraus nur geuebt. Steht sie nicht dabei, wird nichts
            behauptet - ein erfundenes "Schulheft" waere schlimmer als keins. */
         const woher = x.art === "heft" ? ", SCHULHEFT"
-                    : x.art === "uebung" ? ", Uebungsblatt" : "";
+                    : x.art === "uebung" ? ", Uebungsblatt"
+                    : x.art === "buch" ? ", SCHULBUCH-Aufgaben" : "";
         const kopf = (i + 1) + ". " + x.titel + " (" +
                      (FAECHER[x.fach] || x.fach || "?") + ", " + x.datum +
                      woher + ")";

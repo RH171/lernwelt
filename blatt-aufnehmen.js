@@ -157,6 +157,11 @@
           '<span class="z">\uD83D\uDCC4</span>' +
           '<span><b>Ein Übungsblatt</b><small>Zum Üben dazu</small></span>' +
           '<span class="haken">✓</span></button>' +
+        /* Seit 28.09.2026 (Denny): Aufgaben aus dem Schulbuch. */
+        '<button type="button" class="zeile" data-art="buch">' +
+          '<span class="z">\uD83D\uDCD8</span>' +
+          '<span><b>Aus dem Schulbuch</b><small>So stellt das Buch die Aufgaben</small></span>' +
+          '<span class="haken">✓</span></button>' +
       '</div>' +
       '<div class="trenn"></div>' +
       '<div class="frage">Und jetzt dein Blatt</div>' +
