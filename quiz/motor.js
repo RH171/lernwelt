@@ -48,6 +48,31 @@
    * Ein Kind ohne Quiz waere schlechter als eines mit einem Fach zu viel. */
   var ausHeft = null;    // [{fach, blaetter}] oder null = noch nicht geladen
 
+  /* Paul bekommt die neue Auswahl (ein Fach, eine Leiste mit Fragenzahl und
+     Start). Leon und Helena bleiben, wie sie sind, bis Paul fertig ist. */
+  function einzeln() { return typeof window.QUIZ_BLATT_EXTRA === "function"; }
+  var LAENGEN = [[5, "5"], [10, "10"], [20, "20"], [0, "Alle"]];
+
+  /* Vorbauen im Hintergrund (28.09.2026). Denny: "Die Ladezeiten sind
+     unterirdisch für ein Kind. Das muss sofort da sein." Der Server startet
+     das Quiz jetzt sofort mit dem, was da ist; fehlende Fragen baut diese
+     Funktion, waehrend Paul noch waehlt oder schon spielt. Hoechstens sechs
+     Runden je Seitenbesuch, damit nichts endlos Geld kostet. */
+  var vorbauLaeuft = false, vorbauRunden = 0;
+  function vorbauen() {
+    if (vorbauLaeuft || vorbauRunden >= 6 || stand.faecher.length !== 1) return;
+    vorbauLaeuft = true; vorbauRunden++;
+    var p = new URLSearchParams();
+    p.set("kind", KIND); p.set("vorbauen", "1"); p.set("faecher", stand.faecher[0]);
+    fetch("/api/quiz?" + p.toString(), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        vorbauLaeuft = false;
+        if (j && j.ok && j.fehlen > 0 && j.gebaut > 0) vorbauen();
+      })
+      .catch(function () { vorbauLaeuft = false; });
+  }
+
   function faecherHolen() {
     return fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) + "&faecher=1&mitBlaettern=1",
                  { credentials: "same-origin" })
@@ -72,10 +97,11 @@
         stand.faecher = stand.faecher.filter(function (k) {
           return K.faecher.some(function (f) { return f.k === k; });
         });
+        if (einzeln() && stand.faecher.length > 1) stand.faecher = [];
         schreibe(SPEICHER, stand);
       })
       .catch(function () {})
-      .then(function () { fachkachelnMalen(); blaetterMalen(); });
+      .then(function () { fachkachelnMalen(); blaetterMalen(); vorbauen(); });
   }
 
   function fachkachelnMalen() {
@@ -89,10 +115,16 @@
         (f.blaetter ? ' <small style="opacity:.65">' + f.blaetter + "</small>" : "") + "</span>";
       b.addEventListener("click", function () {
         var i = stand.faecher.indexOf(f.k);
-        if (i >= 0) stand.faecher.splice(i, 1); else stand.faecher.push(f.k);
+        /* Bei Paul waehlt ein Tipp GENAU dieses Fach (28.09.2026). Vorher
+           sammelten sich Faecher an: Mathe von gestern blieb an, Deutsch kam
+           dazu, und das Quiz fragte beides. Denny: "Wenn Paul nur ein Fach
+           auswählt … baut er aus allen Fächern Fragen." */
+        if (einzeln()) stand.faecher = i >= 0 ? [] : [f.k];
+        else if (i >= 0) stand.faecher.splice(i, 1); else stand.faecher.push(f.k);
         schreibe(SPEICHER, stand);
         fachkachelnMalen();
         blaetterMalen();
+        vorbauen();
       });
       box.appendChild(b);
     });
@@ -121,7 +153,7 @@
     var kasten = $("q-blaetter");
     if (!kasten) return;
     var eins = stand.faecher.length === 1 ? stand.faecher[0] : "";
-    if (!eins) { kasten.classList.add("verborgen"); nachBlaettern(); return; }
+    if (!eins) { kasten.classList.add("verborgen"); quizLeisteMalen(); nachBlaettern(); return; }
 
     if (blattFach !== eins) {
       blattFach = eins; blaetter = []; stand.blaetter = [];
@@ -358,42 +390,61 @@
         liste.appendChild(k);
       }
     });
-    quizLeisteMalen(kasten);
+    quizLeisteMalen();
     nachBlaettern();
   }
 
   /* Die Leiste unten: sobald ein Blatt angehakt ist, "Quiz aus N Blaettern"
      mit 5/10/15 Fragen und Start (Entwurf A, 28.09.2026). Nur, wo die Seite
      QUIZ_BLATT_EXTRA setzt - also erst bei Paul. */
-  function quizLeisteMalen(kasten) {
+  function quizLeisteMalen() {
     var l = $("q-quizleiste");
-    if (typeof window.QUIZ_BLATT_EXTRA !== "function" || !stand.blaetter.length) {
-      if (l) l.remove();
-      return;
-    }
+    if (!einzeln()) { if (l) l.remove(); return; }
+    /* Eine Stelle zum Starten (28.09.2026). Vorher gab es unten "Los geht's"
+       mit 10/15/25/Endlos UND die Leiste mit 5/10/15, die erst nach einem
+       Haken erschien - wer alle Blaetter wollte, musste 18 anhaken. Jetzt
+       steht die Leiste immer da; ohne Haken gilt das ganze Fach. */
+    $("q-laenge").style.display = "none";
+    $("q-start").style.display = "none";
     if (!l) {
       l = document.createElement("div");
       l.id = "q-quizleiste";
       l.className = "qquizleiste";
-      kasten.appendChild(l);
     }
+    var kasten = $("q-blaetter");
+    if (kasten.nextSibling !== l) kasten.parentNode.insertBefore(l, kasten.nextSibling);
+    if (LAENGEN.every(function (x) { return x[0] !== stand.laenge; })) stand.laenge = 10;
+    var eins = stand.faecher.length === 1;
     var n = stand.blaetter.length;
-    l.innerHTML = '<div class="qql-t"></div><div class="qql-zahl"></div>' +
+    var alleN = eins ? sichtbareBlaetter().length : 0;
+    var titel = !eins ? "\u2753 Quiz aus allen F\u00e4chern"
+      : n ? "\u2753 Quiz aus " + n + (n === 1 ? " Blatt" : " Bl\u00e4ttern")
+      : alleN ? "\u2753 Quiz aus allen " + alleN + " Bl\u00e4ttern" : "\u2753 Quiz";
+    l.innerHTML = '<div class="qql-t"><span></span></div><div class="qql-zahl"></div>' +
       '<button type="button" class="knopf qql-los"></button>';
-    l.querySelector(".qql-t").textContent = "\u2753 Quiz aus " + n + (n === 1 ? " Blatt" : " Bl\u00e4ttern");
-    [5, 10, 15].forEach(function (z) {
+    l.querySelector(".qql-t span").textContent = titel;
+    if (n) {
+      var weg = document.createElement("button");
+      weg.type = "button"; weg.className = "qql-weg";
+      weg.textContent = "Alle Bl\u00e4tter nehmen";
+      weg.addEventListener("click", function () {
+        stand.blaetter = []; schreibe(SPEICHER, stand); blaetterZeichnen();
+      });
+      l.querySelector(".qql-t").appendChild(weg);
+    }
+    LAENGEN.forEach(function (p) {
       var b = document.createElement("button");
       b.type = "button";
-      b.className = "qchip" + (stand.laenge === z ? " an" : "");
-      b.setAttribute("data-laenge", String(z));
-      b.textContent = z + " Fragen";
+      b.className = "qchip" + (stand.laenge === p[0] ? " an" : "");
+      b.setAttribute("data-laenge", String(p[0]));
+      b.textContent = p[0] ? p[1] + " Fragen" : "Alle Fragen";
       b.addEventListener("click", function () {
-        stand.laenge = z; schreibe(SPEICHER, stand); laengeMalen(); quizLeisteMalen(kasten);
+        stand.laenge = p[0]; schreibe(SPEICHER, stand); quizLeisteMalen();
       });
       l.querySelector(".qql-zahl").appendChild(b);
     });
     var los = l.querySelector(".qql-los");
-    los.textContent = "Quiz starten" + (stand.laenge ? " \u00b7 " + stand.laenge + " Fragen" : "");
+    los.textContent = "Quiz starten \u00b7 " + (stand.laenge ? stand.laenge + " Fragen" : "alle Fragen");
     los.addEventListener("click", function () { $("q-start").click(); });
   }
   function nachBlaettern() {

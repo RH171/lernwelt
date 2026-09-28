@@ -155,6 +155,28 @@ export async function onRequestGet(context) {
 
   let vorrat = await vorratLesen(env, kind);
   const gestellt = new Set(await gestellteLesen(env, kind));
+  /* Die Blaetter selbst - fuer zwei Dinge (28.09.2026):
+     1. Alte Fragen mit falschem Fach-Etikett fallen raus (eine Frage vom
+        Mathe-Blatt ist keine Deutschfrage).
+     2. Jede Frage bekommt ihren BELEG mit: die Zeile aus Pauls Heft. Denny:
+        "hier hätten wir sehr gerne gesehen, woher Du die Lösung hast. Sprich
+        wir hätten dazu gerne den Beweis aus seinen Unterlagen gesehen." */
+  const blattNach = {};
+  try {
+    const e = await stoffLesen(env, kind, 4);
+    if (e.ok) for (const x of e.eintraege) blattNach[x.id] = x;
+  } catch (e) {}
+  const fachMitBlatt = new Set(Object.values(blattNach).filter((x) => x.sichtbar !== false)
+    .map((x) => String(x.fach || "").toLowerCase()));
+  vorrat.fragen = vorrat.fragen.filter((f) => {
+    const fach = String(f.fach || "").toLowerCase();
+    /* Ohne Blatt, obwohl es zu dem Fach Blaetter gibt: eine Lehrplanfrage,
+       die Paul nie im Unterricht hatte - bei "nur Deutsch" kamen so
+       "5H + 3Z + 9E" und "Wann bekam Fuerth die U-Bahn?" als Deutschfragen. */
+    if (!f.blatt) return !fachMitBlatt.has(fach);
+    const b = blattNach[f.blatt];
+    return !b || !b.fach || String(b.fach).toLowerCase() === fach;
+  });
 
   const passt = (f) => {
     if (gewuenschteFaecher.length &&
@@ -241,7 +263,8 @@ export async function onRequestGet(context) {
         : "Für diese Auswahl habe ich gerade keine neuen Fragen. Versuch es mit mehr Fächern." });
 
   mischen(offen);
-  const raus = anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40);
+  const raus = (anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40))
+    .map((f) => { const b = belegFuer(f, blattNach[f.blatt]); return b ? { ...f, beleg: b } : f; });
   /* `wartend` zaehlt ueber den GANZEN Vorrat, nicht nur ueber die Auswahl -
      sonst staende an einem abgewaehlten Blatt nie eine Zahl. Was daraus auf
      dem Schirm wird (Zahl, Punkt oder nichts), entscheidet `anzeige.wartend`
@@ -687,6 +710,23 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
     }));
 }
 
+/* Die Zeile aus dem Heft, auf die sich die Frage stuetzt. Erst die Nummer
+ * (belegNr), sonst die Zeile mit dem Stichwort, sonst die mit der Antwort.
+ * Findet sich nichts, gibt es keinen Beleg - lieber keiner als ein falscher. */
+export function belegFuer(f, blatt) {
+  if (!f || !blatt || !Array.isArray(blatt.inhalt) || !blatt.inhalt.length) return null;
+  const zeilen = blatt.inhalt.map((z) => String(z || "").replace(/^✍\s*/, ""));
+  const klein = (s) => String(s || "").toLowerCase();
+  let z = "";
+  const n = Number(f.belegNr);
+  if (n >= 1 && n <= zeilen.length) z = zeilen[n - 1];
+  if (!z && f.zeile && klein(f.zeile).length >= 3) z = zeilen.find((x) => klein(x).includes(klein(f.zeile))) || "";
+  const richtig = klein((f.antworten || [])[f.richtig || 0]);
+  if (!z && richtig.length >= 3) z = zeilen.find((x) => klein(x).includes(richtig)) || "";
+  if (!z) return null;
+  return { titel: String(blatt.titel || "").slice(0, 80), zeile: z.slice(0, 200) };
+}
+
 /* Eine Frage von einem Mathe-Blatt ist keine Deutschfrage, egal was das
  * Modell ins Feld "fach" schreibt. */
 export function fachPasstZumBlatt(f, liste) {
@@ -887,6 +927,7 @@ export function blattGedaechtnis(frage) {
   // wer den Text gerade vor sich hat - das ist Lesen, nicht Lernstoff.
   if (/\b(im|in dem|in diesem|aus dem|laut)\s+(Text|Lesetext|Gedicht|Diktat|Sachtext|Abschnitt)\b/i.test(f)) return true;
   if (/\b(in|aus)\s+der\s+(Geschichte|Erzählung|Erzaehlung|Lesegeschichte)\b/i.test(f)) return true;
+  if (/\bbei dir in der\b/i.test(f)) return true;
   if (/\b(hast du|hattest du)\b[^?]*\b(aufgeschrieben|geschrieben|eingetragen|notiert|angekreuzt)\b/i.test(f)) return true;
   return false;
 }
