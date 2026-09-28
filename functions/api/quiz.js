@@ -375,7 +375,9 @@ async function vorratLesen(env, kind) {
   try {
     const roh = await env.PAUL_KV.get(VORRAT(kind));
     const d = roh ? JSON.parse(roh) : null;
-    if (d && Array.isArray(d.fragen)) return d;
+    /* Alte Fragen, die nach dem Blatt selbst fragen, fallen beim Lesen weg -
+       ohne Schreibvorgang. Mit dem naechsten Nachbau verschwinden sie ganz. */
+    if (d && Array.isArray(d.fragen)) { d.fragen = d.fragen.filter((f) => !f || !blattGedaechtnis(f.frage)); return d; }
   } catch (e) {}
   return { fragen: [], gebaut: null };
 }
@@ -527,6 +529,12 @@ REGELN
    nicht "Welcher Ort wurde eingemeindet?", denn darauf gibt es fuenf richtige.
 4c. Keine zwei Fragen zur selben Zeile des Blattes. Nimm die genauere.
 4d. Frag nicht "ungefähr", wenn auf dem Blatt eine genaue Zahl steht.
+4e. Das Kind hat sein Blatt beim Quiz NICHT vor sich. Frag den STOFF, nie das
+   Blatt: nicht "Welche Farbe hatten die Socken auf deinem Blatt?", sondern
+   "Was heisst gelb auf Englisch?". Nicht "Welches Tier stand bei den
+   Haustieren?", sondern "Was heisst Kaninchen auf Englisch?". Kein "auf deinem
+   Blatt", "im Heft", "stand bei", "stand auf" in der Frage - jede Frage muss
+   jemand beantworten koennen, der den Stoff kann, das Blatt aber nie gesehen hat.
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
@@ -586,6 +594,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
     .filter(belegt)
     .filter((f) => !verneint(f.frage))
+    .filter((f) => !blattGedaechtnis(f.frage))
     // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
     .filter((f) => erlaubt.has(String(f.fach || "").toLowerCase()))
     .map((f) => ({
@@ -788,6 +797,20 @@ export function frageBelegt(f, schule, nurDaraus) {
  * normaler Schreibweise kommt in harmlosen Fragen vor ("Was gehoert nicht
  * dazu" faengt die Grossschreibung ohnehin, und "Welche Zahl ist nicht
  * gerade?" ist eine echte Matheaufgabe). */
+/* Fragt die Frage nach dem BLATT statt nach dem Stoff? Paul hat es beim Quiz
+ * nicht in der Hand. Denny am 28.09.2026 zu "Welche Farbe hatten die Socken auf
+ * deinem Blatt?" und "Welches dieser Tiere stand bei den Haustieren: Kaninchen
+ * auf Englisch?": "Wie soll Paul bei dem Quiz etwas aus dem Blatt zitieren, wenn
+ * er es nicht hat." Regel 4e bittet darum, hier wird sie durchgesetzt.
+ * Nur fuer das Quiz - im Such-Spiel liegt das Foto daneben, dort ist es richtig. */
+export function blattGedaechtnis(frage) {
+  const f = String(frage || "");
+  if (/\b(auf|in|von|aus|laut)\s+(deinem|deinen|dem|den|diesem|deiner|der)\s+(Arbeits)?(Blatt|Blättern|Heft|Hefteintrag|Merkheft|Foto|Buchseite|Seite)\b/i.test(f)) return true;
+  if (/\b(im|ins)\s+(Heft|Hefteintrag|Merkheft|Arbeitsheft)\b/i.test(f)) return true;
+  if (/\b(stand|standen|stehen\s+hatte|war|waren)\s+(bei|auf|unter|neben|oben|unten|ganz)\b/i.test(f)) return true;
+  return false;
+}
+
 export function verneint(frage) {
   const f = String(frage || "");
   if (/\b(NICHT|KEIN|KEINE|FALSCH|AUSSER)\b/.test(f)) return true;
