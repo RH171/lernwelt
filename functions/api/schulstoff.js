@@ -24,7 +24,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { tippOk } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import {
-  FAECHER, kindOk, datumOk, heuteBerlin, blattDatum,
+  FAECHER, FAECHER_JE_KIND, SCHUELER_JE_KIND, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
   inhaltSetzen,
   HAND, KARTEN_MAX,
@@ -325,7 +325,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
        * beleg_nr des Quiz zaehlt einfach weiter - am Riegel aendert sich
        * dadurch nichts. */
       const alle = await Promise.all(
-        seiten.map((s) => blattLesen(env, s).catch(() => null))
+        seiten.map((s) => blattLesen(env, s, kind).catch(() => null))
       );
       const gelesen = alle[0] || { titel: "", datum: "", inhalt: [], karten: [] };
       /* Zeilen der Folgeseiten anhaengen, doppelte weglassen: Ein Merkkasten,
@@ -368,7 +368,8 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
          Der Vorschlag wird am Eintrag vermerkt, damit nur genau dieser
          bestaetigt werden kann. Gelesen wird Seite 1 - dort steht die
          Ueberschrift. */
-      const fachGelesen = gelesen.fach || "";
+      /* Nur ein Fach, das dieses Kind auch waehlen kann (Helena hat kein HSU). */
+      const fachGelesen = (FAECHER_JE_KIND[kind] || []).includes(gelesen.fach) ? gelesen.fach : "";
       if (fachGelesen && eintrag.fach && fachGelesen !== eintrag.fach && eintrag.fach !== "anderes") {
         const rf = await fachSetzen(env, kind, eintrag.id, { vorschlag: fachGelesen });
         if (rf.ok) fachFrage = { gelesen: fachGelesen, gewaehlt: eintrag.fach };
@@ -883,12 +884,21 @@ export function inhalteZusammen(alle) {
 export function fachAusText(s) {
   const w = String(s || "").toLowerCase().trim().replace(/[^a-zäöüß]/g, " ").trim().split(/\s+/)[0] || "";
   const ALIAS = { mathematik: "mathe", sachunterricht: "hsu", heimat: "hsu",
-                  religion: "rel", ethik: "rel", english: "englisch" };
+                  religion: "rel", ethik: "rel", english: "englisch",
+                  franzoesisch: "franz", "französisch": "franz", french: "franz",
+                  geographie: "geo", geografie: "geo", erdkunde: "geo",
+                  informatik: "info" };
   const k = ALIAS[w] || w;
   return (FAECHER[k] && k !== "anderes") ? k : "";
 }
 
-async function blattLesen(env, seite) {
+async function blattLesen(env, seite, kind) {
+  const schueler = SCHUELER_JE_KIND[kind] || SCHUELER_JE_KIND.paul;
+  const fachWoerter = (FAECHER_JE_KIND[kind] || FAECHER_JE_KIND.paul)
+    .map((k) => k === "hsu" ? "hsu (Heimat- und Sachunterricht: Natur, Technik, Ort, Geschichte)"
+              : k === "rel" ? "rel (Religion oder Ethik)" : k === "franz" ? "franz (Franzoesisch)"
+              : k === "geo" ? "geo (Geographie)" : k === "info" ? "info (Informatik)" : k)
+    .join(", ");
   const komma = String(seite || "").indexOf(",");
   if (komma < 0) throw new Error("kein Bild dabei");
   const typ = String(seite).slice(5, String(seite).indexOf(";"));
@@ -925,7 +935,7 @@ async function blattLesen(env, seite) {
           content: [
             { type: "image", source: { type: "base64", media_type: typ, data: String(seite).slice(komma + 1) } },
             { type: "text", text:
-              "Das ist ein Blatt aus dem Unterricht eines Grundschulkindes. Antworte NUR mit zwei " +
+              "Das ist ein Blatt aus dem Unterricht " + schueler.wer + ". Antworte NUR mit zwei " +
               "Zeilen, ohne weiteren Text:\n" +
               "TITEL: eine kurze Überschrift, worum es geht - höchstens fünf Wörter, deutsch, " +
               "ohne Anführungszeichen. Erkennst du es nicht sicher: unklar\n" +
@@ -934,9 +944,8 @@ async function blattLesen(env, seite) {
               "Nur ein Datum, das jemand VON HAND eingetragen hat - ein gedrucktes " +
               "Beispieldatum auf einer Vorlage (etwa \"So schreibe ich in mein Heft\") " +
               "zaehlt nicht. Steht keines da: keins\n" +
-              "FACH: welches Schulfach das ist - genau eines dieser Woerter: mathe, " +
-              "deutsch, hsu (Heimat- und Sachunterricht: Natur, Technik, Ort, Geschichte), " +
-              "englisch, rel (Religion oder Ethik), musik, anderes. Bist du nicht " +
+              "FACH: welches Schulfach das ist - genau eines dieser Woerter: " +
+              fachWoerter + ". Bist du nicht " +
               "sicher: unklar\n" +
               "SORTE: eine von drei Angaben, was fuer ein Blatt das ist:\n" +
               "* lernziele - es listet auf, was man koennen muss (\"Das musst du " +
@@ -993,7 +1002,7 @@ async function blattLesen(env, seite) {
               "sein: vertauschte Ziffern, ein anderes Jahrzehnt, ein aehnlicher Name. " +
               "Sie duerfen NICHT selbst auf dem Blatt stehen und nie eine andere " +
               "Schreibweise der richtigen Antwort sein.\n" +
-              "* Merksatz: eine kurze Hilfsbruecke fuer ein Kind der 4. Klasse, hoechstens " +
+              "* Merksatz: eine kurze Hilfsbruecke fuer " + schueler.klasse + ", hoechstens " +
               "20 Woerter, die das Denken anstoesst, ohne die Antwort zu nennen. Bei " +
               "Regeln die Regel mit einem EIGENEN Beispiel (\"Nomen sind Dinge, Lebewesen " +
               "oder Gefuehle - davor passt der, die oder das, und man schreibt sie gross: " +
@@ -1269,7 +1278,7 @@ async function nachtragen(context) {
     const seite = await stoffBild(env, x.id, 0);
     if (!seite) { getan.push({ id: x.id, warum: "kein Bild" }); continue; }
     try {
-      const gelesen = await blattLesen(env, seite);
+      const gelesen = await blattLesen(env, seite, kind);
       /* Auch das DATUM nachtragen.
        *
        * Denny am 22.09.2026 mit einem Bild aus der Grossansicht: Oben stand

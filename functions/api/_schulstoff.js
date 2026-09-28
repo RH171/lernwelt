@@ -38,7 +38,29 @@ export const FAECHER = {
   englisch: "Englisch",
   rel:      "Religion oder Ethik",
   musik:    "Musik",
+  /* Seit 28.09.2026 fuer Helena (7. Klasse Gymnasium, aus
+     helena/stundenplan.html): Denny will Pauls Ablage auch bei ihr. */
+  franz:      "Französisch",
+  geschichte: "Geschichte",
+  geo:        "Geographie",
+  info:       "Informatik",
   anderes:  "einem anderen Fach",
+};
+
+/* Welche Faecher ein Kind zur Wahl hat - und welche das Lesemodell nennen
+   darf. Paul und Leon: Grundschule. Helena: ihr Stundenplan ohne Sport,
+   Kunst und F-Int (dort entsteht nichts zum Ueben). */
+export const FAECHER_JE_KIND = {
+  paul:   ["mathe", "deutsch", "hsu", "englisch", "rel", "musik", "anderes"],
+  leon:   ["mathe", "deutsch", "hsu", "englisch", "rel", "musik", "anderes"],
+  helena: ["deutsch", "mathe", "englisch", "franz", "geschichte", "geo", "info", "rel", "musik", "anderes"],
+};
+
+/* Wer das Blatt geschrieben hat - fuer den Leseauftrag. */
+export const SCHUELER_JE_KIND = {
+  paul:   { wer: "eines Grundschulkindes", klasse: "ein Kind der 4. Klasse" },
+  leon:   { wer: "eines Grundschulkindes (2. Klasse, Leseanfaenger)", klasse: "ein Kind der 2. Klasse, in ganz einfachen Worten" },
+  helena: { wer: "einer Schuelerin der 7. Klasse am Gymnasium", klasse: "eine Schuelerin der 7. Klasse" },
 };
 
 /* Die beiden Arten eines Eintrags. Bewusst nur zwei (Denny, 23.09.2026):
