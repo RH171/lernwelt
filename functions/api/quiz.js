@@ -937,6 +937,7 @@ export function blattGedaechtnis(frage) {
   if (/\b(im|in dem|in diesem|aus dem|laut)\s+(Text|Lesetext|Gedicht|Diktat|Sachtext|Abschnitt)\b/i.test(f)) return true;
   if (/\b(in|aus)\s+der\s+(Geschichte|Erzählung|Erzaehlung|Lesegeschichte)\b/i.test(f)) return true;
   if (/\bbei dir in der\b/i.test(f)) return true;
+  if (/\b(in|aus) der\s+(Tabelle|Übung|Uebung|Liste|Wörterliste)\b|\bim Kasten\b|\bin Aufgabe\s*\d/i.test(f)) return true;
   if (/\b(hast du|hattest du)\b[^?]*\b(aufgeschrieben|geschrieben|eingetragen|notiert|angekreuzt)\b/i.test(f)) return true;
   return false;
 }
