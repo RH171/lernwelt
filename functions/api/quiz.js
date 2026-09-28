@@ -511,7 +511,7 @@ async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   try { schwaechen = await schwaechenHolen(env, kind, 6); } catch (e) {}
 
   // Und was zuletzt wirklich im Unterricht dran war (Fotos aus dem Heft).
-  const schule = await letzterUnterricht(env, kind, nurBlaetter);
+  const schule = await letzterUnterricht(env, kind, nurBlaetter, nurFaecher);
   const ausDerSchule = schule.text;
   const nurDaraus = !!(nurBlaetter && nurBlaetter.length && schule.blaetter.length);
 
@@ -584,6 +584,13 @@ REGELN
    Haustieren?", sondern "Was heisst Kaninchen auf Englisch?". Kein "auf deinem
    Blatt", "im Heft", "stand bei", "stand auf" in der Frage - jede Frage muss
    jemand beantworten koennen, der den Stoff kann, das Blatt aber nie gesehen hat.
+   Dasselbe gilt fuer Lesetexte: Nicht "Was hatte das Kind im Text im Auge?" -
+   an den Inhalt einer Geschichte erinnert sich niemand ohne den Text. Aus einem
+   Lesetext frag nur, was man daran LERNT (Wortart, Rechtschreibung, Begriffe).
+4f. Wenn das Heft etwas anders einordnet, als man es sonst sagen koennte (etwa
+   "Nussknacker = Nomen + Verb", obwohl "Knacker" auch ein Nomen ist), folgt
+   die Frage dem Heft, und die Erklaerung zitiert die Stelle woertlich:
+   "In deinem Merkheft steht: Nomen + Verb: Nussknacker, Seiltänzer."
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
@@ -644,6 +651,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
     .filter(belegt)
     .filter((f) => !verneint(f.frage))
     .filter((f) => !blattGedaechtnis(f.frage))
+    .filter((f) => fachPasstZumBlatt(f, schule.blaetter))
     // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
     .filter((f) => erlaubt.has(String(f.fach || "").toLowerCase()))
     .map((f) => ({
@@ -677,6 +685,15 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
          das je Lauf neu erfunden wird. */
       ...(Number(f.beleg_nr) >= 1 ? { belegNr: Math.floor(Number(f.beleg_nr)) } : {}),
     }));
+}
+
+/* Eine Frage von einem Mathe-Blatt ist keine Deutschfrage, egal was das
+ * Modell ins Feld "fach" schreibt. */
+export function fachPasstZumBlatt(f, liste) {
+  const n = Number(f && f.blatt_nr);
+  if (!Number.isFinite(n) || n < 1 || !liste || n > liste.length) return true;
+  const soll = String(liste[n - 1].fach || "").toLowerCase();
+  return !soll || soll === String(f.fach || "").toLowerCase();
 }
 
 function blattVon(nr, liste) {
@@ -745,7 +762,7 @@ export function nachArt(liste) {
   });
 }
 
-async function letzterUnterricht(env, kind, nurBlaetter) {
+async function letzterUnterricht(env, kind, nurBlaetter, nurFaecher) {
   try {
     const e = await stoffLesen(env, kind, 4);
     if (!e.ok) return { text: "", blaetter: [] };
@@ -754,6 +771,14 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
       x.sichtbar !== false && x.datum >= ab && x.titel);
     if (nurBlaetter && nurBlaetter.length) {
       liste = liste.filter((x) => nurBlaetter.includes(x.id));
+    }
+    /* Nur die Blaetter der gewaehlten Faecher (28.09.2026). Vorher gingen bei
+       "nur Deutsch" die acht wichtigsten Blaetter ALLER Faecher in den Auftrag,
+       das Modell durfte aber nur "deutsch" als Fach eintragen - heraus kamen
+       Mathe-, HSU- und Englischfragen mit dem Etikett Deutsch. Denny: "Wenn
+       Paul nur ein Fach auswählt … baut er aus allen Fächern Fragen." */
+    if (nurFaecher && nurFaecher.length) {
+      liste = liste.filter((x) => nurFaecher.includes(String(x.fach || "").toLowerCase()));
     }
     /* Hefteintraege zuerst, Uebungsblaetter danach.
      *
@@ -858,6 +883,10 @@ export function blattGedaechtnis(frage) {
   // "Womit streichst du im Heft durch?" ist Stoff (Heftregeln), "Was steht im Heft?" nicht.
   if (/\b(steht|stehen|stand|standen)\b[^?]*\b(im|ins|in deinem)\s+(Heft|Hefteintrag|Merkheft|Arbeitsheft)\b/i.test(f)) return true;
   if (/\b(stand|standen)\s+(bei|auf|unter|neben|oben|unten|ganz)\b/i.test(f)) return true;
+  // Inhalt eines Lesetexts ("Was hatte ein Kind im Text im Auge?") weiss nur,
+  // wer den Text gerade vor sich hat - das ist Lesen, nicht Lernstoff.
+  if (/\b(im|in dem|in diesem|aus dem|laut)\s+(Text|Lesetext|Gedicht|Diktat|Sachtext|Abschnitt)\b/i.test(f)) return true;
+  if (/\b(in|aus)\s+der\s+(Geschichte|Erzählung|Erzaehlung|Lesegeschichte)\b/i.test(f)) return true;
   if (/\b(hast du|hattest du)\b[^?]*\b(aufgeschrieben|geschrieben|eingetragen|notiert|angekreuzt)\b/i.test(f)) return true;
   return false;
 }
