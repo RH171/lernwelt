@@ -806,8 +806,10 @@ export function frageBelegt(f, schule, nurDaraus) {
 export function blattGedaechtnis(frage) {
   const f = String(frage || "");
   if (/\b(auf|in|von|aus|laut)\s+(deinem|deinen|dem|den|diesem|deiner|der)\s+(Arbeits)?(Blatt|Blättern|Heft|Hefteintrag|Merkheft|Foto|Buchseite|Seite)\b/i.test(f)) return true;
-  if (/\b(im|ins)\s+(Heft|Hefteintrag|Merkheft|Arbeitsheft)\b/i.test(f)) return true;
-  if (/\b(stand|standen|stehen\s+hatte|war|waren)\s+(bei|auf|unter|neben|oben|unten|ganz)\b/i.test(f)) return true;
+  // "Womit streichst du im Heft durch?" ist Stoff (Heftregeln), "Was steht im Heft?" nicht.
+  if (/\b(steht|stehen|stand|standen)\b[^?]*\b(im|ins|in deinem)\s+(Heft|Hefteintrag|Merkheft|Arbeitsheft)\b/i.test(f)) return true;
+  if (/\b(stand|standen)\s+(bei|auf|unter|neben|oben|unten|ganz)\b/i.test(f)) return true;
+  if (/\b(hast du|hattest du)\b[^?]*\b(aufgeschrieben|geschrieben|eingetragen|notiert|angekreuzt)\b/i.test(f)) return true;
   return false;
 }
 
