@@ -60,6 +60,13 @@ const GESTELLT = (kind) => "quiz-gestellt:" + kind;
 const JE_LAUF = 24;
 // Darunter wird nachgefuellt, damit nie jemand vor einem leeren Quiz sitzt.
 const NACHFUELLEN_AB = 10;
+/* Vorbauen: so viele Fragen je Blatt sind genug, so viele Blaetter je Aufruf
+   (vier halten den Aufruf unter einer Minute). */
+const VORBAU_ZIEL = 6;
+const VORBAU_JE_LAUF = 4;
+/* 200 reichten fuer zwei Wochen Blaetter; bei ~40 Blaettern im Monat verdraengte
+   der Deckel laufend fertige Fragen - und jede fehlende heisst Warten. */
+const VORRAT_MAX = 800;
 // Mehr als so viele Kennungen werden nicht aufgehoben - sonst waechst der
 // Eintrag endlos und jeder Schreibvorgang wird teurer.
 const GESTELLT_MAX = 400;
@@ -105,6 +112,45 @@ export async function onRequestGet(context) {
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
                        quizWackler: quizWacklerListe(v.fragen, pk, Date.now()) });
+  }
+
+  /* Vorbauen im Hintergrund (28.09.2026). Denny: "Die Ladezeiten sind
+     unterirdisch für ein Kind. Das muss sofort da sein." Ein Nachbau dauert
+     40 bis 60 Sekunden - er darf nie mehr zwischen "Quiz starten" und der
+     ersten Frage liegen. Die Seite ruft das hier auf, sobald ein Fach gewaehlt
+     ist; gebaut wird nur fuer Blaetter mit zu wenig Fragen, hoechstens
+     VORBAU_JE_LAUF auf einmal. Die Antwort sagt, ob noch welche fehlen. */
+  if (url.searchParams.get("vorbauen") === "1") {
+    const v0 = await vorratLesen(env, kind);
+    const jeBlatt = {};
+    for (const f of v0.fragen) if (f.blatt) jeBlatt[f.blatt] = (jeBlatt[f.blatt] || 0) + 1;
+    let kandidaten = gewuenschteBlaetter;
+    if (!kandidaten.length) {
+      const e = await stoffLesen(env, kind, 4).catch(() => ({ ok: false }));
+      const ab = e.ok ? schuljahrStart(e.heute) : "";
+      kandidaten = (e.ok ? e.eintraege : []).filter((x) => x && x.sichtbar !== false && x.titel &&
+          x.datum >= ab &&
+          (!gewuenschteFaecher.length || gewuenschteFaecher.includes(String(x.fach || "").toLowerCase())))
+        .sort((a, b) => String(b.datum).localeCompare(String(a.datum)))   // das Neueste zuerst
+        .map((x) => x.id);
+    }
+    const fehlen = kandidaten.filter((id) => (jeBlatt[id] || 0) < VORBAU_ZIEL);
+    if (!fehlen.length) return json(200, { ok: true, gebaut: 0, fehlen: 0 });
+    const jetztDran = fehlen.slice(0, VORBAU_JE_LAUF);
+    let neu = [];
+    try { neu = await nachschubBauen(env, kind, gewuenschteFaecher, jetztDran); } catch (e) {}
+    if (neu.length) {
+      // Frisch lesen und zusammenfuehren: Zwei Vorbauten gleichzeitig duerfen
+      // sich nicht gegenseitig ueberschreiben.
+      const v1 = await vorratLesen(env, kind);
+      const ids = new Set(v1.fragen.map((f) => f.id));
+      v1.fragen = v1.fragen.concat(neu.filter((f) => !ids.has(f.id))).slice(-VORRAT_MAX);
+      v1.gebaut = new Date().toISOString();
+      try { await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(v1)); } catch (e) {
+        return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an." });
+      }
+    }
+    return json(200, { ok: true, gebaut: neu.length, fehlen: Math.max(0, fehlen.length - jetztDran.length) });
   }
 
   let vorrat = await vorratLesen(env, kind);
@@ -167,14 +213,17 @@ export async function onRequestGet(context) {
     }
   }
 
-  // Reicht es immer noch nicht, wird nachgebaut. Der Aufruf dauert - darum
-  // sagt die Antwort ehrlich, dass gewartet wird, statt still nichts zu liefern.
+  /* Gebaut wird hier nur noch, wenn GAR NICHTS da ist (28.09.2026). Sonst
+     startet das Quiz sofort mit dem, was da ist, und die Seite baut im
+     Hintergrund nach (`vorbauen=1`). Vorher lagen 40 bis 60 Sekunden
+     zwischen "Quiz starten" und der ersten Frage. */
   let nachgebaut = false;
-  if (offen.length < Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB)) {
+  const nachschub = offen.length < Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB);
+  if (!offen.length) {
     try {
       const neu = await nachschubBauen(env, kind, gewuenschteFaecher, gewuenschteBlaetter);
       if (neu.length) {
-        vorrat.fragen = vorrat.fragen.concat(neu).slice(-200);
+        vorrat.fragen = vorrat.fragen.concat(neu).slice(-VORRAT_MAX);
         vorrat.gebaut = new Date().toISOString();
         await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(vorrat));
         nachgebaut = true;
@@ -197,7 +246,7 @@ export async function onRequestGet(context) {
      sonst staende an einem abgewaehlten Blatt nie eine Zahl. Was daraus auf
      dem Schirm wird (Zahl, Punkt oder nichts), entscheidet `anzeige.wartend`
      in _wiedervorlage.js, nicht der Motor. */
-  return json(200, { ok: true, fragen: raus, nachgebaut, vorrat: offen.length,
+  return json(200, { ok: true, fragen: raus, nachgebaut, nachschub, vorrat: offen.length,
                      wiedervorlage: fuerDieSeite(),
                      wartend: wartendJeBlatt(vorrat.fragen, punkte, jetzt),
                      ...(wiederholt ? { wiederholt } : {}) });
