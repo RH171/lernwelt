@@ -49,12 +49,17 @@
   var ausHeft = null;    // [{fach, blaetter}] oder null = noch nicht geladen
 
   function faecherHolen() {
-    return fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) + "&faecher=1",
+    return fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) + "&faecher=1&mitBlaettern=1",
                  { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok) return;
         ausHeft = j.faecher || [];
+        /* Die Blaetter aller Faecher kommen gleich mit (Denny, 28.09.2026: "das
+           koenntest Du doch im Vorfeld schon machen? Weil das ist unnoetige
+           Ladezeit"). Ein alter Server ohne `blaetter` faellt aufs Nachladen
+           je Fach zurueck. */
+        if (j.blaetter && typeof j.blaetter === "object") blattVorrat = j.blaetter;
         // Nur die Faecher, die auch in der Seite beschrieben sind (Name, Zeichen).
         var bekannt = {};
         K.faecher.forEach(function (f) { bekannt[f.k] = f; });
@@ -109,6 +114,7 @@
    * mehreren waere es eine Wand aus Kacheln. Ohne Auswahl gilt: alle
    * Blaetter des Fachs; niemand muss erst etwas anhaken. */
   var blaetter = [], blattFach = "";
+  var blattVorrat = null;   // {fach: [blatt, ...]} aus dem ersten Aufruf, oder null
   if (!Array.isArray(stand.blaetter)) stand.blaetter = [];
 
   function blaetterMalen() {
@@ -119,19 +125,30 @@
 
     if (blattFach !== eins) {
       blattFach = eins; blaetter = []; stand.blaetter = [];
+      if (blattVorrat) {
+        blaetter = nachArtSortiert(blattVorrat[eins] || []);
+        blaetterZeichnen();
+        nachBlaettern();
+        wartendHolen();
+        return;
+      }
       $("q-blaetter-liste").innerHTML = "";
-      $("q-blaetter-kopf").textContent = "Ich schaue nach, was du dazu im Heft hast …";
+      $("q-blaetter-kopf").textContent = "";
+      var altReihe = $("q-blatt-art");
+      if (altReihe) altReihe.style.display = "none";   // keine Zahlen des vorigen Fachs
       kasten.classList.remove("verborgen");
+      nachBlaettern();                                  // alte Such-Karte weg, solange geladen wird
       fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
             "&fach=" + encodeURIComponent(eins), { credentials: "same-origin" })
         .then(function (r) { return r.json(); })
         .then(function (j) {
-          if (!j || !j.ok) { kasten.classList.add("verborgen"); return; }
+          if (!j || !j.ok) { kasten.classList.add("verborgen"); nachBlaettern(); return; }
           blaetter = nachArtSortiert(j.blaetter || []);
           blaetterZeichnen();
+          nachBlaettern();
           wartendHolen();
         })
-        .catch(function () { kasten.classList.add("verborgen"); });
+        .catch(function () { kasten.classList.add("verborgen"); nachBlaettern(); });
       return;
     }
     blaetterZeichnen();

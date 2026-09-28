@@ -434,10 +434,15 @@ export async function faecherImHeft(env, kind) {
   const ab = schuljahrStart(e.heute);
 
   const zahl = {};
+  /* Die Blaetter gleich mit (28.09.2026): Das Lernquiz holt sie so in DEMSELBEN
+     Aufruf und muss beim Fachtipp nicht mehr nachladen. Dieselbe Auswahl wie
+     blaetterImFach() - sichtbar, dieses Schuljahr, genau dieses Fach. */
+  const jeFach = {};
   e.eintraege.forEach((x) => {
     if (x.sichtbar === false) return;              // weggelegt zaehlt nicht
     if (!x.datum || x.datum < ab) return;          // voriges Schuljahr
     const f = x.fach || "";
+    (jeFach[f] = jeFach[f] || []).push(x);
     if (!f || !FAECHER[f]) return;                 // ohne Fach nichts abfragen
     zahl[f] = (zahl[f] || 0) + 1;
   });
@@ -445,7 +450,7 @@ export async function faecherImHeft(env, kind) {
   const faecher = Object.keys(zahl)
     .map((f) => ({ fach: f, blaetter: zahl[f] }))
     .sort((a, b) => b.blaetter - a.blaetter || a.fach.localeCompare(b.fach));
-  return { ok: true, ab, faecher };
+  return { ok: true, ab, faecher, jeFach };
 }
 
 /* Die Blaetter eines Fachs - damit Paul selbst aussuchen kann, welches

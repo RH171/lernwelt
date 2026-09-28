@@ -1191,7 +1191,9 @@ export async function onRequestGet(context) {
         ? Object.assign({}, x, { falsch: q.falsch, gesamt: q.gesamt })
         : x;
     });
-    return json(200, { ok: true, ab: f.ab, faecher, namen: FAECHER });
+    const aus = { ok: true, ab: f.ab, faecher, namen: FAECHER };
+    if (p.get("mitBlaettern") === "1") aus.blaetter = f.jeFach;
+    return json(200, aus);
   }
 
   /* Die Blaetter EINES Fachs - Paul sucht selbst aus, was abgefragt wird. */

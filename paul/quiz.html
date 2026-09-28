@@ -181,7 +181,10 @@ window.QUIZ = {
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
-  var suchMap = {}, suchListe = [], blattListeDa = false;
+  /* null = der Motor hat noch nicht gesagt, ob eine Blattliste kommt. Solange
+     bleibt die alte Such-Karte zu - sonst blitzt sie beim Laden auf (Denny,
+     28.09.2026). */
+  var suchMap = {}, suchListe = [], blattListeDa = null;
   window.QUIZ_BLATT_EXTRA = function(b){
     var x = suchMap[b.id];
     if (!x) return null;
@@ -198,7 +201,7 @@ window.QUIZ = {
     return k;
   };
   function suchKarteZeigen(){
-    $("such-wahl").classList.toggle("verborgen", !suchListe.length || blattListeDa);
+    $("such-wahl").classList.toggle("verborgen", !suchListe.length || blattListeDa !== false);
   }
   window.QUIZ_NACH_BLAETTERN = function(da){ blattListeDa = !!da; suchKarteZeigen(); };
   function merken(blattId, liste){
@@ -317,7 +320,7 @@ window.QUIZ = {
   });
 })();
 </script>
-<script src="/quiz/motor.js?v=a3d94563" defer></script>
+<script src="/quiz/motor.js?v=1ceae85e" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
 </body>
