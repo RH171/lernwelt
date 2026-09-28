@@ -184,3 +184,11 @@ html[data-theme="dark"] .qquizleiste{background:#262a3a}
  * damit sie nicht wie eine Fußnote wirkt. */
 .mkarte .brue{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);
   font-size:14px;line-height:1.45;color:var(--ink);text-align:left}
+/* Der Beweis aus dem Heft nach der Loesung (28.09.2026) */
+.qbeleg{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--feld,#f3f4f8);border:1px solid var(--line,#d8dbe6);color:var(--ink,#1c2033)}
+.qbeleg>span{display:block;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;opacity:.85;margin-bottom:4px}
+.qbeleg q{display:block;font-weight:700;quotes:"„" "“"}
+.qbeleg small{display:block;margin-top:2px;opacity:.85}
+.qbeleg-auf{margin-top:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:var(--card,#fff);color:var(--ink,#1c2033);font:700 15px inherit;cursor:pointer}
+.qql-t{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.qql-weg{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:transparent;color:inherit;font:600 14px inherit;cursor:pointer}

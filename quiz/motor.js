@@ -326,7 +326,7 @@
 
   function blaetterZeichnen() {
     var kasten = $("q-blaetter");
-    if (!blaetter.length) { kasten.classList.add("verborgen"); return; }
+    if (!blaetter.length) { kasten.classList.add("verborgen"); quizLeisteMalen(); return; }
     kasten.classList.remove("verborgen");
     artReiheMalen(kasten);
     var sicht = sichtbareBlaetter();
@@ -664,6 +664,7 @@ function artKurz(art) {
         return;
       }
       fragen = j.fragen; nr = 0; richtigGesamt = 0; antwortenLog = [];
+      if (j.nachschub) vorbauen();      // fuer die naechste Runde, im Hintergrund
       /* Erst anschauen, dann abfragen - wenn es etwas anzuschauen gibt. */
       if (merkkartenZeigen()) return;
       zeige("spiel");
@@ -741,6 +742,17 @@ function artKurz(art) {
       .then(function () { blattLaeuft = false; });
   }
 
+  function belegZeigen(f) {
+    var b = { id: f.blatt, titel: (f.beleg && f.beleg.titel) || "Dein Blatt" };
+    if (vorschau[b.id]) return grossZeigen(b);
+    fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
+          "&bild=" + encodeURIComponent(b.id) + ":0", { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.ok && j.bild) vorschau[b.id] = j.bild; })
+      .catch(function () {})
+      .then(function () { grossZeigen(b); });
+  }
+
   function hilfeVerbergen() {
     var h = $("q-hilfe");
     if (h) { h.innerHTML = ""; h.classList.add("verborgen"); }
@@ -813,7 +825,18 @@ function artKurz(art) {
       ? (versuch === 1 ? "Richtig." : "Jetzt stimmt es.")
       : "Schau es dir an.";
     e.innerHTML = "<b>" + kopf + "</b> " + esc(f.erklaerung || "") +
-      (f.merke ? '<div class="qmerke"><span>Damit du es behältst</span>' + esc(f.merke) + "</div>" : "");
+      (f.merke ? '<div class="qmerke"><span>Damit du es behältst</span>' + esc(f.merke) + "</div>" : "") +
+      /* Der Beweis aus seinen Unterlagen (28.09.2026). Denny, nach
+         "Nussknacker = Nomen + Verb" und dem Tintenkiller: "Es wäre auch cool,
+         wenn Paul nach der Eingabe der Lösung auch selber noch nachschlagen
+         könnte … wir hätten dazu gerne den Beweis aus seinen Unterlagen
+         gesehen." Der Server liefert die Zeile aus dem Heft mit. */
+      (f.beleg ? '<div class="qbeleg"><span>\uD83D\uDCD6 So steht es in deinem Heft</span>' +
+        '<q>' + esc(f.beleg.zeile) + '</q><small>' + esc(f.beleg.titel) + '</small>' +
+        (f.blatt ? '<button type="button" class="qbeleg-auf">\uD83D\uDCC4 Blatt ansehen</button>' : "") +
+        "</div>" : "");
+    var auf = e.querySelector(".qbeleg-auf");
+    if (auf) auf.addEventListener("click", function () { belegZeigen(f); });
     e.classList.remove("verborgen");
     e.classList.toggle("gut", stimmt);
     $("q-weiter").classList.remove("verborgen");
@@ -841,7 +864,7 @@ function artKurz(art) {
     if (stand.laenge && nr >= stand.laenge) return endeMalen();
     if (nr >= fragen.length) {
       // Endlos: nachladen, statt aufzuhören.
-      if (!stand.laenge) return nachladen();
+      if (!stand.laenge && !einzeln()) return nachladen();
       return endeMalen();
     }
     frageMalen();
