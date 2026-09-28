@@ -20,15 +20,15 @@
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
      Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
-<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<!-- Helenas Welt ist immer dunkel (25.09.2026), einen Schalter hat sie nicht. -->
+<script>document.documentElement.setAttribute("data-theme","dark");</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <script src="/strom.js?v=ccb1b4e5"></script>
-<script src="stundenplan.js?v=1b197a6e"></script>
 <script src="/blatt-aufnehmen.js?v=155e6cd1"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
-    --paul:#4f46e5; --gut:#12b76a;
+    --paul:#a78bfa; --gut:#12b76a;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
   }
@@ -113,7 +113,7 @@
 <body>
 <div class="huelle">
   <header>
-    <a class="zurueck" href="/paul/">‹ Lernwelt</a>
+    <a class="zurueck" href="/helena/">‹ Lernwelt</a>
     <h1>📚 Mein Schulheft und Übungsblätter</h1>
   </header>
 
@@ -170,10 +170,16 @@
   var MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli",
                 "August","September","Oktober","November","Dezember"];
   var TAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-  var ZEICHEN = {mathe:"🔢", deutsch:"📖", hsu:"🌍", englisch:"🇬🇧",
-                 rel:"🕊️", musik:"🎵", anderes:"✏️", "":"📄"};
-  var KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
-              rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
+  /* Helenas Faecher (7. Klasse Gymnasium, aus stundenplan.html, 28.09.2026).
+     Sport, Kunst und F-Int fehlen mit Absicht: dort entsteht nichts zum Ueben. */
+  var ZEICHEN = {deutsch:"📖", mathe:"🔢", englisch:"🇬🇧", franz:"🇫🇷",
+                 geschichte:"🏛️", geo:"🗺️", info:"💻", rel:"🕊️", musik:"🎵",
+                 anderes:"✏️", "":"📄"};
+  var KURZ = {deutsch:"Deutsch", mathe:"Mathe", englisch:"Englisch", franz:"Französisch",
+              geschichte:"Geschichte", geo:"Geographie", info:"Informatik",
+              rel:"Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
+  window.HELENA_FAECHER = Object.keys(KURZ).filter(function(k){ return k; })
+    .map(function(k){ return { schluessel: k, text: ZEICHEN[k] + " " + (k === "anderes" ? "Etwas anderes" : KURZ[k]) }; });
   /* Leer heisst: vor der Unterscheidung abgelegt (vor dem 23.09.2026). Dann
      steht kein Schild da - erfunden wird nichts. */
   var ART = {heft:  {kurz:"📓 Heft",  lang:"Aus meinem Schulheft"},
@@ -316,7 +322,7 @@
   function bildHolen(id, nr){
     var k = id + ":" + nr;
     if (bilder[k]) return Promise.resolve(bilder[k]);
-    return fetch("/api/schulstoff?kind=paul&bild=" + encodeURIComponent(k), {credentials:"same-origin"})
+    return fetch("/api/schulstoff?kind=helena&bild=" + encodeURIComponent(k), {credentials:"same-origin"})
       .then(function(r){ return r.json(); })
       .then(function(j){ if (j && j.ok && j.bild){ bilder[k] = j.bild; return j.bild; } return null; })
       .catch(function(){ return null; });
@@ -396,7 +402,7 @@
     fetch("/api/schulstoff", {
       method:"PATCH", credentials:"same-origin",
       headers:{"content-type":"application/json"},
-      body: JSON.stringify({kind:"paul", id: offen.id, was:"weg"})
+      body: JSON.stringify({kind:"helena", id: offen.id, was:"weg"})
     }).then(function(r){ return r.json(); }).then(function(j){
       k.disabled = false;
       if (!j || !j.ok){ k.textContent = "Das hat nicht geklappt – nochmal?"; wegGefragt = false; return; }
@@ -429,7 +435,7 @@
         fetch("/api/schulstoff", {
           method:"PATCH", credentials:"same-origin",
           headers:{"content-type":"application/json"},
-          body: JSON.stringify({kind:"paul", id: offen.id, was:"fach", fach: k})
+          body: JSON.stringify({kind:"helena", id: offen.id, was:"fach", fach: k})
         }).then(function(r){ return r.json(); }).then(function(j){
           b.disabled = false;
           if (!j || !j.ok){ b.textContent = "Nochmal?"; return; }
@@ -452,7 +458,7 @@
     fetch("/api/schulstoff", {
       method:"PATCH", credentials:"same-origin",
       headers:{"content-type":"application/json"},
-      body: JSON.stringify({kind:"paul", id: offen.id, was:"art", art: ziel})
+      body: JSON.stringify({kind:"helena", id: offen.id, was:"art", art: ziel})
     }).then(function(r){ return r.json(); }).then(function(j){
       k.disabled = false;
       if (!j || !j.ok){ k.textContent = "Nochmal?"; return; }
@@ -482,7 +488,7 @@
     fetch("/api/schulstoff", {
       method: "PATCH", credentials: "same-origin",
       headers: {"content-type":"application/json"},
-      body: JSON.stringify({kind:"paul", id: offen.id, was: was})
+      body: JSON.stringify({kind:"helena", id: offen.id, was: was})
     }).then(function(r){ return r.json(); }).then(function(j){
       if (!j || !j.ok) return;
       offen.sichtbar = (was === "zeigen");
@@ -501,8 +507,9 @@
     $("neues-blatt").textContent = zu ? "✕ Doch nicht" : "📸 Neues Blatt";
     if (zu && !aufnehmer){
       aufnehmer = LWBlatt.einbauen(k, {
-        kind: "paul",
-        plan: window.PAUL_PLAN,
+        kind: "helena",
+        faecher: window.HELENA_FAECHER,
+        heftSatz: "Daraus wird in der Schulaufgabe gefragt",
         /* Nach dem Ablegen kommen KEINE Fundkarten mehr (Denny, 25.09.2026:
            "eher als Quiz- und Spielmoeglichkeit fuer Paul"). Das Such-Spiel
            startet Paul selbst im Lernquiz. Hier wird nur die Liste neu
@@ -515,7 +522,7 @@
   });
 
   function laden(){
-    fetch("/api/schulstoff?kind=paul&monate=6", {credentials:"same-origin"})
+    fetch("/api/schulstoff?kind=helena&monate=6", {credentials:"same-origin"})
       .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
       .then(function(a){
         if (a.status === 401){

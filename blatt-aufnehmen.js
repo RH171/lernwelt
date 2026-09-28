@@ -151,7 +151,7 @@
       '<div class="lwb-arten">' +
         '<button type="button" class="zeile" data-art="heft">' +
           '<span class="z">\uD83D\uDCD3</span>' +
-          '<span><b>In meinem Schulheft</b><small>Daraus wird in der Probe gefragt</small></span>' +
+          '<span><b>In meinem Schulheft</b><small>' + (opt.heftSatz || "Daraus wird in der Probe gefragt") + '</small></span>' +
           '<span class="haken">✓</span></button>' +
         '<button type="button" class="zeile" data-art="uebung">' +
           '<span class="z">\uD83D\uDCC4</span>' +
