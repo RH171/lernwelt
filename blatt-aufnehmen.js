@@ -162,6 +162,10 @@
           '<span class="z">\uD83D\uDCD8</span>' +
           '<span><b>Aus dem Schulbuch</b><small>So stellt das Buch die Aufgaben</small></span>' +
           '<span class="haken">✓</span></button>' +
+        '<button type="button" class="zeile" data-art="arbeitsheft">' +
+          '<span class="z">\uD83D\uDCD2</span>' +
+          '<span><b>Aus dem Arbeitsheft</b><small>Hier übst du selbst drin</small></span>' +
+          '<span class="haken">✓</span></button>' +
       '</div>' +
       '<div class="trenn"></div>' +
       '<div class="frage">Und jetzt dein Blatt</div>' +
