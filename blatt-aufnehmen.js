@@ -166,6 +166,12 @@
           '<span class="z">\uD83D\uDCD2</span>' +
           '<span><b>Aus dem Arbeitsheft</b><small>Hier übst du selbst drin</small></span>' +
           '<span class="haken">✓</span></button>' +
+        /* Merkheft gibt es nur in Deutsch (Denny, 28.09.2026) - die Zeile
+           steht erst da, wenn Deutsch gewaehlt ist. */
+        '<button type="button" class="zeile" data-art="merkheft" style="display:none">' +
+          '<span class="z">\uD83D\uDCD5</span>' +
+          '<span><b>Aus dem Merkheft</b><small>Regeln zum Merken, nur in Deutsch</small></span>' +
+          '<span class="haken">✓</span></button>' +
       '</div>' +
       '<div class="trenn"></div>' +
       '<div class="frage">Und jetzt dein Blatt</div>' +
@@ -208,6 +214,11 @@
       b.addEventListener("click", function () {
         fach = f.schluessel;
         Array.prototype.forEach.call(reihe.children, function (x) { x.classList.toggle("an", x === b); });
+        var mz = kasten.querySelector('[data-art="merkheft"]');
+        if (mz) {
+          mz.style.display = fach === "deutsch" ? "" : "none";
+          if (fach !== "deutsch" && art === "merkheft") { art = ""; mz.classList.remove("an"); }
+        }
         knopf();
       });
       reihe.appendChild(b);

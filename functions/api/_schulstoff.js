@@ -73,6 +73,9 @@ export const ARTEN = {
   buch:   "eine Seite aus dem Schulbuch",
   /* Seit 28.09.2026 (Denny): Arbeitshefte, in denen das Kind uebt - eigener Reiter. */
   arbeitsheft: "eine Seite aus dem Arbeitsheft",
+  /* Seit 28.09.2026 (Denny): Pauls Merkheft - nur in Deutsch. Regeln zum Merken,
+     also Pruefungsstoff wie das Heft. */
+  merkheft: "eine Seite aus dem Merkheft",
 };
 
 /* Zeichen vor einer Inhaltszeile, die HANDGESCHRIEBEN auf dem Blatt stand -

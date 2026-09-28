@@ -24,7 +24,7 @@
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="stundenplan.js?v=1b197a6e"></script>
-<script src="/blatt-aufnehmen.js?v=52ae1c3c"></script>
+<script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
@@ -179,7 +179,8 @@
   var ART = {heft:  {kurz:"📓 Heft",  lang:"Aus meinem Schulheft"},
              uebung:{kurz:"📄 Übung", lang:"Ein Übungsblatt"},
              buch:  {kurz:"📘 Buch",  lang:"Aus dem Schulbuch"},
-             arbeitsheft:{kurz:"📒 Arbeitsheft", lang:"Aus dem Arbeitsheft"}};
+             arbeitsheft:{kurz:"📒 Arbeitsheft", lang:"Aus dem Arbeitsheft"},
+             merkheft:{kurz:"📕 Merkheft", lang:"Aus dem Merkheft"}};
 
   var alles = [], heute = "", gewaehlt = "alle", artGewaehlt = "alle", offen = null, offenSeite = 0;
 
@@ -220,13 +221,15 @@
      sagen, wie viele Hefteintraege es in Mathe gibt. */
   function imFach(e){ return gewaehlt === "alle" || (e.fach||"") === gewaehlt; }
   function artFilterMalen(){
-    var basis = alles.filter(imFach), z = {heft:0, uebung:0, buch:0, arbeitsheft:0};
+    var basis = alles.filter(imFach), z = {heft:0, uebung:0, buch:0, arbeitsheft:0, merkheft:0};
     basis.forEach(function(e){ if (z[e.art] != null) z[e.art]++; });
     var reihe = [["alle","Alles", basis.length],
                  ["heft","📓 Hefteinträge", z.heft],
                  ["uebung","📄 Übungsblätter", z.uebung],
                  ["buch","📘 Buchaufgaben", z.buch],
                  ["arbeitsheft","📒 Arbeitshefte", z.arbeitsheft]];
+    /* Merkheft nur in Deutsch (oder bei "Alle", wenn es schon eins gibt). */
+    if (gewaehlt === "deutsch" || (gewaehlt === "alle" && z.merkheft)) reihe.push(["merkheft","📕 Merkheft", z.merkheft]);
     var html = "";
     reihe.forEach(function(r){
       html += '<button class="fach' + (artGewaehlt===r[0]?" an":"") + '" data-a="' + r[0] + '">' +
@@ -457,7 +460,7 @@
       box.classList.add("verborgen"); $("schau").classList.remove("fachoffen"); return;
     }
     box.innerHTML = ""; box.setAttribute("data-wahl", "art");
-    ["heft","uebung","buch","arbeitsheft"].forEach(function(ziel){
+    ["heft","uebung","buch","arbeitsheft"].concat(offen.fach === "deutsch" || offen.art === "merkheft" ? ["merkheft"] : []).forEach(function(ziel){
       var b = document.createElement("button");
       b.type = "button"; b.className = "fach" + (offen.art === ziel ? " an" : "");
       b.setAttribute("data-art", ziel);

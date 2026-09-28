@@ -224,10 +224,10 @@
      Ohne Haken gilt: alle Blaetter, die der Filter zeigt. */
   function artFilter() {
     var a = stand.blattArt || "alle";
-    var hat = { heft: 0, uebung: 0, buch: 0, arbeitsheft: 0 };
+    var hat = { heft: 0, uebung: 0, buch: 0, arbeitsheft: 0, merkheft: 0 };
     blaetter.forEach(function (b) { if (hat[b.art] !== undefined) hat[b.art]++; });
     /* Die Reihe steht nur da, wenn es mindestens zwei Arten gibt (Buch seit 28.09.2026). */
-    var arten = (hat.heft ? 1 : 0) + (hat.uebung ? 1 : 0) + (hat.buch ? 1 : 0) + (hat.arbeitsheft ? 1 : 0);
+    var arten = (hat.heft ? 1 : 0) + (hat.uebung ? 1 : 0) + (hat.buch ? 1 : 0) + (hat.arbeitsheft ? 1 : 0) + (hat.merkheft ? 1 : 0);
     if (arten < 2) return { art: "alle", hat: hat, zeigen: false };
     return { art: hat[a] ? a : "alle", hat: hat, zeigen: true };
   }
@@ -248,11 +248,12 @@
     reihe.style.display = f.zeigen ? "" : "none";
     if (!f.zeigen) return;
     reihe.innerHTML = "";
-    [["alle", (f.hat.buch || f.hat.arbeitsheft) ? "Alles" : "Heft und Übung", f.hat.heft + f.hat.uebung + f.hat.buch + f.hat.arbeitsheft],
+    [["alle", (f.hat.buch || f.hat.arbeitsheft || f.hat.merkheft) ? "Alles" : "Heft und Übung", f.hat.heft + f.hat.uebung + f.hat.buch + f.hat.arbeitsheft + f.hat.merkheft],
      ["heft", "\uD83D\uDCD3 Heft", f.hat.heft],
      ["uebung", "\uD83D\uDCC4 \u00dcbung", f.hat.uebung],
      ["buch", "\uD83D\uDCD8 Buch", f.hat.buch],
-     ["arbeitsheft", "\uD83D\uDCD2 Arbeitsheft", f.hat.arbeitsheft]].filter(function (w) {
+     ["arbeitsheft", "\uD83D\uDCD2 Arbeitsheft", f.hat.arbeitsheft],
+     ["merkheft", "\uD83D\uDCD5 Merkheft", f.hat.merkheft]].filter(function (w) {
        return w[0] === "alle" || w[0] === "heft" || w[0] === "uebung" || w[2];   // Buch nur, wenn es eins gibt
      }).forEach(function (w) {
       var k = document.createElement("button");
@@ -357,6 +358,7 @@ function artKurz(art) {
     if (art === "uebung") return "\uD83D\uDCC4 \u00dcbung \u00b7 ";
     if (art === "buch") return "\uD83D\uDCD8 Buch \u00b7 ";
     if (art === "arbeitsheft") return "\uD83D\uDCD2 Arbeitsheft \u00b7 ";
+    if (art === "merkheft") return "\uD83D\uDCD5 Merkheft \u00b7 ";
     return "";                       // ohne Angabe: gar nichts behaupten
   }
 
@@ -367,7 +369,7 @@ function artKurz(art) {
    * anhaken, es steht nur weiter unten. */
   function nachArtSortiert(liste) {
     // Dieselben fuenf Raenge wie nachArt() in functions/api/quiz.js (24.09.2026).
-    var RANG = { heft: 1, "": 3, uebung: 4, buch: 4, arbeitsheft: 4 };
+    var RANG = { heft: 1, merkheft: 1, "": 3, uebung: 4, buch: 4, arbeitsheft: 4 };
     function rang(x) {
       var s = (x && x.sorte) || "";
       if (s === "lernziele") return 0;

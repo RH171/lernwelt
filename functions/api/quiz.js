@@ -642,7 +642,7 @@ export function nachArt(liste) {
    *
    * Die Sorte kommt NICHT vom Kind, sondern aus der FORM des Blattes
    * (Abhak-Kaestchen, Punktekaestchen) - siehe SORTEN in _schulstoff.js. */
-  const RANG = { heft: 1, "": 3, uebung: 4, buch: 4, arbeitsheft: 4 };
+  const RANG = { heft: 1, merkheft: 1, "": 3, uebung: 4, buch: 4, arbeitsheft: 4 };
   const rang = (x) => {
     const s = (x && x.sorte) || "";
     if (s === "lernziele") return 0;
@@ -696,7 +696,8 @@ async function letzterUnterricht(env, kind, nurBlaetter) {
         const woher = x.art === "heft" ? ", SCHULHEFT"
                     : x.art === "uebung" ? ", Uebungsblatt"
                     : x.art === "buch" ? ", SCHULBUCH-Aufgaben"
-                    : x.art === "arbeitsheft" ? ", ARBEITSHEFT (geuebt)" : "";
+                    : x.art === "arbeitsheft" ? ", ARBEITSHEFT (geuebt)"
+                    : x.art === "merkheft" ? ", MERKHEFT (Regeln zum Merken, wie SCHULHEFT)" : "";
         const kopf = (i + 1) + ". " + x.titel + " (" +
                      (FAECHER[x.fach] || x.fach || "?") + ", " + x.datum +
                      woher + ")";
