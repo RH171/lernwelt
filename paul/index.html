@@ -379,6 +379,22 @@
     box-shadow:0 10px 28px rgba(92,108,255,.35);
     transition:transform .14s ease, box-shadow .14s ease;
   }
+  /* Bitte kurz nachsehen (28.09.2026): deutlich, aber ohne Rot und ohne Warnzeichen. */
+  .nachsehen{background:var(--card);color:var(--ink);border:3px solid #f59e0b;border-radius:22px;
+    padding:16px 18px;margin:0 0 22px;font-family:var(--round)}
+  .nachsehen.verborgen{display:none}
+  .ns-kopf{font-weight:800;font-size:20px;margin-bottom:4px}
+  .ns-satz{font-size:15px;margin-bottom:10px;opacity:.85}
+  .ns-punkt{border-top:1px solid var(--line);padding:12px 0 4px}
+  .ns-punkt:first-child{border-top:0}
+  .ns-text{font-size:16px;line-height:1.4;margin-bottom:10px}
+  .ns-knoepfe{display:flex;flex-wrap:wrap;gap:10px}
+  .ns-knoepfe button{min-height:44px;padding:0 16px;border-radius:14px;font:700 16px/1 var(--round);cursor:pointer;
+    border:2px solid #4f46e5;background:transparent;color:var(--ink)}
+  .ns-knoepfe button.ns-ja{background:#4f46e5;color:#fff}
+  html[data-theme="dark"] .ns-knoepfe button{border-color:#a5b4ff}
+  html[data-theme="dark"] .ns-knoepfe button.ns-ja{background:#a5b4ff;color:#14151c}
+  .ns-fertig{font-size:16px;padding:6px 0}
   .createcard.werkstatt{
     background:linear-gradient(125deg,#f59e0b 0%,#f0705a 55%,#e0457b 100%);
     box-shadow:0 10px 28px rgba(240,112,90,.32);
@@ -508,6 +524,18 @@
        Sortiert wird nur BEIM LADEN, nie während er hinschaut - eine Kachel,
        die unter dem Finger wegspringt, ist schlimmer als eine feste
        Reihenfolge. -->
+  <!-- Bitte kurz nachsehen (28.09.2026). Denny: "wenn dir sowas auffällt und
+       Paul betritt seine Lernwelt - kannst du ihm dann deutlich die
+       information zeigen - damit er weiss er muss ggf. was anpassen".
+       Anlass: zwei Mathe-Buchseiten lagen unter Deutsch, die Rueckfrage beim
+       Hochladen blieb unbeantwortet. Gezeigt wird jede OFFENE Rueckfrage
+       (Fach oder Datum) - beantworten kann er sie gleich hier. -->
+  <section class="nachsehen verborgen" id="nachsehen" aria-live="polite">
+    <div class="ns-kopf">📚 Bitte kurz nachsehen</div>
+    <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen. Sag mir, was stimmt.</div>
+    <div id="nachsehenListe"></div>
+  </section>
+
   <!-- Heute lernen (25.09.2026): der taegliche Einstieg steht FEST oben,
        ausserhalb der Kacheln, die nach letzter Benutzung sortiert werden.
        Fuehrt direkt in die Tagesrunde (paul/quiz.html?heute=1). -->
@@ -1526,5 +1554,70 @@
 <script src="/lernstand.js?v=282ba79a" defer></script>
 <script>window.FERIENBAND = {ziel:"/ferien"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
+<script>
+/* Bitte kurz nachsehen (28.09.2026): offene Rueckfragen zu Fach und Datum
+   beim Betreten zeigen. Liest nur; geschrieben wird erst, wenn Paul tippt. */
+(function(){
+  var FACH = { mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch", rel:"Religion", musik:"Musik", anderes:"Etwas anderes" };
+  function tag(iso){ var t = String(iso || "").split("-"); return t.length === 3 ? (+t[2]) + "." + (+t[1]) + "." + t[0] : iso; }
+  function offen(e){
+    if (e.sichtbar === false) return [];
+    var f = [];
+    if (e.fachVorschlag && e.fachVorschlag !== e.fach) f.push("fach");
+    if (e.datumVorschlag && e.datumVorschlag !== e.datum) f.push("datum");
+    return f;
+  }
+  function punkt(e, was){
+    var d = document.createElement("div");
+    d.className = "ns-punkt";
+    d.setAttribute("data-offen", e.id + ":" + was);
+    var titel = "„" + (e.titel || "Dein Blatt vom " + tag(e.datum)) + "“";
+    var text = document.createElement("div"); text.className = "ns-text";
+    var ja = document.createElement("button"), nein = document.createElement("button");
+    ja.type = nein.type = "button"; ja.className = "ns-ja";
+    if (was === "fach") {
+      text.textContent = titel + " liegt bei " + (FACH[e.fach] || e.fach) + ". Es sieht aber nach " + (FACH[e.fachVorschlag] || e.fachVorschlag) + " aus.";
+      ja.textContent = "Ist " + (FACH[e.fachVorschlag] || e.fachVorschlag);
+      nein.textContent = "Stimmt so: " + (FACH[e.fach] || e.fach);
+    } else {
+      text.textContent = "Auf " + titel + " lese ich das Datum " + tag(e.datumVorschlag) + ". Abgelegt ist es am " + tag(e.datum) + ".";
+      ja.textContent = "Ist der " + tag(e.datumVorschlag);
+      nein.textContent = "Stimmt so: " + tag(e.datum);
+    }
+    var k = document.createElement("div"); k.className = "ns-knoepfe";
+    k.appendChild(ja); k.appendChild(nein);
+    d.appendChild(text); d.appendChild(k);
+    function antwort(w){
+      ja.disabled = nein.disabled = true;
+      fetch("/api/schulstoff", { method: "PATCH", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: "paul", id: e.id, was: w }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw 0;
+        d.innerHTML = '<div class="ns-fertig">✅ Danke, ist gemerkt.</div>';
+        var rest = document.querySelectorAll("#nachsehenListe .ns-punkt .ns-knoepfe").length;
+        if (!rest) setTimeout(function(){ document.getElementById("nachsehen").classList.add("verborgen"); }, 1800);
+      })
+      .catch(function(){ ja.disabled = nein.disabled = false; text.textContent += " (Das hat gerade nicht geklappt – probier es nochmal.)"; });
+    }
+    ja.addEventListener("click", function(){ antwort(was + "-bestaetigen"); });
+    nein.addEventListener("click", function(){ antwort(was + "-ablehnen"); });
+    return d;
+  }
+  fetch("/api/schulstoff?kind=paul&monate=3", { credentials: "same-origin" })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j || !j.ok) return;
+      var liste = document.getElementById("nachsehenListe");
+      liste.innerHTML = "";
+      (j.eintraege || []).forEach(function(e){
+        offen(e).forEach(function(w){ liste.appendChild(punkt(e, w)); });
+      });
+      document.getElementById("nachsehen").classList.toggle("verborgen", !liste.children.length);
+    })
+    .catch(function(){ /* ohne Speicher bleibt die Karte einfach zu */ });
+})();
+</script>
 </body>
 </html>
