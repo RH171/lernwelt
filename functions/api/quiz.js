@@ -134,18 +134,27 @@ export async function onRequestGet(context) {
         .sort((a, b) => String(b.datum).localeCompare(String(a.datum)))   // das Neueste zuerst
         .map((x) => x.id);
     }
-    const fehlen = kandidaten.filter((id) => (jeBlatt[id] || 0) < VORBAU_ZIEL);
+    /* Ein Blatt, das nach einem Versuch noch zu wenig hergibt (ohne Titel,
+       kaum Inhalt), wird drei Tage nicht wieder versucht - sonst kostet jeder
+       Seitenbesuch einen Bau, der nichts bringt. Gemessen live 28.09.2026:
+       Deutsch blieb nach acht Runden bei "fehlen 1" stehen. */
+    const versucht = v0.versucht || {};
+    const frisch = Date.now() - 3 * 86400000;
+    const fehlen = kandidaten.filter((id) => (jeBlatt[id] || 0) < VORBAU_ZIEL &&
+      !(versucht[id] && Date.parse(versucht[id]) > frisch));
     if (!fehlen.length) return json(200, { ok: true, gebaut: 0, fehlen: 0 });
     const jetztDran = fehlen.slice(0, VORBAU_JE_LAUF);
     let neu = [];
     try { neu = await nachschubBauen(env, kind, gewuenschteFaecher, jetztDran); } catch (e) {}
-    if (neu.length) {
+    {
       // Frisch lesen und zusammenfuehren: Zwei Vorbauten gleichzeitig duerfen
       // sich nicht gegenseitig ueberschreiben.
       const v1 = await vorratLesen(env, kind);
       const ids = new Set(v1.fragen.map((f) => f.id));
       v1.fragen = v1.fragen.concat(neu.filter((f) => !ids.has(f.id))).slice(-VORRAT_MAX);
       v1.gebaut = new Date().toISOString();
+      v1.versucht = Object.assign({}, v1.versucht || {});
+      for (const id of jetztDran) v1.versucht[id] = v1.gebaut;
       try { await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(v1)); } catch (e) {
         return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an." });
       }
