@@ -189,7 +189,11 @@ window.QUIZ = {
     k.type = "button"; k.className = "qsuch";
     k.setAttribute("data-such", b.id);
     k.setAttribute("aria-label", "Such-Spiel zu " + (x.titel || "diesem Blatt"));
-    k.textContent = "🔎 Suchen";
+    /* Faellige Karten sichtbar machen (28.09.2026): Die alte Such-Karte zeigte
+       "1 wartet auf dich" - in der Zeile steht es jetzt als Zahl am Knopf. */
+    var n = (faellig[b.id] || []).length;
+    k.textContent = n ? "🔎 Suchen · " + n + " wieder dran" : "🔎 Suchen";
+    if (n) k.classList.add("faellig");
     k.addEventListener("click", function(ev){ ev.stopPropagation(); starten(x); });
     return k;
   };
