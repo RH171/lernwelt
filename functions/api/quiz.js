@@ -170,7 +170,7 @@ export async function onRequestGet(context) {
     if (!kandidaten.length) {
       const e = await stoffLesen(env, kind, 4).catch(() => ({ ok: false }));
       const ab = e.ok ? schuljahrStart(e.heute) : "";
-      kandidaten = (e.ok ? e.eintraege : []).filter((x) => x && x.sichtbar !== false && x.titel &&
+      kandidaten = (e.ok ? e.eintraege : []).filter((x) => x && x.sichtbar !== false && x.probenstoff !== false && x.titel &&
           x.datum >= ab &&
           (!gewuenschteFaecher.length || gewuenschteFaecher.includes(String(x.fach || "").toLowerCase())))
         .sort((a, b) => String(b.datum).localeCompare(String(a.datum)))   // das Neueste zuerst
@@ -509,6 +509,9 @@ export function vorratBereinigen(fragen, blattNach) {
        "5H + 3Z + 9E" und "Wann bekam Fuerth die U-Bahn?" als Deutschfragen. */
     if (!f.blatt) return !fachMitBlatt.has(fach);
     const b = blattNach[f.blatt];
+    /* Handwerk ist kein Probenstoff (30.09.2026): Lineatur, Schreibschrift,
+       "So schreibe ich ins Heft" - daher kam "Lineal oder Tintenkiller?". */
+    if (b && b.probenstoff === false) return false;
     return !b || !b.fach || String(b.fach).toLowerCase() === fach;
   });
 }
@@ -897,7 +900,7 @@ async function letzterUnterricht(env, kind, nurBlaetter, nurFaecher) {
     if (!e.ok) return { text: "", blaetter: [] };
     const ab = schuljahrStart(e.heute);
     let liste = e.eintraege.filter((x) =>
-      x.sichtbar !== false && x.datum >= ab && x.titel);
+      x.sichtbar !== false && x.probenstoff !== false && x.datum >= ab && x.titel);
     if (nurBlaetter && nurBlaetter.length) {
       liste = liste.filter((x) => nurBlaetter.includes(x.id));
     }

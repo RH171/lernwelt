@@ -73,7 +73,8 @@
     stand = stand || {};
 
     var liste = (blaetter || []).filter(function (b) {
-      return b && b.id && b.sichtbar !== false && Array.isArray(b.karten) && b.karten.length;
+      /* Handwerk (Lineatur, Heftregeln) ist kein Probenstoff - 30.09.2026. */
+      return b && b.id && b.sichtbar !== false && b.probenstoff !== false && Array.isArray(b.karten) && b.karten.length;
     }).slice().sort(function (a, b) {
       return String(b.datum || "").localeCompare(String(a.datum || ""));  // juengstes zuerst
     });
