@@ -1308,7 +1308,7 @@
         const satz = "Am " + WOCHENTAG_LANG[i] + " " + (n === 1 ? "ist noch 1 Kreis leer." : "sind noch " + n + " Kreise leer.") +
           (leerN > n ? " (" + (leerN - n) + " davon kann man nicht mehr nachholen.)" : "");
         fach.appendChild(el("p", null, satz));
-        const ja = el("button", "tbknopf", "✨ " + (n === 1 ? "Jetzt füllen" : "Alle " + n + " jetzt füllen"));
+        const ja = el("button", "tbknopf", "✨ Jetzt füllen");   // eine Runde nimmt hoechstens 10 Fragen, "Alle 21" waere gelogen
         ja.type = "button";
         ja.addEventListener("click", function(ev){ ev.stopPropagation(); gehe("quiz.html?kreise=" + encodeURIComponent(t.datum)); });
         const spaeter = el("button", "tbspaeter", "Später");
