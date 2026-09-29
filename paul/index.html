@@ -1267,6 +1267,8 @@
     const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||""));
     return m ? (+m[3]) + "." + (+m[2]) + "." : "";
   }
+  /* window.__geheZu nur fuer die Messung - sie darf die Seite nicht verlassen. */
+  function gehe(u){ (window.__geheZu || function(x){ location.href = x; })(u); }
   function wocheZeichnen(box, w){
     box.innerHTML = "";
     let gewusst = 0, alle = 0, spaeter = 0, offenAlle = 0;
@@ -1296,7 +1298,7 @@
         z.setAttribute("role", "button"); z.tabIndex = 0;
         z.setAttribute("aria-label", n + (n === 1 ? " Kreis" : " Kreise") + " vom " + tagKurz(t.datum) + " füllen");
         z.appendChild(el("span", "tbfuell", "✨ " + n + (n === 1 ? " Kreis" : " Kreise") + " füllen ›"));
-        const los = function(){ location.href = "quiz.html?kreise=" + encodeURIComponent(t.datum); };
+        const los = function(){ gehe("quiz.html?kreise=" + encodeURIComponent(t.datum)); };
         z.addEventListener("click", los);
         z.addEventListener("keydown", function(ev){ if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); los(); } });
       }
@@ -1314,7 +1316,7 @@
       if(offenAlle){
         const b = el("button", "tbknopf", "✨ " + offenAlle + (offenAlle === 1 ? " Kreis" : " Kreise") + " füllen");
         b.type = "button"; b.id = "kreiseFuellen";
-        b.addEventListener("click", function(){ location.href = "quiz.html?kreise=woche"; });
+        b.addEventListener("click", function(){ gehe("quiz.html?kreise=woche"); });
         k.appendChild(b);
       }
     } else {
