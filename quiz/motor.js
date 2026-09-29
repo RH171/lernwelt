@@ -34,6 +34,7 @@
      unten stand sofort "Quiz starten". Gemerkt bleiben nur Länge und Zähler.
      Ausnahme: window.QUIZ.merkeAuswahl = true. */
   if (!K.merkeAuswahl) { stand.faecher = []; stand.blaetter = []; stand.blattArt = ""; }
+  stand.zeitraum = ""; stand.thema = "";   // gilt nur fuer das gerade gewaehlte Fach
   /* "Alle Fächer" ist eine Wahl, kein Grundzustand: erst ein Tipp darauf
      zeigt die Quiz-Leiste (nur mit Blattwahl, also einzeln()). */
   var alleGewaehlt = false;
@@ -169,9 +170,9 @@
     if (!eins) { kasten.classList.add("verborgen"); quizLeisteMalen(); nachBlaettern(); return; }
 
     if (blattFach !== eins) {
-      blattFach = eins; blaetter = []; stand.blaetter = [];
+      blattFach = eins; blaetter = []; stand.blaetter = []; stand.zeitraum = ""; stand.thema = "";
       if (blattVorrat) {
-        blaetter = nachArtSortiert(blattVorrat[eins] || []);
+        blaetter = nachArtSortiert(ohneHandwerk(blattVorrat[eins] || []));
         blaetterZeichnen();
         nachBlaettern();
         wartendHolen();
@@ -188,7 +189,7 @@
         .then(function (r) { return r.json(); })
         .then(function (j) {
           if (!j || !j.ok) { kasten.classList.add("verborgen"); nachBlaettern(); return; }
-          blaetter = nachArtSortiert(j.blaetter || []);
+          blaetter = nachArtSortiert(ohneHandwerk(j.blaetter || []));
           blaetterZeichnen();
           nachBlaettern();
           wartendHolen();
@@ -288,18 +289,157 @@
      zwischen Heft und Übungsblatt.") Die Reihe steht nur da, wenn es in dem
      Fach BEIDES gibt - bei Leon und Helena ohne Art-Angaben also gar nicht.
      Ohne Haken gilt: alle Blaetter, die der Filter zeigt. */
+  /* ---------- Wiederholen bis zur Probe (30.09.2026) ----------
+   *
+   * Denny: "Die Proben sind ja ziemlich einfach: von Schulanfang bis zur
+   * ersten Probe und von der ersten Probe dann zur zweiten Probe. Sprich,
+   * dies könnte man mit einem Datum eingrenzen. Themen finde ich prinzipiell
+   * gut. Die würde ich aber nicht durch die Kinder bestätigen lassen,
+   * sondern du anhand der Überschrift."
+   *
+   * Zwei Reihen ueber Heft/Uebung, beide ohne Vorauswahl:
+   *   Zeitraum - die Grenzen sind die Daten der Noten (jede Probe hat eine,
+   *              /api/noten?eigene=1). Ohne Probe im Fach keine Reihe.
+   *   Thema    - vergibt das Lesemodell (Feld thema am Blatt). Ab 2 Themen.
+   * Handwerk (probenstoff:false - Lineatur, Heftregeln) steht gar nicht da. */
+  function ohneHandwerk(liste) {
+    return (liste || []).filter(function (b) { return b && b.probenstoff !== false; });
+  }
+  var probenJeFach = null;          // {fach: ["2026-10-14", ...]} aufsteigend, nur vergangene
+  var FACH_ALIAS = { mathematik: "mathe", "französisch": "franz", franzoesisch: "franz",
+    geographie: "geo", erdkunde: "geo", informatik: "info", religion: "rel", ethik: "rel" };
+  function probenHolen() {
+    fetch("/api/noten?eigene=1&kind=" + encodeURIComponent(K.kind), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !Array.isArray(j.noten)) return;
+        var heute = new Date().toISOString().slice(0, 10), m = {};
+        j.noten.forEach(function (n) {
+          var d = String(n.datum || "").slice(0, 10), f = String(n.fach || "").toLowerCase();
+          f = FACH_ALIAS[f] || f;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > heute || !f) return;
+          (m[f] = m[f] || []);
+          if (m[f].indexOf(d) < 0) m[f].push(d);
+        });
+        for (var f in m) m[f].sort();
+        probenJeFach = m;
+        if (blaetter.length) blaetterZeichnen();
+      })
+      .catch(function () { /* ohne Noten eben ohne Zeitraum-Reihe */ });
+  }
+  function tagKurz(d) { return Number(d.slice(8, 10)) + "." + Number(d.slice(5, 7)) + "."; }
+  /* Die Abschnitte zwischen den Proben eines Fachs:
+     [{k:"p0", label, von, bis}] - von exklusiv, bis inklusive (ein Blatt vom
+     Probentag gehoert noch zur Probe davor). */
+  function zeitraeume() {
+    var d = (probenJeFach && probenJeFach[blattFach]) || [];
+    if (!d.length) return [];
+    var raus = [];
+    for (var i = 0; i <= d.length; i++) {
+      var von = i ? d[i - 1] : "", bis = i < d.length ? d[i] : "";
+      var label = i === d.length ? "Seit der letzten Probe (" + tagKurz(d[i - 1]) + ")"
+        : i === 0 ? "Bis zur 1. Probe (" + tagKurz(bis) + ")"
+        : i + ". bis " + (i + 1) + ". Probe";
+      raus.push({ k: "p" + i, label: label, von: von, bis: bis });
+    }
+    return raus.reverse();          // das Juengste zuerst
+  }
+  function imZeitraum(liste) {
+    if (!stand.zeitraum) return liste;
+    var z = zeitraeume().filter(function (x) { return x.k === stand.zeitraum; })[0];
+    if (!z) return liste;
+    return liste.filter(function (b) {
+      var d = String(b.datum || "");
+      return (!z.von || d > z.von) && (!z.bis || d <= z.bis);
+    });
+  }
+  function themaVon(b) { return String((b && b.thema) || "").trim(); }
+  function imThema(liste) {
+    if (!stand.thema) return liste;
+    return liste.filter(function (b) { return themaVon(b) === stand.thema; });
+  }
+  function vorArt() { return imThema(imZeitraum(blaetter)); }
+  function filterAktiv() { return !!(stand.zeitraum || stand.thema || artFilter().art !== "alle"); }
+
+  function chipReihe(id, klasse, vorId, eintraege, aktiv, waehle) {
+    var kasten = $("q-blaetter");
+    var reihe = $(id);
+    if (!reihe) {
+      reihe = document.createElement("div");
+      reihe.id = id;
+      reihe.className = "qchips " + klasse;
+      kasten.insertBefore(reihe, $(vorId) || $("q-blaetter-liste"));
+    }
+    reihe.style.display = eintraege ? "" : "none";
+    if (!eintraege) return;
+    reihe.innerHTML = "";
+    eintraege.forEach(function (w) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "qchip" + (aktiv === w.k ? " an" : "");
+      k.setAttribute("data-wert", w.k);
+      k.setAttribute("aria-pressed", aktiv === w.k ? "true" : "false");
+      k.textContent = w.label + " " + w.n;
+      k.addEventListener("click", function () { waehle(w.k); });
+      reihe.appendChild(k);
+    });
+  }
+  function nachFilterAufraeumen() {
+    var sicht = sichtbareBlaetter().map(function (b) { return b.id; });
+    stand.blaetter = stand.blaetter.filter(function (id) { return sicht.indexOf(id) >= 0; });
+    schreibe(SPEICHER, stand);
+    blaetterZeichnen();
+  }
+  function zeitReiheMalen() {
+    var zs = zeitraeume();
+    var eintraege = null;
+    if (zs.length) {
+      var mit = zs.map(function (z) {
+        var n = blaetter.filter(function (b) {
+          var d = String(b.datum || "");
+          return (!z.von || d > z.von) && (!z.bis || d <= z.bis);
+        }).length;
+        return { k: z.k, label: z.label, n: n };
+      }).filter(function (z) { return z.n; });
+      if (mit.length) eintraege = [{ k: "", label: "Ganzes Schuljahr", n: blaetter.length }].concat(mit);
+    }
+    if (stand.zeitraum && !(eintraege || []).some(function (w) { return w.k === stand.zeitraum; })) stand.zeitraum = "";
+    chipReihe("q-blatt-zeit", "qzeitwahl", "q-blatt-thema", eintraege, stand.zeitraum, function (k) {
+      stand.zeitraum = k; nachFilterAufraeumen();
+    });
+  }
+  function themaReiheMalen() {
+    var basis = imZeitraum(blaetter), zahl = {}, reihenfolge = [];
+    basis.forEach(function (b) {
+      var t = themaVon(b);
+      if (!t) return;
+      if (!zahl[t]) { zahl[t] = 0; reihenfolge.push(t); }
+      zahl[t]++;
+    });
+    reihenfolge.sort(function (a, b) { return zahl[b] - zahl[a]; });
+    if (stand.thema && !zahl[stand.thema]) stand.thema = "";
+    var eintraege = reihenfolge.length >= 2
+      ? [{ k: "", label: "Alle Themen", n: basis.length }].concat(reihenfolge.map(function (t) {
+          return { k: t, label: t, n: zahl[t] };
+        }))
+      : null;
+    chipReihe("q-blatt-thema", "qthemawahl", "q-blatt-art", eintraege, stand.thema, function (k) {
+      stand.thema = k; nachFilterAufraeumen();
+    });
+  }
+
   function artFilter() {
     var a = stand.blattArt || "alle";
     var hat = { heft: 0, uebung: 0, buch: 0, arbeitsheft: 0, merkheft: 0 };
-    blaetter.forEach(function (b) { if (hat[b.art] !== undefined) hat[b.art]++; });
+    vorArt().forEach(function (b) { if (hat[b.art] !== undefined) hat[b.art]++; });
     /* Die Reihe steht nur da, wenn es mindestens zwei Arten gibt (Buch seit 28.09.2026). */
     var arten = (hat.heft ? 1 : 0) + (hat.uebung ? 1 : 0) + (hat.buch ? 1 : 0) + (hat.arbeitsheft ? 1 : 0) + (hat.merkheft ? 1 : 0);
     if (arten < 2) return { art: "alle", hat: hat, zeigen: false };
     return { art: hat[a] ? a : "alle", hat: hat, zeigen: true };
   }
   function sichtbareBlaetter() {
-    var f = artFilter();
-    return f.art === "alle" ? blaetter : blaetter.filter(function (b) { return b.art === f.art; });
+    var f = artFilter(), basis = vorArt();
+    return f.art === "alle" ? basis : basis.filter(function (b) { return b.art === f.art; });
   }
 
   function artReiheMalen(kasten) {
@@ -345,6 +485,8 @@
     var kasten = $("q-blaetter");
     if (!blaetter.length) { kasten.classList.add("verborgen"); quizLeisteMalen(); return; }
     kasten.classList.remove("verborgen");
+    zeitReiheMalen();
+    themaReiheMalen();
     artReiheMalen(kasten);
     var sicht = sichtbareBlaetter();
     $("q-blaetter-kopf").textContent = stand.blaetter.length
@@ -523,7 +665,7 @@
     function blattSumme(ids) { ids.forEach(function (id) { n += jb[id] || 0; }); }
     if (stand.faecher.length === 1) {
       if (stand.blaetter.length) blattSumme(stand.blaetter);
-      else if (artFilter().art !== "alle") blattSumme(sichtbareBlaetter().map(function (b) { return b.id; }));
+      else if (filterAktiv()) blattSumme(sichtbareBlaetter().map(function (b) { return b.id; }));
       else n = jf[stand.faecher[0]] || 0;
     } else {
       K.faecher.forEach(function (f) { n += jf[f.k] || 0; });
@@ -721,7 +863,7 @@ function artKurz(art) {
        Ohne Auswahl gilt weiter das ganze Fach. */
     if (stand.blaetter && stand.blaetter.length && stand.faecher.length === 1) {
       p.set("blaetter", stand.blaetter.join(","));
-    } else if (stand.faecher.length === 1 && artFilter().art !== "alle") {
+    } else if (stand.faecher.length === 1 && filterAktiv()) {
       /* Nichts angehakt, aber nur Heft (oder nur Uebung) gewaehlt: dann
          genau die Blaetter, die dastehen. */
       var ids = sichtbareBlaetter().map(function (b) { return b.id; });
@@ -1050,6 +1192,7 @@ function artKurz(art) {
     fachkachelnMalen(); blaetterMalen();
   });
   faecherHolen();   // holt die Faecher aus dem Heft und zeichnet danach
+  probenHolen();    // Probendaten fuer die Zeitraum-Reihe (30.09.2026)
   laengeMalen();
   if (stand.tage && stand.tage.length) {
     $("q-serie").textContent = serie(stand.tage) ? "🔥 " + serie(stand.tage) + " Tage in Folge" : "";
