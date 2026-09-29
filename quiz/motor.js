@@ -28,6 +28,12 @@
   var SPEICHER = KIND + "-quiz";
   var stand = lese(SPEICHER, { faecher: [], laenge: 15, gespielt: 0, richtig: 0, tage: [] });
   if (!Array.isArray(stand.faecher)) stand.faecher = [];
+  /* Sauber starten (29.09.2026). Denny: "Ich hätte das gerne, dass man clean
+     startet, Paul sich sein Fach aussuchen kann und hier keine Vorauswahl
+     stattfindet." Vorher kam das Fach von gestern aus dem Speicher zurück, und
+     unten stand sofort "Quiz starten". Gemerkt bleiben nur Länge und Zähler.
+     Ausnahme: window.QUIZ.merkeAuswahl = true. */
+  if (!K.merkeAuswahl) { stand.faecher = []; stand.blaetter = []; stand.blattArt = ""; }
 
   var fragen = [], nr = 0, richtigGesamt = 0, antwortenLog = [], laufend = false;
 
