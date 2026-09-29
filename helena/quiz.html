@@ -1,30 +1,26 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mein Lernquiz</title>
 <!--
-  Helenas tägliches Lernquiz (20.09.2026) - 7. Klasse Gymnasium, dunkles Farbschema wie ihr Bereich.
+  Helenas Lernquiz (20.09.2026), 7. Klasse Gymnasium, immer dunkel.
 
-  Denny am 20.09.2026: "Kannst du bei jedem Anwender noch ein Quiz bauen, wo die
-  Fragen zum Schulunterricht sind und nur die Fragen, die falsch beantwortet
-  werden, immer wiederholt werden? ... jeden Tag 5 bis 10 Minuten ... alle oder
-  nur gezielte Fächer ... 15 oder mehr Fragen oder endlos."
-
-  Der Motor steht EINMAL in /quiz/motor.js - hier stehen nur Kind, Fächer und
-  Farben. Wer am Motor etwas ändert, ändert es für alle drei und misst alle drei.
-
-  Die Fragen kommen aus /api/quiz: ein Vorrat je Kind, der nachwächst, gespeist
-  aus dem Lehrplan, den offenen Lernzielen und dem, was das Kind zuletzt aus
-  dem Unterricht fotografiert hat. Eine Frage wird nie zweimal gestellt - das
-  Lernziel dagegen so oft, bis es sitzt.
+  Seit 29.09.2026 mit allem, was Paul hat (Denny, 28.09.2026: "Helena zuerst,
+  danach Leon mit allem wie Paul"): ein Fach auf einmal, Blattwahl mit
+  "Suchen" hinter jedem Blatt, Leiste mit Fragenzahl, "Heute lernen", Beleg
+  aus dem Heft nach jeder Loesung. Motor: /quiz/motor.js, Such-Spiel und
+  Heute lernen: /quiz/such.js - beide geteilt mit Paul.
 -->
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <link rel="stylesheet" href="/quiz/quiz.css?v=5c23e92e">
 <style>
+  /* Helenas Welt ist immer dunkel. data-theme="dark" am <html> sagt das auch
+     den Fundkarten (fundkarten.js), ohne /thema.css einzubinden. */
   :root{
     --bg:#0e1320; --card:#171d2e; --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
+    --feld:#1e2539; --paul:#a78bfa;
     --akzent:#a78bfa; --akzent-hell:#241f3d; --akzent-auf:#141024; --akzent-text:#c9b8ff;
     --gut:#49d6bd; --gut-hell:#13322f; --gut-text:#8ee0c2;
     --schlecht:#ff7a6b; --schlecht-hell:#33191c; --schlecht-text:#ff9b91;
@@ -43,11 +39,33 @@
 
   <!-- Start -->
   <section id="sicht-start">
+    <!-- Die Tagesrunde (25.09.2026): eine kurze Runde am Tag aus seinen
+         Blaettern - was wieder dran ist, dazu etwas Neues, hoechstens 8.
+         Auswahl: /tagesrunde.js, Anzeige: /fundkarten.js. Erscheint nur,
+         wenn genug Karten da sind. -->
+    <div class="karte verborgen" id="heute-wahl">
+      <h2>☀️ Heute lernen</h2>
+      <p class="unter" id="heute-unter"></p>
+      <button class="knopf" id="heute-los" type="button">Los geht's</button>
+      <!-- Nur wer von der Startseite kommt, sieht diesen Knopf (Denny,
+           25.09.2026: "ich komme von der Startseite rein, und dann geht es
+           gleich los"). Gewaehlt: Startschirm mit Wahl statt Sofortstart. -->
+      <button class="knopf still verborgen" id="heute-selbst" type="button">Lieber selbst aussuchen</button>
+    </div>
     <div class="karte">
-      <h2>Welche Fächer?</h2>
-      <p class="unter">Mehrere gleichzeitig gehen auch. Ohne Auswahl kommt aus allen etwas.</p>
+      <h2>Was möchtest du üben?</h2>
+      <p class="unter">Tipp ein Fach an – danach kannst du einzelne Blätter auswählen.</p>
       <div class="qchips"><button class="qchip" type="button" id="q-alle">Alle Fächer</button></div>
       <div class="qfaecher" id="q-faecher"></div>
+
+      <!-- Paul sucht selbst aus, WELCHES Blatt abgefragt wird. Denny am
+           23.09.2026: "Das gibt ihm schon ein Stück weit Entscheidungsgewalt,
+           anstatt dass ein Quiz erstellt wird über etwas, was er gerade gar
+           nicht abgefragt werden möchte." -->
+      <div class="blaetter verborgen" id="q-blaetter">
+        <div class="blaetter-kopf" id="q-blaetter-kopf"></div>
+        <div class="blaetter-liste" id="q-blaetter-liste"></div>
+      </div>
     </div>
     <div class="karte">
       <h2>Wie viele Fragen?</h2>
@@ -56,9 +74,40 @@
       <div class="laedt verborgen" id="q-laedt"><i></i><span>Ich suche Fragen für dich heraus …</span></div>
       <div class="fehler" id="q-fehler"></div>
     </div>
+    <!-- Das Such-Spiel (Denny, 25.09.2026: "eher als Quiz- und
+         Spielmoeglichkeit fuer Paul"). Die Fundkarten kamen bis dahin direkt
+         nach dem Hochladen - jetzt startet Paul sie selbst, zu einem Blatt
+         seiner Wahl. Die Karte erscheint nur, wenn ein Blatt genug Karten hat.
+         Motor: /fundkarten.js -->
+    <div class="karte verborgen" id="such-wahl">
+      <h2>🔎 Such-Spiel</h2>
+      <p class="unter">Such die Antwort auf deinem eigenen Blatt. Tipp ein Blatt an.</p>
+      <div class="blaetter-liste" id="such-liste"></div>
+    </div>
+  </section>
+
+  <section id="sicht-such" class="verborgen">
+    <div id="fundkarten"></div>
+    <button class="knopf still" id="such-zurueck" type="button">‹ Zurück zur Auswahl</button>
   </section>
 
   <!-- Spiel -->
+  <!-- Erst anschauen, dann abfragen (Entwurf C, 23.09.2026).
+       Eine kurze Runde Merkkarten VOR der ersten Frage: jede Tatsache mit
+       Eselsbrücke. Lernen vor Prüfen - überspringbar, wer gleich loslegen
+       will. Nur wenn es zu den Fragen auch Eselsbrücken gibt. -->
+  <section id="sicht-merken" class="verborgen">
+    <div class="karte">
+      <!-- Kein zweiter Zurück-Knopf: Die Kopfzeile der Seite hat schon einen,
+           und zwei nebeneinander lassen ein Kind raten, welcher welcher ist. -->
+      <h2 id="m-kopf">Das kommt gleich dran</h2>
+      <p class="unter" id="m-unter">Schau es dir einmal an – danach frage ich dich.</p>
+      <div class="mkarten" id="m-karten"></div>
+      <button class="knopf" id="m-los" type="button">Los, frag mich ab</button>
+      <button class="knopf still" id="m-weiter" type="button">Überspringen</button>
+    </div>
+  </section>
+
   <section id="sicht-spiel" class="verborgen">
     <div class="leiste"><i id="q-balken"></i></div>
     <div class="karte">
@@ -92,18 +141,25 @@
 <script>
 window.QUIZ = {
   kind: "helena",
+  /* Die Schluessel sind die des Schulhefts (helena/schulstoff.html). Bis
+     29.09.2026 standen hier die Lehrplan-Kuerzel ("französisch", "geographie")
+     - dann fiel jedes Heft-Fach aus der Auswahl. */
   faecher: [
-    { k: "deutsch",     n: "Deutsch",     ic: "📘" },
-    { k: "mathe",       n: "Mathematik",  ic: "🔢" },
-    { k: "englisch",    n: "Englisch",    ic: "🇬🇧" },
-    { k: "französisch", n: "Französisch", ic: "🇫🇷" },
-    { k: "geschichte",  n: "Geschichte",  ic: "🏛️" },
-    { k: "geographie",  n: "Geographie",  ic: "🌍" },
-    { k: "nt",          n: "Natur/Technik", ic: "🔬" },
-    { k: "ethik",       n: "Ethik",       ic: "🤔" }
+    { k: "deutsch",    n: "Deutsch",     ic: "📖" },
+    { k: "mathe",      n: "Mathe",       ic: "🔢" },
+    { k: "englisch",   n: "Englisch",    ic: "🇬🇧" },
+    { k: "franz",      n: "Französisch", ic: "🇫🇷" },
+    { k: "geschichte", n: "Geschichte",  ic: "🏛️" },
+    { k: "geo",        n: "Geographie",  ic: "🗺️" },
+    { k: "info",       n: "Informatik",  ic: "💻" },
+    { k: "rel",        n: "Ethik",       ic: "🕊️" },
+    { k: "musik",      n: "Musik",       ic: "🎵" }
   ]
 };
 </script>
+<script src="/fundkarten.js?v=e94dea15"></script>
+<script src="/tagesrunde.js?v=f86f74ae"></script>
+<script src="/quiz/such.js?v=a7c50471"></script>
 <script src="/quiz/motor.js?v=d000bac2" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
