@@ -8,6 +8,7 @@
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis, besuchIstEltern } from "./_riegel.js";
 import { punkteLesen } from "./_wiedervorlage.js";
+import { tabellen, offeneKreise, gefuelltLesen, punktId } from "./_kreise.js";
 import { stoffLesen } from "./_schulstoff.js";
 
 const KINDER = ["paul", "leon", "helena"];
@@ -164,16 +165,15 @@ export async function onRequestGet(context) {
     } catch (e) {
       return json(503, { ok: false, fehler: "Dein Tagebuch kommt gerade nicht." });
     }
-    /* Kreise fuellen (Variante B, Denny 29.09.2026): Die Wiedervorlage sagt,
-       welcher Kreis inzwischen geschafft ist und welcher noch offen. Nur
-       lesen. Ausgeblendete Blaetter zaehlen nicht mit. */
-    let punkte = {}, sichtbar = null;
+    /* Kreise fuellen (Denny, 29.09.2026): welcher leere Kreis schon
+       nachgeholt ist und welche sich noch fuellen lassen. Nur lesen. */
+    let punkte = {}, gefuellt = new Set(), fragen = [], eintraege = [];
     try { punkte = await punkteLesen(env, kind); } catch (e) {}
-    try {
-      const s = await stoffLesen(env, kind, 4);
-      if (s && s.ok) sichtbar = new Set(s.eintraege.filter((x) => x.sichtbar !== false).map((x) => x.id));
-    } catch (e) {}
-    return json(200, Object.assign({ ok: true }, eigeneWoche(liste, new Date(), punkte, sichtbar)));
+    try { gefuellt = await gefuelltLesen(env, kind); } catch (e) {}
+    try { const v = JSON.parse((await env.PAUL_KV.get("quiz-vorrat:" + kind)) || "{}"); fragen = v.fragen || []; } catch (e) {}
+    try { const s = await stoffLesen(env, kind, 4); if (s && s.ok) eintraege = s.eintraege; } catch (e) {}
+    const tab = tabellen(fragen, eintraege);
+    return json(200, Object.assign({ ok: true }, eigeneWoche(liste, new Date(), { punkte, gefuellt, tab })));
   }
 
   // Die Auswertung ist für die Eltern, nicht für die Kinder.
@@ -495,7 +495,8 @@ export function berlinTag(iso) {
    Aufgabe: 1 = beim ersten Tipp gewusst, 0 = erst nachgeschaut. Besuch und
    Bauen zaehlen nicht, Runden eines Erwachsenen kommen gar nicht erst an
    (onRequestPost). Hoechstens 60 Punkte je Tag, der Rest als Zahl. */
-export function eigeneWoche(liste, jetzt, punkte, sichtbar) {
+export function eigeneWoche(liste, jetzt, extra) {
+  const x = extra || {};
   const heute = berlinTag(jetzt);
   const [j, m, t] = heute.split("-").map(Number);
   const mittag = new Date(Date.UTC(j, m - 1, t, 12));
@@ -503,16 +504,17 @@ export function eigeneWoche(liste, jetzt, punkte, sichtbar) {
   const tage = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(mittag.getTime() + (i - wt) * 86400000);
-    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0, spaeter: 0, offen: [] });
+    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0, spaeter: 0 });
   }
   const je = {};
   tage.forEach((x) => { je[x.datum] = x; });
-  const pk = punkte || {};
-  const blattSichtbar = (s) => !sichtbar || sichtbar.has(String(s).split("#")[0]);
-  /* 2 = erst nachgeschaut, spaeter aber geschafft: Der Lernpunkt ist
-     inzwischen richtig und wurde NACH dieser Runde gespielt. Der erste
-     Versuch bleibt ehrlich getrennt - "gewusst" zaehlt nur die 1. */
-  const spaeterGeschafft = (a, zeit) => {
+  const pk = x.punkte || {};
+  const voll = x.gefuellt || new Set();
+  /* 2 = erst nachgeschaut, spaeter geschafft (gelb). Entweder in "Kreise
+     fuellen" beim ersten Tipp richtig (voll), oder der Lernpunkt der Aufgabe
+     sitzt inzwischen. "gewusst" zaehlt nur den ersten Versuch. */
+  const spaeterGeschafft = (a, zeit, id) => {
+    if (voll.has(id)) return true;
     const p = a.p ? pk[a.p] : null;
     return !!(p && !p.f && (Number(p.z) || 0) > Date.parse(zeit || 0));
   };
@@ -522,41 +524,26 @@ export function eigeneWoche(liste, jetzt, punkte, sichtbar) {
     const tag = je[berlinTag(r.zeit)];
     if (!tag) continue;
     tag.sekunden += Math.max(0, Number(r.sekunden) || 0);
-    for (const a of r.aufgaben || []) {
-      if (!a || a.art === "besuch" || a.art === "bauen") continue;
-      const wert = a.stimmt ? 1 : (spaeterGeschafft(a, r.zeit) ? 2 : 0);
+    (r.aufgaben || []).forEach((a, i) => {
+      if (!a || a.art === "besuch" || a.art === "bauen") return;
+      const wert = a.stimmt ? 1 : (spaeterGeschafft(a, r.zeit, punktId(r.zeit, i)) ? 2 : 0);
       if (a.stimmt) tag.gewusst++;
       if (wert === 2) tag.spaeter++;
-      if (a.p) (tag.mitP = tag.mitP || new Set()).add(a.p);
-      if (tag.punkte.length < 60) { tag.punkte.push(wert); if (wert === 0 && !a.p) (tag.ohneP = tag.ohneP || []).push(tag.punkte.length - 1); }
-      else tag.mehr++;
-    }
+      if (tag.punkte.length < 60) tag.punkte.push(wert); else tag.mehr++;
+    });
   }
-  /* Alte Runden ohne Lernpunkt (Denny, 29.09.2026: "Wenn sie dann richtig
-     nachgeholt sind, kann man sie dennoch fuellen, auch wenn es nicht die
-     richtigen sind"): Je Lernpunkt, der an diesem Tag danebenging (fz) und
-     inzwischen sitzt, wird ein hohler Kreis ohne Lernpunkt gelb - von vorn,
-     und nur so viele, wie es hohle gibt. */
-  for (const s of Object.keys(pk)) {
-    const p = pk[s];
-    if (!p || p.f || !p.fz) continue;
-    const tag = je[berlinTag(new Date(p.fz).toISOString())];
-    if (!tag || !tag.ohneP || !tag.ohneP.length || (tag.mitP && tag.mitP.has(s))) continue;
-    tag.punkte[tag.ohneP.shift()] = 2;
-    tag.spaeter++;
-  }
-  /* Was noch zu fuellen ist: jeder Lernpunkt, der zuletzt danebenging, an dem
-     Tag, an dem er zuletzt gespielt wurde. So steht jeder genau einmal da. */
-  for (const s of Object.keys(pk)) {
-    const p = pk[s];
-    if (!p || !p.f || !p.z || !blattSichtbar(s)) continue;
-    const tag = je[berlinTag(new Date(p.z).toISOString())];
-    if (tag && tag.datum <= heute) tag.offen.push(s);
-  }
+  /* Wie viele leere Kreise je Tag sich jetzt fuellen lassen (Paul tippt
+     den Tag an und bekommt genau diese Zahl gesagt). */
+  const offen = x.tab ? offeneKreise(liste, x.tab, voll, berlinTag, tage.map((d) => d.datum),
+    (a, r) => { const p = a.p ? pk[a.p] : null; return !!(p && !p.f && (Number(p.z) || 0) > Date.parse(r.zeit || 0)); }) : {};
   return {
     heute,
-    tage: tage.map((x) => ({ datum: x.datum, minuten: Math.round(x.sekunden / 60), punkte: x.punkte, mehr: x.mehr,
-      gewusst: x.gewusst, spaeter: x.spaeter, gesamt: x.punkte.length + x.mehr, offen: x.offen })),
+    tage: tage.map((d) => {
+      const k = offen[d.datum] || [];
+      const n = d.datum <= heute ? k.reduce((s, c) => s + c.ids.length, 0) : 0;
+      return { datum: d.datum, minuten: Math.round(d.sekunden / 60), punkte: d.punkte, mehr: d.mehr,
+        gewusst: d.gewusst, spaeter: d.spaeter, gesamt: d.punkte.length + d.mehr, kreise: n };
+    }),
   };
 }
 

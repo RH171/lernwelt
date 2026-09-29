@@ -496,6 +496,7 @@
             opt.ergebnis(karten.map(function (k, n) {
               var e1 = { blatt: blattVon(k), karte: schluessel(k), stimmt: erster[n] !== false };
               if (k.quiz) e1.quiz = k.quiz;
+              if (k.kreis) e1.kreis = k.kreis;   // Kreise fuellen: welche Punkte in "Deine Woche"
               return e1;
             }));
           } catch (e) {}

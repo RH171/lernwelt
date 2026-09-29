@@ -36,6 +36,8 @@
 // (Dennys Beschluss vom 24.09.2026) - eine Faelligkeit ist ein Angebot, kein
 // Stapel, der abgearbeitet werden muss.
 
+import { tabellen, offeneKreise, gefuelltLesen, gefuelltMerken } from "./_kreise.js";
+import { eigeneWoche, berlinTag } from "./statistik.js";
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
@@ -114,6 +116,27 @@ export async function onRequestGet(context) {
      Zwei Leseabfragen, kein Schreibvorgang, kein Nachbau und kein Geld.
      Lesen zaehlt im KV praktisch nicht, Schreiben schon. */
   if (url.searchParams.get("nurWartend") === "1") {
+    /* Kreise fuellen (Denny, 29.09.2026): ?kreiseTag=<datum|woche> liefert
+       die Fragen hinter den leeren Kreisen dieses Tages bzw. der Woche. */
+    const kreiseTag = String(url.searchParams.get("kreiseTag") || "");
+    let kreiseKarten;
+    if (kreiseTag) {
+      let liste = [];
+      try { liste = JSON.parse((await env.PAUL_KV.get("lernstand:" + kind)) || "[]"); } catch (e) {}
+      const voll = await gefuelltLesen(env, kind);
+      const w = eigeneWoche(liste, new Date());
+      const tage = w.tage.map((d) => d.datum).filter((d) => d <= w.heute && (kreiseTag === "woche" || d === kreiseTag));
+      const tab = tabellen(v.fragen, Object.values(bn));
+      const je = offeneKreise(liste, tab, voll, berlinTag, tage, (a, r) => {
+        const p = a.p ? pk[a.p] : null; return !!(p && !p.f && (Number(p.z) || 0) > Date.parse(r.zeit || 0)); });
+      const zusammen = new Map();
+      for (const d of tage) for (const c of je[d] || []) {
+        const key = c.karte.frage + "|" + c.karte.richtig;
+        const alt = zusammen.get(key);
+        if (alt) alt.kreis.push(...c.ids); else zusammen.set(key, Object.assign({}, c.karte, { kreis: c.ids.slice() }));
+      }
+      kreiseKarten = [...zusammen.values()];
+    }
     const kreise = new Set(String(url.searchParams.get("kreise") || "").split(",")
       .map((s) => s.trim().slice(0, 70)).filter((s) => /#\d+$/.test(s)).slice(0, 40));
     const v = await vorratLesen(env, kind);
@@ -135,7 +158,8 @@ export async function onRequestGet(context) {
                        /* Kreise fuellen (29.09.2026): die Quizfragen zu genau
                           diesen Lernpunkten, auch wenn sie noch nicht faellig sind -
                           Paul hat sie sich selbst ausgesucht. */
-                       ...(kreise.size ? { kreiseQuiz: quizWacklerListe(v.fragen, pk, Date.now(), 40, kreise) } : {}) });
+                       ...(kreise.size ? { kreiseQuiz: quizWacklerListe(v.fragen, pk, Date.now(), 40, kreise) } : {}),
+                       ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
   /* Vorbauen im Hintergrund (28.09.2026). Denny: "Die Ladezeiten sind
@@ -393,6 +417,11 @@ export async function onRequestPost(context) {
   if (!KINDER[kind]) return json(400, { ok: false, fehler: "Welches Kind denn?" });
   if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
     return json(401, { ok: false, fehler: "Nicht angemeldet." });
+
+  /* Kreise fuellen: geschaffte Punkte merken (ein Schreibvorgang, nur wenn
+     etwas dazukommt). Danach laufen fund/antworten wie immer weiter. */
+  if (Array.isArray(daten.kreise) && daten.kreise.length)
+    await gefuelltMerken(env, kind, daten.kreise.slice(0, 200));
 
   /* Das Such-Spiel (Fundkarten, 25.09.2026) schickt nur `fund` - EIN
      Schreibvorgang je Runde, keine gestellten Fragen, keine Lernzeit. */
