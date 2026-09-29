@@ -122,6 +122,51 @@
   .kachel.quiz{background:linear-gradient(125deg,#115e59,#0f766e 55%,#0d8074); border-color:transparent} /* 25.09.2026: dunkler, vorher 3,3:1 unter der Schrift */
   .kachel.quiz span{color:rgba(255,255,255,.88)}
 
+
+  /* ---------- Von Paul uebernommen (29.09.2026) ----------
+     Denny, 28.09.2026: "Helena zuerst, danach Leon mit allem wie Paul".
+     Nur dazu, nichts ersetzt. Logik: /heft-start.js. */
+  .nachsehen{background:var(--surface);color:var(--ink);border:3px solid var(--gold);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:12px;font-family:var(--round)}
+  .nachsehen.verborgen{display:none}
+  .ns-kopf{font-weight:800;font-size:17px;margin-bottom:3px}
+  .ns-satz{font-size:13.5px;color:var(--muted);margin-bottom:8px}
+  .ns-punkt{border-top:1px solid var(--line);padding:10px 0 4px}
+  .ns-punkt:first-child{border-top:0}
+  .ns-text{font-size:14.5px;line-height:1.4;margin-bottom:9px}
+  .ns-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
+  .ns-knoepfe button{min-height:44px;padding:0 14px;border-radius:12px;font:700 14.5px/1 var(--round);cursor:pointer;
+    border:2px solid var(--brand);background:transparent;color:var(--ink)}
+  .ns-knoepfe button.ns-ja{background:var(--brand);color:#141024}
+  .ns-fertig{font-size:14.5px;padding:6px 0}
+  .kachel.heutelernen{background:linear-gradient(125deg,#3b1d7a,#5b21b6 60%,#6d28d9);border-color:transparent;color:#fff}
+  .kachel.heutelernen span{color:rgba(255,255,255,.9)}
+  button.kachel{font:inherit;text-align:left;cursor:pointer;width:100%}
+  .hoverlay{position:fixed;inset:0;background:rgba(5,8,15,.72);display:none;align-items:flex-start;justify-content:center;
+    padding:24px 12px;z-index:50;overflow:auto}
+  .hoverlay.on{display:flex}
+  .hmodal{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);width:100%;max-width:520px;padding:18px 16px}
+  .hmodal h3{font-family:var(--round);font-size:19px;margin:0 0 4px}
+  .hmodal .lead{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+  .hmodal .zu{display:block;width:100%;min-height:46px;margin-top:10px;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--ink);font:700 15px var(--round);cursor:pointer}
+  .hfach{border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin:0 0 9px}
+  .hfach h4{font-family:var(--round);font-weight:800;font-size:15px;margin:0;display:flex;align-items:center;gap:8px}
+  .hfach h4 .rd{width:10px;height:10px;border-radius:50%}
+  .hfach h4 .hz{margin-left:auto;color:var(--muted);font-weight:600;font-size:13px}
+  .hleer{color:var(--muted);font-size:13.5px;margin:6px 0 0}
+  .hblatt{margin:11px 0 0;padding:11px 0 0;border-top:1px solid var(--line)}
+  .hblatt:first-of-type{border-top:none;padding-top:4px}
+  .hblatt .ht{font-weight:700;font-size:14.5px}
+  .hblatt .ht span{color:var(--muted);font-weight:500}
+  .hbalken{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:#2a3350}
+  .hbalken b{display:block;height:100%}
+  .hbalken .s{background:var(--ok)} .hbalken .n{background:var(--gold)}
+  .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .hleg .ls{color:var(--ok);font-weight:700} .hleg .ln{color:var(--gold);font-weight:700}
+  .hlos{display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:10px;border-radius:12px;
+    background:var(--brand);color:#141024;font-weight:800;text-decoration:none;font-size:15px}
+
   .fuss{color:var(--muted); font-size:12.5px; line-height:1.6; margin:24px 2px 0;
     border-top:1px solid var(--line); padding-top:12px}
 
@@ -154,6 +199,14 @@
     </div>
   </header>
 
+  <!-- Bitte kurz nachsehen (von Paul, 29.09.2026): offene Rueckfragen zu Fach
+       und Datum ihrer Blaetter, gleich hier beantwortbar. -->
+  <section class="nachsehen verborgen" id="nachsehen" aria-live="polite">
+    <div class="ns-kopf">📚 Bitte kurz nachsehen</div>
+    <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen. Sag mir, was stimmt.</div>
+    <div id="nachsehenListe"></div>
+  </section>
+
   <!-- Die eine Empfehlung für heute. Welche es ist, entscheidet heuteSetzen()
        weiter unten - und zwar aus dem, was wirklich ansteht, nicht aus einer
        festen Reihenfolge. -->
@@ -182,6 +235,13 @@
 
   <div class="abschnitt">Für die Schule</div>
   <div class="kacheln">
+    <!-- Heute lernen (von Paul, 29.09.2026): eine kurze Runde aus ihren
+         Blaettern, was wieder dran ist und etwas Neues. -->
+    <a class="kachel breit heutelernen" href="quiz.html?heute=1" id="heuteLernen">
+      <span class="ki">☀️</span>
+      <span class="kt"><b>Heute lernen</b>
+        <span>Eine kurze Runde aus deinen Blättern – was wieder dran ist und etwas Neues.</span></span>
+    </a>
     <a class="kachel breit" href="hausaufgaben.html">
       <span class="ki">📓</span>
       <span class="kt"><b>Das haben wir heute gemacht</b>
@@ -201,6 +261,12 @@
       <span class="ki">🎯</span><b>Mein Lernquiz</b>
       <span>5–10 Minuten, Fächer selbst wählen.</span>
     </a>
+    <!-- Mein Heft (von Paul, 29.09.2026): was aus ihren Blaettern schon sitzt. -->
+    <button class="kachel breit" type="button" id="heftOeffnen">
+      <span class="ki">📊</span>
+      <span class="kt"><b>Mein Heft</b>
+        <span>Was aus deinen Blättern schon sitzt und was du noch übst.</span></span>
+    </button>
   </div>
 
   <div class="abschnitt">Üben und spielen</div>
@@ -231,6 +297,15 @@
     <a class="kachel" href="pruefungen.html">
       <span class="ki">📋</span><b>Prüfungen</b><span>Was zählt und wie viel</span>
     </a>
+  </div>
+
+  <div class="hoverlay" id="heftOverlay">
+    <div class="hmodal" role="dialog" aria-label="Mein Heft">
+      <h3>📊 Mein Heft</h3>
+      <p class="lead">Das kannst du schon aus deinen Blättern:</p>
+      <div id="heftBericht"></div>
+      <button class="zu" type="button" id="heftZu">Schließen</button>
+    </div>
   </div>
 
   <p class="fuss">Alles, was du hier machst, bleibt bei dir. Deine Eltern sehen nur,
@@ -340,6 +415,20 @@
   });
 })();
 </script>
+<script>
+window.HEFT_START = {
+  kind: "helena",
+  faecher: {
+    deutsch:{n:"Deutsch",c:"#60a5fa"}, mathe:{n:"Mathe",c:"#f472b6"}, englisch:{n:"Englisch",c:"#34d399"},
+    franz:{n:"Französisch",c:"#a78bfa"}, geschichte:{n:"Geschichte",c:"#fbbf24"}, geo:{n:"Geographie",c:"#2dd4bf"},
+    info:{n:"Informatik",c:"#38bdf8"}, rel:{n:"Ethik",c:"#c4b5fd"}, musik:{n:"Musik",c:"#fb923c"},
+    anderes:{n:"Anderes",c:"#94a3b8"}
+  },
+  immer: ["deutsch", "mathe", "englisch"],
+  quiz: "quiz.html"
+};
+</script>
+<script src="/heft-start.js?v=dada1efa"></script>
 <script>window.FERIENBAND = {ziel:"termine.html"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
 <!-- lernstand.js NUR für den Puls: Diese Seite meldet keine Lernrunde, sie ist
