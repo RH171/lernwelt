@@ -42,7 +42,7 @@
     --badgeearn:linear-gradient(165deg,#fff,#f3f6ff);
     --badgeline:#dbe3ff;
     --hintbg:#fff7ed; --hintline:#fed7aa; --hintink:#9a5b1e;
-    --sitzt:#1f9d6b; --sitzt-ink:#0b6b43; --noch:#4f7fe0; --noch-ink:#1d4fae; --neu-f:#e4e7f0;
+    --sitzt:#1f9d6b; --sitzt-ink:#0b6b43; --noch:#4f7fe0; --noch-ink:#1d4fae; --spaeter-ink:#8a5a00; --neu-f:#e4e7f0;
     --inspobg:#f3f0ff; --inspoline:#e3dcff; --inspoink:#5b3ec8;
     --warn:#e8453c;
     --veil:rgba(20,22,40,.42);
@@ -70,7 +70,7 @@
     --badgeearn:linear-gradient(165deg,#33333a,#2a2a33);
     --badgeline:#4a4a58;
     --hintbg:#3a2f1f; --hintline:#5c4526; --hintink:#f0c48a;
-    --sitzt:#6ee7a8; --sitzt-ink:#6ee7a8; --noch:#8cb8ff; --noch-ink:#8cb8ff; --neu-f:#3a3a3f;
+    --sitzt:#6ee7a8; --sitzt-ink:#6ee7a8; --noch:#8cb8ff; --noch-ink:#8cb8ff; --spaeter-ink:#f5d77a; --neu-f:#3a3a3f;
     --inspobg:#2e2a3d; --inspoline:#413a58; --inspoink:#c8bcff;
     --warn:#ff6b60;
     --veil:rgba(0,0,0,.6);
@@ -336,6 +336,13 @@
   .tbp{min-width:0;overflow-wrap:anywhere;line-height:1.35;color:var(--muted);}
   .tbp i,.tbleg i{font-style:normal;letter-spacing:1px;}
   .tbp i.g,.tbleg i.g{color:var(--sitzt-ink);} .tbp i.n,.tbleg i.n{color:var(--noch-ink);}
+  /* Kreise fuellen (Variante B, 29.09.2026): gelb = erst nachgeschaut, spaeter geschafft. */
+  .tbp i.s,.tbleg i.s{color:var(--spaeter-ink);}
+  .tbtag.kann{cursor:pointer;}
+  .tbfuell{grid-column:1/-1;justify-self:end;font-weight:800;font-size:14px;color:var(--spaeter-ink);
+    min-height:44px;display:flex;align-items:center;}
+  .tbknopf{display:block;width:100%;min-height:44px;margin-top:10px;border:0;border-radius:14px;
+    font:800 16px var(--round);color:#2b2100;background:#f5d77a;cursor:pointer;}
 
   /* ---------- Neues-Spiel-Karte ---------- */
   /* Farbe und Unterstreichung gehoeren an die GRUNDregel, nicht an jede
@@ -1262,7 +1269,7 @@
   }
   function wocheZeichnen(box, w){
     box.innerHTML = "";
-    let gewusst = 0, alle = 0;
+    let gewusst = 0, alle = 0, spaeter = 0, offenAlle = 0;
     const liste = el("div", "tbliste");
     (w.tage || []).forEach(function(t, i){
       if(t.datum > w.heute) return;            // was noch kommt, steht nicht da
@@ -1273,10 +1280,26 @@
       z.appendChild(el("span", "tbm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min")));
       const p = el("span", "tbp");
       if(leer) p.textContent = t.datum === w.heute ? "heute noch nichts" : "frei";
-      (t.punkte || []).forEach(function(x){ p.appendChild(el("i", x ? "g" : "n", x ? "●" : "○")); });
-      alle += t.gesamt || 0; gewusst += t.gewusst || 0;
+      /* 1 = beim ersten Tipp gewusst · 2 = spaeter geschafft · 0 = noch offen */
+      (t.punkte || []).forEach(function(x){
+        p.appendChild(el("i", x === 1 ? "g" : x === 2 ? "s" : "n", x === 0 ? "○" : "●"));
+      });
+      alle += t.gesamt || 0; gewusst += t.gewusst || 0; spaeter += t.spaeter || 0;
       if(t.mehr) p.appendChild(el("span", "tbmehr", " +" + t.mehr));
       z.appendChild(p);
+      /* Kreise fuellen: Paul tippte am 29.09.2026 intuitiv auf einen Tag und
+         wollte seine Kreise nochmal spielen. Das Wort "Fehler" steht nirgends. */
+      const n = (t.offen || []).length;
+      offenAlle += n;
+      if(n){
+        z.classList.add("kann");
+        z.setAttribute("role", "button"); z.tabIndex = 0;
+        z.setAttribute("aria-label", n + (n === 1 ? " Kreis" : " Kreise") + " vom " + tagKurz(t.datum) + " füllen");
+        z.appendChild(el("span", "tbfuell", "✨ " + n + (n === 1 ? " Kreis" : " Kreise") + " füllen ›"));
+        const los = function(){ location.href = "quiz.html?kreise=" + encodeURIComponent(t.datum); };
+        z.addEventListener("click", los);
+        z.addEventListener("keydown", function(ev){ if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); los(); } });
+      }
       liste.appendChild(z);
     });
     const k = el("div", "tbsumme");
@@ -1285,8 +1308,15 @@
       k.appendChild(s);
       const leg = el("div", "tbleg");
       leg.appendChild(el("i", "g", "●")); leg.appendChild(document.createTextNode(" beim ersten Tipp gewusst  "));
-      leg.appendChild(el("i", "n", "○")); leg.appendChild(document.createTextNode(" erst nachgeschaut"));
+      if(spaeter){ leg.appendChild(el("i", "s", "●")); leg.appendChild(document.createTextNode(" später geschafft  ")); }
+      leg.appendChild(el("i", "n", "○")); leg.appendChild(document.createTextNode(offenAlle ? " noch zu füllen" : " erst nachgeschaut"));
       k.appendChild(leg);
+      if(offenAlle){
+        const b = el("button", "tbknopf", "✨ " + offenAlle + (offenAlle === 1 ? " Kreis" : " Kreise") + " füllen");
+        b.type = "button"; b.id = "kreiseFuellen";
+        b.addEventListener("click", function(){ location.href = "quiz.html?kreise=woche"; });
+        k.appendChild(b);
+      }
     } else {
       k.appendChild(el("b", null, "Diese Woche hast du noch keine Fragen beantwortet."));
       k.appendChild(el("div", "tbleg", "Sobald du im Lernquiz oder beim Suchen spielst, steht es hier."));
