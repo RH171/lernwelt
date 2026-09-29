@@ -96,6 +96,8 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok) return;
+        // Gescheitertes Durchlesen nachholen (29.09.2026, siehe /nachlesen.js).
+        if (window.LWNachlesen) LWNachlesen(KIND, j.eintraege);
         heuteZeigen(j.eintraege);
         if (!$("nachsehen") || !$("nachsehenListe")) return;
         var liste = $("nachsehenListe"); liste.innerHTML = "";

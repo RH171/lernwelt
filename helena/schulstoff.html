@@ -24,6 +24,7 @@
 <script>document.documentElement.setAttribute("data-theme","dark");</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <script src="/strom.js?v=ccb1b4e5"></script>
+<script src="/nachlesen.js?v=2b08c294"></script>
 <script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
 <style>
   :root{
@@ -562,6 +563,8 @@
         }
         heute = a.j.heute;
         alles = a.j.eintraege || [];
+        // Gescheitertes Durchlesen nachholen (29.09.2026, siehe /nachlesen.js).
+        if (window.LWNachlesen) LWNachlesen("helena", alles, function(){ laden(); });
         var tage = {};
         alles.forEach(function(e){ tage[e.datum] = 1; });
         $("stand").textContent = alles.length

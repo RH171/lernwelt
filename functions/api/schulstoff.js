@@ -432,6 +432,7 @@ const TITEL_MODELL = "claude-opus-5-5";
  * 26,9 s. Die Grenze muss ueber diesem Wert liegen, sonst schneidet sie
  * genau den Lauf ab, der endlich richtig liest. */
 const TITEL_GRENZE = 45000;
+const VORUEBERGEHEND = [408, 409, 425, 429, 500, 502, 503, 504, 529];
 /* Der zweite Blick liest nur Zeilenanfaenge - das geht schneller als das
  * ganze Blatt zu verstehen. Reisst er die Grenze, bleibt die Schaetzung
  * aus dem ersten Aufruf; die Karte faellt nie deswegen weg. */
@@ -906,9 +907,13 @@ async function blattLesen(env, seite, kind) {
   const typ = String(seite).slice(5, String(seite).indexOf(";"));
   if (typ.indexOf("image/") !== 0) return { titel: "", datum: "" };
 
+  /* Ein Aussetzer der Schnittstelle (503, 529 ...) bekommt einen zweiten
+     Versuch. Am 29.09.2026 blieb Pauls HSU-Blatt deshalb ungelesen: Schritt 2
+     scheiterte einmal mit HTTP 503, und nichts hat es nachgeholt. */
+  let r;
+  for (let versuch = 0; versuch < 2; versuch++) {
   const abbruch = new AbortController();
   const uhr = setTimeout(() => abbruch.abort(), TITEL_GRENZE);
-  let r;
   try {
     r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -1040,12 +1045,18 @@ async function blattLesen(env, seite, kind) {
   } finally {
     clearTimeout(uhr);
   }
+  if (r.ok || versuch === 1 || VORUEBERGEHEND.indexOf(r.status) < 0) break;
+  await new Promise((w) => setTimeout(w, 4000));
+  }
 
   if (!r.ok) {
     const roh = await r.text().catch(() => "");
     let art = "";
     try { const j = JSON.parse(roh); art = String((j.error && (j.error.type || j.error.message)) || ""); } catch (e) {}
-    throw new Error("HTTP " + r.status + (art ? " " + art.slice(0, 60) : ""));
+    /* Ohne JSON den Anfang des Textes mitnehmen - "HTTP 503" allein liess am
+       29.09.2026 offen, ob Anthropic oder Cloudflare abgelehnt hat. */
+    if (!art) art = roh.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    throw new Error("HTTP " + r.status + (art ? " " + art.slice(0, 80) : ""));
   }
 
   const d = await r.json();

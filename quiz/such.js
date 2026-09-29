@@ -116,6 +116,9 @@
       .then(function(){ return fetch("/api/schulstoff?kind=" + encodeURIComponent(KIND) + "&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
       .then(function(j){
+        /* Gescheitertes Durchlesen nachholen (29.09.2026, siehe /nachlesen.js).
+           Klappt es, wird neu geladen - dann hat das Blatt Titel und Suchkarten. */
+        if (window.LWNachlesen) LWNachlesen(KIND, j && j.eintraege, function(){ laden(); });
         var liste = ((j && j.eintraege) || []).filter(function(x){
           return x && x.sichtbar !== false && Array.isArray(x.karten) && x.karten.length >= 3;
         }).sort(function(a, b){ return String(b.datum).localeCompare(String(a.datum)); });
