@@ -52,7 +52,10 @@ export const FAECHER = {
    Kunst und F-Int (dort entsteht nichts zum Ueben). */
 export const FAECHER_JE_KIND = {
   paul:   ["mathe", "deutsch", "hsu", "englisch", "rel", "musik", "anderes"],
-  leon:   ["mathe", "deutsch", "hsu", "englisch", "rel", "musik", "anderes"],
+  /* Leon (2. Klasse) hat kein Englisch - leon/stundenplan.html, abgeglichen
+     29.09.2026. Stand es hier, konnte das Lesemodell "Englisch" vorschlagen,
+     und die Rueckfrage bot ein Fach an, das seine Ablage gar nicht kennt. */
+  leon:   ["mathe", "deutsch", "hsu", "rel", "musik", "anderes"],
   helena: ["deutsch", "mathe", "englisch", "franz", "geschichte", "geo", "info", "rel", "musik", "anderes"],
 };
 
