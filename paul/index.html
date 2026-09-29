@@ -341,6 +341,11 @@
   .tbtag.kann{cursor:pointer;}
   .tbfuell{grid-column:1/-1;justify-self:end;font-weight:800;font-size:14px;color:var(--spaeter-ink);
     min-height:48px;display:flex;align-items:center;}
+  .tbfrage{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;margin-top:2px;}
+  .tbfrage p{margin:0;font-weight:700;}
+  .tbfrage.verborgen{display:none;}
+  .tbspaeter{display:block;width:100%;min-height:48px;margin-top:6px;border:1px solid var(--line);border-radius:14px;
+    background:transparent;color:var(--ink);font:700 15px var(--round);cursor:pointer;}
   .tbknopf{display:block;width:100%;min-height:48px;margin-top:10px;border:0;border-radius:14px;
     font:800 16px var(--round);color:#2b2100;background:#f5d77a;cursor:pointer;}
 
@@ -1268,6 +1273,7 @@
     return m ? (+m[3]) + "." + (+m[2]) + "." : "";
   }
   /* window.__geheZu nur fuer die Messung - sie darf die Seite nicht verlassen. */
+  const WOCHENTAG_LANG = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
   function gehe(u){ (window.__geheZu || function(x){ location.href = x; })(u); }
   function wocheZeichnen(box, w){
     box.innerHTML = "";
@@ -1289,18 +1295,31 @@
       alle += t.gesamt || 0; gewusst += t.gewusst || 0; spaeter += t.spaeter || 0;
       if(t.mehr) p.appendChild(el("span", "tbmehr", " +" + t.mehr));
       z.appendChild(p);
-      /* Kreise fuellen: Paul tippte am 29.09.2026 intuitiv auf einen Tag und
-         wollte seine Kreise nochmal spielen. Das Wort "Fehler" steht nirgends. */
-      const n = (t.offen || []).length;
+      /* Kreise fuellen (Denny, 29.09.2026): Paul tippt einen Tag an, darunter
+         klappt auf, wie viele Kreise leer sind, und er entscheidet selbst. */
+      const n = t.kreise || 0;
+      const leerN = (t.punkte || []).filter(function(v){ return v === 0; }).length;
       offenAlle += n;
       if(n){
         z.classList.add("kann");
-        z.setAttribute("role", "button"); z.tabIndex = 0;
-        z.setAttribute("aria-label", n + (n === 1 ? " Kreis" : " Kreise") + " vom " + tagKurz(t.datum) + " füllen");
+        z.setAttribute("role", "button"); z.tabIndex = 0; z.setAttribute("aria-expanded", "false");
         z.appendChild(el("span", "tbfuell", "✨ " + n + (n === 1 ? " Kreis" : " Kreise") + " füllen ›"));
-        const los = function(){ gehe("quiz.html?kreise=" + encodeURIComponent(t.datum)); };
-        z.addEventListener("click", los);
-        z.addEventListener("keydown", function(ev){ if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); los(); } });
+        const fach = el("div", "tbfrage verborgen");
+        const satz = "Am " + WOCHENTAG_LANG[i] + " " + (n === 1 ? "ist noch 1 Kreis leer." : "sind noch " + n + " Kreise leer.") +
+          (leerN > n ? " (" + (leerN - n) + " davon kann man nicht mehr nachholen.)" : "");
+        fach.appendChild(el("p", null, satz));
+        const ja = el("button", "tbknopf", "✨ " + (n === 1 ? "Jetzt füllen" : "Alle " + n + " jetzt füllen"));
+        ja.type = "button";
+        ja.addEventListener("click", function(ev){ ev.stopPropagation(); gehe("quiz.html?kreise=" + encodeURIComponent(t.datum)); });
+        const spaeter = el("button", "tbspaeter", "Später");
+        spaeter.type = "button";
+        spaeter.addEventListener("click", function(ev){ ev.stopPropagation(); auf(false); });
+        fach.appendChild(ja); fach.appendChild(spaeter);
+        fach.addEventListener("click", function(ev){ ev.stopPropagation(); });
+        z.appendChild(fach);
+        const auf = function(an){ fach.classList.toggle("verborgen", !an); z.setAttribute("aria-expanded", an ? "true" : "false"); };
+        z.addEventListener("click", function(){ auf(fach.classList.contains("verborgen")); });
+        z.addEventListener("keydown", function(ev){ if(ev.target === z && (ev.key === "Enter" || ev.key === " ")){ ev.preventDefault(); auf(fach.classList.contains("verborgen")); } });
       }
       liste.appendChild(z);
     });

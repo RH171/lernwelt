@@ -181,6 +181,7 @@
        { gewusst, spaeter, offen, fuellen: "Kreise füllen", dunkel: true, gross: true }
      Ohne H.woche bleibt alles wie vorher. Kein Rot, kein "Fehler". */
   var WOCHENTAG = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  var TAG_LANG = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
   function wocheStil() {
     if ($("lww-stil")) return;
     var s = document.createElement("style"); s.id = "lww-stil";
@@ -198,6 +199,10 @@
       ".lww .wfuell{grid-column:1/-1;justify-self:end;font-weight:800;color:var(--ws);min-height:48px;display:flex;align-items:center}" +
       ".lww .wknopf{display:block;width:100%;min-height:48px;margin-top:10px;border:0;border-radius:14px;" +
       "font-weight:800;font-size:16px;color:#2b2100;background:#f5d77a;cursor:pointer}" +
+      ".lww .wfrage{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px}.lww .wfrage p{margin:0;font-weight:700}" +
+      ".lww .wfrage.verborgen{display:none}" +
+      ".lww .wspaeter{display:block;width:100%;min-height:48px;margin-top:6px;border:1px solid var(--line);border-radius:14px;" +
+      "background:transparent;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer}" +
       ".lww.gross .wp{font-size:19px}.lww.gross .wd,.lww.gross .wm{font-size:17px}.lww.gross .wknopf{font-size:18px;min-height:54px}";
     document.head.appendChild(s);
   }
@@ -222,13 +227,28 @@
       if (t.mehr) p.appendChild(el("span", null, " +" + t.mehr));
       z.appendChild(p);
       alle += t.gesamt || 0; gewusst += t.gewusst || 0; spaeter += t.spaeter || 0;
-      var n = (t.offen || []).length; offenAlle += n;
+      var n = t.kreise || 0; offenAlle += n;
+      var leerN = (t.punkte || []).filter(function (v) { return v === 0; }).length;
       if (n) {
-        z.classList.add("kann"); z.setAttribute("role", "button"); z.tabIndex = 0;
+        z.classList.add("kann"); z.setAttribute("role", "button"); z.tabIndex = 0; z.setAttribute("aria-expanded", "false");
         z.appendChild(el("span", "wfuell", "✨ " + mehrz(n) + " " + (W.fuellen || "füllen") + " ›"));
+        var fach = el("div", "wfrage verborgen");
+        fach.appendChild(el("p", null, "Am " + TAG_LANG[i] + " " + (n === 1 ? "ist noch 1 " + (W.einKreis || "Kreis") + " " + (W.leer || "leer")
+          : "sind noch " + mehrz(n) + " " + (W.leer || "leer")) + "." +
+          (leerN > n ? " (" + (leerN - n) + " davon lassen sich nicht mehr nachholen.)" : "")));
         var ziel = (H.quiz || "quiz.html") + "?kreise=" + encodeURIComponent(t.datum);
-        z.addEventListener("click", function () { gehe(ziel); });
-        z.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); gehe(ziel); } });
+        var ja = el("button", "wknopf", "✨ " + (W.jetzt || "Jetzt füllen")); ja.type = "button";
+        ja.addEventListener("click", (function (u) { return function (ev) { ev.stopPropagation(); gehe(u); }; })(ziel));
+        var sp = el("button", "wspaeter", "Später"); sp.type = "button";
+        fach.appendChild(ja); fach.appendChild(sp);
+        fach.addEventListener("click", function (ev) { ev.stopPropagation(); });
+        z.appendChild(fach);
+        (function (z, fach, sp) {
+          var auf = function (an) { fach.classList.toggle("verborgen", !an); z.setAttribute("aria-expanded", an ? "true" : "false"); };
+          sp.addEventListener("click", function () { auf(false); });
+          z.addEventListener("click", function () { auf(fach.classList.contains("verborgen")); });
+          z.addEventListener("keydown", function (ev) { if (ev.target === z && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); auf(fach.classList.contains("verborgen")); } });
+        })(z, fach, sp);
       }
       liste.appendChild(z);
     });

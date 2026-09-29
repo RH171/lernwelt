@@ -90,6 +90,10 @@
         headers: { "content-type": "application/json" }, body: JSON.stringify(daten)
       }).catch(function(){ /* ohne Speicher merkt sich nur die Wiedervorlage diese Runde nicht */ });
     }
+    /* Kreise fuellen: beim ersten Tipp richtig = Kreis gefuellt. */
+    var kreise = [];
+    liste.forEach(function(e){ if (e.kreis && e.stimmt) kreise = kreise.concat(e.kreis); });
+    if (kreise.length) schicken({ kind: KIND, kreise: kreise });
     if (fund.length) schicken({ kind: KIND, fund: fund.map(function(e){
       return { blatt: e.blatt || blattId, karte: e.karte, stimmt: e.stimmt }; }) });
     if (quiz.length) schicken({ kind: KIND, antworten: quiz.map(function(e){
@@ -178,27 +182,48 @@
   var kreiseWahl = (/[?&]kreise=([^&#]+)/.exec(location.search) || [])[1];
   kreiseWahl = kreiseWahl ? decodeURIComponent(kreiseWahl) : "";
   function kreiseStarten(eintraege, wahl){
-    if (!window.LWTag || !LWTag.kreise || !window.LWFund) return;
-    fetch("/api/statistik?eigene=1&kind=" + encodeURIComponent(KIND), { credentials: "same-origin" })
+    if (!window.LWFund) return;
+    fetch("/api/quiz?kind=" + encodeURIComponent(KIND) + "&nurWartend=1&kreiseTag=" + encodeURIComponent(wahl),
+          { credentials: "same-origin" })
       .then(function(r){ return r.json(); })
-      .then(function(w){
-        var keys = [];
-        ((w && w.tage) || []).forEach(function(t){
-          if (wahl === "woche" || t.datum === wahl) keys = keys.concat(t.offen || []);
-        });
-        var quizKeys = keys.filter(function(s){ return /#\d+$/.test(s); });
-        var weiter = quizKeys.length
-          ? fetch("/api/quiz?kind=" + encodeURIComponent(KIND) + "&nurWartend=1&kreise=" +
-                  encodeURIComponent(quizKeys.join(",")), { credentials: "same-origin" })
-              .then(function(r){ return r.json(); }).then(function(j){ return (j && j.kreiseQuiz) || []; })
-              .catch(function(){ return []; })
-          : Promise.resolve([]);
-        return weiter.then(function(quiz){ kreiseZeigen(LWTag.kreise(eintraege, keys, quiz, fundStand), wahl); });
-      })
-      .catch(function(){ /* ohne Tagebuch bleibt die normale Auswahl stehen */ });
+      .then(function(j){ kreiseZeigen(kreiseStapel((j && j.kreiseKarten) || [], eintraege), wahl); })
+      .catch(function(){ kreiseZeigen({ karten: [], offen: 0, rest: 0 }, wahl); });
+  }
+  /* Hoechstens 10 Fragen je Runde, nach je zwei eine, die schon sitzt. */
+  function kreiseStapel(liste, eintraege){
+    var sicher = [];
+    (eintraege || []).forEach(function(b){
+      if (!b || b.sichtbar === false) return;
+      (b.karten || []).forEach(function(k){
+        if (!k || !k.richtig || !k.falsch || k.falsch.length !== 2) return;
+        var st = fundStand[b.id + "#k:" + kartenSchluessel(k)];
+        if (st && !st.f) { var c = {}; for (var z in k) c[z] = k[z]; c.blatt = b.id; c.blattTitel = b.titel || ""; sicher.push(c); }
+      });
+    });
+    var dran = liste.slice(0, 10), karten = [], si = 0;
+    dran.forEach(function(c, i){
+      karten.push(c);
+      if ((i + 1) % 2 === 0 && i + 1 < dran.length && si < sicher.length) karten.push(sicher[si++]);
+    });
+    var kreise = 0, rest = 0;
+    dran.forEach(function(c){ kreise += (c.kreis || []).length; });
+    liste.slice(10).forEach(function(c){ rest += (c.kreis || []).length; });
+    return { karten: karten, offen: kreise, rest: rest };
   }
   function kreiseZeigen(st, wahl){
-    if (!st.karten.length) return;
+    if (!st.karten.length) {
+      /* Nie ein stilles "irgendwas": Paul kam mit einer Absicht hierher. */
+      $("fundkarten").innerHTML = "";
+      var p = document.createElement("div"); p.className = "lwf-karte rein";
+      var h = document.createElement("h2"); h.textContent = "Hier ist schon alles gefüllt.";
+      var b = document.createElement("button"); b.type = "button"; b.className = "lwf-knopf"; b.textContent = "Zurück zur Auswahl";
+      b.addEventListener("click", function(){ zurueck(); laden(); });
+      p.appendChild(h); p.appendChild(b); $("fundkarten").appendChild(p);
+      $("heute-wahl").classList.add("verborgen");
+      $("sicht-start").classList.add("verborgen");
+      $("sicht-such").classList.remove("verborgen");
+      return;
+    }
     var wann = wahl === "woche" ? "diese Woche" : ("am " + datum(wahl));
     /* Worte je Kind (29.09.2026): Helena liest "Wiederholen" und "Fragen". */
     var W = (window.QUIZ && window.QUIZ.kreiseWorte) || {};

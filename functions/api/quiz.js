@@ -116,6 +116,13 @@ export async function onRequestGet(context) {
      Zwei Leseabfragen, kein Schreibvorgang, kein Nachbau und kein Geld.
      Lesen zaehlt im KV praktisch nicht, Schreiben schon. */
   if (url.searchParams.get("nurWartend") === "1") {
+    const v = await vorratLesen(env, kind);
+    const pk = await punkteLesen(env, kind);
+    const bn = {};
+    try {
+      const e = await stoffLesen(env, kind, 4);
+      if (e.ok) for (const x of e.eintraege) bn[x.id] = x;
+    } catch (e) {}
     /* Kreise fuellen (Denny, 29.09.2026): ?kreiseTag=<datum|woche> liefert
        die Fragen hinter den leeren Kreisen dieses Tages bzw. der Woche. */
     const kreiseTag = String(url.searchParams.get("kreiseTag") || "");
@@ -137,15 +144,6 @@ export async function onRequestGet(context) {
       }
       kreiseKarten = [...zusammen.values()];
     }
-    const kreise = new Set(String(url.searchParams.get("kreise") || "").split(",")
-      .map((s) => s.trim().slice(0, 70)).filter((s) => /#\d+$/.test(s)).slice(0, 40));
-    const v = await vorratLesen(env, kind);
-    const pk = await punkteLesen(env, kind);
-    const bn = {};
-    try {
-      const e = await stoffLesen(env, kind, 4);
-      if (e.ok) for (const x of e.eintraege) bn[x.id] = x;
-    } catch (e) {}
     const zahl = fragenZaehlen(vorratBereinigen(v.fragen, bn));
     const fund = fundFaelligJeBlatt(pk, Date.now());
     const fundText = {};
@@ -155,10 +153,6 @@ export async function onRequestGet(context) {
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
                        quizWackler: quizWacklerListe(v.fragen, pk, Date.now()),
-                       /* Kreise fuellen (29.09.2026): die Quizfragen zu genau
-                          diesen Lernpunkten, auch wenn sie noch nicht faellig sind -
-                          Paul hat sie sich selbst ausgesucht. */
-                       ...(kreise.size ? { kreiseQuiz: quizWacklerListe(v.fragen, pk, Date.now(), 40, kreise) } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
