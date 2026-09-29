@@ -337,6 +337,54 @@
      und Schrift auf dieser Flaeche wird dunkel. 25.09.2026 */
   html[data-theme="dark"]{--leon:#4ade9b}
   html[data-theme="dark"] .los{color:#10281f}
+
+  /* ---------- Von Paul uebernommen (29.09.2026) ----------
+     Denny, 28.09.2026: "danach Leon mit allem wie Paul". Nur dazu, nichts
+     ersetzt. Logik: /heft-start.js. Gruen #047857 statt --leon, weil weisse
+     Schrift auf #10b981 nur 2,5:1 hat. */
+  .nachsehen{background:var(--card,#fff);color:var(--ink);border:3px solid #f59e0b;border-radius:22px;
+    padding:16px 18px;margin:0 0 14px;font-family:var(--rund)}
+  .nachsehen.verborgen{display:none}
+  .ns-kopf{font-weight:800;font-size:20px;margin-bottom:4px}
+  .ns-satz{font-size:16px;margin-bottom:10px;color:var(--muted)}
+  .ns-punkt{border-top:1px solid var(--line);padding:12px 0 4px}
+  .ns-punkt:first-child{border-top:0}
+  .ns-text{font-size:17px;line-height:1.4;margin-bottom:10px}
+  .ns-knoepfe{display:flex;flex-wrap:wrap;gap:10px}
+  .ns-knoepfe button{min-height:48px;padding:0 16px;border-radius:14px;font:700 17px/1 var(--rund);cursor:pointer;
+    border:2px solid #047857;background:transparent;color:var(--ink)}
+  .ns-knoepfe button.ns-ja{background:#047857;color:#fff}
+  html[data-theme="dark"] .ns-knoepfe button{border-color:#4ade9b}
+  html[data-theme="dark"] .ns-knoepfe button.ns-ja{background:#4ade9b;color:#0b1a12}
+  .ns-fertig{font-size:17px;padding:6px 0}
+  button.minikachel{font:inherit;text-align:left;cursor:pointer;border:0}
+  .minikachel.heutelernen{background:linear-gradient(125deg,#065f46,#047857 60%,#0f766e);color:#fff}
+  .minikachel.heutelernen span span{color:rgba(255,255,255,.92)}
+  .hoverlay{position:fixed;inset:0;background:rgba(10,14,24,.6);display:none;align-items:flex-start;justify-content:center;
+    padding:24px 12px;z-index:50;overflow:auto}
+  .hoverlay.on{display:flex}
+  .hmodal{background:var(--card,#fff);color:var(--ink);border-radius:22px;width:100%;max-width:520px;padding:18px 16px}
+  .hmodal h3{font-family:var(--rund);font-size:21px;margin:0 0 4px}
+  .hmodal .lead{color:var(--muted);font-size:16px;margin:0 0 12px}
+  .hmodal .zu{display:block;width:100%;min-height:48px;margin-top:10px;border-radius:14px;border:2px solid var(--line);
+    background:transparent;color:var(--ink);font:700 17px var(--rund);cursor:pointer}
+  .hfach{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px}
+  .hfach h4{font-family:var(--rund);font-weight:800;font-size:17px;margin:0;display:flex;align-items:center;gap:8px}
+  .hfach h4 .rd{width:12px;height:12px;border-radius:50%}
+  .hfach h4 .hz{margin-left:auto;color:var(--muted);font-weight:600;font-size:14px}
+  .hleer{color:var(--muted);font-size:15px;margin:6px 0 0}
+  .hblatt{margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line)}
+  .hblatt:first-of-type{border-top:none;padding-top:4px}
+  .hblatt .ht{font-weight:700;font-size:16px}
+  .hblatt .ht span{color:var(--muted);font-weight:500}
+  .hbalken{display:flex;height:16px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:var(--line)}
+  .hbalken b{display:block;height:100%}
+  .hbalken .s{background:#12b76a} .hbalken .n{background:#f59e0b}
+  .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:15px;color:var(--muted)}
+  .hleg .ls{color:#067647;font-weight:700} .hleg .ln{color:#92400e;font-weight:700}
+  html[data-theme="dark"] .hleg .ls{color:#6ee7a8} html[data-theme="dark"] .hleg .ln{color:#fcd34d}
+  .hlos{display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:10px;border-radius:14px;
+    background:#047857;color:#fff;font-weight:800;text-decoration:none;font-size:17px}
 </style>
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 </head>
@@ -373,6 +421,12 @@
          alleine lesen." Jeden Tag eine neue Geschichte, danach 5 Fragen als Lesebeweis. -->
     <!-- 18.09.2026: eigenes Hausaufgaben-Heft (Denny: "Ja.") und der Stundenplan
          zum Nachschauen. -->
+    <!-- Bitte kurz nachsehen (von Paul, 29.09.2026). -->
+    <section class="nachsehen verborgen" id="nachsehen" aria-live="polite">
+      <div class="ns-kopf">📚 Bitte kurz nachsehen</div>
+      <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen.</div>
+      <div id="nachsehenListe"></div>
+    </section>
     <div class="zweikacheln">
       <a class="minikachel" href="hausaufgaben.html"><span class="bild">📚</span><span><b>Meine Hausaufgaben</b><span>Foto machen, zusammen schauen</span></span></a>
       <a class="minikachel" href="stundenplan.html"><span class="bild">📅</span><span><b>Mein Stundenplan</b><span>Was habe ich wann?</span></span></a>
@@ -381,6 +435,16 @@
     <a class="minikachel breit" href="quiz.html" style="margin-top:10px">
       <span class="bild">🎯</span><span><b>Mein Quiz</b><span>Ein paar Fragen. Was du nicht wusstest, kommt wieder.</span></span>
     </a>
+    <!-- Von Paul uebernommen (29.09.2026): Ablage, Heute lernen, Mein Heft. -->
+    <a class="minikachel breit" href="schulstoff.html" style="margin-top:10px">
+      <span class="bild">📚</span><span><b>Mein Schulheft</b><span>Heft oder Blatt fotografieren und sammeln.</span></span>
+    </a>
+    <a class="minikachel breit heutelernen" href="quiz.html?heute=1" id="heuteLernen" data-nurmitkarten="1" style="margin-top:10px;display:none">
+      <span class="bild">☀️</span><span><b>Heute lernen</b><span>Eine kurze Runde aus deinen Blättern.</span></span>
+    </a>
+    <button class="minikachel breit" type="button" id="heftOeffnen" style="margin:10px 0 12px">
+      <span class="bild">📊</span><span><b>Mein Heft</b><span>Was du aus deinen Blättern schon kannst.</span></span>
+    </button>
 
     <!-- Wann sind die naechsten Ferien? Dasselbe Band haben Paul und Helena
          (Denny, 21.09.2026). Bei Leon groesser, weil er noch Leseanfaenger ist.
@@ -1816,6 +1880,24 @@
 </script>
 <script>window.FERIENBAND = {gross:true, ziel:"/ferien"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
+<div class="hoverlay" id="heftOverlay">
+  <div class="hmodal" role="dialog" aria-label="Mein Heft">
+    <h3>📊 Mein Heft</h3>
+    <p class="lead">Das kannst du schon aus deinen Blättern:</p>
+    <div id="heftBericht"></div>
+    <button class="zu" type="button" id="heftZu">Schließen</button>
+  </div>
+</div>
+<script>
+window.HEFT_START = {
+  kind: "leon",
+  faecher: { deutsch:{n:"Deutsch",c:"#3b82f6"}, mathe:{n:"Mathe",c:"#ec4899"}, hsu:{n:"Sachkunde",c:"#10b981"},
+             rel:{n:"Religion",c:"#a78bfa"}, musik:{n:"Musik",c:"#f97316"}, anderes:{n:"Anderes",c:"#94a3b8"} },
+  immer: ["deutsch", "mathe", "hsu"],
+  quiz: "quiz.html"
+};
+</script>
+<script src="/heft-start.js?v=2a93ffd1"></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
 <script>
 /* Leons Schalter hell/dunkel (25.09.2026). Die Wahl liegt unter "leon-theme"
