@@ -489,7 +489,7 @@ export function eigeneWoche(liste, jetzt) {
   const tage = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(mittag.getTime() + (i - wt) * 86400000);
-    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0 });
+    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0 });
   }
   const je = {};
   tage.forEach((x) => { je[x.datum] = x; });
@@ -501,12 +501,14 @@ export function eigeneWoche(liste, jetzt) {
     tag.sekunden += Math.max(0, Number(r.sekunden) || 0);
     for (const a of r.aufgaben || []) {
       if (!a || a.art === "besuch" || a.art === "bauen") continue;
+      if (a.stimmt) tag.gewusst++;
       if (tag.punkte.length < 60) tag.punkte.push(a.stimmt ? 1 : 0); else tag.mehr++;
     }
   }
   return {
     heute,
-    tage: tage.map((x) => ({ datum: x.datum, minuten: Math.round(x.sekunden / 60), punkte: x.punkte, mehr: x.mehr })),
+    tage: tage.map((x) => ({ datum: x.datum, minuten: Math.round(x.sekunden / 60), punkte: x.punkte, mehr: x.mehr,
+      gewusst: x.gewusst, gesamt: x.punkte.length + x.mehr })),
   };
 }
 

@@ -333,24 +333,19 @@
   .rephint{background:var(--hintbg);border:1px solid var(--hintline);border-radius:14px;padding:13px 14px;
     font-size:13px;color:var(--hintink);line-height:1.45;}
   .modal.wide{max-width:480px;max-height:82vh;overflow:auto;}
-  /* Mein Heft (Denny, 25.09.2026, Entwurf B): je Blatt ein Balken
-     sitzt · uebst du noch · neu. Kein Rot, kein Warnzeichen. */
-  .hfach{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px;}
-  .hfach h4{font-family:var(--round);font-weight:800;font-size:15px;margin:0;display:flex;align-items:center;gap:8px;}
-  .hfach h4 .rd{width:10px;height:10px;border-radius:50%;}
-  .hfach h4 .hz{margin-left:auto;color:var(--muted);font-weight:600;font-size:13px;}
   .hleer{color:var(--muted);font-size:13.5px;margin:6px 0 0;}
-  .hblatt{margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line);}
-  .hblatt:first-of-type{border-top:none;padding-top:4px;}
-  .hblatt .ht{font-weight:700;font-size:14.5px;}
-  .hblatt .ht span{color:var(--muted);font-weight:500;}
-  .hbalken{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:var(--neu-f);}
-  .hbalken b{display:block;height:100%;}
-  .hbalken .s{background:var(--sitzt);} .hbalken .n{background:var(--noch);}
-  .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
-  .hleg .ls{color:var(--sitzt-ink);font-weight:700;} .hleg .ln{color:var(--noch-ink);font-weight:700;}
-  .hlos{display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:10px;border-radius:14px;
-    background:var(--brand,#4f46e5);color:#fff;font-weight:800;text-decoration:none;font-size:15px;}
+  /* Tagebuch der Woche (Teil 2 B, 29.09.2026). Kein Rot. */
+  .tbsumme{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px;}
+  .tbsumme b{font-family:var(--round);font-size:16px;}
+  .tbleg{color:var(--muted);font-size:13px;margin-top:4px;}
+  .tbliste{display:flex;flex-direction:column;gap:6px;}
+  .tbtag{display:grid;grid-template-columns:5.2em 4.6em minmax(0,1fr);gap:8px;align-items:center;
+    border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:14px;}
+  .tbtag.heute{border-color:var(--sitzt);}
+  .tbd{font-weight:800;} .tbm{color:var(--muted);font-weight:600;}
+  .tbp{min-width:0;overflow-wrap:anywhere;line-height:1.35;color:var(--muted);}
+  .tbp i,.tbleg i{font-style:normal;letter-spacing:1px;}
+  .tbp i.g,.tbleg i.g{color:var(--sitzt-ink);} .tbp i.n,.tbleg i.n{color:var(--noch-ink);}
   .alt{margin-top:14px;border:1px solid var(--line);border-radius:16px;padding:0 14px;}
   .alt>summary{min-height:48px;display:flex;align-items:center;font-weight:700;cursor:pointer;list-style:none;}
   .alt>summary::-webkit-details-marker{display:none;}
@@ -695,8 +690,8 @@
 <!-- Modal: Lernbericht -->
 <div class="overlay" id="reportOverlay">
   <div class="modal wide">
-    <h3>📊 Mein Heft</h3>
-    <p class="lead">Das kannst du schon aus deinem Heft:</p>
+    <h3>📊 Deine Woche</h3>
+    <p class="lead">Was du diese Woche gelernt hast:</p>
     <div id="reportBody"></div>
     <button class="close" id="closeReport">Schließen</button>
   </div>
@@ -1291,101 +1286,67 @@
   function lwProgress(file){
     try{ const raw=localStorage.getItem("lw-progress:"+file); if(!raw) return null; const o=JSON.parse(raw); return (o&&typeof o==="object")?o:null; }catch(e){ return null; }
   }
-  /* Mein Heft (Denny, 25.09.2026, aus drei Entwuerfen "B"): Paul sieht, was er
-     aus SEINEM Heft schon kann - vom Server, also auf iPad und iPhone gleich.
-     Eine Karte "sitzt", wenn er sie beim letzten Mal beim ersten Tipp wusste,
-     "uebst du noch", wenn nicht, "neu", wenn er sie noch nie hatte. Der Stand
-     kommt aus der Wiedervorlage (/api/quiz?nurWartend=1, fundStand), dieselbe
-     Quelle wie "Heute lernen". Kein Rot, kein Warnzeichen, keine Serie.
-     Die alten Klasse-3-Spiele (Werte nur auf diesem Geraet) stehen eingeklappt
-     darunter. */
-  const HEFT_FACH = {mathe:{n:"Mathe",c:"var(--mathe)"}, deutsch:{n:"Deutsch",c:"var(--deutsch)"},
-    hsu:{n:"HSU",c:"var(--hsu)"}, englisch:{n:"Englisch",c:"var(--englisch)"},
-    rel:{n:"Religion",c:"var(--religion)"}, musik:{n:"Musik",c:"var(--musik)"},
-    anderes:{n:"Anderes",c:"var(--spass)"}};
-  const HEFT_IMMER = ["mathe","deutsch","hsu"];
-  function kartenSchluessel(k){
-    return String((k && k.richtig) || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
-  }
-  function heftDatum(d){
-    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||""));
-    return m ? (+m[3]) + "." + (+m[2]) + "." : "";
-  }
+  /* Tagebuch der Woche (Teil 2 B, Denny 29.09.2026). Der Stand je Blatt
+     (sitzt · uebst du noch · neu) steht seitdem im Lernquiz an jedem Blatt
+     (Teil 1 A), hier nur noch, was Paul diese Woche getan hat: je Tag die
+     Minuten und ein Punkt je Frage - voll = beim ersten Tipp gewusst, Ring =
+     erst nachgeschaut. Ein Tag ohne Lernen heisst "frei". Kein Rot, keine
+     Serie, keine Schwaechenliste. Quelle: /api/statistik?eigene=1, also auf
+     iPad und iPhone gleich. */
+  const WOCHENTAG = ["Mo","Di","Mi","Do","Fr","Sa","So"];
   function el(tag, cls, text){
     const x = document.createElement(tag); if(cls) x.className = cls;
     if(text != null) x.textContent = text; return x;
   }
-  function heftZeichnen(box, eintraege, stand){
-    box.innerHTML = "";
-    const je = {};
-    (eintraege || []).forEach(function(x){
-      if(!x || x.sichtbar === false) return;
-      const f = HEFT_FACH[x.fach] ? x.fach : "anderes";
-      (je[f] = je[f] || []).push(x);
-    });
-    const faecher = Object.keys(HEFT_FACH).filter(function(f){ return je[f] || HEFT_IMMER.indexOf(f) >= 0; });
-    faecher.sort(function(a, b){ return (je[b] ? je[b].length : 0) - (je[a] ? je[a].length : 0); });
-    faecher.forEach(function(f){
-      const liste = (je[f] || []).slice().sort(function(a, b){ return String(b.datum).localeCompare(String(a.datum)); });
-      const k = el("div", "hfach"); k.dataset.fach = f;
-      const h = el("h4"); const rd = el("span", "rd"); rd.style.background = HEFT_FACH[f].c;
-      h.appendChild(rd); h.appendChild(document.createTextNode(HEFT_FACH[f].n));
-      h.appendChild(el("span", "hz", liste.length ? (liste.length === 1 ? "1 Blatt" : liste.length + " Blätter") : "noch kein Blatt"));
-      k.appendChild(h);
-      if(!liste.length) k.appendChild(el("p", "hleer", "Leg ein Blatt ins Heft, dann steht es hier."));
-      liste.forEach(function(x){
-        const b = el("div", "hblatt"); b.dataset.blatt = x.id;
-        const tt = el("div", "ht", x.titel || "Dein Blatt");
-        const d = heftDatum(x.datum); if(d) tt.appendChild(el("span", null, " · " + d));
-        b.appendChild(tt);
-        const karten = Array.isArray(x.karten) ? x.karten : [];
-        let s = 0, n = 0, neu = 0; const gesehen = {};
-        karten.forEach(function(c){
-          const key = x.id + "#k:" + kartenSchluessel(c);
-          if(!c || !c.richtig || gesehen[key]) return; gesehen[key] = 1;
-          const st = stand[key];
-          if(!st) neu++; else if(st.f) n++; else s++;
-        });
-        const alle = s + n + neu;
-        if(alle){
-          const bal = el("div", "hbalken");
-          const bs = el("b", "s"); bs.style.width = (100 * s / alle) + "%";
-          const bn = el("b", "n"); bn.style.width = (100 * n / alle) + "%";
-          bal.appendChild(bs); bal.appendChild(bn); b.appendChild(bal);
-          const leg = el("div", "hleg");
-          if(s) leg.appendChild(el("span", "ls", s + " " + (s === 1 ? "sitzt" : "sitzen")));
-          if(n) leg.appendChild(el("span", "ln", n + " übst du noch"));
-          if(neu) leg.appendChild(el("span", null, neu + " neu"));
-          b.appendChild(leg);
-        } else {
-          b.appendChild(el("p", "hleer", "Zu diesem Blatt gibt es noch keine Karten."));
-        }
-        if(karten.length >= 3){
-          const a = el("a", "hlos", s === alle ? "🔎 Nochmal suchen" : (s + n ? "🔎 Weiter suchen" : "🔎 Jetzt suchen"));
-          a.href = "quiz.html?blatt=" + encodeURIComponent(x.id);
-          b.appendChild(a);
-        }
-        k.appendChild(b);
-      });
-      box.appendChild(k);
-    });
+  function tagKurz(iso){
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||""));
+    return m ? (+m[3]) + "." + (+m[2]) + "." : "";
   }
-  function heftLaden(box){
-    box.innerHTML = '<p class="hleer">Dein Heft lädt …</p>';
-    let stand = {};
-    fetch("/api/quiz?kind=paul&nurWartend=1", { credentials: "same-origin" })
-      .then(function(r){ return r.json(); })
-      .then(function(j){ stand = (j && j.fundStand) || {}; })
-      .catch(function(){ stand = {}; })
-      .then(function(){ return fetch("/api/schulstoff?kind=paul&monate=12", { credentials: "same-origin" }); })
+  function wocheZeichnen(box, w){
+    box.innerHTML = "";
+    let gewusst = 0, alle = 0;
+    const liste = el("div", "tbliste");
+    (w.tage || []).forEach(function(t, i){
+      if(t.datum > w.heute) return;            // was noch kommt, steht nicht da
+      const z = el("div", "tbtag"); z.dataset.tag = t.datum;
+      if(t.datum === w.heute) z.classList.add("heute");
+      z.appendChild(el("span", "tbd", WOCHENTAG[i] + " " + tagKurz(t.datum)));
+      const leer = !t.minuten && !(t.punkte || []).length;
+      z.appendChild(el("span", "tbm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min")));
+      const p = el("span", "tbp");
+      if(leer) p.textContent = t.datum === w.heute ? "heute noch nichts" : "frei";
+      (t.punkte || []).forEach(function(x){ p.appendChild(el("i", x ? "g" : "n", x ? "●" : "○")); });
+      alle += t.gesamt || 0; gewusst += t.gewusst || 0;
+      if(t.mehr) p.appendChild(el("span", "tbmehr", " +" + t.mehr));
+      z.appendChild(p);
+      liste.appendChild(z);
+    });
+    const k = el("div", "tbsumme");
+    if(alle){
+      const s = el("b", null, "Diese Woche gewusst: " + gewusst + " von " + alle);
+      k.appendChild(s);
+      const leg = el("div", "tbleg");
+      leg.appendChild(el("i", "g", "●")); leg.appendChild(document.createTextNode(" beim ersten Tipp gewusst  "));
+      leg.appendChild(el("i", "n", "○")); leg.appendChild(document.createTextNode(" erst nachgeschaut"));
+      k.appendChild(leg);
+    } else {
+      k.appendChild(el("b", null, "Diese Woche hast du noch keine Fragen beantwortet."));
+      k.appendChild(el("div", "tbleg", "Sobald du im Lernquiz oder beim Suchen spielst, steht es hier."));
+    }
+    box.appendChild(k);
+    box.appendChild(liste);
+  }
+  function wocheLaden(box){
+    box.innerHTML = '<p class="hleer">Dein Tagebuch lädt …</p>';
+    fetch("/api/statistik?eigene=1&kind=paul", { credentials: "same-origin" })
       .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
-      .then(function(j){ heftZeichnen(box, (j && j.eintraege) || [], stand); })
-      .catch(function(){ box.innerHTML = '<p class="hleer">Dein Heft kommt gerade nicht. Versuch es gleich noch einmal.</p>'; });
+      .then(function(j){ if(!j || !j.ok || !Array.isArray(j.tage)) throw 0; wocheZeichnen(box, j); })
+      .catch(function(){ box.innerHTML = '<p class="hleer">Dein Tagebuch kommt gerade nicht. Versuch es gleich noch einmal.</p>'; });
   }
   function buildReport(){
     const body=document.getElementById("reportBody"); body.innerHTML="";
-    const heft = el("div"); heft.id = "heftBericht"; body.appendChild(heft);
-    heftLaden(heft);
+    const woche = el("div"); woche.id = "wocheBericht"; body.appendChild(woche);
+    wocheLaden(woche);
     const alt = el("details", "alt"); alt.id = "altSpiele";
     alt.appendChild(el("summary", null, "🎮 Deine Spiele aus Klasse 3"));
     let anyData=false;
