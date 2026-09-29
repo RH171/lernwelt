@@ -79,6 +79,9 @@ const VORRAT_MAX = 800;
 // Mehr als so viele Kennungen werden nicht aufgehoben - sonst waechst der
 // Eintrag endlos und jeder Schreibvorgang wird teurer.
 const GESTELLT_MAX = 400;
+/* Hoechstens so viele Fragen je Runde, auch bei "Alle Fragen" (29.09.2026,
+   vorher 40). Die Seite zeigt "Alle Fragen (N)" - das muss dann auch kommen. */
+const ALLE_HOECHSTENS = 100;
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -105,7 +108,7 @@ export async function onRequestGet(context) {
   const anzahlRoh = Number(url.searchParams.get("anzahl"));
   // 0 heisst "endlos" - dann wird geliefert, was da ist, und beim naechsten
   // Nachladen weiter.
-  const anzahl = Number.isFinite(anzahlRoh) ? Math.min(40, Math.max(0, Math.trunc(anzahlRoh))) : 15;
+  const anzahl = Number.isFinite(anzahlRoh) ? Math.min(ALLE_HOECHSTENS, Math.max(0, Math.trunc(anzahlRoh))) : 15;
 
   /* Nur nachsehen, was wartet - fuer die Blattauswahl, BEVOR das Quiz laeuft.
      Zwei Leseabfragen, kein Schreibvorgang, kein Nachbau und kein Geld.
@@ -113,10 +116,16 @@ export async function onRequestGet(context) {
   if (url.searchParams.get("nurWartend") === "1") {
     const v = await vorratLesen(env, kind);
     const pk = await punkteLesen(env, kind);
+    const bn = {};
+    try {
+      const e = await stoffLesen(env, kind, 4);
+      if (e.ok) for (const x of e.eintraege) bn[x.id] = x;
+    } catch (e) {}
+    const zahl = fragenZaehlen(vorratBereinigen(v.fragen, bn));
     const fund = fundFaelligJeBlatt(pk, Date.now());
     const fundText = {};
     for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
-    return json(200, { ok: true, wiedervorlage: fuerDieSeite(),
+    return json(200, { ok: true, wiedervorlage: fuerDieSeite(), fragenZahl: zahl,
                        wartend: wartendJeBlatt(v.fragen, pk, Date.now()),
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
@@ -184,17 +193,7 @@ export async function onRequestGet(context) {
     const e = await stoffLesen(env, kind, 4);
     if (e.ok) for (const x of e.eintraege) blattNach[x.id] = x;
   } catch (e) {}
-  const fachMitBlatt = new Set(Object.values(blattNach).filter((x) => x.sichtbar !== false)
-    .map((x) => String(x.fach || "").toLowerCase()));
-  vorrat.fragen = vorrat.fragen.filter((f) => {
-    const fach = String(f.fach || "").toLowerCase();
-    /* Ohne Blatt, obwohl es zu dem Fach Blaetter gibt: eine Lehrplanfrage,
-       die Paul nie im Unterricht hatte - bei "nur Deutsch" kamen so
-       "5H + 3Z + 9E" und "Wann bekam Fuerth die U-Bahn?" als Deutschfragen. */
-    if (!f.blatt) return !fachMitBlatt.has(fach);
-    const b = blattNach[f.blatt];
-    return !b || !b.fach || String(b.fach).toLowerCase() === fach;
-  });
+  vorrat.fragen = vorratBereinigen(vorrat.fragen, blattNach);
 
   const passt = (f) => {
     if (gewuenschteFaecher.length &&
@@ -281,7 +280,7 @@ export async function onRequestGet(context) {
         : "Für diese Auswahl habe ich gerade keine neuen Fragen. Versuch es mit mehr Fächern." });
 
   mischen(offen);
-  const raus = (anzahl ? offen.slice(0, anzahl) : offen.slice(0, 40))
+  const raus = (anzahl ? offen.slice(0, anzahl) : offen.slice(0, ALLE_HOECHSTENS))
     .map((f) => { const b = belegFuer(f, blattNach[f.blatt]); return b ? { ...f, beleg: b } : f; });
   /* `wartend` zaehlt ueber den GANZEN Vorrat, nicht nur ueber die Auswahl -
      sonst staende an einem abgewaehlten Blatt nie eine Zahl. Was daraus auf
@@ -459,6 +458,38 @@ export function quizWacklerListe(fragen, punkte, jetzt, max) {
   }
   raus.sort((x, y) => y.tage - x.tage);
   return raus.slice(0, max || 6);
+}
+
+/* Was aus dem Vorrat ueberhaupt gefragt werden darf (28.09.2026, seit
+   29.09.2026 eigene Funktion - die Blattwahl zaehlt damit, wie viele Fragen
+   es gibt). Faellt weg: Fragen mit falschem Fach-Etikett und Lehrplanfragen
+   ohne Blatt in Faechern, zu denen es Blaetter gibt. */
+export function vorratBereinigen(fragen, blattNach) {
+  const fachMitBlatt = new Set(Object.values(blattNach).filter((x) => x.sichtbar !== false)
+    .map((x) => String(x.fach || "").toLowerCase()));
+  return (fragen || []).filter((f) => {
+    const fach = String(f.fach || "").toLowerCase();
+    /* Ohne Blatt, obwohl es zu dem Fach Blaetter gibt: eine Lehrplanfrage,
+       die Paul nie im Unterricht hatte - bei "nur Deutsch" kamen so
+       "5H + 3Z + 9E" und "Wann bekam Fuerth die U-Bahn?" als Deutschfragen. */
+    if (!f.blatt) return !fachMitBlatt.has(fach);
+    const b = blattNach[f.blatt];
+    return !b || !b.fach || String(b.fach).toLowerCase() === fach;
+  });
+}
+
+/* Wie viele Fragen es je Blatt und je Fach gibt - fuer die Staffelung der
+   Fragenzahl (Denny, 29.09.2026: "so viele Fragen angeboten werden, wie es
+   auch ueberhaupt moeglich waere"). Gezaehlt wird alles, auch schon
+   Gestelltes: Paul darf wiederholen (Beschluss 24.09.2026). */
+export function fragenZaehlen(fragen) {
+  const blatt = {}, fach = {};
+  for (const f of fragen || []) {
+    if (f.blatt) blatt[f.blatt] = (blatt[f.blatt] || 0) + 1;
+    const k = String(f.fach || "").toLowerCase();
+    if (k) fach[k] = (fach[k] || 0) + 1;
+  }
+  return { blatt, fach };
 }
 
 async function vorratLesen(env, kind) {
