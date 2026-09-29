@@ -217,7 +217,12 @@ export async function onRequestGet(context) {
   const punkte = await punkteLesen(env, kind);
   const jetzt = Date.now();
   const alleDazu = vorrat.fragen.filter(passt);
-  const gebraucht = Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB);
+  /* "Alle Fragen" (anzahl 0) heisst ALLE der Auswahl, nicht NACHFUELLEN_AB.
+     Am 29.09.2026 waehlte Paul "Alle Fragen (31)" in HSU und bekam 10: Die
+     meisten Fragen hatte er schon gehabt, also zaehlten nur die frischen, 4
+     faellige und aufgefuellt bis 10. */
+  const gebraucht = anzahl ? Math.max(NACHFUELLEN_AB, anzahl)
+                           : Math.min(ALLE_HOECHSTENS, Math.max(NACHFUELLEN_AB, alleDazu.length));
   let wiederholt = 0;
   let offen;
 
