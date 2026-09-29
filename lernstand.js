@@ -1041,7 +1041,9 @@
     uhrZuruecksetzen: function () { aktivMs = 0; laeuftSeit = 0; begonnen = Date.now(); regung(); },
 
     // Ein Spiel kann jede beantwortete Aufgabe melden - freiwillig.
-    antwort: function (stimmt, merkmal, gegeben, richtig) {
+    // punkt (seit 29.09.2026, freiwillig): der Lernpunkt der Aufgabe, z. B.
+    // "blatt#k:regnitz" - damit "Deine Woche" spaeter geschaffte Kreise erkennt.
+    antwort: function (stimmt, merkmal, gegeben, richtig, punkt) {
       try {
         aufgaben.push({
           merkmal: String(merkmal || "").slice(0, 40).toLowerCase(),
@@ -1050,7 +1052,8 @@
           nachspielzeit: false,
           sekunden: 0,
           gegeben: stimmt ? "" : String(gegeben == null ? "" : gegeben).slice(0, 30),
-          richtig: String(richtig == null ? "" : richtig).slice(0, 30)
+          richtig: String(richtig == null ? "" : richtig).slice(0, 30),
+          p: punkt ? String(punkt).slice(0, 70) : ""
         });
       } catch (e) {}
     }

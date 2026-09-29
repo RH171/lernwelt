@@ -243,6 +243,16 @@
     return [Math.max(0, lo - 0.6), Math.min(100, hi + 0.6)];
   }
 
+  /* Derselbe Lernpunkt wie punktSchluessel() in _wiedervorlage.js - fuer
+     "Deine Woche" (Kreise fuellen, 29.09.2026). */
+  function lernpunkt(k) {
+    var blatt = String(k.blatt || aktuellesBlatt || "");
+    if (!blatt) return "";
+    if (k.quiz) return k.quiz.belegNr ? blatt + "#" + Math.floor(Number(k.quiz.belegNr)) : "";
+    var s = String(k.richtig || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
+    return s ? blatt + "#k:" + s : "";
+  }
+  var aktuellesBlatt = "";
   function el(tag, klasse, text) {
     var n = document.createElement(tag);
     if (klasse) n.className = klasse;
@@ -291,6 +301,7 @@
   }
 
   function zeigen(wurzel, opt) {
+    aktuellesBlatt = (opt && opt.blattId) || "";
     opt = opt || {};
     var karten = (opt.karten || []).filter(function (k) {
       return k && k.frage && k.richtig && k.falsch && k.falsch.length === 2;
@@ -573,7 +584,8 @@
             try {
               if (window.lernstand && window.lernstand.antwort)
                 window.lernstand.antwort(erster[i],
-                  String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig);
+                  String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig,
+                  lernpunkt(k));
             } catch (e) {}
           }
           if (text === String(k.richtig)) {

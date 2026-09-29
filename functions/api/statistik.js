@@ -7,6 +7,8 @@
 // Der Fortschritt unter "paul-blob" wird nicht berührt.
 
 import { ausweisGueltig, geheimFuer, brauchtAusweis, besuchIstEltern } from "./_riegel.js";
+import { punkteLesen } from "./_wiedervorlage.js";
+import { stoffLesen } from "./_schulstoff.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const RUNDEN = (kind) => "lernstand:" + kind;
@@ -89,6 +91,9 @@ function saeubern(r) {
       sekunden: zahl(a.sekunden, 3600),
       gegeben: text(a.gegeben, 30),
       richtig: text(a.richtig, 30),
+      /* Der Lernpunkt der Aufgabe (29.09.2026, "Kreise fuellen"): Damit weiss
+         "Deine Woche", welcher Kreis spaeter doch noch geschafft wurde. */
+      ...(a.p ? { p: text(a.p, 70) } : {}),
     })),
   };
 }
@@ -159,7 +164,16 @@ export async function onRequestGet(context) {
     } catch (e) {
       return json(503, { ok: false, fehler: "Dein Tagebuch kommt gerade nicht." });
     }
-    return json(200, Object.assign({ ok: true }, eigeneWoche(liste, new Date())));
+    /* Kreise fuellen (Variante B, Denny 29.09.2026): Die Wiedervorlage sagt,
+       welcher Kreis inzwischen geschafft ist und welcher noch offen. Nur
+       lesen. Ausgeblendete Blaetter zaehlen nicht mit. */
+    let punkte = {}, sichtbar = null;
+    try { punkte = await punkteLesen(env, kind); } catch (e) {}
+    try {
+      const s = await stoffLesen(env, kind, 4);
+      if (s && s.ok) sichtbar = new Set(s.eintraege.filter((x) => x.sichtbar !== false).map((x) => x.id));
+    } catch (e) {}
+    return json(200, Object.assign({ ok: true }, eigeneWoche(liste, new Date(), punkte, sichtbar)));
   }
 
   // Die Auswertung ist für die Eltern, nicht für die Kinder.
@@ -481,7 +495,7 @@ export function berlinTag(iso) {
    Aufgabe: 1 = beim ersten Tipp gewusst, 0 = erst nachgeschaut. Besuch und
    Bauen zaehlen nicht, Runden eines Erwachsenen kommen gar nicht erst an
    (onRequestPost). Hoechstens 60 Punkte je Tag, der Rest als Zahl. */
-export function eigeneWoche(liste, jetzt) {
+export function eigeneWoche(liste, jetzt, punkte, sichtbar) {
   const heute = berlinTag(jetzt);
   const [j, m, t] = heute.split("-").map(Number);
   const mittag = new Date(Date.UTC(j, m - 1, t, 12));
@@ -489,10 +503,19 @@ export function eigeneWoche(liste, jetzt) {
   const tage = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(mittag.getTime() + (i - wt) * 86400000);
-    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0 });
+    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0, spaeter: 0, offen: [] });
   }
   const je = {};
   tage.forEach((x) => { je[x.datum] = x; });
+  const pk = punkte || {};
+  const blattSichtbar = (s) => !sichtbar || sichtbar.has(String(s).split("#")[0]);
+  /* 2 = erst nachgeschaut, spaeter aber geschafft: Der Lernpunkt ist
+     inzwischen richtig und wurde NACH dieser Runde gespielt. Der erste
+     Versuch bleibt ehrlich getrennt - "gewusst" zaehlt nur die 1. */
+  const spaeterGeschafft = (a, zeit) => {
+    const p = a.p ? pk[a.p] : null;
+    return !!(p && !p.f && (Number(p.z) || 0) > Date.parse(zeit || 0));
+  };
   const alt = [...(liste || [])].reverse();   // aelteste zuerst, damit die Punkte in Spielreihenfolge stehen
   for (const r of alt) {
     if (!r || r.nurBesuch || r.zeitart === "bauen") continue;
@@ -501,14 +524,24 @@ export function eigeneWoche(liste, jetzt) {
     tag.sekunden += Math.max(0, Number(r.sekunden) || 0);
     for (const a of r.aufgaben || []) {
       if (!a || a.art === "besuch" || a.art === "bauen") continue;
+      const wert = a.stimmt ? 1 : (spaeterGeschafft(a, r.zeit) ? 2 : 0);
       if (a.stimmt) tag.gewusst++;
-      if (tag.punkte.length < 60) tag.punkte.push(a.stimmt ? 1 : 0); else tag.mehr++;
+      if (wert === 2) tag.spaeter++;
+      if (tag.punkte.length < 60) tag.punkte.push(wert); else tag.mehr++;
     }
+  }
+  /* Was noch zu fuellen ist: jeder Lernpunkt, der zuletzt danebenging, an dem
+     Tag, an dem er zuletzt gespielt wurde. So steht jeder genau einmal da. */
+  for (const s of Object.keys(pk)) {
+    const p = pk[s];
+    if (!p || !p.f || !p.z || !blattSichtbar(s)) continue;
+    const tag = je[berlinTag(new Date(p.z).toISOString())];
+    if (tag && tag.datum <= heute) tag.offen.push(s);
   }
   return {
     heute,
     tage: tage.map((x) => ({ datum: x.datum, minuten: Math.round(x.sekunden / 60), punkte: x.punkte, mehr: x.mehr,
-      gewusst: x.gewusst, gesamt: x.punkte.length + x.mehr })),
+      gewusst: x.gewusst, spaeter: x.spaeter, gesamt: x.punkte.length + x.mehr, offen: x.offen })),
   };
 }
 

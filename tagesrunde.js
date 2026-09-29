@@ -142,7 +142,66 @@
     return { karten: karten, zaehl: zaehl, blaetter: liste.length };
   }
 
-  var LWTag = { waehlen: waehlen, schluessel: schluessel, EIN: EIN };
+  /* Kreise fuellen (Variante B, Denny 29.09.2026): Paul tippt in "Deine
+     Woche" auf einen Tag oder auf "N Kreise fuellen" und bekommt genau die
+     Karten, die er erst nachschauen musste. Er hat sie sich selbst
+     ausgesucht - deshalb kein Deckel von 3 Unsicheren wie in "Heute lernen".
+     Aber: hoechstens 10 offene je Runde, und nach je zwei offenen eine, die
+     schon sitzt - die Runde soll nicht nur aus Wacklern bestehen.
+
+     keys:  Lernpunkte ("blatt#k:..." fuer Suchkarten, "blatt#12" fuer Quiz)
+     quiz:  kreiseQuiz aus /api/quiz?nurWartend=1&kreise=...
+     Rueckgabe: { karten, offen: gefunden, rest: nicht in dieser Runde } */
+  function kreise(blaetter, keys, quiz, stand, opt) {
+    var e = { hoechstens: 10, jeSicher: 2 };
+    for (var y in (opt || {})) e[y] = opt[y];
+    stand = stand || {};
+    var titel = {}, karteVon = {}, sicher = [];
+    (blaetter || []).forEach(function (b) {
+      if (!b || !b.id || b.sichtbar === false || !Array.isArray(b.karten)) return;
+      titel[b.id] = b.titel || "";
+      b.karten.forEach(function (k) {
+        if (!k || !k.frage || !k.richtig || !k.falsch || k.falsch.length !== 2) return;
+        var key = b.id + "#k:" + schluessel(k);
+        if (karteVon[key]) return;
+        var c = {};
+        for (var z in k) c[z] = k[z];
+        c.blatt = b.id; c.blattTitel = b.titel || "";
+        karteVon[key] = c;
+        var st = stand[key];
+        if (st && !st.f) { c.sorte = "sicher"; c._r = st.r || 0; sicher.push(c); }
+      });
+    });
+    var quizVon = {};
+    (quiz || []).forEach(function (q) {
+      if (!q || !q.frage || !q.richtig || !q.falsch || q.falsch.length !== 2 || !(q.blatt in titel)) return;
+      quizVon[q.blatt + "#" + Math.floor(Number(q.belegNr))] = {
+        frage: q.frage, richtig: q.richtig, falsch: q.falsch, merke: q.merke || "",
+        stichwort: "Aus dem Quiz", blatt: q.blatt, blattTitel: titel[q.blatt],
+        quiz: { belegNr: q.belegNr, frageId: q.frageId } };
+    });
+    var offen = [], gesehen = {};
+    (keys || []).forEach(function (s) {
+      if (gesehen[s]) return; gesehen[s] = 1;
+      var c = karteVon[s] || quizVon[s];
+      if (!c) return;
+      c.sorte = "kreis"; offen.push(c);
+    });
+    var dran = offen.slice(0, e.hoechstens);
+    /* Die sicheren vom selben Blatt zuerst - dann passt die Runde zusammen. */
+    var blattDran = {};
+    dran.forEach(function (c) { blattDran[c.blatt] = 1; });
+    sicher.sort(function (a, b) { return ((blattDran[b.blatt] ? 1 : 0) - (blattDran[a.blatt] ? 1 : 0)) || (b._r - a._r); });
+    var karten = [], si = 0;
+    dran.forEach(function (c, i) {
+      karten.push(c);
+      if ((i + 1) % e.jeSicher === 0 && i + 1 < dran.length && si < sicher.length) karten.push(sicher[si++]);
+    });
+    karten.forEach(function (k) { delete k._r; });
+    return { karten: karten, offen: dran.length, rest: offen.length - dran.length };
+  }
+
+  var LWTag = { waehlen: waehlen, kreise: kreise, schluessel: schluessel, EIN: EIN };
   if (typeof module !== "undefined" && module.exports) module.exports = LWTag;
   else global.LWTag = LWTag;
 })(typeof window !== "undefined" ? window : this);

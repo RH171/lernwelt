@@ -148,6 +148,7 @@
         }
         suchKarteZeigen();
         heuteAnbieten((j && j.eintraege) || []);
+        if (kreiseWahl) { var kw = kreiseWahl; kreiseWahl = ""; kreiseStarten((j && j.eintraege) || [], kw); }
       })
       .catch(function(){ /* ohne Liste kein Such-Spiel - das Quiz laeuft weiter */ });
   }
@@ -170,6 +171,49 @@
     /* Von der Startseite (?heute=1) geht es NICHT mehr sofort los: Paul
        sieht erst, was kommt, und entscheidet selbst (25.09.2026). */
     if (autostart && !ohneStart) $("heute-selbst").classList.remove("verborgen");
+  }
+  /* Kreise fuellen (Variante B, Denny 29.09.2026): aus "Deine Woche" kommt
+     ?kreise=woche oder ?kreise=<datum>. Die offenen Lernpunkte liefert
+     /api/statistik?eigene=1, die Quizfragen dazu /api/quiz?kreise=... */
+  var kreiseWahl = (/[?&]kreise=([^&#]+)/.exec(location.search) || [])[1];
+  kreiseWahl = kreiseWahl ? decodeURIComponent(kreiseWahl) : "";
+  function kreiseStarten(eintraege, wahl){
+    if (!window.LWTag || !LWTag.kreise || !window.LWFund) return;
+    fetch("/api/statistik?eigene=1&kind=" + encodeURIComponent(KIND), { credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(w){
+        var keys = [];
+        ((w && w.tage) || []).forEach(function(t){
+          if (wahl === "woche" || t.datum === wahl) keys = keys.concat(t.offen || []);
+        });
+        var quizKeys = keys.filter(function(s){ return /#\d+$/.test(s); });
+        var weiter = quizKeys.length
+          ? fetch("/api/quiz?kind=" + encodeURIComponent(KIND) + "&nurWartend=1&kreise=" +
+                  encodeURIComponent(quizKeys.join(",")), { credentials: "same-origin" })
+              .then(function(r){ return r.json(); }).then(function(j){ return (j && j.kreiseQuiz) || []; })
+              .catch(function(){ return []; })
+          : Promise.resolve([]);
+        return weiter.then(function(quiz){ kreiseZeigen(LWTag.kreise(eintraege, keys, quiz, fundStand), wahl); });
+      })
+      .catch(function(){ /* ohne Tagebuch bleibt die normale Auswahl stehen */ });
+  }
+  function kreiseZeigen(st, wahl){
+    if (!st.karten.length) return;
+    var wann = wahl === "woche" ? "diese Woche" : ("am " + datum(wahl));
+    var ok = LWFund.zeigen($("fundkarten"), {
+      karten: st.karten, kind: KIND, mindestens: 1,
+      kicker: "Kreise füllen", mitBlattTitel: true,
+      ueberschrift: st.offen === 1 ? "1 Kreis zum Füllen" : st.offen + " Kreise zum Füllen",
+      unter: "Die hattest du " + wann + " erst nachgeschaut. Dazwischen kommen ein paar, die du schon kannst.",
+      fertigSatz: st.rest ? "Geschafft! " + st.rest + " Kreise warten noch – die kommen beim nächsten Mal." : "Geschafft! Schau in „Deine Woche“, welche Kreise jetzt gelb sind.",
+      ergebnis: function(liste){ merken("", liste); },
+      fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
+    });
+    if (!ok) return;
+    $("heute-wahl").classList.add("verborgen");
+    $("sicht-start").classList.add("verborgen");
+    $("sicht-such").classList.remove("verborgen");
+    window.scrollTo(0, 0);
   }
   function heuteStarten(){
     if (!heute || !heute.karten.length || !window.LWFund) return;

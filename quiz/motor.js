@@ -938,7 +938,8 @@ function artKurz(art) {
     // Der Lernstand ist die Quelle für die Wiederholung - hier entsteht sie.
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",
-        stimmtEcht ? "" : (ersterFalsch || f.antworten[originalIndex]), f.antworten[f.richtig || 0]);
+        stimmtEcht ? "" : (ersterFalsch || f.antworten[originalIndex]), f.antworten[f.richtig || 0],
+        (f.blatt && Number(f.belegNr) >= 1) ? f.blatt + "#" + Math.floor(Number(f.belegNr)) : "");
     fortschrittMalen();
   }
 

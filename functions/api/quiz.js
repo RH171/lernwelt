@@ -114,6 +114,8 @@ export async function onRequestGet(context) {
      Zwei Leseabfragen, kein Schreibvorgang, kein Nachbau und kein Geld.
      Lesen zaehlt im KV praktisch nicht, Schreiben schon. */
   if (url.searchParams.get("nurWartend") === "1") {
+    const kreise = new Set(String(url.searchParams.get("kreise") || "").split(",")
+      .map((s) => s.trim().slice(0, 70)).filter((s) => /#\d+$/.test(s)).slice(0, 40));
     const v = await vorratLesen(env, kind);
     const pk = await punkteLesen(env, kind);
     const bn = {};
@@ -129,7 +131,11 @@ export async function onRequestGet(context) {
                        wartend: wartendJeBlatt(v.fragen, pk, Date.now()),
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
-                       quizWackler: quizWacklerListe(v.fragen, pk, Date.now()) });
+                       quizWackler: quizWacklerListe(v.fragen, pk, Date.now()),
+                       /* Kreise fuellen (29.09.2026): die Quizfragen zu genau
+                          diesen Lernpunkten, auch wenn sie noch nicht faellig sind -
+                          Paul hat sie sich selbst ausgesucht. */
+                       ...(kreise.size ? { kreiseQuiz: quizWacklerListe(v.fragen, pk, Date.now(), 40, kreise) } : {}) });
   }
 
   /* Vorbauen im Hintergrund (28.09.2026). Denny: "Die Ladezeiten sind
@@ -440,7 +446,7 @@ export async function onRequestPost(context) {
    (Dennys Beschluss 28.09.2026: sie kommen mit in "Heute lernen").
    Je Lernpunkt eine Frage, als Karte fuer /fundkarten.js: eine richtige und
    ZWEI falsche Antworten, wie jede Fundkarte. Am laengsten her zuerst. */
-export function quizWacklerListe(fragen, punkte, jetzt, max) {
+export function quizWacklerListe(fragen, punkte, jetzt, max, nur) {
   if (!WV.an) return [];
   const nun = jetzt || Date.now();
   const raus = [], gesehen = new Set();
@@ -448,7 +454,8 @@ export function quizWacklerListe(fragen, punkte, jetzt, max) {
     const s = punktSchluessel(f);
     if (!s || gesehen.has(s)) continue;
     const p = punkte ? punkte[s] : null;
-    if (!p || !p.f || !istFaellig(p, nun)) continue;
+    if (nur && !nur.has(s)) continue;
+    if (!p || !p.f || (!nur && !istFaellig(p, nun))) continue;
     const a = Array.isArray(f.antworten) ? f.antworten.map(String) : [];
     const ri = Number(f.richtig) || 0;
     if (a.length < 3 || !a[ri]) continue;
