@@ -301,6 +301,15 @@ async function blattNachlesen(context) {
  *
  * Sie wirft nie - der Grund landet am Eintrag (titelWarum), damit niemand
  * vor einem leeren Feld ohne Hinweis steht. */
+/* Die Themen, die es im Fach schon gibt - fuer blattLesen(). Ein Lesefehler
+   ist kein Grund, das Blatt nicht zu lesen: dann eben ohne Vorgabe. */
+async function vorhandeneThemen(env, kind, fach) {
+  try {
+    const b = await stoffLesen(env, kind, 13);
+    return b.ok ? themenImFach(b.eintraege, fach || "") : [];
+  } catch (e) { return []; }
+}
+
 async function blattAuswerten(env, kind, eintrag, seiten, heute) {
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
   let karten = [], kartenWarum = "", genauer = 0, fachFrage = null;
@@ -327,8 +336,9 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
        * Der INHALT dagegen wird ueber alle Seiten aneinandergehaengt. Die
        * beleg_nr des Quiz zaehlt einfach weiter - am Riegel aendert sich
        * dadurch nichts. */
+      const themen = await vorhandeneThemen(env, kind, eintrag.fach);
       const alle = await Promise.all(
-        seiten.map((s) => blattLesen(env, s, kind).catch(() => null))
+        seiten.map((s) => blattLesen(env, s, kind, themen).catch(() => null))
       );
       const gelesen = alle[0] || { titel: "", datum: "", inhalt: [], karten: [] };
       /* Zeilen der Folgeseiten anhaengen, doppelte weglassen: Ein Merkkasten,
@@ -387,6 +397,10 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       genauer = gelesen.genauer || 0;
       if ((gelesen.inhalt && gelesen.inhalt.length) || karten.length) {
         await inhaltSetzen(env, kind, eintrag.id, gelesen.inhalt, karten, gelesen.sorte);
+      }
+      /* Das Thema (30.09.2026): vergibt das Modell, das Kind bestaetigt nichts. */
+      if (gelesen.thema || gelesen.probenstoff === false) {
+        await themenSetzen(env, kind, { [eintrag.id]: { thema: gelesen.thema, probenstoff: gelesen.probenstoff } });
       }
     } catch (err) {
       // Der Grund gehoert in den Eintrag, nicht in einen stillen catch.
@@ -1315,7 +1329,7 @@ async function nachtragen(context) {
     const seite = await stoffBild(env, x.id, 0);
     if (!seite) { getan.push({ id: x.id, warum: "kein Bild" }); continue; }
     try {
-      const gelesen = await blattLesen(env, seite, kind);
+      const gelesen = await blattLesen(env, seite, kind, themenImFach(e.eintraege, x.fach || ""));
       /* Auch das DATUM nachtragen.
        *
        * Denny am 22.09.2026 mit einem Bild aus der Grossansicht: Oben stand
@@ -1352,6 +1366,9 @@ async function nachtragen(context) {
         await inhaltSetzen(env, kind, x.id, gelesen.inhalt, gelesen.karten, gelesen.sorte);
       }
       if (datumNeu) await datumSetzen(env, kind, x.id, datumNeu, x.datum);
+      if (gelesen.thema || gelesen.probenstoff === false) {
+        await themenSetzen(env, kind, { [x.id]: { thema: gelesen.thema, probenstoff: gelesen.probenstoff } });
+      }
 
       getan.push({
         id: x.id,
@@ -1442,6 +1459,24 @@ export async function onRequestPatch(context) {
     const r3 = await artSetzen(env, kind, String(d.id || ""), String(d.art || ""));
     if (!r3.ok) return json(r3.fehler === "Das finde ich nicht mehr." ? 404 : 400, { ok: false, fehler: r3.fehler });
     return json(200, { ok: true, von: r3.von, auf: r3.auf });
+  }
+
+  /* Themen von Hand setzen, mehrere auf einmal (30.09.2026) - fuer den
+     Bestand vor der THEMA-Zeile und fuer Korrekturen. Nur mit Eltern-Code:
+     Denny will die Themen NICHT von den Kindern bestaetigen lassen.
+     { was:"themen", liste:[{id, thema, probenstoff}] } */
+  if (String(d.was || "") === "themen") {
+    if (!geheimFuer(env, "eltern") || !(await ausweisGueltig(request, geheimFuer(env, "eltern"), env))) {
+      return json(401, { ok: false, fehler: "Dafür braucht es den Eltern-Code." });
+    }
+    const zu = {};
+    (Array.isArray(d.liste) ? d.liste : []).slice(0, 300).forEach((z) => {
+      if (z && /^[a-z0-9]{6,20}$/.test(String(z.id || ""))) {
+        zu[z.id] = { thema: String(z.thema || ""), probenstoff: z.probenstoff !== false };
+      }
+    });
+    const rt = await themenSetzen(env, kind, zu);
+    return rt.ok ? json(200, rt) : json(503, { ok: false, fehler: rt.fehler });
   }
 
   if (String(d.was || "") === "datum") {
