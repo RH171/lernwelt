@@ -34,6 +34,9 @@
      unten stand sofort "Quiz starten". Gemerkt bleiben nur Länge und Zähler.
      Ausnahme: window.QUIZ.merkeAuswahl = true. */
   if (!K.merkeAuswahl) { stand.faecher = []; stand.blaetter = []; stand.blattArt = ""; }
+  /* "Alle Fächer" ist eine Wahl, kein Grundzustand: erst ein Tipp darauf
+     zeigt die Quiz-Leiste (nur mit Blattwahl, also einzeln()). */
+  var alleGewaehlt = false;
 
   var fragen = [], nr = 0, richtigGesamt = 0, antwortenLog = [], laufend = false;
 
@@ -125,6 +128,7 @@
            sammelten sich Faecher an: Mathe von gestern blieb an, Deutsch kam
            dazu, und das Quiz fragte beides. Denny: "Wenn Paul nur ein Fach
            auswählt … baut er aus allen Fächern Fragen." */
+        alleGewaehlt = false;
         if (einzeln()) stand.faecher = i >= 0 ? [] : [f.k];
         else if (i >= 0) stand.faecher.splice(i, 1); else stand.faecher.push(f.k);
         schreibe(SPEICHER, stand);
@@ -134,7 +138,7 @@
       });
       box.appendChild(b);
     });
-    $("q-alle").classList.toggle("an", stand.faecher.length === 0);
+    $("q-alle").classList.toggle("an", einzeln() ? alleGewaehlt && !stand.faecher.length : stand.faecher.length === 0);
     // Ohne Auswahl heißt "alle" - so muss niemand erst etwas anklicken.
     $("q-start").textContent = stand.faecher.length
       ? "Los geht's · " + stand.faecher.length + " Fach" + (stand.faecher.length === 1 ? "" : "er")
@@ -406,6 +410,12 @@
   function quizLeisteMalen() {
     var l = $("q-quizleiste");
     if (!einzeln()) { if (l) l.remove(); return; }
+    /* Sauber starten (29.09.2026): ohne gewähltes Fach keine Leiste. */
+    if (stand.faecher.length !== 1 && !alleGewaehlt) {
+      if (l) l.remove();
+      $("q-laenge").style.display = "none"; $("q-start").style.display = "none";
+      return;
+    }
     /* Eine Stelle zum Starten (28.09.2026). Vorher gab es unten "Los geht's"
        mit 10/15/25/Endlos UND die Leiste mit 5/10/15, die erst nach einem
        Haken erschien - wer alle Blaetter wollte, musste 18 anhaken. Jetzt
@@ -966,6 +976,7 @@ function artKurz(art) {
 
   /* ---------- Aufbau ---------- */
   $("q-alle").addEventListener("click", function () {
+    alleGewaehlt = !(alleGewaehlt && !stand.faecher.length) || !einzeln();
     stand.faecher = []; stand.blaetter = []; schreibe(SPEICHER, stand);
     fachkachelnMalen(); blaetterMalen();
   });
