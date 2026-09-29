@@ -939,7 +939,8 @@ function artKurz(art) {
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",
         stimmtEcht ? "" : (ersterFalsch || f.antworten[originalIndex]), f.antworten[f.richtig || 0],
-        (f.blatt && Number(f.belegNr) >= 1) ? f.blatt + "#" + Math.floor(Number(f.belegNr)) : "");
+        !f.blatt ? "" : Number(f.belegNr) >= 1 ? f.blatt + "#" + Math.floor(Number(f.belegNr))
+                       : f.id ? f.blatt + "#f:" + String(f.id).slice(0, 24) : "");
     fortschrittMalen();
   }
 

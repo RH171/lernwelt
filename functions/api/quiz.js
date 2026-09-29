@@ -456,8 +456,8 @@ export async function onRequestPost(context) {
     const punkte = JSON.parse(JSON.stringify(vorher));
     const nun = Date.now();
     for (const a of antworten) {
-      if (!a || !a.blatt || !a.belegNr) continue;
-      punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr }, !!a.stimmt, nun);
+      if (!a || !a.blatt || (!a.belegNr && !a.frageId)) continue;
+      punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr, id: a.frageId }, !!a.stimmt, nun);
     }
     await punkteSchreiben(env, kind, punkte, vorher);
   }
@@ -583,13 +583,14 @@ const WERKZEUG = {
                          description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
             erklaerung: { type: "string", description: "Ein Satz, warum das stimmt. Für das Kind, nicht für Erwachsene." },
             merkmal: { type: "string", description: 'Was die Frage übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Gleiche Sache = gleicher Schlüssel, damit sich zählen lässt, ob es sitzt. Gut: "zehneruebergang plus", "m in cm", "steigerung adjektive", "passe compose". Schlecht: "Frage 3", "gemischt".' },
+            beleg_nr: { type: "integer", description: "Nummer der Zeile des Blattes, in der die Antwort steht (die Zahl vor der Zeile, z. B. 3 bei \"Z3: ...\"). 0, wenn die Frage nicht von einem Blatt stammt." },
             blatt_nr: { type: "integer", description: "Nummer des Blattes aus der Liste oben, auf dem diese Frage steht (1 = das erste). 0, wenn die Frage nicht von einem Blatt stammt." },
             tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Lösung NICHT enthält. Nenne nie die richtige Antwort, keine Zahl daraus, kein Wort daraus. Gut: \"Denk an die Zeile, in der die Postleitzahlen stehen - deine eigene steht ganz hinten.\" Schlecht: \"Es ist 90765.\" Und schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
             merke: { type: "string", description: "ESELSBRÜCKE, die nach der Lösung stehenbleibt - etwas, woran das Kind es beim nächsten Mal wiedererkennt. Eine Merkregel, ein Bild, eine Verbindung zu etwas Bekanntem. Gut: \"FÜ wie die ersten zwei Buchstaben von FÜrth.\" Leer lassen, wenn dir nichts Tragfähiges einfällt - eine erfundene Eselsbrücke ist schlimmer als keine." },
             symbol: { type: "string", description: "EIN Zeichen für die Merkkarte vor dem Quiz - nur wenn es eindeutig und sachlich richtig passt, sonst LEER lassen. Es muss zum Inhalt stimmen: Für ein dreiblättriges Kleeblatt ist ☘️ richtig und 🍀 falsch (das hat vier Blätter). Im Zweifel leer - ein Bild, das dem Blatt widerspricht, ist schlimmer als gar keines." },
             zeile: { type: "string", description: "Nur bei Fragen von einem Blatt: das STICHWORT der Zeile, in der die Antwort steht, genau so wie es dort links steht (z. B. \"Einwohner\", \"Telefonvorwahl\", \"Eingemeindung\"). Damit kann das Kind auf seinem eigenen Foto nachschlagen. Leer, wenn die Frage nicht von einem Blatt kommt." },
           },
-          required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr", "tipp", "merke"],
+          required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr", "beleg_nr", "tipp", "merke"],
         },
       },
     },
@@ -944,7 +945,7 @@ async function letzterUnterricht(env, kind, nurBlaetter, nurFaecher) {
                      woher + ")";
         const zeilen = Array.isArray(x.inhalt) ? x.inhalt : [];
         return zeilen.length
-          ? kopf + "\n" + zeilen.map((z) => "   - " + z).join("\n")
+          ? kopf + "\n" + zeilen.map((z, j) => "   Z" + (j + 1) + ": " + z).join("\n")
           : kopf + "\n   (Inhalt nicht gelesen - zu diesem Blatt nur ganz " +
             "allgemein fragen, nichts Bestimmtes behaupten)";
       }).join("\n"),

@@ -248,7 +248,8 @@
   function lernpunkt(k) {
     var blatt = String(k.blatt || aktuellesBlatt || "");
     if (!blatt) return "";
-    if (k.quiz) return k.quiz.belegNr ? blatt + "#" + Math.floor(Number(k.quiz.belegNr)) : "";
+    if (k.quiz) return k.quiz.belegNr ? blatt + "#" + Math.floor(Number(k.quiz.belegNr))
+                     : k.quiz.frageId ? blatt + "#f:" + String(k.quiz.frageId).slice(0, 24) : "";
     var s = String(k.richtig || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
     return s ? blatt + "#k:" + s : "";
   }

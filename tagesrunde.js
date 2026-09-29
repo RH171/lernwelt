@@ -175,7 +175,8 @@
     var quizVon = {};
     (quiz || []).forEach(function (q) {
       if (!q || !q.frage || !q.richtig || !q.falsch || q.falsch.length !== 2 || !(q.blatt in titel)) return;
-      quizVon[q.blatt + "#" + Math.floor(Number(q.belegNr))] = {
+      quizVon[Number(q.belegNr) >= 1 ? q.blatt + "#" + Math.floor(Number(q.belegNr))
+                                     : q.blatt + "#f:" + String(q.frageId || "").slice(0, 24)] = {
         frage: q.frage, richtig: q.richtig, falsch: q.falsch, merke: q.merke || "",
         stichwort: "Aus dem Quiz", blatt: q.blatt, blattTitel: titel[q.blatt],
         quiz: { belegNr: q.belegNr, frageId: q.frageId } };

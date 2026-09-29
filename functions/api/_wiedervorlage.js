@@ -149,8 +149,13 @@ export function punktSchluessel(frage) {
     return blatt && k ? blatt + "#k:" + k : "";
   }
   const nr = Number(frage && frage.belegNr);
-  if (!blatt || !Number.isFinite(nr) || nr < 1) return "";
-  return blatt + "#" + Math.floor(nr);
+  if (blatt && Number.isFinite(nr) && nr >= 1) return blatt + "#" + Math.floor(nr);
+  /* Ersatz-Lernpunkt (29.09.2026): Bis dahin hatte KEINE der 414 Quizfragen
+     eine belegNr - das Feld stand nicht in `required`, das Modell lieferte es
+     nie, und das Quiz wiederholte nichts. Die Frage-id ist im Vorrat stabil;
+     "blatt#f:<id>" haelt die Frage, bis sie aus dem Vorrat faellt. */
+  const id = String((frage && (frage.id || frage.frageId)) || "").trim().slice(0, 24);
+  return blatt && id ? blatt + "#f:" + id : "";
 }
 
 /* Wann ein Punkt wieder faellig ist. Gibt einen Zeitstempel zurueck. */
