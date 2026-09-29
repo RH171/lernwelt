@@ -174,6 +174,91 @@
       box.appendChild(k);
     });
   }
+  /* ---------- Deine Woche mit "Kreise fuellen" ----------
+     Von Paul (Variante B, Denny 29.09.2026), am selben Tag an Helena und Leon:
+     "diese Dinge jetzt auch immer an Helena und Leon ausgerollt ... nur eben
+     fuer ihr Alter angepasst". Die Seite gibt die Worte in H.woche mit:
+       { gewusst, spaeter, offen, fuellen: "Kreise füllen", dunkel: true, gross: true }
+     Ohne H.woche bleibt alles wie vorher. Kein Rot, kein "Fehler". */
+  var WOCHENTAG = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  function wocheStil() {
+    if ($("lww-stil")) return;
+    var s = document.createElement("style"); s.id = "lww-stil";
+    s.textContent =
+      ".lww{--wg:#047857;--wn:#1d4ed8;--ws:#8a5a00;margin:0 0 14px}" +
+      "html[data-theme=dark] .lww,.lww.dunkel{--wg:#6ee7a8;--wn:#8cb8ff;--ws:#f5d77a}" +
+      ".lww .wsum{border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin:0 0 8px}" +
+      ".lww .wleg{color:var(--muted);font-size:13.5px;margin-top:4px}" +
+      ".lww i{font-style:normal;letter-spacing:1px}.lww i.g{color:var(--wg)}.lww i.n{color:var(--wn)}.lww i.s{color:var(--ws)}" +
+      ".lww .wtag{display:grid;grid-template-columns:4.6em 4.4em minmax(0,1fr);gap:8px;align-items:center;" +
+      "border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin:0 0 6px}" +
+      ".lww .wtag.heute{border-color:var(--wg)}.lww .wtag.kann{cursor:pointer}" +
+      ".lww .wd{font-weight:800}.lww .wm{color:var(--muted);font-weight:600}" +
+      ".lww .wp{min-width:0;overflow-wrap:anywhere;line-height:1.35;color:var(--muted)}" +
+      ".lww .wfuell{grid-column:1/-1;justify-self:end;font-weight:800;color:var(--ws);min-height:48px;display:flex;align-items:center}" +
+      ".lww .wknopf{display:block;width:100%;min-height:48px;margin-top:10px;border:0;border-radius:14px;" +
+      "font-weight:800;font-size:16px;color:#2b2100;background:#f5d77a;cursor:pointer}" +
+      ".lww.gross .wp{font-size:19px}.lww.gross .wd,.lww.gross .wm{font-size:17px}.lww.gross .wknopf{font-size:18px;min-height:54px}";
+    document.head.appendChild(s);
+  }
+  function gehe(u) { (window.__geheZu || function (x) { location.href = x; })(u); }
+  function wocheZeichnen(box, w) {
+    var W = H.woche || {};
+    var mehrz = function (n) { return n + " " + (n === 1 ? (W.einKreis || "Kreis") : (W.kreise || "Kreise")); };
+    box.innerHTML = "";
+    box.className = "lww" + (W.dunkel ? " dunkel" : "") + (W.gross ? " gross" : "");
+    var gewusst = 0, alle = 0, spaeter = 0, offenAlle = 0;
+    var liste = el("div");
+    (w.tage || []).forEach(function (t, i) {
+      if (t.datum > w.heute) return;
+      var z = el("div", "wtag"); z.dataset.tag = t.datum;
+      if (t.datum === w.heute) z.classList.add("heute");
+      z.appendChild(el("span", "wd", WOCHENTAG[i] + " " + tagKurz(t.datum)));
+      var leer = !t.minuten && !(t.punkte || []).length;
+      z.appendChild(el("span", "wm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min")));
+      var p = el("span", "wp");
+      if (leer) p.textContent = t.datum === w.heute ? "heute noch nichts" : "frei";
+      (t.punkte || []).forEach(function (x) { p.appendChild(el("i", x === 1 ? "g" : x === 2 ? "s" : "n", x === 0 ? "○" : "●")); });
+      if (t.mehr) p.appendChild(el("span", null, " +" + t.mehr));
+      z.appendChild(p);
+      alle += t.gesamt || 0; gewusst += t.gewusst || 0; spaeter += t.spaeter || 0;
+      var n = (t.offen || []).length; offenAlle += n;
+      if (n) {
+        z.classList.add("kann"); z.setAttribute("role", "button"); z.tabIndex = 0;
+        z.appendChild(el("span", "wfuell", "✨ " + mehrz(n) + " " + (W.fuellen || "füllen") + " ›"));
+        var ziel = (H.quiz || "quiz.html") + "?kreise=" + encodeURIComponent(t.datum);
+        z.addEventListener("click", function () { gehe(ziel); });
+        z.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); gehe(ziel); } });
+      }
+      liste.appendChild(z);
+    });
+    var k = el("div", "wsum");
+    if (alle) {
+      k.appendChild(el("b", null, (W.summe || "Diese Woche gewusst: ") + gewusst + " von " + alle));
+      var leg = el("div", "wleg");
+      leg.appendChild(el("i", "g", "●")); leg.appendChild(document.createTextNode(" " + (W.gewusst || "gleich gewusst") + "  "));
+      if (spaeter) { leg.appendChild(el("i", "s", "●")); leg.appendChild(document.createTextNode(" " + (W.spaeter || "später geschafft") + "  ")); }
+      leg.appendChild(el("i", "n", "○")); leg.appendChild(document.createTextNode(" " + (offenAlle ? (W.offen || "noch zu füllen") : "erst nachgeschaut")));
+      k.appendChild(leg);
+      if (offenAlle) {
+        var b = el("button", "wknopf", "✨ " + mehrz(offenAlle) + " " + (W.fuellen || "füllen"));
+        b.type = "button"; b.id = "kreiseFuellen";
+        b.addEventListener("click", function () { gehe((H.quiz || "quiz.html") + "?kreise=woche"); });
+        k.appendChild(b);
+      }
+    } else {
+      k.appendChild(el("b", null, "Diese Woche hast du noch keine Fragen beantwortet."));
+    }
+    box.appendChild(k);
+    box.appendChild(liste);
+  }
+  function wocheLaden(box) {
+    wocheStil();
+    fetch("/api/statistik?eigene=1&kind=" + encodeURIComponent(KIND), { credentials: "same-origin" })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) { if (!j || !j.ok || !Array.isArray(j.tage)) throw 0; wocheZeichnen(box, j); })
+      .catch(function () { box.innerHTML = ""; });
+  }
   function heftLaden(box) {
     box.innerHTML = '<p class="hleer">Dein Heft lädt …</p>';
     var stand = {};
@@ -191,6 +276,11 @@
     if (!auf || !ov || !box) return;
     auf.addEventListener("click", function (ev) {
       ev.preventDefault();
+      if (H.woche) {
+        var wb = $("wocheBericht");
+        if (!wb) { wb = document.createElement("div"); wb.id = "wocheBericht"; box.parentNode.insertBefore(wb, box); }
+        wocheLaden(wb);
+      }
       heftLaden(box);
       ov.classList.add("on");
     });
@@ -198,7 +288,7 @@
     ov.addEventListener("click", function (ev) { if (ev.target === ov) ov.classList.remove("on"); });
   }
 
-  window.LWHeftStart = { zeichnen: heftZeichnen };
+  window.LWHeftStart = { zeichnen: heftZeichnen, woche: wocheZeichnen };
   function los() { nachsehen(); heftAnbinden(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", los); else los();
 })();
