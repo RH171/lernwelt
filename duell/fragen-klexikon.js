@@ -552,4 +552,14 @@ export const KLEXIKON = [
   [4, "welt", "🌉", "Welcher Fluss fließt durch die Stadt Riga?", ["Die Düna", "Die Elbe", "Die Donau", "Der Rhein"], "Riga liegt an beiden Ufern des Flusses Düna, kurz bevor dieser in die Ostsee mündet.", null, "Riga"],
   [5, "welt", "🌍", "Womit kann man am schnellsten die Welt umrunden?", ["Mit dem Flugzeug", "Mit dem Schiff", "Mit dem Fahrrad", "Mit dem Zug"], "Früher dauerte eine Weltreise mit dem Schiff mehrere Jahre, heute reicht dafür ein Flugzeug.", null, "Weltreise"],
   [5, "sport", "⚽", "Woher hat der Fußballspieler Pelé seinen Spitznamen?", ["Von einem Torhüter", "Von seiner Oma", "Von einer Stadt", "Von seinem Trainer"], "Als Kind sprach Pelé den Namen eines Torhüters ungenau aus, so entstand sein berühmter Spitzname.", null, "Pelé"],
+
+  // Nachschub vom 29.09.2026
+  [1, "technik", "🚲", "Wozu braucht ein Fahrrad eine Bremse?", ["Zum Langsamwerden", "Zum Klingeln", "Zum Lenken", "Zum Leuchten"], "Bei der Fahrradbremse drückt ein Belag gegen das Rad, das dabei langsamer wird.", null, "Bremse (Technik)"],
+  [2, "technik", "⚙️", "Was wird beim Bremsen aus Bewegung?", ["Wärme", "Licht", "Ton", "Strom"], "Beim Bremsen reiben Teile aneinander, dabei entsteht Wärme aus der Bewegungsenergie.", null, "Bremse (Technik)"],
+  [1, "sport", "🏆", "Was ist ein Rekord?", ["Eine Bestleistung", "Ein Spiel", "Ein Preis", "Eine Uhr"], "Ein Weltrekord gilt für die ganze Welt, zum Beispiel der weiteste Wurf.", null, "Rekord"],
+  [2, "kurios", "📖", "Wo stehen viele besondere Rekorde?", ["Im Guinness Buch", "Im Wörterbuch", "Im Kochbuch", "Im Kalender"], "Manche Menschen essen sehr viel oder halten lange die Luft an, um einen Rekord zu schaffen.", null, "Rekord"],
+  [3, "sport", "🎾", "Welches große Tennisturnier findet in Melbourne statt?", ["Die Australian Open", "Wimbledon", "Die French Open", "Die US Open"], "Melbourne ist die südlichste Millionenstadt der Welt und liegt am Yarra-Fluss.", null, "Melbourne"],
+  [2, "welt", "🌏", "In welchem Land liegt Melbourne?", ["Australien", "Amerika", "Afrika", "Indien"], "Melbourne liegt am Yarra-Fluss und ist eine der größten Städte Australiens.", null, "Melbourne"],
+  [4, "welt", "🏞️", "An welchem See liegt die Stadt Klagenfurt?", ["Wörthersee", "Bodensee", "Chiemsee", "Starnberger See"], "Klagenfurt ist die Hauptstadt von Kärnten und liegt nahe der Grenze zu Slowenien.", null, "Klagenfurt"],
+  [4, "sprache", "🔤", "Zu welcher Sprachgruppe gehört Sorbisch?", ["Slawische Sprachen", "Romanische Sprachen", "Germanische Sprachen", "Asiatische Sprachen"], "Sorbisch kennt neben Einzahl und Mehrzahl auch den Dual für genau zwei Dinge.", null, "Sorbische Sprache"],
 ];
