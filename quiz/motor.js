@@ -60,7 +60,9 @@
   /* Paul bekommt die neue Auswahl (ein Fach, eine Leiste mit Fragenzahl und
      Start). Leon und Helena bleiben, wie sie sind, bis Paul fertig ist. */
   function einzeln() { return typeof window.QUIZ_BLATT_EXTRA === "function"; }
-  var LAENGEN = [[5, "5"], [10, "10"], [20, "20"], [0, "Alle"]];
+  /* Staffelung der Fragenzahl (Denny, 29.09.2026): 5, 10, 20, 25, alle - aber
+     nur, was es auch gibt. "Gibt es nur 8 Fragen: 5, Alle Fragen (8)". */
+  var LAENGEN = [[5, "5"], [10, "10"], [20, "20"], [25, "25"], [0, "Alle"]];
 
   /* Vorbauen im Hintergrund (28.09.2026). Denny: "Die Ladezeiten sind
      unterirdisch für ein Kind. Das muss sofort da sein." Der Server startet
@@ -77,6 +79,7 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         vorbauLaeuft = false;
+        if (j && j.ok && j.gebaut > 0) wartendHolen();   // neue Fragen -> neue Staffelung
         if (j && j.ok && j.fehlen > 0 && j.gebaut > 0) vorbauen();
       })
       .catch(function () { vorbauLaeuft = false; });
@@ -206,12 +209,16 @@
    * Stundenplan, der bis zum 22.09.2026 doppelt lag. */
   var wartend = {};
   var wvAnzeige = null;
+  /* Wie viele Fragen es je Blatt und je Fach gibt (Server: fragenZahl).
+     null = unbekannt, dann bietet die Leiste alle Stufen an. */
+  var fragenZahl = null;
 
   function wartendHolen() {
     fetch("/api/quiz?nurWartend=1&kind=" + encodeURIComponent(K.kind),
           { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
+        if (j && j.ok && j.fragenZahl) { fragenZahl = j.fragenZahl; quizLeisteMalen(); }
         if (!j || !j.ok || !j.wiedervorlage || !j.wiedervorlage.an) return;
         wartend = j.wartend || {};
         wvAnzeige = j.wiedervorlage.anzeige || null;
@@ -466,6 +473,12 @@
     var kasten = $("q-blaetter");
     if (kasten.nextSibling !== l) kasten.parentNode.insertBefore(l, kasten.nextSibling);
     if (LAENGEN.every(function (x) { return x[0] !== stand.laenge; })) stand.laenge = 10;
+    /* Nur Stufen, die es gibt. Passt die gemerkte nicht, gilt "alle" - ohne
+       es zu speichern, damit beim naechsten, groesseren Fach wieder die
+       gewohnte Zahl dasteht. */
+    var moeglich = fragenMoeglich();
+    var stufen = LAENGEN.filter(function (x) { return !x[0] || moeglich == null || x[0] < moeglich; });
+    if (moeglich != null && stand.laenge && stand.laenge >= moeglich) stand.laenge = 0;
     var eins = stand.faecher.length === 1;
     var n = stand.blaetter.length;
     var alleN = eins ? sichtbareBlaetter().length : 0;
@@ -484,20 +497,38 @@
       });
       l.querySelector(".qql-t").appendChild(weg);
     }
-    LAENGEN.forEach(function (p) {
+    stufen.forEach(function (p) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "qchip" + (stand.laenge === p[0] ? " an" : "");
       b.setAttribute("data-laenge", String(p[0]));
-      b.textContent = p[0] ? p[1] + " Fragen" : "Alle Fragen";
+      b.textContent = p[0] ? p[1] + " Fragen" : (moeglich ? "Alle Fragen (" + moeglich + ")" : "Alle Fragen");
       b.addEventListener("click", function () {
         stand.laenge = p[0]; schreibe(SPEICHER, stand); quizLeisteMalen();
       });
       l.querySelector(".qql-zahl").appendChild(b);
     });
     var los = l.querySelector(".qql-los");
-    los.textContent = "Quiz starten \u00b7 " + (stand.laenge ? stand.laenge + " Fragen" : "alle Fragen");
+    los.textContent = "Quiz starten \u00b7 " + (stand.laenge ? stand.laenge + " Fragen"
+      : moeglich ? (moeglich === 1 ? "1 Frage" : "alle " + moeglich + " Fragen") : "alle Fragen");
     los.addEventListener("click", function () { $("q-start").click(); });
+  }
+  /* Wie viele Fragen die aktuelle Auswahl hergibt: angehakte Blaetter, sonst
+     die Blaetter unter dem Art-Filter, sonst das ganze Fach bzw. alle Faecher.
+     null, solange der Server nichts gesagt hat. Hoechstens 100 - mehr kommen
+     in einer Runde nicht (ALLE_HOECHSTENS in functions/api/quiz.js). */
+  function fragenMoeglich() {
+    if (!fragenZahl) return null;
+    var jb = fragenZahl.blatt || {}, jf = fragenZahl.fach || {}, n = 0;
+    function blattSumme(ids) { ids.forEach(function (id) { n += jb[id] || 0; }); }
+    if (stand.faecher.length === 1) {
+      if (stand.blaetter.length) blattSumme(stand.blaetter);
+      else if (artFilter().art !== "alle") blattSumme(sichtbareBlaetter().map(function (b) { return b.id; }));
+      else n = jf[stand.faecher[0]] || 0;
+    } else {
+      K.faecher.forEach(function (f) { n += jf[f.k] || 0; });
+    }
+    return Math.min(n, 100);
   }
   function nachBlaettern() {
     if (typeof window.QUIZ_NACH_BLAETTERN === "function") {
