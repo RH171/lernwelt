@@ -5,30 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mein Quiz</title>
 <!--
-  Leons tägliches Quiz (20.09.2026) - für einen Leseanfänger: kurze Fragen, große Schrift.
+  Leons Quiz (20.09.2026), 2. Klasse, Leseanfaenger.
 
-  Denny am 20.09.2026: "Kannst du bei jedem Anwender noch ein Quiz bauen, wo die
-  Fragen zum Schulunterricht sind und nur die Fragen, die falsch beantwortet
-  werden, immer wiederholt werden? ... jeden Tag 5 bis 10 Minuten ... alle oder
-  nur gezielte Fächer ... 15 oder mehr Fragen oder endlos."
-
-  Der Motor steht EINMAL in /quiz/motor.js - hier stehen nur Kind, Fächer und
-  Farben. Wer am Motor etwas ändert, ändert es für alle drei und misst alle drei.
-
-  Die Fragen kommen aus /api/quiz: ein Vorrat je Kind, der nachwächst, gespeist
-  aus dem Lehrplan, den offenen Lernzielen und dem, was das Kind zuletzt aus
-  dem Unterricht fotografiert hat. Eine Frage wird nie zweimal gestellt - das
-  Lernziel dagegen so oft, bis es sitzt.
+  Seit 29.09.2026 mit allem, was Paul hat (Denny, 28.09.2026: "Helena zuerst,
+  danach Leon mit allem wie Paul"): ein Fach auf einmal, Blattwahl mit
+  "Suchen" hinter jedem Blatt, "Heute lernen", Beleg aus dem Heft nach der
+  Loesung. Motor: /quiz/motor.js, Such-Spiel und Heute lernen: /quiz/such.js.
+  Akzent #047857 statt #10b981: weisse Schrift braucht 4,5:1, #10b981 hatte 2,5:1.
 -->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
 <script>/* Leons Wahl hell/dunkel (25.09.2026), Standard hell. Schalter auf seiner Startseite. */
 (function(){try{ if(localStorage.getItem("leon-theme")==="dark") document.documentElement.setAttribute("data-theme","dark"); }catch(e){}})();</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
-<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <link rel="stylesheet" href="/quiz/quiz.css?v=5c23e92e">
 <style>
   :root{
-    --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#667085; --line:#e4e7f0;
-    --akzent:#10b981; --akzent-hell:#e7f8f1; --akzent-auf:#fff;
+    --bg:#f3f5fb; --card:#fff; --ink:#161a2b; --muted:#5b6070; --line:#e4e7f0;
+    --akzent:#047857; --akzent-hell:#e7f8f1; --akzent-auf:#fff;
     --gut:#0ea371; --gut-hell:#e7f8f1; --gut-text:#067647;
     --schlecht:#d92d20; --schlecht-hell:#fff1f0; --schlecht-text:#a3251c;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
@@ -46,11 +41,33 @@
 
   <!-- Start -->
   <section id="sicht-start">
+    <!-- Die Tagesrunde (25.09.2026): eine kurze Runde am Tag aus seinen
+         Blaettern - was wieder dran ist, dazu etwas Neues, hoechstens 8.
+         Auswahl: /tagesrunde.js, Anzeige: /fundkarten.js. Erscheint nur,
+         wenn genug Karten da sind. -->
+    <div class="karte verborgen" id="heute-wahl">
+      <h2>☀️ Heute lernen</h2>
+      <p class="unter" id="heute-unter"></p>
+      <button class="knopf" id="heute-los" type="button">Los geht's</button>
+      <!-- Nur wer von der Startseite kommt, sieht diesen Knopf (Denny,
+           25.09.2026: "ich komme von der Startseite rein, und dann geht es
+           gleich los"). Gewaehlt: Startschirm mit Wahl statt Sofortstart. -->
+      <button class="knopf still verborgen" id="heute-selbst" type="button">Lieber selbst aussuchen</button>
+    </div>
     <div class="karte">
-      <h2>Was willst du üben?</h2>
-      <p class="unter">Tippe ein Fach an. Oder lass alles an – dann kommt von jedem etwas.</p>
+      <h2>Was möchtest du üben?</h2>
+      <p class="unter">Tipp ein Fach an.</p>
       <div class="qchips"><button class="qchip" type="button" id="q-alle">Alle Fächer</button></div>
       <div class="qfaecher" id="q-faecher"></div>
+
+      <!-- Paul sucht selbst aus, WELCHES Blatt abgefragt wird. Denny am
+           23.09.2026: "Das gibt ihm schon ein Stück weit Entscheidungsgewalt,
+           anstatt dass ein Quiz erstellt wird über etwas, was er gerade gar
+           nicht abgefragt werden möchte." -->
+      <div class="blaetter verborgen" id="q-blaetter">
+        <div class="blaetter-kopf" id="q-blaetter-kopf"></div>
+        <div class="blaetter-liste" id="q-blaetter-liste"></div>
+      </div>
     </div>
     <div class="karte">
       <h2>Wie viele Fragen?</h2>
@@ -59,9 +76,40 @@
       <div class="laedt verborgen" id="q-laedt"><i></i><span>Ich suche Fragen für dich heraus …</span></div>
       <div class="fehler" id="q-fehler"></div>
     </div>
+    <!-- Das Such-Spiel (Denny, 25.09.2026: "eher als Quiz- und
+         Spielmoeglichkeit fuer Paul"). Die Fundkarten kamen bis dahin direkt
+         nach dem Hochladen - jetzt startet Paul sie selbst, zu einem Blatt
+         seiner Wahl. Die Karte erscheint nur, wenn ein Blatt genug Karten hat.
+         Motor: /fundkarten.js -->
+    <div class="karte verborgen" id="such-wahl">
+      <h2>🔎 Such-Spiel</h2>
+      <p class="unter">Such die Antwort auf deinem eigenen Blatt. Tipp ein Blatt an.</p>
+      <div class="blaetter-liste" id="such-liste"></div>
+    </div>
+  </section>
+
+  <section id="sicht-such" class="verborgen">
+    <div id="fundkarten"></div>
+    <button class="knopf still" id="such-zurueck" type="button">‹ Zurück zur Auswahl</button>
   </section>
 
   <!-- Spiel -->
+  <!-- Erst anschauen, dann abfragen (Entwurf C, 23.09.2026).
+       Eine kurze Runde Merkkarten VOR der ersten Frage: jede Tatsache mit
+       Eselsbrücke. Lernen vor Prüfen - überspringbar, wer gleich loslegen
+       will. Nur wenn es zu den Fragen auch Eselsbrücken gibt. -->
+  <section id="sicht-merken" class="verborgen">
+    <div class="karte">
+      <!-- Kein zweiter Zurück-Knopf: Die Kopfzeile der Seite hat schon einen,
+           und zwei nebeneinander lassen ein Kind raten, welcher welcher ist. -->
+      <h2 id="m-kopf">Das kommt gleich dran</h2>
+      <p class="unter" id="m-unter">Schau es dir einmal an – danach frage ich dich.</p>
+      <div class="mkarten" id="m-karten"></div>
+      <button class="knopf" id="m-los" type="button">Los, frag mich ab</button>
+      <button class="knopf still" id="m-weiter" type="button">Überspringen</button>
+    </div>
+  </section>
+
   <section id="sicht-spiel" class="verborgen">
     <div class="leiste"><i id="q-balken"></i></div>
     <div class="karte">
@@ -96,13 +144,17 @@
 window.QUIZ = {
   kind: "leon",
   faecher: [
-    { k: "deutsch", n: "Deutsch", ic: "📘" },
-    { k: "mathe",   n: "Mathe",   ic: "🔢" },
+    { k: "deutsch", n: "Deutsch",   ic: "📘" },
+    { k: "mathe",   n: "Mathe",     ic: "🔢" },
     { k: "hsu",     n: "Sachkunde", ic: "🌍" },
-    { k: "musik",   n: "Musik",   ic: "🎵" }
+    { k: "rel",     n: "Religion",  ic: "🕊️" },
+    { k: "musik",   n: "Musik",     ic: "🎵" }
   ]
 };
 </script>
+<script src="/fundkarten.js?v=e94dea15"></script>
+<script src="/tagesrunde.js?v=f86f74ae"></script>
+<script src="/quiz/such.js?v=a7c50471"></script>
 <script src="/quiz/motor.js?v=d000bac2" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=282ba79a" defer></script>
