@@ -74,8 +74,13 @@
     });
     return (s + n + neu) ? { sitzt: s, noch: n, neu: neu } : null;
   };
+  /* Die eigene Such-Karte ist seit 29.09.2026 immer zu. Denny: "Der Punkt
+     Suchspiele kann hier auch verschwinden, weil das jetzt geloest werden
+     kann ueber die Buttons, die er auswaehlt" - das Such-Spiel startet ueber
+     "🔎 Suchen" am Blatt, nachdem Paul ein Fach gewaehlt hat. Nur ?blatt=<id>
+     startet es noch direkt (siehe laden()). */
   function suchKarteZeigen(){
-    $("such-wahl").classList.toggle("verborgen", !suchListe.length || blattListeDa !== false);
+    $("such-wahl").classList.add("verborgen");
   }
   window.QUIZ_NACH_BLAETTERN = function(da){ blattListeDa = !!da; suchKarteZeigen(); };
   function merken(blattId, liste){

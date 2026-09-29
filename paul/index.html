@@ -320,16 +320,6 @@
   .badgecount{color:var(--muted);font-size:13px;margin:0 0 14px;}
 
   /* ---------- Lernbericht ---------- */
-  .repsub{margin-bottom:16px;}
-  .repsub h4{font-family:var(--round);font-weight:800;font-size:14px;margin:0 0 7px;display:flex;align-items:center;gap:7px;}
-  .repsub h4 .rd{width:10px;height:10px;border-radius:50%;}
-  .reprow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
-    padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
-  .reprow:last-child{border-bottom:none;}
-  .reprow .rn{color:var(--ink);font-weight:600;}
-  .reprow .rv{color:var(--muted);font-size:12.5px;text-align:right;white-space:nowrap;}
-  .reprow .rv b{color:var(--ink);font-weight:800;}
-  .reprow .warn{color:var(--warn);font-weight:700;}
   .rephint{background:var(--hintbg);border:1px solid var(--hintline);border-radius:14px;padding:13px 14px;
     font-size:13px;color:var(--hintink);line-height:1.45;}
   .modal.wide{max-width:480px;max-height:82vh;overflow:auto;}
@@ -346,12 +336,6 @@
   .tbp{min-width:0;overflow-wrap:anywhere;line-height:1.35;color:var(--muted);}
   .tbp i,.tbleg i{font-style:normal;letter-spacing:1px;}
   .tbp i.g,.tbleg i.g{color:var(--sitzt-ink);} .tbp i.n,.tbleg i.n{color:var(--noch-ink);}
-  .alt{margin-top:14px;border:1px solid var(--line);border-radius:16px;padding:0 14px;}
-  .alt>summary{min-height:48px;display:flex;align-items:center;font-weight:700;cursor:pointer;list-style:none;}
-  .alt>summary::-webkit-details-marker{display:none;}
-  .alt>summary::after{content:"▾";margin-left:auto;color:var(--muted);}
-  .alt[open]>summary::after{content:"▴";}
-  .alt .repsub{margin-top:6px;}
 
   /* ---------- Neues-Spiel-Karte ---------- */
   /* Farbe und Unterstreichung gehoeren an die GRUNDregel, nicht an jede
@@ -1258,41 +1242,15 @@
 
   // ---- Lernbericht -----------------------------------------------------
   const reportOv = bindOverlay("reportOverlay","closeReport");
-  const REPORT = {
-    "klasse3-deutsch-praedikat-quiz.html":[{k:"praedikat-stats",f:"correctTotal",label:"richtig",kind:"obj"},{k:"praedikat-mistakes",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-deutsch-subjekt-praedikat-quiz.html":[{k:"sp_xp",label:"XP",kind:"num"},{k:"sp_best",label:"Bestlauf",kind:"num"},{k:"sp_wrong",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-deutsch-praedikat-profi-quiz.html":[{k:"praedikatprofi-xp",label:"XP",kind:"num"},{k:"praedikatprofi-bestscore",label:"Bestlauf",kind:"num"},{k:"praedikatprofi-mistakes",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-deutsch-praedikat-springer.html":[{k:"praedikatSpringerRekord",label:"Rekord",kind:"num"}],
-    "klasse3-deutsch-praedikat-springer-3d.html":[{k:"praedikat3dRekord",label:"Rekord",kind:"num"}],
-    "klasse3-deutsch-praedikat-supermarkt.html":[{k:"supermarkt-xp",label:"XP",kind:"num"},{k:"supermarkt-right",label:"Wörter richtig",kind:"num"}],
-    "klasse3-deutsch-zeitangabe-sortierspiel.html":[{k:"zeitangabe-xp",label:"XP",kind:"num"},{k:"zeitangabe-beststreak",label:"Bestlauf",kind:"num"},{k:"zeitangabe-mistakes",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-hsu-strom-quiz.html":[{k:"strom_xp",label:"XP",kind:"num"},{k:"strom_right",label:"richtig",kind:"num"},{k:"strom_wrong_count",label:"zu üben",kind:"num",warn:true}],
-    "klasse3-hsu-strom-jumpnrun.html":[{k:"strom-xp",label:"XP",kind:"num"},{k:"strom-beststreak",label:"Bestlauf",kind:"num"}],
-    "klasse3-musik-beethoven-quiz.html":[{k:"beethoven-games",label:"Spiele",kind:"num"},{k:"beethoven-wrong",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-mathe-gewichte-wiegespiel.html":[{k:"wiege-xp",label:"XP",kind:"num"},{k:"wiege-best",label:"Bestlauf",kind:"num"},{k:"wiege-mistakes",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-mathe-subtraktion-minusmaschine.html":[{k:"subtraktion-xp",label:"XP",kind:"num"},{k:"subtraktion-best",label:"Bestlauf",kind:"num"},{k:"subtraktion-mistakes",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-hsu-schaltungen-quiz.html":[{k:"schaltungen-xp",label:"XP",kind:"num"},{k:"schaltungen-best",label:"Bestlauf",kind:"num"},{k:"schaltungen-mistakes",label:"zu üben",kind:"len",warn:true}],
-    "klasse3-religion-beten-quiz.html":[{k:"beten-quiz-xp",label:"XP",kind:"num"},{k:"beten-quiz-best",label:"Bestlauf",kind:"num"},{k:"beten-quiz-mistakes",label:"zu üben",kind:"len",warn:true}]
-  };
-  function repVal(row){
-    try{
-      const raw=localStorage.getItem(row.k); if(raw==null) return null;
-      if(row.kind==="num"){ const n=parseFloat(raw); return isNaN(n)?null:n; }
-      if(row.kind==="len"){ const a=JSON.parse(raw); return Array.isArray(a)?a.length:null; }
-      if(row.kind==="obj"){ const o=JSON.parse(raw); const v=o&&o[row.f]; return typeof v==="number"?v:null; }
-    }catch(e){}
-    return null;
-  }
-  function lwProgress(file){
-    try{ const raw=localStorage.getItem("lw-progress:"+file); if(!raw) return null; const o=JSON.parse(raw); return (o&&typeof o==="object")?o:null; }catch(e){ return null; }
-  }
   /* Tagebuch der Woche (Teil 2 B, Denny 29.09.2026). Der Stand je Blatt
      (sitzt · uebst du noch · neu) steht seitdem im Lernquiz an jedem Blatt
      (Teil 1 A), hier nur noch, was Paul diese Woche getan hat: je Tag die
      Minuten und ein Punkt je Frage - voll = beim ersten Tipp gewusst, Ring =
      erst nachgeschaut. Ein Tag ohne Lernen heisst "frei". Kein Rot, keine
      Serie, keine Schwaechenliste. Quelle: /api/statistik?eigene=1, also auf
-     iPad und iPhone gleich. */
+     iPad und iPhone gleich.
+     Die alten Klasse-3-Spiele standen bis 29.09.2026 eingeklappt darunter -
+     Denny: "kann aus dem Bericht herausgenommen werden". */
   const WOCHENTAG = ["Mo","Di","Mi","Do","Fr","Sa","So"];
   function el(tag, cls, text){
     const x = document.createElement(tag); if(cls) x.className = cls;
@@ -1347,41 +1305,6 @@
     const body=document.getElementById("reportBody"); body.innerHTML="";
     const woche = el("div"); woche.id = "wocheBericht"; body.appendChild(woche);
     wocheLaden(woche);
-    const alt = el("details", "alt"); alt.id = "altSpiele";
-    alt.appendChild(el("summary", null, "🎮 Deine Spiele aus Klasse 3"));
-    let anyData=false;
-    FACH_ORDER.forEach(function(fk){
-      const tools=TOOLS.filter(t=>t.fach===fk && (REPORT[t.file] || lwProgress(t.file)));
-      if(!tools.length) return;
-      const sub=document.createElement("div"); sub.className="repsub";
-      sub.innerHTML='<h4><span class="rd" style="background:'+FACH[fk].color+'"></span>'+FACH[fk].name+'</h4>';
-      tools.forEach(function(t){
-        const parts=[];
-        if(REPORT[t.file]){
-          REPORT[t.file].forEach(function(row){
-            const v=repVal(row);
-            if(v==null) return;
-            anyData=true;
-            if(row.warn) { if(v>0) parts.push('<b>'+v+'</b> übst du noch'); }
-            else parts.push('<b>'+v+'</b> '+row.label);
-          });
-        } else {
-          const p=lwProgress(t.file);
-          if(p){
-            if(typeof p.xp==="number"){ anyData=true; parts.push('<b>'+p.xp+'</b> XP'); }
-            if(typeof p.best==="number"){ anyData=true; parts.push('<b>'+p.best+'</b> Bestlauf'); }
-            if(typeof p.uebung==="number" && p.uebung>0){ anyData=true; parts.push('<b>'+p.uebung+'</b> übst du noch'); }
-          }
-        }
-        const row=document.createElement("div"); row.className="reprow";
-        row.innerHTML='<span class="rn">'+t.icon+' '+t.title+'</span><span class="rv">'+
-          (parts.length?parts.join(" · "):"noch nicht gespielt")+'</span>';
-        sub.appendChild(row);
-      });
-      alt.appendChild(sub);
-    });
-    if(!anyData) alt.appendChild(el("p", "hleer", "Auf diesem Gerät hast du die alten Spiele noch nicht gespielt."));
-    body.appendChild(alt);
   }
   document.getElementById("report").addEventListener("click",()=>{ buildReport(); reportOv.classList.add("on"); blip(); });
 
