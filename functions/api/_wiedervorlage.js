@@ -273,15 +273,21 @@ export function punktVerbuchen(punkte, frage, richtig, jetzt, e) {
   const s = punktSchluessel(frage);
   if (!s) return punkte;
   const p = punkte[s] || { z: 0, r: 0 };
+  const vorher = Number(p.z) || 0;
   p.z = jetzt || Date.now();
   if (richtig) {
     p.r = Math.min((Number(p.r) || 0) + 1, ein.sitzt);
+    /* fz = wann er zuletzt danebenlag (29.09.2026, Kreise fuellen). Damit
+       weiss "Deine Woche" auch bei alten Runden ohne Lernpunkt, dass an
+       diesem Tag ein Kreis spaeter geschafft wurde. */
+    if (p.f && vorher) p.fz = vorher;
     delete p.f;
   } else {
     /* ⚠️ NICHT auf null - das waere ein Karteikasten mit Strafe.
        Genau einen Schritt zurueck. */
     p.r = Math.max((Number(p.r) || 0) - 1, 0);
     p.f = 1;
+    delete p.fz;
   }
   punkte[s] = p;
   return punkte;

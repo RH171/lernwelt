@@ -527,8 +527,23 @@ export function eigeneWoche(liste, jetzt, punkte, sichtbar) {
       const wert = a.stimmt ? 1 : (spaeterGeschafft(a, r.zeit) ? 2 : 0);
       if (a.stimmt) tag.gewusst++;
       if (wert === 2) tag.spaeter++;
-      if (tag.punkte.length < 60) tag.punkte.push(wert); else tag.mehr++;
+      if (a.p) (tag.mitP = tag.mitP || new Set()).add(a.p);
+      if (tag.punkte.length < 60) { tag.punkte.push(wert); if (wert === 0 && !a.p) (tag.ohneP = tag.ohneP || []).push(tag.punkte.length - 1); }
+      else tag.mehr++;
     }
+  }
+  /* Alte Runden ohne Lernpunkt (Denny, 29.09.2026: "Wenn sie dann richtig
+     nachgeholt sind, kann man sie dennoch fuellen, auch wenn es nicht die
+     richtigen sind"): Je Lernpunkt, der an diesem Tag danebenging (fz) und
+     inzwischen sitzt, wird ein hohler Kreis ohne Lernpunkt gelb - von vorn,
+     und nur so viele, wie es hohle gibt. */
+  for (const s of Object.keys(pk)) {
+    const p = pk[s];
+    if (!p || p.f || !p.fz) continue;
+    const tag = je[berlinTag(new Date(p.fz).toISOString())];
+    if (!tag || !tag.ohneP || !tag.ohneP.length || (tag.mitP && tag.mitP.has(s))) continue;
+    tag.punkte[tag.ohneP.shift()] = 2;
+    tag.spaeter++;
   }
   /* Was noch zu fuellen ist: jeder Lernpunkt, der zuletzt danebenging, an dem
      Tag, an dem er zuletzt gespielt wurde. So steht jeder genau einmal da. */
