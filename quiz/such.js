@@ -200,12 +200,15 @@
   function kreiseZeigen(st, wahl){
     if (!st.karten.length) return;
     var wann = wahl === "woche" ? "diese Woche" : ("am " + datum(wahl));
+    /* Worte je Kind (29.09.2026): Helena liest "Wiederholen" und "Fragen". */
+    var W = (window.QUIZ && window.QUIZ.kreiseWorte) || {};
+    var ein = W.einKreis || "Kreis", viele = W.kreise || "Kreise";
     var ok = LWFund.zeigen($("fundkarten"), {
       karten: st.karten, kind: KIND, mindestens: 1,
-      kicker: "Kreise füllen", mitBlattTitel: true,
-      ueberschrift: st.offen === 1 ? "1 Kreis zum Füllen" : st.offen + " Kreise zum Füllen",
+      kicker: W.titel || "Kreise füllen", mitBlattTitel: true,
+      ueberschrift: (st.offen === 1 ? "1 " + ein : st.offen + " " + viele) + " " + (W.zum || "zum Füllen"),
       unter: "Die hattest du " + wann + " erst nachgeschaut. Dazwischen kommen ein paar, die du schon kannst.",
-      fertigSatz: st.rest ? "Geschafft! " + st.rest + " Kreise warten noch – die kommen beim nächsten Mal." : "Geschafft! Schau in „Deine Woche“, welche Kreise jetzt gelb sind.",
+      fertigSatz: st.rest ? "Geschafft! " + st.rest + " " + viele + " warten noch – die kommen beim nächsten Mal." : "Geschafft! Schau in „Deine Woche“, was jetzt gelb ist.",
       ergebnis: function(liste){ merken("", liste); },
       fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
     });
