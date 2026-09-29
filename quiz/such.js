@@ -52,6 +52,28 @@
     k.addEventListener("click", function(ev){ ev.stopPropagation(); starten(x); });
     return k;
   };
+  /* Teil 1 A (Denny, 29.09.2026): Der Stand je Blatt - sitzt · uebst du
+     noch · neu - steht im Lernquiz an jedem Blatt der Blattwahl, nicht mehr
+     als "Bericht" auf der Startseite. Dieselbe Zaehlung wie "Mein Heft"
+     (heft-start.js): sitzt = zuletzt beim ersten Tipp gewusst, uebst du noch
+     = zuletzt daneben, neu = noch nie gespielt. Liefert null, wenn das Blatt
+     keine Karten hat - dann steht dort nichts. */
+  function kartenSchluessel(k){
+    return String((k && k.richtig) || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
+  }
+  window.QUIZ_BLATT_STAND = function(b){
+    var x = suchMap[b.id];
+    if (!x) return null;
+    var s = 0, n = 0, neu = 0, gesehen = {};
+    x.karten.forEach(function(c){
+      if (!c || !c.richtig) return;
+      var key = x.id + "#k:" + kartenSchluessel(c);
+      if (gesehen[key]) return; gesehen[key] = 1;
+      var st = fundStand[key];
+      if (!st) neu++; else if (st.f) n++; else s++;
+    });
+    return (s + n + neu) ? { sitzt: s, noch: n, neu: neu } : null;
+  };
   function suchKarteZeigen(){
     $("such-wahl").classList.toggle("verborgen", !suchListe.length || blattListeDa !== false);
   }

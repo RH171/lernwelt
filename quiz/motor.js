@@ -372,6 +372,7 @@
         schildFuer(b) + deutschKurz(b.datum) +
         (b.seiten > 1 ? " · " + b.seiten + " Seiten" : "") +
         (wart ? " · " + wart : "");
+      standMalen(k.querySelector(".was"), b);
       vorschauFuellen(k.querySelector(".qvor"), b);
       k.addEventListener("click", function (ev) {
         /* Ein Tipp auf die Miniatur vergroessert, statt an- oder abzuhaken -
@@ -402,6 +403,41 @@
     });
     quizLeisteMalen();
     nachBlaettern();
+  }
+
+  /* Stand je Blatt (Teil 1 A, Denny 29.09.2026): ein schmaler Balken und
+     darunter die Zahlen - sitzt · uebst du noch · neu. Die Zahlen liefert die
+     Seite ueber window.QUIZ_BLATT_STAND(b) (quiz/such.js). Kein Rot, kein
+     Warnzeichen: "uebst du noch" ist gelb, wie in "Mein Heft". */
+  function standMalen(was, b) {
+    var st = typeof window.QUIZ_BLATT_STAND === "function" ? window.QUIZ_BLATT_STAND(b) : null;
+    if (!st || !was) return;
+    var alle = st.sitzt + st.noch + st.neu;
+    if (!alle) return;
+    var box = document.createElement("div");
+    box.className = "qstand";
+    var bal = document.createElement("div");
+    bal.className = "qstand-balken";
+    [["s", st.sitzt], ["n", st.noch]].forEach(function (p) {
+      if (!p[1]) return;
+      var t = document.createElement("i");
+      t.className = p[0];
+      t.style.width = (100 * p[1] / alle) + "%";
+      bal.appendChild(t);
+    });
+    var leg = document.createElement("div");
+    leg.className = "qstand-leg";
+    function teil(cls, text) {
+      var e = document.createElement("i");
+      if (cls) e.className = cls;
+      e.textContent = text;
+      leg.appendChild(e);
+    }
+    if (st.sitzt) teil("ls", st.sitzt + " " + (st.sitzt === 1 ? "sitzt" : "sitzen"));
+    if (st.noch) teil("ln", st.noch + " übst du noch");
+    if (st.neu) teil("", st.neu + " neu");
+    box.appendChild(bal); box.appendChild(leg);
+    was.appendChild(box);
   }
 
   /* Die Leiste unten: sobald ein Blatt angehakt ist, "Quiz aus N Blaettern"

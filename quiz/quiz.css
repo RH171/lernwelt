@@ -192,3 +192,14 @@ html[data-theme="dark"] .qquizleiste{background:#262a3a}
 .qbeleg-auf{margin-top:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:var(--card,#fff);color:var(--ink,#1c2033);font:700 15px inherit;cursor:pointer}
 .qql-t{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .qql-weg{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:transparent;color:inherit;font:600 14px inherit;cursor:pointer}
+/* Stand je Blatt in der Blattwahl (Teil 1 A, 29.09.2026). Kein Rot. */
+.qstand{margin-top:6px}
+.qstand-balken{display:flex;height:8px;border-radius:999px;overflow:hidden;background:#e3e6ee}
+.qstand-balken i{display:block;height:100%}
+.qstand-balken .s{background:#12b76a} .qstand-balken .n{background:#f5b50a}
+.qstand-leg{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;font-size:13px;color:#4b5263}
+.qstand-leg i{font-style:normal}
+.qstand-leg .ls{color:#0b7a47;font-weight:700} .qstand-leg .ln{color:#8a5a00;font-weight:700}
+html[data-theme="dark"] .qstand-balken{background:#2e3140}
+html[data-theme="dark"] .qstand-leg{color:#c3c8d6}
+html[data-theme="dark"] .qstand-leg .ls{color:#6ee7a8} html[data-theme="dark"] .qstand-leg .ln{color:#fcd34d}
