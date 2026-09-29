@@ -53,6 +53,15 @@ const KINDER = {
 };
 
 const VORRAT = (kind) => "quiz-vorrat:" + kind;
+
+/* Lehrplan und Schulheft nennen manche Faecher verschieden (29.09.2026, bei
+   der Uebertragung auf Helena gefunden): Das Heft sagt "franz", "geo", "rel",
+   der Lehrplan "französisch", "geographie", "religion-kath"/"ethik". Ohne
+   Angleichung fiel jede Frage von Helenas Franzoesisch-Blatt im Fach-Riegel
+   still weg. Gerechnet wird ab jetzt ueberall mit den Heft-Schluesseln. */
+const ZU_HEFT = { "französisch": "franz", "franzoesisch": "franz", "geographie": "geo",
+                  "religion-kath": "rel", "religion": "rel", "ethik": "rel" };
+export function heftFach(k) { k = String(k || "").toLowerCase(); return ZU_HEFT[k] || k; }
 const GESTELLT = (kind) => "quiz-gestellt:" + kind;
 
 // So viele Fragen baut ein Nachschub-Lauf. Gross genug, dass es sich lohnt
@@ -458,7 +467,11 @@ async function vorratLesen(env, kind) {
     const d = roh ? JSON.parse(roh) : null;
     /* Alte Fragen, die nach dem Blatt selbst fragen, fallen beim Lesen weg -
        ohne Schreibvorgang. Mit dem naechsten Nachbau verschwinden sie ganz. */
-    if (d && Array.isArray(d.fragen)) { d.fragen = d.fragen.filter((f) => !f || !blattGedaechtnis(f.frage)); return d; }
+    if (d && Array.isArray(d.fragen)) {
+      d.fragen = d.fragen.filter((f) => !f || !blattGedaechtnis(f.frage));
+      for (const f of d.fragen) if (f && f.fach) f.fach = heftFach(f.fach);
+      return d;
+    }
   } catch (e) {}
   return { fragen: [], gebaut: null };
 }
@@ -531,7 +544,7 @@ async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
 
   let faecher = Array.isArray(lehrplan) ? lehrplan : (lehrplan.faecher || []);
   if (nurFaecher && nurFaecher.length)
-    faecher = faecher.filter((f) => nurFaecher.includes(String(f.kuerzel || "").toLowerCase()));
+    faecher = faecher.filter((f) => nurFaecher.includes(heftFach(f.kuerzel)));
   if (!faecher.length) faecher = Array.isArray(lehrplan) ? lehrplan : (lehrplan.faecher || []);
 
   const fachListe = faecher.map((f) =>
@@ -656,7 +669,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
   const block = (daten.content || []).find((c) => c.type === "tool_use");
   const fragen = (block && block.input && block.input.fragen) || [];
 
-  const erlaubt = new Set(faecher.map((f) => String(f.kuerzel || "").toLowerCase()));
+  const erlaubt = new Set(faecher.map((f) => heftFach(f.kuerzel)));
   /* DER RIEGEL: Was nicht auf dem Blatt steht, wird nicht gefragt.
    *
    * Denny am 23.09.2026, mit Frage 2 aus Pauls HSU-Lauf ("Was ist weniger
@@ -685,10 +698,10 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
     .filter((f) => !blattGedaechtnis(f.frage))
     .filter((f) => fachPasstZumBlatt(f, schule.blaetter))
     // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
-    .filter((f) => erlaubt.has(String(f.fach || "").toLowerCase()))
+    .filter((f) => erlaubt.has(heftFach(f.fach)))
     .map((f) => ({
       id: kennung(),
-      fach: String(f.fach).toLowerCase(),
+      fach: heftFach(f.fach),
       frage: String(f.frage).slice(0, 300),
       antworten: f.antworten.slice(0, 4).map((a) => String(a).slice(0, 120)),
       richtig: 0,                       // die erste ist richtig; gemischt wird auf der Seite
@@ -741,8 +754,8 @@ export function belegFuer(f, blatt) {
 export function fachPasstZumBlatt(f, liste) {
   const n = Number(f && f.blatt_nr);
   if (!Number.isFinite(n) || n < 1 || !liste || n > liste.length) return true;
-  const soll = String(liste[n - 1].fach || "").toLowerCase();
-  return !soll || soll === String(f.fach || "").toLowerCase();
+  const soll = heftFach(liste[n - 1].fach);
+  return !soll || soll === heftFach(f.fach);
 }
 
 function blattVon(nr, liste) {
