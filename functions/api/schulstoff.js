@@ -26,6 +26,7 @@ import { fehlerJeFach } from "./_schwaechen.js";
 import {
   FAECHER, FAECHER_JE_KIND, SCHUELER_JE_KIND, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
+  themenSetzen, themaNormal, themenImFach,
   inhaltSetzen,
   HAND, KARTEN_MAX,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen,
@@ -895,8 +896,11 @@ export function fachAusText(s) {
   return (FAECHER[k] && k !== "anderes") ? k : "";
 }
 
-async function blattLesen(env, seite, kind) {
+async function blattLesen(env, seite, kind, themen) {
   const schueler = SCHUELER_JE_KIND[kind] || SCHUELER_JE_KIND.paul;
+  /* Die Themen, die es im Fach schon gibt (30.09.2026) - das neue Blatt soll
+     einem davon zugeordnet werden, statt einen eigenen Namen zu bekommen. */
+  const themenListe = (themen || []).slice(0, 12);
   const fachWoerter = (FAECHER_JE_KIND[kind] || FAECHER_JE_KIND.paul)
     .map((k) => k === "hsu" ? "hsu (Heimat- und Sachunterricht: Natur, Technik, Ort, Geschichte)"
               : k === "rel" ? "rel (Religion oder Ethik)" : k === "franz" ? "franz (Franzoesisch)"
@@ -961,6 +965,18 @@ async function blattLesen(env, seite, kind) {
               "___ / 20, nummerierte Aufgaben mit Arbeitsauftraegen, Platz zum " +
               "Ausfuellen.\n" +
               "* normal - alles andere.\n" +
+              "THEMA: das Unterrichtsthema, zu dem das Blatt gehoert - zwei bis fuenf " +
+              "Woerter, so wie eine Lehrkraft das Kapitel nennt (z. B. \"Wortarten und " +
+              "Nomen\", \"Schriftlich subtrahieren\", \"Fürth und seine Geschichte\"). " +
+              "Nicht der Titel dieses einen Blattes, sondern das groessere Thema, zu dem " +
+              "mehrere Blaetter gehoeren. " +
+              (themenListe.length
+                ? "Diese Themen gibt es in dem Fach schon: " + themenListe.join("; ") +
+                  ". Passt eines, schreib es GENAU so ab. Nur wenn keines passt, ein neues.\n"
+                : "\n") +
+              "PROBENSTOFF: ja oder nein. nein nur, wenn das Blatt reines Handwerk ist " +
+              "und kein Lernstoff: Heftfuehrung (\"So schreibe ich ins Heft\"), " +
+              "Lineatur, Schreibschrift- oder Schoenschreibuebung. Alles andere: ja.\n" +
               "INHALT: danach eine Zeile je Tatsache, die auf dem Blatt steht - auch " +
               "das, was das Kind selbst hineingeschrieben hat. Jede Zeile beginnt mit " +
               "\"- \". Hoechstens 14 Zeilen, hoechstens 12 Woerter je Zeile. Schreib " +
@@ -1034,6 +1050,7 @@ async function blattLesen(env, seite, kind) {
               "* Frag so, dass die Antwort ein Treffer ist, nie ein Ausschluss: " +
               "\"Welches Wort ist ein Nomen?\" statt \"Welches ist kein Nomen?\".\n" +
               "Beispiel:\nTITEL: Stadtporträt von Fürth\nDATUM: 22.9.26\nFACH: hsu\nSORTE: normal\n" +
+              "THEMA: Fürth und seine Geschichte\nPROBENSTOFF: ja\n" +
               "INHALT:\n- ! Regnitz\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
               "KARTEN:\n" +
               "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000 | Es sind über hunderttausend - schau auf die Zeile mit den Einwohnern.\n" +
@@ -1153,6 +1170,8 @@ async function blattLesen(env, seite, kind) {
     titel: (!titel || /^unklar$/i.test(titel)) ? "" : titel,
     datum: (!datumRoh || /^(keins|kein|keines|unklar)$/i.test(datumRoh)) ? "" : datumRoh,
     fach: fachAusText(zeile("FACH")),
+    thema: themaNormal(zeile("THEMA")),
+    probenstoff: !/^nein/i.test(zeile("PROBENSTOFF").trim()),
   };
 }
 

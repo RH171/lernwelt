@@ -697,6 +697,76 @@ export async function artSetzen(env, kind, id, art) {
   return { ok: false, fehler: "Das finde ich nicht mehr." };
 }
 
+/* Das Thema eines Blattes (30.09.2026).
+ *
+ * Denny, auf die Frage, wie Paul bis zur Probe wiederholt: "Themen finde ich
+ * prinzipiell gut. Die würde ich aber nicht durch die Kinder bestätigen
+ * lassen, sondern du anhand der Überschrift." Das Thema vergibt also das
+ * Lesemodell (blattLesen, Zeile THEMA:) - die Kinder sehen es nur.
+ *
+ * probenstoff:false heisst "Handwerk, kein Lernstoff fuer die Probe"
+ * (Lineatur, Schreibschrift, "So schreibe ich ins Heft"). Die Lehrer-
+ * Gegenpruefung vom 30.09.2026: das sei kein Probenstoff, und das Quiz habe
+ * ernsthaft "Lineal oder Tintenkiller?" gefragt. Solche Blaetter bleiben in
+ * der Ablage, werden aber nicht abgefragt.
+ *
+ * Ein Thema ist ein kurzer Name (hoechstens 40 Zeichen), so wie eine
+ * Lehrkraft das Kapitel nennt. Exportiert fuer pruefe-themen.mjs. */
+export function themaNormal(s) {
+  const t = String(s || "").replace(/["„“]/g, "").replace(/\s+/g, " ").trim();
+  if (!t || /^(unklar|keins?|keines|-+|–)$/i.test(t)) return "";
+  return t.slice(0, 40);
+}
+
+/* Die Themen, die es in einem Fach schon gibt - damit das Modell ein neues
+   Blatt einem bestehenden Thema zuordnet, statt fuer jedes Blatt einen neuen
+   Namen zu erfinden. Haeufigste zuerst. */
+export function themenImFach(eintraege, fach) {
+  const zahl = {};
+  (eintraege || []).forEach((x) => {
+    if (!x || x.sichtbar === false || (x.fach || "") !== fach) return;
+    const t = themaNormal(x.thema);
+    if (t && x.probenstoff !== false) zahl[t] = (zahl[t] || 0) + 1;
+  });
+  return Object.keys(zahl).sort((a, b) => zahl[b] - zahl[a] || a.localeCompare(b));
+}
+
+/* Mehrere Themen auf einmal setzen: zuordnung = { <id>: {thema, probenstoff} }.
+   Ein Schreibvorgang je Monat, nicht je Blatt - bei 1000 am Tag zaehlt das.
+   Erst lesen, dann schreiben: Gleiches kostet nichts. */
+export async function themenSetzen(env, kind, zuordnung) {
+  if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
+  if (!env || !env.PAUL_KV) return { ok: false, fehler: "Der Speicher ist gerade nicht da." };
+  const offen = Object.assign({}, zuordnung || {});
+  const heute = heuteBerlin();
+  let gesetzt = 0, schreibvorgaenge = 0;
+  for (let i = 0; i < MONATE_ZURUECK && Object.keys(offen).length; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try { roh = await env.PAUL_KV.get(LISTE(kind, monat)); }
+    catch (e) { return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
+    liste.forEach((e) => {
+      const z = offen[e.id];
+      if (!z) return;
+      delete offen[e.id];
+      const t = themaNormal(z.thema);
+      if (t) e.thema = t; else delete e.thema;
+      if (z.probenstoff === false) e.probenstoff = false; else delete e.probenstoff;
+      gesetzt++;
+    });
+    const neu = JSON.stringify(liste);
+    if (roh && neu !== roh) {
+      try { await env.PAUL_KV.put(LISTE(kind, monat), neu); schreibvorgaenge++; }
+      catch (e) { return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." }; }
+    }
+  }
+  return { ok: true, gesetzt, fehlen: Object.keys(offen), schreibvorgaenge };
+}
+
 /* Das Fach eines Eintrags aendern und/oder den Fach-Vorschlag vermerken.
  *
  * Denny am 25.09.2026: "Egal, welches Datum Paul eintritt, aber er ...
