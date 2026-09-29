@@ -64,6 +64,7 @@
   .stoff .wer{position:absolute;top:6px;left:6px;background:rgba(20,22,40,.72);color:#fff;
               border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700}
   .stoff-leer{opacity:.75;font-size:15px;margin:8px 0 0}
+  .vorschau-zeit{margin:0 0 8px;font-weight:700;font-size:15px;color:var(--muted,#5b6070)}
   .vorschauen{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
               gap:12px;margin-bottom:20px}
   .vor{background:var(--karte,#fff);border:1px solid var(--linie,#e4e7f0);border-radius:14px;
@@ -714,7 +715,14 @@
     // Ist ein Kind gewaehlt, steht nur dessen Vorschau da - darunter folgt
     // ohnehin sein eigenes Anwesenheitsband ("War Paul da?").
     var welche = KIND ? [KIND] : ["paul","leon","helena"];
-    kasten.innerHTML = '<div class="vorschauen">' +
+    /* Wofuer die Zahlen stehen (Denny, 30.09.2026, mit einem Bild der drei
+       Kacheln: "Ich kann an der Kachel nicht sehen, auf welchen Zeitraum sich
+       das bezieht."). Es ist der heutige Tag in deutscher Zeit, ab 0 Uhr. */
+    var heuteIso = (ANWESEND && ANWESEND.heute) || new Date().toLocaleDateString("sv-SE");
+    var wt = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"][new Date(heuteIso + "T12:00:00").getDay()];
+    var hp = heuteIso.split("-");
+    kasten.innerHTML = '<p class="vorschau-zeit">Heute \u00B7 ' + wt + ", " + hp[2] + "." + hp[1] + "." + hp[0] +
+      ' \u00B7 seit 0 Uhr</p><div class="vorschauen">' +
       welche.filter(function(k){ return DATEN[k] || (ANWESEND && ANWESEND.kinder && ANWESEND.kinder[k]); })
             .map(vorschauKarte).join("") + "</div>";
     Array.prototype.forEach.call(kasten.querySelectorAll(".vor"), function(b){

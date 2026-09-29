@@ -469,16 +469,18 @@ function kalenderwoche(iso) {
   return Math.ceil(((t - jahresbeginn) / 86400000 + 1) / 7);
 }
 
+/* Deutsche Zeit, nicht die des Servers (30.09.2026). Der Worker laeuft in
+   UTC: Um 1:26 Uhr nachts stand im Elternbereich unter "Heute" noch der
+   ganze Vortag - Denny fand die Zahlen, ohne zu sehen, wofuer sie stehen. */
 function tagSchluessel(iso) {
-  const d = new Date(iso || Date.now());
-  if (isNaN(d)) return "?";
-  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") +
-         "-" + String(d.getDate()).padStart(2, "0");
+  const t = berlinTag(iso || new Date().toISOString());
+  return t || "?";
 }
 
 function wochenSchluessel(iso) {
-  const d = new Date(iso || Date.now());
-  if (isNaN(d)) return "?";
+  const t = berlinTag(iso || new Date().toISOString());
+  if (!t) return "?";
+  const d = new Date(t + "T12:00:00Z");   // Montag der deutschen Woche
   const tag = (d.getUTCDay() + 6) % 7;
   d.setUTCDate(d.getUTCDate() - tag);
   return d.toISOString().slice(0, 10);
