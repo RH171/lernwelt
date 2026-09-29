@@ -142,6 +142,26 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
 
+  /* Das Tagebuch der Woche fuer das Kind selbst (Teil 2 B, Denny 29.09.2026):
+     GET /api/statistik?eigene=1&kind=paul. Nur die eigene Woche, nur Minuten
+     und je Aufgabe "beim ersten Tipp gewusst" ja/nein - keine Merkmale, keine
+     Schwaechen, keine Vergleiche (Beschluss vom 20.09.2026). Kinder-Ausweis
+     reicht, wie bei /api/noten?eigene=1. */
+  if (new URL(request.url).searchParams.get("eigene") === "1") {
+    const kind = kindAus(request, null);
+    if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+    if (brauchtAusweis(env, kind) && !(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+      return json(401, { ok: false, fehler: "Nicht angemeldet." });
+    let liste = [];
+    try {
+      const roh = await env.PAUL_KV.get(RUNDEN(kind));
+      liste = roh ? JSON.parse(roh) : [];
+    } catch (e) {
+      return json(503, { ok: false, fehler: "Dein Tagebuch kommt gerade nicht." });
+    }
+    return json(200, Object.assign({ ok: true }, eigeneWoche(liste, new Date())));
+  }
+
   // Die Auswertung ist für die Eltern, nicht für die Kinder.
   const elternGeheim = geheimFuer(env, "eltern");
   if (!elternGeheim) return json(500, { ok: false, fehler: "Auf dem Server fehlt der Zugangscode." });
@@ -448,6 +468,46 @@ function wochenSchluessel(iso) {
   const tag = (d.getUTCDay() + 6) % 7;
   d.setUTCDate(d.getUTCDate() - tag);
   return d.toISOString().slice(0, 10);
+}
+
+/* Deutsche Zeit: "Montag" meint Pauls Montag, nicht den in UTC. */
+export function berlinTag(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(d);
+}
+
+/* Montag bis Sonntag der laufenden Woche, je Tag Minuten und ein Punkt je
+   Aufgabe: 1 = beim ersten Tipp gewusst, 0 = erst nachgeschaut. Besuch und
+   Bauen zaehlen nicht, Runden eines Erwachsenen kommen gar nicht erst an
+   (onRequestPost). Hoechstens 60 Punkte je Tag, der Rest als Zahl. */
+export function eigeneWoche(liste, jetzt) {
+  const heute = berlinTag(jetzt);
+  const [j, m, t] = heute.split("-").map(Number);
+  const mittag = new Date(Date.UTC(j, m - 1, t, 12));
+  const wt = (mittag.getUTCDay() + 6) % 7;
+  const tage = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mittag.getTime() + (i - wt) * 86400000);
+    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0 });
+  }
+  const je = {};
+  tage.forEach((x) => { je[x.datum] = x; });
+  const alt = [...(liste || [])].reverse();   // aelteste zuerst, damit die Punkte in Spielreihenfolge stehen
+  for (const r of alt) {
+    if (!r || r.nurBesuch || r.zeitart === "bauen") continue;
+    const tag = je[berlinTag(r.zeit)];
+    if (!tag) continue;
+    tag.sekunden += Math.max(0, Number(r.sekunden) || 0);
+    for (const a of r.aufgaben || []) {
+      if (!a || a.art === "besuch" || a.art === "bauen") continue;
+      if (tag.punkte.length < 60) tag.punkte.push(a.stimmt ? 1 : 0); else tag.mehr++;
+    }
+  }
+  return {
+    heute,
+    tage: tage.map((x) => ({ datum: x.datum, minuten: Math.round(x.sekunden / 60), punkte: x.punkte, mehr: x.mehr })),
+  };
 }
 
 function json(status, daten) {
