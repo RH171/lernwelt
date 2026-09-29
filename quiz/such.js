@@ -33,10 +33,7 @@
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
-  /* null = der Motor hat noch nicht gesagt, ob eine Blattliste kommt. Solange
-     bleibt die alte Such-Karte zu - sonst blitzt sie beim Laden auf (Denny,
-     28.09.2026). */
-  var suchMap = {}, suchListe = [], blattListeDa = null;
+  var suchMap = {}, suchListe = [];
   window.QUIZ_BLATT_EXTRA = function(b){
     var x = suchMap[b.id];
     if (!x) return null;
@@ -82,7 +79,7 @@
   function suchKarteZeigen(){
     $("such-wahl").classList.add("verborgen");
   }
-  window.QUIZ_NACH_BLAETTERN = function(da){ blattListeDa = !!da; suchKarteZeigen(); };
+  window.QUIZ_NACH_BLAETTERN = function(){ suchKarteZeigen(); };
   function merken(blattId, liste){
     /* Quizfragen aus der Tagesrunde (28.09.2026) gehen als Quiz-Antwort an
        ihren Lernpunkt, Fundkarten wie bisher als "fund". */
