@@ -78,12 +78,26 @@
     nein.addEventListener("click", function () { antwort(was + "-ablehnen"); });
     return d;
   }
+  /* "Heute lernen" nur zeigen, wenn es Karten gibt (29.09.2026): Helena und
+     Leon hatten noch kein Blatt - ein Knopf, hinter dem nichts kommt, waere
+     schlimmer als keiner. Steht auf der Seite data-nurmitkarten="1". */
+  function heuteZeigen(eintraege) {
+    var h = $("heuteLernen");
+    if (!h || h.getAttribute("data-nurmitkarten") !== "1") return;
+    var n = 0;
+    (eintraege || []).forEach(function (x) {
+      if (x && x.sichtbar !== false && Array.isArray(x.karten)) n += x.karten.length;
+    });
+    h.style.display = n >= 3 ? "" : "none";
+  }
   function nachsehen() {
-    if (!$("nachsehen") || !$("nachsehenListe")) return;
+    if (!$("nachsehen") && !$("heuteLernen")) return;
     fetch("/api/schulstoff?kind=" + encodeURIComponent(KIND) + "&monate=3", { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok) return;
+        heuteZeigen(j.eintraege);
+        if (!$("nachsehen") || !$("nachsehenListe")) return;
         var liste = $("nachsehenListe"); liste.innerHTML = "";
         (j.eintraege || []).forEach(function (e) {
           offen(e).forEach(function (w) { liste.appendChild(punkt(e, w)); });
