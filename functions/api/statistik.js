@@ -504,7 +504,7 @@ export function eigeneWoche(liste, jetzt, extra) {
   const tage = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(mittag.getTime() + (i - wt) * 86400000);
-    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0, spaeter: 0 });
+    tage.push({ datum: d.toISOString().slice(0, 10), sekunden: 0, punkte: [], mehr: 0, gewusst: 0, spaeter: 0, leer: 0 });
   }
   const je = {};
   tage.forEach((x) => { je[x.datum] = x; });
@@ -529,6 +529,7 @@ export function eigeneWoche(liste, jetzt, extra) {
       const wert = a.stimmt ? 1 : (spaeterGeschafft(a, r.zeit, punktId(r.zeit, i)) ? 2 : 0);
       if (a.stimmt) tag.gewusst++;
       if (wert === 2) tag.spaeter++;
+      if (wert === 0) tag.leer++;
       if (tag.punkte.length < 60) tag.punkte.push(wert); else tag.mehr++;
     });
   }
@@ -542,7 +543,7 @@ export function eigeneWoche(liste, jetzt, extra) {
       const k = offen[d.datum] || [];
       const n = d.datum <= heute ? k.reduce((s, c) => s + c.ids.length, 0) : 0;
       return { datum: d.datum, minuten: Math.round(d.sekunden / 60), punkte: d.punkte, mehr: d.mehr,
-        gewusst: d.gewusst, spaeter: d.spaeter, gesamt: d.punkte.length + d.mehr, kreise: n };
+        gewusst: d.gewusst, spaeter: d.spaeter, gesamt: d.punkte.length + d.mehr, leer: d.leer, kreise: n };
     }),
   };
 }

@@ -228,7 +228,7 @@
       z.appendChild(p);
       alle += t.gesamt || 0; gewusst += t.gewusst || 0; spaeter += t.spaeter || 0;
       var n = t.kreise || 0; offenAlle += n;
-      var leerN = (t.punkte || []).filter(function (v) { return v === 0; }).length;
+      var leerN = t.leer || 0;
       if (n) {
         z.classList.add("kann"); z.setAttribute("role", "button"); z.tabIndex = 0; z.setAttribute("aria-expanded", "false");
         z.appendChild(el("span", "wfuell", "✨ " + mehrz(n) + " " + (W.fuellen || "füllen") + " ›"));

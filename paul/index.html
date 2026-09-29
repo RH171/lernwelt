@@ -1298,7 +1298,7 @@
       /* Kreise fuellen (Denny, 29.09.2026): Paul tippt einen Tag an, darunter
          klappt auf, wie viele Kreise leer sind, und er entscheidet selbst. */
       const n = t.kreise || 0;
-      const leerN = (t.punkte || []).filter(function(v){ return v === 0; }).length;
+      const leerN = t.leer || 0;
       offenAlle += n;
       if(n){
         z.classList.add("kann");
