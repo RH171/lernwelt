@@ -108,7 +108,7 @@
   .punkte i.g{background:var(--gut)} .punkte i.t{background:#b5620a} .punkte i.n{outline:3px solid var(--leon);outline-offset:1px}
   .nachspiel{background:#fff7e6;color:#7a3c05;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px}
 
-  .ende{text-align:center;max-width:780px;margin:0 auto}
+  .ende{text-align:center;max-width:780px;margin:0 auto;display:flex;flex-direction:column}
   .ende .gross{font-size:56px}
   .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
   .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 14px}
@@ -117,7 +117,11 @@
   .rueckschau b{font-family:var(--rund);font-size:19px;display:block;margin-bottom:4px}
   .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#eceff4;color:var(--ink);
     font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
-  @media (max-width:520px){ .rueckschau{grid-template-columns:1fr} .tuer{min-height:104px} .lupe{min-height:168px} }
+  /* Auf einem kleinen Handy ist die Rueckschau mit 12 Woertern laenger als der
+     Schirm - dann wandert "Neue Woerter" davor, damit es ohne Scrollen dasteht
+     (gemessen 30.09.2026: iPhone SE, 162px unter dem Rand). */
+  @media (max-width:520px){ .rueckschau{grid-template-columns:1fr;order:9} .tuer{min-height:104px} .lupe{min-height:168px}
+    .ende .knopf2{order:10} }
   @media (max-height:560px){ .lupe .bild{display:none} .lupe{min-height:130px} .tuer{min-height:96px} }
   canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
 </style>
