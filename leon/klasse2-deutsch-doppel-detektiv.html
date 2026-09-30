@@ -230,6 +230,10 @@
   function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
   function schutz(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
+  // Wie lange das geloeste Wort stehen bleibt. Die Messung stellt es herunter
+  // (window.__doppel.tempo) - sonst dauert ein Durchlauf ueber alle Geraete
+  // laenger als jedes Zeitfenster.
+  var PAUSE_GUT = 1500, PAUSE_HILFE = 2100;
   var liste = [], pos = 0, fehler = 0, sauber = 0, aufgeholt = 0, verpasst = [], nachspielzeit = false,
       ergebnis = [], gesperrt = false, runde = [];
 
@@ -304,7 +308,7 @@
       sprich(wort(w));
       punkteMalen();
       if (stimmt) konfetti(false);
-      setTimeout(weiter, stimmt ? 1500 : 2100);
+      setTimeout(weiter, stimmt ? PAUSE_GUT : PAUSE_HILFE);
     } else {
       fehler++;
       var fw = $("wortfeld"); fw.classList.remove("wackelt"); void fw.offsetWidth; fw.classList.add("wackelt");
@@ -370,7 +374,8 @@
 
   window.__doppel = { WOERTER: WOERTER, wort: wort, selbstlaut: selbstlaut, starten: starten,
     zustand: function(){ return { pos: pos, liste: liste, nachspielzeit: nachspielzeit, sauber: sauber }; },
-    tippe: tippen };
+    tippe: tippen,
+    tempo: function(gut, hilfe){ PAUSE_GUT = gut; PAUSE_HILFE = hilfe; } };
 })();
 </script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
