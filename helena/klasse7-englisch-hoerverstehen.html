@@ -130,6 +130,27 @@
   .spieler.klebt .stand{display:none}
   .spieler.klebt .klebzeit{display:inline-block}
   .spieler.klebt .klebauf{display:inline-flex}
+  /* Geschrumpft muss alles in EINE Zeile passen - sonst wird aus einer Reihe
+     eine Wand. Gemessen 30.09.2026: mit den Texten "⏪ 10 s" brach die Zeile
+     auf dem 360x360-Schirm (Tastatur offen) auf 229 px um. Die Knoepfe
+     bleiben 44 px gross, nur die Beschriftung wird zum Zeichen. */
+  .spieler.klebt .zeile{flex-wrap:nowrap;gap:6px}
+  .spieler.klebt .start{width:48px;height:48px;font-size:21px}
+  .spieler.klebt .sprung{min-width:48px;min-height:48px;padding:0;font-size:0}
+  .spieler.klebt #zurueck10::after{content:"⏪";font:700 19px/1 var(--rund)}
+  .spieler.klebt #vor10::after{content:"⏩";font:700 19px/1 var(--rund)}
+  .spieler.klebt #klebauf::after{content:"⤢";font:700 19px/1 var(--rund)}
+  .spieler.klebt .klebzeit{flex:1;min-width:0}
+  /* Auch der Stille-Hinweis wird geschrumpft zur Zeile: der Satz auf eine
+     Zeile, der Weiter-Knopf daneben. Gemessen 30.09.2026: aufgeklappt waren
+     es 143 px - zusammen mit der Knopfzeile 223 von 360 px, wenn die Tastatur
+     offen ist. Der Hinweis bleibt, er nimmt nur keinen halben Schirm mehr. */
+  .spieler.klebt .pausenbox{margin-top:8px;padding:6px 8px}
+  .spieler.klebt .pausenbox.da{display:flex;align-items:center;gap:8px}
+  .spieler.klebt .pausenbox p{margin:0;flex:1;min-width:0;font-size:13px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .spieler.klebt .pausenbox button{width:auto;min-width:48px;min-height:44px;flex:0 0 auto;font-size:0}
+  .spieler.klebt .pausenbox button::after{content:"⏭";font:800 18px/1 var(--rund)}
   .knopf.leise{background:transparent;color:var(--muted);border:1px dashed var(--line);
     min-height:48px;font-size:14.5px}
 
