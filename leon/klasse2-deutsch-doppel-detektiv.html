@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Der Doppel-Detektiv</title>
+<!--
+  Der Doppel-Detektiv (30.09.2026) - gebaut nach Leons Meldung 5rmy94r8mz.
+
+  ANLASS: Leon hat sein Laufdiktat "Herbst" fotografiert und geschrieben
+  "Bau mir eine Uebung dazu." In seinem Diktat steckt zweimal DERSELBE
+  Gedanke: Nach einem kurz gesprochenen Selbstlaut kommt der Mitlaut doppelt.
+
+  UEBEN, NICHT LOESEN (Dennys Regel vom 16.09.2026): KEIN Wort aus seinem
+  Diktat kommt hier vor - weder die Saetze noch die Woerter, bei denen er sich
+  vertan hat. Geuebt wird die REGEL an ganz anderen Woertern. Die Liste ist
+  gegen das Blatt geprueft (siehe VERBOTEN unten), damit nie ein Wort vom
+  Blatt samt seiner Loesung hier auftaucht.
+
+  WAS ES UEBT (LehrplanPLUS Bayern, Deutsch 1/2, Lernbereich 4.1 "Richtig
+  schreiben"): Woerter mit doppeltem Mitlaut nach kurzem Selbstlaut. Das ist
+  KEINE Auswendiglern-Sache, sondern eine Hoer-Sache - deshalb wird jedes Wort
+  vorgelesen, und die Hilfe heisst nie "merk es dir", sondern "sprich es laut".
+
+  WIE ES AUFGEBAUT IST
+  - Ein Wort mit einer Luecke ("So__e"), zwei grosse Tueren: ein Mitlaut oder
+    zwei. Mehr Auswahl waere fuer einen Leseanfaenger nur Lesearbeit.
+  - Die Haelfte der Woerter hat einen LANGEN Selbstlaut (Ofen, Nase) - sonst
+    lernt Leon "immer zwei" statt der Regel. Paare wie Huete/Huette sind mit
+    Absicht drin.
+  - Kein Druck ueber Verlustangst (Bauregeln): keine Uhr, kein Leben weg.
+    Erster Fehlgriff -> Einladung, das Wort lang und kurz zu hoeren. Zweiter
+    -> die richtige Tuer blinkt, er tippt sie selbst.
+  - Nach jedem Treffer steht das ganze Wort da, der Selbstlaut farbig, dazu
+    der Grund in einem kurzen Satz.
+  - Nachspielzeit am Ende: was daneben ging, kommt nochmal.
+
+  AN DIE ELTERN geht ueber lernstand.js je Wort das Merkmal
+  "doppelte mitlaute" (erster Versuch zaehlt) - genau das Merkmal, das die
+  Sofortantwort auf sein Diktat vergeben hat.
+  RUECKSCHAU in localStorage "leon-doppel": geloeste Woerter und Runden.
+  Geschrieben nur am Ende einer Runde.
+
+  VERBOTEN (steht auf seinem Blatt, darf hier nie vorkommen): Herbst, fallen,
+  Blaetter, Baeume, Eichhoernchen, sammeln, Nuesse, Winter, findest, Pilze,
+  Wald, Igel, verstecken, gerne, Laub, manchmal, lassen, Kinder, Drachen.
+  Wer die Liste erweitert, prueft mit: node pruefe-doppel-detektiv.mjs
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<script src="/spiel-dunkel.js?v=43f8226f" data-flaeche=".huelle" data-schluessel="leon-theme" data-standard="light"></script>
+<style>
+  :root{
+    --bg:#eef6f0; --card:#fff; --ink:#15171f; --muted:#5b6070; --line:#e3e7ee;
+    --leon:#047857; --leon-dunkel:#065f46; --gut:#0b7a47; --kurz:#b42318; --lang:#1d4ed8;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .huelle{max-width:900px;margin:0 auto}
+  .verborgen{display:none!important}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1}
+  .zaehler{font:700 16px/1 var(--rund);background:#fff;border:1px solid var(--line);border-radius:999px;padding:12px 14px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .start{text-align:center;max-width:720px;margin:0 auto}
+  .start h2{font-family:var(--rund);font-size:26px;margin:4px 0 6px}
+  .start p{color:var(--muted);margin:0 0 14px;font-size:16px;line-height:1.5}
+  .regel{background:#f0f7f3;border:1px solid #cfe6db;border-radius:16px;padding:14px;margin:0 0 16px;text-align:left;font-size:16px;line-height:1.6}
+  .regel b{font-family:var(--rund)}
+  .los{display:block;width:100%;border:none;border-radius:16px;background:var(--leon);color:#fff;font:700 20px/1 var(--rund);padding:18px;cursor:pointer;min-height:58px}
+  .rueckblick{margin-top:14px;color:var(--leon-dunkel);font-weight:700;font-size:15px}
+
+  /* Die Lupe: hier steht das Wort mit der Luecke */
+  .lupe{position:relative;background:linear-gradient(180deg,#e7ecf3,#d7dee8);border-radius:22px;padding:16px 14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:190px;overflow:hidden}
+  .lupe .bild{font-size:clamp(50px,9vw,74px);line-height:1}
+  .wortfeld{font:800 clamp(30px,6.4vw,48px)/1.1 var(--rund);background:#fff;border-radius:14px;padding:10px 18px;
+    box-shadow:0 4px 0 rgba(0,0,0,.12);letter-spacing:.02em;max-width:100%;word-break:break-word;text-align:center}
+  .wortfeld .luecke{color:var(--leon);border-bottom:5px solid var(--leon);padding:0 2px}
+  .wortfeld .selbstlaut{color:var(--kurz)}
+  .wortfeld.langer .selbstlaut{color:var(--lang)}
+  .wortfeld.wackelt{animation:wackeln .4s}
+  @keyframes wackeln{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-7px)}80%{transform:translateX(6px)}}
+  .hoeren{position:absolute;right:12px;top:12px;width:54px;height:54px;border-radius:50%;border:none;background:#fff;font-size:24px;cursor:pointer}
+  .hinweis{min-height:48px;text-align:center;color:#7a3c05;font-weight:700;font-size:16px;line-height:1.4;margin:8px 4px 2px}
+  .hinweis.gut{color:var(--gut)}
+
+  /* Die zwei Tueren */
+  .tueren{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+  .tuer{border:none;border-radius:20px;color:#fff;cursor:pointer;padding:14px 8px;min-height:120px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:0 6px 0 rgba(0,0,0,.18);background:var(--leon)}
+  .tuer:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.18)}
+  .tuer .schrift{font:800 clamp(34px,7vw,52px)/1 var(--rund);background:rgba(255,255,255,.18);border-radius:12px;padding:10px 0;width:86%}
+  .tuer .unterzeile{font:600 14px/1.2 var(--font);opacity:.95}
+  .tuer.zwei{background:#7c3f00}
+  .tuer.blinkt{animation:jubel .6s 2}
+  @keyframes jubel{40%{transform:scale(1.07)}}
+
+  .unten{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .punkte{display:flex;gap:5px;flex-wrap:wrap}
+  .punkte i{width:12px;height:12px;border-radius:50%;background:#c4cad6;display:block}
+  .punkte i.g{background:var(--gut)} .punkte i.t{background:#b5620a} .punkte i.n{outline:3px solid var(--leon);outline-offset:1px}
+  .nachspiel{background:#fff7e6;color:#7a3c05;border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px}
+
+  .ende{text-align:center;max-width:780px;margin:0 auto}
+  .ende .gross{font-size:56px}
+  .ende h2{font-family:var(--rund);font-size:28px;margin:6px 0}
+  .ende p{color:var(--muted);font-size:17px;line-height:1.5;margin:6px 0 14px}
+  .rueckschau{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px;text-align:left}
+  .rueckschau div{border-radius:14px;padding:12px;color:#fff;font-size:17px;line-height:1.7}
+  .rueckschau b{font-family:var(--rund);font-size:19px;display:block;margin-bottom:4px}
+  .knopf2{display:block;width:100%;margin-top:10px;border:none;border-radius:16px;background:#eceff4;color:var(--ink);
+    font:700 18px/1 var(--rund);padding:16px;cursor:pointer;min-height:54px;text-decoration:none;text-align:center}
+  @media (max-width:520px){ .rueckschau{grid-template-columns:1fr} .tuer{min-height:104px} .lupe{min-height:168px} }
+  @media (max-height:560px){ .lupe .bild{display:none} .lupe{min-height:130px} .tuer{min-height:96px} }
+  canvas.konfetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/leon/#anfassen">‹ Leons Spiele</a>
+    <h1>Der Doppel-Detektiv</h1>
+    <div class="zaehler verborgen" id="zaehler"></div>
+  </header>
+
+  <section class="karte start" id="sicht-start">
+    <div style="font-size:56px">🔍</div>
+    <h2>Einer oder zwei?</h2>
+    <p>In jedem Wort fehlt ein Buchstabe. Du hörst das Wort und findest heraus: Kommt er einmal oder doppelt?</p>
+    <div class="regel">
+      <b>Dein Detektiv-Trick:</b><br>
+      Sprich das Wort laut. Hör auf den Selbstlaut <b>vor</b> der Lücke.<br>
+      🔴 Klingt er <b>kurz</b> wie das <span style="color:var(--kurz);font-weight:800">o</span> in <b>Sonne</b>? Dann kommt der Buchstabe <b>doppelt</b>.<br>
+      🔵 Klingt er <b>lang</b> wie das <span style="color:var(--lang);font-weight:800">o</span> in <b>Ofen</b>? Dann kommt er <b>einmal</b>.
+    </div>
+    <button class="los" id="los">Lupe raus!</button>
+    <div class="rueckblick verborgen" id="rueckblick"></div>
+  </section>
+
+  <section class="verborgen" id="sicht-spiel">
+    <div class="lupe" id="lupe">
+      <span class="bild" id="bild"></span>
+      <div class="wortfeld" id="wortfeld"></div>
+      <button class="hoeren" id="hoeren" aria-label="Wort anhören">🔊</button>
+    </div>
+    <div class="hinweis" id="hinweis"></div>
+    <div class="tueren">
+      <button class="tuer eins" id="tuer-eins" data-n="1"><span class="schrift" id="schrift-eins"></span><span class="unterzeile">einmal</span></button>
+      <button class="tuer zwei" id="tuer-zwei" data-n="2"><span class="schrift" id="schrift-zwei"></span><span class="unterzeile">doppelt</span></button>
+    </div>
+    <div class="unten">
+      <div class="punkte" id="punkte"></div>
+      <span class="nachspiel verborgen" id="nachspiel"></span>
+    </div>
+  </section>
+
+  <section class="karte ende verborgen" id="sicht-ende">
+    <div class="gross">🏅</div>
+    <h2 id="ende-titel"></h2>
+    <p id="ende-text"></p>
+    <div class="rueckschau" id="rueckschau"></div>
+    <button class="los" id="nochmal">Neue Wörter</button>
+    <a class="knopf2" href="/leon/#anfassen">Zurück zu Leons Spielen</a>
+  </section>
+</div>
+<canvas class="konfetti" id="konfetti"></canvas>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  // [Bild, vor der Luecke, Buchstabe, nach der Luecke, doppelt?, Selbstlaut-Position in "vor"]
+  // "pos" zeigt auf den Selbstlaut, der ueber die Regel entscheidet - er wird
+  // nach der Loesung farbig. Kein Wort aus Leons Diktat (siehe VERBOTEN oben).
+  var WOERTER = [
+    // doppelt - der Selbstlaut davor klingt kurz
+    ["☀️","So","n","e",true,1], ["⚽","Ba","l","",true,1], ["💧","Wa","s","er",true,1],
+    ["🧈","Bu","t","er",true,1], ["☕","Ta","s","e",true,1], ["🍽️","Te","l","er",true,1],
+    ["🧳","Ko","f","er",true,1], ["🐵","A","f","e",true,0], ["🍲","Su","p","e",true,1],
+    ["🪜","Tre","p","e",true,2], ["👓","Bri","l","e",true,2], ["🔨","Ha","m","er",true,1],
+    ["🏖️","So","m","er",true,1], ["🛏️","Zi","m","er",true,1], ["🛴","Ro","l","er",true,1],
+    ["🌦️","We","t","er",true,1], ["🏃","re","n","en",true,1], ["🧶","Wo","l","e",true,1],
+    ["🏫","Kla","s","e",true,3], ["🛖","Hü","t","e",true,1], ["🏊","schwi","m","en",true,3],
+    ["🔢","Nu","m","er",true,1], ["🛌","Ki","s","en",true,1], ["🎸","Gita","r","e",true,3],
+    // einmal - der Selbstlaut davor klingt lang
+    ["🔥","O","f","en",false,0], ["🎩","Hü","t","e",false,1], ["👃","Na","s","e",false,1],
+    ["🐰","Ha","s","e",false,1], ["🌹","Ro","s","e",false,1], ["📦","Do","s","e",false,1],
+    ["👖","Ho","s","e",false,1], ["🌿","Wie","s","e",false,2], ["🐝","Bie","n","e",false,2],
+    ["🧹","Be","s","en",false,1], ["🌷","Blu","m","e",false,2], ["🏫","Schu","l","e",false,3],
+    ["🎬","Ki","n","o",false,1], ["🍌","Bana","n","e",false,3], ["🍅","Toma","t","e",false,3],
+    ["🔍","Lu","p","e",false,1], ["🏺","Va","s","e",false,1], ["🐞","Kä","f","er",false,1]
+  ];
+  var RUNDE = 12;
+
+  // Huete und Huette stehen beide drin - dasselbe Bild waere verwirrend, das
+  // Emoji unterscheidet sie (Hut vs. Huette).
+  function wort(w){ return w[1] + (w[4] ? w[2] + w[2] : w[2]) + w[3]; }
+
+  var SPEICHER = "leon-doppel";
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+  function rueckblickMalen(){
+    var d = lesen();
+    if (d.woerter){ $("rueckblick").textContent = "🔍 Schon " + d.woerter + " Wörter aufgeklärt."; $("rueckblick").classList.remove("verborgen"); }
+  }
+  rueckblickMalen();
+
+  var kannSprechen = typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined";
+  function sprich(t, tempo){
+    if (!kannSprechen || document.hidden) return;
+    try {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = tempo || .85;
+      var st = (speechSynthesis.getVoices() || []).filter(function(v){ return /^de/i.test(v.lang); })[0];
+      if (st) u.voice = st;
+      speechSynthesis.speak(u);
+    } catch(e){}
+  }
+  if (!kannSprechen) $("hoeren").classList.add("verborgen");
+  document.addEventListener("visibilitychange", function(){ if (document.hidden && kannSprechen) try { speechSynthesis.cancel(); } catch(e){} });
+
+  function mische(f){ for (var i = f.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)); var t=f[i]; f[i]=f[j]; f[j]=t; } return f; }
+  function schutz(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  var liste = [], pos = 0, fehler = 0, sauber = 0, aufgeholt = 0, verpasst = [], nachspielzeit = false,
+      ergebnis = [], gesperrt = false, runde = [];
+
+  function zeige(n){
+    ["start", "spiel", "ende"].forEach(function(x){ $("sicht-" + x).classList.toggle("verborgen", x !== n); });
+    $("zaehler").classList.toggle("verborgen", n !== "spiel");
+    window.scrollTo(0, 0);
+  }
+
+  function starten(){
+    // Haelfte doppelt, Haelfte einfach - sonst lernt er "immer zwei".
+    var dop = mische(WOERTER.filter(function(w){ return w[4]; }).slice()).slice(0, RUNDE/2);
+    var ein = mische(WOERTER.filter(function(w){ return !w[4]; }).slice()).slice(0, RUNDE/2);
+    liste = mische(dop.concat(ein));
+    runde = liste.slice();
+    pos = 0; sauber = 0; aufgeholt = 0; verpasst = []; nachspielzeit = false;
+    ergebnis = liste.map(function(){ return ""; });
+    $("nachspiel").classList.add("verborgen");
+    zeige("spiel");
+    naechste();
+  }
+
+  function punkteMalen(){
+    $("punkte").innerHTML = (nachspielzeit ? [] : ergebnis).map(function(e, i){ return '<i class="' + e + (i === pos ? " n" : "") + '"></i>'; }).join("");
+    $("zaehler").textContent = "🔍 " + (sauber + aufgeholt);
+  }
+
+  function luecke(w){
+    return schutz(w[1]) + '<span class="luecke">_</span>' + schutz(w[3]);
+  }
+  function geloest(w){
+    var vor = w[1], p = w[5];
+    var mit = vor.slice(0, p) + '<span class="selbstlaut">' + schutz(vor.charAt(p)) + '</span>' + schutz(vor.slice(p + 1));
+    return schutz(vor.slice(0, p)) + mit.slice(vor.slice(0, p).length) + schutz(w[4] ? w[2] + w[2] : w[2]) + schutz(w[3]);
+  }
+
+  function naechste(){
+    var w = liste[pos];
+    fehler = 0; gesperrt = false;
+    $("bild").textContent = w[0];
+    var f = $("wortfeld");
+    f.className = "wortfeld";
+    f.innerHTML = luecke(w);
+    $("schrift-eins").textContent = w[2];
+    $("schrift-zwei").textContent = w[2] + w[2];
+    $("tuer-eins").classList.remove("blinkt");
+    $("tuer-zwei").classList.remove("blinkt");
+    $("hinweis").textContent = "";
+    $("hinweis").className = "hinweis";
+    punkteMalen();
+    setTimeout(function(){ sprich(wort(w)); }, 300);
+  }
+
+  function tippen(n){
+    if (gesperrt) return;
+    var w = liste[pos], richtig = w[4] ? 2 : 1;
+    if (n === richtig){
+      gesperrt = true;
+      var stimmt = fehler === 0;
+      try { window.lernstand && window.lernstand.antwort(stimmt, "doppelte mitlaute", stimmt ? "" : "erst daneben", wort(w)); } catch(e){}
+      if (nachspielzeit){ if (stimmt) aufgeholt++; }
+      else { ergebnis[pos] = stimmt ? "g" : "t"; if (stimmt) sauber++; else verpasst.push(w); }
+      var f = $("wortfeld");
+      f.className = "wortfeld" + (w[4] ? "" : " langer");
+      f.innerHTML = geloest(w);
+      $("hinweis").className = "hinweis gut";
+      $("hinweis").textContent = w[4]
+        ? "Richtig! Das " + w[1].charAt(w[5]) + " klingt kurz – darum " + w[2] + w[2] + "."
+        : "Richtig! Das " + w[1].charAt(w[5]) + " klingt lang – darum nur ein " + w[2] + ".";
+      sprich(wort(w));
+      punkteMalen();
+      if (stimmt) konfetti(false);
+      setTimeout(weiter, stimmt ? 1500 : 2100);
+    } else {
+      fehler++;
+      var fw = $("wortfeld"); fw.classList.remove("wackelt"); void fw.offsetWidth; fw.classList.add("wackelt");
+      if (fehler === 1){
+        $("hinweis").textContent = "Noch nicht. Sprich es laut: klingt das " + w[1].charAt(w[5]) + " kurz oder lang?";
+        sprich(wort(w), .6);
+      } else {
+        $("hinweis").textContent = w[4] ? "Der Selbstlaut klingt kurz. Tipp auf „" + w[2] + w[2] + "“."
+                                        : "Der Selbstlaut klingt lang. Tipp auf „" + w[2] + "“.";
+        var ziel = w[4] ? $("tuer-zwei") : $("tuer-eins");
+        ziel.classList.remove("blinkt"); void ziel.offsetWidth; ziel.classList.add("blinkt");
+      }
+    }
+  }
+
+  function weiter(){
+    pos++;
+    if (pos < liste.length){ naechste(); return; }
+    if (!nachspielzeit && verpasst.length){
+      nachspielzeit = true; liste = mische(verpasst.slice()); pos = 0;
+      $("nachspiel").textContent = "🔁 Nochmal · " + (liste.length === 1 ? "ein Wort" : liste.length + " Wörter");
+      $("nachspiel").classList.remove("verborgen");
+      naechste(); return;
+    }
+    ende();
+  }
+
+  function ende(){
+    var d = lesen(); d.woerter = (d.woerter || 0) + RUNDE; d.runden = (d.runden || 0) + 1; schreiben(d);
+    $("ende-titel").textContent = "Alle " + RUNDE + " Wörter aufgeklärt!";
+    $("ende-text").textContent = sauber === RUNDE
+      ? "Jedes Wort beim ersten Hinhören richtig – du hörst kurz und lang schon sehr genau."
+      : "Beim ersten Mal richtig: " + sauber + ". " + (aufgeholt ? "Danach noch " + aufgeholt + " dazu. " : "") + "Das waren deine Wörter:";
+    $("rueckschau").innerHTML = [
+      ['<b>🔴 kurz gesprochen → doppelt</b>', true, "var(--kurz)"],
+      ['<b>🔵 lang gesprochen → einmal</b>', false, "var(--lang)"]
+    ].map(function(g){
+      var w = runde.filter(function(x){ return x[4] === g[1]; }).map(function(x){ return x[0] + " " + wort(x); });
+      return '<div style="background:' + g[2] + '">' + g[0] + (w.join("<br>") || "–") + '</div>';
+    }).join("");
+    zeige("ende"); rueckblickMalen(); konfetti(true);
+  }
+
+  $("tuer-eins").addEventListener("click", function(){ tippen(1); });
+  $("tuer-zwei").addEventListener("click", function(){ tippen(2); });
+  $("hoeren").addEventListener("click", function(){ var w = liste[pos]; if (w) sprich(wort(w)); });
+  $("los").addEventListener("click", starten);
+  $("nochmal").addEventListener("click", starten);
+
+  var fl = $("konfetti"), st = fl.getContext("2d"), stuecke = [], laeuft = false;
+  function konfetti(g){
+    fl.width = innerWidth; fl.height = innerHeight;
+    for (var i = 0; i < (g ? 120 : 26); i++) stuecke.push({ x: Math.random()*fl.width, y: -20 - Math.random()*100, b: 6+Math.random()*6, h: 8+Math.random()*8,
+      v: 2.4+Math.random()*3, d: Math.random()*6, t: (Math.random()-.5)*.3, f: ["#047857","#b42318","#1d4ed8","#ffffff","#b5620a"][i%5] });
+    if (!laeuft){ laeuft = true; requestAnimationFrame(male); }
+  }
+  function male(){
+    st.clearRect(0, 0, fl.width, fl.height);
+    stuecke = stuecke.filter(function(s){ return s.y < fl.height + 30; });
+    stuecke.forEach(function(s){ s.y += s.v; s.d += s.t; st.save(); st.translate(s.x, s.y); st.rotate(s.d); st.fillStyle = s.f; st.fillRect(-s.b/2, -s.h/2, s.b, s.h); st.restore(); });
+    if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
+  }
+
+  window.__doppel = { WOERTER: WOERTER, wort: wort, starten: starten,
+    zustand: function(){ return { pos: pos, liste: liste, nachspielzeit: nachspielzeit, sauber: sauber }; },
+    tippe: tippen };
+})();
+</script>
+<script src="/spiel-navi.js?v=815914e4" defer></script>
+<script src="/lernstand.js?v=7e3d95f9" defer></script>
+</body>
+</html>
