@@ -77,7 +77,11 @@
   /* Der Text */
   .textkasten{background:var(--surface2);border:1px solid var(--line);border-radius:14px;
     padding:14px 15px;font-size:16px;line-height:2.1;white-space:pre-wrap;
-    overflow-y:auto;max-height:46vh}
+    overflow-y:auto;max-height:34vh}
+  /* 34vh statt 46vh: Bei 46 stand auf einem 809 px hohen Fenster beim Oeffnen
+     nur EIN Eingabefeld im Bild (gemessen 30.09.2026). Der Text hat sechs bis
+     acht Zeilen und passt bei 34vh auf jedem grossen Schirm ganz hinein -
+     scrollen muss sie nur auf dem Handy, und dort gilt ohnehin 24vh. */
   .stelle{display:inline-block;border-bottom:2px solid var(--warn);color:var(--warn);
     font-weight:700;padding:2px 4px;border-radius:6px;background:rgba(255,206,92,.09);
     cursor:pointer;min-height:28px}
