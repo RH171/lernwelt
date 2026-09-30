@@ -135,13 +135,25 @@
   th{background:var(--surface2);font-weight:700}
   tr.dran td{background:rgba(167,139,250,.18);font-weight:700}
 
-  /* Handy mit offener Tastatur: der Text tritt zurueck, damit unten Platz
-     zum Schreiben bleibt. Der Satzausschnitt ueber jedem Feld bleibt. */
+  /* Der Textkasten darf das Fenster nicht auffressen. Gemessen am
+     30.09.2026 auf Helenas Handy (360x643): mit 46vh nahm die ganze
+     Textkarte 420 von 643 px, also 65 % - unten blieben zwei Felder.
+     Das ist genau ihre Meldung 98f595rhjg in neuer Gestalt ("ich muss den
+     ganzen Weg wischen und schaffte es dann nicht"). Die Messung haelt
+     35 % nach; mit 24vh sind es 39 %, und darunter stehen fuenf Felder. */
+  @media (max-height:700px){
+    .textkasten{max-height:24vh;line-height:1.95;font-size:15.5px}
+    h2{font-size:16px}
+    .karte{padding:13px}
+  }
+  /* Handy mit offener Tastatur: der Text tritt weiter zurueck, damit unten
+     Platz zum Schreiben bleibt. Der Satzausschnitt ueber jedem Feld traegt
+     dann allein - deshalb geht das ohne Verlust. */
   @media (max-height:520px){
-    .textkasten{max-height:22vh;line-height:1.85}
+    .textkasten{max-height:20vh;line-height:1.8}
     #texthuelle{margin-bottom:8px}
     h1{font-size:18px}
-    .karte{padding:12px}
+    .karte{padding:11px}
   }
 </style>
 </head>
