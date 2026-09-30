@@ -24,9 +24,11 @@
      heisst "sofern sie nicht sinnentstellend sind, generell nicht gewertet".
      Wer hier Toleranz einbaut, uebt am Test vorbei.
    - "Die fehlerhafte Kleinschreibung am Satzanfang muss markiert, darf aber
-     nicht durch BE-Abzug geahndet werden."  -> Feld satzanfang: true.
-     ACHTUNG: Bei einem Item, das GENAU die Grossschreibung prueft
-     (Nationalitaeten), zaehlt sie natuerlich - dort steht satzanfang nicht.
+     nicht durch BE-Abzug geahndet werden."
+     Daraus folgt die Regel dieser Seite: Der ERSTE Buchstabe entscheidet nur
+     dort, wo die Grossschreibung selbst der Pruefgegenstand ist - dann traegt
+     das Item gross: true (Nationalitaeten). Sonst ist gross oder klein egal;
+     alles andere wird Zeichen fuer Zeichen verglichen.
 
    DIE FEHLERTYPEN SIND AUSGEZAEHLT, nicht ausgedacht. Alle 80 Items der
    Jahrgaenge 2022-2025 aus den Loesungs-PDFs (Spalte "Focus on"), Haeufigkeit:
@@ -116,7 +118,7 @@ window.BET_FEHLERTEXTE = [
 "[[9]] the club prize for the best photo, and this year he won it again.\n" +
 "[[10]] more owls in that forest than anybody thought.",
   items: [
-    { nr:1, falsch:"british", ok:["British"],
+    { nr:1, falsch:"british", ok:["British"], gross:true,
       fokus:"Großschreibung von Nationalitäten",
       stufe1:"Am Wort selbst ist nichts falsch. Schau auf den ersten Buchstaben.",
       stufe2:"Länder, Sprachen und Nationalitäten schreibt man im Englischen immer groß – anders als im Deutschen bei „britisch“." },
@@ -155,8 +157,7 @@ window.BET_FEHLERTEXTE = [
     { nr:10, falsch:"It gives", ok:["There are"],
       fokus:"typisch deutscher Fehler (L1 interference): es gibt",
       stufe1:"Das deutsche „es gibt“ wird hier Wort für Wort übersetzt. So sagt man es auf Englisch nicht.",
-      stufe2:"Für „es gibt“ nimmt das Englische eine ganz andere Wendung – sie beginnt mit dem Wort für „dort“. Es sind mehrere Eulen, also Plural.",
-      satzanfang:true }
+      stufe2:"Für „es gibt“ nimmt das Englische eine ganz andere Wendung – sie beginnt mit dem Wort für „dort“. Es sind mehrere Eulen, also Plural." }
   ]
 },
 
