@@ -299,8 +299,12 @@
   function zaehlerMalen(){
     var n = woerter($("text").value);
     $("zahl").textContent = String(n);
-    $("zaehler").classList.toggle("genug", n >= 120);
-    $("ztext").textContent = n >= 120 ? "Wörter · das reicht" : "Wörter · Ziel ca. " + D.ziel;
+    /* "Das reicht" ab 20 Woerter unter dem Ziel - der Test sagt "ca. 140",
+       nicht "genau 140". Die Grenze haengt am Ziel, damit sie nicht an zwei
+       Stellen auseinanderlaufen kann. */
+    var genug = n >= D.ziel - 20;
+    $("zaehler").classList.toggle("genug", genug);
+    $("ztext").textContent = genug ? "Wörter · das reicht" : "Wörter · Ziel ca. " + D.ziel;
   }
 
   function waehlen(id){
