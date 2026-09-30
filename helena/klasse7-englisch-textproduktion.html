@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>E-Mail schreiben – BET Teil III</title>
+<!--
+  Helenas Uebung fuer Teil III des Jahrgangsstufentests Englisch 7 (BET).
+  Gebaut am 30.09.2026 abends, einen Tag vor ihrem Test.
+
+  WARUM ES DIESE SEITE GIBT: Der BET hat drei Teile zu je 20 BE. Fuer Teil I
+  gab es die Hoerverstehen-Seite, fuer Teil II seit heute Mittag "Fehler
+  finden" - fuer Teil III gab es gar nichts, obwohl er ein Drittel der Note
+  ist. Helena am 30.09.2026: "was fuer uebungen koennte ich jetzt noch
+  machen, die mir noch helfen wuerden".
+
+  DER HEBEL, UND ER IST AUSGEZAEHLT (ISB-Loesungshefte 2022-2025, gelesen
+  30.09.2026): Bewertet wird (Inhalt max. 4 BE + Sprache max. 6 BE) x 2.
+  Die vier Inhaltspunkte bekommt laut Raster, wer "die Aufgabenstellung
+  vollstaendig erfuellt" und einen "strukturierten und kohaerenten Text"
+  abliefert - davon steht dort NICHTS ueber Grammatik. Das sind 8 von 20 BE,
+  die an Vollstaendigkeit und Gliederung haengen, nicht an fehlerfreiem
+  Englisch. Genau deshalb steht das Abhaken der Auftraege hier so weit oben
+  und nicht als Nebensache.
+
+  UEBEN, NICHT LOESEN (Dennys Regel vom 16.09.2026): Hier steht kein
+  Mustertext und kein fertiger Satz zum Abschreiben. Die Loesungshefte
+  enthalten fuer Teil III auch keinen - nur das Raster. Was hier steht, ist
+  die FORM (E-Mail, ca. 140 Woerter, Absatz je Auftrag) und ihre eigene
+  Fehlerliste aus dem Faden hup7ep8mdp. Den Text schreibt sie selbst.
+
+  PLATZ ZUM SCHREIBEN: Dieselbe Lehre wie heute Mittag beim Hoerverstehen -
+  auf ihrem 360x643-Handy frisst alles, was oben stehen bleibt, den Platz
+  zum Tippen. Deshalb klappt die Aufgabe beim Schreiben zu einer Zeile
+  zusammen ("Aufgabe zeigen"), und NICHTS auf dieser Seite klebt.
+
+  Kein Punktestand, keine Note: Einen freien Text kann diese Seite nicht
+  bewerten, und so zu tun als koennte sie es, waere das Schlimmste. Sie
+  zaehlt Woerter und haelt die Liste hin. Mehr behauptet sie nicht.
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --surface2:#1f2740; --ink:#eef2fb;
+    --muted:#9aa3ba; --line:#2a3350; --brand:#a78bfa; --warn:#ffce5c;
+    --gut:#49d6bd; --gut-feld:rgba(73,214,189,.13);
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .huelle{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
+    font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:21px;margin:0;flex:1;min-width:140px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:16px;margin-bottom:12px}
+  h2{font:800 17px/1.3 var(--rund);margin:0 0 8px}
+  p{margin:8px 0;line-height:1.55;font-size:15.5px}
+  .unter{color:var(--muted);font-size:14.5px;line-height:1.55}
+  .verborgen{display:none !important}
+  b{color:var(--ink)}
+
+  .plan{display:grid;gap:9px;margin-top:10px}
+  .planzeile{display:flex;gap:11px;align-items:flex-start;background:var(--surface2);
+    border:1px solid var(--line);border-radius:13px;padding:12px 13px}
+  .planzeile .nr{font:800 15px/1.4 var(--rund);color:var(--brand);min-width:20px}
+  .planzeile div{font-size:15px;line-height:1.5}
+  .planzeile small{display:block;color:var(--muted);font-size:14px;line-height:1.5;margin-top:2px}
+
+  .wahl{display:grid;gap:10px;margin-top:10px}
+  .wknopf{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;
+    background:var(--surface2);border:1px solid var(--line);border-radius:14px;
+    padding:14px 15px;color:var(--ink);font-family:inherit;font-size:16px;
+    min-height:44px;cursor:pointer}
+  .wknopf .ic{font-size:21px;line-height:1.2}
+  .wknopf b{display:block;font:800 16.5px/1.3 var(--rund);margin-bottom:2px}
+  .wknopf span{display:block;font-size:14.5px;color:var(--muted);line-height:1.5}
+  .wknopf .fertig{color:var(--gut);font-weight:700}
+
+  .auftrag{display:flex;gap:11px;align-items:flex-start;width:100%;text-align:left;
+    background:var(--surface2);border:1px solid var(--line);border-radius:13px;
+    padding:12px 13px;color:var(--ink);font-family:inherit;font-size:15.5px;
+    line-height:1.5;min-height:44px;cursor:pointer;margin-bottom:8px}
+  .auftrag .box{font-size:19px;line-height:1.25;min-width:24px}
+  .auftrag.ab{border-color:var(--gut);background:var(--gut-feld)}
+  .auftrag.ab .box{color:var(--gut)}
+
+  .mat{background:var(--surface2);border:1px solid var(--line);border-radius:13px;
+    padding:12px 13px;margin-top:10px}
+  .mat h3{font:800 15.5px/1.3 var(--rund);margin:0 0 6px}
+  .mat p{font-size:14.5px;margin:6px 0;line-height:1.55;color:var(--ink)}
+
+  textarea{width:100%;min-height:38vh;background:var(--surface2);color:var(--ink);
+    border:1px solid var(--line);border-radius:13px;padding:12px;font-family:inherit;
+    font-size:16px;line-height:1.6;resize:vertical}
+  textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .zaehler{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:8px 0 2px;
+    font-size:15px}
+  .zaehler b{font:800 19px/1.2 var(--rund);color:var(--warn)}
+  .zaehler.genug b{color:var(--gut)}
+  .zaehler span{color:var(--muted);font-size:14.5px}
+
+  .knopf{display:block;width:100%;text-align:center;text-decoration:none;
+    background:var(--brand);color:#141527;border:0;border-radius:14px;
+    padding:14px 16px;font:700 16px/1.2 var(--rund);min-height:44px;margin-top:10px;
+    cursor:pointer;font-family:var(--rund)}
+  .knopf.still{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+
+  .quelle{color:var(--muted);font-size:13.5px;line-height:1.5;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="bet.html">‹ Zurück</a>
+    <h1>📧 E-Mail schreiben</h1>
+  </header>
+
+  <!-- Der Bauplan. Steht ganz oben, weil er in allen vier Jahren gleich war -
+       das ist das Einzige an Teil III, das sich vorher wissen laesst. -->
+  <div class="karte" id="bauplan">
+    <h2>Das war in allen vier Jahren gleich</h2>
+    <p class="unter" style="margin-top:0">Ich habe die Aufgabenhefte 2022 bis 2025
+      durchgelesen. Teil III sah jedes Mal so aus:</p>
+    <div class="plan">
+      <div class="planzeile"><span class="nr">1</span><div>Eine <b>E-Mail</b> an eine
+        englische Freundin oder einen Austauschpartner
+        <small>Mit Anrede und Gruß – das gehört zur Textsorte und wird mitbewertet.</small></div></div>
+      <div class="planzeile"><span class="nr">2</span><div><b>Ca. 140 Wörter</b>
+        <small>Jedes Jahr dieselbe Zahl. Unten zählt ein Zähler für dich mit.</small></div></div>
+      <div class="planzeile"><span class="nr">3</span><div><b>Mehrere Aufträge</b> –
+        meist drei, als Punkte darunter
+        <small>Zähl sie beim Lesen durch und mach aus jedem einen eigenen Absatz.</small></div></div>
+      <div class="planzeile"><span class="nr">4</span><div>Einer davon war <b>immer eine
+        Erzählung in der Vergangenheit</b>
+        <small>2022 die letzte Fahrradtour · 2023 der letzte Sommerurlaub · 2024 die letzte
+        Bergtour · 2025 das Festival im letzten Jahr. Vier von vier.</small></div></div>
+    </div>
+    <p style="margin-bottom:0"><b>Und das ist die gute Nachricht:</b> Bewertet werden
+      Inhalt (4 Punkte) und Sprache (6 Punkte), zusammen mal zwei. Für die vollen
+      Inhaltspunkte steht im Bewertungsheft nur, dass die Aufgabe <b>vollständig</b>
+      erfüllt und der Text <b>gegliedert</b> sein muss – über Grammatik steht dort
+      kein Wort. Das sind 8 von 20 Punkten, die du dir holst, indem du jeden Auftrag
+      abarbeitest.</p>
+    <p class="quelle">Quelle: Aufgaben- und Lösungshefte des ISB Bayern,
+      Jahrgangsstufentest Englisch 7, 2022 bis 2025.</p>
+  </div>
+
+  <div class="karte" id="auswahl">
+    <h2>Such dir eine Aufgabe aus</h2>
+    <p class="unter" style="margin-top:0">Die unteren vier sind die echten Aufgaben der
+      Vorjahre. Bei dreien gehört ein Bild dazu, das nur im PDF steht – die beiden
+      obersten habe ich nach demselben Muster gebaut, die gehen ohne Bild.</p>
+    <div class="wahl" id="wahl"></div>
+  </div>
+
+  <div class="karte verborgen" id="aufgabe">
+    <h2 id="atitel">Aufgabe</h2>
+    <div id="ainhalt"></div>
+    <button class="knopf still" id="azu" type="button">▴ Aufgabe einklappen</button>
+  </div>
+
+  <div class="karte verborgen" id="azeile">
+    <button class="knopf still" id="aauf" type="button">▾ Aufgabe zeigen</button>
+  </div>
+
+  <div class="karte verborgen" id="schreiben">
+    <h2>Deine E-Mail</h2>
+    <textarea id="text" placeholder="Hi …" spellcheck="false"
+      autocapitalize="sentences" autocomplete="off"></textarea>
+    <div class="zaehler" id="zaehler"><b id="zahl">0</b> <span id="ztext">Wörter · Ziel ca. 140</span></div>
+    <p class="unter" style="margin-bottom:0">Dein Text bleibt gespeichert, auch wenn du
+      die Seite zumachst.</p>
+  </div>
+
+  <!-- Ihre eigene Liste, nicht meine. Die ersten fuenf Punkte sind genau die
+       Stellen, an denen sie heute selbst haengengeblieben ist. -->
+  <div class="karte verborgen" id="kontrolle">
+    <h2>Zum Schluss durchgehen</h2>
+    <p class="unter" style="margin-top:0">Das sind deine Stellen von heute. Geh sie am
+      Ende einmal durch – im Test genauso.</p>
+    <div id="kliste"></div>
+    <button class="knopf still" id="andere" type="button">Andere Aufgabe wählen</button>
+  </div>
+</div>
+
+<script src="bet-schreibaufgaben.js?v=13a4e51c"></script>
+<script src="/lernstand.js?v=7e3d95f9"></script>
+<script>
+(function(){
+  "use strict";
+  var D = window.BET_SCHREIBEN || { aufgaben: [], kontrolle: [], ziel: 140 };
+  var SCHLUESSEL = "helena-textproduktion";
+  var stand = { id: "", texte: {}, haken: {}, kontrolle: [] };
+
+  function $(id){ return document.getElementById(id); }
+  function zeigen(el, ja){ if (el) el.classList.toggle("verborgen", !ja); }
+
+  function laden(){
+    try {
+      var roh = localStorage.getItem(SCHLUESSEL);
+      if (roh) {
+        var g = JSON.parse(roh);
+        if (g && typeof g === "object") {
+          stand.id = g.id || "";
+          stand.texte = g.texte || {};
+          stand.haken = g.haken || {};
+          stand.kontrolle = g.kontrolle || [];
+        }
+      }
+    } catch (e) { /* voller oder gesperrter Speicher: dann eben ohne */ }
+  }
+  function sichern(){
+    try { localStorage.setItem(SCHLUESSEL, JSON.stringify(stand)); } catch (e) {}
+  }
+
+  function aufgabeMit(id){
+    for (var i = 0; i < D.aufgaben.length; i++) if (D.aufgaben[i].id === id) return D.aufgaben[i];
+    return null;
+  }
+
+  /* Woerter zaehlen wie ein Mensch: an Leerraum trennen, Leeres wegwerfen. */
+  function woerter(t){
+    var teile = String(t || "").trim().split(/\s+/);
+    if (teile.length === 1 && teile[0] === "") return 0;
+    return teile.length;
+  }
+
+  function wahlMalen(){
+    var w = $("wahl");
+    w.innerHTML = "";
+    D.aufgaben.forEach(function(a){
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "wknopf";
+      k.setAttribute("data-id", a.id);
+      var wz = woerter(stand.texte[a.id]);
+      var stehtDa = wz > 0
+        ? '<span class="fertig">' + wz + " Wörter geschrieben</span>"
+        : '<span>' + a.auftraege.length + " Aufträge · " + a.jahr + "</span>";
+      k.innerHTML = '<span class="ic">' + (a.eigen ? "✏️" : "📄") + "</span>" +
+        "<span><b>" + a.kurz + "</b>" + stehtDa + "</span>";
+      k.addEventListener("click", function(){ waehlen(a.id); });
+      w.appendChild(k);
+    });
+  }
+
+  function aufgabeMalen(a){
+    $("atitel").textContent = a.kurz + " · " + a.jahr;
+    var h = "<p>" + a.situation + "</p>";
+    a.auftraege.forEach(function(t, i){
+      var ab = (stand.haken[a.id] || [])[i] ? " ab" : "";
+      h += '<button type="button" class="auftrag' + ab + '" data-nr="' + i + '">' +
+        '<span class="box">' + (ab ? "☑" : "☐") + "</span><span>" + t + "</span></button>";
+    });
+    if (a.material) {
+      h += '<div class="mat"><h3>' + a.material.titel + "</h3>";
+      a.material.zeilen.forEach(function(z){ h += "<p>" + z + "</p>"; });
+      h += "</div>";
+    }
+    $("ainhalt").innerHTML = h;
+    Array.prototype.forEach.call($("ainhalt").querySelectorAll(".auftrag"), function(k){
+      k.addEventListener("click", function(){
+        var nr = Number(k.getAttribute("data-nr"));
+        var liste = stand.haken[a.id] || [];
+        liste[nr] = !liste[nr];
+        stand.haken[a.id] = liste;
+        sichern();
+        aufgabeMalen(a);
+      });
+    });
+  }
+
+  function kontrolleMalen(){
+    var l = $("kliste");
+    l.innerHTML = "";
+    D.kontrolle.forEach(function(p, i){
+      var ab = stand.kontrolle[i] ? " ab" : "";
+      var k = document.createElement("button");
+      k.type = "button";
+      k.className = "auftrag" + ab;
+      k.innerHTML = '<span class="box">' + (ab ? "☑" : "☐") + "</span>" +
+        "<span>" + p.t + "<br><span style=\"color:var(--muted);font-size:14px\">" +
+        p.d + "</span></span>";
+      k.addEventListener("click", function(){
+        stand.kontrolle[i] = !stand.kontrolle[i];
+        sichern();
+        kontrolleMalen();
+      });
+      l.appendChild(k);
+    });
+  }
+
+  function zaehlerMalen(){
+    var n = woerter($("text").value);
+    $("zahl").textContent = String(n);
+    $("zaehler").classList.toggle("genug", n >= 120);
+    $("ztext").textContent = n >= 120 ? "Wörter · das reicht" : "Wörter · Ziel ca. " + D.ziel;
+  }
+
+  function waehlen(id){
+    var a = aufgabeMit(id);
+    if (!a) return;
+    stand.id = id;
+    sichern();
+    aufgabeMalen(a);
+    $("text").value = stand.texte[id] || "";
+    zaehlerMalen();
+    kontrolleMalen();
+    zeigen($("auswahl"), false);
+    zeigen($("bauplan"), false);
+    zeigen($("aufgabe"), true);
+    zeigen($("azeile"), false);
+    zeigen($("schreiben"), true);
+    zeigen($("kontrolle"), true);
+    window.scrollTo(0, 0);
+  }
+
+  $("text").addEventListener("input", function(){
+    zaehlerMalen();
+    if (stand.id) { stand.texte[stand.id] = $("text").value; sichern(); }
+  });
+
+  /* Einklappen statt Kleben: beim Tippen soll die Aufgabe keinen Platz fressen. */
+  $("azu").addEventListener("click", function(){
+    zeigen($("aufgabe"), false);
+    zeigen($("azeile"), true);
+  });
+  $("aauf").addEventListener("click", function(){
+    zeigen($("azeile"), false);
+    zeigen($("aufgabe"), true);
+  });
+
+  $("andere").addEventListener("click", function(){
+    zeigen($("aufgabe"), false);
+    zeigen($("azeile"), false);
+    zeigen($("schreiben"), false);
+    zeigen($("kontrolle"), false);
+    zeigen($("bauplan"), true);
+    zeigen($("auswahl"), true);
+    wahlMalen();
+    window.scrollTo(0, 0);
+  });
+
+  laden();
+  wahlMalen();
+  window.__schreiben = { waehlen: waehlen, woerter: woerter, stand: stand };
+})();
+</script>
+</body>
+</html>
