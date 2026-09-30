@@ -113,18 +113,26 @@
     border:none;border-radius:15px;min-height:56px;padding:14px 18px;cursor:pointer;width:100%;
     font:800 16.5px/1.2 var(--rund);background:var(--brand);color:#141024;margin-top:10px}
   .knopf.still{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+
+  /* Der Spieler klebt oben (position:sticky). Auf Helenas Handy nahm er dabei
+     553 von 643 px ein (gemessen 30.09.2026) - unter ihm blieb kein Platz zum
+     Schreiben, und genau davon kam ihr "ich muss da den ganzen Weg wischen".
+     Sobald er klebt, schrumpft er auf die Knopfzeile: Ton steuern geht weiter,
+     der Rest des Schirms gehoert den Antwortfeldern. Mit ⤢ kommt er zurueck. */
+  .anker{display:block;height:1px;margin:0}
+  .klebzeit{display:none;font:700 15px/1 var(--rund);color:var(--ink);min-width:44px;text-align:center}
+  .klebauf{display:none}
+  .spieler.klebt{padding-top:10px;padding-bottom:10px}
+  .spieler.klebt .zeit,
+  .spieler.klebt .balken,
+  .spieler.klebt .tempo,
+  .spieler.klebt #marken,
+  .spieler.klebt .stand{display:none}
+  .spieler.klebt .klebzeit{display:inline-block}
+  .spieler.klebt .klebauf{display:inline-flex}
   .knopf.leise{background:transparent;color:var(--muted);border:1px dashed var(--line);
     min-height:48px;font-size:14.5px}
 
-  /* Der mitlaufende Balken - siehe Kommentar im Markup. */
-  .mitlauf{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:8px;
-    background:var(--surface2);border-top:1px solid var(--line);
-    padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px rgba(0,0,0,.4)}
-  .mitlauf button{min-width:52px;min-height:48px;border:none;border-radius:13px;cursor:pointer;
-    background:var(--brand);color:#141024;font:800 19px/1 var(--rund)}
-  .mitlauf button#m-zurueck,.mitlauf button#m-vor,.mitlauf button#m-hoch{
-    background:var(--card);color:var(--ink);border:1px solid var(--line)}
-  .mitlauf .m-zeit{flex:1;text-align:center;font:700 16px/1 var(--rund);color:var(--ink)}
 
   .schritte{display:grid;gap:9px;margin-top:10px}
   .schritt{display:flex;gap:12px;align-items:flex-start;background:var(--surface2);
@@ -202,11 +210,16 @@
     <div class="jahre" id="jahre"></div>
   </div>
 
-  <div class="karte spieler">
+  <!-- Der Anker verraet, ob die Spieler-Karte gerade oben klebt: sobald er aus
+       dem Bild ist, schrumpft der Spieler (siehe .spieler.klebt). -->
+  <span class="anker" id="spieler-anker" aria-hidden="true"></span>
+  <div class="karte spieler" id="spielerkarte">
     <div class="zeile">
       <button type="button" class="start" id="abspielen" aria-label="Abspielen">▶</button>
       <button type="button" class="sprung" id="zurueck10">⏪ 10 s</button>
       <button type="button" class="sprung" id="vor10">10 s ⏩</button>
+      <span class="klebzeit" id="klebzeit">0:00</span>
+      <button type="button" class="sprung klebauf" id="klebauf" aria-label="Spieler ganz zeigen">⤢</button>
     </div>
     <div class="zeit"><span id="jetzt">0:00</span><span id="dauer">–:–</span></div>
     <input type="range" class="balken" id="balken" min="0" max="1000" value="0" step="1"
@@ -235,20 +248,6 @@
     <button type="button" class="knopf still" id="zu-antworten">✍️ Hier eintragen</button>
     <button type="button" class="knopf leise" id="loesung-zeigen">Ich bin fertig – Lösungen zeigen</button>
     <a class="knopf still verborgen" id="loesungen" href="#" target="_blank" rel="noopener">✅ Lösungen öffnen</a>
-  </div>
-
-  <!-- Der mitlaufende Balken (30.09.2026, Helenas Meldung 98f595rhjg): Sie
-       musste zwischen Aufnahme oben und Antwortfeldern unten staendig wischen
-       ("ich muss da den ganzen [Weg] wischen und ich schaffte es dann nicht").
-       Solange ein Test gewaehlt ist und der Hauptspieler aus dem Bild ist,
-       steht der Ton unten am Schirm - und der Koerper bekommt unten genau so
-       viel Platz dazu, damit der Balken nichts verdeckt. -->
-  <div class="mitlauf verborgen" id="mitlauf">
-    <button type="button" id="m-play" aria-label="Abspielen">▶</button>
-    <button type="button" id="m-zurueck" aria-label="10 Sekunden zurück">⏪</button>
-    <button type="button" id="m-vor" aria-label="10 Sekunden vor">⏩</button>
-    <span class="m-zeit" id="m-zeit">0:00</span>
-    <button type="button" id="m-hoch" aria-label="Zum Spieler">↑</button>
   </div>
 
   <div class="karte" id="pruefkasten">
@@ -396,7 +395,7 @@
     knopfAb.setAttribute("aria-label", ton.paused ? "Abspielen" : "Anhalten");
     if (typeof markenMalen === "function") markenMalen();
     if (typeof pausenZeigen === "function") pausenZeigen();
-    if (typeof mitlaufPruefen === "function"){ mitlaufPruefen(); mitlaufMalen(); }
+    if (typeof klebMalen === "function") klebMalen();
   }
 
   knopfAb.addEventListener("click", function(){
@@ -429,57 +428,49 @@
   }
   document.getElementById("zurueck10").addEventListener("click", function(){ springen(-10); });
 
-  /* --- Der mitlaufende Balken ------------------------------------------
+  /* --- Der Spieler schrumpft, sobald er klebt ---------------------------
      Helena, Meldung 98f595rhjg (30.09.2026): "Ich kann wenn ich auf
      aufgabenblatt öffnen drücke. Nicht da drin schreiben." und danach:
      "Weil ich da den ganzen [Weg] wischen muss und ich schaffte es dann nicht."
-     Ein PDF vom ISB laesst sich nicht beschreiben - geschrieben wird also in
-     "Deine Antworten". Dafuer muss der Ton erreichbar bleiben, WAEHREND sie
-     unten tippt. Der Balken zeigt sich nur, wenn ein Test gewaehlt ist UND
-     der grosse Spieler aus dem Bild gescrollt ist; der Koerper bekommt unten
-     genau so viel Platz dazu, damit nichts verdeckt wird. */
-  var elMit = document.getElementById("mitlauf");
-  var mPlay = document.getElementById("m-play");
-  var mZeit = document.getElementById("m-zeit");
-  var spielerKasten = document.querySelector(".karte.spieler");
-  var mitDa = false;
+     In ein PDF vom ISB laesst sich nicht schreiben - geschrieben wird in
+     "Deine Antworten". Dafuer braucht sie Platz: gemessen nahm die klebende
+     Spieler-Karte auf ihrem 360x643-Handy 553 px ein. Geschrumpft bleibt nur
+     die Knopfzeile stehen, der Ton laeuft weiter. */
+  var spielerKarte = document.getElementById("spielerkarte");
+  var elKlebZeit = document.getElementById("klebzeit");
+  var klebt = false;
 
-  function mitlaufZeigen(ja){
-    if (ja === mitDa) return;
-    mitDa = ja;
-    elMit.classList[ja ? "remove" : "add"]("verborgen");
-    document.body.style.paddingBottom = ja ? (elMit.offsetHeight + 12) + "px" : "";
+  function klebZeigen(ja){
+    if (ja === klebt) return;
+    klebt = ja;
+    spielerKarte.classList[ja ? "add" : "remove"]("klebt");
   }
-  function mitlaufPruefen(){
-    if (!aktuell){ mitlaufZeigen(false); return; }
-    var r = spielerKasten.getBoundingClientRect();
-    mitlaufZeigen(r.bottom < 60);           // der grosse Spieler ist oben raus
+  function klebMalen(){
+    if (klebt) elKlebZeit.textContent = mmss(ton.currentTime > 0 ? ton.currentTime : (wunschZeit || 0));
   }
-  function mitlaufMalen(){
-    if (!mitDa) return;
-    mPlay.textContent = ton.paused ? "▶" : "⏸";
-    mPlay.setAttribute("aria-label", ton.paused ? "Abspielen" : "Anhalten");
-    mZeit.textContent = mmss(ton.currentTime > 0 ? ton.currentTime : (wunschZeit || 0));
+  if (typeof IntersectionObserver === "function"){
+    new IntersectionObserver(function(e){ klebZeigen(!e[0].isIntersecting); })
+      .observe(document.getElementById("spieler-anker"));
+  } else {
+    window.addEventListener("scroll", function(){
+      klebZeigen(document.getElementById("spieler-anker").getBoundingClientRect().bottom < 0);
+    }, { passive: true });
   }
-  mPlay.addEventListener("click", function(){ knopfAb.click(); mitlaufMalen(); });
-  document.getElementById("m-zurueck").addEventListener("click", function(){ springen(-10); mitlaufMalen(); });
-  document.getElementById("m-vor").addEventListener("click", function(){ springen(10); mitlaufMalen(); });
-  document.getElementById("m-hoch").addEventListener("click", function(){
-    spielerKasten.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.addEventListener("scroll", klebMalen, { passive: true });
+  document.getElementById("klebauf").addEventListener("click", function(){
+    document.getElementById("spieler-anker").scrollIntoView({ behavior: "smooth", block: "start" });
   });
-  window.addEventListener("scroll", function(){ mitlaufPruefen(); mitlaufMalen(); }, { passive: true });
-  window.addEventListener("resize", function(){ mitlaufPruefen(); });
 
   /* Der Knopf "Hier eintragen" im Blatt-Kasten - der kuerzeste Weg von der
      Frage zum Feld. Er waehlt gleich das erste Feld an, damit die Tastatur
      aufgeht, ohne dass sie noch einmal tippen muss. */
+
   document.getElementById("zu-antworten").addEventListener("click", function(){
     var kasten = document.getElementById("pruefkasten");
     kasten.scrollIntoView({ behavior: "smooth", block: "start" });
     setTimeout(function(){
       var erstes = kasten.querySelector("input[type=text]");
       if (erstes) erstes.focus({ preventScroll: true });
-      mitlaufPruefen(); mitlaufMalen();
     }, 450);
   });
 
