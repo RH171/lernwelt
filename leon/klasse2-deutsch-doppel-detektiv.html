@@ -182,21 +182,21 @@
   // nach der Loesung farbig. Kein Wort aus Leons Diktat (siehe VERBOTEN oben).
   var WOERTER = [
     // doppelt - der Selbstlaut davor klingt kurz
-    ["☀️","So","n","e",true,1], ["⚽","Ba","l","",true,1], ["💧","Wa","s","er",true,1],
-    ["🧈","Bu","t","er",true,1], ["☕","Ta","s","e",true,1], ["🍽️","Te","l","er",true,1],
-    ["🧳","Ko","f","er",true,1], ["🐵","A","f","e",true,0], ["🍲","Su","p","e",true,1],
-    ["🪜","Tre","p","e",true,2], ["👓","Bri","l","e",true,2], ["🔨","Ha","m","er",true,1],
-    ["🏖️","So","m","er",true,1], ["🛏️","Zi","m","er",true,1], ["🛴","Ro","l","er",true,1],
-    ["🌦️","We","t","er",true,1], ["🏃","re","n","en",true,1], ["🧶","Wo","l","e",true,1],
-    ["🏫","Kla","s","e",true,3], ["🛖","Hü","t","e",true,1], ["🏊","schwi","m","en",true,3],
-    ["🔢","Nu","m","er",true,1], ["🛌","Ki","s","en",true,1], ["🎸","Gita","r","e",true,3],
+    ["\u2600\ufe0f","So","n","e",true,1], ["\u26bd","Ba","l","",true,1], ["\U0001f4a7","Wa","s","er",true,1],
+    ["\U0001f9c8","Bu","t","er",true,1], ["\u2615","Ta","s","e",true,1], ["\U0001f37d\ufe0f","Te","l","er",true,1],
+    ["\U0001f9f3","Ko","f","er",true,1], ["\U0001f435","A","f","e",true,0], ["\U0001f372","Su","p","e",true,1],
+    ["\U0001fa9c","Tre","p","e",true,2], ["\U0001f453","Bri","l","e",true,2], ["\U0001f528","Ha","m","er",true,1],
+    ["\U0001f3d6\ufe0f","So","m","er",true,1], ["\U0001f6cf\ufe0f","Zi","m","er",true,1], ["\U0001f6f4","Ro","l","er",true,1],
+    ["\U0001f326\ufe0f","We","t","er",true,1], ["\U0001f3c3","re","n","en",true,1], ["\U0001f9f6","Wo","l","e",true,1],
+    ["\U0001f4da","Kla","s","e",true,2], ["\U0001f6d6","H\u00fc","t","e",true,1], ["\U0001f3ca","schwi","m","en",true,4],
+    ["\U0001f522","Nu","m","er",true,1], ["\U0001f6cc","Ki","s","en",true,1], ["\U0001f3b8","Gita","r","e",true,3],
     // einmal - der Selbstlaut davor klingt lang
-    ["🔥","O","f","en",false,0], ["🎩","Hü","t","e",false,1], ["👃","Na","s","e",false,1],
-    ["🐰","Ha","s","e",false,1], ["🌹","Ro","s","e",false,1], ["📦","Do","s","e",false,1],
-    ["👖","Ho","s","e",false,1], ["🌿","Wie","s","e",false,2], ["🐝","Bie","n","e",false,2],
-    ["🧹","Be","s","en",false,1], ["🌷","Blu","m","e",false,2], ["🏫","Schu","l","e",false,3],
-    ["🎬","Ki","n","o",false,1], ["🍌","Bana","n","e",false,3], ["🍅","Toma","t","e",false,3],
-    ["🔍","Lu","p","e",false,1], ["🏺","Va","s","e",false,1], ["🐞","Kä","f","er",false,1]
+    ["\U0001f525","O","f","en",false,0], ["\U0001f3a9","H\u00fc","t","e",false,1], ["\U0001f443","Na","s","e",false,1],
+    ["\U0001f430","Ha","s","e",false,1], ["\U0001f339","Ro","s","e",false,1], ["\U0001f4e6","Do","s","e",false,1],
+    ["\U0001f456","Ho","s","e",false,1], ["\U0001f33f","Wie","s","e",false,1,2], ["\U0001f41d","Bie","n","e",false,1,2],
+    ["\U0001f9f9","Be","s","en",false,1], ["\U0001f337","Blu","m","e",false,2], ["\U0001f3eb","Schu","l","e",false,3],
+    ["\U0001f3ac","Ki","n","o",false,1], ["\U0001f34c","Bana","n","e",false,3], ["\U0001f345","Toma","t","e",false,3],
+    ["\U0001f50d","Lu","p","e",false,1], ["\U0001f3fa","Va","s","e",false,1], ["\U0001f41e","K\u00e4","f","er",false,1]
   ];
   var RUNDE = 12;
 
@@ -260,10 +260,12 @@
   function luecke(w){
     return schutz(w[1]) + '<span class="luecke">_</span>' + schutz(w[3]);
   }
+  // Der Selbstlaut, der ueber die Regel entscheidet - bei "ie" sind es zwei Zeichen.
+  function selbstlaut(w){ return w[1].substr(w[5], w[6] || 1); }
   function geloest(w){
-    var vor = w[1], p = w[5];
-    var mit = vor.slice(0, p) + '<span class="selbstlaut">' + schutz(vor.charAt(p)) + '</span>' + schutz(vor.slice(p + 1));
-    return schutz(vor.slice(0, p)) + mit.slice(vor.slice(0, p).length) + schutz(w[4] ? w[2] + w[2] : w[2]) + schutz(w[3]);
+    var vor = w[1], p = w[5], l = w[6] || 1;
+    return schutz(vor.slice(0, p)) + '<span class="selbstlaut">' + schutz(vor.substr(p, l)) + '</span>' +
+           schutz(vor.slice(p + l)) + schutz(w[4] ? w[2] + w[2] : w[2]) + schutz(w[3]);
   }
 
   function naechste(){
@@ -297,8 +299,8 @@
       f.innerHTML = geloest(w);
       $("hinweis").className = "hinweis gut";
       $("hinweis").textContent = w[4]
-        ? "Richtig! Das " + w[1].charAt(w[5]) + " klingt kurz – darum " + w[2] + w[2] + "."
-        : "Richtig! Das " + w[1].charAt(w[5]) + " klingt lang – darum nur ein " + w[2] + ".";
+        ? "Richtig! Das " + selbstlaut(w) + " klingt kurz – darum " + w[2] + w[2] + "."
+        : "Richtig! Das " + selbstlaut(w) + " klingt lang – darum nur ein " + w[2] + ".";
       sprich(wort(w));
       punkteMalen();
       if (stimmt) konfetti(false);
@@ -307,7 +309,7 @@
       fehler++;
       var fw = $("wortfeld"); fw.classList.remove("wackelt"); void fw.offsetWidth; fw.classList.add("wackelt");
       if (fehler === 1){
-        $("hinweis").textContent = "Noch nicht. Sprich es laut: klingt das " + w[1].charAt(w[5]) + " kurz oder lang?";
+        $("hinweis").textContent = "Noch nicht. Sprich es laut: klingt das " + selbstlaut(w) + " kurz oder lang?";
         sprich(wort(w), .6);
       } else {
         $("hinweis").textContent = w[4] ? "Der Selbstlaut klingt kurz. Tipp auf „" + w[2] + w[2] + "“."
@@ -366,7 +368,7 @@
     if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
   }
 
-  window.__doppel = { WOERTER: WOERTER, wort: wort, starten: starten,
+  window.__doppel = { WOERTER: WOERTER, wort: wort, selbstlaut: selbstlaut, starten: starten,
     zustand: function(){ return { pos: pos, liste: liste, nachspielzeit: nachspielzeit, sauber: sauber }; },
     tippe: tippen };
 })();
