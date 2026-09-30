@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fehler finden – BET Teil II</title>
+<!--
+  Helenas Uebung fuer Teil II des Jahrgangsstufentests Englisch 7 (BET).
+  Gebaut am 30.09.2026 aus Meldung hup7ep8mdp, einen Tag vor ihrem Test.
+
+  IHR SATZ, DER ALLES BESTIMMT HAT: "Ja, aber ich hab sie ja nur verbessert,
+  weil du es gesagt hast." Sie hat recht - im Test steht niemand daneben und
+  sagt "nach didn't kommt die Grundform". Deshalb steht hier NIE, worum es
+  geht, bevor sie geantwortet hat. Der Fehler ist unterstrichen, so wie im
+  echten Test, und mehr Hilfe gibt es nur, wenn sie ausdruecklich danach
+  tippt - und dann kostet der Tipp genau das, was er im Test auch kostet.
+
+  DER AUFBAU IST DER DES ECHTEN TESTS, nicht erfunden (ISB Bayern,
+  JT_2023_E7_Aufgaben.pdf bis JT_2025, gelesen 30.09.2026): "Der folgende Text
+  enthaelt Fehler, die alle unterstrichen sind. Schreibe deine Verbesserung in
+  die rechte Spalte, ohne die Aussage des Textes zu veraendern." 10 BE.
+
+  WARUM DIE VERBESSERUNGEN UNTER DEM TEXT STEHEN und nicht rechts daneben:
+  Auf Helenas Handy ist das Fenster 360 px breit. Zwei Spalten waeren dort
+  entweder unlesbar oder man muesste waagrecht wischen. Damit sie beim Tippen
+  trotzdem nicht nach oben scrollen muss, steht ueber JEDEM Feld der
+  Satzausschnitt mit der unterstrichenen Stelle - der grosse Text wird beim
+  Ausfuellen also gar nicht gebraucht. Dieselbe Lehre wie am 30.09.2026 beim
+  Hoerverstehen: was oben klebt, frisst den Platz zum Schreiben.
+
+  WERTUNG: exakt, ohne Rechtschreibtoleranz. Das ist keine Strenge um der
+  Strenge willen, es steht so in den Korrekturhinweisen ("Rechtschreibfehler
+  werden geahndet") - anders als in Teil I. Begruendung und Gegenstueck
+  stehen oben in bet-fehlertexte.js.
+
+  Lernstand: gemeldet wird der ERSTE Versuch je Stelle. Wer erst mit Tipp
+  darauf kommt, hat es noch nicht gewusst - sonst zeigt der Elternbereich
+  Erfolge, die keine sind (dieselbe Regel wie im Lernquiz, 23.09.2026).
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+  :root{
+    --bg:#0e1320; --card:#171d2e; --surface2:#1f2740; --ink:#eef2fb;
+    --muted:#9aa3ba; --line:#2a3350; --brand:#a78bfa; --warn:#ffce5c;
+    --gut:#49d6bd; --gut-feld:rgba(73,214,189,.13); --offen-feld:rgba(255,206,92,.12);
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:12px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .huelle{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
+    font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:21px;margin:0;flex:1;min-width:140px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:16px;margin-bottom:12px}
+  h2{font:800 17px/1.3 var(--rund);margin:0 0 8px}
+  p{margin:8px 0;line-height:1.55;font-size:15.5px}
+  .unter{color:var(--muted);font-size:14.5px;line-height:1.55}
+  .verborgen{display:none !important}
+
+  /* Textauswahl */
+  .wahl{display:grid;gap:10px;margin-top:10px}
+  .wknopf{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;
+    background:var(--surface2);border:1px solid var(--line);border-radius:14px;
+    padding:14px 15px;color:var(--ink);font-family:inherit;font-size:16px;
+    min-height:44px;cursor:pointer}
+  .wknopf .ic{font-size:22px;line-height:1.2}
+  .wknopf b{display:block;font:800 16.5px/1.3 var(--rund);margin-bottom:2px}
+  .wknopf span{font-size:14.5px;color:var(--muted);line-height:1.5}
+  .wknopf .fertig{color:var(--gut);font-weight:700}
+
+  /* Der Text */
+  .textkasten{background:var(--surface2);border:1px solid var(--line);border-radius:14px;
+    padding:14px 15px;font-size:16px;line-height:2.1;white-space:pre-wrap;
+    overflow-y:auto;max-height:46vh}
+  .stelle{display:inline-block;border-bottom:2px solid var(--warn);color:var(--warn);
+    font-weight:700;padding:2px 4px;border-radius:6px;background:rgba(255,206,92,.09);
+    cursor:pointer;min-height:28px}
+  .stelle sup{font-size:11px;margin-left:2px;opacity:.9}
+  .stelle.dran{background:rgba(167,139,250,.22);border-bottom-color:var(--brand);color:#ded3ff}
+  .stelle.fertig{border-bottom-color:var(--gut);color:var(--gut);background:var(--gut-feld)}
+  .textschalter{background:var(--surface2);border:1px solid var(--line);border-radius:999px;
+    color:var(--ink);font:600 14.5px var(--font);padding:11px 15px;min-height:44px;cursor:pointer}
+
+  /* Die Verbesserungen */
+  .zeilen{display:grid;gap:12px;margin-top:4px}
+  .zeile{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+  .zeile.gut{border-color:rgba(73,214,189,.5);background:var(--gut-feld)}
+  .zeile.offen{border-color:rgba(255,206,92,.5);background:var(--offen-feld)}
+  .zkopf{display:flex;gap:8px;align-items:baseline;font-size:14.5px;color:var(--muted);
+    line-height:1.5;margin-bottom:8px}
+  .znr{flex:none;font:800 15px var(--rund);color:var(--brand)}
+  .zkopf em{font-style:normal;color:var(--warn);font-weight:700;text-decoration:underline}
+  .zunten{display:flex;gap:8px;align-items:center}
+  .zunten input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);
+    border-radius:11px;color:var(--ink);font:16px var(--font);padding:12px 13px;min-height:44px}
+  .zunten input:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .tipp{flex:none;width:44px;height:44px;border-radius:11px;background:var(--card);
+    border:1px solid var(--line);color:var(--ink);font-size:19px;cursor:pointer}
+  .tipptext{margin:8px 0 0;font-size:14.5px;line-height:1.55;color:#e4dcff;
+    background:rgba(167,139,250,.13);border-radius:10px;padding:9px 11px}
+  .rueck{margin:8px 0 0;font-size:14.5px;line-height:1.55;display:block}
+  .rueck b{display:block;margin-bottom:2px}
+  .loes{display:block;color:var(--gut);font-weight:700;margin-top:3px}
+  .fokus{display:block;color:var(--muted);margin-top:3px}
+
+  .knopf{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    background:linear-gradient(125deg,#5b21b6,#7c3aed);border:none;border-radius:14px;
+    color:#fff;font:700 17px var(--rund);padding:15px 22px;min-height:52px;
+    width:100%;cursor:pointer}
+  .knopf.leise{background:var(--surface2);border:1px solid var(--line);color:var(--ink);
+    font-size:15.5px;min-height:44px;padding:12px 18px}
+  .knopfreihe{display:grid;gap:9px;margin-top:12px}
+
+  .erg{background:linear-gradient(125deg,#4c1d95,#6d28d9 60%,#8b5cf6);border:none;color:#fff}
+  .ergzahl{font:800 40px/1 var(--rund);margin:4px 0 8px}
+  .erg p{opacity:.95;font-size:15.5px}
+
+  /* Notenrechner */
+  .nreihe{display:grid;grid-template-columns:1fr 88px;gap:9px;align-items:center;margin:9px 0}
+  .nreihe label{font-size:15.5px;line-height:1.4}
+  .nreihe input{background:var(--surface2);border:1px solid var(--line);border-radius:11px;
+    color:var(--ink);font:16px var(--font);padding:12px;min-height:44px;width:100%;text-align:center}
+  .nreihe input:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .nerg{margin-top:10px;background:var(--surface2);border-radius:12px;padding:13px 14px;
+    font-size:15.5px;line-height:1.55}
+  .nerg b{font:800 26px/1 var(--rund);color:var(--brand);display:block;margin-bottom:4px}
+  table{border-collapse:collapse;width:100%;margin-top:10px;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:8px 9px;text-align:left}
+  th{background:var(--surface2);font-weight:700}
+  tr.dran td{background:rgba(167,139,250,.18);font-weight:700}
+
+  /* Handy mit offener Tastatur: der Text tritt zurueck, damit unten Platz
+     zum Schreiben bleibt. Der Satzausschnitt ueber jedem Feld bleibt. */
+  @media (max-height:520px){
+    .textkasten{max-height:22vh;line-height:1.85}
+    #texthuelle{margin-bottom:8px}
+    h1{font-size:18px}
+    .karte{padding:12px}
+  }
+</style>
+</head>
+<body>
+<div class="huelle">
+
+<header>
+  <a class="zurueck" href="/helena/bet.html">←</a>
+  <h1>Fehler finden</h1>
+</header>
+
+<!-- Startschirm -->
+<div id="start">
+  <div class="karte">
+    <h2>Teil II im echten Test</h2>
+    <p class="unter">Im Text sind Fehler <em style="color:var(--warn);text-decoration:underline;font-style:normal">unterstrichen</em>.
+      Du schreibst deine Verbesserung in das Feld darunter – so, dass der Satz
+      dasselbe bedeutet wie vorher. Für jede richtige Verbesserung gibt es 1 BE.</p>
+    <p class="unter"><b>Hier steht nicht, was falsch ist.</b> Das ist Absicht –
+      im Test sagt es dir auch niemand. Wenn du bei einer Stelle nicht
+      weiterkommst, tippst du auf 💡. Dann zählt sie als „noch nicht gewusst“,
+      genauso wie im Test.</p>
+    <p class="unter">⚠️ Rechtschreibung zählt hier mit. In Teil II werden
+      Schreibfehler gewertet – anders als beim Hörverstehen.</p>
+    <div class="wahl" id="wahl"></div>
+  </div>
+
+  <div class="karte">
+    <h2>🧮 Was für eine Note wäre das?</h2>
+    <p class="unter">Trag ein, wie viele BE du in jedem Teil hast. Gerechnet
+      wird mit der amtlichen Tabelle aus den Lösungsheften des ISB – nicht
+      geschätzt.</p>
+    <div class="nreihe"><label for="n1">Teil I · Hörverstehen</label><input type="number" id="n1" min="0" max="20" step="0.5" inputmode="decimal" placeholder="0"></div>
+    <div class="nreihe"><label for="n2">Teil II · Use of English</label><input type="number" id="n2" min="0" max="20" step="0.5" inputmode="decimal" placeholder="0"></div>
+    <div class="nreihe"><label for="n3">Teil III · Text Production</label><input type="number" id="n3" min="0" max="20" step="0.5" inputmode="decimal" placeholder="0"></div>
+    <div class="nerg" id="nerg">Trag oben deine Punkte ein.</div>
+    <table id="ntab"><thead><tr><th>BE von 60</th><th>Note</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- Übungsschirm -->
+<div id="uebung" class="verborgen">
+  <div class="karte" id="texthuelle">
+    <h2 id="u-titel">Text</h2>
+    <div class="textkasten" id="u-text"></div>
+    <div class="knopfreihe"><button type="button" class="textschalter" id="u-textaus">📄 Text ausblenden</button></div>
+  </div>
+
+  <div class="karte">
+    <h2>✍️ Deine Verbesserungen</h2>
+    <div class="zeilen" id="u-zeilen"></div>
+    <div class="knopfreihe">
+      <button type="button" class="knopf" id="u-pruef">Prüfen</button>
+      <button type="button" class="knopf leise" id="u-raus">Zurück zur Auswahl</button>
+    </div>
+  </div>
+
+  <div class="karte erg verborgen" id="u-erg">
+    <h2>Dein Ergebnis</h2>
+    <div class="ergzahl" id="u-ergzahl">–</div>
+    <p id="u-ergtext"></p>
+  </div>
+</div>
+
+</div>
+
+<script src="/lernstand.js?v=7e3d95f9"></script>
+<script src="/helena/bet-fehlertexte.js?v=952edc56"></script>
+<script>
+(function(){
+  "use strict";
+  var TEXTE = window.BET_FEHLERTEXTE || [];
+  var SPEICHER = "helena-bet-fehlertexte";
+  var $ = function(id){ return document.getElementById(id); };
+  function zeigen(el, ja){ if (el) el.classList[ja ? "remove" : "add"]("verborgen"); }
+
+  function lese(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; }
+                   catch(e){ return {}; } }
+  function sichern(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  /* Wertung. Exakt, ohne Rechtschreibtoleranz - so steht es in den
+     Korrekturhinweisen. Angeglichen wird nur, was kein Rechtschreibfehler
+     ist: die vier Apostroph-Zeichen (Handytastaturen setzen das typo-
+     grafische), doppelte Leerzeichen und ein Punkt am Ende.
+     Der erste Buchstabe zaehlt nur bei gross: true - sonst gilt der Hinweis
+     des ISB, dass Kleinschreibung keine BE kostet. */
+  function normal(s){
+    return String(s == null ? "" : s)
+      .replace(/[‘’ʼ´`]/g, "'")
+      .replace(/\s+/g, " ")
+      .replace(/[.,;!?]+$/, "")
+      .trim();
+  }
+  function stimmt(item, eingabe){
+    var e = normal(eingabe);
+    if (!e) return false;
+    for (var i = 0; i < item.ok.length; i++){
+      var k = normal(item.ok[i]);
+      if (e === k) return true;
+      if (!item.gross && e.toLowerCase() === k.toLowerCase()) return true;
+    }
+    return false;
+  }
+  window.__betPruefe = { normal: normal, stimmt: stimmt };
+
+  /* Der Satzausschnitt ueber dem Feld: ein Stueck Text links und rechts der
+     Stelle, damit sie beim Tippen nicht nach oben scrollen muss. */
+  function ausschnitt(text, nr){
+    var marke = "[[" + nr + "]]";
+    var p = text.indexOf(marke);
+    if (p < 0) return null;
+    var vor = text.slice(0, p).replace(/\n/g, " ");
+    var nach = text.slice(p + marke.length).replace(/\n/g, " ");
+    var vw = vor.split(" ").filter(Boolean).slice(-5).join(" ");
+    var nw = nach.split(" ").filter(Boolean).slice(0, 5).join(" ");
+    return { vor: (vor.split(" ").filter(Boolean).length > 5 ? "… " : "") + vw,
+             nach: nw + (nach.split(" ").filter(Boolean).length > 5 ? " …" : "") };
+  }
+
+  /* ---------- Startschirm ---------- */
+  function wahlMalen(){
+    var d = lese(), w = $("wahl");
+    w.innerHTML = "";
+    TEXTE.forEach(function(t){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "wknopf";
+      var best = d[t.k] && d[t.k].best;
+      var fertig = best != null
+        ? '<span class="fertig">Dein bester Versuch: ' + best + " von " + t.items.length + " BE</span>"
+        : '<span>' + t.unter + "</span>";
+      b.innerHTML = '<span class="ic">' + t.ic + "</span><span><b>" + t.titel + "</b>" + fertig + "</span>";
+      b.addEventListener("click", function(){ starten(t); });
+      w.appendChild(b);
+    });
+  }
+
+  function notenTabelle(){
+    var tb = $("ntab").querySelector("tbody");
+    var t = window.BET_NOTEN, zeilen = [];
+    for (var i = 0; i < t.length; i++){
+      var bis = i === 0 ? 60 : (t[i-1].ab - 0.5);
+      zeilen.push({ note: t[i].note, von: t[i].ab, bis: bis });
+    }
+    tb.innerHTML = zeilen.map(function(z){
+      return '<tr data-note="' + z.note + '"><td>' + z.bis + " – " + z.von +
+             " BE</td><td>" + z.note + "</td></tr>";
+    }).join("");
+  }
+
+  function notenRechnen(){
+    var w = [$("n1").value, $("n2").value, $("n3").value];
+    var leer = w.every(function(x){ return String(x).trim() === ""; });
+    var tb = $("ntab").querySelector("tbody");
+    Array.prototype.forEach.call(tb.children, function(tr){ tr.classList.remove("dran"); });
+    if (leer){ $("nerg").innerHTML = "Trag oben deine Punkte ein."; return; }
+    var summe = 0, offen = 0;
+    w.forEach(function(x){
+      if (String(x).trim() === ""){ offen++; return; }
+      var z = parseFloat(String(x).replace(",", "."));
+      if (!isFinite(z)) return;
+      summe += Math.max(0, Math.min(20, z));
+    });
+    summe = Math.round(summe * 2) / 2;
+    var note = window.BET_NOTE(summe, 60);
+    var satz = offen > 0
+      ? "Ein Teil fehlt noch. Mit den bisherigen Punkten wäre es Note " + note + "."
+      : "Das wären " + summe + " von 60 BE.";
+    $("nerg").innerHTML = "<b>Note " + note + "</b>" + satz;
+    var tr = tb.querySelector('[data-note="' + note + '"]');
+    if (tr) tr.classList.add("dran");
+  }
+
+  ["n1","n2","n3"].forEach(function(id){
+    $(id).addEventListener("input", notenRechnen);
+  });
+
+  /* ---------- Übung ---------- */
+  var aktuell = null, geholfen = {}, ersterVersuch = {}, gemeldet = {};
+
+  function starten(t){
+    aktuell = t;
+    geholfen = {}; ersterVersuch = {}; gemeldet = {};
+    $("u-titel").textContent = t.ic + " " + t.titel;
+    textMalen();
+    zeilenMalen();
+    zeigen($("u-erg"), false);
+    $("u-pruef").textContent = "Prüfen";
+    zeigen($("start"), false);
+    zeigen($("uebung"), true);
+    window.scrollTo(0, 0);
+  }
+
+  function textMalen(){
+    var k = $("u-text");
+    k.innerHTML = "";
+    var rest = aktuell.text, i = 0;
+    while (true){
+      var m = rest.match(/\[\[(\d+)\]\]/);
+      if (!m){ k.appendChild(document.createTextNode(rest)); break; }
+      k.appendChild(document.createTextNode(rest.slice(0, m.index)));
+      var nr = parseInt(m[1], 10);
+      var item = aktuell.items.filter(function(x){ return x.nr === nr; })[0];
+      var s = document.createElement("span");
+      s.className = "stelle";
+      s.dataset.nr = String(nr);
+      s.textContent = item ? item.falsch : "?";
+      var sup = document.createElement("sup");
+      sup.textContent = String(nr);
+      s.appendChild(sup);
+      s.addEventListener("click", function(){
+        var f = $("feld-" + this.dataset.nr);
+        if (f){ f.scrollIntoView({ block:"center", behavior:"smooth" }); f.focus(); }
+      });
+      k.appendChild(s);
+      rest = rest.slice(m.index + m[0].length);
+      if (++i > 60) break;
+    }
+  }
+
+  function zeilenMalen(){
+    var z = $("u-zeilen");
+    z.innerHTML = "";
+    aktuell.items.forEach(function(item){
+      var a = ausschnitt(aktuell.text, item.nr);
+      var d = document.createElement("div");
+      d.className = "zeile";
+      d.dataset.nr = String(item.nr);
+
+      var kopf = document.createElement("div");
+      kopf.className = "zkopf";
+      var nr = document.createElement("span");
+      nr.className = "znr";
+      nr.textContent = item.nr + ".";
+      kopf.appendChild(nr);
+      var satz = document.createElement("span");
+      if (a){
+        satz.appendChild(document.createTextNode(a.vor + " "));
+        var em = document.createElement("em");
+        em.textContent = item.falsch;
+        satz.appendChild(em);
+        satz.appendChild(document.createTextNode(" " + a.nach));
+      } else {
+        satz.textContent = item.falsch;
+      }
+      kopf.appendChild(satz);
+      d.appendChild(kopf);
+
+      var unten = document.createElement("div");
+      unten.className = "zunten";
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.id = "feld-" + item.nr;
+      inp.setAttribute("autocapitalize", "off");
+      inp.setAttribute("autocorrect", "off");
+      inp.setAttribute("spellcheck", "false");
+      inp.setAttribute("aria-label", "Verbesserung für Nummer " + item.nr);
+      inp.placeholder = "deine Verbesserung";
+      inp.addEventListener("focus", function(){ dranZeigen(item.nr); });
+      unten.appendChild(inp);
+
+      var tipp = document.createElement("button");
+      tipp.type = "button";
+      tipp.className = "tipp";
+      tipp.textContent = "💡";
+      tipp.title = "Tipp – zählt als „noch nicht gewusst“";
+      tipp.setAttribute("aria-label", "Tipp zu Nummer " + item.nr);
+      tipp.addEventListener("click", function(){ tippGeben(item, d); });
+      unten.appendChild(tipp);
+      d.appendChild(unten);
+
+      z.appendChild(d);
+    });
+  }
+
+  function dranZeigen(nr){
+    Array.prototype.forEach.call($("u-text").querySelectorAll(".stelle"), function(s){
+      s.classList[String(s.dataset.nr) === String(nr) ? "add" : "remove"]("dran");
+    });
+  }
+
+  /* Der Tipp kommt in zwei Stufen und nennt NIE die Loesung. Dass er sie
+     nicht nennt, prueft pruefe-fehlertexte.mjs mechanisch nach - eine Bitte
+     im Text waere keine Pruefung. */
+  function tippGeben(item, zeile){
+    var stufe = (geholfen[item.nr] || 0) + 1;
+    if (stufe > 2) stufe = 2;
+    geholfen[item.nr] = stufe;
+    var alt = zeile.querySelector(".tipptext");
+    if (alt) alt.remove();
+    var p = document.createElement("p");
+    p.className = "tipptext";
+    p.textContent = (stufe === 1 ? "💡 " : "💡💡 ") + (stufe === 1 ? item.stufe1 : item.stufe2);
+    zeile.querySelector(".zunten").insertAdjacentElement("afterend", p);
+    var f = $("feld-" + item.nr);
+    if (f) f.focus();
+  }
+
+  $("u-textaus").addEventListener("click", function(){
+    var k = $("u-text"), aus = k.classList.contains("verborgen");
+    zeigen(k, aus);
+    this.textContent = aus ? "📄 Text ausblenden" : "📄 Text zeigen";
+  });
+
+  $("u-raus").addEventListener("click", function(){
+    zeigen($("uebung"), false);
+    zeigen($("start"), true);
+    wahlMalen();
+    window.scrollTo(0, 0);
+  });
+
+  $("u-pruef").addEventListener("click", function(){
+    var be = 0, offen = 0, leer = 0;
+    aktuell.items.forEach(function(item){
+      var f = $("feld-" + item.nr);
+      var zeile = $("u-zeilen").querySelector('[data-nr="' + item.nr + '"]');
+      var wert = f.value;
+      var gut = stimmt(item, wert);
+      var da = normal(wert) !== "";
+
+      /* Der erste Versuch wird EINMAL festgehalten und danach nicht mehr
+         angefasst - sonst waere der zweite Versuch derselbe Erfolg. */
+      if (ersterVersuch[item.nr] == null && da)
+        ersterVersuch[item.nr] = gut && !geholfen[item.nr];
+
+      if (gut) be++;
+      else { offen++; if (!da) leer++; }
+
+      zeile.classList.remove("gut", "offen");
+      zeile.classList.add(gut ? "gut" : "offen");
+      var alt = zeile.querySelector(".rueck");
+      if (alt) alt.remove();
+      var r = document.createElement("span");
+      r.className = "rueck";
+      if (gut){
+        r.innerHTML = "<b>✅ stimmt</b>";
+        var fo = document.createElement("span");
+        fo.className = "fokus";
+        fo.textContent = item.fokus;
+        r.appendChild(fo);
+      } else {
+        var b = document.createElement("b");
+        b.textContent = da ? "Noch nicht." : "Hier steht noch nichts.";
+        r.appendChild(b);
+        var l = document.createElement("span");
+        l.className = "loes";
+        l.textContent = "Richtig: " + item.ok.join(" oder ");
+        r.appendChild(l);
+        var fo2 = document.createElement("span");
+        fo2.className = "fokus";
+        fo2.textContent = item.fokus;
+        r.appendChild(fo2);
+      }
+      zeile.appendChild(r);
+
+      var s = $("u-text").querySelector('.stelle[data-nr="' + item.nr + '"]');
+      if (s) s.classList[gut ? "add" : "remove"]("fertig");
+
+      if (!gemeldet[item.nr] && da){
+        gemeldet[item.nr] = 1;
+        melden(ersterVersuch[item.nr] === true, item, wert);
+      }
+    });
+
+    var d = lese();
+    if (!d[aktuell.k]) d[aktuell.k] = {};
+    if (d[aktuell.k].best == null || be > d[aktuell.k].best) d[aktuell.k].best = be;
+    d[aktuell.k].zuletzt = new Date().toISOString().slice(0, 10);
+    sichern(d);
+
+    ergMalen(be, offen, leer);
+    $("u-pruef").textContent = "Nochmal prüfen";
+  });
+
+  function ergMalen(be, offen, leer){
+    var max = aktuell.items.length;
+    zeigen($("u-erg"), true);
+    $("u-ergzahl").textContent = be + " von " + max + " BE";
+    var satz;
+    if (offen === 0)
+      satz = "Alle Stellen verbessert. Genau so viele Punkte gibt es im echten Test für Teil II Part A.";
+    else if (leer === offen)
+      satz = offen + (offen === 1 ? " Stelle ist" : " Stellen sind") +
+             " noch leer. Unter jeder steht jetzt, was richtig gewesen wäre – schreib es einmal selbst hin, dann bleibt es besser.";
+    else
+      satz = "Bei " + offen + (offen === 1 ? " Stelle" : " Stellen") +
+             " passt es noch nicht. Unter jeder steht die richtige Form und worum es dabei geht. Du kannst sie überschreiben und nochmal prüfen.";
+    var mitHilfe = Object.keys(geholfen).length;
+    if (mitHilfe > 0)
+      satz += " Bei " + mitHilfe + (mitHilfe === 1 ? " Stelle" : " Stellen") +
+              " hast du einen Tipp genommen – die zählen nicht als „auf Anhieb gewusst“.";
+    $("u-ergtext").textContent = satz;
+    $("u-erg").scrollIntoView({ block:"nearest", behavior:"smooth" });
+  }
+
+  function melden(stimmtEs, item, wert){
+    try {
+      if (window.lernstand && window.lernstand.antwort)
+        window.lernstand.antwort(stimmtEs, item.fokus,
+          stimmtEs ? "" : String(wert || "").slice(0, 40),
+          item.ok[0]);
+    } catch(e){}
+  }
+
+  /* ---------- Start ---------- */
+  wahlMalen();
+  notenTabelle();
+  var w = new URLSearchParams(location.search).get("text");
+  if (w){
+    var t = TEXTE.filter(function(x){ return x.k === w; })[0];
+    if (t) starten(t);
+  }
+})();
+</script>
+</body>
+</html>
