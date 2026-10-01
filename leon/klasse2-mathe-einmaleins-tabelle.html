@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Einmaleins-Tabelle</title>
+<!--
+  Leons Fassung von Pauls Wunsch vom 01.10.2026 (Regel: Neues an alle drei, altersgerecht).
+  Klasse 2: Lücken nur in den Kernaufgaben (mal 1, 2, 5, 10), Tipps werden vorgelesen.
+  Pauls Wunsch (über Denny, mit Foto seines Blatts "Das kleine 1 x 1"):
+  die Tabelle mit Lücken zum Selbst-Ausfüllen, und einmal ganz leer, Zeile und Spalte
+  von 0 bis 10. Motor und Aussehen liegen geteilt in /einmaleins/ (auch bei Leon).
+-->
+<script>(function(){try{ if(localStorage.getItem("leon-theme")==="dark") document.documentElement.setAttribute("data-theme","dark"); }catch(e){}})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/einmaleins/tabelle.css?v=b61d0390">
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Einmaleins-Tabelle</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>✖️ Das kleine Einmaleins</h2>
+  <p>Ich lasse Lücken, du füllst sie: mal 1, mal 2, mal 5 und mal 10. Was noch wackelt, kommt öfter dran.</p>
+  <div id="stufen"></div>
+  <button id="wackel-start" class="knopf verborgen"></button>
+</section>
+
+<section id="spiel" class="verborgen">
+  <div id="tafel" aria-label="Einmaleins-Tabelle"></div>
+  <div id="seite">
+    <div class="oben"><span id="frage"></span><span id="zaehler"></span></div>
+    <div id="tipp" class="tipp" aria-live="polite"></div>
+    <div id="tasten">
+      <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+      <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+      <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+      <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
+      <button data-taste="ok" class="ok next">Prüfen</button>
+    </div>
+    <button class="knopf zurueck">Andere Lücken wählen</button>
+  </div>
+</section>
+
+<section id="ende" class="karte verborgen">
+  <h2>🎉 Alle Lücken gefüllt!</h2>
+  <p id="ende-zahl"></p>
+  <p id="ende-zeit"></p>
+  <p id="ende-wack"></p>
+  <div class="zeile-knoepfe">
+    <button id="nochmal" class="knopf primaer weiter">Neue Lücken</button>
+    <button id="nur-wackler" class="knopf">Nur die Wackler</button>
+    <button class="knopf zurueck">Andere Stufe</button>
+  </div>
+</section>
+
+<script>window.EINMALEINS = { kind: "leon", speicher: "leon-einmaleins", lueckenReihen: [1, 2, 5, 10], vorlesen: true,
+  stufen: [ { n: 5, name: "5 Lücken", sub: "zum Warmwerden" }, { n: 10, name: "10 Lücken", sub: "schon mehr" },
+            { n: 20, name: "20 Lücken", sub: "für Profis" }, { n: "leer", name: "Alle leer", sub: "mal 1, 2, 5 und 10" } ] };</script>
+<script src="/einmaleins/tabelle.js?v=cc44765a" defer></script>
+<script src="/lernstand.js?v=f132a471" defer></script>
+</body>
+</html>
