@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Einmaleins-Tabelle</title>
+<title>Wo fehlt die Zahl?</title>
 <!--
-  Pauls Wunsch vom 01.10.2026 (über Denny, mit Foto seines Blatts "Das kleine 1 x 1"):
-  die Tabelle mit Lücken zum Selbst-Ausfüllen, und einmal ganz leer, Zeile und Spalte
-  von 0 bis 10. Motor und Aussehen liegen geteilt in /einmaleins/ (auch bei Leon).
-  Liegt als "klasse3-" im Ordner, weil games.json nur diese Dateien findet; die
-  Klasse steht in paul/index.html unter OVERRIDES.
+  Pauls Wunsch vom 01.10.2026 (über Denny): "die Tabelle ausgefüllt, und immer fehlt eine Zahl -
+  lerne daraus, wo Paul Schwierigkeiten hat". Motor /einmaleins/tabelle.js, modus "einzeln";
+  derselbe Speicher wie die Einmaleins-Tabelle, beide lernen voneinander.
 -->
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
@@ -19,12 +17,13 @@
 <body>
 <header>
   <a class="knopf" href="./">← Zurück</a>
-  <h1>Einmaleins-Tabelle</h1>
+  <h1>Wo fehlt die Zahl?</h1>
 </header>
 
 <section id="start" class="karte">
-  <h2>✖️ Das kleine Einmaleins</h2>
-  <p>Wie bei deinem Blatt: Ich lasse Lücken, du füllst sie. Was noch wackelt, kommt beim nächsten Mal öfter dran.</p>
+  <h2>🔎 Wo fehlt die Zahl?</h2>
+  <p>Die Tabelle ist voll, nur eine Zahl fehlt. Ich merke mir, was dir schwerfällt und was lange dauert, und frage das öfter.</p>
+  <p id="baustellen" class="verborgen"></p>
   <div id="stufen"></div>
   <button id="wackel-start" class="knopf verborgen"></button>
 </section>
@@ -41,23 +40,23 @@
       <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
       <button data-taste="ok" class="ok next">Prüfen</button>
     </div>
-    <button class="knopf zurueck">Andere Lücken wählen</button>
+    <button class="knopf zurueck">Andere Rundenlänge</button>
   </div>
 </section>
 
 <section id="ende" class="karte verborgen">
-  <h2>🎉 Alle Lücken gefüllt!</h2>
+  <h2>🎉 Geschafft!</h2>
   <p id="ende-zahl"></p>
   <p id="ende-zeit"></p>
   <p id="ende-wack"></p>
   <div class="zeile-knoepfe">
-    <button id="nochmal" class="knopf primaer weiter">Neue Lücken</button>
+    <button id="nochmal" class="knopf primaer weiter">Noch eine Runde</button>
     <button id="nur-wackler" class="knopf">Nur die Wackler</button>
-    <button class="knopf zurueck">Andere Stufe</button>
+    <button class="knopf zurueck">Andere Länge</button>
   </div>
 </section>
 
-<script>window.EINMALEINS = { kind: "paul", speicher: "paul-einmaleins" };</script>
+<script>window.EINMALEINS = { kind: "paul", speicher: "paul-einmaleins", modus: "einzeln" };</script>
 <script src="/einmaleins/tabelle.js?v=b8e9de12" defer></script>
 <script src="/lernstand.js?v=f132a471" defer></script>
 </body>
