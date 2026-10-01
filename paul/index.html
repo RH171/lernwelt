@@ -860,7 +860,9 @@
 
   // ---- Speicher (hub-eigene Daten) ------------------------------------
   const today = new Date(); today.setHours(0,0,0,0);
-  const iso = d => d.toISOString().slice(0,10);
+  // Deutsche Ortszeit, nicht UTC: today ist Mitternacht hier, toISOString machte daraus
+  // 22 Uhr am Vortag - jede Kachel stand deshalb auf "zuletzt gestern" (Denny, 01.10.2026).
+  const iso = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
   const get = (k,def) => { try{const v=localStorage.getItem(k);return v==null?def:v;}catch(e){return def;} };
   const set = (k,v) => { try{localStorage.setItem(k,v);}catch(e){} };
 

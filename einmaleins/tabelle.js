@@ -2,7 +2,7 @@
  *
  * Paul hat in Mathe ein Blatt "Das kleine 1 x 1" (Tabelle 1-10 mal 1-10) und
  * will genau das ueben: dieselbe Tabelle mit Luecken, die er selbst fuellt,
- * und einmal ganz leer - Zeile und Spalte von 0 bis 10 (Denny, 01.10.2026).
+ * und einmal ganz leer - Zeile und Spalte von 1 bis 10 (Denny, 01.10.2026; die 0er-Reihe ist raus, "0 · 0 macht keinen Sinn").
  *
  * Geteilt: Paul (paul/klasse3-mathe-einmaleins-tabelle.html) und Leon
  * (leon/klasse2-mathe-einmaleins-tabelle.html) setzen window.EINMALEINS:
@@ -23,7 +23,7 @@
     { n: 10, name: "10 Lücken", sub: "zum Warmwerden" },
     { n: 25, name: "25 Lücken", sub: "ein Viertel" },
     { n: 50, name: "50 Lücken", sub: "die Hälfte" },
-    { n: "leer", name: "Ganz leer", sub: "alle 121 Felder" }
+    { n: "leer", name: "Ganz leer", sub: "alle 100 Felder" }
   ];
   /* Zweite Uebung (01.10.2026, Pauls Wunsch ueber Denny): "Die Tabelle ist ausgefuellt,
      und immer fehlt eine Zahl - lerne daraus, wo Paul Schwierigkeiten hat."
@@ -59,7 +59,7 @@
   }
   function baustellen() {
     var ks = [];
-    for (var a = 0; a <= 10; a++) for (var b = 0; b <= 10; b++) if (erlaubt(a, b)) {
+    for (var a = 1; a <= 10; a++) for (var b = 1; b <= 10; b++) if (erlaubt(a, b)) {
       var k = schl(a, b);
       if ((stand.fehler[k] || 0) > 0 || stand.zeit[k] > LANGSAM) ks.push(k);
     }
@@ -70,7 +70,7 @@
     var f = warte.filter(function (w) { return w.ab <= gestellt; })[0];
     if (f) { warte.splice(warte.indexOf(f), 1); return f.k; }
     var topf = [];
-    for (var a = 0; a <= 10; a++) for (var b = 0; b <= 10; b++) if (erlaubt(a, b)) {
+    for (var a = 1; a <= 10; a++) for (var b = 1; b <= 10; b++) if (erlaubt(a, b)) {
       var k = schl(a, b);
       if (zuletzt.indexOf(k) < 0) topf.push({ k: k, z: Math.pow(Math.random(), 1 / gewicht(k)) });
     }
@@ -80,7 +80,7 @@
 
   function waehleLuecken(n) {
     var alle = [];
-    for (var a = 0; a <= 10; a++) for (var b = 0; b <= 10; b++) if (erlaubt(a, b)) alle.push([a, b]);
+    for (var a = 1; a <= 10; a++) for (var b = 1; b <= 10; b++) if (erlaubt(a, b)) alle.push([a, b]);
     if (n === "leer") return alle;
     if (n === "wackler") {
       var w = alle.filter(function (p) { return stand.fehler[schl(p[0], p[1])] > 0; });
@@ -104,14 +104,20 @@
   function verdeckt(a, b) {
     if (!EINZELN || !wahl) return false;
     var ab = wahl.split("x"), wa = +ab[0], wb = +ab[1];
-    return (a === wa && Math.abs(b - wb) === 1) || (b === wb && Math.abs(a - wa) === 1);
+    var nah = function (x, y) {
+      return (a === x && Math.abs(b - y) === 1) || (b === y && Math.abs(a - x) === 1);
+    };
+    // Die Tauschaufgabe (8 · 4 bei 4 · 8) hat dasselbe Ergebnis und verriete die
+    // Loesung - sie bleibt leer, samt ihren Nachbarn (Denny, 01.10.2026).
+    if (wa !== wb && a === wb && b === wa) return true;
+    return nah(wa, wb) || (wa !== wb && nah(wb, wa));
   }
   function zeichnen() {
     var t = $("#tafel"), h = '<div class="z kopf ecke">·</div>';
-    for (var b = 0; b <= 10; b++) h += '<div class="z kopf" data-sp="' + b + '">' + b + '</div>';
-    for (var a = 0; a <= 10; a++) {
+    for (var b = 1; b <= 10; b++) h += '<div class="z kopf" data-sp="' + b + '">' + b + '</div>';
+    for (var a = 1; a <= 10; a++) {
       h += '<div class="z kopf" data-ze="' + a + '">' + a + '</div>';
-      for (b = 0; b <= 10; b++) {
+      for (b = 1; b <= 10; b++) {
         var k = schl(a, b);
         if (verdeckt(a, b)) h += '<div class="z verdeckt" data-a="' + a + '" data-b="' + b + '"></div>';
         else if (offen[k] !== undefined) h += '<div class="z luecke" data-k="' + k + '" data-a="' + a + '" data-b="' + b + '">' + (offen[k] || "") + '</div>';
