@@ -562,4 +562,14 @@ export const KLEXIKON = [
   [2, "welt", "🌏", "In welchem Land liegt Melbourne?", ["Australien", "Amerika", "Afrika", "Indien"], "Melbourne liegt am Yarra-Fluss und ist eine der größten Städte Australiens.", null, "Melbourne"],
   [4, "welt", "🏞️", "An welchem See liegt die Stadt Klagenfurt?", ["Wörthersee", "Bodensee", "Chiemsee", "Starnberger See"], "Klagenfurt ist die Hauptstadt von Kärnten und liegt nahe der Grenze zu Slowenien.", null, "Klagenfurt"],
   [4, "sprache", "🔤", "Zu welcher Sprachgruppe gehört Sorbisch?", ["Slawische Sprachen", "Romanische Sprachen", "Germanische Sprachen", "Asiatische Sprachen"], "Sorbisch kennt neben Einzahl und Mehrzahl auch den Dual für genau zwei Dinge.", null, "Sorbische Sprache"],
+
+  // Nachschub vom 01.10.2026
+  [1, "welt", "🛍️", "Wie heißt ein Einkaufszentrum auf Englisch auch?", ["Mall", "Park", "Turm", "Markt"], "In einem Einkaufszentrum gibt es oft Hunderte Läden unter einem Dach, dazu Kinos und Restaurants.", null, "Einkaufszentrum"],
+  [1, "tiere", "🪲", "Wovon ernährt sich ein Borkenkäfer?", ["Baumrinde", "Blätter", "Wurzeln", "Gras"], "Borkenkäfer bohren sich von außen durch die Rinde und können dabei ganze Wälder schädigen.", null, "Borkenkäfer"],
+  [2, "welt", "🏙️", "In welchem Land liegt Kaiserslautern?", ["Deutschland", "Österreich", "Frankreich", "Schweiz"], "Amerikanische Soldaten nennen die Stadt liebevoll „K-Town“, weil der Name für sie schwer auszusprechen ist.", null, "Kaiserslautern"],
+  [2, "welt", "🌊", "An welchem Fluss liegt die Stadt Linz?", ["Donau", "Rhein", "Elbe", "Oder"], "Linz ist nach Wien und Graz die drittgrößte Stadt Österreichs.", null, "Linz"],
+  [2, "natur", "🔥", "Wie heißt der Hauptbestandteil von Erdgas?", ["Methan", "Sauerstoff", "Kohle", "Wasserstoff"], "Methan brennt sehr leicht, deshalb darf Erdgas nie in die Nähe von offenem Feuer kommen.", null, "Erdgas"],
+  [4, "wissen", "⛏️", "Wie tief unter der Erde kann man Erdgas finden?", ["Bis 3000 Meter", "Bis 30 Meter", "Bis 300 Meter", "Bis 30000 Meter"], "Erdgas entstand vor Millionen Jahren aus Resten von Pflanzen und Tieren, die unter die Erde sanken.", null, "Erdgas"],
+  [4, "tiere", "📖", "Warum heißt der Borkenkäfer „Buchdrucker“?", ["Seine Gänge sehen aus wie Druckplatten", "Er frisst Bücher", "Er lebt in Druckereien", "Er wurde von einem Drucker entdeckt"], "Die Larven graben Gänge unter der Rinde, die wie das Muster alter Druckplatten aussehen.", null, "Borkenkäfer"],
+  [6, "musik", "🎸", "Wie nennt man die sich wiederholende Gitarren-Melodie im Heavy Metal?", ["Riff", "Solo", "Akkord", "Takt"], "Fast jedes Heavy-Metal-Stück hat außerdem ein schnelles Gitarrensolo in der Mitte oder am Ende.", null, "Heavy Metal"],
 ];
