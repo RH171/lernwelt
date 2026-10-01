@@ -181,7 +181,7 @@
     var t = e.target.closest("[data-taste]"); if (t) return taste(t.dataset.taste);
     if (e.target.closest("#nochmal")) return los(modus === "wackler" ? 10 : modus);
     if (e.target.closest("#nur-wackler") || e.target.closest("#wackel-start")) return los("wackler");
-    if (e.target.closest("#zurueck")) { $("#spiel").classList.add("verborgen"); $("#ende").classList.add("verborgen"); $("#start").classList.remove("verborgen"); startMalen(); }
+    if (e.target.closest(".zurueck")) { $("#spiel").classList.add("verborgen"); $("#ende").classList.add("verborgen"); $("#start").classList.remove("verborgen"); startMalen(); }
   });
   document.addEventListener("keydown", function (e) {
     if ($("#spiel").classList.contains("verborgen")) return;
