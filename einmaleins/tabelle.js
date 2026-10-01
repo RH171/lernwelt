@@ -97,6 +97,15 @@
     return topf.slice(0, Math.min(n, topf.length)).map(function (t) { return t.p; });
   }
 
+  /* Paul rechnet oft vom Nachbarn aus weiter ("20, 25 - also 30"). Denny, 01.10.2026:
+     "Lasse daher die Zahl davor und danach weg ... Paul soll aber nur die Loesung sagen."
+     In "Wo fehlt die Zahl?" bleiben deshalb die Felder links, rechts, darueber und
+     darunter leer - auch die Spalte laesst sich sonst aufaddieren. */
+  function verdeckt(a, b) {
+    if (!EINZELN || !wahl) return false;
+    var ab = wahl.split("x"), wa = +ab[0], wb = +ab[1];
+    return (a === wa && Math.abs(b - wb) === 1) || (b === wb && Math.abs(a - wa) === 1);
+  }
   function zeichnen() {
     var t = $("#tafel"), h = '<div class="z kopf ecke">·</div>';
     for (var b = 0; b <= 10; b++) h += '<div class="z kopf" data-sp="' + b + '">' + b + '</div>';
@@ -104,7 +113,8 @@
       h += '<div class="z kopf" data-ze="' + a + '">' + a + '</div>';
       for (b = 0; b <= 10; b++) {
         var k = schl(a, b);
-        if (offen[k] !== undefined) h += '<div class="z luecke" data-k="' + k + '" data-a="' + a + '" data-b="' + b + '">' + (offen[k] || "") + '</div>';
+        if (verdeckt(a, b)) h += '<div class="z verdeckt" data-a="' + a + '" data-b="' + b + '"></div>';
+        else if (offen[k] !== undefined) h += '<div class="z luecke" data-k="' + k + '" data-a="' + a + '" data-b="' + b + '">' + (offen[k] || "") + '</div>';
         else h += '<div class="z fest' + (erster[k] !== undefined ? (erster[k] ? " gut" : " spaet") : "") + '" data-a="' + a + '" data-b="' + b + '">' + (a * b) + '</div>';
       }
     }

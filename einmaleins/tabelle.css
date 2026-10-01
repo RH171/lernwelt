@@ -32,6 +32,7 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
 .kopf.an{opacity:1;outline:3px solid var(--ink)}
 .ecke{background:transparent;color:var(--muted)}
 .fest{background:var(--fest);color:var(--muted)}
+.verdeckt{background:var(--fest);opacity:.45}
 .fest.gut{background:var(--gut-hell);color:var(--gut)}
 .fest.spaet{background:var(--spaet-hell);color:var(--spaet)}
 .luecke{background:var(--luecke);border:2px dashed var(--line);color:var(--ink);cursor:pointer}
