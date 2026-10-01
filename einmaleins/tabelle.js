@@ -114,6 +114,9 @@
   }
   function zeichnen() {
     var t = $("#tafel"), h = '<div class="z kopf ecke">·</div>';
+    // Spaltenzahl setzt der Motor selbst: Am 01.10.2026 traf auf Pauls iPad neues CSS
+    // (11 Spalten) auf altes Skript (mit 0er-Reihe, 12 Felder je Zeile) - alles verrutschte.
+    t.style.gridTemplateColumns = "repeat(11, var(--z))";
     for (var b = 1; b <= 10; b++) h += '<div class="z kopf" data-sp="' + b + '">' + b + '</div>';
     for (var a = 1; a <= 10; a++) {
       h += '<div class="z kopf" data-ze="' + a + '">' + a + '</div>';

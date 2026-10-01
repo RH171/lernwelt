@@ -194,7 +194,7 @@
       ".lww .wtag{display:grid;grid-template-columns:4.6em 4.4em minmax(0,1fr);gap:8px;align-items:center;" +
       "border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin:0 0 6px}" +
       ".lww .wtag.heute{border-color:var(--wg)}.lww .wtag.kann{cursor:pointer}" +
-      ".lww .wd{font-weight:800}.lww .wm{color:var(--muted);font-weight:600}" +
+      ".lww .wd{font-weight:800}.lww .wm{color:var(--muted);font-weight:600}.lww .wmsum{display:block;color:var(--ink);font-weight:800;margin-top:2px}" +
       ".lww .wp{min-width:0;overflow-wrap:anywhere;line-height:1.35;color:var(--muted)}" +
       ".lww .wfuell{grid-column:1/-1;justify-self:end;font-weight:800;color:var(--ws);min-height:48px;display:flex;align-items:center}" +
       ".lww .wknopf{display:block;width:100%;min-height:48px;margin-top:10px;border:0;border-radius:14px;" +
@@ -220,7 +220,10 @@
       if (t.datum === w.heute) z.classList.add("heute");
       z.appendChild(el("span", "wd", WOCHENTAG[i] + " " + tagKurz(t.datum)));
       var leer = !t.minuten && !(t.punkte || []).length;
-      z.appendChild(el("span", "wm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min")));
+      var mz = el("span", "wm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min"));
+      /* Tagessumme (Pauls Wunsch, 01.10.2026): wie viele Fragen an dem Tag, gewusst davon */
+      if (t.gesamt) mz.appendChild(el("b", "wmsum", t.gesamt + (t.gesamt === 1 ? " Frage" : " Fragen") + " · " + (t.gewusst || 0) + " gewusst"));
+      z.appendChild(mz);
       var p = el("span", "wp");
       if (leer) p.textContent = t.datum === w.heute ? "heute noch nichts" : "frei";
       (t.punkte || []).forEach(function (x) { p.appendChild(el("i", x === 1 ? "g" : x === 2 ? "s" : "n", x === 0 ? "○" : "●")); });

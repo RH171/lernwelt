@@ -332,7 +332,7 @@
   .tbtag{display:grid;grid-template-columns:5.2em 4.6em minmax(0,1fr);gap:8px;align-items:center;
     border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:14px;}
   .tbtag.heute{border-color:var(--sitzt);}
-  .tbd{font-weight:800;} .tbm{color:var(--muted);font-weight:600;}
+  .tbd{font-weight:800;} .tbm{color:var(--muted);font-weight:600;} .tbmsum{display:block;color:var(--ink);font-weight:800;margin-top:2px;}
   .tbp{min-width:0;overflow-wrap:anywhere;line-height:1.35;color:var(--muted);}
   .tbp i,.tbleg i{font-style:normal;letter-spacing:1px;}
   .tbp i.g,.tbleg i.g{color:var(--sitzt-ink);} .tbp i.n,.tbleg i.n{color:var(--noch-ink);}
@@ -1293,7 +1293,10 @@
       if(t.datum === w.heute) z.classList.add("heute");
       z.appendChild(el("span", "tbd", WOCHENTAG[i] + " " + tagKurz(t.datum)));
       const leer = !t.minuten && !(t.punkte || []).length;
-      z.appendChild(el("span", "tbm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min")));
+      const mz = el("span", "tbm", leer ? "–" : (t.minuten ? t.minuten + " Min" : "unter 1 Min"));
+      /* Tagessumme (Pauls Wunsch, 01.10.2026): wie viele Fragen an dem Tag, gewusst davon */
+      if (t.gesamt) mz.appendChild(el("b", "tbmsum", t.gesamt + (t.gesamt === 1 ? " Frage" : " Fragen") + " · " + (t.gewusst || 0) + " gewusst"));
+      z.appendChild(mz);
       const p = el("span", "tbp");
       if(leer) p.textContent = t.datum === w.heute ? "heute noch nichts" : "frei";
       /* 1 = beim ersten Tipp gewusst · 2 = spaeter geschafft · 0 = noch offen */
