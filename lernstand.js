@@ -974,7 +974,6 @@
 
   var begonnen = Date.now();
   var aufgaben = [];
-  var gesendet = false;
 
   /* ---------- Aktive Zeit ----------
      Wanduhrzeit ist keine Lernzeit. Wer eine Seite offen liegen lässt und
@@ -1061,12 +1060,11 @@
 
   function senden() {
     if (NUR_MELDEN) return;   // Hub, Werkstatt und Vokabeltrainer schreiben selbst mit
-    if (gesendet) return;
     uhrAnhalten();
     var sekunden = aktiveSekunden();
-    // Unter einer halben Minute war es kein Spielen, sondern ein Blick.
-    if (sekunden < 30) return;
-    gesendet = true;
+    // Unter einer halben Minute ohne Antwort war es kein Spielen, sondern ein
+    // Blick. Mit Antworten wird immer gesendet - sie sind echt.
+    if (sekunden < 30 && !aufgaben.length) return;
 
     var d = ausDateiname();
     var runde = {
@@ -1094,6 +1092,14 @@
           headers: { "content-type": "application/json" }, body: text, keepalive: true }).catch(function(){});
       }
     } catch (e) {}
+    /* Danach von vorn zaehlen (01.10.2026). Vorher galt "einmal je Seite":
+       Schaltete Paul das iPad kurz weg, ging die Runde raus, und alles, was er
+       danach auf derselben Seite spielte, kam nie an - 54 HSU-Fragen am
+       01.10.2026 zwischen 16:27 und 16:32 Uhr. Jetzt wird beim Wegschalten
+       gesendet und beim Zurueckkommen weitergezaehlt. Ein pagehide direkt
+       nach dem Wegschalten findet nichts mehr vor und sendet nicht doppelt. */
+    aufgaben = [];
+    aktivMs = 0; laeuftSeit = 0; begonnen = Date.now();
   }
 
   /* ---------- Puls: "hier spielt gerade jemand" ----------
