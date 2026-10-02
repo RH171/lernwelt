@@ -499,6 +499,23 @@ export async function stoffBild(env, id, nr) {
  * geht das hoechstens WECHSEL_MAX-mal je Blatt.
  *
  * Kosten: 2 Schreibvorgaenge beim Anhaengen, 3 beim Ersetzen. */
+/* Alte und neue Lesung zusammenlegen: Altes zuerst, in seiner Reihenfolge,
+ * dann was neu dazukam. Doppeltes (gleiche Zeile, gleiche Antwort) faellt weg. */
+export function lesungenZusammen(altZ, neuZ, altK, neuK) {
+  const n = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "");
+  const zeilen = [], gesehen = new Set();
+  for (const z of [].concat(altZ || [], neuZ || [])) {
+    const k = n(z); if (!k || gesehen.has(k)) continue;
+    gesehen.add(k); zeilen.push(z);
+  }
+  const karten = [], ant = new Set();
+  for (const c of [].concat(altK || [], neuK || [])) {
+    const k = n(c && (c.richtig || c.antwort)); if (!k || ant.has(k)) continue;
+    ant.add(k); karten.push(c);
+  }
+  return { zeilen: zeilen.slice(0, 14), karten: karten.slice(0, KARTEN_MAX) };
+}
+
 export const WECHSEL_MAX = 8;
 export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
   if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
@@ -541,6 +558,14 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
     e.seitenWechsel = (Number(e.seitenWechsel) || 0) + 1;
     e.seiteNeu = new Date().toISOString();
     if (n === 0 && abdruck) e.abdruck = abdruck;
+    /* Was schon gelesen war, bleibt als inhaltAlt/kartenAlt liegen (Denny,
+       02.10.2026: "dass die History dazu bleibt, nicht die gesammelten Punkte
+       verloren gehen"). Beim Neulesen werden alte Zeilen und Karten zuerst
+       uebernommen, Neues kommt hinten dazu - so behalten Quizfragen ihre
+       Zeilennummer und Suchkarten ihre Antwort, und die Lernpunkte daran
+       (blatt#<zeile>, blatt#k:<antwort>) gelten weiter. */
+    if (Array.isArray(e.inhalt) && e.inhalt.length && !e.inhaltAlt) e.inhaltAlt = e.inhalt;
+    if (Array.isArray(e.karten) && e.karten.length && !e.kartenAlt) e.kartenAlt = e.karten;
     delete e.inhalt;
     delete e.karten;
     delete e.titelWarum;
@@ -579,7 +604,7 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
  * Eintrag. Schreibvorgaenge sind hier die knappe Zahl (1000 am Tag), nicht
  * der Platz - zwei Felder gehoeren deshalb in einen Schluessel, nicht in
  * zwei. */
-export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte) {
+export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   /* Handgeschriebenes zuerst - hier steht der ZWEITE Deckel (14), nachdem
      inhalteZusammen() schon bei INHALT_MAX gekuerzt hat. Ohne diese Zeile
@@ -587,8 +612,9 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte) {
   const alleZ = (Array.isArray(inhalt) ? inhalt : [])
     .map((z) => String(z || "").trim().slice(0, 90))
     .filter(Boolean);
-  const zeilen = alleZ.filter((z) => z.indexOf(HAND) === 0)
-    .concat(alleZ.filter((z) => z.indexOf(HAND) !== 0))
+  // halten (neue Seite, 02.10.2026): Reihenfolge bleibt, sonst wandern die Zeilennummern.
+  const zeilen = (halten ? alleZ : alleZ.filter((z) => z.indexOf(HAND) === 0)
+    .concat(alleZ.filter((z) => z.indexOf(HAND) !== 0)))
     .slice(0, 14);
   const gutSorte = SORTEN[sorte] ? sorte : "";
   const hatKarten = Array.isArray(karten) && karten.length > 0;
@@ -608,6 +634,7 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte) {
     if (zeilen.length) liste[treffer].inhalt = zeilen;
     if (gutSorte) liste[treffer].sorte = gutSorte;
     if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, KARTEN_MAX);
+    if (halten) { delete liste[treffer].inhaltAlt; delete liste[treffer].kartenAlt; }
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
     return { ok: true, zeilen: zeilen.length, sorte: gutSorte };

@@ -30,7 +30,7 @@ import {
   inhaltSetzen,
   HAND, KARTEN_MAX,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen,
-  faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen,
+  faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen, lesungenZusammen,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -423,8 +423,16 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       karten = gelesen.karten || [];
       kartenWarum = gelesen.kartenWarum || "";
       genauer = gelesen.genauer || 0;
-      if ((gelesen.inhalt && gelesen.inhalt.length) || karten.length) {
-        await inhaltSetzen(env, kind, eintrag.id, gelesen.inhalt, karten, gelesen.sorte);
+      /* Neue Seite (02.10.2026): Was vorher gelesen war, bleibt vorn - siehe
+         seiteSetzen() und lesungenZusammen() in _schulstoff.js. */
+      const halten = !!(eintrag.inhaltAlt || eintrag.kartenAlt);
+      let zeilenNeu = gelesen.inhalt;
+      if (halten) {
+        const z = lesungenZusammen(eintrag.inhaltAlt, gelesen.inhalt, eintrag.kartenAlt, karten);
+        zeilenNeu = z.zeilen; karten = z.karten;
+      }
+      if ((zeilenNeu && zeilenNeu.length) || karten.length) {
+        await inhaltSetzen(env, kind, eintrag.id, zeilenNeu, karten, gelesen.sorte, halten);
       }
       /* Das Thema (30.09.2026): vergibt das Modell, das Kind bestaetigt nichts. */
       /* Nach einer neu fotografierten Seite bleibt das vergebene Thema (02.10.2026). */
