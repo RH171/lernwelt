@@ -1414,6 +1414,16 @@
       if (za !== zb) return zb - za;          // jüngster zuerst
       return a.__platz - b.__platz;           // sonst wie gebaut
     });
+    // Paul am 02.10.2026 über Denny: zwischen 6 und 8 Uhr soll der Stundenplan
+    // vorn stehen, sonst gilt "zuletzt benutzt". Nur Montag bis Freitag -
+    // am Wochenende packt niemand die Schultasche.
+    var jetzt = window.__jetzt ? new Date(window.__jetzt) : new Date();
+    var tag = jetzt.getDay(), std = jetzt.getHours();
+    if (tag >= 1 && tag <= 5 && std >= 6 && std < 8){
+      karten.sort(function(a, b){
+        return (b.getAttribute("data-weg") === "stundenplan") - (a.getAttribute("data-weg") === "stundenplan");
+      });
+    }
     karten.forEach(function(k){ kasten.appendChild(k); });
   })();
 
