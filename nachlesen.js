@@ -33,9 +33,11 @@
 
   function ungelesen(e) {
     if (!e || !e.id || e.sichtbar === false) return false;
-    if (e.titel || (Array.isArray(e.inhalt) && e.inhalt.length)) return false;
+    if (Array.isArray(e.inhalt) && e.inhalt.length) return false;
+    // Neu fotografierte Seite (02.10.2026): Titel bleibt, Inhalt fehlt -> neu lesen.
+    if (e.titel && !e.seiteNeu) return false;
     if (!(Number(e.seiten) > 0)) return false;
-    var t = Date.parse(e.angelegt || "");
+    var t = Date.parse(e.seiteNeu || e.angelegt || "");
     if (!isFinite(t) || (Date.now() - t) < FRISCH) return false;
     return !schonVersucht(e.id);
   }

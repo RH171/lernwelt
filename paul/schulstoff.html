@@ -24,7 +24,8 @@
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="stundenplan.js?v=1b197a6e"></script>
-<script src="/nachlesen.js?v=2b08c294"></script>
+<script src="/nachlesen.js?v=20efd8d6"></script>
+<script src="/seite-tauschen.js?v=3d5c47be"></script>
 <script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
 <style>
   :root{
@@ -330,6 +331,17 @@
       .catch(function(){ return null; });
   }
 
+  /* Seite neu fotografieren oder dazulegen (02.10.2026, /seite-tauschen.js). */
+  var tauscher = window.LWSeite ? LWSeite.einbauen(document.querySelector("#schau .knoepfe"), {
+    kind: "paul",
+    offen: function(){ return {eintrag: offen, seite: offenSeite}; },
+    abgelegt: function(j, nr){
+      if (!offen) return;
+      Object.keys(bilder).forEach(function(k){ if (k.indexOf(offen.id + ":") === 0) delete bilder[k]; });
+      offen.seiten = j.seiten; offenSeite = nr; seiteZeigen();
+    },
+    fertig: function(){ laden(); }
+  }) : null;
   function aufmachen(id){
     offen = alles.filter(function(e){ return e.id === id; })[0];
     if (!offen) return;
@@ -358,6 +370,7 @@
     $("schau-art").disabled = false;
     $("schau-fachwahl").classList.add("verborgen");
     $("schau").classList.remove("fachoffen");
+    if (tauscher) tauscher.malen();
     bildHolen(offen.id, offenSeite).then(function(url){
       if (url) $("schau-bild").src = url;
     });
@@ -556,6 +569,7 @@
         }
         heute = a.j.heute;
         alles = a.j.eintraege || [];
+        if (offen){ var neuO = alles.filter(function(e){ return e.id === offen.id; })[0]; if (neuO){ offen = neuO; seiteZeigen(); } }
         // Gescheitertes Durchlesen nachholen (29.09.2026, siehe /nachlesen.js).
         if (window.LWNachlesen) LWNachlesen("paul", alles, function(){ laden(); });
         var tage = {};
