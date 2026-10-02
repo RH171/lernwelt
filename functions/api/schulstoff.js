@@ -30,7 +30,7 @@ import {
   inhaltSetzen,
   HAND, KARTEN_MAX,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen,
-  faecherImHeft, blaetterImFach, schuljahrStart,
+  faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -82,6 +82,11 @@ export async function onRequestPost(context) {
        Paul darf ihn selbst aufrufen - es ist sein eigenes Blatt. */
     if (such.get("lesen") === "1") {
       return await blattNachlesen(context);
+    }
+    /* Eine Seite neu fotografieren oder dazulegen (02.10.2026) - das Kind
+       darf es selbst, es ist sein Blatt. Danach liest ?lesen=1 neu. */
+    if (such.get("seite") === "1") {
+      return await seiteTauschen(context);
     }
   } catch (e) {}
 
@@ -204,6 +209,29 @@ export async function onRequestPost(context) {
     // Wie viele Baender der zweite Blick genauer gesetzt hat.
     ...(karten.length ? { genauer } : {}),
   });
+}
+
+/*   POST /api/schulstoff?seite=1   {kind, id, nr, bild}
+ * Siehe seiteSetzen() in _schulstoff.js. */
+async function seiteTauschen(context) {
+  const { request, env } = context;
+  let d;
+  try { d = await request.json(); } catch (e) { return json(400, { ok: false, fehler: "Die Anfrage war kein gültiges JSON." }); }
+  const kind = String(d.kind || "").toLowerCase();
+  if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+  if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+  const bild = d.bild;
+  if (typeof bild !== "string" || !bild.startsWith("data:")) {
+    return json(400, { ok: false, fehler: "Da war kein Bild dabei." });
+  }
+  if (bild.length > MAX_BILD * 1.37) {
+    return json(400, { ok: false, fehler: "Das Bild ist zu groß. Mach es bitte etwas kleiner." });
+  }
+  const nr = Number(d.nr);
+  const abdruck = nr === 0 ? await fingerabdruck(bild) : "";
+  const r = await seiteSetzen(env, kind, String(d.id || "").trim(), nr, bild, MAX_SEITEN, abdruck);
+  if (!r.ok) return json(r.fehler === "Das finde ich nicht mehr." ? 404 : 400, r);
+  return json(200, r);
 }
 
 /* Schritt 2 des zweistufigen Ablegens: das schon abgelegte Blatt lesen.
@@ -399,7 +427,8 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
         await inhaltSetzen(env, kind, eintrag.id, gelesen.inhalt, karten, gelesen.sorte);
       }
       /* Das Thema (30.09.2026): vergibt das Modell, das Kind bestaetigt nichts. */
-      if (gelesen.thema || gelesen.probenstoff === false) {
+      /* Nach einer neu fotografierten Seite bleibt das vergebene Thema (02.10.2026). */
+      if ((gelesen.thema || gelesen.probenstoff === false) && !(eintrag.seiteNeu && eintrag.thema)) {
         await themenSetzen(env, kind, { [eintrag.id]: { thema: gelesen.thema, probenstoff: gelesen.probenstoff } });
       }
     } catch (err) {

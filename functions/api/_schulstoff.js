@@ -479,6 +479,80 @@ export async function stoffBild(env, id, nr) {
   }
 }
 
+/* Eine Seite austauschen oder hinten anhaengen (02.10.2026).
+ *
+ * Denny, mit einem Foto von Pauls Hefteintrag "Zusammengesetzte Nomen", den
+ * Paul nach dem Ablegen zu Ende geschrieben hatte: "Haben wir derzeit schon
+ * die Moeglichkeit, eine Seite zu ergaenzen oder auszutauschen?" - es gab
+ * keine. Gewaehlt per Klickfrage: Knopf in der Grossansicht.
+ *
+ *   nr <  seiten  -> diese Seite wird ersetzt
+ *   nr == seiten  -> eine Seite kommt hinten dazu (hoechstens maxSeiten)
+ *
+ * Das ALTE Bild bleibt liegen (stoffbild-alt:<id>:<nr>:<zeit>) - Dennys Regel
+ * vom 22.09.2026 "speichere weg, sodass es nicht geloescht werden kann" gilt
+ * auch fuer eine ersetzte Seite. Inhalt und Fundkarten werden geleert, damit
+ * ?lesen=1 das Blatt neu liest (der Kostenriegel dort haengt am Inhalt).
+ * Fach, Art, Datum, Thema und Titel bleiben.
+ *
+ * Damit ein Kind nicht beliebig oft neu lesen laesst (je Lesen rund 3 Cent),
+ * geht das hoechstens WECHSEL_MAX-mal je Blatt.
+ *
+ * Kosten: 2 Schreibvorgaenge beim Anhaengen, 3 beim Ersetzen. */
+export const WECHSEL_MAX = 8;
+export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
+  if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
+  if (!env || !env.PAUL_KV) return { ok: false, fehler: "Der Speicher ist gerade nicht da." };
+  if (!/^[a-z0-9]{6,20}$/.test(String(id || ""))) return { ok: false, fehler: "Welches Blatt denn?" };
+  const n = Number(nr);
+  if (!Number.isInteger(n) || n < 0) return { ok: false, fehler: "Welche Seite denn?" };
+
+  const heute = heuteBerlin();
+  for (let i = 0; i < MONATE_ZURUECK; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const schluessel = LISTE(kind, d.toISOString().slice(0, 7));
+    let roh;
+    try { roh = await env.PAUL_KV.get(schluessel); }
+    catch (e) { return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
+    const t = liste.findIndex((e) => e.id === id);
+    if (t < 0) continue;
+    const e = liste[t];
+    const seiten = Math.max(1, Number(e.seiten) || 1);
+    if (n > seiten) return { ok: false, fehler: "Die Seite davor fehlt noch." };
+    if (n === seiten && seiten >= maxSeiten) {
+      return { ok: false, fehler: "Mehr als " + maxSeiten + " Seiten passen nicht in einen Eintrag." };
+    }
+    if ((Number(e.seitenWechsel) || 0) >= WECHSEL_MAX) {
+      return { ok: false, fehler: "Dieses Blatt hast du schon oft neu fotografiert. Leg es bitte als neues Blatt ab." };
+    }
+    try {
+      if (n < seiten) {
+        const alt = await env.PAUL_KV.get(BILD(id, n));
+        if (alt) await env.PAUL_KV.put("stoffbild-alt:" + id + ":" + n + ":" + Date.now(), alt);
+      }
+      await env.PAUL_KV.put(BILD(id, n), bild);
+    } catch (err) {
+      return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." };
+    }
+    e.seiten = Math.max(seiten, n + 1);
+    e.seitenWechsel = (Number(e.seitenWechsel) || 0) + 1;
+    e.seiteNeu = new Date().toISOString();
+    if (n === 0 && abdruck) e.abdruck = abdruck;
+    delete e.inhalt;
+    delete e.karten;
+    delete e.titelWarum;
+    try { await env.PAUL_KV.put(schluessel, JSON.stringify(liste)); }
+    catch (err) {
+      return { ok: false, fehler: "Das Foto liegt sicher, aber das Heft hat es noch nicht vermerkt. Bitte nochmal." };
+    }
+    return { ok: true, id, seiten: e.seiten, ersetzt: n < seiten };
+  }
+  return { ok: false, fehler: "Das finde ich nicht mehr." };
+}
+
 /* Den Titel nachtragen, den das Modell vom Bild gelesen hat.
  *
  * Laeuft NACH der Antwort (waitUntil), damit das Ablegen bei 1,4 Sekunden
