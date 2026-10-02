@@ -23,16 +23,20 @@
         .catch(function(){ return {}; });
     },
     zeit: function(alter, href){ var t = alter[datei(href)]; return t ? Date.parse(t) || 0 : 0; },
-    sortieren: function(liste, alter){
-      if (!liste || !alter) return;
-      var el = Array.prototype.filter.call(liste.children, function(x){ return x.tagName !== "SCRIPT"; });
+    // Gibt die Elemente in neuer Reihenfolge zurück, ohne das DOM anzufassen.
+    ordnen: function(el, alter){
+      el = Array.prototype.slice.call(el);
       el.forEach(function(x, i){ x.__platz = i; });
-      el.sort(function(a, b){
-        var za = wert(alter, a), zb = wert(alter, b);
+      return el.sort(function(a, b){
+        var za = wert(alter || {}, a), zb = wert(alter || {}, b);
         if (!za || !zb) return (za ? 1 : 0) - (zb ? 1 : 0) || a.__platz - b.__platz;
         return zb - za || a.__platz - b.__platz;
       });
-      el.forEach(function(x){ liste.appendChild(x); });
+    },
+    sortieren: function(liste, alter){
+      if (!liste || !alter) return;
+      var el = Array.prototype.filter.call(liste.children, function(x){ return x.tagName !== "SCRIPT"; });
+      LWAlter.ordnen(el, alter).forEach(function(x){ liste.appendChild(x); });
     }
   };
 })();

@@ -717,6 +717,7 @@
 
 <canvas id="confetti"></canvas>
 
+<script src="/spielalter.js?v=fe812d69"></script>
 <script>
 (function(){
   "use strict";
@@ -1047,6 +1048,7 @@
     return (t.title+" "+t.sub+" "+t.type+" "+FACH[t.fach].name).toLowerCase().indexOf(q) >= 0;
   }
 
+  var SPIELALTER = {};
   function render(klasse){
     grid.innerHTML = "";
     const soon = document.getElementById("soon");
@@ -1076,7 +1078,10 @@
       grid.appendChild(hinweis);
     }
     FACH_ORDER.forEach(function(fk){
-      const tools = TOOLS.filter(t=>t.fach===fk && t.klasse===klasse && matchQuery(t));
+      // Neueste zuerst (Denny, 02.10.2026), innerhalb des Fachs.
+      const tools = TOOLS.filter(t=>t.fach===fk && t.klasse===klasse && matchQuery(t))
+        .map((t,i)=>({t:t,i:i,z:window.LWAlter ? LWAlter.zeit(SPIELALTER, t.file) : 0}))
+        .sort((a,b)=> (b.z-a.z) || (a.i-b.i)).map(x=>x.t);
       if(!tools.length) return;
       shown += tools.length;
       const sec = document.createElement("section");
@@ -1444,6 +1449,7 @@
 
   // ---- Start -----------------------------------------------------------
   render(parseInt(klasseSel.value,10));
+  if (window.LWAlter) LWAlter.laden("paul").then(function(a){ SPIELALTER = a; render(parseInt(klasseSel.value,10)); });
   // Automatisch erkannte Spiele nachladen und Kacheln ergänzen (ohne die index.html zu ändern)
   mergeDiscovered(function(){ render(parseInt(klasseSel.value,10)); });
 

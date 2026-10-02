@@ -113,6 +113,16 @@
 
   <p class="hinweis">Fehlt dir ein Spiel oder hakt etwas? Tipp unten rechts auf 💬 – ich lese mit.</p>
 </div>
+<script src="/spielalter.js?v=fe812d69"></script>
+<script>
+/* Neueste Spiele zuerst (Denny, 02.10.2026). Die Schmiede hat kein Datum und
+   bleibt vorn; der Hinweis bleibt unten. */
+LWAlter.laden("helena").then(function(alter){
+  var hinweis = document.querySelector(".wrap > .hinweis");
+  var spiele = document.querySelectorAll(".wrap > a.spiel");
+  LWAlter.ordnen(spiele, alter).forEach(function(x){ hinweis.parentNode.insertBefore(x, hinweis); });
+});
+</script>
 <script src="/lernstand.js?v=f132a471" defer></script>
 </body>
 </html>
