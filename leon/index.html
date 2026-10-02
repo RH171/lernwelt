@@ -427,10 +427,23 @@
       <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen.</div>
       <div id="nachsehenListe"></div>
     </section>
-    <div class="zweikacheln">
+    <div class="zweikacheln" id="schulkacheln">
       <a class="minikachel" href="hausaufgaben.html"><span class="bild">📚</span><span><b>Meine Hausaufgaben</b><span>Foto machen, zusammen schauen</span></span></a>
-      <a class="minikachel" href="stundenplan.html"><span class="bild">📅</span><span><b>Mein Stundenplan</b><span>Was habe ich wann?</span></span></a>
+      <a class="minikachel" href="stundenplan.html" data-weg="stundenplan"><span class="bild">📅</span><span><b>Mein Stundenplan</b><span>Was habe ich wann?</span></span></a>
     </div>
+    <script>
+    /* Wie bei Paul (02.10.2026): Montag bis Freitag zwischen 6 und 8 Uhr steht
+       der Stundenplan als erste Kachel vorn. Die Uhr laesst sich zum Messen
+       ueber window.__jetzt vorgeben. */
+    (function(){
+      var jetzt = window.__jetzt ? new Date(window.__jetzt) : new Date();
+      var tag = jetzt.getDay(), std = jetzt.getHours();
+      if (!(tag >= 1 && tag <= 5 && std >= 6 && std < 8)) return;
+      var reihe = document.getElementById("schulkacheln");
+      var sp = document.querySelector('[data-weg="stundenplan"]');
+      if (reihe && sp) reihe.insertBefore(sp, reihe.firstChild);
+    })();
+    </script>
     <!-- Das taegliche Quiz (20.09.2026) - kurze Fragen aus seinem Stoff. -->
     <a class="minikachel breit" href="quiz.html" style="margin-top:10px">
       <span class="bild">🎯</span><span><b>Mein Quiz</b><span>Ein paar Fragen. Was du nicht wusstest, kommt wieder.</span></span>

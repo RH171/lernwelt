@@ -234,7 +234,7 @@
   </a>
 
   <div class="abschnitt">Für die Schule</div>
-  <div class="kacheln">
+  <div class="kacheln" id="schulkacheln">
     <!-- Heute lernen (von Paul, 29.09.2026): eine kurze Runde aus ihren
          Blaettern, was wieder dran ist und etwas Neues. -->
     <a class="kachel breit heutelernen" href="quiz.html?heute=1" id="heuteLernen" data-nurmitkarten="1" style="display:none">
@@ -291,13 +291,32 @@
 
   <div class="abschnitt">Nachschlagen</div>
   <div class="kacheln">
-    <a class="kachel" href="stundenplan.html">
+    <a class="kachel" href="stundenplan.html" data-weg="stundenplan">
       <span class="ki">📅</span><b>Stundenplan</b><span>Deine Woche</span>
     </a>
     <a class="kachel" href="pruefungen.html">
       <span class="ki">📋</span><b>Prüfungen</b><span>Was zählt und wie viel</span>
     </a>
   </div>
+  <script>
+  /* Wie bei Paul (02.10.2026): Montag bis Freitag zwischen 6 und 8 Uhr steht
+     der Stundenplan breit als erste Kachel unter "Für die Schule". Die Uhr
+     laesst sich zum Messen ueber window.__jetzt vorgeben. */
+  (function(){
+    var jetzt = window.__jetzt ? new Date(window.__jetzt) : new Date();
+    var tag = jetzt.getDay(), std = jetzt.getHours();
+    if (!(tag >= 1 && tag <= 5 && std >= 6 && std < 8)) return;
+    var reihe = document.getElementById("schulkacheln");
+    var sp = document.querySelector('[data-weg="stundenplan"]');
+    if (!reihe || !sp) return;
+    sp.classList.add("breit");
+    // Breite Kacheln tragen Titel und Satz in .kt untereinander.
+    var kt = document.createElement("span"); kt.className = "kt";
+    Array.prototype.slice.call(sp.children, 1).forEach(function(x){ kt.appendChild(x); });
+    sp.appendChild(kt);
+    reihe.insertBefore(sp, reihe.firstChild);
+  })();
+  </script>
 
   <div class="hoverlay" id="heftOverlay">
     <div class="hmodal" role="dialog" aria-label="Mein Heft">
