@@ -374,7 +374,7 @@
       st.falsch++;
     }
     st.faellig = heuteZahl() + FACH_TAGE[st.fach];
-    st.zuletzt = new Date().toISOString().slice(0,10);
+    st.zuletzt = new Date().toLocaleDateString("sv-SE");
     wissen[schl] = st;
     wissenSichern(wissen);
   }

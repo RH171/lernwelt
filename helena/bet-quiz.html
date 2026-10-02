@@ -330,7 +330,7 @@
 
     stand.gespielt = (stand.gespielt || 0) + gesamt;
     stand.richtig = (stand.richtig || 0) + richtig;
-    var heute = new Date().toISOString().slice(0, 10);
+    var heute = new Date().toLocaleDateString("sv-SE");
     if (stand.tage[stand.tage.length - 1] !== heute) stand.tage.push(heute);
     stand.tage = stand.tage.slice(-60);
     schreibe(SPEICHER, stand);
@@ -343,7 +343,7 @@
   function serie() {
     var n = 0, d = new Date();
     for (;;) {
-      var s = d.toISOString().slice(0, 10);
+      var s = d.toLocaleDateString("sv-SE");
       if (stand.tage.indexOf(s) < 0) break;
       n++; d.setDate(d.getDate() - 1);
     }
@@ -368,6 +368,6 @@
 })();
 </script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
-<script src="/lernstand.js?v=f132a471" defer></script>
+<script src="/lernstand.js?v=7e8cd6a3" defer></script>
 </body>
 </html>

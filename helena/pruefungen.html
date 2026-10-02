@@ -165,7 +165,7 @@
         b.innerHTML = '<span class="kasten">' + (stand[x.id] ? "✓" : "") + "</span><span></span>";
         b.querySelector("span:last-child").textContent = x.t;
         b.addEventListener("click", function(){
-          if (stand[x.id]) delete stand[x.id]; else stand[x.id] = new Date().toISOString().slice(0,10);
+          if (stand[x.id]) delete stand[x.id]; else stand[x.id] = new Date().toLocaleDateString("sv-SE");
           schreibe(stand); malen();
         });
         h.appendChild(b);

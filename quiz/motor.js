@@ -313,7 +313,7 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok || !Array.isArray(j.noten)) return;
-        var heute = new Date().toISOString().slice(0, 10), m = {};
+        var heute = new Date().toLocaleDateString("sv-SE"), m = {};
         j.noten.forEach(function (n) {
           var d = String(n.datum || "").slice(0, 10), f = String(n.fach || "").toLowerCase();
           f = FACH_ALIAS[f] || f;
@@ -1148,7 +1148,7 @@ function artKurz(art) {
 
     stand.gespielt = (stand.gespielt || 0) + gesamt;
     stand.richtig = (stand.richtig || 0) + richtigGesamt;
-    var heute = new Date().toISOString().slice(0, 10);
+    var heute = new Date().toLocaleDateString("sv-SE");
     if (!Array.isArray(stand.tage)) stand.tage = [];
     if (stand.tage[stand.tage.length - 1] !== heute) stand.tage.push(heute);
     stand.tage = stand.tage.slice(-60);
@@ -1162,7 +1162,7 @@ function artKurz(art) {
     if (!tage || !tage.length) return 0;
     var n = 0, d = new Date();
     for (;;) {
-      var s = d.toISOString().slice(0, 10);
+      var s = d.toLocaleDateString("sv-SE");
       if (tage.indexOf(s) < 0) break;
       n++; d.setDate(d.getDate() - 1);
     }

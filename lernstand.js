@@ -230,13 +230,13 @@
   function schonAngesprochen(id){
     try {
       var d = JSON.parse(localStorage.getItem(ANGESPROCHEN) || "{}");
-      return d[id] === new Date().toISOString().slice(0,10);
+      return d[id] === new Date().toLocaleDateString("sv-SE");
     } catch(e){ return false; }
   }
   function ansprechenVermerken(id){
     try {
       var d = JSON.parse(localStorage.getItem(ANGESPROCHEN) || "{}");
-      d[id] = new Date().toISOString().slice(0,10);
+      d[id] = new Date().toLocaleDateString("sv-SE");
       localStorage.setItem(ANGESPROCHEN, JSON.stringify(d));
     } catch(e){}
   }

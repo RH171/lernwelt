@@ -224,7 +224,7 @@
 
 </div>
 
-<script src="/lernstand.js?v=f132a471"></script>
+<script src="/lernstand.js?v=7e8cd6a3"></script>
 <script src="/helena/bet-fehlertexte.js?v=3a35b8fb"></script>
 <script>
 (function(){
@@ -525,7 +525,7 @@
     var d = lese();
     if (!d[aktuell.k]) d[aktuell.k] = {};
     if (d[aktuell.k].best == null || be > d[aktuell.k].best) d[aktuell.k].best = be;
-    d[aktuell.k].zuletzt = new Date().toISOString().slice(0, 10);
+    d[aktuell.k].zuletzt = new Date().toLocaleDateString("sv-SE");
     sichern(d);
 
     ergMalen(be, offen, leer);
