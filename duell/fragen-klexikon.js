@@ -572,4 +572,14 @@ export const KLEXIKON = [
   [4, "wissen", "⛏️", "Wie tief unter der Erde kann man Erdgas finden?", ["Bis 3000 Meter", "Bis 30 Meter", "Bis 300 Meter", "Bis 30000 Meter"], "Erdgas entstand vor Millionen Jahren aus Resten von Pflanzen und Tieren, die unter die Erde sanken.", null, "Erdgas"],
   [4, "tiere", "📖", "Warum heißt der Borkenkäfer „Buchdrucker“?", ["Seine Gänge sehen aus wie Druckplatten", "Er frisst Bücher", "Er lebt in Druckereien", "Er wurde von einem Drucker entdeckt"], "Die Larven graben Gänge unter der Rinde, die wie das Muster alter Druckplatten aussehen.", null, "Borkenkäfer"],
   [6, "musik", "🎸", "Wie nennt man die sich wiederholende Gitarren-Melodie im Heavy Metal?", ["Riff", "Solo", "Akkord", "Takt"], "Fast jedes Heavy-Metal-Stück hat außerdem ein schnelles Gitarrensolo in der Mitte oder am Ende.", null, "Heavy Metal"],
+
+  // Nachschub vom 02.10.2026
+  [1, "tiere", "🦅", "Was jagt der Bussard am liebsten?", ["Mäuse", "Fische", "Blumen", "Steine"], "Der Mäusebussard ist der häufigste Greifvogel in Europa.", null, "Bussarde"],
+  [1, "technik", "✈️", "Wie viele Flügelpaare hat ein Doppeldecker?", ["Zwei", "Eins", "Drei", "Vier"], "Manche Flugzeuge haben sogar drei oder vier Flügelpaare übereinander.", null, "Doppeldecker"],
+  [2, "welt", "🚌", "Wo fahren besonders viele Doppeldeckerbusse?", ["London", "Paris", "Rom", "Berlin"], "In London gibt es seit langer Zeit Busse mit zwei Etagen.", null, "Doppeldecker"],
+  [2, "natur", "🌬️", "Wer baute das erste Windrad für Strom?", ["Ein Schotte", "Ein Deutscher", "Ein Franzose", "Ein Italiener"], "Das erste Windrad für Strom wurde vor über hundert Jahren gebaut.", null, "Windkraft"],
+  [3, "welt", "🏞️", "Wie heißt der größte See in Mitteleuropa?", ["Plattensee", "Bodensee", "Genfersee", "Gardasee"], "Viele Touristen besuchen den großen Balaton-See in Ungarn jedes Jahr.", null, "Ungarn"],
+  [4, "wissen", "🏺", "Woher kommen die bekanntesten Mumien?", ["Altes Ägypten", "Antikes Rom", "Altes China", "Altes Griechenland"], "Je reicher jemand im alten Ägypten war, desto öfter wurde er mumifiziert.", null, "Mumie"],
+  [5, "musik", "🎹", "Für welches Instrument schrieb Chopin fast nur Musik?", ["Klavier", "Geige", "Flöte", "Trompete"], "Kaum ein anderer Komponist ist für seine Klaviermusik so beliebt wie Chopin.", null, "Frédéric Chopin"],
+  [2, "technik", "🚂", "Wie heißt ein Zugwagen mit zwei Etagen?", ["Doppelstockwagen", "Doppelgleiswagen", "Zweibahnwagen", "Hochwagen"], "Die untere Etage liegt extra tief, damit der Wagen in jeden Tunnel passt.", null, "Doppeldecker"],
 ];
