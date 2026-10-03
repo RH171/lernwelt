@@ -280,7 +280,7 @@
     fetch("/api/statistik?eigene=1&kind=" + encodeURIComponent(KIND), { credentials: "same-origin" })
       .then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (j) { if (!j || !j.ok || !Array.isArray(j.tage)) throw 0; wocheZeichnen(box, j); })
-      .catch(function () { box.innerHTML = ""; });
+      .catch(function () { box.innerHTML = box.id === "berichtWoche" ? '<p class="hleer">Deine Woche kommt gerade nicht. Versuch es gleich noch einmal.</p>' : ""; });
   }
   function heftLaden(box) {
     box.innerHTML = '<p class="hleer">Dein Heft lädt …</p>';
@@ -311,7 +311,25 @@
     ov.addEventListener("click", function (ev) { if (ev.target === ov) ov.classList.remove("on"); });
   }
 
+  /* ---------- Eigener Knopf "Bericht" (03.10.2026) ----------
+     Denny: "Leon und Helena haetten auch gerne so einen Bericht in ihrer
+     Lernwelt" wie Paul. Deine Woche stand bis dahin nur IN "Mein Heft" und
+     wurde nicht gefunden. Jetzt oben ein eigener Knopf, wie Pauls
+     "📊 Bericht". "Mein Heft" bleibt unveraendert. */
+  function berichtAnbinden() {
+    var auf = $("berichtOeffnen"), ov = $("berichtOverlay"), zu = $("berichtZu"), box = $("berichtWoche");
+    if (!auf || !ov || !box || !H.woche) return;
+    auf.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      box.innerHTML = '<p class="hleer">Deine Woche lädt …</p>';
+      wocheLaden(box);
+      ov.classList.add("on");
+    });
+    if (zu) zu.addEventListener("click", function () { ov.classList.remove("on"); });
+    ov.addEventListener("click", function (ev) { if (ev.target === ov) ov.classList.remove("on"); });
+  }
+
   window.LWHeftStart = { zeichnen: heftZeichnen, woche: wocheZeichnen };
-  function los() { nachsehen(); heftAnbinden(); }
+  function los() { nachsehen(); heftAnbinden(); berichtAnbinden(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", los); else los();
 })();

@@ -399,6 +399,7 @@
     <!-- Hell oder dunkel (Denny, 25.09.2026: "Ja, jetzt übertragen"). Wie bei
          Paul: der Schalter steht NUR hier, die Wahl gilt auf allen Seiten von
          Leon (localStorage "leon-theme", Standard hell). -->
+    <button class="zurueck" id="berichtOeffnen" type="button" title="Deine Woche">📊 Bericht</button>
     <button class="zurueck modus" id="modusBtn" type="button" aria-pressed="false" title="Hell oder dunkel">🌙 Dunkel</button>
   </header>
 
@@ -1899,6 +1900,15 @@
 </script>
 <script>window.FERIENBAND = {gross:true, ziel:"/ferien"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
+<!-- Bericht (03.10.2026): Deine Woche mit eigenem Knopf oben, wie bei Paul. -->
+<div class="hoverlay" id="berichtOverlay">
+  <div class="hmodal" role="dialog" aria-label="Deine Woche">
+    <h3>📊 Deine Woche</h3>
+    <p class="lead">Das hast du diese Woche gelernt:</p>
+    <div id="berichtWoche"></div>
+    <button class="zu" type="button" id="berichtZu">Schließen</button>
+  </div>
+</div>
 <div class="hoverlay" id="heftOverlay">
   <div class="hmodal" role="dialog" aria-label="Mein Heft">
     <h3>📊 Mein Heft</h3>
@@ -1920,7 +1930,7 @@ window.HEFT_START = {
 };
 </script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
-<script src="/heft-start.js?v=16b26de1"></script>
+<script src="/heft-start.js?v=66fae067"></script>
 <script src="/spielalter.js?v=fe812d69"></script>
 <script>
 /* Neueste Spiele zuerst (Denny, 02.10.2026). */

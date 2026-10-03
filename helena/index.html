@@ -194,6 +194,7 @@
       <p>7. Klasse · Johannes-Scharrer-Gymnasium</p>
     </div>
     <div class="oben">
+      <button class="ic" type="button" id="berichtOeffnen" title="Deine Woche" aria-label="Bericht: deine Woche">📊</button>
       <a class="ic" href="termine.html" title="Schultermine" aria-label="Schultermine">🗓️</a>
       <a class="ic" href="../" title="Zur Lernwelt-Startseite" aria-label="Zur Lernwelt-Startseite">🏠</a>
     </div>
@@ -317,6 +318,16 @@
     reihe.insertBefore(sp, reihe.firstChild);
   })();
   </script>
+
+  <!-- Bericht (03.10.2026): Deine Woche mit eigenem Knopf oben, wie bei Paul. -->
+  <div class="hoverlay" id="berichtOverlay">
+    <div class="hmodal" role="dialog" aria-label="Deine Woche">
+      <h3>📊 Deine Woche</h3>
+      <p class="lead">Was du diese Woche gelernt hast:</p>
+      <div id="berichtWoche"></div>
+      <button class="zu" type="button" id="berichtZu">Schließen</button>
+    </div>
+  </div>
 
   <div class="hoverlay" id="heftOverlay">
     <div class="hmodal" role="dialog" aria-label="Mein Heft">
@@ -452,7 +463,7 @@ window.HEFT_START = {
 };
 </script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
-<script src="/heft-start.js?v=16b26de1"></script>
+<script src="/heft-start.js?v=66fae067"></script>
 <script>window.FERIENBAND = {ziel:"termine.html"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
 <!-- lernstand.js NUR für den Puls: Diese Seite meldet keine Lernrunde, sie ist
