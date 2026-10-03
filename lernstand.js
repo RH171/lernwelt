@@ -1269,6 +1269,8 @@
     },
     sichern: weiterSichern
   };
+  // Eine Seite, deren Skript VOR diesem lief, hat sich hier vorgemerkt.
+  if (window.LW_WEITER) window.LWWeiter.anmelden(window.LW_WEITER);
   // Seiten ohne Anmeldung: nur die Scrollposition, nach dem Laden.
   window.addEventListener("load", function () { if (!weiterSeite) setTimeout(function () { if (!weiterSeite) weiterLaden(); }, 300); });
 

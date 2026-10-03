@@ -292,7 +292,9 @@
   startMalen();
 
   // Nach einem Update genau da weitermachen (03.10.2026, lernstand.js -> LWWeiter).
-  if (window.LWWeiter) window.LWWeiter.anmelden({
+  // lernstand.js laedt NACH diesem Skript (defer, Reihenfolge der Seite) - deshalb
+  // ueber window.LW_WEITER, das lernstand.js beim Start selbst abholt.
+  var weiterSeite = {
     sichern: function () {
       if ($("#spiel").classList.contains("verborgen") || modus === null) return null;
       return { modus: modus, luecken: luecken, offen: offen, wahl: wahl, versuche: versuche, erster: erster,
@@ -308,5 +310,6 @@
       zeichnen();
       if ($("#zaehler") && d.zaehler) $("#zaehler").textContent = d.zaehler;
     }
-  });
+  };
+  if (window.LWWeiter) window.LWWeiter.anmelden(weiterSeite); else window.LW_WEITER = weiterSeite;
 })();
