@@ -582,4 +582,14 @@ export const KLEXIKON = [
   [4, "wissen", "🏺", "Woher kommen die bekanntesten Mumien?", ["Altes Ägypten", "Antikes Rom", "Altes China", "Altes Griechenland"], "Je reicher jemand im alten Ägypten war, desto öfter wurde er mumifiziert.", null, "Mumie"],
   [5, "musik", "🎹", "Für welches Instrument schrieb Chopin fast nur Musik?", ["Klavier", "Geige", "Flöte", "Trompete"], "Kaum ein anderer Komponist ist für seine Klaviermusik so beliebt wie Chopin.", null, "Frédéric Chopin"],
   [2, "technik", "🚂", "Wie heißt ein Zugwagen mit zwei Etagen?", ["Doppelstockwagen", "Doppelgleiswagen", "Zweibahnwagen", "Hochwagen"], "Die untere Etage liegt extra tief, damit der Wagen in jeden Tunnel passt.", null, "Doppeldecker"],
+
+  // Nachschub vom 03.10.2026
+  [1, "wissen", "🧊", "Bei wie viel Grad wird Wasser zu Eis?", ["0 Grad", "10 Grad", "50 Grad", "100 Grad"], "Bei null Grad verwandelt sich flüssiges Wasser in festes Eis.", null, "Temperatur"],
+  [2, "wissen", "💧", "Bei wie viel Grad fängt Wasser an zu kochen?", ["100 Grad", "50 Grad", "0 Grad", "200 Grad"], "Bei hundert Grad verwandelt sich Wasser in heißen Dampf.", null, "Temperatur"],
+  [1, "natur", "🌱", "Welche Jahreszeit kommt gleich nach dem Winter?", ["Frühling", "Sommer", "Herbst", "Winter"], "Im Frühling wird es nach der kalten Jahreszeit wieder wärmer.", null, "Frühling"],
+  [2, "tiere", "🐄", "Wovon ernähren sich Rinder meistens?", ["Gras", "Fleisch", "Fisch", "Käse"], "Rinder würgen ihr Futter noch einmal hoch und kauen es ganz genau zwei Mal.", null, "Rinder"],
+  [5, "wissen", "🎢", "Was baute Walt Disney im Jahr 1955?", ["Einen Vergnügungspark", "Ein Schwimmbad", "Einen Zoo", "Ein Museum"], "Walt Disneys Park Disneyland stand in der Nähe von Los Angeles in Kalifornien.", null, "Walt Disney"],
+  [5, "welt", "🏝️", "Aus wie vielen Inseln besteht der Inselstaat Palau ungefähr?", ["350", "35", "3500", "50"], "Von den rund 350 Inseln Palaus sind nur die wenigsten überhaupt bewohnt.", null, "Palau"],
+  [1, "welt", "✈️", "Wo starten und landen Flugzeuge?", ["Flughafen", "Bahnhof", "Hafen", "Parkplatz"], "Auf einem Flughafen wachen Fluglotsen in einem Kontrollturm über alle Flugzeuge.", null, "Flughafen"],
+  [4, "technik", "⌨️", "Womit schrieb man ordentliche Texte, bevor es Computer gab?", ["Schreibmaschine", "Tablet", "Smartphone", "Drucker"], "In einer Schreibmaschine schlägt ein Metallstück den Buchstaben auf ein Farbband.", null, "Schreibmaschine"],
 ];
