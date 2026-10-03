@@ -290,4 +290,23 @@
   window.__einmaleins = { los: los, stand: function () { return { offen: offen, wahl: wahl, erster: erster, gestellt: gestellt, warte: warte, gespeichert: stand }; },
     baustellen: baustellen, gewicht: gewicht };
   startMalen();
+
+  // Nach einem Update genau da weitermachen (03.10.2026, lernstand.js -> LWWeiter).
+  if (window.LWWeiter) window.LWWeiter.anmelden({
+    sichern: function () {
+      if ($("#spiel").classList.contains("verborgen") || modus === null) return null;
+      return { modus: modus, luecken: luecken, offen: offen, wahl: wahl, versuche: versuche, erster: erster,
+               dauer: Date.now() - start, runde: runde, gestellt: gestellt, warte: warte, zuletzt: zuletzt,
+               seitFrage: Date.now() - gefragtAm, zaehler: ($("#zaehler") || {}).textContent || "" };
+    },
+    laden: function (d) {
+      if (!d || !d.offen || d.modus === undefined) return;
+      modus = d.modus; luecken = d.luecken || []; offen = d.offen; wahl = d.wahl; versuche = d.versuche || {};
+      erster = d.erster || {}; start = Date.now() - (+d.dauer || 0); runde = d.runde || 0; gestellt = d.gestellt || 0;
+      warte = d.warte || []; zuletzt = d.zuletzt || []; gefragtAm = Date.now() - Math.min(+d.seitFrage || 0, 30000);
+      $("#start").classList.add("verborgen"); $("#ende").classList.add("verborgen"); $("#spiel").classList.remove("verborgen");
+      zeichnen();
+      if ($("#zaehler") && d.zaehler) $("#zaehler").textContent = d.zaehler;
+    }
+  });
 })();

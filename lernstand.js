@@ -1210,9 +1210,12 @@
     });
 
     h.querySelector("#up-ja").addEventListener("click", function () {
+      // Spielstand JETZT sichern, solange die Seite ihn noch hat (03.10.2026).
+      weiterSichern();
       h.querySelector("#melde-karte").innerHTML =
         '<div class="fertig"><div class="haken">\u{1F527}</div><h3>Danke!</h3>' +
-        '<p class="u">Einen Moment \u2013 die Seite lädt gleich neu.</p></div>';
+        '<p class="u">Einen Moment \u2013 die Seite lädt gleich neu.' +
+        (weiterKann() ? ' Danach machst du genau hier weiter.' : '') + '</p></div>';
       pulsAus();
       fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
         headers: { "content-type": "application/json" },
@@ -1220,10 +1223,54 @@
         .catch(function () {})
         .then(function () {
           // Genug Zeit, damit das Ausrollen durchlaufen kann.
-          setTimeout(function () { location.reload(); }, 75000);
+          setTimeout(function () { weiterSichern(); location.reload(); }, 75000);
         });
     });
+    // Klicks im Fenster gehoeren nur dem Fenster. "Gerade nicht" traegt die
+    // Klasse .zurueck - im Einmaleins hiess das bis 03.10.2026 "zurueck zum
+    // Start", und der Spielstand war weg, obwohl das Kind nur Nein gesagt hatte.
+    h.addEventListener("click", function (e) { e.stopPropagation(); });
   }
+
+  /* ---------- Nach dem Update genau da weitermachen (03.10.2026) ----------
+     Denny: Die Kinder sind neugierig auf jedes Update, wollen aber ihren
+     Spielstand nicht verlieren - also klicken sie "Gerade nicht". Eine Seite,
+     die ihren Stand mitgeben kann, meldet sich mit
+         window.LWWeiter.anmelden({ sichern: fn -> Objekt, laden: fn(Objekt) })
+     an. Beim Neuladen fuers Update wird gesichert, danach sofort geladen.
+     Gilt nur fuer dieses Fenster (sessionStorage) und 20 Minuten - ein Stand
+     von gestern soll niemanden ueberraschen. Ohne Anmeldung bleibt wenigstens
+     die Scrollposition. */
+  var WEITER_KEY = "lw-weiter:" + location.pathname + location.search;
+  var weiterSeite = null;
+  function weiterKann() { return !!(weiterSeite && weiterSeite.sichern); }
+  function weiterSichern() {
+    var d = { t: Date.now(), y: window.scrollY || 0, stand: null };
+    try { if (weiterKann()) d.stand = weiterSeite.sichern(); } catch (e) { d.stand = null; }
+    try { sessionStorage.setItem(WEITER_KEY, JSON.stringify(d)); } catch (e) {}
+  }
+  function weiterHolen() {
+    var d = null;
+    try { d = JSON.parse(sessionStorage.getItem(WEITER_KEY) || "null"); } catch (e) {}
+    if (!d || !(Date.now() - (+d.t || 0) < 20 * 60000)) return null;
+    return d;
+  }
+  function weiterLaden() {
+    var d = weiterHolen(); if (!d) return;
+    try { sessionStorage.removeItem(WEITER_KEY); } catch (e) {}
+    try { if (d.stand != null && weiterSeite && weiterSeite.laden) weiterSeite.laden(d.stand); } catch (e) {}
+    if (d.y) setTimeout(function () { window.scrollTo(0, d.y); }, 50);
+  }
+  window.LWWeiter = {
+    anmelden: function (s) {
+      weiterSeite = s || null;
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", weiterLaden);
+      else weiterLaden();
+    },
+    sichern: weiterSichern
+  };
+  // Seiten ohne Anmeldung: nur die Scrollposition, nach dem Laden.
+  window.addEventListener("load", function () { if (!weiterSeite) setTimeout(function () { if (!weiterSeite) weiterLaden(); }, 300); });
 
   function pulsAn() {
     if (pulsUhr) return;
