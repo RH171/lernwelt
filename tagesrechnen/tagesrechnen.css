@@ -74,3 +74,10 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
 @media (max-height:400px){
   header{margin-bottom:4px} .teil span{display:none} .karte p{font-size:15px;margin-bottom:6px}
 }
+
+/* Breit, aber niedrig, Tasten unter der Tafel (iPad geteilter Bildschirm): eine Reihe
+   1 … 9 0 ⌫ Prüfen, wie die Zahlenreihe der iPad-Tastatur. Vier Reihen passten nicht ins Bild. */
+@media (min-width:700px) and (max-height:760px) and (max-aspect-ratio:4/3){
+  #tasten{grid-template-columns:repeat(11,1fr) 2fr;max-width:none}
+  #tasten [data-taste="0"]{order:1} #tasten [data-taste="weg"]{order:2} #tasten .ok{order:3}
+}
