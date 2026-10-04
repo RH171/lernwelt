@@ -138,7 +138,7 @@
   .ns-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
   .ns-knoepfe button{min-height:44px;padding:0 14px;border-radius:12px;font:700 14.5px/1 var(--round);cursor:pointer;
     border:2px solid var(--brand);background:transparent;color:var(--ink)}
-  .ns-knoepfe button.ns-ja{background:var(--brand);color:#141024}
+  .ns-knoepfe button.ns-ja{background:var(--brand);color:var(--auf-fuellung,#141024)}
   .ns-fertig{font-size:14.5px;padding:6px 0}
   .kachel.heutelernen{background:linear-gradient(125deg,#3b1d7a,#5b21b6 60%,#6d28d9);border-color:transparent;color:#fff}
   .kachel.heutelernen span{color:rgba(255,255,255,.9)}
@@ -160,13 +160,13 @@
   .hblatt:first-of-type{border-top:none;padding-top:4px}
   .hblatt .ht{font-weight:700;font-size:14.5px}
   .hblatt .ht span{color:var(--muted);font-weight:500}
-  .hbalken{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:#2a3350}
+  .hbalken{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:8px 0 6px;background:var(--vertief,#2a3350)}
   .hbalken b{display:block;height:100%}
   .hbalken .s{background:var(--ok)} .hbalken .n{background:var(--gold)}
   .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
   .hleg .ls{color:var(--ok);font-weight:700} .hleg .ln{color:var(--gold);font-weight:700}
   .hlos{display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:10px;border-radius:12px;
-    background:var(--brand);color:#141024;font-weight:800;text-decoration:none;font-size:15px}
+    background:var(--brand);color:var(--auf-fuellung,#141024);font-weight:800;text-decoration:none;font-size:15px}
 
   .fuss{color:var(--muted); font-size:12.5px; line-height:1.6; margin:24px 2px 0;
     border-top:1px solid var(--line); padding-top:12px}
@@ -184,6 +184,7 @@
     .fuss{display:none}
   }
 </style>
+<script src="/farbschalter.js"></script>
 </head>
 <body>
 <div class="wrap">

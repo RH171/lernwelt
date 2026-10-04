@@ -20,8 +20,8 @@
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
      Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
-<!-- Helenas Welt ist immer dunkel (25.09.2026), einen Schalter hat sie nicht. -->
-<script>document.documentElement.setAttribute("data-theme","dark");</script>
+<!-- Seit 04.10.2026 waehlt Helena selbst (/farbschalter.js am Ende des <head>,
+     Standard dunkel). -->
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
@@ -109,8 +109,9 @@
      darf rollen, falls es trotzdem eng wird. */
   .schau{overflow-y:auto}
   .schau.fachoffen img{display:none}
-  html[data-theme="dark"] .blatt img,html[data-theme="dark"] .blatt .platzhalter{background:#262a38}
+  html[data-theme="dark"] .blatt img,html[data-theme="dark"] .blatt .platzhalter{background:var(--vertief,#262a38)}
 </style>
+<script src="/farbschalter.js"></script>
 </head>
 <body>
 <div class="huelle">

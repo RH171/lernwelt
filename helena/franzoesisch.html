@@ -90,7 +90,7 @@
   .feinbody{padding-top:8px;}
   .tipp{color:var(--muted); font-size:12.5px; margin:8px 2px 0; line-height:1.5;}
   .start{width:100%; margin-top:4px; border:none; border-radius:14px; padding:15px; cursor:pointer;
-    font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
+    font-family:var(--round); font-weight:800; font-size:16px; color:var(--auf-fuellung,#150f2e);
     background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 10px 26px rgba(124,92,255,.4);
     transition:transform .12s, box-shadow .12s;}
   .start:hover{transform:translateY(-1px); box-shadow:0 14px 32px rgba(124,92,255,.5);}
@@ -125,8 +125,8 @@
     background:var(--surface2); border:1px solid var(--line); border-radius:14px; padding:15px 14px;
     cursor:pointer; transition:.12s;}
   .choice:hover{border-color:var(--brand); transform:translateY(-1px);}
-  .choice.ok{background:color-mix(in srgb,var(--ok) 20%,var(--surface2)); border-color:var(--ok); color:#eafff9;}
-  .choice.no{background:color-mix(in srgb,var(--no) 18%,var(--surface2)); border-color:var(--no); color:#fff0ee;}
+  .choice.ok{background:color-mix(in srgb,var(--ok) 20%,var(--surface2)); border-color:var(--ok); color:var(--auf-gut-feld,#eafff9);}
+  .choice.no{background:color-mix(in srgb,var(--no) 18%,var(--surface2)); border-color:var(--no); color:var(--auf-schlecht-feld,#fff0ee);}
   .choice:disabled{cursor:default;}
 
   .answer{display:flex; gap:10px;}
@@ -135,7 +135,7 @@
   .answer input:focus{border-color:var(--brand);}
   .answer input.ok{border-color:var(--ok);} .answer input.no{border-color:var(--no);}
   .answer button{border:none; border-radius:14px; padding:0 20px; font-family:var(--round); font-weight:800;
-    font-size:15px; color:#150f2e; background:var(--brand); cursor:pointer;}
+    font-size:15px; color:var(--auf-fuellung,#150f2e); background:var(--brand); cursor:pointer;}
 
   .verdict{text-align:center; font-weight:700; font-size:15px; margin-top:18px; min-height:22px;}
   .verdict.ok{color:var(--ok);} .verdict.no{color:var(--no);}
@@ -209,7 +209,7 @@
   .adder input[type=text]{flex:1; font-family:var(--font); font-size:14px; color:var(--ink);
     background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px;}
   .adder button{border:none; border-radius:10px; padding:10px 16px; font-weight:800; font-family:var(--round);
-    color:#150f2e; background:var(--ok); cursor:pointer;}
+    color:var(--auf-fuellung,#150f2e); background:var(--ok); cursor:pointer;}
   .adder .tiny{color:var(--muted); font-size:12px; margin-top:8px;}
 
   .foot{text-align:center; color:var(--muted); font-size:12px; margin-top:26px; line-height:1.6;}
@@ -285,9 +285,9 @@
   .howto{margin:0 0 12px; padding-left:18px; color:var(--muted); font-size:12.5px; line-height:1.55;}
   .howto b{color:var(--ink);}
   #detectBtn{border:none; border-radius:10px; padding:10px 18px; font-weight:800; font-family:var(--round);
-    color:#150f2e; background:var(--brand); cursor:pointer;}
+    color:var(--auf-fuellung,#150f2e); background:var(--brand); cursor:pointer;}
   .photobtn{width:100%; border:none; border-radius:14px; padding:15px; cursor:pointer; margin-top:2px;
-    font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
+    font-family:var(--round); font-weight:800; font-size:16px; color:var(--auf-fuellung,#150f2e);
     background:linear-gradient(150deg,var(--brand),#7c5cff);}
   .photobtn:active{transform:translateY(1px);}
   .ocrstatus{margin-top:12px; padding:12px 14px; border-radius:12px; background:var(--surface2);
@@ -308,7 +308,7 @@
   .mini:hover{border-color:var(--brand); color:var(--ink);}
   .pvsave{display:flex; gap:10px; margin-top:12px;}
   #saveUnit{border:none; border-radius:12px; padding:11px 18px; font-weight:800; font-family:var(--round);
-    color:#150f2e; background:var(--ok); cursor:pointer;}
+    color:var(--auf-fuellung,#150f2e); background:var(--ok); cursor:pointer;}
   .ghost{border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:12px;
     padding:11px 16px; font-weight:700; cursor:pointer; font-family:var(--font);}
   #myUnits{margin-top:16px;}
@@ -325,12 +325,13 @@
     padding:34px 26px; max-width:360px; width:100%; text-align:center; box-shadow:var(--shadow);}
     font-weight:800; color:var(--ink); background:var(--surface2); border:1.5px solid var(--line);
     border-radius:14px; padding:14px; outline:none;}
-    font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
+    font-family:var(--round); font-weight:800; font-size:16px; color:var(--auf-fuellung,#150f2e);
     background:linear-gradient(150deg,var(--brand),#7c5cff);}
   @keyframes shake{10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(4px);}
     30%,50%,70%{transform:translateX(-8px);}40%,60%{transform:translateX(8px);}}
 </style>
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<script src="/farbschalter.js"></script>
 </head>
 <body>
 
