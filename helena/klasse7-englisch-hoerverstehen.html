@@ -83,8 +83,6 @@
   .sprung:disabled{opacity:.4}
   .zeit{display:flex;justify-content:space-between;font:700 13.5px/1 var(--rund);
     color:#e7e2ff;margin:12px 2px 4px}
-  /* Im Hellen war #e7e2ff hell auf Weiss (1,45:1, gemessen 04.10.2026). */
-  html[data-theme="light"] .zeit{color:var(--ink)}
   /* Der Balken braucht eine Fingerhoehe, nicht nur eine Strichhoehe. */
   input[type=range].balken{-webkit-appearance:none;appearance:none;width:100%;height:44px;
     background:transparent;margin:0;cursor:pointer}
@@ -128,6 +126,9 @@
      der Rest des Schirms gehoert den Antwortfeldern. Mit ⤢ kommt er zurueck. */
   .anker{display:block;height:1px;margin:0}
   .klebzeit{display:none;font:700 15px/1 var(--rund);color:var(--ink);min-width:44px;text-align:center}
+  /* Der Spieler bleibt auch im Hellen dunkelviolett - var(--ink) waere dort
+     dunkel auf dunkel (1,45:1, gemessen 04.10.2026 im angehefteten Spieler). */
+  html[data-theme="light"] .klebzeit{color:#eef2fb}
   .klebauf{display:none}
   .spieler.klebt{padding-top:10px;padding-bottom:10px}
   .spieler.klebt .zeit,
@@ -214,10 +215,6 @@
     .start{width:54px;height:54px;font-size:23px}
     .karte{padding:13px}
   }
-  /* Hell (04.10.2026): diese Schrift war fest hell und erscheint erst nach einer
-     Antwort - die Messung des leeren Zustands sah sie nie. Dunkel bleibt unveraendert. */
-  html[data-theme="light"] .stand{color:var(--muted)}
-  html[data-theme="light"] .stand.schlecht{color:var(--schlecht-text)}
 </style>
 <script src="/farbschalter.js"></script>
 </head>
