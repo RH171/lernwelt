@@ -39,7 +39,8 @@ const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
  * (= abgeschriebene Loesung) oder eine Note bzw. Punkte nennt. */
 export function verraet(hinweis, zeilen) {
   const h = String(hinweis || "");
-  if (/\bnote\b|\bnoten\b|\bpunkte?\b|\bbe\b/i.test(h)) return true;
+  // "Punkt am Ende" ist ein Hinweis, "3 Punkte" eine Bewertung.
+  if (/\bnoten?\b|\bpunkte\b|\d+\s*punkt|\bbe\b/i.test(h)) return true;
   const hw = woerter(h).join(" ");
   for (const z of zeilen || []) {
     const w = woerter(z);

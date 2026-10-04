@@ -113,9 +113,11 @@
     <a class="zurueck" href="/paul/">‹ Lernwelt</a>
     <h1>📋 Meine Proben</h1>
   </header>
+  <div id="probenkarte" class="verborgen"></div>
   <div id="inhalt"><div class="karte"><p class="unter">Einen Moment …</p></div></div>
 </div>
 
+<script src="/probenkarte.js?v=14d0c6f6"></script>
 <script>
 (function(){
   "use strict";
@@ -160,6 +162,7 @@
         return;
       }
       malen(a.j);
+      try { LWProbenkarte.zeigen(document.getElementById("probenkarte"), a.j.termine, "paul"); } catch(e){}
     })
     .catch(function(){
       document.getElementById("inhalt").innerHTML =
