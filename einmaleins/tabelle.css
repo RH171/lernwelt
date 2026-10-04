@@ -98,3 +98,8 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
   #tasten{grid-template-columns:repeat(11,1fr) 2fr;max-width:none}
   #tasten [data-taste="0"]{order:1} #tasten [data-taste="weg"]{order:2} #tasten .ok{order:3}
 }
+/* Schmal (Handy): zwei Reihen 1 … 6 / 7 8 9 0 ⌫ Prüfen – die 0 folgt der 9. */
+@media (max-width:699px){
+  #tasten{grid-template-columns:repeat(6,1fr);max-width:none}
+  #tasten [data-taste="0"]{order:1} #tasten [data-taste="weg"]{order:2} #tasten .ok{order:3}
+}
