@@ -16,14 +16,10 @@
  */
 (function(){
   /* Je Kind: "fach|thema" (klein) -> Uebung. "satz" ist optional, sonst gilt
-   * der Lese-Satz. Helena (04.10.2026): noch kein Termin, keine Uebung - die
-   * Karte ist auf Start- und Pruefungsseite eingebaut und bleibt bis dahin weg.
-   * Ein Eintrag hier plus ein Termin genuegen (Kapitel 103 und 105). */
+   * der Lese-Satz. Nur Paul: Leon und Helena bekommen die Karte nicht (Denny,
+   * 04.10.2026: "Das war nicht gewuenscht. Das war fuer Paul"). Kapitel 105. */
   var UEBUNGEN = {
-    paul: { "deutsch|lesen": { href: "/paul/klasse4-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte" } },
-    leon: { "deutsch|lesen": { href: "/leon/klasse2-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte",
-            satz: "Üb mit einer kurzen Geschichte – so oft du magst." } },
-    helena: {}
+    paul: { "deutsch|lesen": { href: "/paul/klasse4-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte" } }
   };
   var FAECHER = { deutsch: "Deutsch", mathe: "Mathe", hsu: "HSU", englisch: "Englisch", religion: "Religion", musik: "Musik",
     franz: "Französisch", geschichte: "Geschichte", geo: "Geographie", info: "Informatik", ethik: "Ethik" };

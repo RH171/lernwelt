@@ -17,12 +17,9 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 
 const MODELL = "claude-opus-5-5";
-/* Leon dazu am 04.10.2026 (Denny: "dasselbe altersgerecht fuer Helena und
- * Leon"). Bei ihm ist nur EIN Satz frei: er schreibt einen angefangenen Satz
- * zu Ende. Der Hinweis ist kuerzer und in Woertern fuer einen Zweitklaessler. */
+/* Nur Paul (Denny, 04.10.2026: "Das war nicht gewuenscht. Das war fuer Paul"). */
 const KINDER = {
   paul: { name: "Paul", klasse: "4. Klasse" },
-  leon: { name: "Leon", klasse: "2. Klasse" },
 };
 
 const REGELN =
@@ -37,23 +34,10 @@ const REGELN =
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
 
-const REGELN_LEON =
-  "Du schaust einem Zweitklaessler (Grundschule Bayern, Leseanfaenger) ueber die Schulter. " +
-  "Er hat eine kurze Geschichte gelesen und einen angefangenen Satz zu Ende geschrieben. " +
-  "Gib GENAU EINEN Hinweis: hoechstens 15 Woerter, ganz einfache kurze Woerter, du-Form, " +
-  "freundlich, kein Rot, keine Fehlerliste. Ist etwas gut, sag das zuerst in zwei, drei Woertern. " +
-  "Worauf du achtest: Passt der Satz zur Geschichte? Steht am Ende ein Punkt? Nomen gross? " +
-  "Rechtschreibung nur sanft und hoechstens ein Wort ansprechen. " +
-  "WICHTIG: Verlange oder lobe nie 'weil' und frag nie nach einem Grund (Denny, 04.10.2026). " +
-  "VERBOTEN: die Antwort vorsagen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
-  "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
-  'Antworte NUR mit JSON: {"hinweise":[{"nr":5,"hinweis":"..."}]}';
-const REGELN_JE_KIND = { paul: REGELN, leon: REGELN_LEON };
+const REGELN_JE_KIND = { paul: REGELN };
 
 const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
-/* Leon: Frau Sy ist Pauls Lehrerin, nicht seine. Bei ihm faellt ein Weil-Hinweis
- * still auf den neutralen Satz zurueck - verlangt und gelobt wird "weil" nie. */
-const WEIL_ERSATZ_JE_KIND = { leon: "Lies deinen Satz noch einmal. Passt er zur Geschichte? Punkt am Ende?" };
+const WEIL_ERSATZ_JE_KIND = {};
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 
 const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
