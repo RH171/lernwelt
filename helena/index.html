@@ -40,6 +40,11 @@
   PULS gehört hierher (kein Ausrollen, während jemand da ist) und seit dem
   21.09.2026 trägt er mit, auf welcher Seite jemand sitzt.
 -->
+<!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
+     Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <style>
   :root{
     --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740;
@@ -69,7 +74,7 @@
      Zeilen hoch (189 px) und zuletzt nur noch seitlich wischbar. */
   header{display:flex; align-items:center; gap:11px; margin-bottom:16px}
   .mark{width:44px; height:44px; border-radius:14px; flex:none; display:grid; place-items:center;
-    background:linear-gradient(150deg,var(--brand),#7c5cff);
+    background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff));
     box-shadow:0 8px 22px rgba(124,92,255,.42); font-size:22px}
   header h1{font-family:var(--round); font-weight:800; font-size:19px; margin:0; letter-spacing:-.01em}
   header p{margin:2px 0 0; color:var(--muted); font-size:12.5px}
@@ -138,7 +143,7 @@
   .ns-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
   .ns-knoepfe button{min-height:44px;padding:0 14px;border-radius:12px;font:700 14.5px/1 var(--round);cursor:pointer;
     border:2px solid var(--brand);background:transparent;color:var(--ink)}
-  .ns-knoepfe button.ns-ja{background:var(--brand);color:var(--auf-fuellung,#141024)}
+  .ns-knoepfe button.ns-ja{background:var(--brand);color:var(--auf-brand,#141024)}
   .ns-fertig{font-size:14.5px;padding:6px 0}
   .kachel.heutelernen{background:linear-gradient(125deg,#3b1d7a,#5b21b6 60%,#6d28d9);border-color:transparent;color:#fff}
   .kachel.heutelernen span{color:rgba(255,255,255,.9)}
@@ -166,7 +171,7 @@
   .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
   .hleg .ls{color:var(--ok);font-weight:700} .hleg .ln{color:var(--gold);font-weight:700}
   .hlos{display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:10px;border-radius:12px;
-    background:var(--brand);color:var(--auf-fuellung,#141024);font-weight:800;text-decoration:none;font-size:15px}
+    background:var(--brand);color:var(--auf-brand,#141024);font-weight:800;text-decoration:none;font-size:15px}
 
   .fuss{color:var(--muted); font-size:12.5px; line-height:1.6; margin:24px 2px 0;
     border-top:1px solid var(--line); padding-top:12px}
@@ -196,6 +201,11 @@
       <p>7. Klasse · Johannes-Scharrer-Gymnasium</p>
     </div>
     <div class="oben">
+      <!-- Hell oder dunkel. Helena am 04.10.2026: "Ein Schalter zum wechseln
+           zwischen hell und dunkel waere super" - "Am besten gleich auf der
+           Startseite oben rechts". Die Wahl liegt unter "helena-theme" und
+           gilt auf allen ihren Seiten (die lesen sie im <head>). -->
+      <button class="ic" type="button" id="modusBtn" aria-pressed="false" title="Hell oder dunkel" aria-label="Hell oder dunkel umschalten">🌙</button>
       <button class="ic" type="button" id="berichtOeffnen" title="Deine Woche" aria-label="Bericht: deine Woche">📊</button>
       <a class="ic" href="termine.html" title="Schultermine" aria-label="Schultermine">🗓️</a>
       <a class="ic" href="../" title="Zur Lernwelt-Startseite" aria-label="Zur Lernwelt-Startseite">🏠</a>
@@ -471,5 +481,29 @@ window.HEFT_START = {
      ist hier ein Befund (CLAUDE.md, 18.09.2026). -->
 <script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
 <script src="/lernstand.js?v=417a4ab9"></script>
+<script>
+/* Helenas Schalter hell/dunkel (04.10.2026, ihr Wunsch). Umgekehrt zu Paul und
+   Leon: Fehlt die Wahl, ist HELL gemeint - deshalb wird data-theme hier immer
+   ausdruecklich gesetzt und nie entfernt (ihre Seiten tragen die dunklen Werte
+   im eigenen :root, ein fehlendes Attribut waere also dunkel). */
+(function(){
+  var b = document.getElementById("modusBtn"), h = document.documentElement;
+  if (!b) return;
+  function zeigen(){
+    var d = h.getAttribute("data-theme") === "dark";
+    b.textContent = d ? "☀️" : "🌙";
+    b.title = d ? "Hell machen" : "Dunkel machen";
+    b.setAttribute("aria-label", d ? "Hell machen" : "Dunkel machen");
+    b.setAttribute("aria-pressed", d ? "true" : "false");
+  }
+  b.addEventListener("click", function(){
+    var d = h.getAttribute("data-theme") !== "dark";
+    h.setAttribute("data-theme", d ? "dark" : "light");
+    try { localStorage.setItem("helena-theme", d ? "dark" : "light"); } catch (e) {}
+    zeigen();
+  });
+  zeigen();
+})();
+</script>
 </body>
 </html>

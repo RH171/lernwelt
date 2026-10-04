@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mein Lernquiz</title>
 <!--
-  Helenas Lernquiz (20.09.2026), 7. Klasse Gymnasium, immer dunkel.
+  Helenas Lernquiz (20.09.2026), 7. Klasse Gymnasium.
 
   Seit 29.09.2026 mit allem, was Paul hat (Denny, 28.09.2026: "Helena zuerst,
   danach Leon mit allem wie Paul"): ein Fach auf einmal, Blattwahl mit
@@ -13,12 +13,18 @@
   aus dem Heft nach jeder Loesung. Motor: /quiz/motor.js, Such-Spiel und
   Heute lernen: /quiz/such.js - beide geteilt mit Paul.
 -->
+<!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
+     Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
-<link rel="stylesheet" href="/quiz/quiz.css?v=e80e1b70">
+<link rel="stylesheet" href="/quiz/quiz.css?v=11f8562b">
 <style>
-  /* Dunkel ist Helenas Standard. Seit 04.10.2026 waehlt sie selbst:
-     /farbschalter.js setzt data-theme (das lesen auch die Fundkarten) und im
-     Hellen die hellen Werte fuer diese Namen. */
+  /* Die dunklen Werte stehen hier, HELL kommt aus /helena-thema.css - seit
+     dem 04.10.2026 ist hell ihr Standard und sie hat einen Schalter dafuer
+     (oben rechts auf /helena/). data-theme am <html> sagt beides auch den
+     Fundkarten (fundkarten.js), ohne /thema.css einzubinden. */
   :root{
     --bg:#0e1320; --card:#171d2e; --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
     --feld:#1e2539; --paul:#a78bfa;
@@ -167,7 +173,8 @@ window.QUIZ = {
 <script src="/tagesrunde.js?v=9794647e"></script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
 <script src="/quiz/such.js?v=5774382c"></script>
-<script src="/quiz/motor.js?v=b7e6ab93" defer></script>
+<script src="/blatt-seiten.js?v=a370cd04" defer></script>
+<script src="/quiz/motor.js?v=a75fab39" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=417a4ab9" defer></script>
 </body>

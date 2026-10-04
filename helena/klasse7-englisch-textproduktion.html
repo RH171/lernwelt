@@ -38,6 +38,11 @@
   bewerten, und so zu tun als koennte sie es, waere das Schlimmste. Sie
   zaehlt Woerter und haelt die Liste hin. Mehr behauptet sie nicht.
 -->
+<!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
+     Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <style>
   :root{
@@ -106,7 +111,7 @@
   .zaehler span{color:var(--muted);font-size:14.5px}
 
   .knopf{display:block;width:100%;text-align:center;text-decoration:none;
-    background:var(--brand);color:var(--auf-fuellung,#141527);border:0;border-radius:14px;
+    background:var(--brand);color:#141527;border:0;border-radius:14px;
     padding:14px 16px;font:700 16px/1.2 var(--rund);min-height:44px;margin-top:10px;
     cursor:pointer;font-family:var(--rund)}
   .knopf.still{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}

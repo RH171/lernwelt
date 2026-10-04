@@ -212,3 +212,9 @@ html[data-theme="dark"] .qquizleiste{background:#262a3a}
 html[data-theme="dark"] .qstand-balken{background:#2e3140}
 html[data-theme="dark"] .qstand-leg{color:#c3c8d6}
 html[data-theme="dark"] .qstand-leg .ls{color:#6ee7a8} html[data-theme="dark"] .qstand-leg .ln{color:#8cb8ff}
+
+/* Alle Seiten eines Blattes (04.10.2026, /blatt-seiten.js): Die Leiste
+ * "‹ Seite 2 von 3 ›" steht unter dem Bild, die Schrift erbt die Kartenfarbe. */
+.qgross-seiten{color:var(--ink)}
+.qgross-seiten:empty{display:none}
+.qseiten-auf{display:block}

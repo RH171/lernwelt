@@ -6,8 +6,8 @@
  * Auswahl soll auf jeder Seite moeglich sein."
  *
  * Vorher stand der Schalter nur auf zwei Startseiten (Paul, Leon); auf 70 von
- * 72 Kinderseiten liess sich nichts umstellen, und Helena hatte gar keine
- * Wahl - ihre Welt war fest dunkel.
+ * 72 Kinderseiten liess sich nichts umstellen. Helena bekam am selben Tag
+ * ihren eigenen Schalter auf der Startseite (Kapitel 104).
  *
  * Einbau, als LETZTE Zeile im <head> (nach allen alten Kopfschnipseln, damit
  * diese Datei das letzte Wort hat und vor dem ersten Zeichnen laeuft):
@@ -17,8 +17,8 @@
  * Was sie tut:
  *  1. Sofort, vor dem ersten Zeichnen: data-theme am <html> nach der Wahl des
  *     Kindes setzen. Kein Aufblitzen.
- *  2. Bei Helena im Hellen: die hellen Werte fuer ihre Farbnamen einsetzen
- *     (ihre Seiten sind dunkel gebaut und hatten nie eine helle Fassung).
+ *  2. Farben setzt diese Datei keine: Paul und Leon nehmen /thema.css,
+ *     Helena /helena-thema.css (Kapitel 104).
  *  3. Nach dem Laden: ein runder Knopf unten rechts, links neben dem
  *     Melde-Knopf (💬) - auf jeder Seite am selben Ort. 52 px wie der
  *     Melde-Knopf, aria-label und title sagen, was er tut.
@@ -30,14 +30,14 @@
  * nicht Leons Seiten umfaerben):
  *   Paul    "hub-theme"     Standard dunkel
  *   Leon    "leon-theme"    Standard hell
- *   Helena  "helena-theme"  Standard dunkel (ihre Welt war immer dunkel)
+ *   Helena  "helena-theme"  Standard hell (ihr Wunsch, Meldung pncui5wtdg, Kapitel 104)
  * Gespeichert wird nur "light" oder "dark" - kein Geheimnis.
  *
  * prefers-color-scheme spielt bewusst keine Rolle (thema.css, 23.09.2026):
  * Eine getroffene Wahl darf nicht davon abhaengen, wie das Geraet steht.
  *
- * Steht auf der Seite schon ein eigener Schalter (Pauls #modeBtn, Leons
- * #modusBtn auf der Startseite), drueckt dieser Knopf genau den - so laeuft
+ * Steht auf der Seite schon ein eigener Schalter (Pauls #modeBtn, Leons und
+ * Helenas #modusBtn auf der Startseite), drueckt dieser Knopf genau den - so laeuft
  * dort dieselbe Logik, und beide zeigen immer dasselbe an.
  */
 (function () {
@@ -48,7 +48,7 @@
   if (!kind || window.__farbschalter) return;
 
   var SCHLUESSEL = { paul: "hub-theme", leon: "leon-theme", helena: "helena-theme" }[kind];
-  var STANDARD = { paul: "dark", leon: "light", helena: "dark" }[kind];
+  var STANDARD = { paul: "dark", leon: "light", helena: "light" }[kind];
   var html = document.documentElement;
 
   function gewaehlt() {
@@ -68,36 +68,10 @@
   var jetzt = gewaehlt();
   anwenden(jetzt);
 
-  /* ---------- Helena im Hellen ----------
-     Ihre Seiten benutzen durchweg dieselben Farbnamen (--bg, --card,
-     --surface, --ink, --muted, --brand ...), alle dunkel gerechnet. Hier
-     bekommt jeder Name seinen hellen Wert mit derselben Rolle. Lila bleibt
-     ihre Farbe, im Hellen nur dunkler - #a78bfa auf Weiss waere 2,7:1,
-     #6d28d9 sind 7,1:1, und weisse Schrift darauf ebenso.
-     Spezifitaet html[data-theme="light"] (0,1,1) schlaegt :root (0,1,0). */
-  if (kind === "helena") {
-    var hell = document.createElement("style");
-    hell.id = "farbschalter-helena-hell";
-    hell.textContent =
-      'html[data-theme="light"]{color-scheme:light;' +
-        '--bg:#f4f2fb;--bg2:#ebe8f5;--card:#ffffff;--karte:#ffffff;--surface:#ffffff;' +
-        '--surface2:#efecf8;--feld:#efecf8;--line:#d6d0e8;--ink:#1d1a2b;--muted:#57536b;' +
-        '--brand:#6d28d9;--brand-ink:#5b21b6;--brand2:#1d4ed8;' +
-        '--akzent:#6d28d9;--akzent-text:#5b21b6;--akzent-hell:#ede7fb;--akzent-auf:#ffffff;' +
-        '--paul:#6d28d9;--pink:#be185d;--blau:#1d4ed8;' +
-        '--ok:#0f766e;--gut:#0f766e;--gut-text:#0f766e;--gut-hell:#dcf3ee;--gruen:#0f766e;--gruen-hell:#dcf3ee;' +
-        '--gut-feld:rgba(15,118,110,.12);' +
-        '--no:#b91c1c;--schlecht:#b91c1c;--schlecht-text:#b91c1c;--schlecht-hell:#fde8e6;' +
-        '--gold:#a15c07;--warn:#a15c07;--orange:#a15c07;--offen-feld:rgba(161,92,7,.12);' +
-        /* Schrift, die bisher fest dunkel auf einer Lila- oder Gruenflaeche
-           stand (#150f2e auf --brand): Die Flaeche ist im Hellen dunkel,
-           also wird die Schrift weiss. Ebenso helle Schrift auf zart
-           getoenten Antwortfeldern - die wird dunkel. */
-        '--offen-hell:#fbf0d9;--vertief:#efecf8;--auf-fuellung:#ffffff;--auf-gut-feld:#0b5d56;--auf-schlecht-feld:#8f1a1a;' +
-        '--shadow:0 1px 2px rgba(40,30,80,.08),0 12px 30px rgba(40,30,80,.10)}' +
-      'html[data-theme="light"] body{background-color:var(--bg);color:var(--ink)}';
-    (document.head || html).appendChild(hell);
-  }
+  /* Helenas helle Farben stehen in /helena-thema.css (Kapitel 104, seit
+     04.10.2026 11:35 Uhr). Hier wird bei ihr NUR data-theme gesetzt - und
+     immer ausdruecklich, weil ihr :root dunkel ist: ein fehlendes Attribut
+     waere bei ihr dunkel, nicht hell. */
 
   function melden(w) {
     try { document.dispatchEvent(new CustomEvent("lw-farbschema", { detail: w })); } catch (e) {}
@@ -112,9 +86,9 @@
   }
 
   function umschalten() {
-    var eigen = document.getElementById(kind === "leon" ? "modusBtn" : "modeBtn");
+    var eigen = document.getElementById(kind === "paul" ? "modeBtn" : "modusBtn");
     var neu = gewaehlt() === "dark" ? "light" : "dark";
-    if (eigen && kind !== "helena") {
+    if (eigen) {
       eigen.click();                 /* die Startseite schaltet selbst und speichert */
     } else {
       try { localStorage.setItem(SCHLUESSEL, neu); } catch (e) {}

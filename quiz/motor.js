@@ -262,20 +262,67 @@
   }
 
   /* Gross ansehen. Bewusst kein eigenes Fenster und kein Verlassen der Seite:
-     Das Kind steht mitten in seiner Auswahl und soll dahin zurueck. */
-  function grossZeigen(b) {
+     Das Kind steht mitten in seiner Auswahl und soll dahin zurueck.
+
+     ALLE Seiten (04.10.2026). Denny: "Wenn Paul auf das Blatt (Geschichte
+     'Der Brief', drei Seiten) klickt, kann er nur eine Seite anschauen."
+     Gespeichert waren alle drei - hier wurde aber fest Seite ":0" geholt.
+     Seitdem blaettert die Grossansicht ueber /blatt-seiten.js (Pfeile,
+     Wischen, Pfeiltasten) und holt jede Seite erst, wenn sie gebraucht wird. */
+  var seitenBild = {};   // "<id>:<nr>" -> Bild; Seite 0 steht schon in vorschau
+  function seiteHolen(id, nr) {
+    if (!nr && vorschau[id]) return Promise.resolve(vorschau[id]);
+    var k = id + ":" + nr;
+    if (seitenBild[k]) return Promise.resolve(seitenBild[k]);
+    return fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
+                 "&bild=" + encodeURIComponent(k), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok || !j.bild) return null;
+        seitenBild[k] = j.bild;
+        if (!nr) vorschau[id] = j.bild;
+        return j.bild;
+      })
+      .catch(function () { return null; });
+  }
+
+  /* Wie viele Seiten hat ein Blatt? Die Liste weiss es; eine Frage im Quiz
+     traegt nur die Blatt-id, also dort nachsehen. */
+  function seitenVon(id) {
+    var alle = blaetter.slice();
+    if (blattVorrat) Object.keys(blattVorrat).forEach(function (f) { alle = alle.concat(blattVorrat[f] || []); });
+    for (var i = 0; i < alle.length; i++) if (alle[i] && alle[i].id === id) return Number(alle[i].seiten) || 1;
+    return 1;
+  }
+
+  function grossZeigen(b, start) {
     var alt = document.getElementById("q-gross");
     if (alt) alt.remove();
+    var seiten = Number(b.seiten) || seitenVon(b.id);
     var hu = document.createElement("div");
     hu.id = "q-gross";
     hu.className = "qgross";
     hu.innerHTML = '<div class="qgross-innen">' +
       '<div class="qgross-kopf"><b></b><button type="button" class="qgross-zu">Fertig</button></div>' +
-      (vorschau[b.id] ? '<img alt="Dein Blatt">' : '<p class="qgross-leer">Das Bild kommt gerade nicht. Der Titel steht oben.</p>') +
+      (vorschau[b.id] || seiten > 1 ? '<img alt="Dein Blatt">' : '<p class="qgross-leer">Das Bild kommt gerade nicht. Der Titel steht oben.</p>') +
+      '<div class="qgross-seiten"></div>' +
       "</div>";
     hu.querySelector("b").textContent = b.titel || "Dein Blatt";
-    if (vorschau[b.id]) hu.querySelector("img").src = vorschau[b.id];
-    function zu() { hu.remove(); document.removeEventListener("keydown", aufTaste); }
+    var img = hu.querySelector("img");
+    var blaettern = null;
+    if (img && window.LWSeiten) {
+      blaettern = LWSeiten.blaettern({
+        bild: img, leiste: hu.querySelector(".qgross-seiten"), seiten: seiten,
+        start: start || 0,
+        holen: function (nr) { return seiteHolen(b.id, nr); }
+      });
+    } else if (img) {
+      img.src = vorschau[b.id];
+    }
+    function zu() {
+      if (blaettern) blaettern.weg();
+      hu.remove(); document.removeEventListener("keydown", aufTaste);
+    }
     function aufTaste(e) { if (e.key === "Escape") zu(); }
     hu.addEventListener("click", function (e) { if (e.target === hu) zu(); });
     hu.querySelector(".qgross-zu").addEventListener("click", zu);
@@ -970,12 +1017,7 @@ function artKurz(art) {
   function belegZeigen(f) {
     var b = { id: f.blatt, titel: (f.beleg && f.beleg.titel) || "Dein Blatt" };
     if (vorschau[b.id]) return grossZeigen(b);
-    fetch("/api/schulstoff?kind=" + encodeURIComponent(K.kind) +
-          "&bild=" + encodeURIComponent(b.id) + ":0", { credentials: "same-origin" })
-      .then(function (r) { return r.json(); })
-      .then(function (j) { if (j && j.ok && j.bild) vorschau[b.id] = j.bild; })
-      .catch(function () {})
-      .then(function () { grossZeigen(b); });
+    seiteHolen(b.id, 0).then(function () { grossZeigen(b); });
   }
 
   function hilfeVerbergen() {
@@ -1003,8 +1045,14 @@ function artKurz(art) {
       h.innerHTML = '<div class="qtipp"><b>Schau auf dein Blatt:</b> Die Antwort steht in der Zeile <b>' +
         esc(f.zeile) + "</b>.</div>" +
         (blattBild ? '<div class="qfoto"><img src="' + blattBild +
-                     '" alt="Dein Blatt zum Nachschlagen"></div>' : "");
+                     '" alt="Dein Blatt zum Nachschlagen"></div>' : "") +
+        /* Mehrseitiges Blatt (04.10.2026): Die Zeile kann auf Seite 2 oder 3
+           stehen - hier steht nur Seite 1, also kommt man zu den anderen. */
+        (seitenVon(f.blatt) > 1 ? '<button type="button" class="qbeleg-auf qseiten-auf">\uD83D\uDCC4 Alle ' +
+          seitenVon(f.blatt) + ' Seiten ansehen</button>' : "");
       h.classList.remove("verborgen");
+      var alleS = h.querySelector(".qseiten-auf");
+      if (alleS) alleS.addEventListener("click", function () { belegZeigen(f); });
     }
   }
 

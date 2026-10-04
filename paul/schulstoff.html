@@ -25,6 +25,7 @@
 <script src="/strom.js?v=ccb1b4e5"></script>
 <script src="stundenplan.js?v=1b197a6e"></script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
+<script src="/blatt-seiten.js?v=a370cd04"></script>
 <script src="/seite-tauschen.js?v=3d5c47be"></script>
 <script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
 <style>
@@ -356,7 +357,7 @@
       (KURZ[offen.fach||""]||"Ohne Fach") +
       (ART[offen.art] ? " · " + ART[offen.art].lang : "") +
       " · " + lang(offen.datum);
-    $("schau-nr").textContent = offen.seiten > 1 ? (offenSeite+1) + " von " + offen.seiten : "";
+    $("schau-nr").textContent = offen.seiten > 1 ? "Seite " + (offenSeite+1) + " von " + offen.seiten : "";
     $("schau-vor").style.display = offen.seiten > 1 ? "" : "none";
     $("schau-zurueck").style.display = offen.seiten > 1 ? "" : "none";
     $("schau-verstecken").textContent = offen.sichtbar === false
@@ -372,8 +373,11 @@
     $("schau-fachwahl").classList.add("verborgen");
     $("schau").classList.remove("fachoffen");
     if (tauscher) tauscher.malen();
+    var welche = offen.id + ":" + offenSeite;
+    $("schau-bild").setAttribute("data-seite", String(offenSeite));
     bildHolen(offen.id, offenSeite).then(function(url){
-      if (url) $("schau-bild").src = url;
+      /* Schnell weitergeblaettert? Dann gewinnt die Seite, die gerade dran ist. */
+      if (url && offen && offen.id + ":" + offenSeite === welche) $("schau-bild").src = url;
     });
   }
   /* Zweimal fragen, und beim zweiten Mal ehrlich sein.
@@ -509,6 +513,20 @@
   $("schau-zurueck").addEventListener("click", function(){
     if (!offen) return;
     offenSeite = (offenSeite + 1) % offen.seiten; seiteZeigen();
+  });
+  /* Wischen und Pfeiltasten (04.10.2026, /blatt-seiten.js). Denny: "kann er
+     nur eine Seite anschauen, nicht die weiteren" - auf dem iPad wischt ein
+     Kind, statt einen Knopf zwischen sechs anderen zu suchen. */
+  function seiteWeiter(schritt){
+    if (!offen || !(offen.seiten > 1) || !$("schau").classList.contains("auf")) return;
+    offenSeite = (offenSeite + schritt + offen.seiten) % offen.seiten; seiteZeigen();
+  }
+  if (window.LWSeiten) LWSeiten.wischen($("schau-bild"),
+    function(){ seiteWeiter(-1); }, function(){ seiteWeiter(1); });
+  document.addEventListener("keydown", function(e){
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === "ArrowLeft") seiteWeiter(-1);
+    else if (e.key === "ArrowRight") seiteWeiter(1);
   });
 
   /* Aus der Ansicht nehmen ist ein Tipp und umkehrbar - das Bild bleibt

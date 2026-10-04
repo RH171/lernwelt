@@ -374,6 +374,7 @@
   .nachsehen{background:var(--card);color:var(--ink);border:3px solid #f59e0b;border-radius:22px;
     padding:16px 18px;margin:0 0 22px;font-family:var(--round)}
   .nachsehen.verborgen{display:none}
+  #probenkarte.verborgen{display:none}
   .ns-kopf{font-weight:800;font-size:20px;margin-bottom:4px}
   .ns-satz{font-size:15px;margin-bottom:10px;opacity:.85}
   .ns-punkt{border-top:1px solid var(--line);padding:12px 0 4px}
@@ -527,6 +528,10 @@
     <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen. Sag mir, was stimmt.</div>
     <div id="nachsehenListe"></div>
   </section>
+
+  <!-- Gelbe Probenkarte (04.10.2026): steht nur da, wenn eine Probe in den
+       naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
+  <div id="probenkarte" class="verborgen"></div>
 
   <!-- Heute lernen (25.09.2026): der taegliche Einstieg steht FEST oben,
        ausserhalb der Kacheln, die nach letzter Benutzung sortiert werden.
@@ -758,7 +763,12 @@
       scoreKey:"beethoven-games", scoreLabel:"Spiele"},
 
     {file:"klasse3-spass-wuerfel-spiel.html", klasse:3, fach:"spass",
-      title:"Pauls Würfel", sub:"Einfach mal würfeln", icon:"🎲", type:"Spaß"}
+      title:"Pauls Würfel", sub:"Einfach mal würfeln", icon:"🎲", type:"Spaß"},
+
+    // Generalprobe fuer die Probe "D | Lesen" am 09.10.2026 (04.10.2026, Dennys Wahl B).
+    // Steht fest hier, weil games.json nur klasse3-Dateien findet.
+    {file:"klasse4-deutsch-generalprobe-lesen.html", klasse:4, fach:"deutsch",
+      title:"Generalprobe Lesen", sub:"Geschichte lesen, Aufgaben wie in der Probe", icon:"📖", type:"Probe"}
   ];
 
   const FACH = {
@@ -1584,6 +1594,8 @@
     .catch(function(){ /* ohne Speicher bleibt die Karte einfach zu */ });
 })();
 </script>
+<script src="/probenkarte.js?v=14d0c6f6"></script>
+<script>try{ LWProbenkarte.laden("paul", document.getElementById("probenkarte")); }catch(e){}</script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
 </body>
 </html>

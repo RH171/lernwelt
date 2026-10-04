@@ -1,0 +1,115 @@
+/* Helenas Lernwelt in HELL - und ein Schalter dafuer (04.10.2026).
+ *
+ * Helena am 04.10.2026 ueber die Werkstatt (Meldung pncui5wtdg):
+ *   "Weisser Hintergrund, nicht schwarz"
+ *   "Die ganze Lernwelt fuer Helena soll einen weissen Hintergrund haben.
+ *    Und ein Schalter zum wechseln zwischen hell und dunkel waere super"
+ *   "Am besten gleich auf der Startseite oben rechts"
+ *
+ * VORHER war ihre Welt fest dunkel (Kapitel 064, 25.09.2026: "Helena - kein
+ * Schalter, ihre Welt ist dunkel"). Ihre 21 Seiten tragen ihre dunklen Werte
+ * fest im eigenen :root. Deshalb laeuft es hier GENAU UMGEKEHRT zu /thema.css:
+ * dort ist hell der Grundzustand und dunkel die Ausnahme, hier bleibt der
+ * dunkle :root der Seite stehen und HELL ist die Ausnahme.
+ *
+ * Die Wahl liegt unter localStorage "helena-theme", Standard ist jetzt HELL -
+ * ihr Wunsch. Ein eigener Schluessel, nicht "hub-theme": auf einem geteilten
+ * Geraet soll Pauls Wahl ihre Seiten nicht umfaerben (dieselbe Regel wie bei
+ * "leon-theme").
+ *
+ * Spezifitaet: html[data-theme="light"] ist (0,1,1) und schlaegt :root (0,1,0).
+ * Diese Datei gewinnt also auch dann, wenn die Seite ihre Farben spaeter setzt.
+ * UMGEKEHRT darf eine Seite mit eigener Leitfarbe (Franzoesisch blau, Mathe
+ * gruen, Schmiede pink) ihren eigenen html[data-theme="light"]-Block haben -
+ * gleiche Spezifitaet, und der steht im Dokument SPAETER als dieser Link.
+ *
+ * Alle Werte sind gerechnet, keiner geschaetzt: jede Textfarbe hat auf jeder
+ * Flaeche mindestens 4,5:1 (WCAG 2.2, 1.4.3), und Weiss auf jeder Fuellfarbe
+ * ebenfalls. Niedrigster Wert im Satz: 4,64:1 (--gut auf --surface2).
+ */
+html[data-theme="light"]{
+  color-scheme: light;
+
+  /* Flaechen. Sie wollte Weiss: die Karten sind reines Weiss, die Seite
+   * darunter ein Hauch Violett, damit die Karten ueberhaupt Kanten haben. */
+  --bg:#f6f5fc;
+  --bg2:#efebfa;
+  --surface:#ffffff;
+  --card:#ffffff;
+  --karte:#ffffff;
+  --surface2:#f1eefb;
+  --feld:#fbfaff;
+  --line:#e3e0f0;
+  --vertief:#eceaf6;      /* Rinne eines Balkens, Platz eines Bildes */
+  --tief:#f1eefb;         /* noch eine Stufe tiefer: Pausenzeile im Stundenplan */
+
+  /* Schrift */
+  --ink:#1b1c22;
+  --muted:#5b6070;
+
+  /* Ihre Leitfarbe bleibt Violett, nur dunkel genug fuer Weiss:
+   * #a78bfa haette auf Weiss 2,0:1 gehabt, #6d28d9 hat 7,1:1 - und Weiss
+   * darauf genauso. Derselbe Wert taugt also als Schrift UND als Flaeche. */
+  --brand:#6d28d9;
+  --brand-ink:#5b21b6;
+  --akzent:#6d28d9;
+  --akzent-text:#5b21b6;
+  --akzent-hell:#f1ecfe;
+  --akzent-auf:#ffffff;
+  --paul:#6d28d9;        /* so heisst die Leitfarbe in geteilten Dateien */
+
+  /* Schrift AUF der Leitfarbe. Im Dunklen war --brand hell, deshalb stand dort
+   * ueberall fest "color:#141024" (dunkel auf hell). Im Hellen ist --brand
+   * dunkel - dieselbe Zeile waere 2,6:1 gewesen, gemessen am 04.10.2026 an
+   * bet.html, hausaufgaben.html, stundenplan.html und zwei weiteren. Die
+   * Seiten schreiben jetzt var(--auf-brand,#141024): hier Weiss (7,1:1), ohne
+   * diese Datei der alte Wert. */
+  --auf-brand:#ffffff;
+
+  /* Dieselbe Falle an zwei weiteren Stellen (gemessen 04.10.2026):
+   * - Schrift auf einer ZARTEN Leitfarben-Fuellung (ausgewaehlter Segmentknopf
+   *   im Vokabeltrainer). Im Dunklen war diese Fuellung dunkel und die Schrift
+   *   weiss - im Hellen ist sie hellviolett, Weiss darauf hatte 1,00:1.
+   * - Das Ende des violetten Verlaufs auf dem Foto-Knopf: #7c5cff traegt Weiss
+   *   nur mit 4,35:1, also knapp unter der Grenze. */
+  --auf-sanft:#5b21b6;
+  --brand-tief:#5b21b6;
+
+  /* Gut / richtig */
+  --ok:#0f7a5c;
+  --gut:#0f7a5c;
+  --gut-text:#0f7a45;
+  --gut-hell:#eefbf2;
+  --gruen:#0f7a5c;
+  --gruen-hell:#eefbf2;
+  --gruen-text:#0f7a45;
+  --gut-feld:#eefbf2;
+
+  /* Falsch / Achtung */
+  --no:#b42318;
+  --schlecht:#b42318;
+  --schlecht-text:#b42318;
+  --schlecht-hell:#fee4e2;
+  --schlecht-rand:#fda29b;
+
+  /* Hinweis, offen, Gold */
+  --gold:#9a4a06;
+  --warn:#9a4a06;
+  --orange:#9a4a06;
+  --offen-feld:#fff8ec;
+  --warn-hell:#fff8ec;
+  --warn-rand:#f3dcb5;
+
+  /* Weitere Farbtupfer einzelner Seiten */
+  --blau:#1d4ed8;
+  --pink:#be185d;
+
+  /* Schatten: auf Schwarz war er schwarz und unsichtbar, auf Weiss darf er
+   * tragen. */
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 18px 40px rgba(16,24,40,.10);
+}
+
+/* Bilder und leere Platzhalter brauchen auf Weiss einen Grund, der sich
+ * abhebt - sonst verschwindet der Rahmen. */
+html[data-theme="light"] img[src^="data:"],
+html[data-theme="light"] .platzhalter{ background:#eceaf6; }

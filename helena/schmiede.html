@@ -4,14 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Helenas Spiel-Schmiede</title>
-<!-- Hell oder dunkel waehlt Helena seit 04.10.2026 selbst: /farbschalter.js
-     am Ende des <head> (Standard dunkel, Schluessel "helena-theme"). -->
+<!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
+     Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <link rel="stylesheet" href="/schmiede/schmiede.css?v=1cc314c5">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <style>
   /* Helenas Farbe */
   :root{ --paul:#db2777; }
+  /* Hell (04.10.2026): #db2777 hat auf Weiss nur 4,6:1 und wird als Flaeche
+     mit weisser Schrift benutzt - #a3176b hat 7,3:1 in beide Richtungen. */
+  html[data-theme="light"]{ --paul:#a3176b; }
 </style>
 <script src="/farbschalter.js"></script>
 </head>

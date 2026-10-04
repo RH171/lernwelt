@@ -20,8 +20,13 @@
   Lösung mit Erklärung. Am Ende geht die Runde an /api/spiele (Statistik des
   Spiels) und an lernstand (Merkmale für den Elternbereich).
 -->
+<!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
+     Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
-<link rel="stylesheet" href="/quiz/quiz.css?v=e80e1b70">
+<link rel="stylesheet" href="/quiz/quiz.css?v=11f8562b">
 <style>
   :root{
     --bg:#0e1320; --card:#171d2e; --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
