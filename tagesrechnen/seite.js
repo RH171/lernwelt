@@ -147,9 +147,9 @@
       tipp(lob + " " + a.x.probe, true);
       document.querySelector('[data-taste="ok"]').textContent = "Weiter";
     } else {
-      tipp(lob, true);
-      var m = ++marke;
-      setTimeout(function () { if (m === marke) naechste(); }, erster ? 650 : 1100);
+      // Bleibt stehen, bis Paul "Weiter" tippt (Denny, 04.10.2026).
+      tipp(lob + " " + a.x.weg, true);
+      document.querySelector('[data-taste="ok"]').textContent = "Weiter";
     }
     // In der Fehlerrunde: richtig beim ersten Anlauf = erledigt, sonst hinten wieder anstellen.
     if (lauf.modus === "nach") {

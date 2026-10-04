@@ -24,7 +24,9 @@
     { n: 30, name: "30 Aufgaben", sub: "lang" }
   ];
   var LANGSAM = 6000;   // ab 6 s beim ersten Versuch "dauert noch" (wie im Einmaleins)
-  var LEUCHTEN = 1100;  // so lange leuchtet das neue Feld, bevor die naechste Frage kommt
+  /* Nach "Richtig!" bleibt die Rechnung stehen, bis Paul selbst "Weiter" tippt
+   * (Denny, 04.10.2026: "bleibt viel zu kurz und Paul will ihn selber weg klicken"). */
+  function okText(t) { var b = document.querySelector('#tasten [data-taste="ok"]'); if (b) b.textContent = t; }
   var $ = function (s) { return document.querySelector(s); };
 
   function lesen() { try { return JSON.parse(localStorage.getItem(SPEICHER)) || {}; } catch (e) { return {}; } }
@@ -101,7 +103,7 @@
   }
 
   function naechste() {
-    clearTimeout(zeitgeber); neu = null;
+    clearTimeout(zeitgeber); neu = null; okText("Prüfen");
     if (gestellt >= runde) return fertig();
     wahl = waehlen();
     if (!wahl) return fertig();   // geht bei hoechstens 30 Aufgaben nicht leer (55 Paare), aber sicher ist sicher
@@ -131,8 +133,7 @@
       gefuellt[f] = erster[wahl] ? "gut" : "spaet";
       neu = f; phase = "richtig"; gestellt++;
       meldung("Richtig! " + t.d + " · " + t.q + " = " + t.D + ", also " + t.D + " : " + t.d + " = " + t.q + ".", "ok");
-      zeichnen(); frageZeigen();
-      zeitgeber = setTimeout(naechste, LEUCHTEN);
+      zeichnen(); frageZeigen(); okText("Weiter");
       return;
     }
     // Falsch: kein Rot, die Frage bleibt, es gibt Hilfe in Stufen.
@@ -145,7 +146,7 @@
 
   function taste(z) {
     if (!wahl) return;
-    if (z === "ok") return pruefen();
+    if (z === "ok") return phase === "richtig" ? naechste() : pruefen();
     if (phase !== "frage") return;
     if (z === "weg") eingabe = eingabe.slice(0, -1);
     else if (eingabe.length < 2) eingabe += z;
