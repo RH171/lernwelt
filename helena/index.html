@@ -44,7 +44,7 @@
      Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
      Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
 <script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
-<link rel="stylesheet" href="/helena-thema.css?v=8db50467">
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <style>
   :root{
     --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740;
@@ -74,7 +74,7 @@
      Zeilen hoch (189 px) und zuletzt nur noch seitlich wischbar. */
   header{display:flex; align-items:center; gap:11px; margin-bottom:16px}
   .mark{width:44px; height:44px; border-radius:14px; flex:none; display:grid; place-items:center;
-    background:linear-gradient(150deg,var(--brand),#7c5cff);
+    background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff));
     box-shadow:0 8px 22px rgba(124,92,255,.42); font-size:22px}
   header h1{font-family:var(--round); font-weight:800; font-size:19px; margin:0; letter-spacing:-.01em}
   header p{margin:2px 0 0; color:var(--muted); font-size:12.5px}

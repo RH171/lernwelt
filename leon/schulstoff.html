@@ -132,6 +132,8 @@
   <button class="fach auf-zu" type="button" id="neues-blatt">📸 Neues Blatt</button>
   <div id="aufnehmen" class="verborgen"></div>
 
+  <!-- Suche in der Ablage (04.10.2026, /ablage-suche.js). -->
+  <div id="suche"></div>
   <div id="filter" class="faecher" style="margin-top:16px"></div>
   <!-- Zweite Reihe: Heft oder Uebung (Denny, 25.09.2026: "Ich gehe auf Mathe
        und möchte nur die Hefteinträge."). Wirkt zusammen mit dem Fach. -->
@@ -166,6 +168,7 @@
   <div class="fachwahl verborgen" id="schau-fachwahl"></div>
 </div>
 
+<script src="/ablage-suche.js?v=c328aefd"></script>
 <script>
 (function(){
   "use strict";
@@ -276,6 +279,8 @@
     var zeigen = alles.filter(function(e){
       return imFach(e) && (artGewaehlt === "alle" || e.art === artGewaehlt);
     });
+    /* Suche: wirkt zusammen mit Fach und Art (04.10.2026, /ablage-suche.js). */
+    if (suche && suche.zeigen($("inhalt"), zeigen)) return;
     if (!zeigen.length && alles.length){
       $("inhalt").innerHTML = '<div class="karte leer"><div class="zeichen">🔎</div>' +
         '<b>Dazu liegt noch kein Blatt da</b><p class="unter">Tipp oben auf „Alle“ ' +
@@ -574,6 +579,18 @@
     }
     if (zu) k.scrollIntoView({behavior:"smooth", block:"nearest"});
   });
+
+  /* Suchfeld (Denny, 04.10.2026: Paul fand die Textaufgaben nicht). Sucht
+     nur in dem, was schon geladen ist - kein Server-Aufruf. */
+  var suche = window.LWSuche ? LWSuche.einbauen($("suche"), {
+    platzhalter: "Suchen, z. B. Diktat",
+    fachName: function(f){ return KURZ[f||""] || f; },
+    artName: function(a){ return ART[a] ? ART[a].kurz : ""; },
+    zeichen: function(f){ return ZEICHEN[f||""] || "📄"; },
+    datum: lang,
+    oeffnen: aufmachen,
+    geaendert: function(){ listeMalen(); }
+  }) : null;
 
   function laden(){
     fetch("/api/schulstoff?kind=leon&monate=6", {credentials:"same-origin"})

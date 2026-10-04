@@ -4,7 +4,7 @@
  * Antwort: { ok, hinweise:[{nr, hinweis}] }
  *
  * Nur fuer die drei Aufgaben, die keine Maschine sicher pruefen kann: die
- * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Begruendung (7).
+ * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Meinung (7). Keine Weil-Antworten: Pauls Lehrerin erlaubt sie nicht (04.10.2026).
  * Die Werkstatt sagt NUR, worauf das Kind achten soll - keine Musterloesung, keine
  * Note, keine Punkte. Das ist zusaetzlich mechanisch abgesichert (verraet()),
  * weil eine Bitte im Auftrag keine Pruefung ist.
@@ -31,8 +31,8 @@ const REGELN =
   "verlangt das ausdruecklich. Zu jeder Antwort gibst du GENAU EINEN kurzen Hinweis " +
   "(hoechstens 22 Woerter, du-Form, freundlich, kein Rot, keine Fehlerliste). " +
   "Worauf du achtest: ganzer Satz mit Subjekt und Verb? Punkt am Ende? Grossschreibung am " +
-  "Satzanfang und bei Nomen? Passt die Antwort zur Frage und zum Text? Bei der Begruendung: " +
-  "steht ein Grund mit 'weil' oder 'denn' da? Ist etwas gut, sag das zuerst in drei Woertern. " +
+  "Satzanfang und bei Nomen? Passt die Antwort zur Frage und zum Text? Bei der Meinungsfrage: " +
+  "steht eine klare Meinung im ganzen Satz da? WICHTIG: Die Lehrerin erlaubt KEINE Antworten mit 'weil'. Verlange oder lobe nie 'weil'; steht 'weil' in der Antwort, sag freundlich, dass Frau Sy Antworten ohne 'weil' moechte. Ist etwas gut, sag das zuerst in drei Woertern. " +
   "VERBOTEN: die richtige Antwort nennen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
@@ -44,11 +44,16 @@ const REGELN_LEON =
   "freundlich, kein Rot, keine Fehlerliste. Ist etwas gut, sag das zuerst in zwei, drei Woertern. " +
   "Worauf du achtest: Passt der Satz zur Geschichte? Steht am Ende ein Punkt? Nomen gross? " +
   "Rechtschreibung nur sanft und hoechstens ein Wort ansprechen. " +
+  "WICHTIG: Verlange oder lobe nie 'weil' und frag nie nach einem Grund (Denny, 04.10.2026). " +
   "VERBOTEN: die Antwort vorsagen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":5,"hinweis":"..."}]}';
 const REGELN_JE_KIND = { paul: REGELN, leon: REGELN_LEON };
 
+const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
+/* Leon: Frau Sy ist Pauls Lehrerin, nicht seine. Bei ihm faellt ein Weil-Hinweis
+ * still auf den neutralen Satz zurueck - verlangt und gelobt wird "weil" nie. */
+const WEIL_ERSATZ_JE_KIND = { leon: "Lies deinen Satz noch einmal. Passt er zur Geschichte? Punkt am Ende?" };
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 
 const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
@@ -69,7 +74,7 @@ export function verraet(hinweis, zeilen) {
   return false;
 }
 
-export function hinweiseAuswerten(text, zeilen, nummern) {
+export function hinweiseAuswerten(text, zeilen, nummern, kind) {
   let liste = [];
   try {
     const m = String(text).match(/\{[\s\S]*\}/);
@@ -80,6 +85,9 @@ export function hinweiseAuswerten(text, zeilen, nummern) {
     const f = liste.find((x) => x && Number(x.nr) === nr);
     const h = f && typeof f.hinweis === "string" ? f.hinweis.trim().slice(0, 220) : "";
     if (!h || verraet(h, zeilen)) return { nr, hinweis: ERSATZ, ersetzt: true };
+    // Pauls Lehrerin erlaubt keine Weil-Antworten (04.10.2026): ein Hinweis,
+    // der "weil" lobt oder verlangt, wird ersetzt. Erlaubt ist nur "ohne 'weil'".
+    if (/\bweil\b/i.test(h) && !/ohne\s+.?weil/i.test(h)) return { nr, hinweis: WEIL_ERSATZ_JE_KIND[kind] || WEIL_ERSATZ, ersetzt: true };
     return { nr, hinweis: h };
   });
 }
@@ -121,7 +129,7 @@ export async function onRequestPost(context) {
     if (!r.ok) return json(502, { ok: false, fehler: "Die Werkstatt antwortet gerade nicht (" + r.status + ")." });
     const j = await r.json();
     const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
-    return json(200, { ok: true, hinweise: hinweiseAuswerten(text, zeilen, antworten.map((a) => a.nr)) });
+    return json(200, { ok: true, hinweise: hinweiseAuswerten(text, zeilen, antworten.map((a) => a.nr), kind) });
   } catch (e) {
     return json(502, { ok: false, fehler: "Die Werkstatt antwortet gerade nicht." });
   }

@@ -1,0 +1,13 @@
+/* Zusatz fuer "Wo fehlt die Zahl? · Geteilt" (04.10.2026) - der Rest kommt aus tabelle.css. */
+.leer{background:var(--luecke);border:1px solid var(--line)}
+.fest.neu{animation:leucht 1.1s ease-out 1}
+@keyframes leucht{0%{background:var(--gut);color:var(--akzent-auf);transform:scale(1.3)}100%{transform:scale(1)}}
+.tipp.ok{background:var(--gut-hell);color:var(--gut);font-weight:700}
+#frage{font-variant-numeric:tabular-nums;display:inline-block}
+@media (prefers-reduced-motion:reduce){.fest.neu{animation:none}}
+/* Niedriges Fenster (375x360): Steht ein Tipp da, rutschte "Pruefen" 45 px unter den Rand
+   (gemessen 04.10.2026). Tipp knapper, Tafel so lange etwas kleiner. */
+@media (max-height:520px) and (max-width:859px){
+  .tipp{font-size:14px;line-height:1.25} .tipp.zeigen{padding:4px 8px}
+  #spiel:has(.tipp.zeigen){--z:min(calc((100vw - 28px) / 11), calc((100vh - 270px) / 11))}
+}

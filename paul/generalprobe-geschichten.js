@@ -58,7 +58,7 @@ window.GENERALPROBE = [
       { art: "kreuz", frage: "Wie heißt der Nachbar?", optionen: ["Herr Brodersen", "Herr Brodmann", "Herr Broderich"], richtig: 0, hinweis: [10, 11] },
       { art: "unterstreichen", auftrag: "Tippe die Sätze an, die verraten, dass der Wind stark war.", zeilen: [1, 6], hinweis: [1, 6] },
       { art: "einsetzen", satz: "Der Drachen <u>fiel</u> auf das Dach der letzten Garage.", wort: "landete", zeile: 8 },
-      { art: "meinung", frage: "War es richtig, dass Merle beim Nachbarn geklingelt hat? Begründe deine Meinung!" }
+      { art: "meinung", frage: "War es richtig, dass Merle beim Nachbarn geklingelt hat? Schreibe deine Meinung in einem ganzen Satz." }
     ]
   },
   {
@@ -98,7 +98,7 @@ window.GENERALPROBE = [
       { art: "kreuz", frage: "Wie heißt die Katze von nebenan?", optionen: ["Punkti", "Pünktchen", "Pünktli"], richtig: 1, hinweis: [7, 8] },
       { art: "unterstreichen", auftrag: "Tippe die Sätze an, die verraten, dass Lotta den Igel gern hat.", zeilen: [18, 20], hinweis: [17, 20] },
       { art: "einsetzen", satz: "Jeden Morgen <u>bewässerte</u> sie die Beete.", wort: "goss", zeile: 2 },
-      { art: "meinung", frage: "Soll Lotta dem Igel Futter hinstellen oder ihn in Ruhe lassen? Begründe deine Meinung!" }
+      { art: "meinung", frage: "Soll Lotta dem Igel Futter hinstellen oder ihn in Ruhe lassen? Schreibe deine Meinung in einem ganzen Satz." }
     ]
   },
   {
@@ -138,7 +138,7 @@ window.GENERALPROBE = [
       { art: "kreuz", frage: "Wie heißt Finns Freund?", optionen: ["Malte", "Malik", "Mailo"], richtig: 1, hinweis: [4, 4] },
       { art: "unterstreichen", auftrag: "Tippe die Sätze an, die verraten, dass Malik ein guter Freund ist.", zeilen: [9, 12], hinweis: [9, 12] },
       { art: "einsetzen", satz: "Finn kniete sich hin und <u>befühlte</u> jeden Schneeball.", wort: "tastete", zeile: 13 },
-      { art: "meinung", frage: "Warum hat die Mutter wohl einen Knopf an die Tasche genäht? Begründe deine Meinung!" }
+      { art: "meinung", frage: "Was glaubst du: Was wollte die Mutter mit dem Knopf an der Tasche erreichen? Antworte in einem ganzen Satz." }
     ]
   },
   {
@@ -178,7 +178,7 @@ window.GENERALPROBE = [
       { art: "kreuz", frage: "Wie heißt Hannas Lehrerin?", optionen: ["Frau Albrecht", "Frau Alberts", "Frau Albers"], richtig: 2, hinweis: [7, 7] },
       { art: "unterstreichen", auftrag: "Tippe die Sätze an, die verraten, dass Hanna aufgeregt war.", zeilen: [5, 11], hinweis: [5, 11] },
       { art: "einsetzen", satz: "Beim ersten Ton <u>pfiff</u> die Flöte schrecklich.", wort: "quietschte", zeile: 9 },
-      { art: "meinung", frage: "Was hättest du an Hannas Stelle gemacht, als die Kinder kicherten? Begründe deine Meinung!" }
+      { art: "meinung", frage: "Was hättest du an Hannas Stelle gemacht, als die Kinder kicherten? Antworte in einem ganzen Satz." }
     ]
   },
   {
@@ -218,7 +218,7 @@ window.GENERALPROBE = [
       { art: "kreuz", frage: "Wie heißt Milas Bruder?", optionen: ["Ben", "Benno", "Bent"], richtig: 0, hinweis: [13, 13] },
       { art: "unterstreichen", auftrag: "Tippe die Sätze an, die verraten, dass Ben erst traurig und dann froh war.", zeilen: [13, 19], hinweis: [13, 19] },
       { art: "einsetzen", satz: "Ben <u>lächelte</u> über das ganze Gesicht.", wort: "strahlte", zeile: 19 },
-      { art: "meinung", frage: "Warum hat Mila wohl die Äpfel verteilt? Begründe deine Meinung!" }
+      { art: "meinung", frage: "Was glaubst du: Was wollte Mila erreichen, als sie die Äpfel verteilt hat? Antworte in einem ganzen Satz." }
     ]
   }
 ];

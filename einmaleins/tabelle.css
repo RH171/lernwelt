@@ -57,7 +57,36 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
 }
 @media (max-height:520px) and (max-width:859px){
   header{margin-bottom:4px} header h1{font-size:17px}
-  #spiel{--z:min(calc((100vw - 28px) / 11), calc((100vh - 232px) / 11));gap:6px}
+  #spiel{--z:min(calc((100vw - 28px) / 11), calc((100vh - 252px) / 11));gap:6px}
   .zurueck{min-height:40px;padding:6px 14px}
   #frage{font-size:20px} #tasten button{min-height:44px;font-size:18px} #tasten{gap:4px}
+}
+
+/* Rechenweg als Lueckenkette (04.10.2026): Knopf unter der Aufgabe, die Kette ersetzt
+   waehrend der Hilfe die Tafel. Kein Rot - richtig ist gruen, gezeigt ist grau. */
+.oben{align-items:center;flex-wrap:wrap}
+.weg-knopf{padding:8px 14px;font-size:15px;white-space:nowrap}
+.weg{background:var(--karte);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.weg-kopf{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.weg-kopf b{font:800 24px/1.1 var(--font)}
+.weg-wahl{display:flex;flex-wrap:wrap;gap:6px}
+.weg-art{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--fest);color:var(--ink);font:700 15px/1.1 var(--font);cursor:pointer}
+.weg-art.an{border:2px solid var(--akzent);background:var(--an)}
+.weg-kette{display:flex;flex-direction:column;gap:8px}
+.weg-zeile{display:flex;align-items:center;justify-content:center;gap:10px;font:700 26px/1 var(--font);font-variant-numeric:tabular-nums}
+.lk{display:inline-flex;align-items:center;justify-content:center;min-width:76px;height:48px;padding:0 8px;border-radius:12px;
+  border:2px dashed var(--akzent);background:var(--an);color:var(--ink)}
+.lk.ok{border:2px solid var(--gut);background:var(--gut-hell);color:var(--gut)}
+.lk.gezeigt{border:2px solid var(--line);background:var(--fest);color:var(--muted)}
+.weg-wort{text-align:center;color:var(--muted);font-size:16px;min-height:22px}
+.weg-zeigen{align-self:center}
+#spiel.weg-an #tafel{display:none}
+#spiel.weg-an{grid-template-columns:min(100%,420px)}
+#spiel.weg-an #seite{width:min(100%,420px)}
+@media (max-height:520px) and (max-width:859px){
+  .weg{padding:8px;gap:6px} .weg-zeile{font-size:22px} .lk{height:44px} .weg-kopf b{font-size:20px}
+  /* Kurzer Bildschirm: Kopf, Aufgabenzeile und "Andere Rundenlaenge" ruhen, die Kette
+     rollt in sich, das Tastenfeld mit "Pruefen" bleibt immer im Bild. */
+  body:has(#spiel.weg-an) header, #spiel.weg-an .oben, #spiel.weg-an .zurueck{display:none}
+  #spiel.weg-an .weg{max-height:calc(100vh - 150px);overflow-y:auto}
 }

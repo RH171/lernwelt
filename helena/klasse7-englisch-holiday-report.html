@@ -43,7 +43,7 @@
      Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
      Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
 <script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
-<link rel="stylesheet" href="/helena-thema.css?v=8db50467">
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <style>
   :root{
@@ -146,8 +146,8 @@
   .bauzeile .stein{background:rgba(167,139,250,.16);border-color:var(--brand)}
 
   .weiter{width:100%;min-height:54px;margin-top:12px;border:none;border-radius:16px;cursor:pointer;
-    font:800 17px/1 var(--round);color:#150f2e;
-    background:linear-gradient(150deg,var(--brand),#7c5cff);box-shadow:0 10px 26px rgba(124,92,255,.4)}
+    font:800 17px/1 var(--round);color:var(--auf-brand,#150f2e);
+    background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff));box-shadow:0 10px 26px rgba(124,92,255,.4)}
   .weiter.grau{background:var(--surface2);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
   .zweitreihe{display:flex;gap:9px;margin-top:9px}
   .zweitreihe button{flex:1;min-height:46px;border-radius:14px;cursor:pointer;

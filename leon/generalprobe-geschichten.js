@@ -12,7 +12,8 @@
  *  luecke       satz mit ___, drei optionen, wort = Loesung, zeile = wo es steht
  *  reihenfolge  drei Ereignisse in Textreihenfolge (je mit zeile); angezeigt gemischt
  *  stimmt       satz, richtig = true/false, zeile = wo man es nachliest
- *  ende         angefangener Satz, Leon schreibt ihn zu Ende - geht an die Werkstatt
+ *  ende         angefangener Satz, Leon schreibt ihn zu Ende - geht an die Werkstatt.
+ *               NIE mit "weil" oder als Warum-Frage (Denny, 04.10.2026: keine Weil-Fragen).
  */
 window.GENERALPROBE = [
   {
@@ -39,7 +40,7 @@ window.GENERALPROBE = [
         { text: "Der Ball fliegt am Pfosten vorbei.", zeile: 7 },
         { text: "Der Ball landet im Netz.", zeile: 10 } ] },
       { art: "stimmt", satz: "In der ersten Halbzeit fällt ein Tor.", richtig: false, zeile: 4 },
-      { art: "ende", anfang: "Ben hüpft vor Freude, weil" }
+      { art: "ende", anfang: "Als der Ball im Netz landet," }
     ]
   },
   {
@@ -65,7 +66,7 @@ window.GENERALPROBE = [
         { text: "Lina hört ein leises Miauen.", zeile: 5 },
         { text: "Lina streichelt ihre Katze.", zeile: 9 } ] },
       { art: "stimmt", satz: "Das Miauen kommt aus der Küche.", richtig: false, zeile: 6 },
-      { art: "ende", anfang: "Lina ist froh, weil" }
+      { art: "ende", anfang: "Lina findet Flocke" }
     ]
   },
   {
@@ -91,7 +92,7 @@ window.GENERALPROBE = [
         { text: "Emil malt eine Karte.", zeile: 6 },
         { text: "Alle essen den warmen Kuchen.", zeile: 9 } ] },
       { art: "stimmt", satz: "Opa klingelt am Morgen an der Tür.", richtig: false, zeile: 7 },
-      { art: "ende", anfang: "Opa freut sich, weil" }
+      { art: "ende", anfang: "Zum Geburtstag bekommt Opa" }
     ]
   },
   {
@@ -116,7 +117,7 @@ window.GENERALPROBE = [
         { text: "Mila sieht eine Schnecke.", zeile: 5 },
         { text: "Mila geht fröhlich ins Haus.", zeile: 9 } ] },
       { art: "stimmt", satz: "Die Schnecke hat ein braunes Haus.", richtig: true, zeile: 6 },
-      { art: "ende", anfang: "Mila trägt die Schnecke weg, weil" }
+      { art: "ende", anfang: "Mila trägt die Schnecke" }
     ]
   },
   {
@@ -141,7 +142,7 @@ window.GENERALPROBE = [
         { text: "Die Kinder sammeln Eier.", zeile: 6 },
         { text: "Papa kocht das Ei.", zeile: 9 } ] },
       { art: "stimmt", satz: "Eine Kuh leckt Tom am Arm.", richtig: true, zeile: 4 },
-      { art: "ende", anfang: "Tom hält sein Ei ganz fest, weil" }
+      { art: "ende", anfang: "Auf dem Bauernhof dürfen die Kinder" }
     ]
   },
   {
@@ -166,7 +167,7 @@ window.GENERALPROBE = [
         { text: "Die Kinder gehen durch den Park.", zeile: 6 },
         { text: "Frau Kern macht ein neues Licht an.", zeile: 8 } ] },
       { art: "stimmt", satz: "Mama hilft Jonte beim Griff.", richtig: false, zeile: 4 },
-      { art: "ende", anfang: "Jonte singt am lautesten, weil" }
+      { art: "ende", anfang: "Als das Licht ausgeht," }
     ]
   }
 ];

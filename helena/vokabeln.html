@@ -8,7 +8,7 @@
      Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
      Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
 <script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
-<link rel="stylesheet" href="/helena-thema.css?v=8db50467">
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
 <style>
   :root{
     --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740;
@@ -35,7 +35,7 @@
   header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;}
   .logo{display:flex; align-items:center; gap:12px;}
   .mark{width:46px; height:46px; border-radius:14px; flex:none; display:grid; place-items:center;
-    background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 8px 22px rgba(124,92,255,.45); font-size:24px;}
+    background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff)); box-shadow:0 8px 22px rgba(124,92,255,.45); font-size:24px;}
   .logo h1{font-family:var(--round); font-weight:800; font-size:20px; margin:0; letter-spacing:-.01em;}
   .logo p{margin:1px 0 0; color:var(--muted); font-size:12.5px;}
   /* EINE Zeile zum Wischen - auf jedem Schirm. Gemessen am 21.09.2026 mit
@@ -168,7 +168,7 @@
   .seg button:hover{border-color:var(--brand);}
   .heute{text-align:center; padding:22px 16px 6px;}
   .heutezahl{font-family:var(--round); font-size:56px; font-weight:800; line-height:1;
-             background:linear-gradient(150deg,var(--brand),#7c5cff);
+             background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff));
              -webkit-background-clip:text; background-clip:text; color:transparent;}
   .heutetext{color:var(--muted); font-size:15px; margin-top:6px; line-height:1.45;}
   .feineinst{margin-top:18px; border-top:1px solid var(--line); padding-top:14px;}
@@ -180,8 +180,8 @@
   .feinbody{padding-top:8px;}
   .tipp{color:var(--muted); font-size:12.5px; margin:8px 2px 0; line-height:1.5;}
   .start{width:100%; margin-top:4px; border:none; border-radius:14px; padding:15px; cursor:pointer;
-    font-family:var(--round); font-weight:800; font-size:16px; color:#150f2e;
-    background:linear-gradient(150deg,var(--brand),#7c5cff); box-shadow:0 10px 26px rgba(124,92,255,.4);
+    font-family:var(--round); font-weight:800; font-size:16px; color:var(--auf-brand,#150f2e);
+    background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff)); box-shadow:0 10px 26px rgba(124,92,255,.4);
     transition:transform .12s, box-shadow .12s;}
   .start:hover{transform:translateY(-1px); box-shadow:0 14px 32px rgba(124,92,255,.5);}
   .start:active{transform:translateY(0);}
@@ -299,7 +299,7 @@
   .adder input[type=text]{flex:1; font-family:var(--font); font-size:14px; color:var(--ink);
     background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px;}
   .adder button{border:none; border-radius:10px; padding:10px 16px; font-weight:800; font-family:var(--round);
-    color:#150f2e; background:var(--ok); cursor:pointer;}
+    color:var(--auf-brand,#150f2e); background:var(--ok); cursor:pointer;}
   .adder .tiny{color:var(--muted); font-size:12px; margin-top:8px;}
 
   .foot{text-align:center; color:var(--muted); font-size:12px; margin-top:26px; line-height:1.6;}
@@ -398,7 +398,7 @@
   .mini:hover{border-color:var(--brand); color:var(--ink);}
   .pvsave{display:flex; gap:10px; margin-top:12px;}
   #saveUnit{border:none; border-radius:12px; padding:11px 18px; font-weight:800; font-family:var(--round);
-    color:#150f2e; background:var(--ok); cursor:pointer;}
+    color:var(--auf-brand,#150f2e); background:var(--ok); cursor:pointer;}
   .ghost{border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:12px;
     padding:11px 16px; font-weight:700; cursor:pointer; font-family:var(--font);}
   #myUnits{margin-top:16px;}
