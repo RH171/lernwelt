@@ -4,7 +4,7 @@
  * Antwort: { ok, hinweise:[{nr, hinweis}] }
  *
  * Nur fuer die drei Aufgaben, die keine Maschine sicher pruefen kann: die
- * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Begruendung (7).
+ * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Meinung (7). Keine Weil-Antworten: Pauls Lehrerin erlaubt sie nicht (04.10.2026).
  * Die Werkstatt sagt NUR, worauf Paul achten soll - keine Musterloesung, keine
  * Note, keine Punkte. Das ist zusaetzlich mechanisch abgesichert (verraet()),
  * weil eine Bitte im Auftrag keine Pruefung ist.
@@ -25,12 +25,13 @@ const REGELN =
   "verlangt das ausdruecklich. Zu jeder Antwort gibst du GENAU EINEN kurzen Hinweis " +
   "(hoechstens 22 Woerter, du-Form, freundlich, kein Rot, keine Fehlerliste). " +
   "Worauf du achtest: ganzer Satz mit Subjekt und Verb? Punkt am Ende? Grossschreibung am " +
-  "Satzanfang und bei Nomen? Passt die Antwort zur Frage und zum Text? Bei der Begruendung: " +
-  "steht ein Grund mit 'weil' oder 'denn' da? Ist etwas gut, sag das zuerst in drei Woertern. " +
+  "Satzanfang und bei Nomen? Passt die Antwort zur Frage und zum Text? Bei der Meinungsfrage: " +
+  "steht eine klare Meinung im ganzen Satz da? WICHTIG: Die Lehrerin erlaubt KEINE Antworten mit 'weil'. Verlange oder lobe nie 'weil'; steht 'weil' in der Antwort, sag freundlich, dass Frau Sy Antworten ohne 'weil' moechte. Ist etwas gut, sag das zuerst in drei Woertern. " +
   "VERBOTEN: die richtige Antwort nennen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
 
+const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 
 const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
@@ -62,6 +63,9 @@ export function hinweiseAuswerten(text, zeilen, nummern) {
     const f = liste.find((x) => x && Number(x.nr) === nr);
     const h = f && typeof f.hinweis === "string" ? f.hinweis.trim().slice(0, 220) : "";
     if (!h || verraet(h, zeilen)) return { nr, hinweis: ERSATZ, ersetzt: true };
+    // Pauls Lehrerin erlaubt keine Weil-Antworten (04.10.2026): ein Hinweis,
+    // der "weil" lobt oder verlangt, wird ersetzt. Erlaubt ist nur "ohne 'weil'".
+    if (/\bweil\b/i.test(h) && !/ohne\s+.?weil/i.test(h)) return { nr, hinweis: WEIL_ERSATZ, ersetzt: true };
     return { nr, hinweis: h };
   });
 }
