@@ -49,6 +49,7 @@
 
   var luecken = [], offen = {}, wahl = null, versuche = {}, erster = {}, start = 0, modus = null;
   var runde = 0, gestellt = 0, gefragtAm = 0, warte = [], zuletzt = [];
+  var hilfe = {};   // Aufgaben, bei denen das Kind den Rechenweg geoeffnet hat (04.10.2026)
 
   function gewicht(k) {
     var ab = k.split("x"), a = +ab[0], b = +ab[1];
@@ -141,9 +142,11 @@
     if (zk) zk.classList.add("an"); if (sk) sk.classList.add("an");
     $("#frage").textContent = ab[0] + " · " + ab[1] + " = " + (offen[wahl] || "?");
     $("#zaehler").textContent = EINZELN ? "Aufgabe " + (gestellt + 1) + " von " + runde : "noch " + Object.keys(offen).length + " Lücken";
+    wegKnopfZeigen();
   }
 
   function naechste() {
+    wegZu();
     if (EINZELN) {
       if (gestellt >= runde) return fertig();
       offen = {}; wahl = einzelneWaehlen(); offen[wahl] = ""; versuche[wahl] = 0;
@@ -177,22 +180,25 @@
     if (!wahl || !offen[wahl]) return;
     var ab = wahl.split("x"), a = +ab[0], b = +ab[1], richtig = a * b, gegeben = +offen[wahl];
     var stimmt = gegeben === richtig;
+    // Mit Rechenweg gerechnet zaehlt fuer die Statistik als "noch nicht gewusst": Die Aufgabe
+    // kommt dann oefter dran - ohne Rot, das Kind sieht nur sein Lob (04.10.2026).
+    var gewusst = stimmt && !hilfe[wahl];
     versuche[wahl] = (versuche[wahl] || 0) + 1;
     // Eine Wiederholung in derselben Runde zaehlt nicht noch einmal: Der erste Versuch
     // ist der Befund, sonst hebt ein "richtig beim zweiten Mal" den Fehler gleich wieder auf.
     if (versuche[wahl] === 1 && erster[wahl] === undefined) {
-      erster[wahl] = stimmt;
-      if (!stimmt) stand.fehler[wahl] = (stand.fehler[wahl] || 0) + 1;
+      erster[wahl] = gewusst;
+      if (!gewusst) stand.fehler[wahl] = (stand.fehler[wahl] || 0) + 1;
       else if (stand.fehler[wahl]) stand.fehler[wahl] = Math.max(0, stand.fehler[wahl] - 1);
       if (EINZELN) {
         // Zeit nur bei richtigem ersten Versuch, geglaettet. Gedeckelt bei 30 s (Pause ist kein Ueberlegen).
         var ms = Math.min(30000, Date.now() - gefragtAm);
-        if (stimmt) stand.zeit[wahl] = stand.zeit[wahl] === undefined ? ms : Math.round(stand.zeit[wahl] * 0.5 + ms * 0.5);
-        if (!stimmt) warte.push({ k: wahl, ab: gestellt + 4 });
+        if (gewusst) stand.zeit[wahl] = stand.zeit[wahl] === undefined ? ms : Math.round(stand.zeit[wahl] * 0.5 + ms * 0.5);
+        if (!gewusst) warte.push({ k: wahl, ab: gestellt + 4 });
       }
       schreiben(stand);
       if (window.lernstand && window.lernstand.antwort)
-        window.lernstand.antwort(stimmt, "einmaleins " + Math.max(a, b) + "er reihe", String(gegeben), String(richtig), "1x1#" + wahl);
+        window.lernstand.antwort(gewusst, "einmaleins " + Math.max(a, b) + "er reihe", hilfe[wahl] ? "mit Rechenweg " + gegeben : String(gegeben), String(richtig), "1x1#" + wahl);
     }
     var tp = $("#tipp");
     if (stimmt) {
@@ -215,6 +221,7 @@
 
   function taste(z) {
     if (!wahl) return;
+    if (weg.offen) return wegTaste(z);
     if (z === "weg") offen[wahl] = String(offen[wahl] || "").slice(0, -1);
     else if (z === "ok") return pruefen();
     else if (String(offen[wahl] || "").length < 3) offen[wahl] = String(offen[wahl] || "") + z;
@@ -224,12 +231,13 @@
   }
 
   function los(n) {
+    hilfe = {}; wegZu();
     if (EINZELN) {
       modus = n; runde = n; gestellt = 0; warte = []; zuletzt = []; versuche = {}; erster = {}; start = Date.now();
       $("#start").classList.add("verborgen"); $("#ende").classList.add("verborgen"); $("#spiel").classList.remove("verborgen");
       return naechste();
     }
-    modus = n; luecken = waehleLuecken(n); offen = {}; versuche = {}; erster = {};
+    modus = n; luecken = waehleLuecken(n); offen = {}; versuche = {}; erster = {}; hilfe = {};
     luecken.sort(function (x, y) { return x[0] - y[0] || x[1] - y[1]; });
     luecken.forEach(function (p) { offen[schl(p[0], p[1])] = ""; });
     wahl = null; start = Date.now();
@@ -273,6 +281,167 @@
     $("#wackel-start").textContent = "🔁 Nur was noch wackelt (" + w.length + ")";
   }
 
+  /* Rechenweg als Lueckenkette (04.10.2026). Denny waehlte aus drei Entwuerfen
+     (unterlagen/einmaleins-rechenwege-darstellung.html) Darstellung 1: nur Rechnungen,
+     je eine Luecke, dazu ein Wort als Hinweis. Reihenfolge der Wege: Verdoppeln ->
+     5er-Reihe -> eine Reihe mehr/weniger. Das Kind fuellt jede Luecke selbst mit dem
+     Tastenfeld; erst nach einem Fehlversuch darf es sich eine Luecke zeigen lassen.
+     Kein Rot, keine Uhr. Die Loesung tippt es am Ende selbst in die Tabelle.
+     Leon (Klasse 2): nur Wege, deren Hilfsaufgaben in der 1er-, 2er-, 5er- oder
+     10er-Reihe liegen, jede Zeile wird vorgelesen. Bei mal 1 und mal 10 gibt es keinen
+     Weg - dort reicht die Merkregel aus tipp(). */
+  var KERN = { 1: 1, 2: 1, 5: 1, 10: 1 };
+  function leicht(x, y) { return !REIHEN || KERN[x] || KERN[y]; }
+  function rechenwege(a, b) {
+    var L = [];
+    if (a === 1 || b === 1 || a === 10 || b === 10) return L;
+    var paare = a === b ? [[a, b]] : [[a, b], [b, a]];
+    // 1. Verdoppeln - bevorzugt die Zerlegung, deren Haelfte schon eine Kernaufgabe ist.
+    var dop = paare.filter(function (p) { return p[0] % 2 === 0 && leicht(p[0] / 2, p[1]); })
+      .sort(function (x, y) { return (KERN[y[0] / 2] ? 1 : 0) - (KERN[x[0] / 2] ? 1 : 0); })[0];
+    if (dop) {
+      var f = dop[0], g = dop[1], h = f / 2 * g;
+      L.push({ id: "doppelt", name: "✌️ Verdoppeln", zeilen: f === 2
+        ? [[g + " + " + g + " =", 2 * g, "2 mal heißt: doppelt"]]
+        : [[f / 2 + " · " + g + " =", h, "die Hälfte von " + f + " mal"], [h + " + " + h + " =", 2 * h, "doppelt"]] });
+    }
+    // 2. 5er-Reihe: steht die 5 schon in der Aufgabe, ist 5 mal die Haelfte von 10 mal;
+    //    sonst 5 mal und den Rest.
+    var p5 = paare.filter(function (p) { return p[0] === 5; })[0];
+    if (p5) {
+      var g5 = p5[1];
+      L.push({ id: "fuenf", name: "✋ 5er-Reihe", zeilen: [["10 · " + g5 + " =", 10 * g5, "leichte Aufgabe"],
+        ["Hälfte von " + 10 * g5 + " =", 5 * g5, "5 ist die Hälfte von 10"]] });
+    } else {
+      var pr = paare.filter(function (p) { return p[0] > 5 && leicht(p[0] - 5, p[1]); })[0];
+      if (pr) {
+        var f6 = pr[0], g6 = pr[1], r = f6 - 5;
+        L.push({ id: "fuenf", name: "✋ 5er-Reihe", zeilen: r === 1
+          ? [["5 · " + g6 + " =", 5 * g6, "5er-Reihe"], [5 * g6 + " + " + g6 + " =", f6 * g6, "noch eine " + g6 + " dazu"]]
+          : [["5 · " + g6 + " =", 5 * g6, "5er-Reihe"], [r + " · " + g6 + " =", r * g6, "der Rest"],
+             [5 * g6 + " + " + r * g6 + " =", f6 * g6, "zusammen"]] });
+      }
+    }
+    // 3. Eine Reihe mehr oder weniger - von einer Kernaufgabe aus.
+    var nb = null;
+    paare.forEach(function (p) {
+      var f = p[0], g = p[1];
+      if (nb) return;
+      if (f > 2 && KERN[f - 1]) nb = { id: "mehr", name: "⬆️ Reihe mehr", zeilen: [[(f - 1) + " · " + g + " =", (f - 1) * g, "leichte Aufgabe"],
+        [(f - 1) * g + " + " + g + " =", f * g, "eine " + g + " dazu"]] };
+      else if (KERN[f + 1]) nb = { id: "weniger", name: "⬇️ Reihe weniger", zeilen: [[(f + 1) + " · " + g + " =", (f + 1) * g, "leichte Aufgabe"],
+        [(f + 1) * g + " − " + g + " =", f * g, "eine " + g + " weg"]] };
+    });
+    // 6 · 6: "5er-Reihe" und "eine Reihe mehr" waeren dieselbe Kette - dann nur einmal.
+    if (nb && !L.some(function (w) { return w.zeilen[0][0] === nb.zeilen[0][0]; })) L.push(nb);
+    return L;
+  }
+
+  var LOB = ["Gut überlegt!", "Stark gerechnet!", "Du bleibst dran – genau so!", "Klasse mitgedacht!"];
+  var weg = { offen: false, wege: [], w: null, i: 0, ein: "", fehl: 0, fertig: false };
+  function wegBauen() {
+    if ($("#weg")) return;
+    var tasten = $("#tasten"); if (!tasten) return;
+    var k = document.createElement("button");
+    k.id = "weg-knopf"; k.className = "knopf weg-knopf verborgen"; k.type = "button";
+    k.textContent = "🪜 Rechenweg";
+    var box = document.createElement("div");
+    box.id = "weg"; box.className = "weg verborgen";
+    box.innerHTML = '<div class="weg-kopf"><b id="weg-aufgabe"></b><button type="button" class="knopf weg-zu">Zur Tabelle</button></div>' +
+      '<div class="weg-wahl"></div><div class="weg-kette"></div><div class="weg-wort" aria-live="polite"></div>' +
+      '<button type="button" class="knopf weg-zeigen verborgen">Zeig mir diese Zahl</button>';
+    // Der Knopf sitzt in der Zeile der Aufgabe - eine eigene Zeile kostete auf kurzen
+    // Bildschirmen die Tafel 38 px (gemessen 04.10.2026, 375x360).
+    var oben = document.querySelector("#seite .oben"), zl = $("#zaehler");
+    if (oben && zl) oben.insertBefore(k, zl); else tasten.parentNode.insertBefore(k, tasten);
+    tasten.parentNode.insertBefore(box, tasten);
+  }
+  function wegKnopfZeigen() {
+    var k = $("#weg-knopf"); if (!k) return;
+    var ab = wahl ? wahl.split("x") : null;
+    var da = !weg.offen && ab && offen[wahl] !== undefined && rechenwege(+ab[0], +ab[1]).length > 0;
+    k.classList.toggle("verborgen", !da);
+  }
+  function vorlesbar(t) { return t.replace(/·/g, " mal ").replace(/−/g, " minus ").replace(/\+/g, " plus ").replace(/=/g, " ist "); }
+  function wegAuf() {
+    if (!wahl) return;
+    var ab = wahl.split("x"), a = +ab[0], b = +ab[1];
+    weg.wege = rechenwege(a, b); if (!weg.wege.length) return;
+    hilfe[wahl] = true; weg.offen = true;
+    $("#spiel").classList.add("weg-an");
+    $("#weg").classList.remove("verborgen"); $("#weg-knopf").classList.add("verborgen");
+    $("#weg-aufgabe").textContent = a + " · " + b + " = ?";
+    $("#tipp").textContent = ""; $("#tipp").className = "tipp";
+    var wl = $("#weg .weg-wahl"), h = "";
+    weg.wege.forEach(function (w, i) { h += '<button type="button" class="weg-art" data-weg="' + i + '">' + w.name + '</button>'; });
+    wl.innerHTML = h;
+    wegStart(0);
+  }
+  function wegStart(i) {
+    weg.w = weg.wege[i]; weg.i = 0; weg.ein = ""; weg.fehl = 0; weg.fertig = false;
+    document.querySelectorAll("#weg .weg-art").forEach(function (x, j) { x.classList.toggle("an", j === i); });
+    $("#weg .weg-kette").innerHTML = ""; $("#weg .weg-zu").classList.remove("primaer");
+    wegZeile();
+  }
+  function wegZeile() {
+    var z = weg.w.zeilen[weg.i];
+    var r = document.createElement("div"); r.className = "weg-zeile";
+    r.innerHTML = '<span>' + z[0] + '</span> <span class="lk aktiv"></span>';
+    var kette = $("#weg .weg-kette"); kette.appendChild(r);
+    var bx = $("#weg"); if (bx.scrollHeight > bx.clientHeight) bx.scrollTop = bx.scrollHeight;
+    weg.ein = ""; weg.fehl = 0;
+    $("#weg .weg-zeigen").classList.add("verborgen");
+    $("#weg .weg-wort").textContent = z[2];
+    if (C.vorlesen) sprich(vorlesbar(z[0]) + " wie viel? " + z[2]);
+  }
+  function wegLuecke() { var l = document.querySelectorAll("#weg .lk"); return l[l.length - 1]; }
+  function wegWeiter(gezeigt) {
+    var z = weg.w.zeilen[weg.i], l = wegLuecke();
+    l.textContent = z[1]; l.className = "lk " + (gezeigt ? "gezeigt" : "ok");
+    weg.i++;
+    if (weg.i >= weg.w.zeilen.length) {
+      weg.fertig = true;
+      var ab = wahl.split("x");
+      var t = (gezeigt ? "" : LOB[Math.floor(Math.random() * LOB.length)] + " ") + "Jetzt tipp " + ab[0] + " · " + ab[1] + " selbst in die Tabelle.";
+      $("#weg .weg-wort").textContent = t;
+      $("#weg .weg-zeigen").classList.add("verborgen");
+      $("#weg .weg-zu").classList.add("primaer");
+      if (C.vorlesen) sprich(t.replace(/·/g, " mal "));
+      return;
+    }
+    if (!gezeigt) $("#weg .weg-wort").textContent = LOB[Math.floor(Math.random() * LOB.length)];
+    setTimeout(wegZeile, gezeigt ? 0 : 450);
+  }
+  function wegTaste(z) {
+    if (weg.fertig) { if (z === "ok") wegZu(); return; }
+    var l = wegLuecke(); if (!l || !l.classList.contains("aktiv")) return;
+    var soll = weg.w.zeilen[weg.i][1];
+    if (z === "weg") weg.ein = weg.ein.slice(0, -1);
+    else if (z === "ok") {
+      if (!weg.ein) return;
+      if (+weg.ein === soll) { weg.ein = ""; return wegWeiter(false); }
+      weg.fehl++; weg.ein = "";
+      l.classList.remove("rueck"); void l.offsetWidth; l.classList.add("rueck");
+      $("#weg .weg-wort").textContent = "Fast! Schau noch mal: " + weg.w.zeilen[weg.i][2] + ".";
+      $("#weg .weg-zeigen").classList.remove("verborgen");
+    } else if (weg.ein.length < 3) weg.ein += z;
+    l.textContent = weg.ein;
+  }
+  function wegZu() {
+    if (!weg.offen) return;
+    weg.offen = false;
+    var sp = $("#spiel"); if (sp) sp.classList.remove("weg-an");
+    var b = $("#weg"); if (b) b.classList.add("verborgen");
+    if (wahl && $("#tafel")) markieren();
+  }
+  wegBauen();
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("#weg-knopf")) return wegAuf();
+    if (e.target.closest("#weg .weg-zu")) return wegZu();
+    if (e.target.closest("#weg .weg-zeigen")) return wegWeiter(true);
+    var w = e.target.closest("#weg .weg-art"); if (w) return wegStart(+w.dataset.weg);
+  });
+
   document.addEventListener("click", function (e) {
     var s = e.target.closest(".stufe"); if (s) { var n = s.dataset.n; return los(n === "leer" ? "leer" : +n); }
     var l = e.target.closest("#tafel .luecke"); if (l) { wahl = l.dataset.k; $("#tipp").textContent = ""; $("#tipp").className = "tipp"; return markieren(); }
@@ -287,8 +456,8 @@
     else if (e.key === "Backspace") taste("weg");
     else if (e.key === "Enter") taste("ok");
   });
-  window.__einmaleins = { los: los, stand: function () { return { offen: offen, wahl: wahl, erster: erster, gestellt: gestellt, warte: warte, gespeichert: stand }; },
-    baustellen: baustellen, gewicht: gewicht };
+  window.__einmaleins = { los: los, stand: function () { return { offen: offen, wahl: wahl, erster: erster, gestellt: gestellt, warte: warte, gespeichert: stand, hilfe: hilfe, weg: weg }; },
+    baustellen: baustellen, gewicht: gewicht, rechenwege: rechenwege };
   startMalen();
 
   // Nach einem Update genau da weitermachen (03.10.2026, lernstand.js -> LWWeiter).
@@ -299,13 +468,13 @@
       if ($("#spiel").classList.contains("verborgen") || modus === null) return null;
       return { modus: modus, luecken: luecken, offen: offen, wahl: wahl, versuche: versuche, erster: erster,
                dauer: Date.now() - start, runde: runde, gestellt: gestellt, warte: warte, zuletzt: zuletzt,
-               seitFrage: Date.now() - gefragtAm, zaehler: ($("#zaehler") || {}).textContent || "" };
+               seitFrage: Date.now() - gefragtAm, hilfe: hilfe, zaehler: ($("#zaehler") || {}).textContent || "" };
     },
     laden: function (d) {
       if (!d || !d.offen || d.modus === undefined) return;
       modus = d.modus; luecken = d.luecken || []; offen = d.offen; wahl = d.wahl; versuche = d.versuche || {};
       erster = d.erster || {}; start = Date.now() - (+d.dauer || 0); runde = d.runde || 0; gestellt = d.gestellt || 0;
-      warte = d.warte || []; zuletzt = d.zuletzt || []; gefragtAm = Date.now() - Math.min(+d.seitFrage || 0, 30000);
+      warte = d.warte || []; zuletzt = d.zuletzt || []; hilfe = d.hilfe || {}; gefragtAm = Date.now() - Math.min(+d.seitFrage || 0, 30000);
       $("#start").classList.add("verborgen"); $("#ende").classList.add("verborgen"); $("#spiel").classList.remove("verborgen");
       zeichnen();
       if ($("#zaehler") && d.zaehler) $("#zaehler").textContent = d.zaehler;
