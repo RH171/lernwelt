@@ -44,7 +44,7 @@
      Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
      Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
 <script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
-<link rel="stylesheet" href="/helena-thema.css?v=d80c0bfc">
+<link rel="stylesheet" href="/helena-thema.css?v=9ade8ae5">
 <style>
   :root{
     --bg:#0e1320; --bg2:#0b0f18; --surface:#171d2e; --surface2:#1f2740;
@@ -143,7 +143,7 @@
   .ns-knoepfe{display:flex;flex-wrap:wrap;gap:8px}
   .ns-knoepfe button{min-height:44px;padding:0 14px;border-radius:12px;font:700 14.5px/1 var(--round);cursor:pointer;
     border:2px solid var(--brand);background:transparent;color:var(--ink)}
-  .ns-knoepfe button.ns-ja{background:var(--brand);color:#141024}
+  .ns-knoepfe button.ns-ja{background:var(--brand);color:var(--auf-brand,#141024)}
   .ns-fertig{font-size:14.5px;padding:6px 0}
   .kachel.heutelernen{background:linear-gradient(125deg,#3b1d7a,#5b21b6 60%,#6d28d9);border-color:transparent;color:#fff}
   .kachel.heutelernen span{color:rgba(255,255,255,.9)}
@@ -171,7 +171,7 @@
   .hleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
   .hleg .ls{color:var(--ok);font-weight:700} .hleg .ln{color:var(--gold);font-weight:700}
   .hlos{display:flex;align-items:center;justify-content:center;min-height:46px;margin-top:10px;border-radius:12px;
-    background:var(--brand);color:#141024;font-weight:800;text-decoration:none;font-size:15px}
+    background:var(--brand);color:var(--auf-brand,#141024);font-weight:800;text-decoration:none;font-size:15px}
 
   .fuss{color:var(--muted); font-size:12.5px; line-height:1.6; margin:24px 2px 0;
     border-top:1px solid var(--line); padding-top:12px}

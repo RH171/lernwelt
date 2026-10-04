@@ -56,6 +56,23 @@ html[data-theme="light"]{
   --akzent-auf:#ffffff;
   --paul:#6d28d9;        /* so heisst die Leitfarbe in geteilten Dateien */
 
+  /* Schrift AUF der Leitfarbe. Im Dunklen war --brand hell, deshalb stand dort
+   * ueberall fest "color:#141024" (dunkel auf hell). Im Hellen ist --brand
+   * dunkel - dieselbe Zeile waere 2,6:1 gewesen, gemessen am 04.10.2026 an
+   * bet.html, hausaufgaben.html, stundenplan.html und zwei weiteren. Die
+   * Seiten schreiben jetzt var(--auf-brand,#141024): hier Weiss (7,1:1), ohne
+   * diese Datei der alte Wert. */
+  --auf-brand:#ffffff;
+
+  /* Dieselbe Falle an zwei weiteren Stellen (gemessen 04.10.2026):
+   * - Schrift auf einer ZARTEN Leitfarben-Fuellung (ausgewaehlter Segmentknopf
+   *   im Vokabeltrainer). Im Dunklen war diese Fuellung dunkel und die Schrift
+   *   weiss - im Hellen ist sie hellviolett, Weiss darauf hatte 1,00:1.
+   * - Das Ende des violetten Verlaufs auf dem Foto-Knopf: #7c5cff traegt Weiss
+   *   nur mit 4,35:1, also knapp unter der Grenze. */
+  --auf-sanft:#5b21b6;
+  --brand-tief:#5b21b6;
+
   /* Gut / richtig */
   --ok:#0f7a5c;
   --gut:#0f7a5c;
