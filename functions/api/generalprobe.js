@@ -5,7 +5,7 @@
  *
  * Nur fuer die drei Aufgaben, die keine Maschine sicher pruefen kann: die
  * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Begruendung (7).
- * Die Werkstatt sagt NUR, worauf Paul achten soll - keine Musterloesung, keine
+ * Die Werkstatt sagt NUR, worauf das Kind achten soll - keine Musterloesung, keine
  * Note, keine Punkte. Das ist zusaetzlich mechanisch abgesichert (verraet()),
  * weil eine Bitte im Auftrag keine Pruefung ist.
  *
@@ -17,7 +17,13 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 
 const MODELL = "claude-opus-5-5";
-const KINDER = { paul: { name: "Paul", klasse: "4. Klasse" } };
+/* Leon dazu am 04.10.2026 (Denny: "dasselbe altersgerecht fuer Helena und
+ * Leon"). Bei ihm ist nur EIN Satz frei: er schreibt einen angefangenen Satz
+ * zu Ende. Der Hinweis ist kuerzer und in Woertern fuer einen Zweitklaessler. */
+const KINDER = {
+  paul: { name: "Paul", klasse: "4. Klasse" },
+  leon: { name: "Leon", klasse: "2. Klasse" },
+};
 
 const REGELN =
   "Du schaust einem Viertklaessler ueber die Schulter. Er uebt fuer eine Probe 'Lesen' " +
@@ -30,6 +36,18 @@ const REGELN =
   "VERBOTEN: die richtige Antwort nennen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
+
+const REGELN_LEON =
+  "Du schaust einem Zweitklaessler (Grundschule Bayern, Leseanfaenger) ueber die Schulter. " +
+  "Er hat eine kurze Geschichte gelesen und einen angefangenen Satz zu Ende geschrieben. " +
+  "Gib GENAU EINEN Hinweis: hoechstens 15 Woerter, ganz einfache kurze Woerter, du-Form, " +
+  "freundlich, kein Rot, keine Fehlerliste. Ist etwas gut, sag das zuerst in zwei, drei Woertern. " +
+  "Worauf du achtest: Passt der Satz zur Geschichte? Steht am Ende ein Punkt? Nomen gross? " +
+  "Rechtschreibung nur sanft und hoechstens ein Wort ansprechen. " +
+  "VERBOTEN: die Antwort vorsagen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
+  "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
+  'Antworte NUR mit JSON: {"hinweise":[{"nr":5,"hinweis":"..."}]}';
+const REGELN_JE_KIND = { paul: REGELN, leon: REGELN_LEON };
 
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 
@@ -85,7 +103,7 @@ export async function onRequestPost(context) {
   const frage =
     `Geschichte "${String(daten.titel || "").slice(0, 80)}" (Zeilen nummeriert):\n` +
     zeilen.map((z, i) => `${i + 1} ${z}`).join("\n") + "\n\n" +
-    antworten.map((a) => `Aufgabe ${a.nr}: ${a.auftrag}\nPauls Antwort: ${a.antwort || "(leer)"}`).join("\n\n");
+    antworten.map((a) => `Aufgabe ${a.nr}: ${a.auftrag}\n${KINDER[kind].name}s Antwort: ${a.antwort || "(leer)"}`).join("\n\n");
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -96,7 +114,7 @@ export async function onRequestPost(context) {
         // Das Denken zaehlt in max_tokens (24.09.2026) - genug Luft und effort low.
         max_tokens: 4000,
         output_config: { effort: "low" },
-        system: REGELN,
+        system: REGELN_JE_KIND[kind] || REGELN,
         messages: [{ role: "user", content: frage }],
       }),
     });

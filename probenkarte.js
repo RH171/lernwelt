@@ -15,8 +15,15 @@
  *   LWProbenkarte.zeigen(element, termine, kind)  mit schon geholten Terminen
  */
 (function(){
+  /* Je Kind: "fach|thema" (klein) -> Uebung. "satz" ist optional, sonst gilt
+   * der Lese-Satz. Helena (04.10.2026): noch kein Termin, keine Uebung - die
+   * Karte ist auf Start- und Pruefungsseite eingebaut und bleibt bis dahin weg.
+   * Ein Eintrag hier plus ein Termin genuegen (Kapitel 103 und 105). */
   var UEBUNGEN = {
-    paul: { "deutsch|lesen": { href: "/paul/klasse4-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte" } }
+    paul: { "deutsch|lesen": { href: "/paul/klasse4-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte" } },
+    leon: { "deutsch|lesen": { href: "/leon/klasse2-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte",
+            satz: "Üb mit einer kurzen Geschichte – so oft du magst." } },
+    helena: {}
   };
   var FAECHER = { deutsch: "Deutsch", mathe: "Mathe", hsu: "HSU", englisch: "Englisch", religion: "Religion", musik: "Musik",
     franz: "Französisch", geschichte: "Geschichte", geo: "Geographie", info: "Informatik", ethik: "Ethik" };
@@ -47,6 +54,7 @@
       ".lwpk .pk-k{font:800 13px/1.2 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--pk-leise)}" +
       ".lwpk .pk-t{font:800 18px/1.3 system-ui,sans-serif;margin-top:2px}" +
       ".lwpk .pk-s{font:15px/1.35 system-ui,sans-serif;color:var(--pk-leise);margin-top:2px}" +
+      ".lwpk.gross .pk-t{font-size:21px}.lwpk.gross .pk-s{font-size:17px}.lwpk.gross .pk-los{font-size:18px;min-height:52px}" +
       ".lwpk .pk-los{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;" +
       "border-radius:999px;background:#7a5a00;color:#fff;font:800 16px system-ui,sans-serif;text-decoration:none;white-space:nowrap}" +
       "html[data-theme=dark] .lwpk .pk-los{background:#f2d36b;color:#2a2000}";
@@ -76,11 +84,12 @@
     var t = w.termin;
     var wann = w.tage === 0 ? "heute" : w.tage === 1 ? "morgen" : "in " + w.tage + " Tagen";
     el.classList.remove("verborgen");
-    el.innerHTML = '<div class="lwpk" id="lwpk">' +
+    // Leon ist Leseanfaenger: groessere Schrift.
+    el.innerHTML = '<div class="lwpk' + (kind === "leon" ? " gross" : "") + '" id="lwpk">' +
       '<div class="pk-ic">📝</div>' +
       '<div class="pk-txt"><div class="pk-k">Nächste Probe</div>' +
       '<div class="pk-t">' + esc(FAECHER[t.fach] || t.fach) + ' · ' + esc(t.thema) + ' · ' + esc(lang(t.datum)) + '</div>' +
-      '<div class="pk-s">Das ist ' + wann + '. Üb mit einer Geschichte – so viel du magst.</div></div>' +
+      '<div class="pk-s">Das ist ' + wann + '. ' + esc(w.uebung.satz || "Üb mit einer Geschichte – so viel du magst.") + '</div></div>' +
       '<a class="pk-los" href="' + esc(w.uebung.href) + '">' + esc(w.uebung.knopf) + '</a></div>';
     return true;
   }

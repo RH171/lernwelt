@@ -428,6 +428,9 @@
       <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen.</div>
       <div id="nachsehenListe"></div>
     </section>
+    <!-- Gelbe Probenkarte (04.10.2026, wie bei Paul): steht nur da, wenn eine Probe in
+         den naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
+    <div id="probenkarte" class="verborgen"></div>
     <div class="zweikacheln" id="schulkacheln">
       <a class="minikachel" href="hausaufgaben.html"><span class="bild">📚</span><span><b>Meine Hausaufgaben</b><span>Foto machen, zusammen drüberschauen</span></span></a>
       <a class="minikachel" href="stundenplan.html" data-weg="stundenplan"><span class="bild">📅</span><span><b>Mein Stundenplan</b><span>Was habe ich wann?</span></span></a>
@@ -1932,6 +1935,8 @@ window.HEFT_START = {
 <script src="/nachlesen.js?v=20efd8d6"></script>
 <script src="/heft-start.js?v=66fae067"></script>
 <script src="/spielalter.js?v=fe812d69"></script>
+<script src="/probenkarte.js"></script>
+<script>try{ LWProbenkarte.laden("leon", document.getElementById("probenkarte")); }catch(e){}</script>
 <script>
 /* Neueste Spiele zuerst (Denny, 02.10.2026). */
 LWAlter.laden("leon").then(function(alter){

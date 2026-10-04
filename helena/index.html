@@ -135,6 +135,7 @@
   .nachsehen{background:var(--surface);color:var(--ink);border:3px solid var(--gold);border-radius:var(--radius);
     padding:14px 16px;margin-bottom:12px;font-family:var(--round)}
   .nachsehen.verborgen{display:none}
+  #probenkarte.verborgen{display:none}
   .ns-kopf{font-weight:800;font-size:17px;margin-bottom:3px}
   .ns-satz{font-size:13.5px;color:var(--muted);margin-bottom:8px}
   .ns-punkt{border-top:1px solid var(--line);padding:10px 0 4px}
@@ -238,6 +239,9 @@
 
   <!-- Ferien und nächster Schultermin - beide zeichnet fremder Code:
        /ferienband.js (für alle drei Kinder gleich) und das Skript unten. -->
+  <!-- Gelbe Probenkarte (04.10.2026, wie bei Paul): steht nur da, wenn eine Probe in
+       den naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
+  <div id="probenkarte" class="verborgen"></div>
   <div id="ferienband"></div>
   <a class="band" href="termine.html" id="termin-band" style="display:none">
     <span class="bi">📅</span>
@@ -473,6 +477,8 @@ window.HEFT_START = {
 </script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
 <script src="/heft-start.js?v=66fae067"></script>
+<script src="/probenkarte.js"></script>
+<script>try{ LWProbenkarte.laden("helena", document.getElementById("probenkarte")); }catch(e){}</script>
 <script>window.FERIENBAND = {ziel:"termine.html"};</script>
 <script src="/ferienband.js?v=8c06a6e6"></script>
 <!-- lernstand.js NUR für den Puls: Diese Seite meldet keine Lernrunde, sie ist

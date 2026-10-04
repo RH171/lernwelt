@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Generalprobe Lesen</title>
+<!--
+  Generalprobe "D | Lesen" fuer Leon, 2. Klasse (04.10.2026).
+  Denny: Probenkarte und Generalprobe "danach dasselbe altersgerecht fuer Helena
+  und Leon". Vorbild ist Pauls Seite (paul/klasse4-deutsch-generalprobe-lesen.html,
+  Kapitel 103), fuer einen Leseanfaenger umgebaut:
+    - kurze eigene Geschichten (60-90 Woerter), grosse Schrift, ein Satz je Zeile
+    - fuenf Aufgaben: ankreuzen, Wort einsetzen (antippen statt tippen),
+      Reihenfolge, "Stimmt das?", Satz zu Ende schreiben
+    - nur der letzte Satz ist frei geschrieben; ihn schaut die Werkstatt an
+      (/api/generalprobe, kind leon), faellt sie aus, steht ein Ersatzsatz da
+  Layout B: iPad quer Text links, Aufgabe rechts. Schmal: Umschalter Text / Aufgabe.
+  Kein Rot, keine Uhr. Zweiter Versuch mit Hinweis, gezaehlt wird der erste.
+  Pruefen: node pruefe-generalprobe-leon.mjs
+  Messen:  node geraete-messen.js /leon/klasse2-deutsch-generalprobe-lesen.html leon mess-schritte-generalprobe-leon.js
+-->
+<script>(function(){try{ if(localStorage.getItem("leon-theme")==="dark") document.documentElement.setAttribute("data-theme","dark"); }catch(e){}})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+:root{
+  --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#555e70; --line:#d5dbe5; --vertief:#f1f4f8;
+  --gp-akzent:#047857; --gp-akzent-auf:#fff; --gut:#067647; --gut-hell:#e7f8ef; --rand-gut:#86d9ae; --rand-warn:#e0a526;
+  --gp-gelb:#ffe98a; --gp-gelb-text:#2a2200; --gp-hinweis:#fff4d6;
+  --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+}
+html[data-theme="dark"]{
+  --vertief:#262935; --gp-akzent:#4ade9b; --gp-akzent-auf:#0b1a12; --rand-gut:#2f7a55; --rand-warn:#b08422;
+  --gp-gelb:#6b5a12; --gp-gelb-text:#fff6cf; --gp-hinweis:#2e2614;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--rund)}
+body{padding:10px 12px 24px}
+header{display:flex;align-items:center;gap:10px;max-width:1180px;margin:0 auto 8px}
+header h1{font:800 22px/1.15 var(--rund);margin:0;flex:1}
+.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 18px;border-radius:999px;
+  border:2px solid var(--line);background:var(--card);color:var(--ink);font:800 19px var(--rund);text-decoration:none;cursor:pointer}
+.knopf.primaer{background:var(--gp-akzent);border-color:var(--gp-akzent);color:var(--gp-akzent-auf)}
+.knopf[disabled]{opacity:.45;cursor:default}
+.karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;max-width:1180px;margin:0 auto 12px}
+.karte h2{margin:0 0 8px;font-size:24px}
+.karte p{margin:8px 0;line-height:1.5;font-size:20px}
+.leise{color:var(--muted)}
+.verborgen{display:none!important}
+
+#umschalter{display:none;gap:8px;max-width:1180px;margin:0 auto 8px}
+#umschalter button{flex:1}
+#umschalter button[aria-pressed="true"]{background:var(--gp-akzent);border-color:var(--gp-akzent);color:var(--gp-akzent-auf)}
+
+#arbeit{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;max-width:1180px;margin:0 auto}
+#text,#aufgabe{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px 18px}
+#text{max-height:calc(100dvh - 80px);overflow:auto}
+#text h2{margin:0 0 10px;font-size:23px}
+#text ol{margin:0;padding:0;list-style:none}
+#text li{display:grid;grid-template-columns:1.8em 1fr;gap:4px;padding:5px 6px;border-radius:10px;line-height:1.5;font-size:22px;border:3px solid transparent}
+#text li .nr{color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;padding-right:6px;font-size:15px;padding-top:5px}
+#text li.schau{border-color:var(--rand-warn);background:var(--gp-hinweis)}
+#aufgabe{align-self:start;position:sticky;top:10px}
+.kopf{margin-bottom:6px;font-size:17px;color:var(--muted);font-weight:800}
+.balken{display:flex;gap:5px;margin:0 0 14px}
+.balken span{flex:1;height:10px;border-radius:99px;background:var(--line)}
+.balken span.fertig{background:var(--gut)}
+.balken span.jetzt{background:var(--gp-akzent)}
+.auftrag{font-size:22px;font-weight:800;line-height:1.4;margin:0 0 12px}
+.luecke-platz{display:inline-block;min-width:4.5em;border-bottom:3px solid var(--ink);text-align:center}
+textarea{width:100%;font:21px/1.45 var(--rund);padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);min-height:96px;resize:vertical}
+.wahl{display:grid;gap:10px}
+.wahl.zwei{grid-template-columns:1fr 1fr}
+.wahl button{text-align:left;justify-content:flex-start;border-radius:16px;white-space:normal;font-size:21px;min-height:56px}
+.wahl.zwei button{justify-content:center;text-align:center}
+.wahl button[aria-pressed="true"]{border-color:var(--gp-akzent);box-shadow:inset 0 0 0 3px var(--gp-akzent)}
+.wahl button .platz{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
+  border:2px solid var(--line);margin-right:12px;flex:0 0 auto;font-weight:800}
+.wahl button[aria-pressed="true"] .platz{background:var(--gp-akzent);border-color:var(--gp-akzent);color:var(--gp-akzent-auf)}
+.vorgabe{font-weight:800;margin:4px 0 8px;font-size:21px}
+.rueck{margin-top:12px;padding:12px 14px;border-radius:14px;line-height:1.45;font-size:19px}
+.rueck.gut{background:var(--gut-hell);border:2px solid var(--rand-gut)}
+.rueck.schau{background:var(--gp-hinweis);border:2px solid var(--rand-warn)}
+.rueck.ruhig{background:var(--vertief);border:2px solid var(--line)}
+.leiste{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.leiste .knopf{flex:1 1 auto}
+#ende .antwort{background:var(--vertief);border-radius:14px;padding:10px 12px;margin:6px 0;white-space:pre-wrap;font-size:20px}
+#ende .block{margin:14px 0;padding-top:12px;border-top:1px solid var(--line)}
+#ende .hinweis{font-size:19px;line-height:1.45}
+
+@media (max-width:767px){
+  header h1{font-size:20px}
+  #umschalter{display:flex}
+  #arbeit{display:block}
+  #text{max-height:none}
+  #aufgabe{position:static}
+  body.zeige-text #aufgabe{display:none}
+  body.zeige-aufgabe #text{display:none}
+  #text li{font-size:21px}
+}
+@media (max-height:520px){
+  #aufgabe .leiste{position:sticky;bottom:0;background:var(--card);margin:10px -18px -16px;padding:8px 18px 10px;
+    border-top:1px solid var(--line);border-radius:0 0 22px 22px;flex-wrap:nowrap}
+  #aufgabe .leiste .knopf{flex:1 1 0;min-width:0;padding-left:6px;padding-right:6px}
+}
+</style>
+</head>
+<body class="zeige-aufgabe">
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Generalprobe Lesen</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>📖 Übe für deine Probe „Lesen“</h2>
+  <p>Eine kurze Geschichte und fünf Aufgaben. Du hast so viel Zeit, wie du brauchst.</p>
+  <p class="leise" id="start-info"></p>
+  <div class="leiste"><button class="knopf primaer" id="los">▶ Los geht's</button></div>
+</section>
+
+<div id="umschalter" class="verborgen">
+  <button class="knopf" id="tab-text" aria-pressed="false">📖 Text</button>
+  <button class="knopf" id="tab-aufgabe" aria-pressed="true">✏️ Aufgabe</button>
+</div>
+
+<main id="arbeit" class="verborgen">
+  <section id="text"><h2 id="titel"></h2><ol id="zeilen"></ol></section>
+  <section id="aufgabe">
+    <div class="kopf" id="zaehler"></div>
+    <div class="balken" id="balken"></div>
+    <div id="inhalt"></div>
+    <div id="rueck" class="rueck verborgen"></div>
+    <div class="leiste">
+      <button class="knopf" id="zurueck">←</button>
+      <button class="knopf primaer" id="pruefen">Prüfen</button>
+      <button class="knopf" id="weiter">Weiter →</button>
+    </div>
+  </section>
+</main>
+
+<section id="ende" class="karte verborgen"></section>
+
+<script src="generalprobe-geschichten.js"></script>
+<script>
+(function(){
+  var G = window.GENERALPROBE || [];
+  var KIND = "leon";
+  var SPEICHER = "leon-generalprobe";
+  var ERSATZ = "Lies deinen Satz noch einmal laut: Passt er zur Geschichte? Steht am Ende ein Punkt?";
+  var MERKMAL = { kreuz: "Ankreuzen", luecke: "Wort einsetzen", reihenfolge: "Reihenfolge", stimmt: "Stimmt das?" };
+  var $ = function(id){ return document.getElementById(id); };
+
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  // Die erste ungelesene Geschichte; sind alle gelesen, die am laengsten her ist.
+  function naechste(){
+    var d = lesen(), gelesen = Array.isArray(d.gelesen) ? d.gelesen : [];
+    for (var i = 0; i < G.length; i++) if (gelesen.indexOf(G[i].id) < 0) return G[i];
+    for (var j = 0; j < gelesen.length; j++) for (var k = 0; k < G.length; k++) if (G[k].id === gelesen[j]) return G[k];
+    return G[0];
+  }
+  function alsGelesen(id){
+    var d = lesen(), g = (Array.isArray(d.gelesen) ? d.gelesen : []).filter(function(x){ return x !== id; });
+    g.push(id); d.gelesen = g; schreiben(d);
+  }
+
+  var stand = null;
+  window.__gp = { get stand(){ return stand; }, G: G };
+
+  function mischen(liste, saat){
+    var a = liste.slice(), s = saat || 7;
+    for (var i = a.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; var j = Math.floor(s / 233280 * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    if (a.every(function(x, i){ return x === liste[i]; })) a.push(a.shift());
+    return a;
+  }
+
+  function starten(g){
+    stand = { g: g, nr: 0, a: g.aufgaben.map(function(a, i){
+      var s = { versuche: 0, fertig: false, erst: null };
+      if (a.art === "reihenfolge") { s.gemischt = mischen(a.ereignisse, g.id.length * 31 + i); s.wahl = []; }
+      return s; }) };
+    $("start").classList.add("verborgen");
+    $("ende").classList.add("verborgen");
+    $("arbeit").classList.remove("verborgen");
+    $("umschalter").classList.remove("verborgen");
+    $("titel").textContent = g.titel;
+    var ol = $("zeilen"); ol.innerHTML = "";
+    g.zeilen.forEach(function(z, i){
+      var li = document.createElement("li"); li.dataset.z = i + 1;
+      li.innerHTML = '<span class="nr">' + (i + 1) + '</span><span></span>';
+      li.lastChild.textContent = z;
+      ol.appendChild(li);
+    });
+    // Erst lesen, dann Aufgaben: schmal startet Leon beim Text.
+    zeige("text");
+    malen();
+    window.scrollTo(0, 0);
+  }
+
+  function zeige(was){
+    document.body.classList.toggle("zeige-text", was === "text");
+    document.body.classList.toggle("zeige-aufgabe", was !== "text");
+    $("tab-text").setAttribute("aria-pressed", was === "text");
+    $("tab-aufgabe").setAttribute("aria-pressed", was !== "text");
+  }
+  $("tab-text").onclick = function(){ zeige("text"); };
+  $("tab-aufgabe").onclick = function(){ zeige("aufgabe"); };
+
+  function aufg(){ return stand.g.aufgaben[stand.nr]; }
+  function st(){ return stand.a[stand.nr]; }
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  function textMarken(){
+    var schau = st().schau || [];
+    Array.prototype.forEach.call($("zeilen").children, function(li){
+      var z = +li.dataset.z;
+      li.classList.toggle("schau", z >= (schau[0] || 0) && z <= (schau[1] || -1));
+    });
+  }
+
+  function wahlKnoepfe(optionen, gewaehlt, zeichen){
+    return optionen.map(function(o, i){
+      return '<button class="knopf" data-i="' + i + '" aria-pressed="' + (gewaehlt === i) + '"><span class="platz">' + (gewaehlt === i ? zeichen : "") + '</span>' + esc(o) + '</button>';
+    }).join("");
+  }
+
+  function malen(){
+    var a = aufg(), s = st(), n = stand.g.aufgaben.length;
+    $("zaehler").textContent = "Aufgabe " + (stand.nr + 1) + " von " + n;
+    $("balken").innerHTML = stand.a.map(function(x, i){
+      return '<span class="' + (i === stand.nr ? "jetzt" : (x.fertig ? "fertig" : "")) + '"></span>'; }).join("");
+    var h = "";
+    if (a.art === "kreuz") {
+      h = '<p class="auftrag">' + esc(a.frage) + '</p><div class="wahl" id="gp-wahl">' + wahlKnoepfe(a.optionen, s.wahl, "✕") + '</div>';
+    } else if (a.art === "luecke") {
+      var wort = typeof s.wahl === "number" ? a.optionen[s.wahl] : "";
+      h = '<p class="auftrag">Welches Wort passt? Schau in der Geschichte nach.</p>' +
+        '<p class="vorgabe">' + esc(a.satz).replace("___", '<span class="luecke-platz" id="gp-platz">' + esc(wort) + '</span>') + '</p>' +
+        '<div class="wahl" id="gp-wahl">' + wahlKnoepfe(a.optionen, s.wahl, "✓") + '</div>';
+    } else if (a.art === "reihenfolge") {
+      h = '<p class="auftrag">Was passiert zuerst? Tippe der Reihe nach.</p>' +
+        '<p class="leise">Nochmal tippen nimmt die Zahl weg.</p>' +
+        '<div class="wahl" id="gp-wahl">' + s.gemischt.map(function(e, i){
+          var p = s.wahl.indexOf(i);
+          return '<button class="knopf" data-i="' + i + '" aria-pressed="' + (p >= 0) + '"><span class="platz">' + (p >= 0 ? p + 1 : "") + '</span>' + esc(e.text) + '</button>';
+        }).join("") + '</div>';
+    } else if (a.art === "stimmt") {
+      h = '<p class="auftrag">Stimmt das?</p><p class="vorgabe">„' + esc(a.satz) + '“</p>' +
+        '<div class="wahl zwei" id="gp-wahl">' + wahlKnoepfe(["Ja, stimmt", "Nein, stimmt nicht"], s.wahl, "✕") + '</div>';
+    } else if (a.art === "ende") {
+      h = '<p class="auftrag">Schreib den Satz zu Ende.</p>' +
+        '<p class="vorgabe">' + esc(a.anfang) + ' …</p><textarea id="gp-ende" placeholder="… schreib hier weiter"></textarea>';
+    }
+    $("inhalt").innerHTML = h;
+    var feld = $("gp-ende");
+    if (feld) { feld.value = s.text || ""; feld.addEventListener("input", function(){ s.text = feld.value; knoepfe(); }); }
+    var wahl = $("gp-wahl");
+    if (wahl) wahl.addEventListener("click", function(ev){
+      var b = ev.target.closest("button"); if (!b || s.fertig) return;
+      var i = +b.dataset.i;
+      if (a.art === "reihenfolge") { var p = s.wahl.indexOf(i); if (p >= 0) s.wahl.splice(p, 1); else s.wahl.push(i); }
+      else s.wahl = i;
+      malen();
+    });
+    rueckZeigen(s.rueck);
+    textMarken(); knoepfe();
+  }
+
+  function rueckZeigen(r){
+    var el = $("rueck");
+    if (!r) { el.className = "rueck verborgen"; el.textContent = ""; return; }
+    el.className = "rueck " + r.art; el.textContent = r.text;
+  }
+
+  function bereit(){
+    var a = aufg(), s = st();
+    if (a.art === "reihenfolge") return s.wahl.length === a.ereignisse.length;
+    if (a.art === "ende") return false;
+    return typeof s.wahl === "number";
+  }
+
+  function knoepfe(){
+    var a = aufg(), s = st(), letzte = stand.nr === stand.g.aufgaben.length - 1;
+    $("zurueck").disabled = stand.nr === 0;
+    var pruefbar = a.art !== "ende";
+    $("pruefen").classList.toggle("verborgen", !pruefbar || s.fertig);
+    $("pruefen").disabled = !bereit();
+    $("weiter").textContent = letzte ? "Fertig ✓" : "Weiter →";
+    $("weiter").classList.toggle("primaer", !pruefbar || s.fertig);
+  }
+
+  function spanne(h){ return h[0] === h[1] ? "Zeile " + h[0] : "Zeile " + h[0] + " bis " + h[1]; }
+
+  // Prueft die vier antippbaren Aufgaben. Gezaehlt wird der erste Versuch.
+  function pruefen(){
+    var a = aufg(), s = st(); if (s.fertig || !bereit()) return;
+    var stimmt = false, getippt = "", richtig = "", hinweis = null, loesung = "";
+    if (a.art === "kreuz") {
+      stimmt = s.wahl === a.richtig; getippt = a.optionen[s.wahl]; richtig = a.optionen[a.richtig];
+      hinweis = a.hinweis; loesung = "Richtig ist: " + richtig + ".";
+    } else if (a.art === "luecke") {
+      richtig = a.wort; getippt = a.optionen[s.wahl]; stimmt = getippt === richtig;
+      hinweis = [a.zeile, a.zeile]; loesung = "In der Geschichte steht „" + richtig + "“ (Zeile " + a.zeile + ").";
+    } else if (a.art === "reihenfolge") {
+      var gew = s.wahl.map(function(i){ return s.gemischt[i]; });
+      stimmt = gew.every(function(e, i){ return e === a.ereignisse[i]; });
+      getippt = gew.map(function(e){ return a.ereignisse.indexOf(e) + 1; }).join("-");
+      richtig = a.ereignisse.map(function(e, i){ return i + 1; }).join("-");
+      var erst = 0; while (erst < gew.length && gew[erst] === a.ereignisse[erst]) erst++;
+      var ez = a.ereignisse[Math.min(erst, a.ereignisse.length - 1)].zeile;
+      hinweis = [Math.max(1, ez - 1), Math.min(stand.g.zeilen.length, ez + 1)];
+      if (!stimmt) s.richtigBis = erst;
+      loesung = "So ist es in der Geschichte: " + a.ereignisse.map(function(e, i){ return (i + 1) + ". " + e.text; }).join("  ");
+    } else if (a.art === "stimmt") {
+      stimmt = (s.wahl === 0) === a.richtig; getippt = s.wahl === 0 ? "ja" : "nein"; richtig = a.richtig ? "ja" : "nein";
+      hinweis = [a.zeile, a.zeile]; loesung = (a.richtig ? "Das stimmt." : "Das stimmt nicht.") + " Lies Zeile " + a.zeile + ".";
+    }
+    s.versuche++;
+    if (s.versuche === 1) {
+      s.erst = stimmt;
+      try { if (window.lernstand && typeof lernstand.antwort === "function")
+        lernstand.antwort(stimmt, "Lesen: " + MERKMAL[a.art], getippt, richtig, "gp:" + stand.g.id + "#" + (stand.nr + 1)); } catch(e){}
+    }
+    if (stimmt) {
+      s.fertig = true; s.schau = null;
+      s.rueck = { art: "gut", text: s.versuche === 1 ? "✓ Stimmt! Super gelesen." : "✓ Jetzt stimmt es – gut nachgelesen!" };
+    } else if (s.versuche === 1) {
+      s.schau = hinweis;
+      var extra = a.art === "reihenfolge" && s.richtigBis > 0 ? " Der Anfang stimmt schon." : "";
+      s.rueck = { art: "schau", text: "Fast! Lies noch einmal " + spanne(hinweis) + ". Sie leuchtet jetzt im Text." + extra + " Du darfst es nochmal versuchen." };
+      if (a.art === "reihenfolge") s.wahl = s.wahl.slice(0, s.richtigBis);
+      else s.wahl = null;
+    } else {
+      s.fertig = true; s.schau = hinweis;
+      if (a.art === "kreuz") s.wahl = a.richtig;
+      if (a.art === "luecke") s.wahl = a.optionen.indexOf(a.wort);
+      if (a.art === "stimmt") s.wahl = a.richtig ? 0 : 1;
+      if (a.art === "reihenfolge") s.wahl = a.ereignisse.map(function(e){ return s.gemischt.indexOf(e); });
+      s.rueck = { art: "ruhig", text: loesung + " Lies die Stelle in Ruhe – beim nächsten Mal findest du sie schneller." };
+    }
+    malen();
+  }
+
+  $("pruefen").onclick = pruefen;
+  $("zurueck").onclick = function(){ if (stand.nr > 0) { stand.nr--; malen(); zeige("aufgabe"); } };
+  $("weiter").onclick = function(){
+    if (stand.nr < stand.g.aufgaben.length - 1) { stand.nr++; malen(); zeige("aufgabe"); window.scrollTo(0, 0); }
+    else abgeben();
+  };
+
+  function abgeben(){
+    var g = stand.g;
+    alsGelesen(g.id);
+    var nrEnde = g.aufgaben.map(function(a){ return a.art; }).indexOf("ende");
+    var pruefbare = stand.a.filter(function(s, i){ return g.aufgaben[i].art !== "ende"; });
+    var erste = pruefbare.filter(function(s){ return s.erst === true; }).length;
+    var aEnde = g.aufgaben[nrEnde], text = (stand.a[nrEnde].text || "").trim();
+    var satz = (aEnde.anfang + " " + text).trim();
+    $("arbeit").classList.add("verborgen");
+    $("umschalter").classList.add("verborgen");
+    var e = $("ende"); e.classList.remove("verborgen");
+    e.innerHTML = '<h2>✓ Geschafft: „' + esc(g.titel) + '“</h2>' +
+      '<p>' + erste + ' von ' + pruefbare.length + ' Aufgaben hast du gleich beim ersten Mal gefunden.</p>' +
+      '<div class="leiste"><button class="knopf primaer" id="neu">▶ Neue Geschichte</button><a class="knopf" href="./">Zur Startseite</a></div>' +
+      '<div class="block" data-nr="' + (nrEnde + 1) + '"><strong>Dein Satz</strong>' +
+      '<div class="antwort">' + esc(text ? satz : "(nichts geschrieben)") + '</div>' +
+      '<p class="hinweis leise">Ich schaue mir deinen Satz gerade an …</p></div>';
+    $("neu").onclick = function(){ starten(naechste()); };
+    window.scrollTo(0, 0);
+    var hin = e.querySelector(".block .hinweis");
+    var setze = function(liste){
+      var h = liste && liste.filter(function(x){ return x.nr === nrEnde + 1; })[0];
+      hin.textContent = h && h.hinweis ? "💡 " + h.hinweis : ERSATZ;
+      hin.classList.toggle("leise", !(h && h.hinweis));
+    };
+    if (!text) { setze(null); return; }
+    fetch("/api/generalprobe", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: KIND, titel: g.titel, zeilen: g.zeilen,
+        antworten: [{ nr: nrEnde + 1, auftrag: "Schreib den Satz zu Ende: " + aEnde.anfang, antwort: satz }] }) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ setze(j && j.ok ? j.hinweise : null); })
+      .catch(function(){ setze(null); });
+  }
+
+  function startKarte(){
+    var g = naechste(), d = lesen(), n = (Array.isArray(d.gelesen) ? d.gelesen : []).length;
+    $("start-info").textContent = "Heute dran: „" + g.titel + "“" +
+      (n ? " · " + Math.min(n, G.length) + " von " + G.length + " Geschichten schon geübt" : " · " + G.length + " Geschichten warten");
+    $("los").onclick = function(){ starten(naechste()); };
+  }
+  startKarte();
+  if (/[?&]los=1\b/.test(location.search)) starten(naechste());
+})();
+</script>
+<script src="/lernstand.js?v=417a4ab9" defer></script>
+</body>
+</html>
