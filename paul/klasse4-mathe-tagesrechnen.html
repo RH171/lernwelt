@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1×1 und Textaufgaben</title>
+<!--
+  Pauls taegliche Aufgabe (Denny, 04.10.2026): jeden Tag Einmaleins (Mal und Geteilt) und
+  Textaufgaben. Motor /tagesrechnen/motor.js (reine Logik, geprueft mit pruefe-tagesrechnen.mjs),
+  Anzeige /tagesrechnen/seite.js, Speicher paul-tagesrechnen (localStorage, synchronisiert ueber
+  paul-sync.js, hoechstens zwei Schreibvorgaenge am Tag). Kapitel 110 in der Anleitung.
+  Nur fuer Paul (Beschluss 04.10.2026).
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/tagesrechnen/tagesrechnen.css?v=1">
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>1×1 und Textaufgaben</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>☀️ Deine Aufgabe für heute</h2>
+  <p id="start-satz">Jeden Tag neue Aufgaben. Was heute gewackelt hat, kommt morgen wieder – so lange, bis es sitzt.</p>
+  <div class="teile">
+    <div class="teil" id="teil-e"><div class="ic">✖️</div><div><b>Teil 1: Einmaleins</b><span id="teil-e-satz"></span></div></div>
+    <div class="teil" id="teil-t"><div class="ic">🧩</div><div><b>Teil 2: Textaufgaben</b><span id="teil-t-satz"></span></div></div>
+  </div>
+  <div class="mitte"><button id="los" class="knopf primaer">Los geht's</button></div>
+</section>
+
+<section id="zwischen" class="karte verborgen">
+  <h2 id="zwischen-kopf"></h2>
+  <p id="zwischen-satz"></p>
+  <div class="mitte"><button id="weiter-teil" class="knopf primaer">Weiter</button></div>
+</section>
+
+<section id="spiel" class="verborgen">
+  <div class="oben"><span id="teil"></span><span id="zaehler"></span></div>
+  <div id="aufgabe" aria-live="polite"></div>
+  <div id="tipp" class="tipp" aria-live="polite"></div>
+  <div id="tasten">
+    <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+    <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+    <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+    <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
+    <button data-taste="ok" class="ok">Prüfen</button>
+  </div>
+</section>
+
+<section id="ende" class="karte verborgen">
+  <h2>🎉 Für heute geschafft!</h2>
+  <p id="ende-lob"></p>
+  <p id="ende-zahlen"></p>
+  <p id="ende-tage"></p>
+  <p>Morgen warten neue Aufgaben auf dich.</p>
+  <div class="mitte"><a class="knopf primaer" href="./">Zur Startseite</a></div>
+</section>
+
+<script src="/tagesrechnen/motor.js?v=1"></script>
+<script src="/tagesrechnen/seite.js?v=1" defer></script>
+<script src="/lernstand.js?v=417a4ab9" defer></script>
+</body>
+</html>

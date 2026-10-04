@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paul · 1×1 und Textaufgaben</title>
+<!--
+  Uebersicht fuer Denny (04.10.2026): Was sitzt noch nicht, an wie vielen Tagen hat Paul die
+  Tagesaufgabe geschafft. Liest /api/tagesrechnen (nur mit Elternausweis, nur lesen) und
+  beschreibt die Aufgaben mit demselben Motor wie Pauls Seite (/tagesrechnen/motor.js).
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+  :root{ --bg:#f4f6f9; --karte:#fff; --ink:#161821; --muted:#5f6675; --line:#e5e8ef;
+    --gut:#12804a; --mittel:#b45309; --paul:#4f46e5;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;padding:22px 16px 60px}
+  .huelle{max-width:860px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:24px;margin:0}
+  .zurueck{display:inline-flex;align-items:center;min-height:44px;padding:0 15px;border:1.5px solid var(--line);background:#fff;
+    border-radius:11px;color:var(--ink);text-decoration:none;font-weight:600}
+  .karte{background:var(--karte);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 4px 14px rgba(20,30,60,.06)}
+  .karte h2{font-size:19px;margin:0 0 6px}
+  .unter{color:var(--muted);margin:0 0 12px}
+  .zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .kachel{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .kachel b{display:block;font-size:26px}
+  .kachel span{color:var(--muted);font-size:14px}
+  table{width:100%;border-collapse:collapse}
+  td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:14px}
+  td.zahl{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .punkte{white-space:nowrap;letter-spacing:2px}
+  .leer{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/eltern/">← Elternbereich</a>
+    <h1>Paul · 1×1 und Textaufgaben</h1>
+  </header>
+  <div id="inhalt"><div class="karte"><p class="unter">Lade …</p></div></div>
+</div>
+<script src="/tagesrechnen/motor.js?v=1"></script>
+<script>
+(function(){
+  "use strict";
+  var M = window.TRMotor;
+  function esc(t){ var d=document.createElement("div"); d.textContent=t==null?"":String(t); return d.innerHTML; }
+  function dt(iso){ var p=String(iso||"").split("-"); if(p.length!==3) return "–";
+    var t=new Date(+p[0],+p[1]-1,+p[2]); return t.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}); }
+  function punkte(s){ var n=M.EIN.sitztNach, h=""; for(var i=0;i<n;i++) h+= i<s ? "●" : "○"; return h; }
+  function zeige(h){ document.getElementById("inhalt").innerHTML = h; }
+
+  fetch("/api/tagesrechnen",{credentials:"same-origin"})
+    .then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }); })
+    .then(function(a){
+      if (a.s === 401){ zeige('<div class="karte"><h2>Bitte zuerst anmelden</h2><p class="unter">Melde dich im <a href="/eltern/">Elternbereich</a> mit dem Elterncode an und öffne diese Seite dann noch einmal.</p></div>'); return; }
+      if (!a.j || !a.j.ok){ zeige('<div class="karte"><h2>Gerade nicht lesbar</h2><p class="unter">'+esc(a.j&&a.j.fehler)+'</p></div>'); return; }
+      malen(a.j.stand);
+    })
+    .catch(function(){ zeige('<div class="karte"><h2>Keine Verbindung</h2><p class="unter">Bitte später noch einmal versuchen.</p></div>'); });
+
+  function malen(st){
+    if (!st){ zeige('<div class="karte"><h2>Noch nicht begonnen</h2><p class="unter">Paul hat die Tagesaufgabe noch nicht gemacht. Sobald er Teil 1 beendet hat, steht hier sein Stand.</p></div>'); return; }
+    st = M.standPruefen(st);
+    var heute = M.heuteIso();
+    var h = "";
+    var gesehen = Object.keys(st.gesehen).length;
+    var letzte = st.tage.length ? st.tage[st.tage.length-1] : "";
+    var sieben = st.tage.filter(function(d){ var t=new Date(d+"T12:00:00"); return (Date.now()-t.getTime()) < 7*864e5; }).length;
+    var offen1 = Object.keys(st.offen), offenT = Object.keys(st.toffen);
+    h += '<div class="karte"><h2>Überblick</h2><p class="unter">Eine Aufgabe sitzt, wenn Paul sie an drei Übungstagen hintereinander beim ersten Versuch richtig hatte.</p><div class="zahlen">' +
+      '<div class="kachel"><b>'+st.tage.length+'</b><span>Tage geschafft (beide Teile)</span></div>' +
+      '<div class="kachel"><b>'+sieben+'</b><span>davon in den letzten 7 Tagen</span></div>' +
+      '<div class="kachel"><b>'+(offen1.length+offenT.length)+'</b><span>sitzen noch nicht</span></div>' +
+      '<div class="kachel"><b>'+gesehen+' / '+M.ALLE.length+'</b><span>1×1-Aufgaben schon einmal dran</span></div>' +
+      '</div><p class="unter" style="margin:12px 0 0">Zuletzt geschafft: '+(letzte?dt(letzte):"noch nie")+
+      (st.heute && st.heute.d===heute ? ' · heute: Teil 1 '+(st.heute.e?"✓":"offen")+', Teil 2 '+(st.heute.t?"✓":"offen") : '')+'</p></div>';
+
+    // Einmaleins, das noch nicht sitzt
+    offen1.sort(function(a,b){ return (st.offen[a].s-st.offen[b].s) || (st.offen[a].d<st.offen[b].d?-1:1); });
+    h += '<div class="karte"><h2>Einmaleins, das noch nicht sitzt</h2>';
+    if (!offen1.length) h += '<p class="unter leer">Nichts offen.</p>';
+    else h += '<p class="unter">Kommt jeden Tag wieder dran. Die Punkte zeigen, wie viele Tage in Folge es richtig war.</p><table><tr><th>Aufgabe</th><th>in Folge richtig</th><th>zuletzt geübt</th></tr>' +
+      offen1.map(function(k){ var x=M.einmaleins(k), o=st.offen[k]; return '<tr><td><b>'+esc(x.frage)+' = '+x.loesung+'</b></td><td class="punkte">'+punkte(o.s)+'</td><td>'+dt(o.d)+'</td></tr>'; }).join("") + '</table>';
+    h += '</div>';
+
+    // Textaufgaben-Arten, die noch nicht sitzen
+    h += '<div class="karte"><h2>Textaufgaben, die noch nicht sitzen</h2>';
+    if (!offenT.length) h += '<p class="unter leer">Nichts offen.</p>';
+    else h += '<p class="unter">Dieselbe Art kommt jeden Tag mit neuen Zahlen wieder.</p><table><tr><th>Art</th><th>in Folge richtig</th><th>zuerst falsch</th></tr>' +
+      offenT.map(function(id){ var o=st.toffen[id]; return '<tr><td>'+esc(M.beschreibung(o.typ,o.v))+'</td><td class="punkte">'+punkte(o.s)+'</td><td>'+dt(id.split("#")[0])+'</td></tr>'; }).join("") + '</table>';
+    h += '</div>';
+
+    // Verlauf
+    var log = st.log.slice(-14).reverse();
+    h += '<div class="karte"><h2>Die letzten Tage</h2>';
+    if (!log.length) h += '<p class="unter leer">Noch kein Tag.</p>';
+    else h += '<p class="unter">Beim ersten Versuch richtig.</p><table><tr><th>Tag</th><th>Einmaleins</th><th>Textaufgaben</th></tr>' +
+      log.map(function(l){ return '<tr><td>'+dt(l.d)+'</td><td class="zahl">'+(l.e? l.e[0]+' von '+l.e[1] : '–')+'</td><td class="zahl">'+(l.t? l.t[0]+' von '+l.t[1] : '–')+'</td></tr>'; }).join("") + '</table>';
+    h += '</div>';
+
+    var neuSitzt = st.sitzt.slice(-10).reverse();
+    if (neuSitzt.length){
+      h += '<div class="karte"><h2>Sitzt jetzt</h2><p class="unter">Zuletzt drei Tage hintereinander richtig.</p><table>' +
+        neuSitzt.map(function(x){ var t = /^t:/.test(x.k) ? M.beschreibung(x.k.split(":")[1], x.k.split(":")[2]) : (M.einmaleins(x.k).frage + " = " + M.einmaleins(x.k).loesung);
+          return '<tr><td>'+esc(t)+'</td><td>'+dt(x.d)+'</td></tr>'; }).join("") + '</table></div>';
+    }
+    zeige(h);
+  }
+})();
+</script>
+</body>
+</html>

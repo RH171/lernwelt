@@ -1084,6 +1084,15 @@
       '<a class="knopf-link" href="/eltern/probearbeiten.html">Alle Regeln ansehen</a></div>';
   }
 
+  /* Pauls Tagesaufgabe "1×1 und Textaufgaben" (04.10.2026): die Uebersicht liegt auf eigener
+     Seite, damit diese hier nicht noch eine Abfrage mehr macht. */
+  function tagesrechnenKarte(){
+    if (KIND !== "paul") return "";
+    return '<div class="karte"><h2>1×1 und Textaufgaben</h2>' +
+      '<p class="unter">Pauls tägliche Aufgabe: was noch nicht sitzt und an wie vielen Tagen er sie geschafft hat.</p>' +
+      '<a class="knopf-link" href="/eltern/tagesrechnen.html">Übersicht ansehen</a></div>';
+  }
+
   /* ---------- Noten ---------- */
   var NOTEN = null, NOTEN_FEHLER = null;
 
@@ -1343,12 +1352,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + schulinfoKarte() +
+      $("inhalt").innerHTML = notenKarte() + schulinfoKarte() + tagesrechnenKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + schulinfoKarte();
+    h += notenKarte() + schulinfoKarte() + tagesrechnenKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +

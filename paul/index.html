@@ -415,6 +415,12 @@
     background:linear-gradient(125deg,#9a3412 0%,#b45309 50%,#a16207 100%);
     box-shadow:0 10px 28px rgba(217,119,6,.32);
   }
+  /* 1×1 und Textaufgaben (04.10.2026): taeglich, steht fest unter "Heute lernen". */
+  .createcard.tagesrechnen{
+    background:linear-gradient(125deg,#3730a3 0%,#4338ca 55%,#4f46e5 100%);
+    box-shadow:0 10px 28px rgba(79,70,229,.32);
+  }
+  .createcard.tagesrechnen.erledigt .cc-s::before{content:"✓ ";}
   .createcard.hausaufgabe:hover{box-shadow:0 16px 38px rgba(18,160,140,.4);}
   .createcard.werkstatt:hover{box-shadow:0 16px 38px rgba(240,112,90,.4);}
   .createcard:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(92,108,255,.42);}
@@ -544,6 +550,24 @@
     </div>
     <div class="cc-arrow">›</div>
   </a>
+
+  <!-- 1×1 und Textaufgaben (Denny, 04.10.2026): jeden Tag, deshalb fest neben "Heute lernen".
+       Der Satz zeigt nur, ob heute schon erledigt ist - nie einen Rueckstand oder eine Serie. -->
+  <a class="createcard tagesrechnen" href="klasse4-mathe-tagesrechnen.html" id="tagesRechnen">
+    <div class="cc-ic">✖️</div>
+    <div>
+      <div class="cc-t">1×1 und Textaufgaben</div>
+      <div class="cc-s" id="tagesRechnenSatz">Jeden Tag neu: Einmaleins und Rätselaufgaben.</div>
+    </div>
+    <div class="cc-arrow">›</div>
+  </a>
+  <script>(function(){try{
+    var d=new Date(), h=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+    var s=JSON.parse(localStorage.getItem("paul-tagesrechnen")||"null"), x=s&&s.heute;
+    if(x&&x.d===h&&x.e&&x.t){ document.getElementById("tagesRechnen").classList.add("erledigt");
+      document.getElementById("tagesRechnenSatz").textContent="Für heute geschafft – morgen gibt es neue."; }
+    else if(x&&x.d===h&&x.e){ document.getElementById("tagesRechnenSatz").textContent="Teil 1 ist geschafft – jetzt noch die Textaufgaben."; }
+  }catch(e){}})();</script>
 
   <div id="hauptwege">
   <button class="createcard" id="createBtn" data-weg="erfinden">
