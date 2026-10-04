@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wo fehlt die Zahl? · Geteilt</title>
+<!--
+  Dennys Wahl vom 04.10.2026: "1 · Leere Tafel, die sich fuellt". Geteiltaufgaben ohne Rest aus
+  dem kleinen Einmaleins; die Tafel ist leer und fuellt sich mit jeder richtigen Antwort.
+  Motor /einmaleins/geteilt.js, eigener Speicher paul-geteilt. Dateiname klasse3-, damit
+  games.json die Seite findet; die Klasse 4 steht in paul/index.html (OVERRIDES).
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/einmaleins/tabelle.css?v=36b5709c">
+<link rel="stylesheet" href="/einmaleins/geteilt.css?v=1">
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Wo fehlt die Zahl? · Geteilt</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>➗ Geteilt-Tafel</h2>
+  <p>Die Tafel ist leer. Jede richtige Antwort füllt ihr Feld – Runde für Runde wird sie voller. Ich merke mir, was dir schwerfällt, und frage das öfter.</p>
+  <p id="baustellen" class="verborgen"></p>
+  <div id="stufen"></div>
+</section>
+
+<section id="spiel" class="verborgen">
+  <div id="tafel" aria-label="Einmaleins-Tafel zum Teilen"></div>
+  <div id="seite">
+    <div class="oben"><span id="frage"></span><span id="zaehler"></span></div>
+    <div id="tipp" class="tipp" aria-live="polite"></div>
+    <div id="tasten">
+      <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+      <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+      <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+      <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
+      <button data-taste="ok" class="ok next">Prüfen</button>
+    </div>
+    <button class="knopf zurueck">Andere Rundenlänge</button>
+  </div>
+</section>
+
+<section id="ende" class="karte verborgen">
+  <h2>🎉 Geschafft!</h2>
+  <p id="ende-zahl"></p>
+  <p id="ende-zeit"></p>
+  <p id="ende-wack"></p>
+  <div class="zeile-knoepfe">
+    <button id="nochmal" class="knopf primaer weiter">Noch eine Runde</button>
+    <button class="knopf zurueck">Andere Länge</button>
+  </div>
+</section>
+
+<script>window.GETEILT = { kind: "paul", speicher: "paul-geteilt" };</script>
+<script src="/einmaleins/geteilt.js?v=1" defer></script>
+<script src="/lernstand.js?v=417a4ab9" defer></script>
+</body>
+</html>
