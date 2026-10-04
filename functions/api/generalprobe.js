@@ -1,0 +1,116 @@
+/* Generalprobe "D | Lesen": die Werkstatt schaut auf die freien Antworten (04.10.2026).
+ *
+ * POST /api/generalprobe  { kind, titel, zeilen:[...], antworten:[{nr, auftrag, antwort}] }
+ * Antwort: { ok, hinweise:[{nr, hinweis}] }
+ *
+ * Nur fuer die drei Aufgaben, die keine Maschine sicher pruefen kann: die
+ * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Begruendung (7).
+ * Die Werkstatt sagt NUR, worauf Paul achten soll - keine Musterloesung, keine
+ * Note, keine Punkte. Das ist zusaetzlich mechanisch abgesichert (verraet()),
+ * weil eine Bitte im Auftrag keine Pruefung ist.
+ *
+ * Die Geschichte schickt die Seite mit (die Datei ist ein Browser-Skript und
+ * im Worker nicht ladbar). Gedeckelt: 30 Zeilen, je Antwort 400 Zeichen.
+ * Kein KV: Ein Zaehler kostete Schreibvorgaenge, und der Endpunkt braucht
+ * Pauls Ausweis.
+ */
+import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+
+const MODELL = "claude-opus-5-5";
+const KINDER = { paul: { name: "Paul", klasse: "4. Klasse" } };
+
+const REGELN =
+  "Du schaust einem Viertklaessler ueber die Schulter. Er uebt fuer eine Probe 'Lesen' " +
+  "(Grundschule Bayern): Geschichte lesen, Fragen IM GANZEN SATZ beantworten, die Lehrerin " +
+  "verlangt das ausdruecklich. Zu jeder Antwort gibst du GENAU EINEN kurzen Hinweis " +
+  "(hoechstens 22 Woerter, du-Form, freundlich, kein Rot, keine Fehlerliste). " +
+  "Worauf du achtest: ganzer Satz mit Subjekt und Verb? Punkt am Ende? Grossschreibung am " +
+  "Satzanfang und bei Nomen? Passt die Antwort zur Frage und zum Text? Bei der Begruendung: " +
+  "steht ein Grund mit 'weil' oder 'denn' da? Ist etwas gut, sag das zuerst in drei Woertern. " +
+  "VERBOTEN: die richtige Antwort nennen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
+  "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
+  'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
+
+const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
+
+const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
+
+/* true, wenn der Hinweis vier Woerter am Stueck aus der Geschichte enthaelt
+ * (= abgeschriebene Loesung) oder eine Note bzw. Punkte nennt. */
+export function verraet(hinweis, zeilen) {
+  const h = String(hinweis || "");
+  if (/\bnote\b|\bnoten\b|\bpunkte?\b|\bbe\b/i.test(h)) return true;
+  const hw = woerter(h).join(" ");
+  for (const z of zeilen || []) {
+    const w = woerter(z);
+    for (let i = 0; i + 4 <= w.length; i++) {
+      if ((" " + hw + " ").includes(" " + w.slice(i, i + 4).join(" ") + " ")) return true;
+    }
+  }
+  return false;
+}
+
+export function hinweiseAuswerten(text, zeilen, nummern) {
+  let liste = [];
+  try {
+    const m = String(text).match(/\{[\s\S]*\}/);
+    const j = JSON.parse(m ? m[0] : "");
+    if (Array.isArray(j.hinweise)) liste = j.hinweise;
+  } catch (e) {}
+  return nummern.map((nr) => {
+    const f = liste.find((x) => x && Number(x.nr) === nr);
+    const h = f && typeof f.hinweis === "string" ? f.hinweis.trim().slice(0, 220) : "";
+    if (!h || verraet(h, zeilen)) return { nr, hinweis: ERSATZ, ersetzt: true };
+    return { nr, hinweis: h };
+  });
+}
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  let daten = {};
+  try { daten = await request.json(); } catch (e) {}
+  const kind = String(daten.kind || "").toLowerCase();
+  if (!KINDER[kind]) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+  if (!(await ausweisGueltig(request, geheimFuer(env, kind), env)))
+    return json(401, { ok: false, fehler: "Nicht angemeldet." });
+  if (!env.ANTHROPIC_API_KEY) return json(503, { ok: false, fehler: "Die Werkstatt ist gerade nicht erreichbar." });
+
+  const zeilen = (Array.isArray(daten.zeilen) ? daten.zeilen : []).slice(0, 30).map((z) => String(z).slice(0, 200));
+  const antworten = (Array.isArray(daten.antworten) ? daten.antworten : []).slice(0, 3)
+    .map((a) => ({ nr: Number(a.nr) || 0, auftrag: String(a.auftrag || "").slice(0, 300), antwort: String(a.antwort || "").slice(0, 400) }))
+    .filter((a) => a.nr > 0);
+  if (!antworten.length) return json(400, { ok: false, fehler: "Keine Antworten." });
+
+  const frage =
+    `Geschichte "${String(daten.titel || "").slice(0, 80)}" (Zeilen nummeriert):\n` +
+    zeilen.map((z, i) => `${i + 1} ${z}`).join("\n") + "\n\n" +
+    antworten.map((a) => `Aufgabe ${a.nr}: ${a.auftrag}\nPauls Antwort: ${a.antwort || "(leer)"}`).join("\n\n");
+
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: MODELL,
+        // Das Denken zaehlt in max_tokens (24.09.2026) - genug Luft und effort low.
+        max_tokens: 4000,
+        output_config: { effort: "low" },
+        system: REGELN,
+        messages: [{ role: "user", content: frage }],
+      }),
+    });
+    if (!r.ok) return json(502, { ok: false, fehler: "Die Werkstatt antwortet gerade nicht (" + r.status + ")." });
+    const j = await r.json();
+    const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
+    return json(200, { ok: true, hinweise: hinweiseAuswerten(text, zeilen, antworten.map((a) => a.nr)) });
+  } catch (e) {
+    return json(502, { ok: false, fehler: "Die Werkstatt antwortet gerade nicht." });
+  }
+}
+
+function json(status, daten) {
+  return new Response(JSON.stringify(daten), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
