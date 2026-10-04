@@ -5,7 +5,11 @@
  *
  * Nur fuer die drei Aufgaben, die keine Maschine sicher pruefen kann: die
  * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Meinung (7). Keine Weil-Antworten: Pauls Lehrerin erlaubt sie nicht (04.10.2026).
+<<<<<<< HEAD
+ * Die Werkstatt sagt NUR, worauf das Kind achten soll - keine Musterloesung, keine
+=======
  * Die Werkstatt sagt NUR, worauf Paul achten soll - keine Musterloesung, keine
+>>>>>>> bau/gp-druck
  * Note, keine Punkte. Das ist zusaetzlich mechanisch abgesichert (verraet()),
  * weil eine Bitte im Auftrag keine Pruefung ist.
  *
@@ -17,7 +21,13 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 
 const MODELL = "claude-opus-5-5";
-const KINDER = { paul: { name: "Paul", klasse: "4. Klasse" } };
+/* Leon dazu am 04.10.2026 (Denny: "dasselbe altersgerecht fuer Helena und
+ * Leon"). Bei ihm ist nur EIN Satz frei: er schreibt einen angefangenen Satz
+ * zu Ende. Der Hinweis ist kuerzer und in Woertern fuer einen Zweitklaessler. */
+const KINDER = {
+  paul: { name: "Paul", klasse: "4. Klasse" },
+  leon: { name: "Leon", klasse: "2. Klasse" },
+};
 
 const REGELN =
   "Du schaust einem Viertklaessler ueber die Schulter. Er uebt fuer eine Probe 'Lesen' " +
@@ -31,7 +41,27 @@ const REGELN =
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
 
+<<<<<<< HEAD
+const REGELN_LEON =
+  "Du schaust einem Zweitklaessler (Grundschule Bayern, Leseanfaenger) ueber die Schulter. " +
+  "Er hat eine kurze Geschichte gelesen und einen angefangenen Satz zu Ende geschrieben. " +
+  "Gib GENAU EINEN Hinweis: hoechstens 15 Woerter, ganz einfache kurze Woerter, du-Form, " +
+  "freundlich, kein Rot, keine Fehlerliste. Ist etwas gut, sag das zuerst in zwei, drei Woertern. " +
+  "Worauf du achtest: Passt der Satz zur Geschichte? Steht am Ende ein Punkt? Nomen gross? " +
+  "Rechtschreibung nur sanft und hoechstens ein Wort ansprechen. " +
+  "WICHTIG: Verlange oder lobe nie 'weil' und frag nie nach einem Grund (Denny, 04.10.2026). " +
+  "VERBOTEN: die Antwort vorsagen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
+  "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
+  'Antworte NUR mit JSON: {"hinweise":[{"nr":5,"hinweis":"..."}]}';
+const REGELN_JE_KIND = { paul: REGELN, leon: REGELN_LEON };
+
 const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
+/* Leon: Frau Sy ist Pauls Lehrerin, nicht seine. Bei ihm faellt ein Weil-Hinweis
+ * still auf den neutralen Satz zurueck - verlangt und gelobt wird "weil" nie. */
+const WEIL_ERSATZ_JE_KIND = { leon: "Lies deinen Satz noch einmal. Passt er zur Geschichte? Punkt am Ende?" };
+=======
+const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
+>>>>>>> bau/gp-druck
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 
 const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
@@ -52,7 +82,7 @@ export function verraet(hinweis, zeilen) {
   return false;
 }
 
-export function hinweiseAuswerten(text, zeilen, nummern) {
+export function hinweiseAuswerten(text, zeilen, nummern, kind) {
   let liste = [];
   try {
     const m = String(text).match(/\{[\s\S]*\}/);
@@ -65,7 +95,11 @@ export function hinweiseAuswerten(text, zeilen, nummern) {
     if (!h || verraet(h, zeilen)) return { nr, hinweis: ERSATZ, ersetzt: true };
     // Pauls Lehrerin erlaubt keine Weil-Antworten (04.10.2026): ein Hinweis,
     // der "weil" lobt oder verlangt, wird ersetzt. Erlaubt ist nur "ohne 'weil'".
+<<<<<<< HEAD
+    if (/\bweil\b/i.test(h) && !/ohne\s+.?weil/i.test(h)) return { nr, hinweis: WEIL_ERSATZ_JE_KIND[kind] || WEIL_ERSATZ, ersetzt: true };
+=======
     if (/\bweil\b/i.test(h) && !/ohne\s+.?weil/i.test(h)) return { nr, hinweis: WEIL_ERSATZ, ersetzt: true };
+>>>>>>> bau/gp-druck
     return { nr, hinweis: h };
   });
 }
@@ -89,7 +123,7 @@ export async function onRequestPost(context) {
   const frage =
     `Geschichte "${String(daten.titel || "").slice(0, 80)}" (Zeilen nummeriert):\n` +
     zeilen.map((z, i) => `${i + 1} ${z}`).join("\n") + "\n\n" +
-    antworten.map((a) => `Aufgabe ${a.nr}: ${a.auftrag}\nPauls Antwort: ${a.antwort || "(leer)"}`).join("\n\n");
+    antworten.map((a) => `Aufgabe ${a.nr}: ${a.auftrag}\n${KINDER[kind].name}s Antwort: ${a.antwort || "(leer)"}`).join("\n\n");
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -100,14 +134,14 @@ export async function onRequestPost(context) {
         // Das Denken zaehlt in max_tokens (24.09.2026) - genug Luft und effort low.
         max_tokens: 4000,
         output_config: { effort: "low" },
-        system: REGELN,
+        system: REGELN_JE_KIND[kind] || REGELN,
         messages: [{ role: "user", content: frage }],
       }),
     });
     if (!r.ok) return json(502, { ok: false, fehler: "Die Werkstatt antwortet gerade nicht (" + r.status + ")." });
     const j = await r.json();
     const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
-    return json(200, { ok: true, hinweise: hinweiseAuswerten(text, zeilen, antworten.map((a) => a.nr)) });
+    return json(200, { ok: true, hinweise: hinweiseAuswerten(text, zeilen, antworten.map((a) => a.nr), kind) });
   } catch (e) {
     return json(502, { ok: false, fehler: "Die Werkstatt antwortet gerade nicht." });
   }

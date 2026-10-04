@@ -42,6 +42,7 @@
     background:var(--card);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
     font-weight:600;font-size:15px;min-height:44px}
   h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:150px}
+  #probenkarte.verborgen{display:none}
   .karte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
   h2{font:800 18px/1.25 var(--rund);margin:0 0 10px}
   table{width:100%;border-collapse:collapse;font-family:var(--rund)}
@@ -80,6 +81,11 @@
     <a class="zurueck" href="/helena/">‹ Zurück</a>
     <h1>📋 Meine Prüfungen</h1>
   </header>
+
+  <!-- Gelbe Probenkarte (04.10.2026, wie bei Paul): steht nur da, wenn eine
+       Schulaufgabe in den naechsten 14 Tagen ansteht UND es eine Uebung dazu
+       gibt (/probenkarte.js). Bis dahin bleibt der Platz leer. -->
+  <div id="probenkarte" class="verborgen"></div>
 
   <div class="karte">
     <h2>Große Leistungsnachweise in der 7. Klasse</h2>
@@ -201,6 +207,8 @@
   if (tage < 0) el.style.color = "var(--muted)";
 })();
 </script>
+<script src="/probenkarte.js?v=08db7e25"></script>
+<script>try{ LWProbenkarte.laden("helena", document.getElementById("probenkarte")); }catch(e){}</script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 </body>
 </html>
