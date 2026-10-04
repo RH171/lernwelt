@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Helenas Spiel-Schmiede</title>
-<script>/* Helenas ganze Welt ist dunkel - nur die Schmiede war es nicht (gemessen
-   25.09.2026: Leuchtdichte 0,88 gegen 0,005 auf allen anderen Seiten).
-   Sie hat keinen Schalter, also fest dunkel. */
-document.documentElement.setAttribute("data-theme","dark");</script>
+<script><!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Der Schalter steht NUR auf /helena/ oben rechts, die
+     Wahl gilt auf allen ihren Seiten. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=d80c0bfc">
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <link rel="stylesheet" href="/schmiede/schmiede.css?v=1cc314c5">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
