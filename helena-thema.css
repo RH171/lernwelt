@@ -40,6 +40,8 @@ html[data-theme="light"]{
   --surface2:#f1eefb;
   --feld:#fbfaff;
   --line:#e3e0f0;
+  --vertief:#eceaf6;      /* Rinne eines Balkens, Platz eines Bildes */
+  --tief:#f1eefb;         /* noch eine Stufe tiefer: Pausenzeile im Stundenplan */
 
   /* Schrift */
   --ink:#1b1c22;
@@ -88,12 +90,15 @@ html[data-theme="light"]{
   --schlecht:#b42318;
   --schlecht-text:#b42318;
   --schlecht-hell:#fee4e2;
+  --schlecht-rand:#fda29b;
 
   /* Hinweis, offen, Gold */
   --gold:#9a4a06;
   --warn:#9a4a06;
   --orange:#9a4a06;
   --offen-feld:#fff8ec;
+  --warn-hell:#fff8ec;
+  --warn-rand:#f3dcb5;
 
   /* Weitere Farbtupfer einzelner Seiten */
   --blau:#1d4ed8;
