@@ -8,12 +8,14 @@
  *   GET    /api/noten?kind=helena            -> Auswertung je Fach
  *   POST   /api/noten  {kind, note:{...}}    -> anlegen oder aendern (gleiche id)
  *   DELETE /api/noten?kind=helena&id=abc     -> loeschen
+ *   POST   /api/noten  {kind, termin:{datum,fach,thema}} / {kind, terminWeg:{datum,fach}}
  *   POST   /api/noten  {kind, blatt:"data:…"} -> Notenstand auslesen (kostet Geld,
  *                                               speichert NICHTS, schlaegt nur vor)
  */
 
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId } from "./_noten.js";
+import { termineLesen, terminSetzen, terminWeg, terminPruefen, kuenftige, berlinHeute } from "./_probentermine.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const MODELL = "claude-opus-5-5";
@@ -153,7 +155,12 @@ export async function onRequestGet(context) {
     const meine = noten
       .map((n) => ({ fach: n.fach, note: n.note, datum: n.datum, was: n.was || "" }))
       .sort((x, y) => String(y.datum || "").localeCompare(String(x.datum || "")));
-    return json(200, { ok: true, noten: meine, proben: PROBEN[k] || null });
+    // Probentermine (04.10.2026): nur heutige und kuenftige. Antwortet der
+    // Speicher nicht, steht null da - nie eine leere Liste, sonst hiesse
+    // "kein Termin" in Wahrheit "weiss ich nicht".
+    const alle = await termineLesen(env, k);
+    const termine = alle === null ? null : kuenftige(alle, berlinHeute());
+    return json(200, { ok: true, noten: meine, proben: PROBEN[k] || null, termine });
   }
 
   if (!(await eltern(request, env))) return json(401, { ok: false, fehler: "Nur mit Elternausweis." });
@@ -186,6 +193,30 @@ export async function onRequestPost(context) {
   const url = new URL(request.url);
   const kind = kindAus(url, daten);
   if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+
+  // Probentermin setzen oder wegnehmen (04.10.2026), nur mit Elternausweis.
+  if (daten.termin) {
+    const g = terminPruefen(daten.termin);
+    if (g.fehler) return json(400, { ok: false, fehler: g.fehler });
+    try {
+      const r = await terminSetzen(env, kind, g.termin);
+      return json(200, { ok: true, geschrieben: r.geschrieben, termine: r.termine });
+    } catch (e) {
+      return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Der Termin ist NICHT gespeichert." });
+    }
+  }
+  if (daten.terminWeg) {
+    const datum = String(daten.terminWeg.datum || "");
+    const fach = String(daten.terminWeg.fach || "").toLowerCase();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) return json(400, { ok: false, fehler: "Datum bitte als JJJJ-MM-TT." });
+    try {
+      const r = await terminWeg(env, kind, datum, fach);
+      if (!r.gefunden) return json(404, { ok: false, fehler: "Diesen Termin gibt es nicht (mehr).", termine: r.termine });
+      return json(200, { ok: true, geschrieben: true, termine: r.termine });
+    } catch (e) {
+      return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Nichts geloescht." });
+    }
+  }
 
   // Ein Blatt auslesen lassen - es wird NICHTS gespeichert, nur vorgeschlagen.
   if (daten.blatt) return blattLesen(env, kind, daten.blatt);
