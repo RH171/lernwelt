@@ -77,8 +77,9 @@ body.arbeitet header{display:none}
 body.papier #text,body.papier #umschalter,body.papier #gp-zumtext{display:none!important}
 body.papier #arbeit{display:block;max-width:820px}
 body.papier #aufgabe{position:static;display:block!important;padding:18px 22px}
-body.papier .auftrag{font-size:24px}
 body.papier #aufgabe p,body.papier .rueck{font-size:19px}
+/* #aufgabe p (Id) schlug .auftrag - die Aufgabe blieb 19 px. Deshalb mit Id. */
+body.papier #aufgabe .auftrag{font-size:24px}
 body.papier textarea,body.papier input[type=text]{font-size:20px}
 body.papier .wahl button{font-size:18px}
 /* Erst lesen, dann Aufgaben (Pauls Wunsch, 04.10.2026): die Geschichte allein, gross,
@@ -160,9 +161,9 @@ label.zeile input{width:7em}
   body>*:not(#druckblatt){display:none!important}
   #druckblatt{display:block!important;font-family:Georgia,"Times New Roman",serif;color:#000}
   .db-kopf{display:flex;justify-content:space-between;font:11pt system-ui,sans-serif;border-bottom:1px solid #888;padding-bottom:5pt}
-  #druckblatt h2{font-size:20pt;margin:16pt 0 10pt}
+  #druckblatt h2{font-size:20pt;margin:12pt 0 8pt}
   #druckblatt ol{list-style:none;margin:0;padding:0}
-  #druckblatt li{display:grid;grid-template-columns:2.4em 1fr;font-size:15pt;line-height:1.75;break-inside:avoid}
+  #druckblatt li{display:grid;grid-template-columns:2.4em 1fr;font-size:15pt;line-height:1.6;break-inside:avoid}
   #druckblatt li .nr{font:11pt system-ui,sans-serif;color:#444;text-align:right;padding-right:10pt;padding-top:4pt}
   .db-fuss{margin-top:16pt;font:10.5pt system-ui,sans-serif;color:#333;border-top:1px solid #aaa;padding-top:6pt}
 }
@@ -273,7 +274,7 @@ label.zeile input{width:7em}
     var b = $("papier-an");
     b.setAttribute("aria-pressed", papier);
     b.textContent = papier ? "📖 Text am Tablet zeigen" : "📄 Ich lese auf Papier";
-    if (stand) { zeige("aufgabe"); malen(); }
+    if (stand) { zeige("aufgabe"); malen(); leisteInSicht(); }
   }
   $("drucken").onclick = drucken;
   $("papier-an").onclick = function(){ papierSetzen(!papier); };
@@ -408,7 +409,7 @@ label.zeile input{width:7em}
         '<p class="leise">Das unterstrichene Wort steht so nicht im Text. Welches Wort benutzt die Geschichte?</p>' +
         '<input type="text" id="gp-wort" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Wort aus dem Text">';
     } else if (a.art === "meinung") {
-      h = '<p class="auftrag">' + esc(a.frage) + '</p><p class="leise">Schreib mindestens einen ganzen Satz mit „weil“ oder „denn“.</p>' +
+      h = '<p class="auftrag">' + esc(a.frage) + '</p><p class="leise">Ein ganzer Satz genügt – mehr darfst du gern schreiben.</p>' +
         '<textarea id="gp-meinung" placeholder="Ich finde …"></textarea>';
     }
     $("inhalt").innerHTML = h;
@@ -526,6 +527,15 @@ label.zeile input{width:7em}
       s.rueck = { art: "ruhig", text: loesung + " Lies die Stelle einmal in Ruhe – beim nächsten Mal findest du sie schneller." };
     }
     malen();
+    leisteInSicht();
+  }
+  // Nach "Prüfen" und beim Umschalten auf Papier: Rückmeldung und "Weiter" ins Bild holen,
+  // falls sie unter dem Rand liegen (Handy, Papier-Modus mit grosser Schrift). Nie nach oben.
+  function leisteInSicht(){
+    var l = document.querySelector("#aufgabe .leiste");
+    if (!l || !l.offsetParent) return;
+    var r = l.getBoundingClientRect();
+    if (r.bottom > innerHeight) window.scrollBy(0, r.bottom - innerHeight + 10);
   }
 
   $("pruefen").onclick = pruefen;
