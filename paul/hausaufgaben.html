@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mein Hausaufgaben-Heft</title>
+<title>Meine Hausaufgaben</title>
 <!--
   Pauls Hausaufgaben-Heft (17.09.2026).
 
@@ -163,7 +163,7 @@
 <div class="huelle">
   <header>
     <button class="zurueck" id="zurueck" type="button">‹ Lernwelt</button>
-    <h1 id="titel">📚 Mein Hausaufgaben-Heft</h1>
+    <h1 id="titel">📚 Meine Hausaufgaben</h1>
   </header>
 
   <!-- 1. Die Liste -->
@@ -472,7 +472,7 @@
   });
   $("neu-abbrechen").addEventListener("click", function(){
     if (modus === "verbessert" && offen) { fadenOeffnen(offen.id); return; }
-    $("titel").textContent = "📚 Mein Hausaufgaben-Heft"; zeige("liste");
+    $("titel").textContent = "📚 Meine Hausaufgaben"; zeige("liste");
   });
 
   var BRAUCH = {
