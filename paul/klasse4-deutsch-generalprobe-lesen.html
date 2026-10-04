@@ -92,6 +92,10 @@ label.zeile input{width:7em}
 @media (max-height:520px){
   header h1{font-size:17px} body{padding-top:6px}
   .balken{margin-bottom:6px} textarea{min-height:60px}
+  /* Offene Tastatur: die Knoepfe kleben unten, sonst liegen Pruefen und Weiter unter dem Rand */
+  #aufgabe .leiste{position:sticky;bottom:0;background:var(--card);margin:10px -16px -14px;padding:8px 16px 10px;
+    border-top:1px solid var(--line);border-radius:0 0 18px 18px;flex-wrap:nowrap}
+  #aufgabe .leiste .knopf{flex:1 1 0;min-width:0;padding-left:6px;padding-right:6px}
 }
 </style>
 </head>
@@ -411,12 +415,12 @@ label.zeile input{width:7em}
     var e = $("ende"); e.classList.remove("verborgen");
     e.innerHTML = '<h2>✓ Abgegeben: „' + esc(g.titel) + '“</h2>' +
       '<p>' + erste + ' von ' + pruefbare.length + ' Aufgaben hast du beim ersten Versuch gefunden.</p>' +
+      '<div class="leiste"><button class="knopf primaer" id="neu">▶ Neue Geschichte</button><a class="knopf" href="./">Zur Startseite</a></div>' +
       '<div id="ende-frei">' + frei.map(function(f){
         return '<div class="block" data-nr="' + f.nr + '"><strong>Aufgabe ' + f.nr + '</strong>' +
           '<div class="antwort">' + esc(f.antwort || "(nichts geschrieben)") + '</div>' +
           '<p class="hinweis leise">Ich schaue mir das gerade an …</p></div>';
-      }).join("") + '</div>' +
-      '<div class="leiste"><button class="knopf primaer" id="neu">▶ Neue Geschichte</button><a class="knopf" href="./">Zur Startseite</a></div>';
+      }).join("") + '</div>';
     $("neu").onclick = function(){ starten(naechste()); };
     window.scrollTo(0, 0);
     var setze = function(liste){
