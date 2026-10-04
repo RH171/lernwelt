@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Generalprobe Lesen</title>
+<!--
+  Generalprobe "D | Lesen" (04.10.2026, Dennys Wahl: Version B).
+  Anlass: Paul schreibt am Freitag, 09.10.2026 die Probe "D | Lesen".
+  Aufgabenformen wie auf seinem Uebungsblatt, Geschichten selbst geschrieben
+  (generalprobe-geschichten.js). iPad quer: Text links, rechts eine Aufgabe nach
+  der anderen. Schmal: Umschalter Text / Aufgabe.
+  Kein Rot, keine Uhr. Zweiter Versuch mit Hinweis, gezaehlt wird der erste.
+  Die freien Antworten (1, 3, 7) schaut am Ende die Werkstatt an
+  (/api/generalprobe); faellt sie aus, steht ein Satz zum Selbst-Nachlesen da.
+  Pruefen: node pruefe-generalprobe.mjs
+  Messen:  node geraete-messen.js /paul/klasse4-deutsch-generalprobe-lesen.html paul mess-schritte-generalprobe.js
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+:root{--gp-gelb:#ffe98a;--gp-gelb-text:#2a2200;--gp-hinweis:#fff4d6}
+:root[data-theme="dark"]{--gp-gelb:#6b5a12;--gp-gelb-text:#fff6cf;--gp-hinweis:#2e2614}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{padding:10px 12px 24px}
+header{display:flex;align-items:center;gap:10px;max-width:1180px;margin:0 auto 8px}
+header h1{font:800 20px/1.15 system-ui,sans-serif;margin:0;flex:1}
+.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border-radius:999px;
+  border:2px solid var(--line);background:var(--card);color:var(--ink);font:700 16px system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.knopf.primaer{background:var(--akzent);border-color:var(--akzent);color:var(--akzent-auf,#fff)}
+.knopf[disabled]{opacity:.45;cursor:default}
+.karte{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;max-width:1180px;margin:0 auto 12px}
+.karte h2{margin:0 0 6px;font-size:20px}
+.karte p{margin:6px 0;line-height:1.45}
+.leise{color:var(--muted)}
+.verborgen{display:none!important}
+
+#umschalter{display:none;gap:8px;max-width:1180px;margin:0 auto 8px}
+#umschalter button{flex:1}
+#umschalter button[aria-pressed="true"]{background:var(--akzent);border-color:var(--akzent);color:var(--akzent-auf,#fff)}
+
+#arbeit{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;max-width:1180px;margin:0 auto}
+#text,#aufgabe{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+#text{max-height:calc(100dvh - 80px);overflow:auto}
+#text h2{margin:0 0 8px;font-size:19px}
+#text ol{margin:0;padding:0;list-style:none;counter-reset:z}
+#text li{display:grid;grid-template-columns:2.2em 1fr;gap:4px;padding:5px 6px;border-radius:8px;line-height:1.45;font-size:17px;border:2px solid transparent}
+#text li .nr{color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;padding-right:4px;font-size:14px;padding-top:2px}
+#text.tippen li{cursor:pointer;min-height:44px}
+#text li.gelb{background:var(--gp-gelb);color:var(--gp-gelb-text)}
+#text li.gelb .nr{color:var(--gp-gelb-text)}
+#text li.schau{border-color:var(--rand-warn)}
+#aufgabe{align-self:start;position:sticky;top:10px}
+.kopf{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.kopf strong{font-size:15px;color:var(--muted)}
+.balken{display:flex;gap:4px;margin:0 0 12px}
+.balken span{flex:1;height:8px;border-radius:99px;background:var(--line)}
+.balken span.fertig{background:var(--gut)}
+.balken span.jetzt{background:var(--akzent)}
+.auftrag{font-size:18px;font-weight:700;line-height:1.35;margin:0 0 10px}
+.auftrag u{text-decoration-thickness:2px}
+textarea,input[type=text]{width:100%;font:17px/1.4 system-ui,sans-serif;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--feld,var(--bg));color:var(--ink)}
+textarea{min-height:88px;resize:vertical}
+label.zeile{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:700}
+label.zeile input{width:7em}
+.wahl{display:grid;gap:8px}
+.wahl button{text-align:left;justify-content:flex-start;border-radius:14px;white-space:normal}
+.wahl button[aria-pressed="true"]{border-color:var(--akzent);box-shadow:inset 0 0 0 2px var(--akzent)}
+.wahl button .platz{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;
+  border:2px solid var(--line);margin-right:10px;flex:0 0 auto;font-weight:800}
+.wahl button[aria-pressed="true"] .platz{background:var(--akzent);border-color:var(--akzent);color:var(--akzent-auf,#fff)}
+.vorgabe{font-weight:700;margin:4px 0}
+.rueck{margin-top:12px;padding:10px 12px;border-radius:12px;line-height:1.4}
+.rueck.gut{background:var(--gut-hell);border:1px solid var(--rand-gut)}
+.rueck.schau{background:var(--gp-hinweis);border:1px solid var(--rand-warn)}
+.rueck.ruhig{background:var(--vertief);border:1px solid var(--line)}
+.leiste{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.leiste .knopf{flex:1 1 auto}
+#ende .antwort{background:var(--vertief);border-radius:12px;padding:8px 10px;margin:4px 0 6px;white-space:pre-wrap}
+#ende .block{margin:12px 0;padding-top:10px;border-top:1px solid var(--line)}
+
+@media (max-width:767px){
+  #umschalter{display:flex}
+  #arbeit{display:block}
+  #text{max-height:none}
+  #aufgabe{position:static}
+  body.zeige-text #aufgabe{display:none}
+  body.zeige-aufgabe #text{display:none}
+}
+@media (max-height:520px){
+  header h1{font-size:17px} body{padding-top:6px}
+  .balken{margin-bottom:6px} textarea{min-height:60px}
+}
+</style>
+</head>
+<body class="zeige-aufgabe">
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Generalprobe Lesen</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>📖 Generalprobe für deine Probe „Lesen“</h2>
+  <p>Eine Geschichte und sieben Aufgaben – genau die Arten, die du von deinem Übungsblatt kennst. Du hast so viel Zeit, wie du brauchst.</p>
+  <p class="leise" id="start-info"></p>
+  <div class="leiste"><button class="knopf primaer" id="los">▶ Los geht's</button></div>
+</section>
+
+<div id="umschalter" class="verborgen">
+  <button class="knopf" id="tab-text" aria-pressed="false">📖 Text</button>
+  <button class="knopf" id="tab-aufgabe" aria-pressed="true">✏️ Aufgabe</button>
+</div>
+
+<main id="arbeit" class="verborgen">
+  <section id="text"><h2 id="titel"></h2><ol id="zeilen"></ol></section>
+  <section id="aufgabe">
+    <div class="kopf"><strong id="zaehler"></strong></div>
+    <div class="balken" id="balken"></div>
+    <div id="inhalt"></div>
+    <div id="rueck" class="rueck verborgen"></div>
+    <div class="leiste">
+      <button class="knopf" id="zurueck">← Zurück</button>
+      <button class="knopf primaer" id="pruefen">Prüfen</button>
+      <button class="knopf" id="weiter">Weiter →</button>
+    </div>
+  </section>
+</main>
+
+<section id="ende" class="karte verborgen"></section>
+
+<script src="generalprobe-geschichten.js?v=cf020b82"></script>
+<script>
+(function(){
+  var G = window.GENERALPROBE || [];
+  var KIND = "paul";
+  var SPEICHER = "paul-generalprobe";
+  var ERSATZ = "Das schaue ich mir gerade nicht an – lies selbst nach: ganzer Satz? Punkt am Ende?";
+  var FREI = { frage: true, anfang: true, meinung: true };   // geht (auch) an die Werkstatt
+  var MERKMAL = { frage: "Zeile finden", reihenfolge: "Reihenfolge", kreuz: "Ankreuzen",
+                  unterstreichen: "Unterstreichen", einsetzen: "Wort aus dem Text" };
+  var $ = function(id){ return document.getElementById(id); };
+
+  function lesen(){ try { return JSON.parse(localStorage.getItem(SPEICHER) || "{}") || {}; } catch(e){ return {}; } }
+  function schreiben(d){ try { localStorage.setItem(SPEICHER, JSON.stringify(d)); } catch(e){} }
+
+  // Die erste ungelesene Geschichte; sind alle gelesen, die am laengsten her ist.
+  function naechste(){
+    var d = lesen(), gelesen = Array.isArray(d.gelesen) ? d.gelesen : [];
+    for (var i = 0; i < G.length; i++) if (gelesen.indexOf(G[i].id) < 0) return G[i];
+    for (var j = 0; j < gelesen.length; j++) for (var k = 0; k < G.length; k++) if (G[k].id === gelesen[j]) return G[k];
+    return G[0];
+  }
+  function alsGelesen(id){
+    var d = lesen(), g = (Array.isArray(d.gelesen) ? d.gelesen : []).filter(function(x){ return x !== id; });
+    g.push(id); d.gelesen = g; schreiben(d);
+  }
+
+  var stand = null;   // {g, nr, a:[{versuche, fertig, erst, wert...}]}
+  window.__gp = { get stand(){ return stand; }, G: G };
+
+  function mischen(liste, saat){
+    var a = liste.slice(), s = saat || 7;
+    for (var i = a.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; var j = Math.floor(s / 233280 * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    // nie zufaellig schon in der richtigen Reihenfolge
+    if (a.every(function(x, i){ return x === liste[i]; })) a.push(a.shift());
+    return a;
+  }
+
+  function starten(g){
+    stand = { g: g, nr: 0, a: g.aufgaben.map(function(a, i){
+      var s = { versuche: 0, fertig: false, erst: null };
+      if (a.art === "reihenfolge") { s.gemischt = mischen(a.ereignisse, g.id.length * 31 + i); s.wahl = []; }
+      if (a.art === "unterstreichen") s.wahl = [];
+      return s; }) };
+    $("start").classList.add("verborgen");
+    $("ende").classList.add("verborgen");
+    $("arbeit").classList.remove("verborgen");
+    $("umschalter").classList.remove("verborgen");
+    $("titel").textContent = g.titel;
+    var ol = $("zeilen"); ol.innerHTML = "";
+    g.zeilen.forEach(function(z, i){
+      var li = document.createElement("li"); li.dataset.z = i + 1;
+      li.innerHTML = '<span class="nr">' + (i + 1) + '</span><span></span>';
+      li.lastChild.textContent = z;
+      li.addEventListener("click", function(){ zeileTippen(i + 1); });
+      ol.appendChild(li);
+    });
+    zeige("aufgabe");
+    malen();
+    window.scrollTo(0, 0);
+  }
+
+  function zeige(was){
+    document.body.classList.toggle("zeige-text", was === "text");
+    document.body.classList.toggle("zeige-aufgabe", was !== "text");
+    $("tab-text").setAttribute("aria-pressed", was === "text");
+    $("tab-aufgabe").setAttribute("aria-pressed", was !== "text");
+  }
+  $("tab-text").onclick = function(){ zeige("text"); };
+  $("tab-aufgabe").onclick = function(){ zeige("aufgabe"); };
+
+  function aufg(){ return stand.g.aufgaben[stand.nr]; }
+  function st(){ return stand.a[stand.nr]; }
+
+  function zeileTippen(z){
+    var a = aufg(), s = st();
+    if (a.art !== "unterstreichen" || s.fertig) return;
+    var i = s.wahl.indexOf(z);
+    if (i < 0) s.wahl.push(z); else s.wahl.splice(i, 1);
+    textMarken(); knoepfe();
+    var n = $("gp-anzahl"); if (n) n.textContent = s.wahl.length ? (s.wahl.length + (s.wahl.length === 1 ? " Satz" : " Sätze") + " markiert") : "Noch nichts markiert.";
+  }
+
+  function textMarken(){
+    var a = aufg(), s = st();
+    var tippen = a.art === "unterstreichen" && !s.fertig;
+    $("text").classList.toggle("tippen", tippen);
+    var gelb = a.art === "unterstreichen" ? s.wahl : [];
+    var schau = s.schau || [];
+    Array.prototype.forEach.call($("zeilen").children, function(li){
+      var z = +li.dataset.z;
+      li.classList.toggle("gelb", gelb.indexOf(z) >= 0);
+      li.classList.toggle("schau", z >= (schau[0] || 0) && z <= (schau[1] || -1));
+      li.setAttribute("role", tippen ? "button" : "");
+    });
+  }
+
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  function malen(){
+    var a = aufg(), s = st(), n = stand.g.aufgaben.length;
+    $("zaehler").textContent = "Aufgabe " + (stand.nr + 1) + " von " + n;
+    $("balken").innerHTML = stand.a.map(function(x, i){
+      return '<span class="' + (i === stand.nr ? "jetzt" : (x.fertig ? "fertig" : "")) + '"></span>'; }).join("");
+    var h = "";
+    if (a.art === "frage") {
+      h = '<p class="auftrag">' + esc(a.frage) + '</p>' +
+        '<p class="leise">Antworte im ganzen Satz und schreib die Zeile dazu.</p>' +
+        '<textarea id="gp-satz" placeholder="Dein ganzer Satz …"></textarea>' +
+        '<label class="zeile">In Zeile <input type="text" inputmode="numeric" id="gp-zeile" autocomplete="off"></label>';
+    } else if (a.art === "reihenfolge") {
+      h = '<p class="auftrag">Bringe die Sätze in die richtige Reihenfolge.</p>' +
+        '<p class="leise">Tippe zuerst an, was zuerst passiert. Nochmal tippen nimmt die Zahl weg.</p>' +
+        '<div class="wahl" id="gp-wahl">' + s.gemischt.map(function(e, i){
+          var p = s.wahl.indexOf(i);
+          return '<button class="knopf" data-i="' + i + '" aria-pressed="' + (p >= 0) + '"><span class="platz">' + (p >= 0 ? p + 1 : "") + '</span>' + esc(e.text) + '</button>';
+        }).join("") + '</div>';
+    } else if (a.art === "anfang") {
+      h = '<p class="auftrag">' + esc(a.auftrag) + '</p>' +
+        '<p class="vorgabe">' + esc(a.anfang) + '</p><textarea id="gp-anfang" placeholder="… schreib weiter"></textarea>';
+    } else if (a.art === "kreuz") {
+      h = '<p class="auftrag">' + esc(a.frage) + '</p><p class="leise">Kreuze an.</p><div class="wahl" id="gp-wahl">' +
+        a.optionen.map(function(o, i){
+          return '<button class="knopf" data-i="' + i + '" aria-pressed="' + (s.wahl === i) + '"><span class="platz">' + (s.wahl === i ? "✕" : "") + '</span>' + esc(o) + '</button>';
+        }).join("") + '</div>';
+    } else if (a.art === "unterstreichen") {
+      h = '<p class="auftrag">' + esc(a.auftrag) + '</p>' +
+        '<p class="leise">Tippe die Sätze im Text an – sie werden gelb wie mit dem Textmarker.</p>' +
+        '<p id="gp-anzahl">' + (s.wahl.length ? s.wahl.length + (s.wahl.length === 1 ? " Satz" : " Sätze") + " markiert" : "Noch nichts markiert.") + '</p>' +
+        '<button class="knopf nur-schmal" id="gp-zumtext">📖 Zum Text</button>';
+    } else if (a.art === "einsetzen") {
+      h = '<p class="auftrag">' + a.satz.replace(/<(?!\/?u>)/g, "&lt;") + '</p>' +
+        '<p class="leise">Das unterstrichene Wort steht so nicht im Text. Welches Wort benutzt die Geschichte?</p>' +
+        '<input type="text" id="gp-wort" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Wort aus dem Text">';
+    } else if (a.art === "meinung") {
+      h = '<p class="auftrag">' + esc(a.frage) + '</p><p class="leise">Schreib mindestens einen ganzen Satz mit „weil“ oder „denn“.</p>' +
+        '<textarea id="gp-meinung" placeholder="Ich finde …"></textarea>';
+    }
+    $("inhalt").innerHTML = h;
+    // gespeicherte Eingaben zurueck
+    if ($("gp-satz")) $("gp-satz").value = s.satz || "";
+    if ($("gp-zeile")) $("gp-zeile").value = s.zeile || "";
+    if ($("gp-anfang")) $("gp-anfang").value = s.text || "";
+    if ($("gp-meinung")) $("gp-meinung").value = s.text || "";
+    if ($("gp-wort")) $("gp-wort").value = s.wort || "";
+    ["gp-satz","gp-zeile","gp-anfang","gp-meinung","gp-wort"].forEach(function(id){
+      var el = $(id); if (!el) return;
+      el.addEventListener("input", function(){
+        if (id === "gp-satz") s.satz = el.value; else if (id === "gp-zeile") s.zeile = el.value;
+        else if (id === "gp-wort") s.wort = el.value; else s.text = el.value;
+        knoepfe();
+      });
+      if (s.fertig && !FREI[a.art]) el.disabled = true;
+      if (s.fertig && a.art === "frage" && id === "gp-zeile") el.disabled = true;
+    });
+    var wahl = $("gp-wahl");
+    if (wahl) wahl.addEventListener("click", function(ev){
+      var b = ev.target.closest("button"); if (!b || s.fertig) return;
+      var i = +b.dataset.i;
+      if (a.art === "kreuz") s.wahl = i;
+      else { var p = s.wahl.indexOf(i); if (p >= 0) s.wahl.splice(p, 1); else s.wahl.push(i); }
+      malen();
+    });
+    if ($("gp-zumtext")) $("gp-zumtext").onclick = function(){ zeige("text"); };
+    rueckZeigen(s.rueck);
+    textMarken(); knoepfe();
+  }
+
+  function rueckZeigen(r){
+    var el = $("rueck");
+    if (!r) { el.className = "rueck verborgen"; el.textContent = ""; return; }
+    el.className = "rueck " + r.art; el.textContent = r.text;
+  }
+
+  function bereit(){
+    var a = aufg(), s = st();
+    if (a.art === "frage") return /\d/.test(s.zeile || "") && (s.satz || "").trim().length > 0;
+    if (a.art === "reihenfolge") return s.wahl.length === a.ereignisse.length;
+    if (a.art === "kreuz") return typeof s.wahl === "number";
+    if (a.art === "unterstreichen") return s.wahl.length > 0;
+    if (a.art === "einsetzen") return (s.wort || "").trim().length > 0;
+    return false;
+  }
+
+  function knoepfe(){
+    var a = aufg(), s = st(), letzte = stand.nr === stand.g.aufgaben.length - 1;
+    $("zurueck").disabled = stand.nr === 0;
+    var pruefbar = a.art !== "anfang" && a.art !== "meinung";
+    $("pruefen").classList.toggle("verborgen", !pruefbar || s.fertig);
+    $("pruefen").disabled = !bereit();
+    $("weiter").textContent = letzte ? "Abgeben ✓" : "Weiter →";
+    $("weiter").classList.toggle("primaer", !pruefbar || s.fertig);
+  }
+
+  var wortRein = function(w){ return String(w || "").toLowerCase().replace(/[^a-zäöüß]/g, ""); };
+  function spanne(h){ return h[0] === h[1] ? "Zeile " + h[0] : "Zeile " + h[0] + "–" + h[1]; }
+
+  // Prueft die maschinell pruefbaren Aufgaben. Gezaehlt wird der erste Versuch.
+  function pruefen(){
+    var a = aufg(), s = st(); if (s.fertig || !bereit()) return;
+    var stimmt = false, getippt = "", richtig = "", hinweis = null, loesung = "";
+    if (a.art === "frage") {
+      var zahlen = (s.zeile.match(/\d+/g) || []).map(Number);
+      stimmt = zahlen.length > 0 && zahlen.every(function(z){ return a.zeilen.indexOf(z) >= 0; });
+      getippt = "Zeile " + zahlen.join(", "); richtig = "Zeile " + a.zeilen.join(" oder ");
+      hinweis = a.hinweis; loesung = "Die Antwort steht in " + (a.zeilen.length > 1 ? "Zeile " + a.zeilen.join(" und ") : "Zeile " + a.zeilen[0]) + ".";
+    } else if (a.art === "reihenfolge") {
+      var gew = s.wahl.map(function(i){ return s.gemischt[i]; });
+      stimmt = gew.every(function(e, i){ return e === a.ereignisse[i]; });
+      getippt = gew.map(function(e){ return a.ereignisse.indexOf(e) + 1; }).join("-");
+      richtig = a.ereignisse.map(function(e, i){ return i + 1; }).join("-");
+      var erst = 0; while (erst < gew.length && gew[erst] === a.ereignisse[erst]) erst++;
+      var ez = a.ereignisse[Math.min(erst, a.ereignisse.length - 1)].zeile;
+      hinweis = [Math.max(1, ez - 2), Math.min(stand.g.zeilen.length, ez + 2)];
+      if (!stimmt) s.richtigBis = erst;
+      loesung = "So ist die Reihenfolge im Text: " + a.ereignisse.map(function(e, i){ return (i + 1) + ". " + e.text; }).join("  ");
+    } else if (a.art === "kreuz") {
+      stimmt = s.wahl === a.richtig; getippt = a.optionen[s.wahl]; richtig = a.optionen[a.richtig];
+      hinweis = a.hinweis; loesung = "Richtig ist: " + richtig + ".";
+    } else if (a.art === "unterstreichen") {
+      var w = s.wahl.slice().sort(function(x, y){ return x - y; });
+      stimmt = w.length === a.zeilen.length && w.every(function(z){ return a.zeilen.indexOf(z) >= 0; });
+      getippt = "Zeile " + w.join(", "); richtig = "Zeile " + a.zeilen.join(", ");
+      hinweis = a.hinweis; loesung = "Diese Sätze sind gemeint: Zeile " + a.zeilen.join(" und ") + ".";
+    } else if (a.art === "einsetzen") {
+      stimmt = wortRein(s.wort) === wortRein(a.wort); getippt = s.wort.trim(); richtig = a.wort;
+      hinweis = [a.zeile, a.zeile]; loesung = "Im Text steht „" + a.wort + "“ (Zeile " + a.zeile + ").";
+    }
+    s.versuche++;
+    if (s.versuche === 1) {
+      s.erst = stimmt;
+      try { if (window.lernstand && typeof lernstand.antwort === "function")
+        lernstand.antwort(stimmt, "Lesen: " + MERKMAL[a.art], getippt, richtig, "gp:" + stand.g.id + "#" + (stand.nr + 1)); } catch(e){}
+    }
+    if (stimmt) {
+      s.fertig = true; s.schau = null;
+      s.rueck = { art: "gut", text: s.versuche === 1 ? "✓ Stimmt! Genau so steht es im Text." : "✓ Jetzt stimmt es – gut nachgelesen!" };
+      if (a.art === "unterstreichen") { /* gelb bleibt */ }
+    } else if (s.versuche === 1) {
+      s.schau = hinweis;
+      var extra = a.art === "reihenfolge" && s.richtigBis > 0 ? " Die ersten " + s.richtigBis + " stimmen schon." : "";
+      s.rueck = { art: "schau", text: "Fast. Schau noch einmal in " + spanne(hinweis) + " – dort steht es." + extra + " Du hast einen zweiten Versuch." };
+      if (a.art === "reihenfolge") s.wahl = s.wahl.slice(0, s.richtigBis);
+    } else {
+      s.fertig = true; s.schau = hinweis;
+      if (a.art === "unterstreichen") s.wahl = a.zeilen.slice();
+      if (a.art === "kreuz") s.wahl = a.richtig;
+      if (a.art === "reihenfolge") s.wahl = a.ereignisse.map(function(e){ return s.gemischt.indexOf(e); });
+      s.rueck = { art: "ruhig", text: loesung + " Lies die Stelle einmal in Ruhe – beim nächsten Mal findest du sie schneller." };
+    }
+    malen();
+  }
+
+  $("pruefen").onclick = pruefen;
+  $("zurueck").onclick = function(){ if (stand.nr > 0) { stand.nr--; malen(); zeige("aufgabe"); } };
+  $("weiter").onclick = function(){
+    if (stand.nr < stand.g.aufgaben.length - 1) { stand.nr++; malen(); zeige("aufgabe"); window.scrollTo(0, 0); }
+    else abgeben();
+  };
+
+  function freieAntworten(){
+    return stand.g.aufgaben.map(function(a, i){
+      var s = stand.a[i];
+      if (a.art === "frage") return { nr: i + 1, auftrag: a.frage + " (im ganzen Satz)", antwort: (s.satz || "").trim() };
+      if (a.art === "anfang") return { nr: i + 1, auftrag: a.auftrag, antwort: (a.anfang + " " + (s.text || "")).trim() };
+      if (a.art === "meinung") return { nr: i + 1, auftrag: a.frage, antwort: (s.text || "").trim() };
+      return null;
+    }).filter(Boolean);
+  }
+
+  function abgeben(){
+    var g = stand.g;
+    alsGelesen(g.id);
+    var pruefbare = stand.a.filter(function(s, i){ return !FREI[g.aufgaben[i].art] || g.aufgaben[i].art === "frage"; });
+    var erste = pruefbare.filter(function(s){ return s.erst === true; }).length;
+    var frei = freieAntworten();
+    $("arbeit").classList.add("verborgen");
+    $("umschalter").classList.add("verborgen");
+    var e = $("ende"); e.classList.remove("verborgen");
+    e.innerHTML = '<h2>✓ Abgegeben: „' + esc(g.titel) + '“</h2>' +
+      '<p>' + erste + ' von ' + pruefbare.length + ' Aufgaben hast du beim ersten Versuch gefunden.</p>' +
+      '<div id="ende-frei">' + frei.map(function(f){
+        return '<div class="block" data-nr="' + f.nr + '"><strong>Aufgabe ' + f.nr + '</strong>' +
+          '<div class="antwort">' + esc(f.antwort || "(nichts geschrieben)") + '</div>' +
+          '<p class="hinweis leise">Ich schaue mir das gerade an …</p></div>';
+      }).join("") + '</div>' +
+      '<div class="leiste"><button class="knopf primaer" id="neu">▶ Neue Geschichte</button><a class="knopf" href="./">Zur Startseite</a></div>';
+    $("neu").onclick = function(){ starten(naechste()); };
+    window.scrollTo(0, 0);
+    var setze = function(liste){
+      frei.forEach(function(f){
+        var b = e.querySelector('.block[data-nr="' + f.nr + '"] .hinweis'); if (!b) return;
+        var h = liste && liste.filter(function(x){ return x.nr === f.nr; })[0];
+        b.textContent = h && h.hinweis ? "💡 " + h.hinweis : ERSATZ;
+        b.classList.toggle("leise", !(h && h.hinweis));
+      });
+    };
+    var leer = frei.every(function(f){ return !f.antwort; });
+    if (leer) { setze(null); return; }
+    fetch("/api/generalprobe", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: KIND, titel: g.titel, zeilen: g.zeilen, antworten: frei }) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ setze(j && j.ok ? j.hinweise : null); })
+      .catch(function(){ setze(null); });
+  }
+
+  function startKarte(){
+    var g = naechste(), d = lesen(), n = (Array.isArray(d.gelesen) ? d.gelesen : []).length;
+    $("start-info").textContent = "Heute dran: „" + g.titel + "“" +
+      (n ? " · " + Math.min(n, G.length) + " von " + G.length + " Geschichten schon geübt" : " · " + G.length + " Geschichten warten");
+    $("los").onclick = function(){ starten(naechste()); };
+  }
+  startKarte();
+  if (/[?&]los=1\b/.test(location.search)) starten(naechste());
+})();
+</script>
+<script src="/lernstand.js?v=417a4ab9" defer></script>
+</body>
+</html>
