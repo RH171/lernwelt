@@ -5,11 +5,7 @@
  *
  * Nur fuer die drei Aufgaben, die keine Maschine sicher pruefen kann: die
  * Antwort im ganzen Satz (1), den ergaenzten Anfang (3) und die Meinung (7). Keine Weil-Antworten: Pauls Lehrerin erlaubt sie nicht (04.10.2026).
-<<<<<<< HEAD
  * Die Werkstatt sagt NUR, worauf das Kind achten soll - keine Musterloesung, keine
-=======
- * Die Werkstatt sagt NUR, worauf Paul achten soll - keine Musterloesung, keine
->>>>>>> bau/gp-druck
  * Note, keine Punkte. Das ist zusaetzlich mechanisch abgesichert (verraet()),
  * weil eine Bitte im Auftrag keine Pruefung ist.
  *
@@ -41,7 +37,6 @@ const REGELN =
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
 
-<<<<<<< HEAD
 const REGELN_LEON =
   "Du schaust einem Zweitklaessler (Grundschule Bayern, Leseanfaenger) ueber die Schulter. " +
   "Er hat eine kurze Geschichte gelesen und einen angefangenen Satz zu Ende geschrieben. " +
@@ -59,9 +54,6 @@ const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib de
 /* Leon: Frau Sy ist Pauls Lehrerin, nicht seine. Bei ihm faellt ein Weil-Hinweis
  * still auf den neutralen Satz zurueck - verlangt und gelobt wird "weil" nie. */
 const WEIL_ERSATZ_JE_KIND = { leon: "Lies deinen Satz noch einmal. Passt er zur Geschichte? Punkt am Ende?" };
-=======
-const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
->>>>>>> bau/gp-druck
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 
 const woerter = (s) => (String(s).toLowerCase().match(/[a-zäöüß]+/g) || []);
@@ -95,11 +87,7 @@ export function hinweiseAuswerten(text, zeilen, nummern, kind) {
     if (!h || verraet(h, zeilen)) return { nr, hinweis: ERSATZ, ersetzt: true };
     // Pauls Lehrerin erlaubt keine Weil-Antworten (04.10.2026): ein Hinweis,
     // der "weil" lobt oder verlangt, wird ersetzt. Erlaubt ist nur "ohne 'weil'".
-<<<<<<< HEAD
     if (/\bweil\b/i.test(h) && !/ohne\s+.?weil/i.test(h)) return { nr, hinweis: WEIL_ERSATZ_JE_KIND[kind] || WEIL_ERSATZ, ersetzt: true };
-=======
-    if (/\bweil\b/i.test(h) && !/ohne\s+.?weil/i.test(h)) return { nr, hinweis: WEIL_ERSATZ, ersetzt: true };
->>>>>>> bau/gp-druck
     return { nr, hinweis: h };
   });
 }
