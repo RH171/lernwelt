@@ -39,33 +39,36 @@
     var w = localStorage.getItem(schluessel);
     if (w === "light" || w === "dark") dunkel = (w === "dark");
   } catch (e) {}
-  if (!dunkel) return;
 
   var html = document.documentElement;
-  html.setAttribute("data-spiel-dunkel", "");
-
   var BG = "#14151c";
-  var css =
-    "html[data-spiel-dunkel]{background:" + BG + ";color-scheme:light}" +
-    /* Der Schleier: dimmt gleichmaessig, veraendert keine Farbe und kein
-       Layout. pointer-events:none, sonst waere nichts mehr antippbar. */
-    "html[data-spiel-dunkel]::after{content:'';position:fixed;inset:0;" +
-      "background:rgba(0,0,0,.10);pointer-events:none;z-index:2147483646}";
-  if (sel) {
-    css += "html[data-spiel-dunkel] body{background:" + BG + " !important}" +
-      "html[data-spiel-dunkel] " + sel + "{border-radius:22px;" +
-      "box-shadow:0 0 0 1px rgba(255,255,255,.06)}";
-  }
-  var st = document.createElement("style");
-  st.id = "spiel-dunkel";
-  st.textContent = css;
-  (document.head || html).appendChild(st);
+  var gestylt = false, gemerkt = null;
 
-  if (!sel) return;
+  function stilEinmal() {
+    if (gestylt) return; gestylt = true;
+    var css =
+      "html[data-spiel-dunkel]{background:" + BG + ";color-scheme:light}" +
+      /* Der Schleier: dimmt gleichmaessig, veraendert keine Farbe und kein
+         Layout. pointer-events:none, sonst waere nichts mehr antippbar. */
+      "html[data-spiel-dunkel]::after{content:'';position:fixed;inset:0;" +
+        "background:rgba(0,0,0,.10);pointer-events:none;z-index:2147483646}";
+    if (sel) {
+      css += "html[data-spiel-dunkel] body{background:" + BG + " !important}" +
+        "html[data-spiel-dunkel] " + sel + "{border-radius:22px;" +
+        "box-shadow:0 0 0 1px rgba(255,255,255,.06)}";
+    }
+    var st = document.createElement("style");
+    st.id = "spiel-dunkel";
+    st.textContent = css;
+    (document.head || html).appendChild(st);
+  }
+
   /* Die Flaeche bekommt den Hintergrund, den die Seite vorher hatte. Der wird
      einmal gemessen - mit abgeschaltetem Dunkel, synchron, ohne dass
-     dazwischen gezeichnet wird. */
+     dazwischen gezeichnet wird. Was dabei an der Flaeche gesetzt wird, merkt
+     sich "gemerkt", damit es beim Umschalten auf hell wieder weg kann. */
   function flaeche() {
+    if (!sel) return;
     var ziel = document.querySelector(sel);
     if (!ziel || !document.body) return;
     html.removeAttribute("data-spiel-dunkel");
@@ -82,15 +85,35 @@
       if (!farbe || farbe === "rgba(0, 0, 0, 0)") farbe = "#ffffff";
     }
     html.setAttribute("data-spiel-dunkel", "");
-    var z = getComputedStyle(ziel);
+    var z = getComputedStyle(ziel), s = ziel.style;
+    gemerkt = { ziel: ziel, alt: s.cssText };
     if (z.backgroundColor === "rgba(0, 0, 0, 0)" && z.backgroundImage === "none") {
-      ziel.style.backgroundColor = farbe;
-      if (bild && bild !== "none") ziel.style.backgroundImage = bild;
+      s.backgroundColor = farbe;
+      if (bild && bild !== "none") s.backgroundImage = bild;
     }
     /* Ein Kasten ohne Innenabstand klebt sonst mit dem Text am Rand. */
-    if (parseFloat(z.paddingLeft) < 12) { ziel.style.paddingLeft = "14px"; ziel.style.paddingRight = "14px"; }
-    if (parseFloat(z.paddingTop) < 12) { ziel.style.paddingTop = "14px"; ziel.style.paddingBottom = "14px"; }
+    if (parseFloat(z.paddingLeft) < 12) { s.paddingLeft = "14px"; s.paddingRight = "14px"; }
+    if (parseFloat(z.paddingTop) < 12) { s.paddingTop = "14px"; s.paddingBottom = "14px"; }
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", flaeche);
-  else flaeche();
+
+  function setze(an) {
+    if (an) {
+      stilEinmal();
+      html.setAttribute("data-spiel-dunkel", "");
+      if (!gemerkt) {
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { if (!gemerkt && html.hasAttribute("data-spiel-dunkel")) flaeche(); });
+        else flaeche();
+      }
+    } else {
+      html.removeAttribute("data-spiel-dunkel");
+      if (gemerkt) { gemerkt.ziel.style.cssText = gemerkt.alt; gemerkt = null; }
+    }
+  }
+
+  /* Seit 04.10.2026 laesst sich auf JEDER Seite umschalten (farbschalter.js).
+     Das wirkt sofort, ohne Neuladen - ein Neuladen mitten im Spiel kostete
+     den Spielstand. */
+  document.addEventListener("lw-farbschema", function (e) { setze(e.detail === "dark"); });
+
+  if (dunkel) setze(true);
 })();

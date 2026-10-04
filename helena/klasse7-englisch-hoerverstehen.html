@@ -126,6 +126,9 @@
      der Rest des Schirms gehoert den Antwortfeldern. Mit ⤢ kommt er zurueck. */
   .anker{display:block;height:1px;margin:0}
   .klebzeit{display:none;font:700 15px/1 var(--rund);color:var(--ink);min-width:44px;text-align:center}
+  /* Der Spieler bleibt auch im Hellen dunkelviolett - var(--ink) waere dort
+     dunkel auf dunkel (1,45:1, gemessen 04.10.2026 im angehefteten Spieler). */
+  html[data-theme="light"] .klebzeit{color:#eef2fb}
   .klebauf{display:none}
   .spieler.klebt{padding-top:10px;padding-bottom:10px}
   .spieler.klebt .zeit,
@@ -213,6 +216,7 @@
     .karte{padding:13px}
   }
 </style>
+<script src="/farbschalter.js"></script>
 </head>
 <body>
 <div class="huelle">

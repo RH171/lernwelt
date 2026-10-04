@@ -164,7 +164,12 @@
     h1{font-size:18px}
     .karte{padding:11px}
   }
+  /* Hell (04.10.2026): diese Schrift war fest hell und erscheint erst nach einer
+     Antwort - die Messung des leeren Zustands sah sie nie. Dunkel bleibt unveraendert. */
+  html[data-theme="light"] .stelle.dran{color:var(--brand-ink)}
+  html[data-theme="light"] .tipptext{color:var(--ink)}
 </style>
+<script src="/farbschalter.js"></script>
 </head>
 <body>
 <div class="huelle">

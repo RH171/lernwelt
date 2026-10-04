@@ -419,8 +419,12 @@
     background:linear-gradient(150deg,var(--brand),var(--brand-tief,#7c5cff));}
   @keyframes shake{10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(4px);}
     30%,50%,70%{transform:translateX(-8px);}40%,60%{transform:translateX(8px);}}
+  /* Hell (04.10.2026): diese Schrift war fest hell und erscheint erst nach einer
+     Antwort - die Messung des leeren Zustands sah sie nie. Dunkel bleibt unveraendert. */
+  html[data-theme="light"] .choice.ok,html[data-theme="light"] .choice.no{color:var(--ink)}
 </style>
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<script src="/farbschalter.js"></script>
 </head>
 <body>
 
