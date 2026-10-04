@@ -148,7 +148,8 @@
       document.querySelector('[data-taste="ok"]').textContent = "Weiter";
     } else {
       // Bleibt stehen, bis Paul "Weiter" tippt (Denny, 04.10.2026).
-      tipp(lob + " " + a.x.weg, true);
+      var e = M.einmaleins(a.k);
+      tipp(lob + " " + (e.art === "geteilt" ? e.b + " · " + e.loesung + " = " + e.a + ", also " + e.a + " : " + e.b + " = " + e.loesung : e.a + " · " + e.b + " = " + e.loesung) + ".", true);
       document.querySelector('[data-taste="ok"]').textContent = "Weiter";
     }
     // In der Fehlerrunde: richtig beim ersten Anlauf = erledigt, sonst hinten wieder anstellen.
