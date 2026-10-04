@@ -592,4 +592,14 @@ export const KLEXIKON = [
   [5, "welt", "🏝️", "Aus wie vielen Inseln besteht der Inselstaat Palau ungefähr?", ["350", "35", "3500", "50"], "Von den rund 350 Inseln Palaus sind nur die wenigsten überhaupt bewohnt.", null, "Palau"],
   [1, "welt", "✈️", "Wo starten und landen Flugzeuge?", ["Flughafen", "Bahnhof", "Hafen", "Parkplatz"], "Auf einem Flughafen wachen Fluglotsen in einem Kontrollturm über alle Flugzeuge.", null, "Flughafen"],
   [4, "technik", "⌨️", "Womit schrieb man ordentliche Texte, bevor es Computer gab?", ["Schreibmaschine", "Tablet", "Smartphone", "Drucker"], "In einer Schreibmaschine schlägt ein Metallstück den Buchstaben auf ein Farbband.", null, "Schreibmaschine"],
+
+  // Nachschub vom 04.10.2026
+  [1, "technik", "🌀", "Was dreht sich bei einem Windrad im Wind?", ["Flügel", "Das Dach", "Der Boden", "Die Tür"], "Ein einfaches Windrad kannst du sogar selbst aus Papier basteln, mit einem Nagel als Drehachse.", null, "Windrad"],
+  [2, "technik", "🎈", "Welches Gas lässt einen Ballon nach oben fliegen?", ["Helium", "Sauerstoff", "Kohlendioxid", "Stickstoff"], "Heliumballons steigen auf, weil Helium leichter ist als die Luft, die uns umgibt.", null, "Ballon"],
+  [2, "natur", "🌳", "Wie viele Menschen leben normalerweise in einem echten Urwald?", ["Keine", "Viele", "Wenige", "Einige"], "Echte Urwälder sind so wild, dass dort noch nie ein Mensch Spuren hinterlassen hat.", null, "Urwald"],
+  [2, "welt", "🏰", "In welchem Land liegt die Stadt Vaduz?", ["Liechtenstein", "Österreich", "Schweiz", "Deutschland"], "In Vaduz arbeiten mehr Menschen, als dort überhaupt wohnen, weil viele von auswärts kommen.", null, "Vaduz"],
+  [3, "technik", "🔧", "Woraus wird Stahl hergestellt?", ["Eisen", "Gold", "Holz", "Kunststoff"], "Aus altem Stahlschrott kann durch starkes Erhitzen ganz neuer Stahl entstehen.", null, "Stahl"],
+  [4, "koerper", "😊", "Welche körpereigenen Stoffe machen Menschen glücklich?", ["Endorphine", "Vitamine", "Mineralien", "Fette"], "Dein Körper kann selbst Stoffe bilden, die Endorphine heißen und dich glücklich machen.", null, "Glück"],
+  [3, "koerper", "🦟", "Wodurch stecken sich Menschen mit Malaria an?", ["Mückenstich", "Schmutziges Wasser", "Kalte Luft", "Verdorbenes Essen"], "Mit einem Moskitonetz über dem Bett kannst du dich gut vor den Stichen schützen.", null, "Malaria"],
+  [4, "technik", "🌬️", "Wie viele Flügel haben moderne Windkraftanlagen meist?", ["Drei", "Zwei", "Vier", "Fünf"], "Manche riesigen Windräder sind über hundert Meter hoch und drehen gewaltige Flügel im Wind.", null, "Windrad"],
 ];
