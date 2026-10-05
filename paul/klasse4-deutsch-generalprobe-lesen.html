@@ -226,6 +226,9 @@ label.zeile input{width:7em}
 <script>
 (function(){
   var G = window.GENERALPROBE || [];
+  // Nachschub vom Server (05.10.2026): kommen erst dran, wenn die festen gelesen sind.
+  var SERVER = [];
+  function alle(){ return G.concat(SERVER); }
   var KIND = "paul";
   var SPEICHER = "paul-generalprobe";
   var ERSATZ = "Das schaue ich mir gerade nicht an – lies selbst nach: ganzer Satz? Punkt am Ende?";
@@ -239,10 +242,48 @@ label.zeile input{width:7em}
 
   // Die erste ungelesene Geschichte; sind alle gelesen, die am laengsten her ist.
   function naechste(){
+    var d = lesen(), gelesen = Array.isArray(d.gelesen) ? d.gelesen : [], A = alle();
+    for (var i = 0; i < A.length; i++) if (gelesen.indexOf(A[i].id) < 0) return A[i];
+    for (var j = 0; j < gelesen.length; j++) for (var k = 0; k < A.length; k++) if (A[k].id === gelesen[j]) return A[k];
+    return A[0];
+  }
+  function ungelesen(){
     var d = lesen(), gelesen = Array.isArray(d.gelesen) ? d.gelesen : [];
-    for (var i = 0; i < G.length; i++) if (gelesen.indexOf(G[i].id) < 0) return G[i];
-    for (var j = 0; j < gelesen.length; j++) for (var k = 0; k < G.length; k++) if (G[k].id === gelesen[j]) return G[k];
-    return G[0];
+    return alle().filter(function(x){ return gelesen.indexOf(x.id) < 0; }).length;
+  }
+
+  // Nur was die Seite sicher anzeigen kann (der Server prueft schon, das hier ist der Gurt).
+  function brauchbar(x){
+    return x && typeof x.id === "string" && typeof x.titel === "string" && Array.isArray(x.zeilen) && x.zeilen.length &&
+      Array.isArray(x.aufgaben) && x.aufgaben.length === 7 && !G.some(function(f){ return f.id === x.id; });
+  }
+  function serverDazu(liste){
+    (liste || []).forEach(function(x){
+      if (brauchbar(x) && !SERVER.some(function(y){ return y.id === x.id; })) SERVER.push(x);
+    });
+    if (!stand) startKarte();
+  }
+  // Holt die Geschichten vom Server und bittet um Nachschub, wenn weniger als 4 ungelesen sind.
+  // Paul wartet nie darauf: alles laeuft im Hintergrund, waehrend er liest.
+  var nachschubLaeuft = false;
+  function nachschub(){
+    if (nachschubLaeuft || ungelesen() >= 4) return;
+    nachschubLaeuft = true;
+    var d = lesen();
+    fetch("/api/generalprobe-nachschub", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: KIND, fest: G.map(function(x){ return { id: x.id, titel: x.titel }; }),
+        gelesen: Array.isArray(d.gelesen) ? d.gelesen : [] }) })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if (j && j.geschichte) serverDazu([j.geschichte]); })
+      .catch(function(){})
+      .then(function(){ nachschubLaeuft = false; });
+  }
+  function serverHolen(){
+    fetch("/api/generalprobe-nachschub?kind=" + KIND, { credentials: "same-origin", cache: "no-store" })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ if (j && Array.isArray(j.geschichten)) serverDazu(j.geschichten); })
+      .catch(function(){})
+      .then(nachschub);
   }
   function alsGelesen(id){
     var d = lesen(), g = (Array.isArray(d.gelesen) ? d.gelesen : []).filter(function(x){ return x !== id; });
@@ -251,7 +292,7 @@ label.zeile input{width:7em}
 
   var stand = null;   // {g, nr, a:[{versuche, fertig, erst, wert...}]}
   var papier = false; // "Ich lese auf Papier": Text am Tablet aus, Aufgabe gross
-  window.__gp = { get stand(){ return stand; }, G: G, get papier(){ return papier; },
+  window.__gp = { get stand(){ return stand; }, G: G, get alle(){ return alle(); }, serverDazu: function(l){ serverDazu(l); }, get papier(){ return papier; },
     starten: function(g, p){ starten(g, p); }, druckblatt: function(g){ druckblattFuellen(g); } };
 
   // Das Druckblatt traegt dieselben Zeilen und Nummern wie die Seite (eine Quelle: g.zeilen).
@@ -585,22 +626,25 @@ label.zeile input{width:7em}
       });
     };
     var leer = frei.every(function(f){ return !f.antwort; });
-    if (leer) { setze(null); return; }
+    if (leer) { setze(null); nachschub(); return; }
     fetch("/api/generalprobe", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
       body: JSON.stringify({ kind: KIND, titel: g.titel, zeilen: g.zeilen, antworten: frei }) })
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(j){ setze(j && j.ok ? j.hinweise : null); })
-      .catch(function(){ setze(null); });
+      .catch(function(){ setze(null); })
+      .then(nachschub);
   }
 
   function startKarte(){
-    var g = naechste(), d = lesen(), n = (Array.isArray(d.gelesen) ? d.gelesen : []).length;
+    var g = naechste(), A = alle(), d = lesen(), gl = Array.isArray(d.gelesen) ? d.gelesen : [];
+    var n = A.filter(function(x){ return gl.indexOf(x.id) >= 0; }).length;
     $("start-info").textContent = "Heute dran: „" + g.titel + "“" +
-      (n ? " · " + Math.min(n, G.length) + " von " + G.length + " Geschichten schon geübt" : " · " + G.length + " Geschichten warten");
+      (n ? " · " + n + " von " + A.length + " Geschichten schon geübt" : " · " + A.length + " Geschichten warten");
     $("los").onclick = function(){ starten(naechste()); };
   }
   startKarte();
   if (/[?&]los=1\b/.test(location.search)) starten(naechste());
+  serverHolen();
 })();
 </script>
 <script src="/lernstand.js?v=417a4ab9" defer></script>
