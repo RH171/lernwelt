@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Übung zum Blatt</title>
+<!--
+  Helenas Wunsch vom 05.10.2026 (Meldung uhpehqypar), hier für Paul: ein
+  Knopf, ein Foto vom Blatt, und man bekommt eigene Aufgaben dazu. Geprüft
+  wird erst am Ende, die Anzahl wählt er selbst.
+
+  Neues geht an alle drei (Denny, 29.09.2026) - im Ton und in der Größe des
+  Alters. Pauls Fassung redet wie zu einem Zehnjährigen, und der Server
+  stellt ihm KEINE Warum- oder Begründe-Aufgaben: Seine Lehrerin lässt
+  Weil-Antworten nicht zu (04.10.2026).
+
+  ÜBEN, NICHT LÖSEN (Dennys Regel vom 16.09.2026): keine Aufgabe vom Blatt,
+  keine Lösung davon - eigene, ähnliche Aufgaben zum selben Stoff.
+
+  Der Ablauf steht in /foto-uebung.js, EINMAL für alle drei Kinder.
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<script src="/strom.js?v=ccb1b4e5"></script>
+<script src="/foto-uebung.js?v=ddbcec7c"></script>
+<style>
+  /* Die HELLEN Werte stehen hier, dunkel kommt aus /thema.css. */
+  :root{
+    --bg:#f3f5fb; --card:#fff; --karte:#fff; --ink:#161a2b; --muted:#5b6070; --line:#e4e7f0;
+    --akzent:#4f46e5; --akzent-hell:#eef0fb; --akzent-text:#3730a3; --paul:#4f46e5;
+    --gut:#0ea371; --gut-hell:#e7f8f1; --gut-text:#067647;
+    --schlecht:#d92d20; --schlecht-hell:#fff1f0; --schlecht-text:#a3251c;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:14px 14px calc(70px + env(safe-area-inset-bottom))}
+  .huelle{max-width:720px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 14px;flex-wrap:wrap}
+  .zurueck-knopf{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--karte);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
+    font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:23px;margin:0;flex:1;min-width:150px}
+</style>
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<!-- Die Uhr und der Melde-Knopf. Geschrieben wird die Runde hier selbst -
+     mit dem Fach VOM BLATT, nicht aus dem Dateinamen. -->
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<script src="/lernstand.js?v=3b8ee778"></script>
+<div class="huelle">
+  <header>
+    <a class="zurueck-knopf" href="/paul/">‹ Zurück</a>
+    <h1>📸 Übung zum Blatt</h1>
+  </header>
+  <div id="hier"></div>
+</div>
+<script>LWFotoUebung.einbauen(document.getElementById("hier"), { kind: "paul" });</script>
+<script src="/spiel-navi.js?v=815914e4" defer></script>
+</body>
+</html>

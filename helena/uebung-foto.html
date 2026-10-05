@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Übung zum Blatt</title>
+<!--
+  Helena am 05.10.2026 (Meldung uhpehqypar): "Nein, ich meine in der lernwelt
+  nicht hier übungsaufgaben, irgendwie, wo ich einen knopf auch habe oder
+  irgendeinen keine Ahnung, wo ich draufklicken kann, dann ein foto machen
+  kann und mir du mir dazu übungen stellst" - und danach: "Alle zusammen am
+  ende. Und soll auswählbar sein wie viele fragen".
+
+  Angefangen hatte es mit ihrem Französisch-Blatt (vouloir, pouvoir, savoir):
+  Sie hatte gefragt "Kannst du mir dazu bitte übungsaufgaben stellen" und die
+  Aufgaben im Meldungs-Faden bekommen - also im Chat, nicht in ihrer Welt.
+  Hier ist der Knopf dafür.
+
+  WARUM NICHT DAS LERNQUIZ: Das fragt aus dem SCHULHEFT ab - erst ablegen,
+  Fach wählen, Blatt wählen, und jede Antwort wird sofort kontrolliert. Das
+  ist der lange Weg und bleibt, wie er ist. Das hier ist der kurze daneben:
+  Blatt vor sich, Foto, Aufgaben. Nichts wird abgelegt, nichts sortiert.
+
+  ÜBEN, NICHT LÖSEN (Dennys Regel vom 16.09.2026): Der Server nimmt keine
+  Aufgabe vom Blatt und verrät keine Lösung davon - er stellt eigene,
+  ähnliche Aufgaben zum selben Stoff.
+
+  Der Ablauf steht in /foto-uebung.js, EINMAL für alle drei Kinder.
+-->
+<!-- Hell oder dunkel, Helenas eigene Wahl (04.10.2026, ihr Wunsch).
+     Standard ist HELL. Muss VOR dem ersten Zeichnen laufen. -->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<script src="/strom.js?v=ccb1b4e5"></script>
+<script src="/foto-uebung.js?v=ddbcec7c"></script>
+<style>
+  /* Die DUNKLEN Werte stehen hier, HELL kommt aus /helena-thema.css - seit
+     dem 04.10.2026 ist hell ihr Standard. */
+  :root{
+    --bg:#0e1320; --card:#171d2e; --karte:#171d2e; --vertief:#1f2740; --feld:#1b2235;
+    --ink:#eef2fb; --muted:#8a92a8; --line:#2a3350;
+    --akzent:#a78bfa; --akzent-hell:#241f3d; --akzent-text:#c9b8ff; --paul:#a78bfa;
+    --gut:#49d6bd; --gut-hell:#13322f; --gut-text:#8ee0c2;
+    --schlecht:#ff7a6b; --schlecht-hell:#33191c; --schlecht-text:#ff9b91;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;
+       padding:14px 14px calc(70px + env(safe-area-inset-bottom))}
+  .huelle{max-width:720px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 14px;flex-wrap:wrap}
+  .zurueck-knopf{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);
+    background:var(--karte);border:1px solid var(--line);border-radius:999px;padding:12px 16px;
+    font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:23px;margin:0;flex:1;min-width:150px}
+</style>
+</head>
+<body>
+<!-- Die Uhr und der Melde-Knopf. Geschrieben wird die Runde hier selbst -
+     mit dem Fach VOM BLATT, nicht aus dem Dateinamen. -->
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<script src="/lernstand.js?v=3b8ee778"></script>
+<div class="huelle">
+  <header>
+    <a class="zurueck-knopf" href="./">‹ Zurück</a>
+    <h1>📸 Übung zum Blatt</h1>
+  </header>
+  <div id="hier"></div>
+</div>
+<script>LWFotoUebung.einbauen(document.getElementById("hier"), { kind: "helena" });</script>
+<script src="/spiel-navi.js?v=815914e4" defer></script>
+</body>
+</html>
