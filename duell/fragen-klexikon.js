@@ -602,4 +602,14 @@ export const KLEXIKON = [
   [4, "koerper", "😊", "Welche körpereigenen Stoffe machen Menschen glücklich?", ["Endorphine", "Vitamine", "Mineralien", "Fette"], "Dein Körper kann selbst Stoffe bilden, die Endorphine heißen und dich glücklich machen.", null, "Glück"],
   [3, "koerper", "🦟", "Wodurch stecken sich Menschen mit Malaria an?", ["Mückenstich", "Schmutziges Wasser", "Kalte Luft", "Verdorbenes Essen"], "Mit einem Moskitonetz über dem Bett kannst du dich gut vor den Stichen schützen.", null, "Malaria"],
   [4, "technik", "🌬️", "Wie viele Flügel haben moderne Windkraftanlagen meist?", ["Drei", "Zwei", "Vier", "Fünf"], "Manche riesigen Windräder sind über hundert Meter hoch und drehen gewaltige Flügel im Wind.", null, "Windrad"],
+
+  // Nachschub vom 05.10.2026
+  [1, "tiere", "🐻‍❄️", "Welches Tier lebt auf Spitzbergen?", ["Eisbär", "Löwe", "Elefant", "Giraffe"], "Auf den eisigen Inseln leben neben Eisbären auch Rentiere, Polarfüchse und Wale.", null, "Spitzbergen"],
+  [1, "natur", "🧊", "Was bedeckt viele Inseln auf Spitzbergen?", ["Gletscher", "Wald", "Wüste", "Wiesen"], "Mehr als die Hälfte der Inseln ist von dickem Eis und Gletschern bedeckt.", null, "Spitzbergen"],
+  [1, "wissen", "📖", "Wer schreibt den Text für ein Buch?", ["Der Autor", "Der Bäcker", "Der Pilot", "Der Gärtner"], "Ein Buch braucht einen Autor, einen Grafiker und eine Druckerei, bevor es fertig ist.", null, "Buch"],
+  [4, "wissen", "🖨️", "Wer erfand den Buchdruck?", ["Johannes Gutenberg", "Leonardo da Vinci", "Albert Einstein", "Martin Luther"], "Vor dem Buchdruck mussten Mönche jedes Buch mühsam von Hand abschreiben.", null, "Buch"],
+  [2, "wissen", "🥣", "Was entsteht durch Gärung aus Milch?", ["Joghurt", "Honig", "Marmelade", "Schokolade"], "Winzige Lebewesen verwandeln Milchzucker in Säure, so wird aus Milch leckerer Joghurt.", null, "Gärung"],
+  [2, "welt", "🌾", "Wofür wird am Erntedankfest gedankt?", ["Die Ernte", "Die Ferien", "Der Schnee", "Der Geburtstag"], "Menschen bedanken sich im Herbst für Obst und Getreide, die sie geerntet haben.", null, "Erntedankfest"],
+  [4, "technik", "📻", "Wie sprechen Funkamateure über weite Strecken ohne Internet?", ["Per Funk", "Per Brief", "Per Rauchzeichen", "Per Fahrrad"], "Mit Kurzwelle können Funkamateure manchmal sogar Signale um die ganze Welt schicken.", null, "Amateurfunk"],
+  [3, "sport", "🥊", "Wie nennt man es, wenn ein Boxer seinen Gegner niederschlägt?", ["K.o.", "Abseits", "Elfmeter", "Freistoß"], "Wer nach einem K.o. nicht binnen zehn Sekunden aufsteht, hat den Kampf verloren.", null, "Boxen"],
 ];
