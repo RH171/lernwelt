@@ -31,8 +31,11 @@ import { anfrageBauen, geschichteAusText, pruefeGeschichte, saeubern } from "./_
 
 const KINDER = ["paul"];                 // nur Paul (Proben-Uebungen nur fuers Kind mit der Probe)
 export const SCHLUESSEL = (kind) => "gp-nachschub:" + kind;
-export const SCHWELLE = 4;               // weniger als 4 ungelesen -> nachschreiben
-export const DECKEL = { versuche: 7, neu: 5, vorrat: 40 };
+export const SCHWELLE = 6;               // weniger als 6 ungelesen -> nachschreiben (Puffer, 05.10.2026)
+/* Keine Drosselung (Denny, 05.10.2026: "Wenn Paul am Tag 10 Geschichten machen moechte, dann
+ * moechte er 10 machen ... keine Drosselung"). Die Zahlen sind nur eine Notbremse gegen eine
+ * Fehlerschleife (60 Versuche = rund 3,60 EUR), kein Kind erreicht sie. */
+export const DECKEL = { versuche: 60, neu: 40, vorrat: 80 };
 const SPERRE_MS = 120000;                // ein Lauf zur Zeit (zwei Tabs, zwei Geraete)
 const heuteUtc = () => new Date().toISOString().slice(0, 10);
 
