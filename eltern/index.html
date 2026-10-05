@@ -328,6 +328,7 @@
         meldungenLaden();
         anwesenheitLaden();
         notenLaden();
+        zurueckLaden();
         reiterMalen();
         vorschauenMalen();
         stoffLaden();
@@ -1093,6 +1094,163 @@
       '<a class="knopf-link" href="/eltern/tagesrechnen.html">Übersicht ansehen</a></div>';
   }
 
+  /* ---------- Zurueckbekommene Arbeiten ----------
+     Helena am 05.10.2026: "Wir haben den BET zurueckbekommen. Wo soll ich das
+     hinschicken" - seitdem gibt es /<kind>/zurueck.html. Was dort ankommt, ist
+     ein VORSCHLAG, keine Note: Erst ein Klick hier legt eine Note an. Dieselbe
+     Regel wie beim Notenblatt (21.09.2026, "erst Dennys Klick legt es an"). */
+  var ZURUECK = null, ZURUECK_FEHLER = null;
+
+  function zurueckLaden(){
+    ZURUECK_FEHLER = null;
+    return fetch("/api/zurueck?alle=1", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
+        ZURUECK = j.kinder || {};
+      })
+      .catch(function(e){ ZURUECK_FEHLER = e.message || "Das ging nicht."; })
+      .then(function(){ if (KIND && !$("sicht-daten").classList.contains("verborgen")) malen(); });
+  }
+
+  /* Eine Schulaufgabe ist etwas anderes als eine Stegreifaufgabe - und das
+     entscheidet nach GSO Art. 28 ueber das ganze Gewicht. Deshalb wird es NICHT
+     geraten: Der Vorschlag steht sichtbar da und ist umschaltbar, bevor er zur
+     Note wird. Die zentralen Tests (BET, BMT) stellt notePruefen() ohnehin
+     mechanisch richtig. */
+  function istGross(anlass){
+    return /schulaufgabe|klausur|kurzarbeit/i.test(String(anlass || ""));
+  }
+
+  function zurueckKarte(){
+    if (ZURUECK_FEHLER){
+      return '<div class="karte"><h2>Zurückbekommen</h2><p class="unter">' +
+             '<b>Die zurückgegebenen Arbeiten kann ich gerade nicht laden.</b> ' + esc(ZURUECK_FEHLER) +
+             '<br>Das heißt <b>nicht</b>, dass keine da sind.</p></div>';
+    }
+    if (!ZURUECK) return "";
+    var d = ZURUECK[KIND] || {};
+    if (d.kaputt){
+      return '<div class="karte"><h2>Zurückbekommen</h2><p class="unter">' +
+             '<b>Der Speicher hat nicht geantwortet.</b> Was hier fehlt, muss nicht bedeuten, ' +
+             'dass nichts da ist.</p></div>';
+    }
+    var liste = (d.liste || []).slice(0, 30);
+    if (!liste.length) return "";
+
+    var offen = liste.filter(function(e){ return !e.uebernommen; });
+    var h = '<div class="karte"><h2>Zurückbekommen</h2>' +
+            '<p class="unter">Was ' + esc(kindName(KIND)) + ' selbst abgegeben hat. ' +
+            (offen.length
+              ? 'Daraus wird erst eine Note, wenn du es übernimmst.'
+              : 'Alles übernommen.') + '</p>';
+
+    liste.forEach(function(e){
+      var zeilen = [];
+      if (e.punkte !== undefined && e.maxpunkte !== undefined) zeilen.push(komma2(e.punkte) + ' von ' + komma2(e.maxpunkte) + ' Punkten');
+      else if (e.punkte !== undefined) zeilen.push(komma2(e.punkte) + ' Punkte');
+      if (typeof e.note === "number") zeilen.push('Note ' + String(e.note).replace(".", ","));
+      zeilen.push(kurzDatum(e.datum));
+      if (e.seiten) zeilen.push(e.seiten + (e.seiten === 1 ? ' Foto' : ' Fotos'));
+
+      h += '<div class="nzeile"><span><b>' + esc(e.anlass) + '</b> · ' +
+           esc(fachName(e.fach)) + ' · ' + esc(zeilen.filter(Boolean).join(' · ')) +
+           (istGross(e.anlass) ? ' · als Schulaufgabe' : '') +
+           (e.notiz ? '<br><i>„' + esc(e.notiz) + '“</i>' : '') + '</span>';
+      if (e.seiten) h += '<button data-zrk-bild="' + esc(e.id) + '">Ansehen</button>';
+      if (e.uebernommen) h += '<span style="color:#12a35f;font-weight:700">✓ Note</span>';
+      else h += '<button data-zrk-note="' + esc(e.id) + '">Als Note übernehmen</button>';
+      h += '</div>';
+    });
+    return h + '<div id="zrk-arbeit"></div></div>';
+  }
+
+  function komma2(x){
+    return String(Math.round(Number(x) * 2) / 2).replace(".", ",");
+  }
+
+  function zrkMelde(html){
+    var k = $("zrk-arbeit");
+    if (k) k.innerHTML = html;
+  }
+
+  function zrkEintrag(id){
+    var d = (ZURUECK || {})[KIND] || {};
+    return (d.liste || []).filter(function(e){ return e.id === id; })[0] || null;
+  }
+
+  /* Die Fotos ansehen - groß, untereinander, direkt in der Karte. */
+  function zrkBild(id){
+    var e = zrkEintrag(id);
+    if (!e) return;
+    zrkMelde('<p class="unter">Ich hole die Fotos …</p>');
+    var nummern = [];
+    for (var i = 0; i < e.seiten; i++) nummern.push(i);
+    Promise.all(nummern.map(function(n){
+      return fetch("/api/zurueck?kind=" + encodeURIComponent(KIND) + "&bild=" + encodeURIComponent(id + ":" + n),
+                   {credentials:"same-origin"})
+        .then(function(r){ return r.json(); })
+        .then(function(j){ return (j && j.ok && j.bild) ? j.bild : null; })
+        .catch(function(){ return null; });
+    })).then(function(bilder){
+      var da = bilder.filter(Boolean);
+      if (!da.length) return zrkMelde('<p class="unter">Die Fotos finde ich gerade nicht.</p>');
+      zrkMelde(da.map(function(b, i){
+        return '<img src="' + b + '" alt="Seite ' + (i + 1) + '" ' +
+               'style="width:100%;border-radius:14px;margin-top:10px;display:block">';
+      }).join(""));
+    });
+  }
+
+  /* Aus einem Rücklauf eine Note machen. Gerechnet wird NICHTS: Steht keine
+     Note drauf, geht die Punktzahl als Text mit und das Notenfeld bleibt leer -
+     notePruefen() erlaubt das ausdrücklich ("rechne NIE selbst eine Note aus").
+     Danach bekommt der Rücklauf seinen Haken, damit er nicht zweimal zählt. */
+  function zrkAlsNote(id){
+    var e = zrkEintrag(id);
+    if (!e) return;
+    var punkte = (e.punkte !== undefined && e.maxpunkte !== undefined)
+      ? komma2(e.punkte) + "/" + komma2(e.maxpunkte)
+      : (e.punkte !== undefined ? komma2(e.punkte) : "");
+    if (typeof e.note !== "number" && !punkte){
+      return zrkMelde('<p class="unter" style="color:#b91c1c">Hier steht weder eine Note noch eine Punktzahl. ' +
+                      'Trag sie über „Note von Hand“ ein.</p>');
+    }
+    zrkMelde('<p class="unter">Ich lege die Note an …</p>');
+    /* Nicht noteSenden() - das faengt seine Fehler selbst und gibt danach
+       trotzdem ein erfuelltes Versprechen zurueck. Der Haken waere dann
+       gesetzt, obwohl keine Note entstanden ist. */
+    fetch("/api/noten", { method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: KIND, note: {
+          fach: e.fach, note: (typeof e.note === "number" ? e.note : ""), punkte: punkte,
+          anlass: e.anlass, datum: e.datum, art: istGross(e.anlass) ? "gross" : "klein",
+          quelle: "blatt" } }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Die Note ging nicht durch.");
+        return fetch("/api/zurueck", { method: "POST", credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: KIND, uebernommen: { id: id, noteId: (j.note || {}).id } }) });
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Der Haken ging nicht. Die Note ist aber da.");
+        zrkMelde('<p class="unter">Übernommen.</p>');
+        return Promise.all([notenLaden(), zurueckLaden()]);
+      })
+      .catch(function(err){ zrkMelde('<p class="unter" style="color:#b91c1c">' + esc(err.message) + '</p>'); });
+  }
+
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if (!t.closest) return;
+    var b = t.closest("[data-zrk-bild]");
+    if (b) return zrkBild(b.getAttribute("data-zrk-bild"));
+    var n = t.closest("[data-zrk-note]");
+    if (n) return zrkAlsNote(n.getAttribute("data-zrk-note"));
+  });
+
   /* ---------- Noten ---------- */
   var NOTEN = null, NOTEN_FEHLER = null;
 
@@ -1352,12 +1510,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + schulinfoKarte() + tagesrechnenKarte() +
+      $("inhalt").innerHTML = notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + schulinfoKarte() + tagesrechnenKarte();
+    h += notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
