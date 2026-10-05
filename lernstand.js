@@ -1102,10 +1102,11 @@
     aktivMs = 0; laeuftSeit = 0; begonnen = Date.now();
   }
 
-  /* ---------- Puls: "hier spielt gerade jemand" ----------
-     Damit kein Update ausgerollt wird, während ein Kind mitten in einer
-     Aufgabe steckt. Der Wächter auf Dennys Rechner fragt vor dem Hochladen
-     nach und wartet, wenn jemand da ist.
+  /* ---------- Puls: "hier ist gerade jemand" ----------
+     Speist das Anwesenheitsband. Bis 05.10.2026 hielt er ausserdem das
+     Ausrollen an und brachte das Fenster "Darf ich kurz?" - beides ist weg
+     (Denny per Klickfrage: "Still beim Seitenwechsel"). Eine neue Fassung
+     kommt mit der naechsten Seite, die das Kind oeffnet.
 
      Bewusst sparsam: alle drei Minuten, und nur solange die Seite wirklich
      sichtbar ist. Ein vergessener Tab im Hintergrund pulst nicht - sonst
@@ -1148,7 +1149,6 @@
             if (!r.ok) throw new Error("Puls abgewiesen: " + r.status);
             return r.json();
           })
-          .then(function (j) { if (j && j.updateWartet) updateFragen(j.updateWas); })
           .catch(function () {
             // Genau einmal nachfassen, und nur beim laufenden Puls.
             if (weg || istWiederholung || pulsNachholen) return;
@@ -1161,83 +1161,13 @@
     } catch (e) {}
   }
 
-  /* ---------- "Darf ich kurz?" ----------
-     Denny am 07.09.2026: Statt ein Update stumm zu blockieren, bis irgendwann
-     niemand mehr spielt, fragt die App selbst. Wer gerade mitten in einer
-     Aufgabe steckt, sagt "gleich nicht" - wer sowieso nur herumklickt, sagt ja
-     und hat die neue Fassung sofort.
-
-     Ohne Antwort passiert nichts. Niemand wird hinausgeworfen.
-
-     Paul am 08.09.2026 (Meldung 5z785gdjxc): "wenn das Fenster aufplatzt ... da
-     will ich gerne wissen, was du da überhaupt machst" - und auf die Rückfrage,
-     ob ein grober Satz reicht: "Ich will was genaueres". Deshalb steht jetzt
-     drin, woran gebaut wurde, bevor er auf "Ja" drückt. Der Satz kommt vom
-     Server (updateWas) und wird als Text gesetzt, nie als HTML - was dort
-     steht, soll gelesen und nicht ausgeführt werden. */
-
-  var updateGefragt = false;
-
-  function updateFragen(woran) {
-    if (updateGefragt) return;
-    if (document.getElementById("melde-huelle")) return;   // nicht ins Gespraech platzen
-    updateGefragt = true;
-
-    var satz = String(woran == null ? "" : woran).trim();
-
-    var h = document.createElement("div");
-    h.id = "melde-huelle";
-    h.innerHTML =
-      '<div id="melde-karte">' +
-        '<h3>Darf ich kurz? \u{1F527}</h3>' +
-        (satz
-          ? '<p class="u">Das habe ich gerade f\u00fcr dich gebaut:</p>' +
-            '<div class="woran" id="up-woran"></div>'
-          : '<p class="u">Es liegt eine Verbesserung bereit.</p>') +
-        '<p class="u">Zum Einspielen muss die ' +
-        'Seite einmal neu laden \u2013 das dauert ein paar Sekunden. ' +
-        'Dein Fortschritt bleibt gespeichert.</p>' +
-        '<button type="button" class="schicken" id="up-ja">Ja, jetzt gleich</button>' +
-        '<button type="button" class="zurueck" id="up-nein">Gerade nicht \u2013 später nochmal fragen</button>' +
-      '</div>';
-    if (satz) h.querySelector("#up-woran").textContent = satz;
-    document.body.appendChild(h);
-
-    h.querySelector("#up-nein").addEventListener("click", function () {
-      h.remove();
-      // In zehn Minuten darf noch einmal gefragt werden.
-      setTimeout(function () { updateGefragt = false; }, 600000);
-    });
-
-    h.querySelector("#up-ja").addEventListener("click", function () {
-      // Spielstand JETZT sichern, solange die Seite ihn noch hat (03.10.2026).
-      weiterSichern();
-      h.querySelector("#melde-karte").innerHTML =
-        '<div class="fertig"><div class="haken">\u{1F527}</div><h3>Danke!</h3>' +
-        '<p class="u">Einen Moment \u2013 die Seite lädt gleich neu.' +
-        (weiterKann() ? ' Danach machst du genau hier weiter.' : '') + '</p></div>';
-      pulsAus();
-      fetch("/api/aktiv", { method: "POST", credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kind: KIND, updateOk: true }) })
-        .catch(function () {})
-        .then(function () {
-          // Genug Zeit, damit das Ausrollen durchlaufen kann.
-          setTimeout(function () { weiterSichern(); location.reload(); }, 75000);
-        });
-    });
-    // Klicks im Fenster gehoeren nur dem Fenster. "Gerade nicht" traegt die
-    // Klasse .zurueck - im Einmaleins hiess das bis 03.10.2026 "zurueck zum
-    // Start", und der Spielstand war weg, obwohl das Kind nur Nein gesagt hatte.
-    h.addEventListener("click", function (e) { e.stopPropagation(); });
-  }
-
   /* ---------- Nach dem Update genau da weitermachen (03.10.2026) ----------
      Denny: Die Kinder sind neugierig auf jedes Update, wollen aber ihren
      Spielstand nicht verlieren - also klicken sie "Gerade nicht". Eine Seite,
      die ihren Stand mitgeben kann, meldet sich mit
          window.LWWeiter.anmelden({ sichern: fn -> Objekt, laden: fn(Objekt) })
-     an. Beim Neuladen fuers Update wird gesichert, danach sofort geladen.
+     an. Beim stillen Neuladen (Zurueck-Taste, neue Fassung, siehe unten)
+     wird gesichert, danach sofort geladen.
      Gilt nur fuer dieses Fenster (sessionStorage) und 20 Minuten - ein Stand
      von gestern soll niemanden ueberraschen. Ohne Anmeldung bleibt wenigstens
      die Scrollposition. */
@@ -1274,6 +1204,45 @@
   // Seiten ohne Anmeldung: nur die Scrollposition, nach dem Laden.
   window.addEventListener("load", function () { if (!weiterSeite) setTimeout(function () { if (!weiterSeite) weiterLaden(); }, 300); });
 
+  /* ---------- Neue Fassung still beim Seitenwechsel (05.10.2026) ----------
+     Denny per Klickfrage: "Still beim Seitenwechsel". Kein Fenster mehr; die
+     neue Fassung kommt mit der naechsten Seite. Ein normaler Link holt sie von
+     selbst: HTML kommt mit no-store, jedes eigene Skript traegt ?v=<Stempel>.
+
+     Die eine Luecke ist die Zurueck-Taste: Der Browser holt die Seite dann
+     samt ihren ALTEN Skripten aus dem Speicher (bfcache, pageshow.persisted),
+     ohne beim Server nachzufragen. Darum vergleicht die Seite in genau diesem
+     Moment ihre Stempel mit denen der frischen Fassung. Weichen sie ab, wird
+     der Stand gesichert (LWWeiter) und still neu geladen - das Kind hat ja
+     gerade selbst die Seite gewechselt. Mitten in einer Aufgabe passiert nie
+     etwas. Ohne Netz oder bei gleichen Stempeln: nichts. */
+  function stempelVon(doc) {
+    var liste = [];
+    var els = doc.querySelectorAll('script[src], link[rel~="stylesheet"][href]');
+    for (var i = 0; i < els.length; i++) {
+      var u = els[i].getAttribute("src") || els[i].getAttribute("href") || "";
+      if (/^(https?:)?\/\//.test(u)) continue;              // fremde Adressen zaehlen nicht
+      var m = u.match(/[?&]v=([0-9a-z]+)/i);
+      if (m) liste.push(u.split("?")[0] + "=" + m[1]);
+    }
+    return liste.sort().join("|");
+  }
+  window.addEventListener("pageshow", function (e) {
+    if (!e || !e.persisted) return;
+    var alt = stempelVon(document);
+    if (!alt) return;
+    fetch(location.href.split("#")[0], { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (html) {
+        if (!html) return;
+        var neu = stempelVon(new DOMParser().parseFromString(html, "text/html"));
+        if (!neu || neu === alt) return;
+        weiterSichern();
+        location.reload();
+      })
+      .catch(function () {});
+  });
+
   function pulsAn() {
     if (pulsUhr) return;
     binGemeldet = true;
@@ -1300,8 +1269,8 @@
 
      Merkt sich die Seite dagegen nichts und das Kind schliesst den Tab
      wirklich, gilt es nach STILLE_BIS_WEG (acht Minuten) ohnehin als weg -
-     schlimmstenfalls wartet ein Update also ein paar Minuten länger. Das ist
-     die harmlosere Seite des Irrtums. */
+     schlimmstenfalls steht es im Anwesenheitsband ein paar Minuten zu lang.
+     Das ist die harmlosere Seite des Irrtums. */
   var gehtNurWoandersHin = false;
 
   document.addEventListener("click", function (e) {

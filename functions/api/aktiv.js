@@ -1,4 +1,4 @@
-// Wer spielt gerade? Damit nichts ausgerollt wird, während ein Kind übt.
+// Wer ist gerade da? Speist das Anwesenheitsband (seit 05.10.2026 haelt es das Ausrollen nicht mehr an).
 //
 // POST /api/aktiv   {kind:"leon", seite:"quiz"}  -> "ich bin da" (alle 3 Minuten)
 // POST /api/aktiv   {kind:"leon", weg:true}  -> Seite geschlossen
@@ -18,55 +18,13 @@ import { anwesendVermerken, woVermerken } from "./_anwesend.js";
 const KINDER = ["paul", "leon", "helena"];
 const SCHLUESSEL = (kind) => "aktiv:" + kind;
 
-// Ein Update wartet. Denny am 07.09.2026: "Du koenntest auch eine Push
-// Benachrichtung in der APP senden, dass Du ein update machen moechtest und
-// fragst, ob du sie kurz kicken darfst." Besser als beides, was es vorher gab:
-// blockieren, bis irgendwann niemand mehr spielt - oder einfach ausrollen.
-const WUNSCH = "ausrollen:wunsch";
-const WUNSCH_GILT = 900;          // 15 Minuten, dann verfaellt die Frage
-
-// Erst nach so vielen Sekunden wird die Frage neu hingeschrieben.
-// ausrollen-frei.sh ruft ?wunsch=1 JEDE MINUTE auf, solange ein Kind spielt
-// und etwas zum Ausrollen bereitliegt - am 14.09.2026 waren das 75 Minuten
-// und damit 75 Schreibvorgaenge fuer einen Satz, der sich in der ganzen Zeit
-// kein einziges Mal geaendert hat. Nachschauen ist umsonst, schreiben nicht.
-const WUNSCH_AUFFRISCHEN = 600;
-
-// Woran gerade gebaut wird - Pauls Meldung 5z785gdjxc vom 08.09.2026: "wenn das
-// Fenster aufplatzt ... da will ich gerne wissen, was du da überhaupt machst",
-// und auf die Rückfrage, ob ein grober Satz reicht: "Ich will was genaueres".
-// Der Satz wird beim Ausrollen mitgeschickt und im Fenster angezeigt.
-//
-// Warum er einen Ausweis braucht: Diese Antwort steht ungeschützt im Netz - ohne
-// Riegel könnte jeder Fremde Paul einen beliebigen Satz auf den Bildschirm
-// schreiben. Der reine "es liegt etwas bereit"-Schalter bleibt offen wie bisher;
-// er verrät nichts und ist nur ein Ja/Nein.
-const WAS_MAX = 160;
-
-function wasSaeubern(roh) {
-  const t = String(roh || "")
-    .replace(/[\u0000-\u001f\u007f]+/g, " ")   // Steuerzeichen raus
-    .replace(/\s+/g, " ")
-    .trim();
-  if (t.length <= WAS_MAX) return t;
-  // Nicht mitten im Wort abschneiden - Paul soll lesen koennen, was dasteht.
-  const kurz = t.slice(0, WAS_MAX - 1);
-  const luecke = kurz.lastIndexOf(" ");
-  return (luecke > WAS_MAX - 45 ? kurz.slice(0, luecke) : kurz).replace(/[ ,;:.-]+$/, "") + "\u2026";
-}
-
-// Was liegt bereit? Gibt {da, was} zurueck. Alte Eintraege (nur ein Zeitstempel)
-// werden weiter verstanden - dann eben ohne Satz.
-async function wunschLesen(env) {
-  let roh = null;
-  try { roh = await env.PAUL_KV.get(WUNSCH); } catch (e) {}
-  if (!roh) return { da: false, was: "" };
-  try {
-    const d = JSON.parse(roh);
-    if (d && typeof d === "object") return { da: true, was: wasSaeubern(d.was) };
-  } catch (e) {}
-  return { da: true, was: "" };
-}
+/* Bis 05.10.2026 stand hier die "Darf ich kurz?"-Frage (ausrollen:wunsch,
+ * updateOk, pause:<kind>, Bauzettel). Denny am 05.10.2026 per Klickfrage:
+ * "Still beim Seitenwechsel" - kein Kind wird mehr gefragt. Eine neue Fassung
+ * kommt, sobald das Kind die naechste Seite oeffnet (HTML no-store, Skripte mit
+ * ?v=-Stempel). Der Puls bleibt: er speist das Anwesenheitsband.
+ * Alte, noch offene Seiten schicken evtl. updateOk - das zaehlt jetzt als
+ * gewoehnlicher Puls. ?wunsch=... wird ignoriert. */
 
 // Nach so vielen Sekunden ohne Puls gilt jemand als weg. Etwas mehr als zwei
 // Pulsabstände, damit ein verschlucktes Signal niemanden verschwinden lässt.
@@ -147,21 +105,6 @@ export async function onRequestPost(context) {
     return json(200, { ok: true });
   }
 
-  // Das Kind hat zugestimmt, dass jetzt aktualisiert werden darf.
-  if (daten.updateOk) {
-    try {
-      if (await env.PAUL_KV.get(SCHLUESSEL(kind))) await env.PAUL_KV.delete(SCHLUESSEL(kind));
-      // Kurze Schonzeit, damit der Puls nicht sofort wieder anspringt und
-      // das Ausrollen erneut blockiert.
-      await env.PAUL_KV.put("pause:" + kind, "1", { expirationTtl: 180 });
-    } catch (e) {}
-    return json(200, { ok: true, danke: true });
-  }
-
-  // Waehrend der Schonzeit nach einem Ja wird kein Puls angenommen.
-  try { if (await env.PAUL_KV.get("pause:" + kind)) return json(200, { ok: true, pausiert: true }); }
-  catch (e) {}
-
   // Nachschauen kostet nichts, schreiben schon.
   let letzter = 0;
   try { letzter = Number(await env.PAUL_KV.get(SCHLUESSEL(kind))) || 0; } catch (e) {}
@@ -187,10 +130,7 @@ export async function onRequestPost(context) {
      Denny soll die Seite nicht unter den Fingern getauscht bekommen. */
   let alsEltern = false;
   try { alsEltern = await besuchIstEltern(request, geheimFuer(env, kind)); } catch (e) {}
-  if (alsEltern) {
-    const w0 = await wunschLesen(env);
-    return json(200, { ok: true, alsEltern: true, updateWartet: w0.da, updateWas: w0.was });
-  }
+  if (alsEltern) return json(200, { ok: true, alsEltern: true });
 
   try { await anwesendVermerken(env, kind, "lernwelt", Date.now(), offen); } catch (e) {}
 
@@ -204,55 +144,14 @@ export async function onRequestPost(context) {
    * eine Zeile in der Elternansicht - mehr nicht. */
   try { await woVermerken(env, kind, Date.now(), daten.seite, offen, daten.geraet); } catch (e) {}
 
-  // Wartet ein Update? Dann sagt die Antwort es der Seite, und die fragt das
-  // Kind. So erfaehrt es davon, ohne dass jemand extra nachschauen muss.
-  // updateWas sagt zusaetzlich, woran gebaut wurde - Paul wollte es genau wissen.
-  const w = await wunschLesen(env);
-  return json(200, { ok: true, updateWartet: w.da, updateWas: w.was });
+  return json(200, { ok: true });
 }
 
 export async function onRequestGet(context) {
-  const { env, request } = context;
+  const { env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
 
-  // ?wunsch=1 heisst: Es soll ausgerollt werden. Die Seiten fragen daraufhin
-  // beim naechsten Puls nach - hoechstens WUNSCH_GILT Sekunden lang.
-  const url = new URL(request.url);
-  if (url.searchParams.get("wunsch") === "1") {
-    // Den Satz nimmt der Server nur von jemandem an, der den Elternausweis hat.
-    let was = "";
-    const roh = wasSaeubern(url.searchParams.get("was"));
-    if (roh) {
-      const geheim = geheimFuer(env, "eltern");
-      if (geheim && (await ausweisGueltig(request, geheim, env))) was = roh;
-    }
-    try {
-      // Steht dieselbe Frage schon da und ist sie noch frisch, bleibt sie
-      // einfach stehen. Geschrieben wird nur, wenn sich der Satz aendert oder
-      // der Eintrag seinem Ablauf naher kommt.
-      let schreiben = true;
-      const alt = await env.PAUL_KV.get(WUNSCH);
-      if (alt) {
-        try {
-          const d = JSON.parse(alt);
-          const alterSek = (Date.now() - (Number(d && d.t) || 0)) / 1000;
-          if (wasSaeubern(d && d.was) === was && alterSek >= 0 && alterSek < WUNSCH_AUFFRISCHEN)
-            schreiben = false;
-        } catch (e) {}
-      }
-      if (schreiben)
-        await env.PAUL_KV.put(WUNSCH, JSON.stringify({ t: Date.now(), was }),
-                              { expirationTtl: WUNSCH_GILT });
-    } catch (e) {}
-  } else if (url.searchParams.get("wunsch") === "0") {
-    // Erst nachschauen, dann erst loeschen. Ein delete ist im KV ein
-    // SCHREIBvorgang und zaehlt gegen das Tageskontingent, ein get nicht.
-    // Diese Zeile laeuft nach JEDEM Ausrollen - und ausgerollt wird, sobald
-    // sich eine Datei geaendert hat, an einem Bastelabend also im Minutentakt.
-    // Fast immer liegt dann gar keine Frage vor, die zurueckzunehmen waere.
-    try { if (await env.PAUL_KV.get(WUNSCH)) await env.PAUL_KV.delete(WUNSCH); } catch (e) {}
-  }
-
+  // Nur noch Lesen: Ist gerade jemand da? (?wunsch=... seit 05.10.2026 ohne Wirkung.)
   let juengste = 0;
   for (const kind of KINDER) {
     const roh = await env.PAUL_KV.get(SCHLUESSEL(kind));
@@ -261,8 +160,7 @@ export async function onRequestGet(context) {
   }
   const seit = juengste ? Math.round((Date.now() - juengste) / 1000) : null;
   const frei = seit === null || seit > STILLE_BIS_WEG;
-  const w = await wunschLesen(env);
-  return json(200, { ok: true, frei, seit, stilleBisWeg: STILLE_BIS_WEG, gefragt: w.da });
+  return json(200, { ok: true, frei, seit, stilleBisWeg: STILLE_BIS_WEG });
 }
 
 function json(status, daten) {
