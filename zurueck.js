@@ -53,11 +53,17 @@
     "  color:var(--ink,#1b1c22)}",
     ".lwz .knopf .z{display:block;font-size:24px;margin-bottom:5px}",
     ".lwz .seiten{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}",
-    ".lwz .seite{position:relative;width:78px;height:78px;border-radius:12px;overflow:hidden;",
+    /* 92 px statt 78, damit das Kreuz darin 44x44 sein kann - das Mindestmass
+       fuer einen Finger (WCAG 2.2, 2.5.8). Mit 28 px hat die Messung am
+       05.10.2026 auf ALLEN Touch-Geraeten angeschlagen. Drei Vorschauen
+       nebeneinander brauchen 294 px und passen auf Helenas 360er-Handy. */
+    ".lwz .seite{position:relative;width:92px;height:92px;border-radius:12px;overflow:hidden;",
     "  background:var(--vertief,#f1f4fa)}",
     ".lwz .seite img{width:100%;height:100%;object-fit:cover}",
-    ".lwz .seite .weg{position:absolute;top:3px;right:3px;width:28px;height:28px;border-radius:50%;",
-    "  background:rgba(20,22,40,.72);color:#fff;border:none;font-size:15px;cursor:pointer;padding:0;min-height:28px}",
+    ".lwz .seite .weg{position:absolute;top:0;right:0;width:44px;height:44px;min-height:44px;",
+    "  border-bottom-left-radius:14px;background:rgba(20,22,40,.72);color:#fff;border:none;",
+    "  font-size:17px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;",
+    "  justify-content:center}",
     ".lwz .los{width:100%;margin-top:18px;border:none;border-radius:16px;",
     "  background:var(--paul,#4f46e5);color:#fff;padding:15px;font:700 17.5px var(--rund,inherit);",
     "  cursor:pointer;min-height:54px}",
