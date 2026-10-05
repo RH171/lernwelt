@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zurückbekommen</title>
+<!--
+  Ein Platz für zurückgegebene Arbeiten (05.10.2026). Angefangen hat es bei
+  Helena ("Wir haben den BET zurückbekommen. Wo soll ich das hinschicken"),
+  und Schulrelevantes gilt für alle drei - Paul bekommt seine Proben genauso
+  zurück.
+
+  WAS HIER NICHT PASSIERT: Es entsteht keine Note und kein Durchschnitt.
+  Noten schreibt nur der Elternbereich (Denny, 20.09.2026: "sie müssen nicht
+  unbedingt sehen, wo die Defizite waren"). Was Paul hier einträgt, ist ein
+  Vorschlag - erst Dennys Klick macht daraus eine Note.
+
+  Keine Lernzeit: Abgeben ist kein Lernen - lernstand.js bleibt draußen.
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
+     Zeichnen laufen, sonst blitzt die falsche Farbe auf. -->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<script src="/strom.js?v=ccb1b4e5"></script>
+<script src="/zurueck.js?v=dc9ada8f"></script>
+<style>
+  :root{
+    --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
+    --feld:#fbfaff; --vertief:#f1f4fa; --paul:#4f46e5; --gut:#12b76a;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  }
+  html[data-theme="dark"]{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;
+    --line:#2e3140;--feld:#191b23;--vertief:#23262f;--paul:#8b83ff}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--font);
+       padding:18px 16px calc(70px + env(safe-area-inset-bottom));-webkit-text-size-adjust:100%}
+  .huelle{max-width:680px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .zurueck-knopf{background:var(--karte);border-radius:999px;padding:11px 16px;text-decoration:none;
+    color:var(--ink);font-weight:600;font-size:15.5px;min-height:44px;display:flex;align-items:center}
+  h1{font:800 25px/1.2 var(--rund);margin:0;flex:1;min-width:150px}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck-knopf" href="./">‹ Zurück</a>
+    <h1>📬 Zurückbekommen</h1>
+  </header>
+  <div id="hier"></div>
+</div>
+<script>LWZurueck.einbauen(document.getElementById("hier"), { kind: "paul" });</script>
+<script src="/spiel-navi.js?v=815914e4" defer></script>
+</body>
+</html>
