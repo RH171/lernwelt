@@ -1460,14 +1460,22 @@
     // Paul am 02.10.2026 über Denny: zwischen 6 und 8 Uhr soll der Stundenplan
     // vorn stehen, sonst gilt "zuletzt benutzt". Nur Montag bis Freitag -
     // am Wochenende packt niemand die Schultasche.
+    //
+    // 05.10.2026, Denny: "Auch war wohl heute Morgen der Stundenplan nicht oben."
+    // Er stand zwar vorn in diesem Kasten, aber seit dem 04.10.2026 stehen
+    // DARUEBER die Probenkarte, "Heute lernen" und "1×1 und Textaufgaben" -
+    // am Montag um 7 Uhr war er so die vierte Karte. Deshalb wandert er morgens
+    // ganz nach oben, vor alle anderen Karten. Die Seite misst das an der
+    // Bildschirmlage, nicht an der Reihenfolge im Kasten.
     var jetzt = window.__jetzt ? new Date(window.__jetzt) : new Date();
     var tag = jetzt.getDay(), std = jetzt.getHours();
-    if (tag >= 1 && tag <= 5 && std >= 6 && std < 8){
-      karten.sort(function(a, b){
-        return (b.getAttribute("data-weg") === "stundenplan") - (a.getAttribute("data-weg") === "stundenplan");
-      });
-    }
-    karten.forEach(function(k){ kasten.appendChild(k); });
+    var morgens = tag >= 1 && tag <= 5 && std >= 6 && std < 8;
+    var sp = kasten.querySelector('[data-weg="stundenplan"]');
+    var oben = document.getElementById("nachsehen") || document.getElementById("probenkarte");
+    karten.forEach(function(k){
+      if (morgens && k === sp && oben) oben.parentNode.insertBefore(k, oben);
+      else kasten.appendChild(k);
+    });
   })();
 
   // ---- Neues Spiel erfinden -------------------------------------------
