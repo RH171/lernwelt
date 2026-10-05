@@ -81,6 +81,8 @@
   .vor .mehr{font-size:12.5px;color:var(--grau,#71768a);padding-top:6px}
   /* Der wichtige Fall: da gewesen, aber nichts abgeschlossen. */
   .vor.nurda{border-left:4px solid #f59e0b}
+  .vor .runde .geraet{color:var(--grau,#71768a);white-space:nowrap;font-size:12.5px}
+  .vor .spur{margin-top:6px;border-top:1px dashed var(--linie,#e5e7eb)}
   .vor.garnicht{opacity:.72}
 
   .reiter{display:flex;gap:10px;margin-bottom:20px}
@@ -547,6 +549,44 @@
     return t || null;
   }
 
+  /* Welche Seite war offen, auf welchem Geraet? (Dennys Wahl vom 05.10.2026,
+     "Geoeffnete Seiten zeigen"). Anlass: Leon "15 min da, aber keine Runde",
+     Helena "90 min da" - was dahinter lag, stand nur in den Daten. Der Puls
+     vermerkt je Viertelstunde die zuletzt offene Seite; aufeinanderfolgende
+     Viertelstunden mit derselben Seite und demselben Geraet werden zu einer
+     Zeile. Ein kurzer Abstecher innerhalb einer Viertelstunde kann fehlen. */
+  function spurZeilen(kind, da){
+    if (!da || !da.wo) return "";
+    var bloecke = Object.keys(da.wo).map(Number).sort(function(x,y){ return x-y; });
+    if (!bloecke.length) return "";
+    // Spieltitel aus den Runden des Kindes: thema "artikel kabine" -> "Der-die-das-Kabine".
+    var titel = {};
+    ((DATEN && DATEN[kind] && DATEN[kind].letzte) || []).forEach(function(r){
+      if (r.thema && r.titel && !titel[r.thema]) titel[r.thema] = r.titel;
+    });
+    function name(s){
+      if (s === "index") return "Startseite";
+      var kurz = String(s).replace(/^klasse\d+-/, "")
+        .replace(/^(deutsch|englisch|franzoesisch|mathe|mathematik|hsu)-/, "").replace(/-/g, " ");
+      return titel[kurz] || titel[String(s).replace(/-/g, " ")] || seiteName(s);
+    }
+    var gruppen = [];
+    bloecke.forEach(function(b){
+      var w = da.wo[String(b)] || {};
+      var g = String(w.geraet || "").split(" \u00B7 ")[0];
+      var letzte = gruppen[gruppen.length - 1];
+      if (letzte && letzte.seite === w.seite && letzte.geraet === g && letzte.bis === b) letzte.bis = b + 1;
+      else gruppen.push({ seite: w.seite, geraet: g, von: b, bis: b + 1 });
+    });
+    var zeilen = gruppen.slice(0, 6).map(function(x){
+      return '<div class="runde"><span class="uhr">' + blockZeit(x.von) + "\u2013" + blockZeit(x.bis) + '</span>' +
+             '<span class="was">' + esc(name(x.seite)) + '</span>' +
+             '<span class="geraet">' + esc(x.geraet) + '</span></div>';
+    }).join("");
+    if (gruppen.length > 6) zeilen += '<div class="mehr">und ' + (gruppen.length - 6) + ' weitere</div>';
+    return '<div class="spur"><div class="mehr">Offen war:</div>' + zeilen + '</div>';
+  }
+
   function vorschauKarte(kind){
     var name = kind.charAt(0).toUpperCase() + kind.slice(1);
     var d = (DATEN && DATEN[kind]) || {};
@@ -570,13 +610,15 @@
       }).join("");
       if (runden.length > 3)
         liste += '<div class="mehr">und ' + (runden.length - 3) + ' weitere</div>';
+      if (da) liste += spurZeilen(kind, da);
     } else if (da){
       // Der wichtige Fall - und der Grund fuer diese Karte.
       klasse += " nurda";
       // anwesendMinuten() haengt "min" schon an - ein zweites waere doppelt.
       zeile = "<b>" + anwesendMinuten(da.viertelstunden) + " da</b> (" +
               esc(da.von) + "\u2013" + esc(da.bis) + "), aber keine Runde beendet";
-      liste = '<div class="mehr">Eine Runde z\u00E4hlt erst ab einer halben Minute ' +
+      liste = spurZeilen(kind, da) +
+              '<div class="mehr">Eine Runde z\u00E4hlt erst ab einer halben Minute ' +
               'und wird beim Verlassen der Seite gemeldet.</div>';
     } else {
       klasse += " garnicht";
