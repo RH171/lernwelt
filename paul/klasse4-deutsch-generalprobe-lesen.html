@@ -267,7 +267,7 @@ label.zeile input{width:7em}
   // Paul wartet nie darauf: alles laeuft im Hintergrund, waehrend er liest.
   var nachschubLaeuft = false;
   function nachschub(){
-    if (nachschubLaeuft || ungelesen() >= 4) return;
+    if (nachschubLaeuft || ungelesen() >= 6) return;
     nachschubLaeuft = true;
     var d = lesen();
     fetch("/api/generalprobe-nachschub", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
