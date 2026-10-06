@@ -612,4 +612,14 @@ export const KLEXIKON = [
   [2, "welt", "🌾", "Wofür wird am Erntedankfest gedankt?", ["Die Ernte", "Die Ferien", "Der Schnee", "Der Geburtstag"], "Menschen bedanken sich im Herbst für Obst und Getreide, die sie geerntet haben.", null, "Erntedankfest"],
   [4, "technik", "📻", "Wie sprechen Funkamateure über weite Strecken ohne Internet?", ["Per Funk", "Per Brief", "Per Rauchzeichen", "Per Fahrrad"], "Mit Kurzwelle können Funkamateure manchmal sogar Signale um die ganze Welt schicken.", null, "Amateurfunk"],
   [3, "sport", "🥊", "Wie nennt man es, wenn ein Boxer seinen Gegner niederschlägt?", ["K.o.", "Abseits", "Elfmeter", "Freistoß"], "Wer nach einem K.o. nicht binnen zehn Sekunden aufsteht, hat den Kampf verloren.", null, "Boxen"],
+
+  // Nachschub vom 06.10.2026
+  [1, "tiere", "🪲", "Wann fliegen die meisten Maikäfer?", ["Im Mai", "Im Winter", "Im Herbst", "Im August"], "Maikäfer leben als fertiger Käfer nur vier bis sechs Wochen, fast ihr ganzes Leben verbringen sie unter der Erde.", null, "Maikäfer"],
+  [3, "tiere", "🪲", "Wie heißen die Larven der Maikäfer?", ["Engerlinge", "Raupen", "Maden", "Kaulquappen"], "Ein Engerling lebt bis zu drei Jahre unter der Erde, bevor er sich zum fliegenden Käfer verwandelt.", null, "Maikäfer"],
+  [1, "tiere", "🐭", "Was fressen Mäuse am liebsten?", ["Samen", "Fleisch", "Blätter", "Steine"], "Manche Mäuse fressen sogar gekochtes Essen, wenn sie in der Nähe von Menschen wohnen.", null, "Mäuse"],
+  [2, "tiere", "🐭", "Was trinken neugeborene Mäuse?", ["Milch", "Wasser", "Tee", "Saft"], "Ein neugeborenes Mäusebaby wiegt weniger als ein Gramm und ist noch blind und taub.", null, "Mäuse"],
+  [3, "welt", "🏞️", "Welcher Fluss gab dem Kanton Aargau seinen Namen?", ["Die Aare", "Der Rhein", "Die Limmat", "Die Reuss"], "Im Aargau treffen sich gleich drei große Flüsse, deshalb heißt die Gegend auch Wasserschloss der Schweiz.", null, "Aargau"],
+  [2, "welt", "🏰", "Was bedeutet der Name „Sanssouci“?", ["Ohne Sorgen", "Schönes Schloss", "Großer Garten", "Goldenes Haus"], "Ein König ließ extra Gewächshäuser bauen, damit im kalten Preußen sogar Orangen und Bananen wuchsen.", null, "Schloss Sanssouci"],
+  [3, "technik", "📼", "Worauf speichert ein Kassettenrekorder Musik?", ["Auf einem Tonband", "Auf einer SD-Karte", "Auf einer CD", "Auf einem Chip"], "Ein kleiner Metallstift namens Capstan sorgt dafür, dass das Band immer gleich schnell läuft.", null, "Kassettenrekorder"],
+  [5, "wissen", "🧪", "Wie schreiben Chemiker die Formel für Wasser?", ["H2O", "CO2", "O2", "H2"], "Zehn Millionen Atome nebeneinander wären gerade einmal einen Millimeter breit.", null, "Chemie"],
 ];
