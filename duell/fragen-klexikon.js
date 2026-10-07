@@ -622,4 +622,14 @@ export const KLEXIKON = [
   [2, "welt", "🏰", "Was bedeutet der Name „Sanssouci“?", ["Ohne Sorgen", "Schönes Schloss", "Großer Garten", "Goldenes Haus"], "Ein König ließ extra Gewächshäuser bauen, damit im kalten Preußen sogar Orangen und Bananen wuchsen.", null, "Schloss Sanssouci"],
   [3, "technik", "📼", "Worauf speichert ein Kassettenrekorder Musik?", ["Auf einem Tonband", "Auf einer SD-Karte", "Auf einer CD", "Auf einem Chip"], "Ein kleiner Metallstift namens Capstan sorgt dafür, dass das Band immer gleich schnell läuft.", null, "Kassettenrekorder"],
   [5, "wissen", "🧪", "Wie schreiben Chemiker die Formel für Wasser?", ["H2O", "CO2", "O2", "H2"], "Zehn Millionen Atome nebeneinander wären gerade einmal einen Millimeter breit.", null, "Chemie"],
+
+  // Nachschub vom 07.10.2026
+  [1, "tiere", "🐿️", "Wie nennt man das Streifenhörnchen auch?", ["Chipmunk", "Hamster", "Biber", "Maulwurf"], "Chipmunk ist der englische Name für das Streifenhörnchen, das vor allem in Nordamerika lebt.", null, "Streifenhörnchen"],
+  [2, "tiere", "🌰", "Was sammelt das Streifenhörnchen für den Winter?", ["Nüsse", "Blätter", "Steine", "Wolle"], "Für den Winter sammelt es Nüsse, Samen, Früchte und sogar Insekten als Vorrat.", null, "Streifenhörnchen"],
+  [2, "welt", "🏔️", "In welchem Land liegt das Matterhorn?", ["Schweiz", "Italien", "Österreich", "Frankreich"], "Vom Ort Zermatt aus sieht das Matterhorn aus wie eine Pyramide.", null, "Matterhorn"],
+  [3, "welt", "🌊", "Wie heißt eine Bucht, die durch einen Gletscher entstand?", ["Fjord", "Delta", "Golf", "Riff"], "Ein Fjord entsteht, wenn ein Gletscher eine tiefe Rinne ins Land schneidet.", null, "Bucht"],
+  [3, "koerper", "🍞", "Wofür braucht unser Körper Kohlenhydrate vor allem?", ["Kraft", "Schlaf", "Geruch", "Gehör"], "Zu viele Kohlenhydrate verwandelt der Körper in Fett, weil überschüssiger Zucker ungesund ist.", null, "Kohlenhydrate"],
+  [2, "koerper", "👶", "Von wem bekommt ein Kind seine Gene?", ["Eltern", "Lehrern", "Freunden", "Nachbarn"], "Ein Kind kann die Augenfarbe vom Vater und die Haarfarbe von der Mutter erben.", null, "Gen"],
+  [4, "welt", "🌊", "In welchen Fluss mündet die Havel?", ["Elbe", "Rhein", "Oder", "Donau"], "Die Havel fließt durch viele Seen und ist 334 Kilometer lang bis zur Elbe.", null, "Havel"],
+  [4, "welt", "⛺", "Wie heißen die großen Zelte der Nomaden in Kirgistan?", ["Jurte", "Iglu", "Tipi", "Baumhaus"], "Nomadenfamilien in Kirgistan ziehen mit ihren Tieren von Weide zu Weide und leben in Jurten.", null, "Kirgistan"],
 ];
