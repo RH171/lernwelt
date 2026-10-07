@@ -431,8 +431,13 @@ label.zeile input{width:7em}
           return '<button class="knopf" data-i="' + i + '" aria-pressed="' + (p >= 0) + '"><span class="platz">' + (p >= 0 ? p + 1 : "") + '</span>' + esc(e.text) + '</button>';
         }).join("") + '</div>';
     } else if (a.art === "anfang") {
+      /* Paul, 07.10.2026: "Ich weiß halt nicht, aus was das bestehen soll, was ich da sagen soll."
+         Darum steht dabei, WAS in den Satz gehoert - ohne Inhalt aus der Geschichte vorzugeben. */
       h = '<p class="auftrag">' + esc(a.auftrag) + '</p>' +
-        '<p class="vorgabe">' + esc(a.anfang) + '</p><textarea id="gp-anfang" placeholder="… schreib weiter"></textarea>';
+        '<p class="leise" id="gp-anfang-hilfe">Stell dir vor, du bist die Person aus der Geschichte. Erzähl in einem ganzen Satz, ' +
+        '<b>was passiert ist</b> – so, wie es in der Geschichte steht. Zum Beispiel: „heute ist etwas Aufregendes passiert: …“ ' +
+        'oder „stell dir vor, …“</p>' +
+        '<p class="vorgabe">' + esc(a.anfang) + '</p><textarea id="gp-anfang" placeholder="… schreib weiter: Was ist passiert?"></textarea>';
     } else if (a.art === "kreuz") {
       h = '<p class="auftrag">' + esc(a.frage) + '</p><p class="leise">Kreuze an.</p><div class="wahl" id="gp-wahl">' +
         a.optionen.map(function(o, i){
