@@ -503,6 +503,7 @@ label.zeile input{width:7em}
   }
 
   function knoepfe(){
+    laufSichern();
     var a = aufg(), s = st(), letzte = stand.nr === stand.g.aufgaben.length - 1;
     $("zurueck").disabled = stand.nr === 0;
     var pruefbar = a.art !== "anfang" && a.art !== "meinung";
@@ -599,6 +600,7 @@ label.zeile input{width:7em}
 
   function abgeben(){
     var g = stand.g;
+    laufWeg();
     alsGelesen(g.id);
     var pruefbare = stand.a.filter(function(s, i){ return !FREI[g.aufgaben[i].art] || g.aufgaben[i].art === "frage"; });
     var erste = pruefbare.filter(function(s){ return s.erst === true; }).length;
@@ -635,6 +637,62 @@ label.zeile input{width:7em}
       .then(nachschub);
   }
 
+  /* Weitermachen nach einem Rauswurf (07.10.2026). Paul: "immer wenn ich bei Aufgabe 6 bin,
+     werde ich auf die Startseite geschmissen". Die Ursache liess sich lokal nicht ausloesen
+     (alle 20 Geschichten bis Aufgabe 7, Maus und Tastatur, mit Sync), deshalb zwei Dinge:
+     1. Der laufende Stand liegt in sessionStorage (nur dieses Fenster, kein Sync, kein
+        Schreibvorgang im Speicher). Laedt die Seite neu, geht es an derselben Aufgabe weiter.
+     2. Kam es zu so einem Neustart, legt die Seite EINMAL "paul-generalprobe-abgang" an:
+        Art des Ladens, Aufgabe, letzter Klick und letzte Taste vor dem Verlassen. paul-sync
+        spiegelt das in den Speicher, ./werkstatt.sh seite paul liest es. */
+  var LAUF = "paul-generalprobe-lauf", LETZTES = "paul-generalprobe-letztes";
+  function laufSichern(){
+    if (!stand) return;
+    try {
+      var a = stand.a.map(function(x, i){
+        var y = {}; for (var k in x) y[k] = x[k];
+        if (x.gemischt) y.gemischt = x.gemischt.map(function(e){ return stand.g.aufgaben[i].ereignisse.indexOf(e); });
+        return y; });
+      sessionStorage.setItem(LAUF, JSON.stringify({ id: stand.g.id, nr: stand.nr, a: a, papier: papier,
+        lesen: document.body.classList.contains("lesen"), t: Date.now() }));
+    } catch(e){}
+  }
+  function laufWeg(){ try { sessionStorage.removeItem(LAUF); } catch(e){} }
+  function laufHolen(){
+    var d = null; try { d = JSON.parse(sessionStorage.getItem(LAUF) || "null"); } catch(e){}
+    if (!d || !(Date.now() - (+d.t || 0) < 6 * 3600000)) return false;
+    var g = alle().filter(function(x){ return x.id === d.id; })[0];
+    if (!g || !Array.isArray(d.a) || d.a.length !== g.aufgaben.length) return false;
+    starten(g, d.papier);
+    stand.a = d.a.map(function(x, i){
+      if (Array.isArray(x.gemischt)) x.gemischt = x.gemischt.map(function(n){ return g.aufgaben[i].ereignisse[n]; });
+      return x; });
+    stand.nr = Math.max(0, Math.min(g.aufgaben.length - 1, +d.nr || 0));
+    document.body.classList.toggle("lesen", !!d.lesen);
+    malen();
+    try {
+      var nav = (performance.getEntriesByType && performance.getEntriesByType("navigation")[0]) || {};
+      var vorher = JSON.parse(sessionStorage.getItem(LETZTES) || "null");
+      localStorage.setItem("paul-generalprobe-abgang", JSON.stringify({ zeit: new Date().toISOString(),
+        laden: nav.type || "", geschichte: g.id, aufgabe: stand.nr + 1, vorher: vorher }));
+    } catch(e){}
+    return true;
+  }
+  var letzterKlick = "", letzteTaste = "";
+  document.addEventListener("click", function(e){
+    var t = e.target && e.target.closest ? e.target.closest("a,button,input,textarea,li") || e.target : e.target;
+    letzterKlick = t ? (t.tagName + "#" + (t.id || "") + " " + String(t.textContent || t.getAttribute("href") || "").trim().slice(0, 30)) : "";
+  }, true);
+  document.addEventListener("keydown", function(e){ letzteTaste = (e.metaKey ? "Cmd+" : "") + (e.ctrlKey ? "Ctrl+" : "") + (e.altKey ? "Alt+" : "") + e.key; }, true);
+  function letztesMerken(warum){
+    if (!stand) return;
+    laufSichern();
+    try { sessionStorage.setItem(LETZTES, JSON.stringify({ zeit: new Date().toISOString(), warum: warum,
+      aufgabe: stand.nr + 1, klick: letzterKlick, taste: letzteTaste })); } catch(e){}
+  }
+  window.addEventListener("pagehide", function(e){ letztesMerken(e && e.persisted ? "pagehide-bfcache" : "pagehide"); });
+  window.addEventListener("beforeunload", function(){ letztesMerken("beforeunload"); });
+
   function startKarte(){
     var g = naechste(), A = alle(), d = lesen(), gl = Array.isArray(d.gelesen) ? d.gelesen : [];
     var n = A.filter(function(x){ return gl.indexOf(x.id) >= 0; }).length;
@@ -643,7 +701,7 @@ label.zeile input{width:7em}
     $("los").onclick = function(){ starten(naechste()); };
   }
   startKarte();
-  if (/[?&]los=1\b/.test(location.search)) starten(naechste());
+  if (!laufHolen() && /[?&]los=1\b/.test(location.search)) starten(naechste());
   serverHolen();
 })();
 </script>
