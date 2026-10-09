@@ -692,8 +692,12 @@ label.zeile input{width:7em}
   function letztesMerken(warum){
     if (!stand) return;
     laufSichern();
-    try { sessionStorage.setItem(LETZTES, JSON.stringify({ zeit: new Date().toISOString(), warum: warum,
-      aufgabe: stand.nr + 1, klick: letzterKlick, taste: letzteTaste })); } catch(e){}
+    var z = JSON.stringify({ zeit: new Date().toISOString(), warum: warum, geschichte: stand.g.id,
+      aufgabe: stand.nr + 1, klick: letzterKlick, taste: letzteTaste });
+    try { sessionStorage.setItem(LETZTES, z); } catch(e){}
+    // Seit 09.10.2026 auch dauerhaft: paul-sync nimmt den letzten Abgang beim naechsten Laden mit,
+    // auch wenn Paul nach einem Rauswurf nicht in die Lese-Probe zurueckkehrt.
+    try { localStorage.setItem(LETZTES, z); } catch(e){}
   }
   window.addEventListener("pagehide", function(e){ letztesMerken(e && e.persisted ? "pagehide-bfcache" : "pagehide"); });
   window.addEventListener("beforeunload", function(){ letztesMerken("beforeunload"); });
