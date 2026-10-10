@@ -28,6 +28,7 @@
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { anfrageBauen, geschichteAusText, pruefeGeschichte, saeubern } from "./_nachschub-pruefen.js";
+import { termineLesen, kuenftige, berlinHeute } from "./_probentermine.js";
 
 const KINDER = ["paul"];                 // nur Paul (Proben-Uebungen nur fuers Kind mit der Probe)
 export const SCHLUESSEL = (kind) => "gp-nachschub:" + kind;
@@ -91,6 +92,13 @@ export async function einmalSchreiben(env, titelBekannt, abrufen = fetch) {
   return { geschichte: g, usage: j.usage };
 }
 
+/* Steht eine Lese-Probe an? Antwortet der Speicher nicht (null), lieber nichts erzeugen. */
+export async function leseProbeGeplant(env, kind) {
+  const alle = await termineLesen(env, kind);
+  if (!Array.isArray(alle)) return false;
+  return kuenftige(alle, berlinHeute()).some((t) => t.fach === "deutsch" && /les/i.test(t.thema || ""));
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   let daten = {};
@@ -107,6 +115,9 @@ export async function onRequestPost(context) {
   const antwort = (extra) => json(200, Object.assign({ ok: true, ungelesen }, extra));
 
   if (ungelesen >= SCHWELLE) return antwort({ erzeugt: false, grund: "genug Vorrat" });
+  // Nachgeschrieben wird nur vor einer Lese-Probe (10.10.2026, nach der Probe am 09.10.2026):
+  // Deutsch-Termin heute oder kuenftig, Thema mit "Les". Ohne Termin kostet die Seite nichts.
+  if (!(await leseProbeGeplant(env, kind))) return antwort({ erzeugt: false, grund: "keine Lese-Probe geplant" });
   if (!env.ANTHROPIC_API_KEY) return antwort({ erzeugt: false, grund: "kein Schluessel" });
   if (s.neu >= DECKEL.neu || s.versuche >= DECKEL.versuche) return antwort({ erzeugt: false, grund: "Tagesdeckel" });
   if (s.laeuft && Date.now() - Number(s.laeuft) < SPERRE_MS) return antwort({ erzeugt: false, grund: "laeuft schon" });
