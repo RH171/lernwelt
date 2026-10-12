@@ -14663,5 +14663,429 @@ window.LEON_GESCHICHTEN = [
     "seite": 7
    }
   ]
+ },
+ {
+  "id": "w42-profi",
+  "titel": "Ein Profi kommt in die Schule",
+  "bild": "⭐",
+  "ereignis": "2026-10-13",
+  "zeigenAb": "2026-10-12",
+  "zeigenBis": "2026-10-13",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "⚽",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Diens|tag gibt es ei|ne Über|ra|schung.",
+     "Ein Fuß|ball|pro|fi kommt in die Schu|le.",
+     "Er spielt für die Klee|blät|ter aus Fürth.",
+     "Le|on kann es kaum glau|ben.",
+     "Ein ech|ter Pro|fi, bei ihm in der Schu|le!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🏫",
+      "⏰"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul geht auch auf die|se Schu|le.",
+     "Bei|de dür|fen den Pro|fi se|hen.",
+     "Der Be|such be|ginnt um elf Uhr.",
+     "Am Diens|tag ist die Schu|le früh aus.",
+     "Denn in Fürth ist noch Ker|wa."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🗓️",
+      "✍️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Pro|fi bringt et|was mit.",
+     "Er ver|teilt Stun|den|plä|ne.",
+     "Da|rauf steht, wann wel|ches Fach dran ist.",
+     "Und er ver|teilt Au|to|gramm|kar|ten.",
+     "Da|rauf ist sei|ne Un|ter|schrift."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👕",
+      "🧣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Man darf auch et|was mit|brin|gen.",
+     "Zum Bei|spiel ei|nen Schal oder ein Tri|kot.",
+     "Der Pro|fi un|ter|schreibt dann da|rauf.",
+     "Le|on über|legt lan|ge.",
+     "Was soll er nur mit|neh|men?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💭",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Viel|leicht sein grü|nes Tri|kot.",
+     "Oder viel|leicht sei|nen Schal.",
+     "Bei|des mag er sehr.",
+     "Mit ei|ner Un|ter|schrift wä|re es ein Schatz.",
+     "Den wür|de er gut auf|he|ben."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "❓",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat vie|le Fra|gen im Kopf.",
+     "Wie oft trai|niert ein Pro|fi?",
+     "War er als Kind auch Tor|wart?",
+     "Ist er vor ei|nem Spiel auf|ge|regt?",
+     "Viel|leicht darf Le|on et|was fra|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🏟️",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag ha|ben die Klee|blät|ter ver|lo|ren.",
+     "Am Sams|tag spie|len sie wie|der.",
+     "Dann kommt Braun|schweig nach Fürth.",
+     "Le|on wünscht dem Pro|fi viel Glück.",
+     "Viel|leicht sagt er ihm das so|gar."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "⭐"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend vor|her ist Le|on ganz auf|ge|regt.",
+     "Er legt sei|ne Sa|chen be|reit.",
+     "Dann schließt er die Au|gen.",
+     "Mor|gen trifft er ei|nen ech|ten Pro|fi.",
+     "Das ist ein be|son|de|rer Tag."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Für welchen Verein spielt der Profi?",
+    "richtig": "für die Kleeblätter aus Fürth",
+    "falsch": [
+     "für Hertha",
+     "für Braunschweig"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wann beginnt der Besuch?",
+    "richtig": "um elf Uhr",
+    "falsch": [
+     "um acht Uhr",
+     "um drei Uhr"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was verteilt der Profi?",
+    "richtig": "Stundenpläne und Autogrammkarten",
+    "falsch": [
+     "Bälle und Trikots",
+     "Bonbons"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was darf man mitbringen?",
+    "richtig": "einen Schal oder ein Trikot",
+    "falsch": [
+     "ein Haustier",
+     "ein Fahrrad"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wer kommt am Samstag nach Fürth?",
+    "richtig": "Braunschweig",
+    "falsch": [
+     "Hertha",
+     "Nürnberg"
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "w42-audi",
+  "titel": "Ein neues Auto für Mama",
+  "bild": "🚗",
+  "ereignis": "2026-10-15",
+  "zeigenAb": "2026-10-14",
+  "zeigenBis": "2026-10-15",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🚗",
+      "✨"
+     ],
+     "leute": [
+      "Leon",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Ma|ma be|kommt ein neu|es Au|to.",
+     "Am Don|ners|tag wird es ab|ge|holt.",
+     "Le|on und Paul dür|fen mit|fah|ren.",
+     "Le|on freut sich schon rie|sig.",
+     "Ein neu|es Au|to ist auf|re|gend!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🗺️",
+      "🛣️"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Das Au|to steht in In|gol|stadt.",
+     "Die Stadt liegt in Bay|ern.",
+     "Die Fahrt dau|ert ein|ein|halb Stun|den.",
+     "Das ist ganz schön weit.",
+     "Am Nach|mit|tag geht es los."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚙",
+      "🎲"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Was macht man auf so ei|ner lan|gen Fahrt?",
+     "Man kann aus dem Fens|ter schau|en.",
+     "Man kann Au|tos zäh|len.",
+     "Oder man denkt sich Rät|sel aus.",
+     "Dann geht die Zeit schnel|ler vor|bei."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🏢",
+      "🚗"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In In|gol|stadt baut die Fir|ma Au|di Au|tos.",
+     "Dort gibt es ein gro|ßes Haus.",
+     "Es heißt Au|di Fo|rum.",
+     "Dort holt man sein neu|es Au|to ab.",
+     "Ma|ma hat dort ei|nen Ter|min."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "🎨"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat das Au|to noch nicht ge|se|hen.",
+     "Wel|che Far|be es wohl hat?",
+     "Ist es groß oder klein?",
+     "Wie viel Platz gibt es hin|ten?",
+     "Le|on ist sehr neu|gie|rig."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🔌",
+      "⚡"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Au|di Fo|rum gibt es auch La|de|säu|len.",
+     "Dort kön|nen E|lek|tro|au|tos Strom tan|ken.",
+     "Fährt Ma|mas neu|es Au|to auch mit Strom?",
+     "Das weiß Le|on noch nicht.",
+     "Er wird es am Don|ners|tag se|hen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "🌇"
+     ],
+     "leute": [
+      "Leon",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Auf dem Heim|weg fah|ren sie mit dem neu|en Au|to.",
+     "Al|les riecht noch ganz neu.",
+     "Le|on schaut sich al|les ge|nau an.",
+     "Viel|leicht gibt es ganz vie|le Knöp|fe.",
+     "Was die wohl al|le ma|chen?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "🚗"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend ist Le|on mü|de.",
+     "Es war ein lan|ger Aus|flug.",
+     "Im Bett denkt er an das neu|e Au|to.",
+     "Bald fährt er be|stimmt oft da|rin mit.",
+     "Dar|auf freut er sich schon."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wer bekommt ein neues Auto?",
+    "richtig": "Mama",
+    "falsch": [
+     "Papa",
+     "Omi"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie lange dauert die Fahrt?",
+    "richtig": "eineinhalb Stunden",
+    "falsch": [
+     "zehn Minuten",
+     "einen ganzen Tag"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was kann man auf der Fahrt machen?",
+    "richtig": "Autos zählen",
+    "falsch": [
+     "schlafen gehen",
+     "kochen"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wie heißt das große Haus in Ingolstadt?",
+    "richtig": "Audi Forum",
+    "falsch": [
+     "Kleeblatt-Halle",
+     "Rathaus"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was können Autos an Ladesäulen tanken?",
+    "richtig": "Strom",
+    "falsch": [
+     "Wasser",
+     "Benzin"
+    ],
+    "seite": 6
+   }
+  ]
  }
 ];
