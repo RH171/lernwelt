@@ -13188,90 +13188,114 @@ window.LEON_GESCHICHTEN = [
  },
  {
   "id": "w42-kerwa",
-  "titel": "Auf der Kerwa",
+  "titel": "Mit dem Bus zur Kerwa",
   "bild": "🎡",
   "zeigenAb": "2026-10-12",
-  "zeigenBis": "2026-10-13",
+  "zeigenBis": "2026-10-14",
   "seiten": [
    {
     "szene": {
-     "ort": "strasse",
+     "ort": "zimmer",
      "dinge": [
-      "🎡",
-      "🎶"
-     ],
-     "leute": [
-      "Leon",
-      "Papa"
-     ]
-    },
-    "zeilen": [
-     "In Fürth ist wie|der Ker|wa.",
-     "Ü|ber|all in der Stadt ste|hen Bu|den.",
-     "Es riecht nach ge|brann|ten Man|deln.",
-     "Le|on hält Pa|pa fest an der Hand.",
-     "Heu|te geht es auf die Ker|wa!"
-    ]
-   },
-   {
-    "szene": {
-     "ort": "strasse",
-     "dinge": [
-      "🎠",
-      "💡"
-     ],
-     "leute": [
-      "Leon",
-      "Paul"
-     ]
-    },
-    "zeilen": [
-     "Ü|ber|all blin|ken bun|te Lich|ter.",
-     "Ein Ka|rus|sell dreht sich ganz schnell.",
-     "Die Mu|sik ist rich|tig laut.",
-     "Paul zeigt auf das Rie|sen|rad.",
-     "„Da will ich hoch!“, ruft er."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "strasse",
-     "dinge": [
-      "🎡",
-      "☁️"
+      "🌧️",
+      "🪟"
      ],
      "leute": [
       "Leon",
       "Paul",
-      "Papa"
+      "Mama"
      ]
     },
     "zeilen": [
-     "Das Rie|sen|rad ist sehr hoch.",
-     "Le|on hat ein biss|chen Herz|klop|fen.",
-     "Ganz oben bleibt die Gon|del ste|hen.",
-     "Le|on sieht die gan|ze Stadt.",
-     "Die Men|schen un|ten sind ganz klein."
+     "Am Sonn|tag war in Fürth Ker|wa.",
+     "Am Mor|gen hat es stark ge|reg|net.",
+     "Le|on woll|te am liebs|ten so|fort los.",
+     "Paul woll|te lie|ber erst am A|bend.",
+     "Ma|ma sag|te: „Wir war|ten den Re|gen ab.“"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🛁",
+      "🕒"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Dann ent|schied Ma|ma: am Nach|mit|tag.",
+     "So kom|men al|le nicht zu spät ins Bett.",
+     "Paul muss|te vor|her noch in die Ba|de|wan|ne.",
+     "Le|on war|te|te schon an der Tür.",
+     "Er war rich|tig zap|pe|lig."
     ]
    },
    {
     "szene": {
      "ort": "strasse",
      "dinge": [
-      "🚗",
-      "💥"
+      "🚏",
+      "🚌"
      ],
      "leute": [
       "Leon",
-      "Paul"
+      "Omi",
+      "Opi"
      ]
     },
     "zeilen": [
-     "Da|nach geht es zum Au|to|scoo|ter.",
-     "Le|on lenkt sein ro|tes Au|to.",
-     "Paul fährt ein blau|es Au|to.",
-     "Rums, die bei|den sto|ßen zu|sam|men.",
-     "Bei|de la|chen ganz laut."
+     "An der Hal|te|stel|le war|te|ten O|mi und O|pi.",
+     "Al|le woll|ten mit dem Bus fah|ren.",
+     "Um elf nach drei kam der Bus.",
+     "Le|on durf|te am Fens|ter sit|zen.",
+     "Drau|ßen war es end|lich tro|cken."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🥁",
+      "🎺"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Opi"
+     ]
+    },
+    "zeilen": [
+     "In der Stadt war ein Um|zug.",
+     "Mu|sik|ka|pel|len lie|fen durch die Stra|ßen.",
+     "Die Trom|meln wa|ren ganz laut.",
+     "Sie schau|ten nur ein biss|chen zu.",
+     "Dann gin|gen sie wei|ter zu den Bu|den."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🎡",
+      "🎠"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Ü|ber|all blink|ten bun|te Lich|ter.",
+     "Es roch nach ge|brann|ten Man|deln.",
+     "Ka|rus|sells dreh|ten sich im Kreis.",
+     "Le|on staun|te mit gro|ßen Au|gen.",
+     "So vie|le Leu|te wa|ren da!"
     ]
    },
    {
@@ -13283,54 +13307,36 @@ window.LEON_GESCHICHTEN = [
      ],
      "leute": [
       "Leon",
-      "Papa"
+      "Omi"
      ]
     },
     "zeilen": [
-     "Jetzt ha|ben al|le Hun|ger.",
-     "Pa|pa kauft ei|ne Tü|te Man|deln.",
-     "Le|on be|kommt ein Leb|ku|chen|herz.",
-     "Da|rauf steht in Zu|cker|schrift: Fuß|ball|held.",
-     "Das passt ge|nau zu Le|on!"
+     "O|mi hielt Le|on an der Hand.",
+     "Sie gin|gen an vie|len Bu|den vor|bei.",
+     "Le|on such|te sich et|was Sü|ßes aus.",
+     "O|pi mach|te mit Paul ei|nen Spaß.",
+     "Al|le hat|ten gu|te Lau|ne."
     ]
    },
    {
     "szene": {
      "ort": "strasse",
      "dinge": [
-      "🎯",
-      "🧸"
+      "🚌",
+      "🌆"
      ],
      "leute": [
       "Leon",
-      "Paul"
+      "Paul",
+      "Mama"
      ]
     },
     "zeilen": [
-     "An ei|ner Bu|de kann man wer|fen.",
-     "Le|on wirft drei Bäl|le auf Do|sen.",
-     "Zwei Do|sen fal|len um.",
-     "Der Mann gibt ihm ei|nen klei|nen Ball.",
-     "„Für den Tor|wart“, sagt er."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "zimmer",
-     "dinge": [
-      "🌙",
-      "🛏️"
-     ],
-     "leute": [
-      "Leon"
-     ]
-    },
-    "zeilen": [
-     "Am A|bend ist Le|on mü|de.",
-     "Das Herz hängt jetzt an sei|ner Wand.",
-     "Den klei|nen Ball legt er ins Bett.",
-     "Er denkt an das Rie|sen|rad.",
-     "Dann schläft er schnell ein."
+     "Um sechs Uhr ging es wie|der heim.",
+     "Wie|der fuh|ren al|le mit dem Bus.",
+     "Le|on lehn|te sich an Ma|ma.",
+     "Sei|ne Fü|ße wa|ren ganz mü|de.",
+     "Paul gähn|te laut."
     ]
    },
    {
@@ -13345,7 +13351,7 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Am Diens|tag ist Kirch|weih|diens|tag.",
+     "Am Diens|tag ist noch|mal Ker|wa.",
      "Da ist die Schu|le schon früh aus.",
      "Um zwan|zig nach elf klin|gelt es.",
      "Le|on freut sich auf den frei|en Mit|tag.",
@@ -13355,40 +13361,40 @@ window.LEON_GESCHICHTEN = [
   ],
   "fragen": [
    {
-    "frage": "Wonach riecht es in der Stadt?",
-    "richtig": "nach gebrannten Mandeln",
+    "frage": "Wie war das Wetter am Morgen?",
+    "richtig": "Es hat stark geregnet.",
     "falsch": [
-     "nach Pizza",
-     "nach Regen"
+     "Es war heiß.",
+     "Es hat geschneit."
     ],
     "seite": 1
    },
    {
-    "frage": "Wo will Paul hoch?",
-    "richtig": "auf das Riesenrad",
+    "frage": "Wer musste vorher noch in die Badewanne?",
+    "richtig": "Paul",
     "falsch": [
-     "auf den Kirchturm",
-     "auf einen Baum"
+     "Leon",
+     "Mama"
     ],
     "seite": 2
    },
    {
-    "frage": "Welche Farbe hat Leons Auto beim Autoscooter?",
-    "richtig": "rot",
+    "frage": "Um wie viel Uhr kam der Bus?",
+    "richtig": "um elf nach drei",
     "falsch": [
-     "blau",
-     "grün"
+     "um acht Uhr",
+     "um zwölf Uhr"
     ],
-    "seite": 4
+    "seite": 3
    },
    {
-    "frage": "Was steht auf Leons Lebkuchenherz?",
-    "richtig": "Fußballheld",
+    "frage": "Was war in der Stadt?",
+    "richtig": "ein Umzug",
     "falsch": [
-     "Kleeblatt",
-     "Für Mama"
+     "ein Fußballspiel",
+     "ein Markt mit Tieren"
     ],
-    "seite": 5
+    "seite": 4
    },
    {
     "frage": "Wann ist am Dienstag die Schule aus?",
@@ -14040,6 +14046,222 @@ window.LEON_GESCHICHTEN = [
     "falsch": [
      "eine Stunde",
      "fünf Minuten"
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "w42-igel",
+  "titel": "Ein Igel zu Besuch",
+  "bild": "🦔",
+  "zeigenAb": "2026-10-12",
+  "zeigenBis": "2026-10-25",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🍂",
+      "🦔"
+     ],
+     "leute": [
+      "Leon",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag hat Ma|ma ei|nen I|gel auf|ge|nom|men.",
+     "Er war ganz klein und ganz kalt.",
+     "Al|lein drau|ßen hät|te er es schwer.",
+     "Ma|ma hat ihn vor|sich|tig mit|ge|nom|men.",
+     "Jetzt ist er ein klei|ner Haus|gast."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "📦",
+      "🧣"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Der I|gel liegt in ei|ner war|men Kis|te.",
+     "Er muss erst rich|tig warm wer|den.",
+     "Le|on und Paul knien da|ne|ben.",
+     "„Ist der süß!“, flüs|tert Le|on.",
+     "Sie sind ganz be|geis|tert."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "📱",
+      "🦔"
+     ],
+     "leute": [
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Ma|ma fragt bei der I|gel|hil|fe nach.",
+     "Das sind Leu|te, die I|geln hel|fen.",
+     "Sie ge|ben Ma|ma Tipps über das Han|dy.",
+     "Ma|ma schickt ih|nen Bil|der vom I|gel.",
+     "So wis|sen sie, wie es ihm geht."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🥣",
+      "🦔"
+     ],
+     "leute": [
+      "Leon",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Ein I|gel braucht das rich|ti|ge Fut|ter.",
+     "Ma|ma hat ei|ne Pa|ste|te für ihn.",
+     "Die ist gut für ei|nen I|gel.",
+     "Dann frisst der I|gel end|lich et|was.",
+     "Le|on ist rich|tig froh."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "⚖️",
+      "🦔"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag wiegt Ma|ma den I|gel.",
+     "Er wiegt nur hun|dert|fünf|und|zwan|zig Gramm.",
+     "Das ist wirk|lich win|zig.",
+     "Ein I|gel braucht viel mehr für den Win|ter.",
+     "Er muss noch viel fres|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "❄️",
+      "🏠"
+     ],
+     "leute": [
+      "Leon",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "„Darf er wie|der raus?“, fragt Le|on.",
+     "„Noch nicht“, sagt Ma|ma.",
+     "„Er ist noch zu klein für den Win|ter.“",
+     "„Er bleibt wohl bis zum Früh|ling hier.“",
+     "Le|on freut sich sehr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🌳",
+      "🪺"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "O|ma hat ei|ne gu|te I|dee.",
+     "Im Früh|ling bau|en die Kin|der ein Nest.",
+     "Das Nest kommt ins Af|fen|wäld|chen.",
+     "Dort kann der I|gel dann woh|nen.",
+     "Und er be|kommt noch ein biss|chen Fut|ter."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "🦔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend denkt Le|on an den I|gel.",
+     "Wel|chen Na|men soll er be|kom|men?",
+     "Viel|leicht Sta|chel|chen oder Pieks|i?",
+     "O|ma will ihn bald be|su|chen.",
+     "Sie ist schon ganz ge|spannt."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wer kümmert sich um den Igel?",
+    "richtig": "Mama",
+    "falsch": [
+     "Paul",
+     "Opi"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wo liegt der Igel?",
+    "richtig": "in einer warmen Kiste",
+    "falsch": [
+     "im Garten",
+     "in Leons Bett"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wer gibt Mama Tipps?",
+    "richtig": "die Igelhilfe",
+    "falsch": [
+     "der Tierarzt im Fernsehen",
+     "Leons Lehrer"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wie viel wiegt der Igel?",
+    "richtig": "hundertfünfundzwanzig Gramm",
+    "falsch": [
+     "ein Kilo",
+     "zehn Gramm"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wohin kommt das Nest im Frühling?",
+    "richtig": "ins Affenwäldchen",
+    "falsch": [
+     "in den Keller",
+     "auf den Balkon"
     ],
     "seite": 7
    }
