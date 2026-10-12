@@ -247,7 +247,16 @@
 (function(){
   "use strict";
   var $ = function(id){ return document.getElementById(id); };
-  var ALLE = window.LEON_GESCHICHTEN || [];
+  /* Wochengeschichten (12.10.2026): eine Geschichte mit "zeigenAb"/"zeigenBis" (JJJJ-MM-TT)
+     erzaehlt aus Leons echter Woche (Training, Turnier, Kleeblatt). Sie kommt nur in
+     ihrem Zeitraum und dann VOR dem Vorrat; danach waere "morgen ist Turnier" falsch.
+     Schon gelesene bleiben im Lesepass zum Nochmal-Lesen (ROH). */
+  var ROH = window.LEON_GESCHICHTEN || [];
+  function gilt(g){ var h = heuteText(); return !(g.zeigenBis && g.zeigenBis < h) && !(g.zeigenAb && g.zeigenAb > h); }
+  var ALLE = ROH.filter(gilt);
+  function aktuellZuerst(liste){
+    return liste.filter(function(g){ return g.zeigenBis; }).concat(liste.filter(function(g){ return !g.zeigenBis; }));
+  }
 
   /* ---------- Speicher ----------
      "leon-lesepass": { gelesen: {id: {datum, minuten, gleichRichtig}}, heute: {datum, id} }
@@ -284,14 +293,14 @@
   function naechsteGeschichte(){
     var d = lesen(), offen = ungelesene();
     var frisch = offen.filter(function(g){ return (d.uebersprungen || []).indexOf(g.id) < 0; });
-    if (frisch.length) return frisch[0];
-    if (offen.length) return offen[0];
+    if (frisch.length) return aktuellZuerst(frisch)[0];
+    if (offen.length) return aktuellZuerst(offen)[0];
     // Alles gelesen: die, die am längsten her ist - und das sagen wir auch.
     return ALLE.slice().sort(function(a, b){
       return String(d.gelesen[a.id].datum).localeCompare(String(d.gelesen[b.id].datum));
     })[0] || null;
   }
-  function finde(id){ return ALLE.filter(function(g){ return g.id === id; })[0] || null; }
+  function finde(id){ return ROH.filter(function(g){ return g.id === id; })[0] || null; }
 
   /* ---------- Ansichten ---------- */
   function zeige(welche){
