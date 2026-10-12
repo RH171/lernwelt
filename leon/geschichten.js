@@ -13190,6 +13190,7 @@ window.LEON_GESCHICHTEN = [
   "id": "w42-kerwa",
   "titel": "Mit dem Bus zur Kerwa",
   "bild": "🎡",
+  "ereignis": "2026-10-11",
   "zeigenAb": "2026-10-12",
   "zeigenBis": "2026-10-14",
   "seiten": [
@@ -13411,6 +13412,7 @@ window.LEON_GESCHICHTEN = [
   "id": "w42-omis-geburtstag",
   "titel": "Omi hat Geburtstag",
   "bild": "🎂",
+  "ereignis": "2026-10-12",
   "zeigenAb": "2026-10-13",
   "zeigenBis": "2026-10-15",
   "seiten": [
@@ -13422,35 +13424,34 @@ window.LEON_GESCHICHTEN = [
       "📅"
      ],
      "leute": [
-      "Leon",
-      "Papa"
+      "Leon"
      ]
     },
     "zeilen": [
      "Am Mon|tag hat|te O|mi Ge|burts|tag.",
      "O|mi ist Pa|pas Ma|ma.",
      "Le|on hat sich schon lan|ge ge|freut.",
-     "Am Mor|gen holt er sei|ne Stif|te.",
-     "Er will O|mi et|was ma|len."
+     "Ge|burts|ta|ge mag er sehr.",
+     "Da gibt es im|mer viel zu fei|ern."
     ]
    },
    {
     "szene": {
      "ort": "zimmer",
      "dinge": [
-      "🖍️",
-      "📄"
+      "💭",
+      "🎁"
      ],
      "leute": [
       "Leon"
      ]
     },
     "zeilen": [
-     "Le|on malt ein gro|ßes Bild.",
-     "Da|rauf ist ein Tor mit ei|nem Ball.",
-     "Da|ne|ben malt er O|mi und O|pi.",
-     "O|ben schreibt er: Al|les Gu|te!",
-     "Das Bild faltet er zu ei|ner Kar|te."
+     "Le|on hat sich über|legt, was er sagt.",
+     "„Al|les Gu|te, O|mi!“, will er ru|fen.",
+     "Und er will sie ganz fest drü|cken.",
+     "Das mag O|mi am liebs|ten.",
+     "Viel|leicht malt er ihr noch et|was."
     ]
    },
    {
@@ -13462,37 +13463,51 @@ window.LEON_GESCHICHTEN = [
      ],
      "leute": [
       "Leon",
-      "Paul",
       "Papa"
      ]
     },
     "zeilen": [
-     "Am Nach|mit|tag fah|ren al|le los.",
-     "Es geht nach Kalch|reuth.",
-     "Dort gibt es ein Gast|haus.",
-     "Die Bäu|me sind schon gelb und rot.",
-     "Paul zählt die Kur|ven auf der Stra|ße."
+     "Am Nach|mit|tag ging es los.",
+     "Pa|pa und Le|on fuh|ren nach Kalch|reuth.",
+     "Dort woll|ten sie mit O|mi es|sen ge|hen.",
+     "Die Bäu|me wa|ren schon bunt."
     ]
    },
    {
     "szene": {
      "ort": "kueche",
      "dinge": [
-      "🎁",
-      "💐"
+      "💐",
+      "🎂"
      ],
      "leute": [
       "Leon",
-      "Omi",
-      "Opi"
+      "Omi"
      ]
     },
     "zeilen": [
-     "Im Gast|haus war|ten O|mi und O|pi.",
-     "Le|on rennt so|fort zu O|mi.",
-     "Er gibt ihr die Kar|te.",
-     "O|mi macht die Kar|te auf.",
-     "Sie lä|chelt und drückt Le|on ganz fest."
+     "Dann war es so weit.",
+     "Le|on gra|tu|lier|te O|mi zum Ge|burts|tag.",
+     "Das war ein schö|ner Mo|ment.",
+     "O|mi hat sich be|stimmt sehr ge|freut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "🎂"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Wie alt ist O|mi ei|gent|lich?",
+     "Le|on weiß es gar nicht ge|nau.",
+     "Er weiß nur, dass sie äl|ter ist als Pa|pa.",
+     "Viel|leicht fragt er sie mal."
     ]
    },
    {
@@ -13500,61 +13515,18 @@ window.LEON_GESCHICHTEN = [
      "ort": "kueche",
      "dinge": [
       "🍽️",
-      "🥤"
+      "😋"
      ],
      "leute": [
-      "Leon",
-      "Paul",
-      "Omi"
+      "Leon"
      ]
     },
     "zeilen": [
-     "Dann set|zen sich al|le an den Tisch.",
-     "Le|on be|stellt Schnit|zel mit Pom|mes.",
-     "Paul nimmt lie|ber ei|nen Bra|ten.",
-     "O|mi isst ei|nen gro|ßen Sa|lat.",
-     "Al|le re|den durch|ei|nan|der."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "kueche",
-     "dinge": [
-      "🎂",
-      "🕯️"
-     ],
-     "leute": [
-      "Leon",
-      "Omi",
-      "Opi"
-     ]
-    },
-    "zeilen": [
-     "Zum Schluss kommt ein Ku|chen.",
-     "Da|rauf brennt ei|ne Ker|ze.",
-     "Al|le sin|gen für O|mi ein Lied.",
-     "O|mi bläst die Ker|ze aus.",
-     "Le|on klatscht am lau|tes|ten."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "kueche",
-     "dinge": [
-      "⚽",
-      "😄"
-     ],
-     "leute": [
-      "Leon",
-      "Opi"
-     ]
-    },
-    "zeilen": [
-     "O|pi fragt Le|on nach dem Fuß|ball.",
-     "„Am Sams|tag ha|be ich ein Tur|nier“, sagt Le|on.",
-     "„Ich bin wie|der im Tor.“",
-     "O|pi hebt den Dau|men.",
-     "„Du hältst be|stimmt je|den Ball!“"
+     "Es|sen ge|hen ist et|was Be|son|de|res.",
+     "Man sitzt an ei|nem gro|ßen Tisch.",
+     "Je|der kann sich et|was aus|su|chen.",
+     "Und kei|ner muss ab|wa|schen!",
+     "Das macht Le|on Spaß."
     ]
    },
    {
@@ -13570,59 +13542,77 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Spät am A|bend fah|ren sie heim.",
-     "Le|on ist satt und mü|de.",
-     "Im Au|to fal|len ihm die Au|gen zu.",
-     "Pa|pa trägt ihn ins Bett.",
-     "Das war ein schö|ner Ge|burts|tag."
+     "Am A|bend fuh|ren sie wie|der heim.",
+     "Le|on war mü|de.",
+     "Es war ein lan|ger Tag.",
+     "Am nächs|ten Tag war ja schon wie|der Schu|le."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎂",
+      "❤️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on denkt noch ger|ne an den Tag.",
+     "Ein Ge|burts|tag mit der Fa|mi|lie ist schön.",
+     "Bald hat Le|on selbst Ge|burts|tag.",
+     "Dann wird er acht Jah|re alt.",
+     "Da|rauf freut er sich schon."
     ]
    }
   ],
   "fragen": [
    {
-    "frage": "Wer ist Omi?",
-    "richtig": "Papas Mama",
+    "frage": "Wer hatte am Montag Geburtstag?",
+    "richtig": "Omi",
     "falsch": [
-     "Leons Lehrerin",
-     "die Nachbarin"
+     "Opi",
+     "Paul"
     ],
     "seite": 1
    },
    {
-    "frage": "Was malt Leon auf das Bild?",
-    "richtig": "ein Tor mit einem Ball",
+    "frage": "Was will Leon rufen?",
+    "richtig": "Alles Gute, Omi!",
     "falsch": [
-     "ein Haus",
-     "eine Katze"
+     "Gute Nacht!",
+     "Hallo Papa!"
     ],
     "seite": 2
    },
    {
-    "frage": "Wohin fahren alle am Nachmittag?",
+    "frage": "Wohin fuhren Papa und Leon?",
     "richtig": "nach Kalchreuth",
     "falsch": [
      "nach Berlin",
-     "an den See"
+     "ins Freibad"
     ],
     "seite": 3
    },
    {
-    "frage": "Was isst Leon?",
-    "richtig": "Schnitzel mit Pommes",
+    "frage": "Was muss beim Essengehen keiner machen?",
+    "richtig": "abwaschen",
     "falsch": [
-     "einen Salat",
-     "einen Braten"
-    ],
-    "seite": 5
-   },
-   {
-    "frage": "Was macht Omi mit der Kerze?",
-    "richtig": "Sie bläst sie aus.",
-    "falsch": [
-     "Sie stellt sie ins Fenster.",
-     "Sie schenkt sie Leon."
+     "essen",
+     "sitzen"
     ],
     "seite": 6
+   },
+   {
+    "frage": "Wie alt wird Leon bald?",
+    "richtig": "acht Jahre",
+    "falsch": [
+     "sechs Jahre",
+     "zehn Jahre"
+    ],
+    "seite": 8
    }
   ]
  },
@@ -13630,6 +13620,7 @@ window.LEON_GESCHICHTEN = [
   "id": "w42-kleeblatt",
   "titel": "Ein Tor zu wenig",
   "bild": "🍀",
+  "ereignis": "2026-10-11",
   "zeigenAb": "2026-10-13",
   "zeigenBis": "2026-10-17",
   "seiten": [
@@ -13832,111 +13823,15 @@ window.LEON_GESCHICHTEN = [
  },
  {
   "id": "w42-turnier",
-  "titel": "Die Woche vor dem Turnier",
-  "bild": "🧤",
-  "zeigenAb": "2026-10-13",
+  "titel": "Das Turnier in Nürnberg",
+  "bild": "🏆",
+  "ereignis": "2026-10-17",
+  "zeigenAb": "2026-10-16",
   "zeigenBis": "2026-10-17",
   "seiten": [
    {
     "szene": {
-     "ort": "klasse",
-     "dinge": [
-      "📅",
-      "⚽"
-     ],
-     "leute": [
-      "Leon"
-     ]
-    },
-    "zeilen": [
-     "Die|se Wo|che ist Le|on auf|ge|regt.",
-     "Am Sams|tag hat er ein Tur|nier.",
-     "Er spielt beim ASC Box|dorf.",
-     "Le|on ist der Tor|wart.",
-     "Bis da|hin wird viel trai|niert."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "platz",
-     "dinge": [
-      "⚽",
-      "🥅"
-     ],
-     "leute": [
-      "Leon"
-     ]
-    },
-    "zeilen": [
-     "Am Mitt|woch ist das ers|te Trai|ning.",
-     "Es be|ginnt um fünf Uhr.",
-     "Die Kin|der lau|fen erst ei|ne Run|de.",
-     "Dann schie|ßen sie auf das Tor.",
-     "Le|on fängt fast je|den Ball."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "platz",
-     "dinge": [
-      "🧤",
-      "⚽"
-     ],
-     "leute": [
-      "Leon",
-      "Papa"
-     ]
-    },
-    "zeilen": [
-     "Am Frei|tag kommt Pa|pa mit.",
-     "Um vier Uhr ist Tor|wart|trai|ning.",
-     "Pa|pa schießt flach und hoch.",
-     "Le|on springt nach links und rechts.",
-     "Sei|ne Hand|schu|he wer|den ganz dre|ckig."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "platz",
-     "dinge": [
-      "⚽",
-      "💪"
-     ],
-     "leute": [
-      "Leon",
-      "Papa"
-     ]
-    },
-    "zeilen": [
-     "Da|nach geht es gleich wei|ter.",
-     "Um fünf Uhr ist das nor|ma|le Trai|ning.",
-     "Le|on ist schon warm.",
-     "Der Trai|ner ruft: „Gut ge|hal|ten!“",
-     "Le|on strahlt über das gan|ze Ge|sicht."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "zimmer",
-     "dinge": [
-      "🎒",
-      "🧤"
-     ],
-     "leute": [
-      "Leon"
-     ]
-    },
-    "zeilen": [
-     "Am Frei|tag|a|bend packt Le|on.",
-     "Tri|kot, Ho|se und Stut|zen kom|men in die Ta|sche.",
-     "Die Hand|schu|he legt er o|ben drauf.",
-     "Die Fuß|ball|schu|he stellt er an die Tür.",
-     "Dann geht er früh ins Bett."
-    ]
-   },
-   {
-    "szene": {
-     "ort": "platz",
+     "ort": "strasse",
      "dinge": [
       "🚗",
       "🏟️"
@@ -13947,11 +13842,30 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Am Sams|tag fah|ren sie nach Nürn|berg.",
+     "Am Sams|tag ist end|lich Tur|nier.",
+     "Pa|pa fährt Le|on nach Nürn|berg.",
      "Der Platz ge|hört zum ESV Flü|gel|rad.",
      "Das ers|te Spiel be|ginnt um zehn Uhr.",
+     "Le|on schaut aus dem Fens|ter."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🏟️",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
      "Vier Mann|schaf|ten sind ge|mel|det.",
-     "Flü|gel|rad hat so|gar zwei Teams."
+     "Flü|gel|rad hat so|gar zwei Teams.",
+     "Da|zu kommt Ran|gier|bahn|hof.",
+     "Und na|tür|lich der ASC Box|dorf.",
+     "Das ist Le|ons Mann|schaft."
     ]
    },
    {
@@ -13969,8 +13883,85 @@ window.LEON_GESCHICHTEN = [
      "Es spie|len im|mer fünf ge|gen fünf.",
      "Ein Spiel dau|ert fünf|zehn Mi|nu|ten.",
      "Da|zwi|schen gibt es kur|ze Pau|sen.",
-     "Ge|gen Box|dorf spielt auch Ran|gier|bahn|hof.",
-     "Das ist ein lus|ti|ger Na|me."
+     "Dann kann man et|was trin|ken.",
+     "Dann wird wei|ter|ge|spielt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on zieht sei|ne Hand|schu|he an.",
+     "Er stellt sich ins Tor.",
+     "Sein Herz klopft ganz schnell.",
+     "Das ist ein biss|chen wie im Sta|di|on.",
+     "Nur klei|ner."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die|se Wo|che trai|niert Le|on viel.",
+     "Am Mitt|woch mit der Mann|schaft.",
+     "Am Frei|tag mit Pa|pa im Tor.",
+     "Am Sams|tag will er zei|gen, was er kann.",
+     "Le|on ist be|reit."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "📣",
+      "👏"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Pa|pa ist am Platz da|bei.",
+     "Das macht Le|on Mut.",
+     "Le|on ist nicht al|lein auf dem Platz.",
+     "Sei|ne gan|ze Mann|schaft ist da.",
+     "Zu|sam|men sind sie stark."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📺",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Um ein Uhr spielt auch Fürth.",
+     "Die Klee|blät|ter spie|len ge|gen Braun|schweig.",
+     "Le|on will das Er|geb|nis wis|sen.",
+     "Viel|leicht ge|win|nen heu|te al|le bei|de.",
+     "Das wä|re ein schö|ner Tag."
     ]
    },
    {
@@ -13986,56 +13977,56 @@ window.LEON_GESCHICHTEN = [
     },
     "zeilen": [
      "Le|on denkt an die Klee|blät|ter.",
-     "Die spie|len am sel|ben Tag.",
      "„Wir hal|ten heu|te bei|de durch“, denkt er.",
      "Er zieht die Hand|schu|he fest.",
-     "Dann läuft er ins Tor."
+     "Dann läuft er ins Tor.",
+     "Das Tur|nier kann be|gin|nen!"
     ]
    }
   ],
   "fragen": [
    {
-    "frage": "Für welchen Verein spielt Leon?",
-    "richtig": "ASC Boxdorf",
+    "frage": "Wer fährt Leon nach Nürnberg?",
+    "richtig": "Papa",
     "falsch": [
-     "ESV Flügelrad",
-     "Hertha"
+     "Omi",
+     "der Trainer"
     ],
     "seite": 1
    },
    {
-    "frage": "Wann beginnt das Training am Mittwoch?",
-    "richtig": "um fünf Uhr",
+    "frage": "Wie viele Mannschaften sind gemeldet?",
+    "richtig": "vier",
     "falsch": [
-     "um zehn Uhr",
-     "um acht Uhr"
+     "zehn",
+     "sieben"
     ],
     "seite": 2
    },
    {
-    "frage": "Was macht Papa beim Torwarttraining?",
-    "richtig": "Er schießt flach und hoch.",
-    "falsch": [
-     "Er steht im Tor.",
-     "Er pfeift."
-    ],
-    "seite": 3
-   },
-   {
-    "frage": "Was legt Leon oben in die Tasche?",
-    "richtig": "die Handschuhe",
-    "falsch": [
-     "die Fußballschuhe",
-     "ein Buch"
-    ],
-    "seite": 5
-   },
-   {
-    "frage": "Wie lange dauert ein Spiel beim Turnier?",
+    "frage": "Wie lange dauert ein Spiel?",
     "richtig": "fünfzehn Minuten",
     "falsch": [
      "eine Stunde",
      "fünf Minuten"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wann trainiert Leon mit Papa?",
+    "richtig": "am Freitag",
+    "falsch": [
+     "am Sonntag",
+     "am Montag"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Gegen wen spielt Fürth?",
+    "richtig": "gegen Braunschweig",
+    "falsch": [
+     "gegen Hertha",
+     "gegen Bayern"
     ],
     "seite": 7
    }
@@ -14045,6 +14036,7 @@ window.LEON_GESCHICHTEN = [
   "id": "w42-igel",
   "titel": "Ein Igel zu Besuch",
   "bild": "🦔",
+  "ereignis": "2026-10-10",
   "zeigenAb": "2026-10-12",
   "zeigenBis": "2026-10-25",
   "seiten": [
@@ -14252,6 +14244,421 @@ window.LEON_GESCHICHTEN = [
     "falsch": [
      "in den Keller",
      "auf den Balkon"
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "w42-training",
+  "titel": "Training am Mittwoch",
+  "bild": "🥅",
+  "ereignis": "2026-10-14",
+  "zeigenAb": "2026-10-13",
+  "zeigenBis": "2026-10-14",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "📅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die|se Wo|che ist Le|on auf|ge|regt.",
+     "Am Sams|tag hat er ein Tur|nier.",
+     "Er spielt beim ASC Box|dorf.",
+     "Le|on ist der Tor|wart.",
+     "Vor|her wird noch trai|niert."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎒",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Mitt|woch ist das ers|te Trai|ning.",
+     "Es be|ginnt um fünf Uhr.",
+     "Le|on legt sei|ne Sa|chen schon be|reit.",
+     "Die Tor|wart|hand|schu|he dür|fen nicht feh|len.",
+     "Oh|ne die geht er nie ins Tor."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf dem Platz trifft er sei|ne Freun|de.",
+     "Al|le spie|len beim ASC Box|dorf.",
+     "Sie wol|len am Sams|tag ge|win|nen.",
+     "Da|für muss je|der mit|ma|chen.",
+     "Auch der Tor|wart."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on weiß, was ein Tor|wart braucht.",
+     "Er muss gut auf|pas|sen.",
+     "Er muss schnell sprin|gen kön|nen.",
+     "Und er darf kei|ne Angst vor dem Ball ha|ben.",
+     "Le|on hat kei|ne Angst."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "💭"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt sich schon vor, wie es wird.",
+     "Ein Ball fliegt hoch aufs Tor.",
+     "Le|on springt und fängt ihn.",
+     "Sei|ne Freun|de klat|schen.",
+     "Das wä|re toll!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag gibt es noch mehr Trai|ning.",
+     "Dann kommt so|gar Pa|pa mit.",
+     "Da|von er|zählt ei|ne an|de|re Ge|schich|te.",
+     "Erst ein|mal ist Mitt|woch dran."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Vor ei|nem Trai|ning geht Le|on früh ins Bett.",
+     "Er will fit sein.",
+     "Er macht die Au|gen zu.",
+     "In sei|nem Kopf rollt ein Ball.",
+     "Dann schläft er ein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on freut sich auf den Mitt|woch.",
+     "Er freut sich auf den Ball.",
+     "Er freut sich auf sei|ne Freun|de.",
+     "Und am meis|ten freut er sich auf Sams|tag."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wann beginnt das Training am Mittwoch?",
+    "richtig": "um fünf Uhr",
+    "falsch": [
+     "um zehn Uhr",
+     "um acht Uhr"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was darf nicht fehlen?",
+    "richtig": "die Torwarthandschuhe",
+    "falsch": [
+     "die Mütze",
+     "die Brille"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Für welchen Verein spielt Leon?",
+    "richtig": "ASC Boxdorf",
+    "falsch": [
+     "ESV Flügelrad",
+     "Hertha"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wovor hat Leon keine Angst?",
+    "richtig": "vor dem Ball",
+    "falsch": [
+     "vor dem Hund",
+     "vor der Nacht"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wer kommt am Freitag mit?",
+    "richtig": "Papa",
+    "falsch": [
+     "Opi",
+     "Paul"
+    ],
+    "seite": 6
+   }
+  ]
+ },
+ {
+  "id": "w42-torwart",
+  "titel": "Torwarttraining mit Papa",
+  "bild": "🧤",
+  "ereignis": "2026-10-16",
+  "zeigenAb": "2026-10-15",
+  "zeigenBis": "2026-10-16",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag ist ein be|son|de|rer Tag.",
+     "Le|on hat Tor|wart|trai|ning.",
+     "Und Pa|pa kommt mit.",
+     "Es be|ginnt um vier Uhr.",
+     "Le|on kann es kaum er|war|ten."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt es sich schon vor.",
+     "Pa|pa schießt flach und hoch.",
+     "Le|on springt nach links und rechts.",
+     "Sei|ne Hand|schu|he wer|den ganz dre|ckig.",
+     "Aber das macht nichts."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "💪"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Tor|wart muss viel üben.",
+     "Er muss sich schnell auf den Bo|den wer|fen.",
+     "Dann muss er schnell wie|der auf|ste|hen.",
+     "Das ist ganz schön an|stren|gend.",
+     "Le|on übt das gern."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🏃"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Um fünf Uhr geht es gleich wei|ter.",
+     "Dann ist das nor|ma|le Trai|ning.",
+     "Le|on ist dann schon warm.",
+     "Sei|ne Freun|de kom|men da|zu.",
+     "Jetzt wird für Sams|tag ge|übt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Mann|schaft übt Päs|se und Tor|schüs|se.",
+     "Le|on steht da|bei im Tor.",
+     "Er ruft sei|nen Freun|den et|was zu.",
+     "Ein Tor|wart sieht das gan|ze Feld.",
+     "Er hilft so den an|de|ren."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎒",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag|a|bend packt Le|on.",
+     "Tri|kot, Ho|se und Stut|zen kom|men in die Ta|sche.",
+     "Die Hand|schu|he legt er o|ben drauf.",
+     "Die Fuß|ball|schu|he stellt er an die Tür."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "🌙",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann geht er früh ins Bett.",
+     "Mor|gen ist das Tur|nier.",
+     "Le|on ist mü|de von den zwei Trai|nings.",
+     "Aber er ist auch auf|ge|regt.",
+     "Er ku|schelt sich in sei|ne De|cke."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍀",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on denkt an das Tur|nier.",
+     "Er will viel hal|ten.",
+     "Er will sei|ner Mann|schaft hel|fen.",
+     "Mit die|sem Ge|dan|ken schläft er ein."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wann beginnt das Torwarttraining?",
+    "richtig": "um vier Uhr",
+    "falsch": [
+     "um fünf Uhr",
+     "um neun Uhr"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie schießt Papa?",
+    "richtig": "flach und hoch",
+    "falsch": [
+     "nur ganz leise",
+     "mit dem Kopf"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was ist um fünf Uhr?",
+    "richtig": "das normale Training",
+    "falsch": [
+     "das Abendessen",
+     "das Turnier"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was legt Leon oben in die Tasche?",
+    "richtig": "die Handschuhe",
+    "falsch": [
+     "die Trinkflasche",
+     "ein Buch"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Was ist morgen?",
+    "richtig": "das Turnier",
+    "falsch": [
+     "Omis Geburtstag",
+     "ein Ausflug"
     ],
     "seite": 7
    }
