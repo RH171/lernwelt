@@ -254,8 +254,17 @@
   var ROH = window.LEON_GESCHICHTEN || [];
   function gilt(g){ var h = heuteText(); return !(g.zeigenBis && g.zeigenBis < h) && !(g.zeigenAb && g.zeigenAb > h); }
   var ALLE = ROH.filter(gilt);
+  /* Denny, 12.10.2026 (Wahl A): erst das juengste Erlebnis der letzten Tage, gleich danach das
+     naechste Ereignis. "ereignis" ist der Tag, um den es geht. Rueckblicke (vor heute) neueste zuerst,
+     dann Vorschauen (heute und spaeter) naechste zuerst, dann Wochengeschichten ohne Datum, dann der Vorrat. */
   function aktuellZuerst(liste){
-    return liste.filter(function(g){ return g.zeigenBis; }).concat(liste.filter(function(g){ return !g.zeigenBis; }));
+    var h = heuteText();
+    var rueck = liste.filter(function(g){ return g.zeigenBis && g.ereignis && g.ereignis < h; })
+      .sort(function(a, b){ return b.ereignis.localeCompare(a.ereignis); });
+    var vor = liste.filter(function(g){ return g.zeigenBis && g.ereignis && g.ereignis >= h; })
+      .sort(function(a, b){ return a.ereignis.localeCompare(b.ereignis); });
+    var ohne = liste.filter(function(g){ return g.zeigenBis && !g.ereignis; });
+    return rueck.concat(vor, ohne, liste.filter(function(g){ return !g.zeigenBis; }));
   }
 
   /* ---------- Speicher ----------
