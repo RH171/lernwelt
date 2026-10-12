@@ -13635,22 +13635,21 @@ window.LEON_GESCHICHTEN = [
   "seiten": [
    {
     "szene": {
-     "ort": "zimmer",
+     "ort": "stadion",
      "dinge": [
-      "📺",
+      "🏟️",
       "🍀"
      ],
      "leute": [
-      "Leon",
-      "Papa"
+      "Leon"
      ]
     },
     "zeilen": [
      "Am Sonn|tag spiel|ten die Klee|blät|ter.",
      "So nennt man den Ver|ein aus Fürth.",
      "Sie spiel|ten in Ber|lin ge|gen Her|tha.",
-     "Le|on hat sein grü|nes Tri|kot an.",
-     "Er drückt ganz fest die Dau|men."
+     "Le|on war an dem Tag auf der Ker|wa.",
+     "Das Er|geb|nis hat er erst spä|ter er|fah|ren."
     ]
    },
    {
@@ -13668,8 +13667,8 @@ window.LEON_GESCHICHTEN = [
      "Das Sta|di|on in Ber|lin ist rie|sig.",
      "Lan|ge steht es null zu null.",
      "Dann schießt Her|tha ein Tor.",
-     "Le|on hält sich die Hän|de vors Ge|sicht.",
-     "„Oh nein!“, ruft er."
+     "Die Fans aus Fürth sind ganz lei|se.",
+     "Ih|re grü|nen Fah|nen hän|gen nach un|ten."
     ]
    },
    {
@@ -13679,17 +13678,14 @@ window.LEON_GESCHICHTEN = [
       "⚽",
       "😟"
      ],
-     "leute": [
-      "Leon",
-      "Papa"
-     ]
+     "leute": []
     },
     "zeilen": [
      "Kurz da|nach fällt noch ein Tor.",
      "Wie|der für Her|tha.",
      "Jetzt steht es zwei zu null.",
-     "„Noch ist es nicht vor|bei“, sagt Pa|pa.",
-     "Le|on rutscht auf dem So|fa hin und her."
+     "Die Spie|ler aus Fürth ge|ben nicht auf.",
+     "Sie lau|fen und kämp|fen wei|ter."
     ]
    },
    {
@@ -13699,15 +13695,12 @@ window.LEON_GESCHICHTEN = [
       "⚽",
       "🎉"
      ],
-     "leute": [
-      "Leon",
-      "Papa"
-     ]
+     "leute": []
     },
     "zeilen": [
      "In der letz|ten Mi|nu|te pas|siert es.",
      "Fürth schießt end|lich ein Tor!",
-     "Le|on springt vom So|fa hoch.",
+     "Die Fans aus Fürth ju|beln laut.",
      "Doch dann pfeift der Schieds|rich|ter ab.",
      "Es en|det zwei zu eins für Her|tha."
     ]
@@ -13720,33 +13713,31 @@ window.LEON_GESCHICHTEN = [
       "🍀"
      ],
      "leute": [
-      "Leon",
-      "Papa"
+      "Leon"
      ]
     },
     "zeilen": [
-     "Pa|pa zeigt Le|on die Ta|bel|le.",
+     "Le|on schaut sich die Ta|bel|le an.",
      "Fürth steht ge|ra|de auf Platz fünf|zehn.",
-     "„Das ist ziem|lich weit un|ten“, sagt Le|on.",
-     "„Das kann sich schnell än|dern“, sagt Pa|pa.",
-     "„Je|des Spiel ist ei|ne neu|e Chan|ce.“"
+     "„Das ist ziem|lich weit un|ten“, denkt Le|on.",
+     "Aber das kann sich schnell än|dern.",
+     "Je|des Spiel ist ei|ne neu|e Chan|ce."
     ]
    },
    {
     "szene": {
-     "ort": "zimmer",
+     "ort": "stadion",
      "dinge": [
-      "📺",
+      "⚽",
       "⚽"
      ],
      "leute": [
-      "Leon",
-      "Paul"
+      "Leon"
      ]
     },
     "zeilen": [
-     "Paul hat noch ein Spiel ge|se|hen.",
-     "Nürn|berg hat ge|gen Wolfs|burg ge|spielt.",
+     "Auch Nürn|berg hat am Wo|chen|en|de ge|spielt.",
+     "Sie spiel|ten ge|gen Wolfs|burg.",
      "Am En|de stand es vier zu vier.",
      "„Acht To|re!“, staunt Le|on.",
      "Nürn|berg ist jetzt auf Platz zwei."
@@ -13760,8 +13751,7 @@ window.LEON_GESCHICHTEN = [
       "🍀"
      ],
      "leute": [
-      "Leon",
-      "Papa"
+      "Leon"
      ]
     },
     "zeilen": [
