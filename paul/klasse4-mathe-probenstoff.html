@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Probenstoff Mathe</title>
+<!--
+  Pauls Probenstoff Mathe (Dennys Wahl vom 13.10.2026: A Tagesrunde Probenstoff, B Kiste mit seinen
+  Fehlerstellen, D Sachaufgaben). Mathe-Probe am Montag, 19.10.2026; danach ist der Teil still aus
+  (EIN.bis im Motor). Motor /probenstoff/motor.js (reine Logik), Anzeige /probenstoff/seite.js,
+  Speicher paul-probenstoff (localStorage, ueber paul-sync.js, hoechstens drei Schreibvorgaenge am Tag).
+  Nur fuer Paul. Kapitel 121.
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/probenstoff/probenstoff.css?v=e3207b70">
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Probenstoff Mathe</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>📐 Fit für die Mathe-Probe</h2>
+  <p id="start-satz">Jeden Tag neue Aufgaben zu deinem Stoff.</p>
+  <div class="teile">
+    <div class="teil" id="teil-1"><div class="ic">✖️</div><div><b>Teil 1: Probenstoff</b><span id="teil-1-satz"></span></div></div>
+    <div class="teil" id="teil-2"><div class="ic">📖</div><div><b>Teil 2: Sachaufgaben</b><span id="teil-2-satz"></span></div></div>
+  </div>
+  <p id="start-fertig"></p>
+  <div class="mitte"><button id="los" class="knopf primaer">Los geht's</button></div>
+</section>
+
+<section id="zwischen" class="karte verborgen">
+  <h2>Teil 1 geschafft!</h2>
+  <p id="zwischen-satz"></p>
+  <div class="mitte"><button id="weiter-sach" class="knopf primaer">Zu den Sachaufgaben</button></div>
+</section>
+
+<section id="spiel" class="verborgen">
+  <div class="oben"><span id="thema"></span><span id="zaehler"></span></div>
+  <div id="aufgabe" aria-live="polite"></div>
+  <div id="tipp" class="tipp" aria-live="polite"></div>
+  <div id="tasten">
+    <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+    <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+    <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+    <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
+    <button data-taste="ok" class="ok">Prüfen</button>
+  </div>
+</section>
+
+<section id="ende" class="karte verborgen">
+  <h2>🎉 Für heute geschafft!</h2>
+  <p id="ende-zahlen"></p>
+  <p id="ende-morgen">Morgen gibt es neue Aufgaben.</p>
+  <div class="mitte"><button id="nochmal" class="knopf">Noch eine Runde</button><a class="knopf primaer" href="./">Zur Startseite</a></div>
+</section>
+
+<section id="aus" class="karte verborgen">
+  <h2>Die Mathe-Probe ist vorbei</h2>
+  <p>Diese Übung war für deine Probe am 19.10.2026. Deine anderen Mathe-Übungen findest du auf der Startseite.</p>
+  <div class="mitte"><a class="knopf primaer" href="./">Zur Startseite</a></div>
+</section>
+
+<script src="/probenstoff/motor.js?v=67a64e7d"></script>
+<script src="/probenstoff/seite.js?v=c05dd421" defer></script>
+<script src="/lernstand.js?v=3e61289c" defer></script>
+</body>
+</html>
