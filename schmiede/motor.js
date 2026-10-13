@@ -1204,6 +1204,10 @@
   }
 
   function raetselPruefen(){
+    // Nur bei offenem Tor. Ein Browser, der den Fokus im versteckten Feld
+    // laesst, schickt eine zweite Eingabetaste sonst hierher - und die
+    // Aufgabe zaehlte doppelt (13.10.2026, Leons Meldung).
+    if (!station || $("schirm-raetsel").classList.contains("weg")) return;
     var a = station.aufgabe;
     var kette = (a.art === "teilschritte" && a.teilschritte && a.teilschritte.length) ? a.teilschritte : null;
     var soll = kette ? kette[raetselSchritt].richtig : a.richtig;
@@ -1217,7 +1221,7 @@
         setTimeout(function(){ try{ $("raetsel-feld").focus(); }catch(e){} }, 40);
         return;
       }
-      $("schirm-raetsel").classList.add("weg");
+      torFeldLoslassen();
       station.geloest = true; station.offen = true;
       punkte += 20; geloest++;
       anzeigenAuffrischen();
@@ -1232,7 +1236,7 @@
     feld.classList.add("schlecht");
     sndFalsch();
     if (raetselFehler >= 2){
-      $("schirm-raetsel").classList.add("weg");
+      torFeldLoslassen();
       station.geloest = true; station.offen = true;
       danebenSchubsen();
       antwortMelden(false, eingabe);
@@ -1259,7 +1263,48 @@
     zeigen(el, true);
   }
 
-  $("raetsel-pruefen").addEventListener("click", raetselPruefen);
+  /* Tor zu UND Fokus raus: Sonst bleibt auf dem iPad die Tastatur offen und
+     die naechste Eingabetaste landet im unsichtbaren Feld. */
+  function torFeldLoslassen(){
+    $("schirm-raetsel").classList.add("weg");
+    try { $("raetsel-feld").blur(); } catch(e){}
+  }
+
+  /* Ein Tafelknopf muss auch dann reagieren, wenn ein zweiter Finger noch
+     auf dem Bildschirm liegt. Gemessen am 13.10.2026 (pruefe-schmiede-weiter.mjs,
+     echte Touch-Ereignisse): Haelt Leon beim Fliegen den Daumen auf FLIEGEN,
+     waehrend das Tor aufgeht, ist jeder weitere Tipp ein Zwei-Finger-Tipp -
+     und dafuer erzeugt der Browser KEIN click. "Weiter geht's!" tat nichts,
+     bis der Daumen weg war - auch dann, wenn der Daumen beim Abheben des
+     Tipps schon weg ist (e.touches ist dann leer, ein click kommt trotzdem
+     nicht). Deshalb loest hier jeder Tipp schon beim touchend aus, ohne auf
+     das click des Browsers zu warten; preventDefault verhindert ein zweites
+     Ausloesen, die Sperre von 450 ms faengt den Rest. Maus und Tastatur
+     laufen weiter ueber click. */
+  function tippBinden(el, tu){
+    var finger = null, zuletzt = 0;
+    function los(e){ var t = Date.now(); if (t - zuletzt < 450) return; zuletzt = t; tu(e); }
+    el.addEventListener("click", los);
+    el.addEventListener("touchstart", function(e){
+      var t = e.changedTouches && e.changedTouches[0];
+      finger = t ? { id: t.identifier, x: t.clientX, y: t.clientY } : null;
+    }, {passive:true});
+    el.addEventListener("touchcancel", function(){ finger = null; });
+    el.addEventListener("touchend", function(e){
+      if (!finger) return;
+      for (var i = 0; i < e.changedTouches.length; i++){
+        var t = e.changedTouches[i];
+        if (t.identifier !== finger.id) continue;
+        var weit = Math.abs(t.clientX - finger.x) > 14 || Math.abs(t.clientY - finger.y) > 14;
+        finger = null;
+        var r = el.getBoundingClientRect();
+        var drauf = t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
+        if (drauf && !weit){ e.preventDefault(); los(e); }
+      }
+    }, {passive:false});
+  }
+
+  tippBinden($("raetsel-pruefen"), raetselPruefen);
   $("raetsel-feld").addEventListener("keydown", function(e){ if (e.key === "Enter") raetselPruefen(); });
 
   function loesungZeigen(stimmt, a){
@@ -1277,9 +1322,12 @@
       $("loesung-merke").appendChild(b); $("loesung-merke").appendChild(t);
     }
     $("schirm-loesung").classList.remove("weg");
+    loesungSeit = Date.now();
   }
 
-  $("loesung-weiter").addEventListener("click", function(){
+  var loesungSeit = 0;
+  function loesungWeiter(){
+    if ($("schirm-loesung").classList.contains("weg")) return;
     $("schirm-loesung").classList.add("weg");
     aufgabeNr++;
     if (aufgabeNr >= aufgaben.length){ spielEnde(); return; }
@@ -1288,6 +1336,17 @@
     zustand = "spielt";
     weltErzeugen(naechstes + 900);
     stationSetzen(naechstes);
+  }
+  tippBinden($("loesung-weiter"), loesungWeiter);
+  /* Auch per Eingabe- oder Leertaste weiter. Erst nach einer kurzen Pause:
+     Dieselbe Eingabetaste, die das Tor geloest hat, oeffnet die Tafel - sie
+     darf sie nicht gleich wieder ueberspringen, ehe der Rechenweg zu sehen war. */
+  window.addEventListener("keydown", function(e){
+    if (e.repeat || $("schirm-loesung").classList.contains("weg")) return;
+    if (e["key"] !== "Enter" && e.code !== "Space" && e.code !== "NumpadEnter") return;
+    e.preventDefault();
+    if (Date.now() - loesungSeit < 600) return;
+    loesungWeiter();
   });
 
   /* "1736", " 1736 " und "1.736" gelten als dasselbe; eine fehlende Einheit
@@ -1332,12 +1391,12 @@
     lernstandSenden();
   }
 
-  $("ende-nochmal").addEventListener("click", function(){ if (LS()) LS().uhrZuruecksetzen(); imSpiel = true; neuStart(); });
-  $("ende-raus").addEventListener("click", function(){
+  tippBinden($("ende-nochmal"), function(){ if (LS()) LS().uhrZuruecksetzen(); imSpiel = true; neuStart(); });
+  tippBinden($("ende-raus"), function(){
     zustand = "aus"; document.body.classList.remove("spielt");
     window.location.href = K.zurueck.href;
   });
-  $("ende-neu").addEventListener("click", function(){
+  tippBinden($("ende-neu"), function(){
     spielVerlassen();
     schrittNr = 0; schrittZeigen();
   });
