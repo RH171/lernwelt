@@ -1051,12 +1051,14 @@ function artKurz(art) {
     lehrerin: "\u270D\uFE0F Deine Lehrerin hat verbessert",
     "lehrerin-angemerkt": "\u270D\uFE0F Das hat deine Lehrerin angemerkt",
     eingetragen: "\u270F\uFE0F Das hast du eingetragen \u2013 deine Lehrerin hat es nicht nachgesehen",
-    nachgesehen: "\uD83D\uDD0E Nachgesehen \u2013 nicht von deiner Lehrerin verbessert"
+    nachgesehen: "\uD83D\uDD0E Nachgesehen \u2013 nicht von deiner Lehrerin verbessert",
+    /* Vorlage der Lehrerin von der Klassenpinnwand (13.10.2026). */
+    vorlage: "\u270D\uFE0F So steht es bei deiner Lehrerin"
   };
   function belegKasten(f) {
     if (!f.beleg) return "";
     var h = HERKUNFT_KOPF[f.beleg.herkunft] ? f.beleg.herkunft : "heft";
-    var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt";
+    var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt" || h === "vorlage";
     var a = f.beleg.auch;
     var kopf = h === "eingetragen" && f.beleg.abgehakt
       ? "\u270F\uFE0F Das hast du eingetragen \u2013 deine Lehrerin hat es abgehakt" : HERKUNFT_KOPF[h];
@@ -1070,6 +1072,18 @@ function artKurz(art) {
           " meinen dasselbe.)</i>" : "") +
         '<br><button type="button" class="qbeleg-auf qbeleg-auch">\uD83D\uDCC4 Dieses Blatt ansehen</button></div>' : "") +
       "</div>";
+  }
+  /* Videos und Übungen der Lehrerin (13.10.2026, Dennys Wahl "C"). Nur
+     https-Adressen, öffnen in einem neuen Tab. Die Adressen kommen über die
+     API, nie aus einer Datei im Web-Ordner. */
+  function medienKnoepfe(f) {
+    var m = Array.isArray(f.medien) ? f.medien.filter(function (x) { return x && /^https:\/\//.test(String(x.url || "")); }) : [];
+    if (!m.length) return "";
+    return '<div class="qmedien">' + m.slice(0, 2).map(function (x) {
+      return '<a class="qmedium" target="_blank" rel="noopener noreferrer" href="' + esc(x.url).replace(/"/g, "&quot;") + '">' +
+        (x.art === "Video" ? "\uD83C\uDFAC Video deiner Lehrerin" : "\uD83E\uDDE9 \u00DCbung deiner Lehrerin") +
+        '<small>' + esc(x.titel) + '</small></a>';
+    }).join("") + "</div>";
   }
   function datumKurz(d) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || ""));
@@ -1171,7 +1185,7 @@ function artKurz(art) {
          wenn Paul nach der Eingabe der Lösung auch selber noch nachschlagen
          könnte … wir hätten dazu gerne den Beweis aus seinen Unterlagen
          gesehen." Der Server liefert die Zeile aus dem Heft mit. */
-      belegKasten(f);
+      belegKasten(f) + medienKnoepfe(f);
     var auf = e.querySelector(".qbeleg-auf:not(.qbeleg-auch)");
     if (auf) auf.addEventListener("click", function () { belegZeigen(f); });
     var aufAuch = e.querySelector(".qbeleg-auch");

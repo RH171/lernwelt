@@ -41,6 +41,7 @@ import { eigeneWoche, berlinTag } from "./statistik.js";
 import { zeileHerkunft, zeileKindgerecht, lehrerinVerbessert, allesAbgehakt, anderesBlatt, auchRichtig, markeFuerModell } from "./_herkunft.js";
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
+import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, medienFuer } from "./_lehrervorlagen.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import {
@@ -220,7 +221,20 @@ export async function onRequestGet(context) {
   } catch (e) {}
   vorrat.fragen = vorratBereinigen(vorrat.fragen, blattNach);
 
+  /* Vorlagen der Lehrerin (13.10.2026, Dennys Wahl "A · Quiz prüft gegen die
+     Lehrerin"): Eine Frage, deren "richtig" ihrer ausgefüllten Vorlage
+     widerspricht, wird beim Lesen unterdrückt - im Speicher bleibt sie, es
+     gibt keinen Schreibvorgang. Ohne Vorlage (oder ohne Speicherwert) läuft
+     alles wie vorher. */
+  const lehrer = await vorlagenLesen(env, kind);
+  const gegenLehrerin = new Set();
+  if (lehrer) for (const f of vorrat.fragen) {
+    const r = frageGegenVorlage(f, vorlageFuerBlatt(lehrer, f.blatt));
+    if (r && !r.passt) gegenLehrerin.add(f.id);
+  }
+
   const passt = (f) => {
+    if (gegenLehrerin.has(f.id)) return false;
     if (gewuenschteFaecher.length &&
         !gewuenschteFaecher.includes(String(f.fach || "").toLowerCase())) return false;
     if (gewuenschteBlaetter.length && !gewuenschteBlaetter.includes(String(f.blatt || ""))) return false;
@@ -316,7 +330,16 @@ export async function onRequestGet(context) {
       /* Gleichwertige Namen (Fundbüro = Fundamt, 13.10.2026): beide zählen.
          Eine alte Seite kennt das Feld nicht und wertet wie bisher. */
       const auch = auchRichtig(f.antworten, f.richtig);
-      return { ...f, ...(b ? { beleg: b } : {}), ...(auch.length ? { auchRichtig: auch } : {}) };
+      /* Steht die Antwort so auf der Vorlage der Lehrerin, ist DAS der Beleg
+         ("✍ So steht es bei deiner Lehrerin"), und passende Videos und
+         Übungen von ihrer Pinnwand kommen als Knöpfe mit (13.10.2026). */
+      let beleg = b;
+      const vl = lehrer ? vorlageFuerBlatt(lehrer, f.blatt) : null;
+      const gv = vl ? frageGegenVorlage(f, vl) : null;
+      if (gv && gv.passt) beleg = belegAusVorlage(vl, gv.zeile);
+      const medien = lehrer ? medienFuer(f, blattNach[f.blatt], lehrer.medien) : [];
+      return { ...f, ...(beleg ? { beleg } : {}), ...(auch.length ? { auchRichtig: auch } : {}),
+               ...(medien.length ? { medien } : {}) };
     });
   /* `wartend` zaehlt ueber den GANZEN Vorrat, nicht nur ueber die Auswahl -
      sonst staende an einem abgewaehlten Blatt nie eine Zahl. Was daraus auf

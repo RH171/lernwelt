@@ -260,3 +260,9 @@ html[data-theme="dark"] .qstand-leg .ls{color:#6ee7a8} html[data-theme="dark"] .
   font:800 22px/1 var(--rund);cursor:pointer}
 .rk-taste:active{background:var(--akzent-hell)}
 .rk-weg{font-size:20px}
+
+/* Videos und Übungen der Lehrerin (13.10.2026) */
+.qmedien{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.qmedium{display:inline-flex;flex-direction:column;justify-content:center;min-height:44px;padding:6px 14px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:var(--card,#fff);color:var(--ink,#1c2033);font:700 15px inherit;text-decoration:none}
+.qmedium small{font-weight:500;font-size:13px;opacity:.85}
+.qbeleg-vorlage{border-style:solid}
