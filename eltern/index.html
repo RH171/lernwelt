@@ -1136,6 +1136,14 @@
       '<a class="knopf-link" href="/eltern/tagesrechnen.html">Übersicht ansehen</a></div>';
   }
 
+  /* Pauls 1×1-Woche (13.10.2026): Reihen mit Trick, Zahlendreiecke, Tempo-Runde. Eigene Seite. */
+  function einmaleinswocheKarte(){
+    if (KIND !== "paul") return "";
+    return '<div class="karte"><h2>1×1-Woche</h2>' +
+      '<p class="unter">Je Tag: richtig beim ersten Versuch, Zeit der Tempo-Runde und die langsamsten Aufgaben.</p>' +
+      '<a class="knopf-link" href="/eltern/einmaleinswoche.html">Übersicht ansehen</a></div>';
+  }
+
   /* ---------- Zurueckbekommene Arbeiten ----------
      Helena am 05.10.2026: "Wir haben den BET zurueckbekommen. Wo soll ich das
      hinschicken" - seitdem gibt es /<kind>/zurueck.html. Was dort ankommt, ist
@@ -1552,12 +1560,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() +
+      $("inhalt").innerHTML = notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte();
+    h += notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +

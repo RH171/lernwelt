@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paul · 1×1-Woche</title>
+<!--
+  Uebersicht fuer Denny (13.10.2026): Pauls 1×1-Woche je Tag – richtig beim ersten Versuch, Zeit
+  der Tempo-Runde, langsamste Aufgaben, was noch wackelt. Liest /api/einmaleinswoche (nur mit
+  Elternausweis, nur lesen), beschreibt die Aufgaben mit /einmaleinswoche/motor.js.
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+  :root{ --bg:#f4f6f9; --karte:#fff; --ink:#161821; --muted:#5f6675; --line:#e5e8ef;
+    --gut:#12804a; --mittel:#b45309; --paul:#4f46e5;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;padding:22px 16px 60px}
+  .huelle{max-width:860px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:24px;margin:0}
+  .zurueck{display:inline-flex;align-items:center;min-height:44px;padding:0 15px;border:1.5px solid var(--line);background:#fff;
+    border-radius:11px;color:var(--ink);text-decoration:none;font-weight:600}
+  .karte{background:var(--karte);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 4px 14px rgba(20,30,60,.06)}
+  .karte h2{font-size:19px;margin:0 0 6px}
+  .unter{color:var(--muted);margin:0 0 12px}
+  .zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .kachel{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .kachel b{display:block;font-size:26px}
+  .kachel span{color:var(--muted);font-size:14px}
+  table{width:100%;border-collapse:collapse}
+  td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:14px}
+  td.zahl{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .punkte{white-space:nowrap;letter-spacing:2px}
+  .leer{color:var(--muted)}
+  .karte{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/eltern/">← Elternbereich</a>
+    <h1>Paul · 1×1-Woche</h1>
+  </header>
+  <div id="inhalt"><div class="karte"><p class="unter">Lade …</p></div></div>
+</div>
+<script src="/einmaleinswoche/motor.js?v=6cb379fd"></script>
+<script>
+(function(){
+  "use strict";
+  var M = window.EWMotor;
+  function esc(t){ var d=document.createElement("div"); d.textContent=t==null?"":String(t); return d.innerHTML; }
+  function dt(iso){ var p=String(iso||"").split("-"); if(p.length!==3) return "–";
+    var t=new Date(+p[0],+p[1]-1,+p[2]); return t.toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}); }
+  function zeige(h){ document.getElementById("inhalt").innerHTML = h; }
+  function name(k){ var x=M.aufgabe(k); return x ? x.rechnung.replace(" = ?"," = "+x.loesung) : k; }
+  function setName(s){ return M.wahl(s).name + (s==="gemischt" ? "" : "er"); }
+
+  fetch("/api/einmaleinswoche",{credentials:"same-origin"})
+    .then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }); })
+    .then(function(a){
+      if (a.s === 401){ zeige('<div class="karte"><h2>Bitte zuerst anmelden</h2><p class="unter">Melde dich im <a href="/eltern/">Elternbereich</a> mit dem Elterncode an und öffne diese Seite dann noch einmal.</p></div>'); return; }
+      if (!a.j || !a.j.ok){ zeige('<div class="karte"><h2>Gerade nicht lesbar</h2><p class="unter">'+esc(a.j&&a.j.fehler)+'</p></div>'); return; }
+      malen(a.j.stand);
+    })
+    .catch(function(){ zeige('<div class="karte"><h2>Keine Verbindung</h2><p class="unter">Bitte später noch einmal versuchen.</p></div>'); });
+
+  function malen(st){
+    if (!st){ zeige('<div class="karte"><h2>Noch nicht begonnen</h2><p class="unter">Paul hat die 1×1-Woche noch nicht gemacht. Nach seinem ersten ganzen Durchgang steht hier sein Stand.</p></div>'); return; }
+    st = M.standPruefen(st);
+    var h = "", tage = Object.keys(st.tage).sort().reverse();
+    var plan = Object.keys(M.PLAN).map(function(d){ var l=st.tage[d]||[]; return '<tr><td>'+dt(d)+'</td><td>'+esc(setName(M.setFuerTag(d)))+'</td><td>'+(l.length?"✓ "+l.length+"× geübt":"–")+'</td></tr>'; }).join("");
+    h += '<div class="karte"><h2>Wochenplan</h2><p class="unter">Paul kann jeden Tag auch eine andere Auswahl nehmen.</p><table><tr><th>Tag</th><th>Reihen</th><th>Stand</th></tr>'+plan+'</table></div>';
+
+    h += '<div class="karte"><h2>Je Durchgang</h2>';
+    if (!tage.length) h += '<p class="unter leer">Noch kein Durchgang.</p>';
+    else {
+      h += '<p class="unter">Richtig beim ersten Versuch. Die Zeit der Tempo-Runde zählt nur, solange die Seite offen war.</p><table><tr><th>Tag</th><th>Reihen</th><th>Dreiecke</th><th>Tempo</th><th>Zeit</th><th>am langsamsten</th></tr>';
+      tage.forEach(function(d){ (st.tage[d]||[]).forEach(function(l){
+        h += '<tr><td>'+dt(d)+'</td><td>'+esc(setName(l.s))+'</td><td class="zahl">'+(l.a? l.a[0]+' von '+l.a[1]:'–')+'</td><td class="zahl">'+(l.b? l.b[0]+' von '+l.b[1]:'–')+'</td><td class="zahl">'+(l.t!=null? l.t+' s':'–')+'</td><td>'+
+          (l.l||[]).map(function(e){ return esc(name(e[0]))+' <span class="leer">('+String(e[1]).replace(".",",")+' s)</span>'; }).join("<br>")+'</td></tr>';
+      }); });
+      h += '</table>';
+    }
+    h += '</div>';
+
+    var w = M.wacklerListe(st);
+    h += '<div class="karte"><h2>Wackelt noch</h2>';
+    if (!w.length) h += '<p class="unter leer">Nichts offen.</p>';
+    else h += '<p class="unter">Kommt beim nächsten Durchgang zuerst dran. Verschwindet, wenn Paul sie an einem späteren Tag gleich richtig und zügig hat.</p><table><tr><th>Aufgabe</th><th>Grund</th><th>seit</th></tr>' +
+      w.map(function(k){ var o=st.wackel[k]; return '<tr><td><b>'+esc(name(k))+'</b></td><td>'+(o.f?"falsch":"langsam")+'</td><td>'+dt(o.d)+'</td></tr>'; }).join("") + '</table>';
+    h += '</div>';
+
+    var zt = Object.keys(st.zeiten);
+    if (zt.length){
+      h += '<div class="karte"><h2>Zeiten der Tempo-Runde</h2><table><tr><th>Reihen</th><th>zuletzt</th><th>schnellste</th><th>Runden</th></tr>' +
+        zt.map(function(s){ var z=st.zeiten[s]; return '<tr><td>'+esc(setName(s))+'</td><td class="zahl">'+z[z.length-1].t+' s</td><td class="zahl">'+Math.min.apply(null,z.map(function(e){return e.t;}))+' s</td><td class="zahl">'+z.length+'</td></tr>'; }).join("") + '</table></div>';
+    }
+    zeige(h);
+  }
+})();
+</script>
+</body>
+</html>

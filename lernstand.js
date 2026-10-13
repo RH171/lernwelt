@@ -1042,14 +1042,16 @@
     // Ein Spiel kann jede beantwortete Aufgabe melden - freiwillig.
     // punkt (seit 29.09.2026, freiwillig): der Lernpunkt der Aufgabe, z. B.
     // "blatt#k:regnitz" - damit "Deine Woche" spaeter geschaffte Kreise erkennt.
-    antwort: function (stimmt, merkmal, gegeben, richtig, punkt) {
+    // sekunden (seit 13.10.2026, freiwillig): Zeit bis zum ersten Versuch. Vorher stand hier
+    // immer 0, die Statistik kannte das Feld (functions/api/statistik.js) aber schon.
+    antwort: function (stimmt, merkmal, gegeben, richtig, punkt, sekunden) {
       try {
         aufgaben.push({
           merkmal: String(merkmal || "").slice(0, 40).toLowerCase(),
           art: "spiel",
           stimmt: !!stimmt,
           nachspielzeit: false,
-          sekunden: 0,
+          sekunden: (typeof sekunden === "number" && isFinite(sekunden) && sekunden > 0) ? Math.min(3600, Math.round(sekunden)) : 0,
           gegeben: stimmt ? "" : String(gegeben == null ? "" : gegeben).slice(0, 30),
           richtig: String(richtig == null ? "" : richtig).slice(0, 30),
           p: punkt ? String(punkt).slice(0, 70) : ""

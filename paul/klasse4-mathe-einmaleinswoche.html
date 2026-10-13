@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1×1-Woche</title>
+<!--
+  Pauls 1×1-Woche (Dennys Wahl vom 13.10.2026: A Reihen-Woche mit Dreieck, B Tempo-Runde mit
+  Bestzeit, C Merkhilfe vor jeder Reihe). Motor /einmaleinswoche/motor.js (reine Logik), Anzeige
+  /einmaleinswoche/seite.js, Speicher paul-einmaleinswoche (localStorage, ueber paul-sync.js,
+  ein Schreibvorgang je Durchgang, hoechstens zwei am Tag). Nur fuer Paul. Kapitel 115.
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/einmaleinswoche/einmaleinswoche.css?v=e873f875">
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>1×1-Woche</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>✖️ Deine 1×1-Woche</h2>
+  <p id="start-satz"></p>
+  <div class="wahl" id="wahl" role="group" aria-label="Reihen wählen"></div>
+  <div class="teile">
+    <div class="teil" id="teil-c"><div class="ic">💡</div><div><b>Teil 1: Der Trick</b><span id="teil-c-satz"></span></div></div>
+    <div class="teil" id="teil-a"><div class="ic">🔺</div><div><b>Teil 2: Zahlendreiecke</b><span id="teil-a-satz"></span></div></div>
+    <div class="teil" id="teil-b"><div class="ic">⚡</div><div><b>Teil 3: Tempo-Runde</b><span id="teil-b-satz"></span></div></div>
+  </div>
+  <p id="start-fertig"></p>
+  <div class="mitte"><button id="los" class="knopf primaer">Los geht's</button></div>
+</section>
+
+<section id="merk" class="karte verborgen">
+  <h2 id="merk-kopf">Der Trick</h2>
+  <div id="merk-liste"></div>
+  <div class="mitte"><button id="merk-los" class="knopf primaer">Los</button></div>
+</section>
+
+<section id="zwischen" class="karte verborgen">
+  <h2 id="zwischen-kopf"></h2>
+  <div id="familie"></div>
+  <p id="zwischen-satz"></p>
+  <div class="mitte"><button id="weiter-tempo" class="knopf primaer">Zur Tempo-Runde</button></div>
+</section>
+
+<section id="spiel" class="verborgen">
+  <div class="oben"><span id="teil"></span><span id="zaehler"></span></div>
+  <div id="aufgabe" aria-live="polite"></div>
+  <div id="tipp" class="tipp" aria-live="polite"></div>
+  <div id="tasten">
+    <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+    <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+    <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+    <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
+    <button data-taste="ok" class="ok">Prüfen</button>
+  </div>
+</section>
+
+<section id="ende" class="karte verborgen">
+  <h2>🎉 Geschafft!</h2>
+  <p id="ende-zeit"></p>
+  <p id="ende-zahlen"></p>
+  <p id="ende-morgen"></p>
+  <div class="mitte"><button id="nochmal" class="knopf">Andere Reihe üben</button><a class="knopf primaer" href="./">Zur Startseite</a></div>
+</section>
+
+<script src="/einmaleinswoche/motor.js?v=6cb379fd"></script>
+<script src="/einmaleinswoche/seite.js?v=4ed3309e" defer></script>
+<script src="/lernstand.js?v=3e61289c" defer></script>
+</body>
+</html>
