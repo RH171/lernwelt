@@ -1039,8 +1039,46 @@ function artKurz(art) {
       .then(function () { blattLaeuft = false; });
   }
 
-  function belegZeigen(f) {
-    var b = { id: f.blatt, titel: (f.beleg && f.beleg.titel) || "Dein Blatt" };
+  /* Der Beleg-Kasten sagt, WOHER die Zeile kommt (13.10.2026). Denny, nach
+     "Kind schrieb Bürgeramt, richtig: Bürgermeisteramt" unter "So steht es
+     in deinem Heft": Auf dem Blatt gibt es keine Korrektur der Lehrerin -
+     das Urteil kam vom Lesehelfer. Dennys Wahl: "Kennzeichnen statt
+     behaupten". Der Server liefert `beleg.herkunft`; fehlt es (alter
+     Server), bleibt es beim Heft wie bisher. Nur Heft und Lehrerin stehen
+     in Anfuehrungszeichen - alles andere ist kein Zitat. */
+  var HERKUNFT_KOPF = {
+    heft: "\uD83D\uDCD6 So steht es in deinem Heft",
+    lehrerin: "\u270D\uFE0F Deine Lehrerin hat verbessert",
+    "lehrerin-angemerkt": "\u270D\uFE0F Das hat deine Lehrerin angemerkt",
+    eingetragen: "\u270F\uFE0F Das hast du eingetragen \u2013 deine Lehrerin hat es nicht nachgesehen",
+    nachgesehen: "\uD83D\uDD0E Nachgesehen \u2013 nicht von deiner Lehrerin verbessert"
+  };
+  function belegKasten(f) {
+    if (!f.beleg) return "";
+    var h = HERKUNFT_KOPF[f.beleg.herkunft] ? f.beleg.herkunft : "heft";
+    var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt";
+    var a = f.beleg.auch;
+    var kopf = h === "eingetragen" && f.beleg.abgehakt
+      ? "\u270F\uFE0F Das hast du eingetragen \u2013 deine Lehrerin hat es abgehakt" : HERKUNFT_KOPF[h];
+    return '<div class="qbeleg qbeleg-' + h + '" data-herkunft="' + h + '"><span>' + kopf + '</span>' +
+      (zitat ? '<q>' + esc(f.beleg.zeile) + '</q>' : '<p class="qbeleg-text">' + esc(f.beleg.zeile) + '</p>') +
+      '<small>' + esc(f.beleg.titel) + '</small>' +
+      (f.blatt ? '<button type="button" class="qbeleg-auf">\uD83D\uDCC4 Blatt ansehen</button>' : "") +
+      (a && a.blatt ? '<div class="qbeleg-auchzeile"><b>Steht auch auf deinem Blatt \u201E' + esc(a.titel) + '\u201C' +
+        (a.datum ? " vom " + esc(datumKurz(a.datum)) : "") + ':</b> ' + esc(a.zeile) +
+        (a.gleichwertig ? " <i>(" + esc(a.gleichwertig) + " und " + esc((f.antworten || [])[f.richtig || 0]) +
+          " meinen dasselbe.)</i>" : "") +
+        '<br><button type="button" class="qbeleg-auf qbeleg-auch">\uD83D\uDCC4 Dieses Blatt ansehen</button></div>' : "") +
+      "</div>";
+  }
+  function datumKurz(d) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || ""));
+    return m ? (+m[3]) + "." + (+m[2]) + "." : String(d || "");
+  }
+
+  function belegZeigen(f, andereId, andererTitel) {
+    var b = andereId ? { id: andereId, titel: andererTitel || "Dein Blatt" }
+                     : { id: f.blatt, titel: (f.beleg && f.beleg.titel) || "Dein Blatt" };
     if (vorschau[b.id]) return grossZeigen(b);
     seiteHolen(b.id, 0).then(function () { grossZeigen(b); });
   }
@@ -1062,6 +1100,7 @@ function artKurz(art) {
       var blass = 0;
       Array.prototype.forEach.call($("q-antworten").children, function (b, i) {
         if (reihenfolge[i] !== (f.richtig || 0) && blass < 2 &&
+            !(Array.isArray(f.auchRichtig) && f.auchRichtig.indexOf(reihenfolge[i]) >= 0) &&
             !b.classList.contains("daneben")) { b.classList.add("zurueck"); blass++; }
       });
       // Das Blatt schon mal holen, falls es eine dritte Stufe gibt.
@@ -1084,7 +1123,9 @@ function artKurz(art) {
   function waehlen(platz, originalIndex, knopf) {
     if (!wahlOffen) return;
     var f = fragen[nr];
-    var stimmt = originalIndex === (f.richtig || 0);
+    /* Gleichwertige Namen (Fundbüro = Fundamt) zaehlen auch (13.10.2026). */
+    var stimmt = originalIndex === (f.richtig || 0) ||
+      (Array.isArray(f.auchRichtig) && f.auchRichtig.indexOf(originalIndex) >= 0);
     versuch++;
 
     /* Daneben, und es gibt noch Hilfe? Dann ist es KEIN Fehler, sondern ein
@@ -1114,7 +1155,8 @@ function artKurz(art) {
 
     Array.prototype.forEach.call($("q-antworten").children, function (b, i) {
       b.disabled = true;
-      if (reihenfolge[i] === (f.richtig || 0)) b.classList.add("richtig");
+      if (reihenfolge[i] === (f.richtig || 0) ||
+          (Array.isArray(f.auchRichtig) && f.auchRichtig.indexOf(reihenfolge[i]) >= 0)) b.classList.add("richtig");
     });
     if (!stimmt) knopf.classList.add("falsch");
 
@@ -1129,12 +1171,13 @@ function artKurz(art) {
          wenn Paul nach der Eingabe der Lösung auch selber noch nachschlagen
          könnte … wir hätten dazu gerne den Beweis aus seinen Unterlagen
          gesehen." Der Server liefert die Zeile aus dem Heft mit. */
-      (f.beleg ? '<div class="qbeleg"><span>\uD83D\uDCD6 So steht es in deinem Heft</span>' +
-        '<q>' + esc(f.beleg.zeile) + '</q><small>' + esc(f.beleg.titel) + '</small>' +
-        (f.blatt ? '<button type="button" class="qbeleg-auf">\uD83D\uDCC4 Blatt ansehen</button>' : "") +
-        "</div>" : "");
-    var auf = e.querySelector(".qbeleg-auf");
+      belegKasten(f);
+    var auf = e.querySelector(".qbeleg-auf:not(.qbeleg-auch)");
     if (auf) auf.addEventListener("click", function () { belegZeigen(f); });
+    var aufAuch = e.querySelector(".qbeleg-auch");
+    if (aufAuch) aufAuch.addEventListener("click", function () {
+      belegZeigen(f, f.beleg.auch.blatt, f.beleg.auch.titel);
+    });
     e.classList.remove("verborgen");
     e.classList.toggle("gut", stimmt);
     $("q-weiter").classList.remove("verborgen");

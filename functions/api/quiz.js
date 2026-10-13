@@ -38,6 +38,7 @@
 
 import { tabellen, offeneKreise, gefuelltLesen, gefuelltMerken } from "./_kreise.js";
 import { eigeneWoche, berlinTag } from "./statistik.js";
+import { zeileHerkunft, zeileKindgerecht, lehrerinVerbessert, allesAbgehakt, anderesBlatt, auchRichtig, markeFuerModell } from "./_herkunft.js";
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
@@ -310,7 +311,13 @@ export async function onRequestGet(context) {
 
   mischen(offen);
   const raus = (anzahl ? offen.slice(0, anzahl) : offen.slice(0, ALLE_HOECHSTENS))
-    .map((f) => { const b = belegFuer(f, blattNach[f.blatt]); return b ? { ...f, beleg: b } : f; });
+    .map((f) => {
+      const b = belegFuer(f, blattNach[f.blatt], blattNach);
+      /* Gleichwertige Namen (Fundbüro = Fundamt, 13.10.2026): beide zählen.
+         Eine alte Seite kennt das Feld nicht und wertet wie bisher. */
+      const auch = auchRichtig(f.antworten, f.richtig);
+      return { ...f, ...(b ? { beleg: b } : {}), ...(auch.length ? { auchRichtig: auch } : {}) };
+    });
   /* `wartend` zaehlt ueber den GANZEN Vorrat, nicht nur ueber die Auswahl -
      sonst staende an einem abgewaehlten Blatt nie eine Zahl. Was daraus auf
      dem Schirm wird (Zahl, Punkt oder nichts), entscheidet `anzeige.wartend`
@@ -706,6 +713,15 @@ REGELN
    "Nussknacker = Nomen + Verb", obwohl "Knacker" auch ein Nomen ist), folgt
    die Frage dem Heft, und die Erklaerung zitiert die Stelle woertlich:
    "In deinem Merkheft steht: Nomen + Verb: Nussknacker, Seiltänzer."
+4g. HERKUNFT DER ZEILEN (13.10.2026). Manche Zeilen tragen eine Marke in
+   eckigen Klammern. "[nachgesehen vom Lesehelfer, …]" ist ein Urteil beim
+   Einlesen, KEINE Korrektur der Lehrerin. "[vom Kind eingetragen, …]" hat
+   das Kind selbst geschrieben, niemand hat es bestaetigt. Schreib in der
+   Erklaerung zu solchen Zeilen nie "deine Lehrerin", "im Heft steht" oder
+   "so steht es in deinem Heft" - sag es sachlich ("Das Fundbüro bewahrt
+   Fundsachen auf."). Nur "[rot von der Lehrerin]" darf die Lehrerin nennen.
+   Zwei Namen fuer dieselbe Sache (Fundbüro und Fundamt) nie als richtige
+   und falsche Antwort in dieselbe Frage.
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
@@ -804,19 +820,38 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
 
 /* Die Zeile aus dem Heft, auf die sich die Frage stuetzt. Erst die Nummer
  * (belegNr), sonst die Zeile mit dem Stichwort, sonst die mit der Antwort.
- * Findet sich nichts, gibt es keinen Beleg - lieber keiner als ein falscher. */
-export function belegFuer(f, blatt) {
+ * Findet sich nichts, gibt es keinen Beleg - lieber keiner als ein falscher.
+ *
+ * Seit 13.10.2026 mit HERKUNFT (siehe _herkunft.js): Der Kasten sagt, ob
+ * die Zeile Heftstoff ist, eine rote Korrektur der Lehrerin, eine Eintragung
+ * des Kindes oder ein Urteil des Lesehelfers. `zeile` ist dann kindgerecht
+ * ("Du hast „Bürgeramt“ geschrieben. Richtig ist …"), nie "Kind schrieb".
+ * `alle` (optional) sind alle Blaetter des Kindes - steht die richtige
+ * Antwort wörtlich als Heftstoff auf einem anderen Blatt desselben Fachs,
+ * wird es als `auch` mitgegeben. */
+export function belegFuer(f, blatt, alle) {
   if (!f || !blatt || !Array.isArray(blatt.inhalt) || !blatt.inhalt.length) return null;
-  const zeilen = blatt.inhalt.map((z) => String(z || "").replace(/^✍\s*/, ""));
+  const roh = blatt.inhalt.map((z) => String(z || ""));
+  const zeilen = roh.map((z) => z.replace(/^✍\s*/, ""));
   const klein = (s) => String(s || "").toLowerCase();
-  let z = "";
+  let i = -1;
   const n = Number(f.belegNr);
-  if (n >= 1 && n <= zeilen.length) z = zeilen[n - 1];
-  if (!z && f.zeile && klein(f.zeile).length >= 3) z = zeilen.find((x) => klein(x).includes(klein(f.zeile))) || "";
-  const richtig = klein((f.antworten || [])[f.richtig || 0]);
-  if (!z && richtig.length >= 3) z = zeilen.find((x) => klein(x).includes(richtig)) || "";
-  if (!z) return null;
-  return { titel: String(blatt.titel || "").slice(0, 80), zeile: z.slice(0, 200) };
+  if (n >= 1 && n <= zeilen.length) i = n - 1;
+  if (i < 0 && f.zeile && klein(f.zeile).length >= 3) i = zeilen.findIndex((x) => klein(x).includes(klein(f.zeile)));
+  const richtigWort = (f.antworten || [])[f.richtig || 0];
+  const richtig = klein(richtigWort);
+  if (i < 0 && richtig.length >= 3) i = zeilen.findIndex((x) => klein(x).includes(richtig));
+  if (i < 0 || !zeilen[i]) return null;
+  const herkunft = zeileHerkunft(roh[i], roh);
+  const out = { titel: String(blatt.titel || "").slice(0, 80), zeile: zeileKindgerecht(roh[i]).slice(0, 200), herkunft };
+  if (herkunft === "lehrerin" && !lehrerinVerbessert(roh[i])) out.herkunft = "lehrerin-angemerkt";
+  /* Eintragung, die die Lehrerin mit "Haken bei allen Aufgaben" bestätigt hat. */
+  if (herkunft === "eingetragen" && allesAbgehakt(roh)) out.abgehakt = true;
+  if (herkunft === "nachgesehen" || herkunft === "eingetragen") {
+    const auch = anderesBlatt(richtigWort, blatt, alle, (a, b) => heftFach(a) === heftFach(b));
+    if (auch) out.auch = auch;
+  }
+  return out;
 }
 
 /* Eine Frage von einem Mathe-Blatt ist keine Deutschfrage, egal was das
@@ -948,7 +983,7 @@ async function letzterUnterricht(env, kind, nurBlaetter, nurFaecher) {
                      woher + ")";
         const zeilen = Array.isArray(x.inhalt) ? x.inhalt : [];
         return zeilen.length
-          ? kopf + "\n" + zeilen.map((z, j) => "   Z" + (j + 1) + ": " + z).join("\n")
+          ? kopf + "\n" + zeilen.map((z, j) => "   Z" + (j + 1) + ": " + markeFuerModell(z, zeilen) + z).join("\n")
           : kopf + "\n   (Inhalt nicht gelesen - zu diesem Blatt nur ganz " +
             "allgemein fragen, nichts Bestimmtes behaupten)";
       }).join("\n"),

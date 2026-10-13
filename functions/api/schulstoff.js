@@ -1037,6 +1037,19 @@ async function blattLesen(env, seite, kind, themen) {
               "Fehlern - verbessere nichts still. Bist du SICHER, dass es sich " +
               "verschrieben oder verrechnet hat, schreib: Kind schrieb X, richtig: Y. " +
               "Bist du nicht sicher, schreib nur ab.\n" +
+              /* Herkunft erkennbar halten (13.10.2026, Denny zu "Kind schrieb
+                 Bürgeramt, richtig: Bürgermeisteramt" und "Haustürschlüssel:
+                 Fundamt"): Was das Kind auf einem Arbeitsblatt eingetragen hat,
+                 darf im Quiz nicht als Heftwahrheit erscheinen. Altbestand
+                 erkennt _herkunft.js an den Textmustern. */
+              "Was das Kind auf einem ARBEITSBLATT selbst eingetragen hat (Luecken, " +
+              "Zuordnungen, Antworten auf Fragen) und was die Lehrkraft NICHT rot " +
+              "abgehakt oder verbessert hat, beginnt mit \"Kind: \", z. B. " +
+              "\"- Kind: Haustuerschluessel verloren: Fundamt\". Gedruckter Text und " +
+              "Merkstoff, den das Kind ins Heft abgeschrieben hat, bekommen KEIN " +
+              "\"Kind:\". \"Kind schrieb X, richtig: Y\" ist DEIN Urteil, nicht das " +
+              "der Lehrkraft - schreib dort nie \"Lehrkraft\" hinein, wenn nichts Rotes " +
+              "dasteht.\n" +
               "ROT schreibt nur die Lehrkraft (Haken, Verbesserungen, ihr Kuerzel wie " +
               "\"Sy\"); das Kind schreibt blau oder mit Bleistift. Schreib Rotes als " +
               "\"Lehrkraft: ...\". Auch eine rote Zahl kann falsch sein - rechne nach, " +

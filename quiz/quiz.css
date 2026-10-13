@@ -198,6 +198,10 @@ html[data-theme="dark"] .qquizleiste{background:#262a3a}
 .qbeleg>span{display:block;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;opacity:.85;margin-bottom:4px}
 .qbeleg q{display:block;font-weight:700;quotes:"„" "“"}
 .qbeleg small{display:block;margin-top:2px;opacity:.85}
+/* Herkunft des Belegs (13.10.2026): kein Zitat fuer Eintragung und Urteil, gestrichelter Rand */
+.qbeleg-text{margin:0;font-weight:700}
+.qbeleg-eingetragen,.qbeleg-nachgesehen{border-style:dashed}
+.qbeleg-auchzeile{margin-top:10px;padding-top:8px;border-top:1px solid var(--line,#d8dbe6)}
 .qbeleg-auf{margin-top:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:var(--card,#fff);color:var(--ink,#1c2033);font:700 15px inherit;cursor:pointer}
 .qql-t{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .qql-weg{min-height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:transparent;color:inherit;font:600 14px inherit;cursor:pointer}
