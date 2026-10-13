@@ -218,3 +218,41 @@ html[data-theme="dark"] .qstand-leg .ls{color:#6ee7a8} html[data-theme="dark"] .
 .qgross-seiten{color:var(--ink)}
 .qgross-seiten:empty{display:none}
 .qseiten-auf{display:block}
+
+/* Rechenkaestchen (13.10.2026): ein Schmierblatt in Kaestchen bei Fragen zum
+   schriftlichen Rechnen. Prueft nichts, verraet nichts. Feld und Ziffernblock
+   stehen nebeneinander, wo Platz ist, sonst untereinander. Alle Tippziele
+   44 px hoch; die Uebertragskaestchen SEHEN klein aus, getroffen wird
+   trotzdem die ganze Zelle. Farben aus den Variablen der Seite - hell und
+   dunkel bei allen drei Kindern. */
+.rk{margin:10px 0 12px}
+.rk-auf{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:12px;
+  border:2px solid var(--line);background:var(--card);color:var(--ink);font:700 15.5px/1.2 var(--rund);cursor:pointer}
+.rk-pfeil{transition:transform .2s}
+.rk.rk-zu .rk-pfeil{transform:rotate(180deg)}
+.rk.rk-zu .rk-koerper{display:none}
+.rk-koerper{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 22px;margin-top:10px}
+.rk-gitter{display:grid;grid-template-columns:30px repeat(calc(var(--rk-spalten) - 1),48px);
+  column-gap:3px;row-gap:3px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);
+  background:var(--akzent-hell);background:color-mix(in srgb,var(--akzent-hell) 45%,var(--card))}
+.rk-kopf{font:800 13px/1 var(--rund);color:var(--muted);text-align:center;padding:2px 0 4px}
+.rk-zelle{height:44px;display:flex;align-items:center;justify-content:center;
+  font:800 28px/1 var(--rund);color:var(--ink);font-variant-numeric:tabular-nums}
+.rk-zeichen{justify-content:flex-start}
+.rk-ziffer{border-radius:8px;border:1px dashed var(--line)}
+.rk-strich{grid-column:1 / -1;height:0;border-top:3px solid var(--ink);margin:2px 0}
+.rk-erg,.rk-ue{border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;padding:0;
+  font-variant-numeric:tabular-nums}
+.rk-erg{height:52px;border-radius:10px;font:800 28px/1 var(--rund)}
+.rk-ue{height:44px;border:none;background:none;display:flex;align-items:center;justify-content:center}
+.rk-ue-k{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;
+  border:2px solid var(--line);background:var(--card);font:800 16px/1 var(--rund);color:var(--ink)}
+.rk-ue:disabled{cursor:default}
+.rk-ue:disabled .rk-ue-k{visibility:hidden}
+.rk-erg.an{border-color:var(--akzent);box-shadow:0 0 0 3px var(--akzent-hell)}
+.rk-ue.an .rk-ue-k{border-color:var(--akzent);box-shadow:0 0 0 3px var(--akzent-hell)}
+.rk-block{display:grid;grid-template-columns:repeat(3,56px);gap:7px}
+.rk-taste{min-height:48px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);
+  font:800 22px/1 var(--rund);cursor:pointer}
+.rk-taste:active{background:var(--akzent-hell)}
+.rk-weg{font-size:20px}

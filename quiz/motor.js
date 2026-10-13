@@ -975,6 +975,7 @@ function artKurz(art) {
     $("q-nr").textContent = "Frage " + (nr + 1) + (stand.laenge ? " von " + Math.min(stand.laenge, fragen.length) : "");
     $("q-fach").textContent = fachName(f.fach);
     $("q-frage").textContent = f.frage;
+    rechenfeld(f.frage);
     $("q-erklaerung").classList.add("verborgen");
     $("q-weiter").classList.add("verborgen");
     versuch = 0; ersterFalsch = "";
@@ -999,6 +1000,23 @@ function artKurz(art) {
       box.appendChild(b);
     });
     fortschrittMalen();
+  }
+
+  /* Rechenkaestchen (13.10.2026): bei "Rechne schriftlich: 794 − 283" ein
+     Schmierblatt in Kaestchen unter der Frage (/quiz/rechenkaestchen.js).
+     Es steht VOR der Hilfe, damit Tipp und Antworten direkt darunter folgen,
+     und bleibt bei einem Fehlversuch mit seinen Ziffern stehen - neu gemalt
+     (und damit geleert) wird es nur mit der naechsten Frage. */
+  function rechenfeld(text) {
+    var h = $("q-rechnen");
+    if (!h) {
+      h = document.createElement("div");
+      h.id = "q-rechnen";
+      h.className = "rk verborgen";
+      $("q-frage").insertAdjacentElement("afterend", h);
+    }
+    if (window.Rechenkaestchen) window.Rechenkaestchen.malen(h, text || "");
+    else { h.innerHTML = ""; h.classList.add("verborgen"); }
   }
 
   /* ---------- Hilfe in Stufen ---------- */
@@ -1154,6 +1172,7 @@ function artKurz(art) {
 
   function nachladen() {
     $("q-frage").textContent = "Einen Moment, ich hole neue Fragen …";
+    rechenfeld("");
     $("q-antworten").innerHTML = "";
     $("q-weiter").classList.add("verborgen");
     $("q-erklaerung").classList.add("verborgen");
