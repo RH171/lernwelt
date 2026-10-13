@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Generalprobe Mathe</title>
+<!--
+  Generalprobe Mathe "Einmaleins und Teilen" (13.10.2026, Dennys Wahl C). Kapitel 122.
+  Anlass: Paul schreibt am Montag, 19.10.2026 die Mathe-Probe. Aufbau wie sein Blatt vom
+  13.10.2026 "Mal- und Geteiltaufgaben": 7 Teile, 15 Aufgaben, jedes Mal neue Zahlen.
+  Wie eine Probe: keine Sofort-Korrektur, nachgesehen wird am Ende. Danach Rueckschau je Thema
+  ohne Note und ohne Punkte ("Das sitzt schon" / "Das schauen wir uns noch an"), je falscher
+  Aufgabe ein zweiter Versuch mit Hilfe in Stufen. Gezaehlt (lernstand, Elternbereich) wird
+  nur der erste Versuch. Laufender Stand nur in sessionStorage (kein Sync, kein Schreibvorgang).
+  Motor: /generalprobe-mathe/motor.js · Anzeige: /generalprobe-mathe/seite.js. Nur Paul.
+  Pruefen: node pruefe-generalprobe-mathe.mjs
+  Messen:  node geraete-messen.js /paul/klasse4-mathe-generalprobe.html paul mess-schritte-generalprobe-mathe.js
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+:root{--bg:#f4f6fb;--card:#ffffff;--karte:#ffffff;--ink:#1f2433;--muted:#555c70;--line:#d9dde8;--akzent:#4f46e5;--gut:#0b7a47;--gut-hell:#eaf7f0}
+:root{--gpm-hinweis:#fff4d6}
+:root[data-theme="dark"]{--gpm-hinweis:#2e2614}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{padding:10px 12px 40px}
+header{display:flex;align-items:center;gap:10px;max-width:900px;margin:0 auto 8px}
+header h1{font:800 20px/1.15 system-ui,sans-serif;margin:0;flex:1}
+.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border-radius:999px;
+  border:2px solid var(--line);background:var(--card);color:var(--ink);font:700 16px system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.knopf.primaer{background:var(--akzent);border-color:var(--akzent);color:var(--akzent-auf,#fff)}
+.knopf[disabled]{opacity:.45;cursor:default}
+.karte{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;max-width:900px;margin:0 auto 12px}
+.karte h2{margin:0 0 8px;font-size:21px;line-height:1.25}
+.karte p{margin:6px 0;line-height:1.45;font-size:17px}
+.leise{color:var(--muted)}
+.verborgen{display:none!important}
+.leiste{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.leiste .knopf{flex:1 1 auto}
+
+.kopf{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.kopf strong{font-size:15px;color:var(--muted);flex:1}
+.kopf .knopf{padding:8px 14px;font-size:15px}
+.balken{display:flex;gap:4px;margin:0 0 14px}
+.balken span{flex:1;height:8px;border-radius:99px;background:var(--line)}
+.balken span.fertig{background:var(--gut)}
+.balken span.jetzt{background:var(--akzent)}
+.auftrag{font-size:18px;font-weight:700;line-height:1.35;margin:0 0 12px}
+
+/* Eine Aufgabe: Buchstabe vorn, Rechnung mit Feldern in einer Zeile */
+.aufg{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.aufg:first-of-type{border-top:0}
+.aufg .bu{font:800 19px/44px system-ui,sans-serif;color:var(--muted);min-width:1.6em}
+.aufg .inhalt{flex:1;min-width:0}
+.rechnung{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:600 23px/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.sachtext{font-size:18px;line-height:1.5;margin:0 0 8px}
+.antwortzeile{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:18px;margin:6px 0}
+input.zahl{width:4.6em;min-height:48px;font:700 23px system-ui,sans-serif;text-align:center;padding:4px 6px;border-radius:12px;
+  border:2px solid var(--line);background:var(--feld,var(--bg));color:var(--ink);font-variant-numeric:tabular-nums}
+input.zahl:focus{outline:none;border-color:var(--akzent);box-shadow:0 0 0 3px var(--rand-akzent)}
+input.zahl.rest{width:3.6em}
+.antwortzeile input.zahl{font-size:20px;min-height:46px}
+.teilerwahl{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px;margin-top:8px}
+.teilerwahl button{min-height:48px;padding:0;border-radius:12px;font:700 19px system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.teilerwahl button[aria-pressed="true"]{background:var(--akzent);border-color:var(--akzent);color:var(--akzent-auf,#fff)}
+.leerhinweis{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--gpm-hinweis);border:1px solid var(--rand-warn);line-height:1.4}
+.aufg.leer-mark input.zahl:placeholder-shown,.aufg.leer-mark .teilerwahl{box-shadow:0 0 0 3px var(--rand-warn)}
+
+/* Rueckschau: kein Rot, keine Punkte */
+.themen{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px;padding:0;list-style:none}
+.themen li{padding:8px 12px;border-radius:999px;background:var(--gut-hell);border:1px solid var(--rand-gut);font-weight:700}
+.schau{border:1px solid var(--rand-warn);background:var(--gpm-hinweis);border-radius:16px;padding:12px 14px;margin:10px 0}
+.schau h3{margin:0 0 6px;font-size:18px}
+.nochmal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+.nochmal .vorher{color:var(--muted);font-size:15px;margin-top:4px}
+.nochmal .df{margin:8px 0 0;font-size:16px;line-height:1.4}
+.nochmal .tipp{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--vertief);line-height:1.4;font-size:16px}
+.nochmal .tipp b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.nochmal .weg{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--vertief);line-height:1.4}
+.nochmal.geschafft{border-color:var(--rand-gut);background:var(--gut-hell)}
+.nochmal .gut{margin:8px 0 0;font-weight:700;color:var(--gut-text,var(--gut))}
+.nochmal .leiste{margin-top:10px}
+@media (max-width:520px){
+  .rechnung{font-size:21px}
+  input.zahl{width:4.2em;font-size:21px}
+  .karte{padding:14px 12px}
+}
+/* Weiter/Zurueck und "Neue Generalprobe" kleben unten (gemessen 13.10.2026: auf dem iPhone lag
+   "Weiter" bei den 36 Teiler-Knoepfen 40 px unter dem Rand). Tippt Paul im zweiten Versuch
+   (Tastatur offen), tritt die Leiste der Rueckschau zur Seite, damit sie das Feld nicht verdeckt. */
+.klebt{position:sticky;bottom:0;z-index:2;background:var(--card);margin:14px -18px -16px;padding:10px 18px 12px;
+  border-top:1px solid var(--line);border-radius:0 0 18px 18px;flex-wrap:nowrap}
+.klebt .knopf{flex:1 1 0;min-width:0;padding-left:8px;padding-right:8px}
+body.tippt #rueck .klebt{position:static}
+.knopf.voll{background:var(--akzent);border-color:var(--akzent);color:var(--akzent-auf,#fff)}
+@media (max-width:520px){ .klebt{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px} }
+</style>
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Generalprobe Mathe</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>📝 Generalprobe für deine Probe „Einmaleins und Teilen“</h2>
+  <p>15 Aufgaben in 7 Teilen – so wie auf deinem Blatt „Mal- und Geteiltaufgaben“. Du hast so viel Zeit, wie du brauchst.</p>
+  <p>Wie in der Probe: Erst rechnest du alles, am Ende schauen wir zusammen nach.</p>
+  <p class="leise" id="start-info"></p>
+  <div class="leiste">
+    <button class="knopf primaer" id="los">▶ Los geht's</button>
+    <button class="knopf verborgen" id="weiter-lauf">Weiter, wo du warst</button>
+  </div>
+</section>
+
+<section id="arbeit" class="karte verborgen">
+  <div class="kopf"><a class="knopf" href="./">🏠 Startseite</a><strong id="zaehler"></strong></div>
+  <div class="balken" id="balken"></div>
+  <h2 id="teil-titel"></h2>
+  <p class="auftrag" id="teil-auftrag"></p>
+  <div id="teil-aufgaben"></div>
+  <div class="leerhinweis verborgen" id="leerhinweis">
+    <p id="leer-satz" style="margin:0 0 8px"></p>
+    <div class="leiste" style="margin-top:6px"><button class="knopf" id="zu-leer">Zu den leeren Feldern</button><button class="knopf primaer" id="trotzdem">Trotzdem nachsehen</button></div>
+  </div>
+  <div class="leiste klebt">
+    <button class="knopf" id="zurueck">← Zurück</button>
+    <button class="knopf primaer" id="weiter">Weiter →</button>
+  </div>
+</section>
+
+<section id="rueck" class="karte verborgen">
+  <h2 id="rueck-titel">✓ Geschafft!</h2>
+  <p id="rueck-lob"></p>
+  <div id="sitzt-block">
+    <h3 style="margin:14px 0 4px;font-size:19px">Das sitzt schon</h3>
+    <ul class="themen" id="sitzt"></ul>
+  </div>
+  <div id="anschauen-block">
+    <h3 style="margin:18px 0 4px;font-size:19px">Das schauen wir uns noch an</h3>
+    <p class="leise" style="margin:0 0 6px">Probier es noch einmal – mit Hilfe.</p>
+    <div id="anschauen"></div>
+  </div>
+  <div class="leiste klebt">
+    <button class="knopf primaer" id="neu">▶ Neue Generalprobe – neue Zahlen</button>
+    <a class="knopf" href="./">🏠 Zur Startseite</a>
+  </div>
+</section>
+
+<script src="/generalprobe-mathe/motor.js"></script>
+<script src="/generalprobe-mathe/seite.js"></script>
+<script src="/lernstand.js?v=3e61289c" defer></script>
+</body>
+</html>

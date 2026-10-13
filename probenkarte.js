@@ -35,6 +35,17 @@
         satz: "Üb in Ruhe – so viel du magst." }
     }
   };
+  /* Kurz vor der Probe (13.10.2026, Dennys Wahl C): In den letzten Tagen vor einer Probe, deren
+   * Thema passt, fuehrt die Karte auf die Generalprobe statt auf die allgemeine Uebung.
+   * Mathe "Einmaleins und Teilen" am 19.10.2026: ab Samstag 17.10. (2 Tage vorher) bis zum
+   * Probentag; danach ist die Probe vorbei und die Karte weg. Ohne Thema zaehlt es auch. Kapitel 122. */
+  var NAH = {
+    paul: {
+      mathe: { tage: 2, thema: /einmaleins|1\s*[x×·]\s*1|teil|geteilt|divi|mal|multipli/i,
+        href: "/paul/klasse4-mathe-generalprobe.html?los=1", knopf: "▶ Generalprobe Mathe",
+        satz: "Eine Probe zum Ausprobieren – jedes Mal neue Zahlen, so oft du magst.", nah: true }
+    }
+  };
   var FAECHER = { deutsch: "Deutsch", mathe: "Mathe", hsu: "HSU", englisch: "Englisch", religion: "Religion", rel: "Religion",
     musik: "Musik", franz: "Französisch", geschichte: "Geschichte", geo: "Geographie", info: "Informatik", ethik: "Ethik" };
   // Quiz-Seite je Kind fuer "Im Heft wiederholen".
@@ -79,10 +90,12 @@
 
   function fachName(f){ return FAECHER[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : ""); }
   function heftWeg(kind, fach){ return (QUIZ[kind] || "quiz.html") + "?fach=" + encodeURIComponent(String(fach || "").toLowerCase()); }
-  function uebungFuer(t, kind){
+  function uebungFuer(t, kind, tage){
     var u = UEBUNGEN[kind] || {}, f = String(t.fach || "").toLowerCase();
     var genau = u[f + "|" + String(t.thema || "").trim().toLowerCase()];
     if (genau) return genau;
+    var nah = (NAH[kind] || {})[f], th = String(t.thema || "").trim();
+    if (nah && typeof tage === "number" && tage >= 0 && tage <= nah.tage && (!th || nah.thema.test(th))) return nah;
     if (u[f + "|*"]) return u[f + "|*"];
     return { href: heftWeg(kind, f), knopf: "▶ Im Heft wiederholen",
       satz: "Wiederhol, was in deinem Heft steht – so viel du magst.", heft: true };
@@ -96,7 +109,7 @@
       var t = liste[i]; if (!t || typeof t.datum !== "string" || !t.fach) continue;
       var n = tageBis(t.datum, h);
       if (n < 0 || n > TAGE) continue;
-      raus.push({ termin: t, tage: n, uebung: uebungFuer(t, kind) });
+      raus.push({ termin: t, tage: n, uebung: uebungFuer(t, kind, n) });
     }
     return raus;
   }
@@ -115,11 +128,15 @@
 
   function melden(kind, termine, h){
     try {
-      var faecher = {};
-      anstehend(termine, kind, h).forEach(function(w){ faecher[String(w.termin.fach).toLowerCase()] = true; });
+      var faecher = {}, nah = {};
+      anstehend(termine, kind, h).forEach(function(w){
+        var f = String(w.termin.fach).toLowerCase(); faecher[f] = true;
+        if (w.uebung && w.uebung.nah) nah[f] = true;   // Generalprobe kurz vor der Probe (NAH)
+      });
       window.LWProbenkarte.termine = termine;
       window.LWProbenkarte.faecher = faecher;
-      document.dispatchEvent(new CustomEvent("lw-probentermine", { detail: { kind: kind, termine: termine, faecher: faecher } }));
+      window.LWProbenkarte.nah = nah;
+      document.dispatchEvent(new CustomEvent("lw-probentermine", { detail: { kind: kind, termine: termine, faecher: faecher, nah: nah } }));
     } catch (e) {}
   }
 
@@ -158,6 +175,6 @@
       .catch(function(){ zeigen(el, null, kind); });
   }
 
-  window.LWProbenkarte = { laden: laden, zeigen: zeigen, waehle: waehle, anstehend: anstehend, UEBUNGEN: UEBUNGEN,
-    FAECHER: FAECHER, termine: undefined, faecher: {} };
+  window.LWProbenkarte = { laden: laden, zeigen: zeigen, waehle: waehle, anstehend: anstehend, UEBUNGEN: UEBUNGEN, NAH: NAH,
+    FAECHER: FAECHER, termine: undefined, faecher: {}, nah: {} };
 })();

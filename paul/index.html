@@ -876,17 +876,22 @@
       title:"Generalprobe Lesen", sub:"Geschichte lesen, Aufgaben wie in der Probe", icon:"📖", type:"Probe",
       // 13.10.2026 (Denny): Probe-Kacheln nur, solange eine Probe dieses Fachs in den
       // naechsten 14 Tagen ansteht (Termine aus der Probenkarte). Die Seite bleibt erreichbar.
-      probe:"deutsch"}
+      probe:"deutsch"},
+    // Generalprobe Mathe "Einmaleins und Teilen" fuer die Probe am 19.10.2026 (13.10.2026, Dennys Wahl C).
+    // probeNah: nur in den letzten Tagen vor der Probe (Regel NAH in probenkarte.js, ab 17.10.), Kapitel 122.
+    {file:"klasse4-mathe-generalprobe.html", klasse:4, fach:"mathe",
+      title:"Generalprobe Mathe", sub:"Einmaleins und Teilen, jedes Mal neue Zahlen", icon:"📝", type:"Probe",
+      probe:"mathe", probeNah:true}
   ];
   /* Probe-Kacheln (Feld probe) warten auf die Termine. Bis die Probenkarte sie
      gemeldet hat, stehen sie nicht da - eine Kachel, die erst steht und dann
      verschwindet, waere schlimmer als eine, die kurz spaeter dazukommt. */
   const PROBE_TOOLS = TOOLS.filter(t=>t.probe);
   for (let i = TOOLS.length - 1; i >= 0; i--) if (TOOLS[i].probe) TOOLS.splice(i, 1);
-  function probeKachelnPflegen(faecher){
+  function probeKachelnPflegen(faecher, nah){
     let geaendert = false;
     PROBE_TOOLS.forEach(function(t){
-      const soll = !!(faecher && faecher[t.probe]);
+      const soll = !!(t.probeNah ? (nah && nah[t.probe]) : (faecher && faecher[t.probe]));
       const ist = TOOLS.indexOf(t) >= 0;
       if (soll && !ist) { TOOLS.push(t); geaendert = true; }
       if (!soll && ist) { TOOLS.splice(TOOLS.indexOf(t), 1); geaendert = true; }
@@ -1595,9 +1600,9 @@
   // ---- Start -----------------------------------------------------------
   // Termine der Probenkarte: Probe-Kacheln dazu oder weg (13.10.2026).
   document.addEventListener("lw-probentermine", function(e){
-    if (e.detail && e.detail.kind === "paul" && probeKachelnPflegen(e.detail.faecher)) render(parseInt(klasseSel.value,10));
+    if (e.detail && e.detail.kind === "paul" && probeKachelnPflegen(e.detail.faecher, e.detail.nah)) render(parseInt(klasseSel.value,10));
   });
-  if (window.LWProbenkarte && LWProbenkarte.faecher) probeKachelnPflegen(LWProbenkarte.faecher);
+  if (window.LWProbenkarte && LWProbenkarte.faecher) probeKachelnPflegen(LWProbenkarte.faecher, LWProbenkarte.nah);
   render(parseInt(klasseSel.value,10));
   if (window.LWAlter) LWAlter.laden("paul").then(function(a){ SPIELALTER = a; render(parseInt(klasseSel.value,10)); });
   // Automatisch erkannte Spiele nachladen und Kacheln ergänzen (ohne die index.html zu ändern)
