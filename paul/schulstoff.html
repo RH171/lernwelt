@@ -28,6 +28,7 @@
 <script src="/blatt-seiten.js?v=a370cd04"></script>
 <script src="/seite-tauschen.js?v=3d5c47be"></script>
 <script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
+<script src="/lehrervergleich.js?v=ca988bf4"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
@@ -148,6 +149,9 @@
     <button class="fach weg" type="button" id="schau-zu">✕ Zurück</button>
   </div>
   <img id="schau-bild" alt="Dein Blatt">
+  <!-- Heft gegen die Lehrerin (13.10.2026, /lehrervergleich.js): Abweichungen
+       von ihrer Vorlage und ihre roten Verbesserungen, direkt am Blatt. -->
+  <div id="schau-lehrer"></div>
   <div class="knoepfe">
     <button class="fach" type="button" id="schau-vor">‹ Seite</button>
     <span id="schau-nr" style="color:#fff;align-self:center;font-weight:600"></span>
@@ -306,6 +310,7 @@
                 '<div class="platzhalter" data-bild="' + e.id + '">' + (ZEICHEN[e.fach||""]||"📄") + '</div>' +
                 (ART[e.art] ? '<span class="art">' + ART[e.art].kurz + '</span>' : '') +
                 (e.seiten > 1 ? '<span class="nr">' + e.seiten + ' Seiten</span>' : '') +
+                (window.LWLehrer && lehrer ? LWLehrer.schild(lehrer.vergleiche[e.id]) : '') +
                 '<div class="fuss"><b>' + sicher(e.titel || KURZ[e.fach||""] || "Ohne Fach") + '</b>' +
                 '<span>' + sicher(untertext(e)) + '</span>' +
                 '</div></button>';
@@ -327,6 +332,20 @@
       });
     });
   }
+
+  /* Heft gegen die Lehrerin (13.10.2026). Ohne Vorlage und ohne Rot bleibt
+     alles still - keine Fehlermeldung. */
+  var lehrer = null;
+  function lehrerMalen(){
+    var el = $("schau-lehrer"); if (!el) return;
+    el.innerHTML = (offen && lehrer && window.LWLehrer) ? LWLehrer.kasten(lehrer.vergleiche[offen.id], "kind") : "";
+  }
+  if (window.LWLehrer) LWLehrer.holen("paul").then(function(d){
+    lehrer = d && d.ok ? d : null;
+    if (!lehrer) return;
+    if (alles.length) listeMalen();
+    lehrerMalen();
+  });
 
   var bilder = {};
   function bildHolen(id, nr){
@@ -378,6 +397,7 @@
     $("schau-fachwahl").classList.add("verborgen");
     $("schau").classList.remove("fachoffen");
     if (tauscher) tauscher.malen();
+    lehrerMalen();
     var welche = offen.id + ":" + offenSeite;
     $("schau-bild").setAttribute("data-seite", String(offenSeite));
     bildHolen(offen.id, offenSeite).then(function(url){

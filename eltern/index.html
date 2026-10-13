@@ -314,6 +314,7 @@
   </div>
 
 </div>
+<script src="/lehrervergleich.js?v=ca988bf4"></script>
 <script>
 (function(){
   "use strict";
@@ -1222,6 +1223,41 @@
     }
   });
 
+  /* Heft gegen die Lehrerin (13.10.2026, /lehrervergleich.js). Denny: "die
+     Einträge in seinem Heft mit dem Hochladen der Lehrerin zu verifizieren und
+     gegebenenfalls auf Fehler direkt hinzuweisen." Nur Blätter mit Vorlage oder
+     roter Verbesserung; ohne beides keine Meldung. */
+  var LV = { daten: null, laedt: false };
+  function lehrerKarte(){
+    if (KIND !== "paul" || !window.LWLehrer) return "";
+    if (!LV.daten && !LV.laedt){
+      LV.laedt = true;
+      LWLehrer.holen("paul").then(function(d){
+        LV.daten = d; LV.laedt = false;
+        var el = document.getElementById("lvKarte"); if (el) el.outerHTML = lehrerKarte();
+      });
+    }
+    var h = '<div class="karte" id="lvKarte"><h2>Heft und Lehrerin</h2>';
+    if (!LV.daten) return h + '<p class="unter">Einen Moment …</p></div>';
+    if (!LV.daten.ok) return h + '<p class="unter">Der Abgleich ist gerade nicht erreichbar. Das heißt <b>nicht</b>, dass alles stimmt.</p></div>';
+    var v = LV.daten.vergleiche || {};
+    var ids = Object.keys(v).sort(function(a, b){ return String(v[b].blatt && v[b].blatt.datum).localeCompare(String(v[a].blatt && v[a].blatt.datum)); });
+    var mitVorlage = ids.filter(function(id){ return v[id].vorlage; });
+    var auffaellig = ids.filter(function(id){ return (v[id].abweichungen || []).length || (v[id].schreibweise || []).length; });
+    var nurRot = ids.filter(function(id){ return !v[id].vorlage && (v[id].rot || []).length; });
+    h += '<p class="unter">Pauls Heftblätter verglichen mit den Vorlagen der Lehrerin von der Klassenpinnwand' +
+         (LV.daten.mitVorlagen ? '' : ' (noch keine Vorlagen eingespielt)') + ': ' + mitVorlage.length + ' Blätter mit Vorlage, ' +
+         auffaellig.length + ' mit Abweichung oder Schreibweise.</p>';
+    auffaellig.concat(nurRot).forEach(function(id){
+      var x = v[id];
+      h += '<div style="margin-top:10px"><b>' + esc(x.blatt && x.blatt.titel || "Blatt") + '</b>' +
+           (x.blatt && x.blatt.datum ? ' <span class="unter">· ' + esc(kurzDatum(x.blatt.datum)) + '</span>' : '') +
+           LWLehrer.kasten(x, "eltern") + '</div>';
+    });
+    if (mitVorlage.length && !auffaellig.length) h += '<p class="unter">✅ Alles wie bei der Lehrerin.</p>';
+    return h + '</div>';
+  }
+
   /* Pauls Tagesaufgabe "1×1 und Textaufgaben" (04.10.2026): die Uebersicht liegt auf eigener
      Seite, damit diese hier nicht noch eine Abfrage mehr macht. */
   function tagesrechnenKarte(){
@@ -1655,12 +1691,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
+      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + probenTermineKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
+    h += notenKarte() + probenTermineKarte() + lehrerKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
