@@ -1,15 +1,23 @@
-/* Gelbe Probenkarte (04.10.2026, Dennys Wahl: Version B).
+/* Gelbe Probenkarte (04.10.2026, Dennys Wahl: Version B; erweitert 13.10.2026).
  *
- * "Naechste Probe · Deutsch · Lesen · Freitag, 9. Oktober 2026" mit einem Knopf
- * zur passenden Uebung. Erscheint nur, wenn
- *   - der Termin in den naechsten 14 Tagen liegt (heute zaehlt mit), UND
- *   - zu Fach und Thema eine Uebung in UEBUNGEN steht.
- * Ohne Uebung keine Karte: Eine Erinnerung ohne Weg dorthin waere nur Druck.
- * Kein Countdown, keine rote Zahl - "in 5 Tagen" steht ruhig dabei.
+ * Seit 13.10.2026 (Dennys Wahl per Klickfrage): ein Hinweis fuer JEDE Probe in
+ * den naechsten 14 Tagen, nicht nur fuer eine mit eigener Uebung. Paul traegt
+ * angekuendigte Proben selbst ein (probeneintrag.js). Die naechste Probe steht
+ * gross da, weitere als kurze Zeile.
  *
- * Termine kommen aus GET /api/noten?eigene=1 (Feld termine, gesetzt mit
- * ./werkstatt.sh probe-termin). termine:null heisst "Speicher hat nicht
- * geantwortet" - dann bleibt die Karte einfach weg.
+ *   "Noch 6 Tage bis Mathe · Einmaleins und Teilen"   am Tag selbst "Heute: Mathe-Probe"
+ *
+ * Der Knopf fuehrt immer irgendwohin - ein Hinweis ohne Weg waere nur Druck:
+ *   1. Uebung genau zu Fach+Thema (UEBUNGEN, z. B. Deutsch Lesen -> Generalprobe)
+ *   2. Uebung zum Fach (UEBUNGEN "<fach>|*", z. B. Mathe -> 1x1-Woche)
+ *   3. sonst "Im Heft wiederholen": Lernquiz dieses Fachs (?fach=…)
+ * Kein Rot, kein Alarm, keine Uhr. Die Zahl der Tage steht ruhig dabei.
+ *
+ * Termine kommen aus GET /api/noten?eigene=1 (Feld termine). termine:null
+ * heisst "Speicher hat nicht geantwortet" - dann bleibt die Karte einfach weg.
+ * Nach jedem Zeigen meldet die Karte die Termine als Ereignis
+ * "lw-probentermine" (detail: {kind, termine, faecher}) - die Startseite
+ * zeigt damit Probe-Kacheln nur, solange eine Probe des Fachs ansteht.
  *
  *   LWProbenkarte.laden("paul", element)          holt selbst
  *   LWProbenkarte.zeigen(element, termine, kind)  mit schon geholten Terminen
@@ -19,10 +27,18 @@
    * der Lese-Satz. Nur Paul: Leon und Helena bekommen die Karte nicht (Denny,
    * 04.10.2026: "Das war nicht gewuenscht. Das war fuer Paul"). Kapitel 105. */
   var UEBUNGEN = {
-    paul: { "deutsch|lesen": { href: "/paul/klasse4-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte" } }
+    paul: {
+      "deutsch|lesen": { href: "/paul/klasse4-deutsch-generalprobe-lesen.html?los=1", knopf: "▶ Neue Geschichte",
+        satz: "Üb mit einer Geschichte – so viel du magst." },
+      // Mathe: die 1x1-Woche passt zu jedem Mathe-Thema der Klasse 4 als Aufwaermen (Dennys Vorgabe 13.10.2026).
+      "mathe|*": { href: "/paul/klasse4-mathe-einmaleinswoche.html", knopf: "▶ 1×1-Woche",
+        satz: "Üb in Ruhe – so viel du magst." }
+    }
   };
-  var FAECHER = { deutsch: "Deutsch", mathe: "Mathe", hsu: "HSU", englisch: "Englisch", religion: "Religion", musik: "Musik",
-    franz: "Französisch", geschichte: "Geschichte", geo: "Geographie", info: "Informatik", ethik: "Ethik" };
+  var FAECHER = { deutsch: "Deutsch", mathe: "Mathe", hsu: "HSU", englisch: "Englisch", religion: "Religion", rel: "Religion",
+    musik: "Musik", franz: "Französisch", geschichte: "Geschichte", geo: "Geographie", info: "Informatik", ethik: "Ethik" };
+  // Quiz-Seite je Kind fuer "Im Heft wiederholen".
+  var QUIZ = { paul: "/paul/quiz.html", leon: "/leon/quiz.html", helena: "/helena/quiz.html" };
   var TAGE = 14;
 
   function heute(){ return new Date().toLocaleDateString("sv-SE"); }
@@ -53,40 +69,84 @@
       ".lwpk.gross .pk-t{font-size:21px}.lwpk.gross .pk-s{font-size:17px}.lwpk.gross .pk-los{font-size:18px;min-height:52px}" +
       ".lwpk .pk-los{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 18px;" +
       "border-radius:999px;background:#7a5a00;color:#fff;font:800 16px system-ui,sans-serif;text-decoration:none;white-space:nowrap}" +
-      "html[data-theme=dark] .lwpk .pk-los{background:#f2d36b;color:#2a2000}";
+      "html[data-theme=dark] .lwpk .pk-los{background:#f2d36b;color:#2a2000}" +
+      ".lwpk .pk-w{font:600 14px/1.35 system-ui,sans-serif;color:var(--pk-leise);margin-top:6px}" +
+      ".lwpk .pk-knoepfe{display:flex;flex-direction:column;align-items:stretch;gap:6px}" +
+      ".lwpk .pk-heft{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:6px 14px;" +
+      "border-radius:999px;border:2px solid var(--pk-rand);color:var(--pk-text);font:700 15px system-ui,sans-serif;text-decoration:none;white-space:nowrap}";
     document.head.appendChild(s);
   }
 
-  // Liefert den naechsten passenden Termin oder null.
-  function waehle(termine, kind, h){
-    var u = UEBUNGEN[kind] || {};
-    var liste = (Array.isArray(termine) ? termine : []).slice().sort(function(a, b){ return a.datum < b.datum ? -1 : 1; });
+  function fachName(f){ return FAECHER[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : ""); }
+  function heftWeg(kind, fach){ return (QUIZ[kind] || "quiz.html") + "?fach=" + encodeURIComponent(String(fach || "").toLowerCase()); }
+  function uebungFuer(t, kind){
+    var u = UEBUNGEN[kind] || {}, f = String(t.fach || "").toLowerCase();
+    var genau = u[f + "|" + String(t.thema || "").trim().toLowerCase()];
+    if (genau) return genau;
+    if (u[f + "|*"]) return u[f + "|*"];
+    return { href: heftWeg(kind, f), knopf: "▶ Im Heft wiederholen",
+      satz: "Wiederhol, was in deinem Heft steht – so viel du magst.", heft: true };
+  }
+
+  // Alle Termine von heute bis +14 Tage, nach Datum: [{termin, tage, uebung}].
+  function anstehend(termine, kind, h){
+    var liste = (Array.isArray(termine) ? termine : []).slice().sort(function(a, b){ return a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : 0; });
+    var raus = [];
     for (var i = 0; i < liste.length; i++) {
-      var t = liste[i]; if (!t || typeof t.datum !== "string") continue;
+      var t = liste[i]; if (!t || typeof t.datum !== "string" || !t.fach) continue;
       var n = tageBis(t.datum, h);
       if (n < 0 || n > TAGE) continue;
-      var ueb = u[String(t.fach || "").toLowerCase() + "|" + String(t.thema || "").trim().toLowerCase()];
-      if (ueb) return { termin: t, tage: n, uebung: ueb };
+      raus.push({ termin: t, tage: n, uebung: uebungFuer(t, kind) });
     }
-    return null;
+    return raus;
+  }
+  // Liefert den naechsten Termin (mit Uebung oder Heft-Weg) oder null.
+  function waehle(termine, kind, h){ return anstehend(termine, kind, h)[0] || null; }
+
+  function titel(w){
+    var t = w.termin, f = fachName(t.fach), th = String(t.thema || "").trim();
+    if (w.tage === 0) return "Heute: " + f + "-Probe" + (th ? " · " + th : "");
+    if (w.tage === 1) return "Morgen: " + f + "-Probe" + (th ? " · " + th : "");
+    return "Noch " + w.tage + " Tage bis " + f + (th ? " · " + th : "");
+  }
+  function kurz(iso){
+    return new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  }
+
+  function melden(kind, termine, h){
+    try {
+      var faecher = {};
+      anstehend(termine, kind, h).forEach(function(w){ faecher[String(w.termin.fach).toLowerCase()] = true; });
+      window.LWProbenkarte.termine = termine;
+      window.LWProbenkarte.faecher = faecher;
+      document.dispatchEvent(new CustomEvent("lw-probentermine", { detail: { kind: kind, termine: termine, faecher: faecher } }));
+    } catch (e) {}
   }
 
   function zeigen(el, termine, kind){
     if (!el) return false;
     var h = window.__probenHeute || heute();
-    var w = waehle(termine, kind, h);
-    if (!w) { el.innerHTML = ""; el.classList.add("verborgen"); return false; }
+    var alle = anstehend(termine, kind, h);
+    melden(kind, termine, h);
+    if (!alle.length) { el.innerHTML = ""; el.classList.add("verborgen"); return false; }
     stil();
-    var t = w.termin;
-    var wann = w.tage === 0 ? "heute" : w.tage === 1 ? "morgen" : "in " + w.tage + " Tagen";
+    var w = alle[0], t = w.termin;
     el.classList.remove("verborgen");
+    var weitere = alle.slice(1, 4).map(function(x){
+      var th = String(x.termin.thema || "").trim();
+      return '<div class="pk-w">Danach: ' + esc(fachName(x.termin.fach)) + (th ? " · " + esc(th) : "") + " am " + esc(kurz(x.termin.datum)) +
+        " (" + (x.tage === 1 ? "morgen" : "in " + x.tage + " Tagen") + ")</div>";
+    }).join("");
+    var heftLink = w.uebung.heft ? "" :
+      '<a class="pk-heft" href="' + esc(heftWeg(kind, t.fach)) + '">Im Heft wiederholen</a>';
     // Leon ist Leseanfaenger: groessere Schrift.
     el.innerHTML = '<div class="lwpk' + (kind === "leon" ? " gross" : "") + '" id="lwpk">' +
       '<div class="pk-ic">📝</div>' +
       '<div class="pk-txt"><div class="pk-k">Nächste Probe</div>' +
-      '<div class="pk-t">' + esc(FAECHER[t.fach] || t.fach) + ' · ' + esc(t.thema) + ' · ' + esc(lang(t.datum)) + '</div>' +
-      '<div class="pk-s">Das ist ' + wann + '. ' + esc(w.uebung.satz || "Üb mit einer Geschichte – so viel du magst.") + '</div></div>' +
-      '<a class="pk-los" href="' + esc(w.uebung.href) + '">' + esc(w.uebung.knopf) + '</a></div>';
+      '<div class="pk-t">' + esc(titel(w)) + '</div>' +
+      '<div class="pk-s">' + esc(lang(t.datum)) + '. ' + esc(w.uebung.satz || "Üb in Ruhe – so viel du magst.") + '</div>' +
+      weitere + '</div>' +
+      '<div class="pk-knoepfe"><a class="pk-los" href="' + esc(w.uebung.href) + '">' + esc(w.uebung.knopf) + '</a>' + heftLink + '</div></div>';
     return true;
   }
 
@@ -95,8 +155,9 @@
     fetch("/api/noten?eigene=1&kind=" + encodeURIComponent(kind), { credentials: "same-origin" })
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(j){ zeigen(el, j && j.ok ? j.termine : null, kind); })
-      .catch(function(){});
+      .catch(function(){ zeigen(el, null, kind); });
   }
 
-  window.LWProbenkarte = { laden: laden, zeigen: zeigen, waehle: waehle, UEBUNGEN: UEBUNGEN };
+  window.LWProbenkarte = { laden: laden, zeigen: zeigen, waehle: waehle, anstehend: anstehend, UEBUNGEN: UEBUNGEN,
+    FAECHER: FAECHER, termine: undefined, faecher: {} };
 })();

@@ -35,6 +35,13 @@
      Ausnahme: window.QUIZ.merkeAuswahl = true. */
   if (!K.merkeAuswahl) { stand.faecher = []; stand.blaetter = []; stand.blattArt = ""; }
   stand.zeitraum = ""; stand.thema = "";   // gilt nur fuer das gerade gewaehlte Fach
+  /* Von der Probenkarte ("Im Heft wiederholen", 13.10.2026): ?fach=mathe waehlt
+     genau dieses Fach vor. Bietet das Heft es nicht an, faellt es unten beim
+     Abgleich mit den Heft-Faechern wieder weg. */
+  try {
+    var vorFach = (location.search.match(/[?&]fach=([a-z-]{2,20})/) || [])[1];
+    if (vorFach) stand.faecher = [vorFach];
+  } catch (e) {}
   /* "Alle Fächer" ist eine Wahl, kein Grundzustand: erst ein Tipp darauf
      zeigt die Quiz-Leiste (nur mit Blattwahl, also einzeln()). */
   var alleGewaehlt = false;

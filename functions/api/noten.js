@@ -9,13 +9,17 @@
  *   POST   /api/noten  {kind, note:{...}}    -> anlegen oder aendern (gleiche id)
  *   DELETE /api/noten?kind=helena&id=abc     -> loeschen
  *   POST   /api/noten  {kind, termin:{datum,fach,thema}} / {kind, terminWeg:{datum,fach}}
+ *                       {kind, terminAlt:{datum,fach}, termin:{...}}  -> aendern in einem Schreibvorgang
+ *          Seit 13.10.2026 auch mit dem KINDERAUSWEIS - nur fuer sich selbst und nur
+ *          Termine (kindTermin unten, Grenzen in _probentermine.js).
  *   POST   /api/noten  {kind, blatt:"data:…"} -> Notenstand auslesen (kostet Geld,
  *                                               speichert NICHTS, schlaegt nur vor)
  */
 
-import { ausweisGueltig, geheimFuer } from "./_riegel.js";
+import { ausweisGueltig, geheimFuer, besuchIstEltern } from "./_riegel.js";
 import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId } from "./_noten.js";
-import { termineLesen, terminSetzen, terminWeg, terminPruefen, kuenftige, berlinHeute } from "./_probentermine.js";
+import { termineLesen, terminSetzen, terminWeg, terminPruefen, kuenftige, berlinHeute,
+         kindSchreiben, terminAendern } from "./_probentermine.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const MODELL = "claude-opus-5-5";
@@ -25,7 +29,41 @@ const json = (status, daten) =>
   new Response(JSON.stringify(daten), { status, headers: { "content-type": "application/json; charset=utf-8" } });
 
 async function eltern(request, env) {
-  return ausweisGueltig(request, geheimFuer(env, "eltern"), env);
+  // Ohne ELTERN_CODE bleibt der Elternweg zu (dieselbe Pruefung wie im GET).
+  const g = geheimFuer(env, "eltern");
+  return !!g && ausweisGueltig(request, g, env);
+}
+
+/* Das Kind traegt seine angekuendigten Proben selbst ein (13.10.2026).
+ * Nur Termine, nur fuer das Kind, dessen Ausweis gilt. Sitzt ein Erwachsener
+ * mit dem Hauptschluessel im Kinderbereich (signiertes lw_besuch-Cookie),
+ * gelten dieselben Grenzen, der Eintrag heisst dann aber von:"eltern". */
+async function kindTermin(request, env, kind, daten) {
+  const g = geheimFuer(env, kind);
+  if (!g || !(await ausweisGueltig(request, g, env))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+  let besuch = false;
+  try { besuch = await besuchIstEltern(request, g); } catch (e) {}
+  const heute = berlinHeute();
+  let neu = null, alt = null;
+  if (daten.termin) {
+    const p = terminPruefen(daten.termin, { themaOptional: true });
+    if (p.fehler) return json(400, { ok: false, fehler: p.fehler });
+    neu = p.termin;
+  }
+  const altRoh = daten.terminWeg || daten.terminAlt;
+  if (altRoh) {
+    alt = { datum: String(altRoh.datum || ""), fach: String(altRoh.fach || "").toLowerCase() };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(alt.datum) || !alt.fach) return json(400, { ok: false, fehler: "Welche Probe denn?" });
+  }
+  if (daten.terminWeg) neu = null;
+  try {
+    const r = await kindSchreiben(env, kind, { neu, alt, von: besuch ? "eltern" : kind }, heute);
+    if (r.fehler) return json(r.status || 400, { ok: false, fehler: r.fehler });
+    const termine = kuenftige(r.termine, heute);
+    return json(200, { ok: true, geschrieben: r.geschrieben, termine });
+  } catch (e) {
+    return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Die Probe ist NICHT gespeichert." });
+  }
 }
 
 function kindAus(url, daten) {
@@ -185,18 +223,40 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
-  if (!(await eltern(request, env))) return json(401, { ok: false, fehler: "Nur mit Elternausweis." });
+  const alsEltern = await eltern(request, env);
 
   let daten = {};
-  try { daten = await request.json(); } catch (e) { return json(400, { ok: false, fehler: "Ich konnte die Anfrage nicht lesen." }); }
+  try { daten = await request.json(); } catch (e) {
+    return json(alsEltern ? 400 : 401, { ok: false, fehler: alsEltern ? "Ich konnte die Anfrage nicht lesen." : "Nur mit Elternausweis." });
+  }
 
   const url = new URL(request.url);
   const kind = kindAus(url, daten);
+  if (!alsEltern) {
+    // Ohne Elternausweis geht NUR ein Probentermin des eigenen Kindes.
+    const nurTermin = daten && (daten.termin || daten.terminWeg) && !daten.note && !daten.blatt;
+    if (!kind || !nurTermin) return json(401, { ok: false, fehler: "Nur mit Elternausweis." });
+    return kindTermin(request, env, kind, daten);
+  }
   if (!kind) return json(400, { ok: false, fehler: "Welches Kind denn?" });
+
+  // Aendern in einem Schreibvorgang (13.10.2026, Elternbereich): von bleibt dran.
+  if (daten.terminAlt && daten.termin) {
+    const g = terminPruefen(daten.termin, { themaOptional: true });
+    if (g.fehler) return json(400, { ok: false, fehler: g.fehler });
+    const alt = { datum: String(daten.terminAlt.datum || ""), fach: String(daten.terminAlt.fach || "").toLowerCase() };
+    try {
+      const r = await terminAendern(env, kind, alt, g.termin);
+      if (!r.gefunden) return json(404, { ok: false, fehler: "Diesen Termin gibt es nicht (mehr).", termine: r.termine });
+      return json(200, { ok: true, geschrieben: true, termine: r.termine });
+    } catch (e) {
+      return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Nichts geändert." });
+    }
+  }
 
   // Probentermin setzen oder wegnehmen (04.10.2026), nur mit Elternausweis.
   if (daten.termin) {
-    const g = terminPruefen(daten.termin);
+    const g = terminPruefen(daten.termin, { themaOptional: true });
     if (g.fehler) return json(400, { ok: false, fehler: g.fehler });
     try {
       const r = await terminSetzen(env, kind, g.termin);

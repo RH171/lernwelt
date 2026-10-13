@@ -102,6 +102,18 @@
   .karte table.termine{width:100%;border-collapse:collapse}
   .karte table.termine td{padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
   .karte table.termine tr:last-child td{border-bottom:none}
+  /* Kommende Proben (13.10.2026): Paul traegt selbst ein, hier aendern und loeschen. */
+  .pt-zeile{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+  .pt-zeile:last-child{border-bottom:none}
+  .pt-was{flex:1 1 220px;min-width:0}
+  .pt-von{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#fff3c4;color:#5e4a10;font-size:12.5px;font-weight:700}
+  .pt-zeile button,.pt-form button{min-height:44px;padding:0 14px;border:1.5px solid var(--line);background:#fff;border-radius:11px;
+    color:var(--ink);font:600 14.5px/1 var(--rund);cursor:pointer}
+  .pt-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%;margin-top:4px}
+  .pt-form input,.pt-form select{min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:11px;font:15px var(--rund);
+    background:#fff;color:var(--ink);max-width:100%;box-sizing:border-box}
+  .pt-form input[type=text]{flex:1 1 180px;min-width:0}
+  .pt-meldung{font-size:13.5px;margin-top:8px;color:var(--muted)}
   .karte table.termine td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 
   /* Anwesenheitsband (19.09.2026): eine Spur aus 96 Viertelstunden je Tag.
@@ -1127,6 +1139,89 @@
       '<a class="knopf-link" href="/eltern/probearbeiten.html">Alle Regeln ansehen</a></div>';
   }
 
+  /* Kommende Proben (13.10.2026, Dennys Wahl): Paul traegt angekuendigte Proben auf seiner
+     Startseite selbst ein (von:"paul"). Hier stehen alle kommenden, seine mit "von Paul",
+     und die Eltern koennen jede aendern (Datum, Fach, Thema - ein Schreibvorgang) oder loeschen.
+     Gelesen ueber GET /api/noten?eigene=1 (der Elternausweis gilt dort auch). */
+  var PT = { termine: null, fehler: null, laedt: false, offen: "" };
+  var PT_FAECHER = { mathe: "Mathe", deutsch: "Deutsch", hsu: "HSU", englisch: "Englisch", rel: "Religion", religion: "Religion", musik: "Musik" };
+  function ptHeute(){ return new Date().toLocaleDateString("sv-SE"); }
+  function ptLang(iso){ return new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }); }
+  function ptLaden(){
+    if (PT.laedt) return; PT.laedt = true;
+    fetch("/api/noten?eigene=1&kind=paul", { credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht."); PT.termine = Array.isArray(j.termine) ? j.termine : null; PT.fehler = Array.isArray(j.termine) ? null : "Der Speicher hat nicht geantwortet."; })
+      .catch(function(e){ PT.fehler = e.message || "Das ging nicht."; })
+      .then(function(){ PT.laedt = false; ptMalen(); });
+  }
+  function ptForm(t){
+    var f = t ? t.fach : "mathe", opts = "";
+    ["mathe","deutsch","hsu","englisch","rel","musik"].forEach(function(k){ opts += '<option value="' + k + '"' + (k === f ? " selected" : "") + '>' + PT_FAECHER[k] + '</option>'; });
+    return '<div class="pt-form" data-pt-form="' + (t ? esc(t.datum + "|" + t.fach) : "neu") + '">' +
+      '<select aria-label="Fach" data-pt="fach">' + opts + '</select>' +
+      '<input type="date" aria-label="Datum" data-pt="datum" value="' + (t ? esc(t.datum) : "") + '" min="' + ptHeute() + '">' +
+      '<input type="text" aria-label="Thema" data-pt="thema" maxlength="40" placeholder="Thema (freiwillig)" value="' + (t ? esc(t.thema || "") : "") + '">' +
+      '<button type="button" data-pt-speichern="1">Speichern</button><button type="button" data-pt-abbrechen="1">Abbrechen</button></div>';
+  }
+  function ptInhalt(){
+    if (PT.fehler) return '<p class="unter" style="margin:0"><b>Die Proben kann ich gerade nicht laden.</b> ' + esc(PT.fehler) + ' Das heißt <b>nicht</b>, dass keine da sind.</p>';
+    if (!PT.termine) return '<p class="unter" style="margin:0">Lädt …</p>';
+    var h = "";
+    PT.termine.forEach(function(t){
+      var key = t.datum + "|" + t.fach;
+      h += '<div class="pt-zeile"><div class="pt-was"><b>' + esc(PT_FAECHER[t.fach] || t.fach) + '</b>' + (t.thema ? " · " + esc(t.thema) : "") +
+        (t.von === "paul" ? '<span class="pt-von">von Paul</span>' : "") + '<br><span style="color:var(--muted)">' + esc(ptLang(t.datum)) + '</span></div>' +
+        (PT.offen === key ? ptForm(t) : '<button type="button" data-pt-aendern="' + esc(key) + '">Ändern</button><button type="button" data-pt-weg="' + esc(key) + '">Löschen</button>') + '</div>';
+    });
+    if (!PT.termine.length) h += '<p class="unter" style="margin:0 0 8px">Keine Probe eingetragen.</p>';
+    h += PT.offen === "neu" ? ptForm(null) : '<div style="margin-top:10px"><button type="button" class="knopf-link" data-pt-neu="1">+ Probe eintragen</button></div>';
+    return h + '<div class="pt-meldung" id="ptMeldung" aria-live="polite"></div>';
+  }
+  function probenTermineKarte(){
+    if (KIND !== "paul") return "";
+    if (PT.termine === null && !PT.fehler) ptLaden();
+    return '<div class="karte" id="ptKarte"><h2>Kommende Proben</h2>' +
+      '<p class="unter">Paul trägt angekündigte Proben selbst ein – seine stehen mit „von Paul“ da. Seine Startseite zeigt die nächste 14 Tage vorher.</p>' +
+      '<div id="ptInhalt">' + ptInhalt() + '</div></div>';
+  }
+  function ptMalen(){ var el = document.getElementById("ptInhalt"); if (el) el.innerHTML = ptInhalt(); }
+  function ptSenden(korpus){
+    var m = document.getElementById("ptMeldung"); if (m) m.textContent = "Einen Moment …";
+    return fetch("/api/noten", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(korpus) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
+        var h = ptHeute();
+        PT.termine = (j.termine || []).filter(function(t){ return t.datum >= h; });
+        PT.offen = ""; ptMalen();
+        var m2 = document.getElementById("ptMeldung"); if (m2) m2.textContent = "Gespeichert.";
+      })
+      .catch(function(e){ var m3 = document.getElementById("ptMeldung"); if (m3) m3.textContent = "Nicht gespeichert: " + (e.message || "Das ging nicht."); });
+  }
+  document.addEventListener("click", function(e){
+    var t = e.target; if (!t || !t.closest || !t.closest("#ptKarte")) return;
+    var b;
+    if ((b = t.closest("[data-pt-aendern]"))) { PT.offen = b.getAttribute("data-pt-aendern"); ptMalen(); return; }
+    if (t.closest("[data-pt-neu]")) { PT.offen = "neu"; ptMalen(); return; }
+    if (t.closest("[data-pt-abbrechen]")) { PT.offen = ""; ptMalen(); return; }
+    if ((b = t.closest("[data-pt-weg]"))) {
+      var k = b.getAttribute("data-pt-weg").split("|");
+      if (!confirm("Diese Probe löschen?")) return;
+      ptSenden({ kind: "paul", terminWeg: { datum: k[0], fach: k[1] } });
+      return;
+    }
+    if ((b = t.closest("[data-pt-speichern]"))) {
+      var f = b.closest("[data-pt-form]"), alt = f.getAttribute("data-pt-form");
+      var neu = { datum: f.querySelector('[data-pt="datum"]').value, fach: f.querySelector('[data-pt="fach"]').value,
+                  thema: f.querySelector('[data-pt="thema"]').value.trim() };
+      if (!neu.datum) { document.getElementById("ptMeldung").textContent = "Bitte ein Datum wählen."; return; }
+      var korpus = { kind: "paul", termin: neu };
+      if (alt !== "neu") { var a = alt.split("|"); korpus.terminAlt = { datum: a[0], fach: a[1] }; }
+      ptSenden(korpus);
+    }
+  });
+
   /* Pauls Tagesaufgabe "1×1 und Textaufgaben" (04.10.2026): die Uebersicht liegt auf eigener
      Seite, damit diese hier nicht noch eine Abfrage mehr macht. */
   function tagesrechnenKarte(){
@@ -1560,12 +1655,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
+      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
+    h += notenKarte() + probenTermineKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +

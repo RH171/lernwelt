@@ -375,6 +375,9 @@
     padding:16px 18px;margin:0 0 22px;font-family:var(--round)}
   .nachsehen.verborgen{display:none}
   #probenkarte.verborgen{display:none}
+  /* "Probe angekündigt" (13.10.2026) - dieselbe Regel steht in /paul/probeneintrag.js. */
+  .pe-knopf{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;margin:0 0 18px;
+    border:2px dashed var(--muted);border-radius:18px;background:var(--card);color:var(--ink);font:800 16px var(--round);cursor:pointer}
   .ns-kopf{font-weight:800;font-size:20px;margin-bottom:4px}
   .ns-satz{font-size:15px;margin-bottom:10px;opacity:.85}
   .ns-punkt{border-top:1px solid var(--line);padding:12px 0 4px}
@@ -544,6 +547,9 @@
   <!-- Gelbe Probenkarte (04.10.2026): steht nur da, wenn eine Probe in den
        naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
   <div id="probenkarte" class="verborgen"></div>
+  <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
+       (/paul/probeneintrag.js, Server prueft die Grenzen). Steht immer da, auch ohne Probe. -->
+  <button type="button" id="probeEintragen" class="pe-knopf">📝 Probe angekündigt? Hier eintragen</button>
 
   <!-- Heute lernen (25.09.2026): der taegliche Einstieg steht FEST oben,
        ausserhalb der Kacheln, die nach letzter Benutzung sortiert werden.
@@ -842,8 +848,26 @@
     // Generalprobe fuer die Probe "D | Lesen" am 09.10.2026 (04.10.2026, Dennys Wahl B).
     // Steht fest hier, weil games.json nur klasse3-Dateien findet.
     {file:"klasse4-deutsch-generalprobe-lesen.html", klasse:4, fach:"deutsch",
-      title:"Generalprobe Lesen", sub:"Geschichte lesen, Aufgaben wie in der Probe", icon:"📖", type:"Probe"}
+      title:"Generalprobe Lesen", sub:"Geschichte lesen, Aufgaben wie in der Probe", icon:"📖", type:"Probe",
+      // 13.10.2026 (Denny): Probe-Kacheln nur, solange eine Probe dieses Fachs in den
+      // naechsten 14 Tagen ansteht (Termine aus der Probenkarte). Die Seite bleibt erreichbar.
+      probe:"deutsch"}
   ];
+  /* Probe-Kacheln (Feld probe) warten auf die Termine. Bis die Probenkarte sie
+     gemeldet hat, stehen sie nicht da - eine Kachel, die erst steht und dann
+     verschwindet, waere schlimmer als eine, die kurz spaeter dazukommt. */
+  const PROBE_TOOLS = TOOLS.filter(t=>t.probe);
+  for (let i = TOOLS.length - 1; i >= 0; i--) if (TOOLS[i].probe) TOOLS.splice(i, 1);
+  function probeKachelnPflegen(faecher){
+    let geaendert = false;
+    PROBE_TOOLS.forEach(function(t){
+      const soll = !!(faecher && faecher[t.probe]);
+      const ist = TOOLS.indexOf(t) >= 0;
+      if (soll && !ist) { TOOLS.push(t); geaendert = true; }
+      if (!soll && ist) { TOOLS.splice(TOOLS.indexOf(t), 1); geaendert = true; }
+    });
+    return geaendert;
+  }
 
   const FACH = {
     deutsch: {name:"Deutsch", color:"var(--deutsch)"},
@@ -1544,6 +1568,11 @@
   });
 
   // ---- Start -----------------------------------------------------------
+  // Termine der Probenkarte: Probe-Kacheln dazu oder weg (13.10.2026).
+  document.addEventListener("lw-probentermine", function(e){
+    if (e.detail && e.detail.kind === "paul" && probeKachelnPflegen(e.detail.faecher)) render(parseInt(klasseSel.value,10));
+  });
+  if (window.LWProbenkarte && LWProbenkarte.faecher) probeKachelnPflegen(LWProbenkarte.faecher);
   render(parseInt(klasseSel.value,10));
   if (window.LWAlter) LWAlter.laden("paul").then(function(a){ SPIELALTER = a; render(parseInt(klasseSel.value,10)); });
   // Automatisch erkannte Spiele nachladen und Kacheln ergänzen (ohne die index.html zu ändern)
@@ -1679,8 +1708,10 @@
     .catch(function(){ /* ohne Speicher bleibt die Karte einfach zu */ });
 })();
 </script>
-<script src="/probenkarte.js?v=9474d0f6"></script>
+<script src="/probenkarte.js?v=56c6db75"></script>
 <script>try{ LWProbenkarte.laden("paul", document.getElementById("probenkarte")); }catch(e){}</script>
+<script src="/paul/probeneintrag.js?v=7fe8c1fa"></script>
+<script>try{ LWProbeneintrag.start({ kind: "paul", knopf: document.getElementById("probeEintragen"), karte: document.getElementById("probenkarte") }); }catch(e){}</script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
 </body>
 </html>
