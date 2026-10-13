@@ -545,6 +545,8 @@ async function vorratLesen(env, kind) {
        ohne Schreibvorgang. Mit dem naechsten Nachbau verschwinden sie ganz. */
     if (d && Array.isArray(d.fragen)) {
       d.fragen = d.fragen.filter((f) => !f || !blattGedaechtnis(f.frage));
+      /* Dasselbe fuer Beiwerk statt Lernziel (13.10.2026, Buergersprechstunde). */
+      d.fragen = d.fragen.filter((f) => !f || !nebendetail(f));
       for (const f of d.fragen) if (f && f.fach) f.fach = heftFach(f.fach);
       return d;
     }
@@ -713,7 +715,24 @@ REGELN
    "Nussknacker = Nomen + Verb", obwohl "Knacker" auch ein Nomen ist), folgt
    die Frage dem Heft, und die Erklaerung zitiert die Stelle woertlich:
    "In deinem Merkheft steht: Nomen + Verb: Nussknacker, Seiltänzer."
-4g. HERKUNFT DER ZEILEN (13.10.2026). Manche Zeilen tragen eine Marke in
+4g. FRAG NACH DEM LERNZIEL, NICHT NACH DEM BEIWERK. Frag dich zu jedem Blatt
+   zuerst: "Was soll das Kind hier lernen?" (die Überschrift, der Merksatz, die
+   Begriffe, die Regel). Frag nur, was eine Lehrerin in der Probe abfragen
+   würde. NICHT fragen: Uhrzeiten, Öffnungszeiten, Hausnummern, Telefonnummern
+   oder Namen von einem Schild, einer Zeichnung oder einem Beispielbild; Namen,
+   Alter, Farben oder Kleidung erfundener Beispielfiguren; Deko-Zahlen,
+   Seitenzahlen, Aufgabennummern, Stempel oder Sticker der Lehrerin; wie ein
+   Arbeitsauftrag aufgebaut ist ("Mit welchem Buchstaben beginnt die Übung?").
+   Ein Bild oder Beispiel steht für den BEGRIFF daneben - frag nach dem Begriff.
+   Schlecht: "Wann ist die Bürgersprechstunde? -> Dienstag 10-11 Uhr" (das
+   Türschild ist nur das Bild zu "Gespräch mit Politikern"). Gut: "Wie können
+   Bürger direkt mit dem Bürgermeister reden? -> in der Bürgersprechstunde".
+   Schlecht: "Welche Hausnummer hat das Rathaus? -> 88". Gut: "Wo arbeitet die
+   Verwaltung der Stadt? -> im Rathaus". Schlecht: "Welche Farbe hat Milos
+   Schultasche?". Lieber weniger Fragen als eine zum Beiwerk.
+4h. Keine Warum-, Wieso- oder Begründe-Fragen und keine Antwort, die mit "weil"
+   anfängt - die Lehrerin erlaubt keine Weil-Antworten.
+4i. HERKUNFT DER ZEILEN (13.10.2026). Manche Zeilen tragen eine Marke in
    eckigen Klammern. "[nachgesehen vom Lesehelfer, …]" ist ein Urteil beim
    Einlesen, KEINE Korrektur der Lehrerin. "[vom Kind eingetragen, …]" hat
    das Kind selbst geschrieben, niemand hat es bestaetigt. Schreib in der
@@ -782,6 +801,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
     .filter(belegt)
     .filter((f) => !verneint(f.frage))
     .filter((f) => !blattGedaechtnis(f.frage))
+    .filter((f) => !nebendetail(f))
     .filter((f) => fachPasstZumBlatt(f, schule.blaetter))
     // Ein falsches Fachkürzel macht die Fächerauswahl kaputt - lieber weglassen.
     .filter((f) => erlaubt.has(heftFach(f.fach)))
@@ -1057,6 +1077,33 @@ export function blattGedaechtnis(frage) {
   if (/\bbei dir in der\b/i.test(f)) return true;
   if (/\b(in|aus) der\s+(Tabelle|Übung|Uebung|Liste|Wörterliste)\b|\bim Kasten\b|\bin Aufgabe\s*\d/i.test(f)) return true;
   if (/\b(hast du|hattest du)\b[^?]*\b(aufgeschrieben|geschrieben|eingetragen|notiert|angekreuzt)\b/i.test(f)) return true;
+  return false;
+}
+
+/* Fragt die Frage nach Beiwerk statt nach dem Lernziel? Regel 4g bittet darum,
+ * hier wird das Eindeutige durchgesetzt (eine Bitte im Auftrag ist keine
+ * Pruefung). Anlass, Denny am 13.10.2026 zu "Wann ist die Buergersprechstunde?
+ * -> Dienstag 10-11 Uhr" (ein gezeichnetes Tuerschild, nur das Bild zu
+ * "Gespraech mit Politikern"): "Die Oeffnungszeiten wird die Lehrerin sicher
+ * nicht abfragen." Dazu "Welche Hausnummer hat das Rathaus? -> 88".
+ *
+ * Bewusst eng: Nur Muster, die nie ein Lernziel sind. Uhrzeiten zaehlen nur
+ * ausserhalb von Mathe - dort ist "Viertel nach 5" Stoff. Alles Feinere
+ * (Farben erfundener Figuren, Lesetext-Details) regelt der Auftrag. */
+export function nebendetail(f) {
+  const frage = String((f && f.frage) || "");
+  const richtig = String(((f && f.antworten) || [])[Number(f && f.richtig) || 0] || "");
+  const mathe = /^mathe/i.test(String((f && f.fach) || ""));
+  // Keine Weil-Antworten (Beschluss 04.10.2026, Frau Sy).
+  if (/^\s*(warum|wieso|weshalb)\b|\bbegründe|\bbegruende/i.test(frage)) return true;
+  if (/^\s*weil\b/i.test(richtig)) return true;
+  // Hausnummer, Telefonnummer, Oeffnungs- und Sprechzeiten.
+  if (/\b(haus|telefon|zimmer|raum)nummer\b|öffnungszeit|oeffnungszeit|sprechzeit|\bgeöffnet\b|\bgeoeffnet\b/i.test(frage)) return true;
+  if (/^\s*wann\b[^?]*sprechstunde/i.test(frage)) return true;
+  // Uhrzeit oder Zeitfenster als Antwort ("10-11 Uhr") ausserhalb von Mathe.
+  if (!mathe && /\b\d{1,2}([:.]\d{2})?\s*(uhr\b|(–|-|bis)\s*\d{1,2}([:.]\d{2})?\s*uhr\b)/i.test(richtig)) return true;
+  // Stempel, Sticker, Smiley der Lehrkraft.
+  if (/\b(stempel|sticker|smiley)\b/i.test(frage) && /\b(lehrkraft|lehrerin|lehrer)\b/i.test(frage)) return true;
   return false;
 }
 

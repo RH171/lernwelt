@@ -21,7 +21,7 @@
  * kommt überall hinein.
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
-import { tippOk } from "./quiz.js";
+import { tippOk, nebendetail } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import {
   FAECHER, FAECHER_JE_KIND, SCHUELER_JE_KIND, kindOk, datumOk, heuteBerlin, blattDatum,
@@ -629,7 +629,7 @@ export function karteRetten(k, inhalt) {
 
 /* Gibt "" zurueck, wenn die Karte in Ordnung ist - sonst den Grund.
  * inhalt ist die Stichwortliste desselben Blattes. */
-export function karteOk(k, inhalt) {
+export function karteOk(k, inhalt, fach) {
   if (!k) return "leer";
   const frage = String(k.frage || "").trim();
   const richtig = String(k.richtig || "").trim();
@@ -649,6 +649,15 @@ export function karteOk(k, inhalt) {
   if (/^(warum|wozu|weshalb|wieso)\b/i.test(frage) || /\bwas\s+(spart|bringt|nützt|nuetzt)\b/i.test(frage)) {
     return "fragt nach einer Wirkung statt nach einer Tatsache";
   }
+  /* Lernziel statt Beiwerk (13.10.2026, Befund 2026-10-13-nebendetail-fragen):
+     dieselbe mechanische Grenze wie im Lernquiz - keine Hausnummer,
+     Sprechzeit, Uhrzeit vom Schild, kein Stempel der Lehrerin. Das Fach
+     zaehlt nur fuer die Uhrzeit (in Mathe ist "3 Uhr" Stoff); ohne Fach
+     bleibt die Uhrzeit-Regel aus, damit keine Uhr-Karte faelschlich faellt. */
+  if (nebendetail({ frage, antworten: [richtig], richtig: 0, fach: fach || "mathe" })) return "Nebendetail statt Lernziel";
+  /* Die Adresse eines Gebaeudes ist Beiwerk (Befund: "Adresse des Rathauses
+     -> Königstr. 88"). Gilt nur fuer Karten - im Quiz regelt das 4g. */
+  if (/\b(adresse|anschrift|postanschrift)\b/i.test(frage)) return "Nebendetail statt Lernziel";
   const mehr = mehrdeutig(frage, richtig, inhalt);
   if (mehr) return mehr;
 
@@ -735,7 +744,7 @@ export function mehrdeutig(frage, richtig, inhalt) {
 }
 
 /* Liest den KARTEN-Block und laesst nur durch, was karteOk() bestehen kann. */
-export function kartenLesen(roh, inhalt) {
+export function kartenLesen(roh, inhalt, fach) {
   const nach = String(roh || "").split(/^\s*KARTEN\s*:/mi)[1] || "";
   const karten = [];
   const verworfen = [];
@@ -759,7 +768,7 @@ export function kartenLesen(roh, inhalt) {
     const merke = String(f[7] || "").replace(/\s+/g, " ").trim().slice(0, 180);
     if (merke && tippOk(merke, [k.richtig])) k.merke = merke;
     let fertig = k;
-    const grund = karteOk(k, inhalt);
+    const grund = karteOk(k, inhalt, fach);
     if (grund) {
       /* Erst retten, dann wegwerfen. Eine Karte weniger heisst bei vier
          Karten, dass der ganze Stapel ausfaellt (er braucht drei). */
@@ -1104,6 +1113,17 @@ async function blattLesen(env, seite, kind, themen) {
               "kurzen Wert, keine mehr und keine weniger. Auch aus einer Liste darf eine " +
               "Karte werden, wenn die Frage genau eine Antwort hat (\"In welchem Land " +
               "liegt Marmaris?\"), nie eine Frage nach der ganzen Liste.\n" +
+              "* LERNZIEL, NICHT BEIWERK: Frag dich zuerst, was das Kind auf diesem Blatt " +
+              "lernen soll (Ueberschrift, Merksatz, Begriffe, Regel). Eine Karte nur zu " +
+              "dem, was eine Lehrerin in der Probe abfragen wuerde. Keine Karte zu " +
+              "Uhrzeiten, Oeffnungszeiten, Hausnummern, Adressen, Telefonnummern oder " +
+              "Namen von einem Schild, einer Zeichnung oder einem Beispielbild, zu Namen, " +
+              "Alter oder Kleidung erfundener Beispielfiguren, und keine Warum-Karte. " +
+              "Schlecht: \"Adresse des Rathauses -> Königstr. 88\". Gut: \"Wo arbeitet " +
+              "die Verwaltung der Stadt? -> im Rathaus\". Lieber eine Karte weniger.\n" +
+              "* Hat das Kind etwas nur SELBST eingetragen (Zeile mit \"Kind:\") und die " +
+              "Lehrkraft hat es nicht bestaetigt, ist die Karte nur gut, wenn die Antwort " +
+              "sicher stimmt - sonst lass sie weg.\n" +
               "* Karten nur zum LERNSTOFF. Keine Karte zu Name, Klasse, Datum, " +
               "Kuerzel oder Lob der Lehrkraft, Stempel, Seitenzahl, und keine zur " +
               "Lage auf dem Blatt (\"Welches Wort steht als erstes?\").\n" +
@@ -1198,7 +1218,7 @@ async function blattLesen(env, seite, kind, themen) {
          : s.indexOf("probennah") >= 0 ? "probennah" : "";
   })();
 
-  const kk = kartenLesen(roh, inhalt);
+  const kk = kartenLesen(roh, inhalt, fachAusText(zeile("FACH")));
 
   /* Die Positionen aus dem ersten Aufruf sind nur eine Schaetzung nebenbei.
      Der zweite Blick schaut gezielt nach - und ueberschreibt nur, was er
@@ -1212,7 +1232,7 @@ async function blattLesen(env, seite, kind, themen) {
         if (!p) continue;
         const probe = Object.assign({}, k, { von: p[0], bis: p[1] });
         // Auch der zweite Blick muss durch den Riegel.
-        if (karteOk(probe, inhalt)) continue;
+        if (karteOk(probe, inhalt, fachAusText(zeile("FACH")))) continue;
         k.von = p[0]; k.bis = p[1]; k.genau = true;
         genauer++;
       }
