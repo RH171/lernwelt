@@ -23,6 +23,7 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { tippOk, nebendetail } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
+import { korrekturenFuerBrowser } from "./_korrektur.js";
 import {
   FAECHER, FAECHER_JE_KIND, SCHUELER_JE_KIND, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
@@ -1314,13 +1315,14 @@ export async function onRequestGet(context) {
   const nurFach = p.get("fach");
   if (nurFach) {
     const b = await blaetterImFach(env, kind, nurFach);
-    return b.ok ? json(200, { ok: true, blaetter: b.blaetter })
+    return b.ok ? json(200, { ok: true, blaetter: b.blaetter.map(korrekturenFuerBrowser) })
                 : json(503, { ok: false, fehler: b.fehler });
   }
 
   const e = await stoffLesen(env, kind, Number(p.get("monate") || 3));
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
-  return json(200, { ok: true, heute: e.heute, faecher: FAECHER, eintraege: e.eintraege });
+  /* Neues Foto (14.10.2026): grüne Orte vom alten Foto bleiben weg (nur Anzeige). */
+  return json(200, { ok: true, heute: e.heute, faecher: FAECHER, eintraege: e.eintraege.map(korrekturenFuerBrowser) });
 }
 
 /* Verstecken, wieder zeigen, wegräumen.

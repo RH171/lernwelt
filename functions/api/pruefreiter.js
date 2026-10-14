@@ -35,7 +35,7 @@ import { vorlagenLesen, vorlagenBilderLesen, vorlageFuerBlatt, BILD_SCHLUESSEL }
 import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
          zustandLesen, zustandSchreiben, fortschritt } from "./_pruefreiter.js";
 import { kreiseLesen, kreiseSchreiben, fehltOrt, ortFuer, vorlageOrt, zieleFuerStelle, zielFuerVorlage,
-         orten } from "./_fehlerkreis.js";
+         orten, orteVerwerfen } from "./_fehlerkreis.js";
 import { korrekturFuer, korrekturSetzen, gruenFuer } from "./_korrektur.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
@@ -133,6 +133,10 @@ async function ortenAktion(env, kind, blattId) {
   const zustand = await zustandLesen(env, kind);
   const stellen = stellenFuerBlatt(blatt, vorlagen).filter((s) => !zustand.s[s.id]);
   const kreise = await kreiseLesen(env, kind);
+  /* Neues Foto (14.10.2026): Orte vom alten Foto dieses Blattes verwerfen.
+     Gespeichert wird das nur mit dem Schreibvorgang der neuen Ortung - bis
+     dahin blendet ortGilt() sie beim Lesen aus. */
+  const verworfen = orteVerwerfen(kreise, blattId, blatt.fotoNeu);
   const bilder = stellen.some((s) => s.art === "pinnwand") ? await vorlagenBilderLesen(env, kind) : {};
   const fehlen = stellen.filter((s) => fehltOrt(kreise, s));
   const ziele = fehlen.flatMap(zieleFuerStelle).filter((z) => !(kreise.b[blattId] && kreise.b[blattId][z.id]));
@@ -161,11 +165,12 @@ async function ortenAktion(env, kind, blattId) {
       .then((r) => ({ art: "vorlage", vid, r, ziele: vorlageZiele[vid] })));
   }
   let geaendert = false;
+  const jetzt = new Date().toISOString();
   for (const a of await Promise.all(auftraege)) {
     if (a.r.fehler) continue;   // HTTP-Fehler, Abbruch: nichts merken, später wieder
     for (const z of a.ziele) {
       const o = a.r.orte[z.id] || { nicht: 1 };   // geantwortet, aber nicht gefunden: nicht nochmal bezahlen
-      if (a.art === "blatt") { (kreise.b[blattId] = kreise.b[blattId] || {})[z.id] = o; }
+      if (a.art === "blatt") { (kreise.b[blattId] = kreise.b[blattId] || {})[z.id] = { ...o, am: jetzt }; }
       else if (!o.nicht) { (kreise.vorlagen[a.vid] = kreise.vorlagen[a.vid] || {})[z.id] = { x: o.x, y: o.y, b: o.b, h: o.h }; }
       else { (kreise.vorlagen[a.vid] = kreise.vorlagen[a.vid] || {})[z.id] = { nicht: 1 }; }
       geaendert = true;
@@ -175,7 +180,7 @@ async function ortenAktion(env, kind, blattId) {
     try { await kreiseSchreiben(env, kind, kreise); }
     catch (x) { return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken." }); }
   }
-  return json(200, { ok: true, geortet: geaendert, stellen: stellen.map((s) => {
+  return json(200, { ok: true, geortet: geaendert, ...(verworfen ? { verworfen } : {}), stellen: stellen.map((s) => {
     const o = { id: s.id, ort: ortFuer(kreise, s) };
     if (s.art === "pinnwand" && s.beleg) { const vo = vorlageOrt(kreise, s.beleg.vorlage, s.beleg.nr); if (vo) o.belegOrt = vo; }
     return o;

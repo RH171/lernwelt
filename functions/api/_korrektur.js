@@ -26,7 +26,8 @@
  * bereits. Dort wird nur der Verlauf geschrieben (quelle "lehrerin"), die Zeile bleibt.
  */
 import { kindSchrieb, falten } from "./_lehrervorlagen.js";
-import { MARKE, MARKE_RE, rechteck } from "./_fehlerkreis.js";
+import { MARKE, MARKE_RE, rechteck, ortGilt } from "./_fehlerkreis.js";
+export { korrekturenErneuern } from "./_korrekturhalt.js";
 import { listeLesen, KAPUTT, monatVon, heuteBerlin } from "./_schulstoff.js";
 
 const OP_ZEIGEN = { "*": "·", "/": ":", "+": "+", "-": "−" };
@@ -126,6 +127,8 @@ export function gruenFuer(blatt) {
   for (const k of ks) {
     if (!k || !Array.isArray(k.ort)) continue;
     for (const o of k.ort) {
+      /* Neues Foto (14.10.2026): ein Ort vom alten Foto zeigt nichts mehr. */
+      if (!ortGilt({ ...o, am: k.am }, blatt.fotoNeu)) continue;
       const r = rechteck(o);
       if (!r) continue;
       aus.push({ ...r,
@@ -134,6 +137,20 @@ export function gruenFuer(blatt) {
     }
   }
   return aus.slice(0, 30);
+}
+
+/* Für den Browser (GET /api/schulstoff): Korrektur-Orte vom alten Foto
+   weglassen - der Verlauf selbst bleibt vollständig. Ändert nichts im Speicher. */
+export function korrekturenFuerBrowser(blatt) {
+  if (!blatt || !blatt.fotoNeu || !Array.isArray(blatt.korrekturen)) return blatt;
+  return { ...blatt, korrekturen: blatt.korrekturen.map((k) => {
+    if (!k || !Array.isArray(k.ort)) return k;
+    const ort = k.ort.filter((o) => ortGilt({ ...o, am: k.am }, blatt.fotoNeu));
+    if (ort.length === k.ort.length) return k;
+    const c = { ...k };
+    if (ort.length) c.ort = ort; else delete c.ort;
+    return c;
+  }) };
 }
 
 /* Speichern: EIN Schreibvorgang in die Monatsliste des Blattes (dort, wo auch

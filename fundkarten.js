@@ -327,6 +327,10 @@
        gilt opt.blattId wie bisher. Je Blatt ein Bild und eine Zeilensuche. */
     var bilder = {}, zeilenJe = {};
     function blattVon(k) { return (k && k.blatt) || opt.blattId || ""; }
+    function gruenFuer(bid) {
+      if (opt.gruenJe && Array.isArray(opt.gruenJe[bid])) return opt.gruenJe[bid];
+      return (bid === opt.blattId && Array.isArray(opt.gruen)) ? opt.gruen : null;
+    }
     function bildVon(k) { return bilder[blattVon(k)] || ""; }
     var i = 0, gefunden = 0;
     /* Gezaehlt wird der ERSTE Tipp je Karte - wer erst nach einem
@@ -459,8 +463,11 @@
            auch im Ausschnitt gruen darueber - nie im Foto selbst (/fehlerkreis.js).
            Nur Seite 0 (die Karten zeigen immer Seite 0) und nur fuer das Blatt,
            zu dem opt.gruen gehoert. */
-        if (window.LWKreis && Array.isArray(opt.gruen) && opt.gruen.length && bid === opt.blattId) {
-          if (!im._gruen) im._gruen = LWKreis.legen(im, opt.gruen, {});
+        /* Mehrere Blaetter (Heute lernen, Kreise fuellen, 14.10.2026): opt.gruenJe
+           = { <blatt-id>: [...] } - jede Karte bekommt das Gruen IHRES Blattes. */
+        var gr = gruenFuer(bid);
+        if (window.LWKreis && gr && gr.length) {
+          if (!im._gruen) im._gruen = LWKreis.legen(im, gr, {});
           else im._gruen.malen();
         }
       }

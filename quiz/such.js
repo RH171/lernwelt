@@ -109,6 +109,14 @@
     });
     return aus;
   }
+  /* Heute lernen und Kreise fuellen ueber mehrere Blaetter (14.10.2026):
+     das Gruen je Blatt, wie beim Such-Spiel eines Blattes. */
+  var alleBlaetter = [];
+  function gruenJeBlatt(){
+    var je = {};
+    alleBlaetter.forEach(function(x){ var g = gruenVon(x); if (x && x.id && g.length) je[x.id] = g; });
+    return je;
+  }
   function starten(x){
     var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
       karten: x.karten, kind: KIND, was: x.titel, blattId: x.id,
@@ -135,6 +143,7 @@
         /* Gescheitertes Durchlesen nachholen (29.09.2026, siehe /nachlesen.js).
            Klappt es, wird neu geladen - dann hat das Blatt Titel und Suchkarten. */
         if (window.LWNachlesen) LWNachlesen(KIND, j && j.eintraege, function(){ laden(); });
+        alleBlaetter = ((j && j.eintraege) || []).filter(function(x){ return x && x.id; });
         var liste = ((j && j.eintraege) || []).filter(function(x){
           return x && x.sichtbar !== false && Array.isArray(x.karten) && x.karten.length >= 3;
         }).sort(function(a, b){ return String(b.datum).localeCompare(String(a.datum)); });
@@ -242,7 +251,7 @@
     var ein = W.einKreis || "Kreis", viele = W.kreise || "Kreise";
     var ok = LWFund.zeigen($("fundkarten"), {
       karten: st.karten, kind: KIND, mindestens: 1,
-      kicker: W.titel || "Kreise füllen", mitBlattTitel: true,
+      kicker: W.titel || "Kreise füllen", mitBlattTitel: true, gruenJe: gruenJeBlatt(),
       ueberschrift: (st.offen === 1 ? "1 " + ein : st.offen + " " + viele) + " " + (W.zum || "zum Füllen"),
       unter: "Die hattest du " + wann + " erst nachgeschaut. Dazwischen kommen ein paar, die du schon kannst.",
       fertigSatz: st.rest ? "Geschafft! " + st.rest + " " + viele + " warten noch – die kommen beim nächsten Mal." : "Geschafft! Schau in „Deine Woche“, was jetzt gelb ist.",
@@ -259,7 +268,7 @@
     if (!heute || !heute.karten.length || !window.LWFund) return;
     var ok = LWFund.zeigen($("fundkarten"), {
       karten: heute.karten, kind: KIND, mindestens: 1,
-      kicker: "Heute lernen", mitBlattTitel: heute.blaetter > 1,
+      kicker: "Heute lernen", mitBlattTitel: heute.blaetter > 1, gruenJe: gruenJeBlatt(),
       ueberschrift: heute.karten.length + " Karten für heute",
       unter: "Aus deinen Blättern. Schau auf den Ausschnitt und tipp an, was dort steht.",
       fertigSatz: "Deine Runde für heute ist geschafft.",

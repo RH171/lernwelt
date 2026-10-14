@@ -209,13 +209,42 @@ export async function kreiseSchreiben(env, kind, d) {
   await env.PAUL_KV.put(SCHLUESSEL(kind), JSON.stringify({ v: 1, b: d.b || {}, vorlagen: d.vorlagen || {} }));
 }
 
-/* Was der Browser zu einer Stelle bekommt: [{s,x,y,b,h}] - nie mehr. */
+/* Neues Foto (14.10.2026): Gilt ein Ort noch? `foto` = blatt.fotoNeu
+   { "<seite>": iso } - wann eine Seite ersetzt wurde (seiteSetzen()).
+   Ein Ort gilt, wenn seine Seite nie ersetzt wurde oder er danach entstand
+   (`am`). Ein "nicht gefunden" gilt nur, wenn danach keine Seite ersetzt wurde.
+   Alte Orte ohne `am` auf einer ersetzten Seite gelten nicht mehr - lieber
+   kein Kreis als einer an falscher Stelle. */
+export function ortGilt(o, foto) {
+  if (!o || typeof o !== "object") return false;
+  if (!foto || typeof foto !== "object") return true;
+  const zeiten = Object.values(foto).filter((t) => typeof t === "string" && t);
+  if (!zeiten.length) return true;
+  const neu = o.nicht ? zeiten.sort().pop() : foto[String(Math.max(0, Math.floor(Number(o.s) || 0)))];
+  if (!neu) return true;
+  return typeof o.am === "string" && o.am >= neu;
+}
+/* Die ungültigen Orte eines Blattes verwerfen (im Speicherobjekt, ohne zu
+   schreiben). Gibt die Zahl der verworfenen Ziele. */
+export function orteVerwerfen(kreise, blattId, foto) {
+  const jb = kreise && kreise.b && kreise.b[blattId];
+  if (!jb || !foto) return 0;
+  let n = 0;
+  for (const z of Object.keys(jb)) if (!ortGilt(jb[z], foto)) { delete jb[z]; n++; }
+  if (!Object.keys(jb).length) delete kreise.b[blattId];
+  return n;
+}
+
+/* Was der Browser zu einer Stelle bekommt: [{s,x,y,b,h}] - nie mehr.
+   s.foto (nur Server) = fotoNeu des Blattes: Orte vom alten Foto fallen weg. */
 export function ortFuer(kreise, s) {
   const jeBlatt = (kreise && kreise.b && kreise.b[s.blatt && s.blatt.id]) || {};
   const aus = [];
   for (const z of zieleFuerStelle(s)) {
-    const r = rechteck(jeBlatt[z.id]);
-    if (r && !jeBlatt[z.id].nicht) aus.push(r);
+    const o = jeBlatt[z.id];
+    if (!o || o.nicht || !ortGilt(o, s.foto)) continue;
+    const r = rechteck(o);
+    if (r) aus.push(r);
   }
   return aus;
 }
@@ -227,5 +256,5 @@ export function vorlageOrt(kreise, vorlageId, nr) {
 /* Fehlt für diese Stelle noch eine Ortung (und ist sie nicht als "nicht gefunden" vermerkt)? */
 export function fehltOrt(kreise, s) {
   const jeBlatt = (kreise && kreise.b && kreise.b[s.blatt && s.blatt.id]) || {};
-  return zieleFuerStelle(s).some((z) => !jeBlatt[z.id]);
+  return zieleFuerStelle(s).some((z) => !jeBlatt[z.id] || !ortGilt(jeBlatt[z.id], s.foto));
 }

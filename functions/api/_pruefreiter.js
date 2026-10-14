@@ -250,6 +250,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
     aus.push({ id: bk.id + ":l:" + kurz(rz.join("\n")), art: "lehrerin", blatt: bk,
                zeilen: rz.map(rotText) });
   }
+  /* Neues Foto (14.10.2026): foto = wann welche Seite ersetzt wurde - nur für
+     den Server (ortFuer/fehltOrt), oeffentlich() gibt es nicht weiter. */
+  if (blatt.fotoNeu && typeof blatt.fotoNeu === "object") for (const s of aus) s.foto = blatt.fotoNeu;
   return aus;
 }
 

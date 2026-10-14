@@ -24,6 +24,7 @@
  * Monat fuer die Liste, dazu je Seite ein Bild. Drei Eintraege am Tag mit je
  * zwei Seiten sind neun Schreibvorgaenge - das traegt.
  */
+import { korrekturenErneuern } from "./_korrekturhalt.js";
 
 export const KINDER = ["paul", "leon", "helena"];
 
@@ -557,6 +558,12 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
     e.seiten = Math.max(seiten, n + 1);
     e.seitenWechsel = (Number(e.seitenWechsel) || 0) + 1;
     e.seiteNeu = new Date().toISOString();
+    /* Fehlerkreis (14.10.2026): Wird eine Seite ERSETZT, gelten Kreise und
+       grüne Korrektur-Orte auf genau dieser Seite nicht mehr - sie lagen auf
+       dem alten Foto. Vermerkt wird nur die Zeit je Seite (im selben
+       Schreibvorgang), verworfen wird beim Lesen (ortGilt in _fehlerkreis.js).
+       Eine dazugelegte Seite macht nichts ungültig. */
+    if (n < seiten) e.fotoNeu = { ...(e.fotoNeu && typeof e.fotoNeu === "object" ? e.fotoNeu : {}), [String(n)]: e.seiteNeu };
     if (n === 0 && abdruck) e.abdruck = abdruck;
     /* Was schon gelesen war, bleibt als inhaltAlt/kartenAlt liegen (Denny,
        02.10.2026: "dass die History dazu bleibt, nicht die gesammelten Punkte
@@ -635,9 +642,16 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten)
     if (gutSorte) liste[treffer].sorte = gutSorte;
     if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, KARTEN_MAX);
     if (halten) { delete liste[treffer].inhaltAlt; delete liste[treffer].kartenAlt; }
+    /* Korrekturen halten (14.10.2026, _korrekturhalt.js): "verbessert · durch
+       Claude" gilt auch nach dem Neueinlesen - im selben Schreibvorgang. */
+    let halt = null;
+    try { halt = korrekturenErneuern(liste[treffer]); } catch (e) { halt = null; }
+    if (halt && (halt.zeilen || halt.doppel || halt.karten)) liste[treffer] = halt.eintrag;
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
-    return { ok: true, zeilen: zeilen.length, sorte: gutSorte };
+    return { ok: true, zeilen: zeilen.length, sorte: gutSorte,
+             ...(halt && (halt.zeilen || halt.doppel || halt.karten)
+               ? { korrekturHalt: { zeilen: halt.zeilen, doppel: halt.doppel, karten: halt.karten } } : {}) };
   }
   return { ok: false, fehlt: true };
 }
