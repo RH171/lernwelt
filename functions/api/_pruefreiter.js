@@ -30,7 +30,9 @@
  *
  * Prüfen ohne Server: node pruefe-pruefreiter.mjs
  */
-import { kindSchrieb, blattVergleichen, vorlageFuerBlatt, falten, levenshtein, GLEICHWERTIG } from "./_lehrervorlagen.js";
+import { kindSchrieb, blattVergleichen, vorlageFuerBlatt, falten, levenshtein, GLEICHWERTIG, zeileFinden } from "./_lehrervorlagen.js";
+import { ortFuer, vorlageOrt } from "./_fehlerkreis.js";
+import { gruenFuer } from "./_korrektur.js";
 import { zeileKindgerecht } from "./_herkunft.js";
 
 /* Ab diesem Blattdatum zählt der Bestand mit (Dennys Auftrag: "Die schon
@@ -201,9 +203,14 @@ export function rotText(z) {
 /* ---------- Alle Stellen eines Blattes ---------- */
 
 function blattKurz(b) {
-  /* seiten (14.10.2026): für die Vorschau und das Blättern in der Großansicht. */
-  return { id: String(b.id || ""), titel: String(b.titel || "").slice(0, 80), datum: String(b.datum || ""),
-           fach: String(b.fach || ""), art: ART_NAME[b.art] || "", seiten: Math.min(9, Math.max(1, Number(b.seiten) || 1)) };
+  /* seiten (14.10.2026): für die Vorschau und das Blättern in der Großansicht.
+     gruen (Fehlerkreis, 14.10.2026): was Claude auf diesem Blatt schon verbessert
+     hat - grüne Überlagerung mit "verbessert · durch Claude". */
+  const o = { id: String(b.id || ""), titel: String(b.titel || "").slice(0, 80), datum: String(b.datum || ""),
+              fach: String(b.fach || ""), art: ART_NAME[b.art] || "", seiten: Math.min(9, Math.max(1, Number(b.seiten) || 1)) };
+  const g = gruenFuer(b);
+  if (g.length) o.gruen = g;
+  return o;
 }
 
 /* Mit Wahrheit - nur für den Server. */
@@ -215,7 +222,7 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
 
   inhalt.forEach((z) => {
     const r = rechenStelle(z, blatt);
-    if (r) aus.push({ id: bk.id + ":r:" + kurz(z), art: "rechnen", blatt: bk, ...r });
+    if (r) aus.push({ id: bk.id + ":r:" + kurz(z), art: "rechnen", blatt: bk, ...r, zeile: String(z) });
   });
 
   const vorlage = vorlageFuerBlatt(vorlagenDaten, blatt.id);
@@ -229,7 +236,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
                  /* Beweis (14.10.2026): WO es bei der Lehrerin steht - Vorlage und Zeile. */
                  beleg: { vorlage: String(vorlage.id || ""), titel: String(vorlage.titel || "").slice(0, 80),
                           nr: vz.nr, aufgabe: String(vz.aufgabe || "").slice(0, 160) },
-                 tipp: "Auf der Vorlage deiner Lehrerin steht hier etwas anderes. Lies die Aufgabe noch einmal genau und schau in deinem Heft nach." });
+                 tipp: "Auf der Vorlage deiner Lehrerin steht hier etwas anderes. Lies die Aufgabe noch einmal genau und schau in deinem Heft nach.",
+                 /* Pauls Zeile im Wortlaut - für die Korrektur (bleibt auf dem Server). */
+                 zeile: zeileFinden(inhalt, vz) });
     });
   }
 
@@ -247,14 +256,23 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
 /* Was der Browser bekommt: ohne `soll`, ohne `gleich`, ohne Rohzeile.
    `bilder` = { <vorlage-id>: true } aus vorlagenBilderLesen(). Wird die
    Funktion über .map() gerufen, kommt dort eine Zahl an - dann ohne Bilder. */
-export function oeffentlich(s, bilder) {
+/* `kreise` (Fehlerkreis, 14.10.2026) = kreiseLesen(): dann trägt jede Stelle
+   `ort: [{s,x,y,b,h}]` in Prozent ihres Blattes (leer = noch nicht geortet)
+   und der Beweis bei 📌 `beleg.ort` auf dem Bild der Lehrerin. */
+export function oeffentlich(s, bilder, kreise) {
   const bi = bilder && typeof bilder === "object" && !Array.isArray(bilder) ? bilder : {};
+  const kr = kreise && typeof kreise === "object" && !Array.isArray(kreise) && kreise.b ? kreise : null;
   const o = { id: s.id, art: s.art, blatt: s.blatt };
+  if (kr) o.ort = ortFuer(kr, s);
   if (s.art === "lehrerin") { o.zeilen = s.zeilen; return o; }
   o.aufgabe = s.aufgabe; o.du = s.du;
   if (s.art === "pinnwand") {
     o.lehrerin = String(s.soll || "");
-    if (s.beleg) o.beleg = { ...s.beleg, bild: !!bi[s.beleg.vorlage] };
+    if (s.beleg) {
+      o.beleg = { ...s.beleg, bild: !!bi[s.beleg.vorlage] };
+      const vo = kr ? vorlageOrt(kr, s.beleg.vorlage, s.beleg.nr) : null;
+      if (vo) o.beleg.ort = vo;
+    }
     return o;
   }
   o.tipp = s.tipp; o.eingabe = s.eingabe;
@@ -280,13 +298,23 @@ export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt) {
   const erl = (zustand && zustand.s) || {};
   const heute = TAG_BERLIN.format(jetzt ? new Date(jetzt) : new Date());
   let offen = 0, erledigt = 0;
+  const gezaehlt = new Set(), bereich = new Set();
   for (const b of blaetter || []) {
     if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
+    bereich.add(b.id);
     for (const s of stellenFuerBlatt(b, vorlagenDaten)) {
+      gezaehlt.add(s.id);
       const z = erl[s.id];
       if (!z) offen++;
       else if (berlinTag(z.t) === heute) erledigt++;
     }
+  }
+  /* Eine verbesserte Stelle (Zeile durch Claude berichtigt) gibt es danach nicht
+     mehr - heute erledigt zählt sie trotzdem mit. */
+  for (const id of Object.keys(erl)) {
+    if (gezaehlt.has(id) || !bereich.has(id.split(":")[0])) continue;
+    const z = erl[id];
+    if (z && (z.z === "verbessert" || z.z === "richtig") && berlinTag(z.t) === heute) erledigt++;
   }
   return { erledigt, gesamt: offen + erledigt };
 }

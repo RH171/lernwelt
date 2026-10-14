@@ -29,7 +29,8 @@
 <script src="/seite-tauschen.js?v=3d5c47be"></script>
 <script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
 <script src="/lehrervergleich.js?v=ca988bf4"></script>
-<script src="/pruefreiter.js?v=f77fc1e7"></script>
+<script src="/fehlerkreis.js?v=6c7c4858"></script>
+<script src="/pruefreiter.js?v=e140a4f0"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
@@ -405,10 +406,29 @@
     lehrerMalen();
     var welche = offen.id + ":" + offenSeite;
     $("schau-bild").setAttribute("data-seite", String(offenSeite));
+    gruenMalen();
     bildHolen(offen.id, offenSeite).then(function(url){
       /* Schnell weitergeblaettert? Dann gewinnt die Seite, die gerade dran ist. */
       if (url && offen && offen.id + ":" + offenSeite === welche) $("schau-bild").src = url;
     });
+  }
+  /* Verbessert durch Claude (14.10.2026, Dennys Zusatz): Was Paul nach dem
+     Prüf-Reiter im Heft verbessert hat, steht grün über seinem Foto - mit der
+     richtigen Antwort und "verbessert · durch Claude". Das Foto bleibt, wie es
+     ist (/fehlerkreis.js legt nur eine Ebene darüber). Ohne Verbesserung mit
+     Ort: keine Ebene. */
+  var gruenEbene = null;
+  function gruenMalen(){
+    if (!window.LWKreis) return;
+    var ks = [];
+    (offen && Array.isArray(offen.korrekturen) ? offen.korrekturen : []).forEach(function(k){
+      (k && Array.isArray(k.ort) ? k.ort : []).forEach(function(o){
+        ks.push({ s: o.s, x: o.x, y: o.y, b: o.b, h: o.h, art: "gut",
+                  text: k.quelle === "lehrerin" ? "" : String(k.korrigiert || "").slice(0, 60) });
+      });
+    });
+    if (!gruenEbene) gruenEbene = LWKreis.legen($("schau-bild"), ks, {});
+    else gruenEbene.setzen(ks);
   }
   /* Zweimal fragen, und beim zweiten Mal ehrlich sein.
    *

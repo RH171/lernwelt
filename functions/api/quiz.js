@@ -42,6 +42,7 @@ import { zeileHerkunft, zeileKindgerecht, lehrerinVerbessert, allesAbgehakt, and
 import { ausweisGueltig, geheimFuer, brauchtAusweis } from "./_riegel.js";
 import { schwaechenHolen } from "./_schwaechen.js";
 import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, medienFuer } from "./_lehrervorlagen.js";
+import { frageGegenKorrektur } from "./_korrektur.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import {
@@ -232,6 +233,10 @@ export async function onRequestGet(context) {
     const r = frageGegenVorlage(f, vorlageFuerBlatt(lehrer, f.blatt));
     if (r && !r.passt) gegenLehrerin.add(f.id);
   }
+
+  /* Verbessert durch Claude (14.10.2026): Eine Frage, deren "richtig" Pauls
+     verbesserter FALSCHER Wert ist, fällt beim Lesen heraus - kein Schreibvorgang. */
+  for (const f of vorrat.fragen) if (frageGegenKorrektur(f, blattNach[f.blatt])) gegenLehrerin.add(f.id);
 
   const passt = (f) => {
     if (gegenLehrerin.has(f.id)) return false;

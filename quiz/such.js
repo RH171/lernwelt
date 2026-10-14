@@ -99,9 +99,21 @@
     if (quiz.length) schicken({ kind: KIND, antworten: quiz.map(function(e){
       return { frageId: e.quiz.frageId, blatt: e.blatt, belegNr: e.quiz.belegNr, stimmt: e.stimmt }; }) });
   }
+  function gruenVon(x){
+    var aus = [];
+    (x && Array.isArray(x.korrekturen) ? x.korrekturen : []).forEach(function(k){
+      (k && Array.isArray(k.ort) ? k.ort : []).forEach(function(o){
+        if (o && !(o.s > 0)) aus.push({ s: 0, x: o.x, y: o.y, b: o.b, h: o.h, art: "gut",
+          text: k.quelle === "lehrerin" ? "" : String(k.korrigiert || "").slice(0, 60) });
+      });
+    });
+    return aus;
+  }
   function starten(x){
     var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
       karten: x.karten, kind: KIND, was: x.titel, blattId: x.id,
+      /* Verbessert durch Claude (14.10.2026): grün über dem Ausschnitt. */
+      gruen: gruenVon(x),
       zuerst: faellig[x.id] || null,
       ergebnis: function(liste){ merken(x.id, liste); },
       fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }

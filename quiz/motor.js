@@ -1053,12 +1053,14 @@ function artKurz(art) {
     eingetragen: "\u270F\uFE0F Das hast du eingetragen \u2013 deine Lehrerin hat es nicht nachgesehen",
     nachgesehen: "\uD83D\uDD0E Nachgesehen \u2013 nicht von deiner Lehrerin verbessert",
     /* Vorlage der Lehrerin von der Klassenpinnwand (13.10.2026). */
-    vorlage: "\u270D\uFE0F So steht es bei deiner Lehrerin"
+    vorlage: "\u270D\uFE0F So steht es bei deiner Lehrerin",
+    /* Verbessert durch Claude (14.10.2026): Paul hat es im Heft verbessert. */
+    verbessert: "\u2705 Du hast es in deinem Heft verbessert \u00B7 berichtigt durch Claude"
   };
   function belegKasten(f) {
     if (!f.beleg) return "";
     var h = HERKUNFT_KOPF[f.beleg.herkunft] ? f.beleg.herkunft : "heft";
-    var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt" || h === "vorlage";
+    var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt" || h === "vorlage" || h === "verbessert";
     var a = f.beleg.auch;
     var kopf = h === "eingetragen" && f.beleg.abgehakt
       ? "\u270F\uFE0F Das hast du eingetragen \u2013 deine Lehrerin hat es abgehakt" : HERKUNFT_KOPF[h];

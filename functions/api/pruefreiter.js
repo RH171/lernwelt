@@ -13,14 +13,30 @@
  *      -> pruefen: { ok, richtig, satz? , tipp? }   (falsch: kein Schreibvorgang)
  *      -> stimmt/gesehen: { ok }                     (ein Schreibvorgang)
  *
+ * Fehlerkreis (14.10.2026, anleitung/123):
+ *   GET liefert je Stelle `ort: [{s,x,y,b,h}]` (Prozent des Blattes, s = Seite ab 0),
+ *       bei 📌 `beleg.ort`, und `orten: [<blatt-id>]` = Blätter, denen noch ein Ort fehlt.
+ * POST /api/pruefreiter { kind, aktion: "orten", blatt }
+ *      -> EIN Modellaufruf je Blatt (alle Stellen, alle Seiten) und, wenn nötig, einer
+ *         fürs Bild der Lehrerin; EIN Schreibvorgang (`fehlerkreis:<kind>`).
+ *         Nur Stellen ohne Ort - der Kostenriegel ist der Speicher, nicht der Ausweis.
+ *      -> { ok, stellen: [{ id, ort, belegOrt? }] }
+ * Verbessert durch Claude (Zusatz 14.10.2026): "verbessert" und ein richtiges
+ *      "pruefen" berichtigen danach die Zeile im Blatt (_korrektur.js) - zweiter
+ *      Schreibvorgang. Antwort zusätzlich { korrigiert, gruen: [{s,x,y,b,h,text}] }.
+ *
  * Nur Paul (Dennys Auftrag). Für andere Kinder antwortet der Weg leer, damit
  * eine Seite, die ihn trotzdem fragt, einfach nichts zeigt.
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen, kindOk } from "./_schulstoff.js";
-import { vorlagenLesen, vorlagenBilderLesen } from "./_lehrervorlagen.js";
+import { stoffBild } from "./_schulstoff.js";
+import { vorlagenLesen, vorlagenBilderLesen, vorlageFuerBlatt, BILD_SCHLUESSEL } from "./_lehrervorlagen.js";
 import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
          zustandLesen, zustandSchreiben, fortschritt } from "./_pruefreiter.js";
+import { kreiseLesen, kreiseSchreiben, fehltOrt, ortFuer, vorlageOrt, zieleFuerStelle, zielFuerVorlage,
+         orten } from "./_fehlerkreis.js";
+import { korrekturFuer, korrekturSetzen, gruenFuer } from "./_korrektur.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
@@ -67,15 +83,118 @@ export async function onRequestGet(context) {
                art: s ? s.art : "" };
     });
     const offen = offeneStellen(e.eintraege, vorlagen, zustand);
-    return json(200, { ok: true, stimmtDoch: liste, offen: offen.length });
+    /* Verbessert durch Claude (14.10.2026): was im Blatt berichtigt wurde, mit dem alten Wert. */
+    const verbessert = [];
+    for (const b of e.eintraege || []) for (const k of (Array.isArray(b.korrekturen) ? b.korrekturen : [])) {
+      if (!k || k.von !== "claude") continue;
+      verbessert.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "", fach: b.fach || "" },
+                        war: String(k.war || ""), korrigiert: String(k.korrigiert || ""), quelle: String(k.quelle || ""), am: String(k.am || "") });
+    }
+    verbessert.sort((a, b) => (a.am < b.am ? 1 : -1));
+    return json(200, { ok: true, stimmtDoch: liste, offen: offen.length, verbessertClaude: verbessert.slice(0, 40) });
   }
 
   const offen = offeneStellen(e.eintraege, vorlagen, zustand, blatt || null);
   /* Bilder nur, wenn es überhaupt eine 📌-Stelle gibt - sonst ein Lesevorgang umsonst. */
   const bilder = offen.some((s) => s.art === "pinnwand") ? await vorlagenBilderLesen(env, kind) : {};
-  return json(200, { ok: true, stellen: offen.map((s) => oeffentlich(s, bilder)),
+  /* Fehlerkreis: ein Lesevorgang, nur wenn es Stellen gibt. */
+  const kreise = offen.length ? await kreiseLesen(env, kind) : null;
+  const orten_ = kreise && env.ANTHROPIC_API_KEY
+    ? [...new Set(offen.filter((s) => fehltOrt(kreise, s) || belegFehlt(kreise, s, bilder)).map((s) => s.blatt.id))] : [];
+  return json(200, { ok: true, stellen: offen.map((s) => oeffentlich(s, bilder, kreise)),
                      blaetter: new Set(offen.map((s) => s.blatt.id)).size,
-                     fortschritt: fortschritt(e.eintraege, vorlagen, zustand, blatt || null) });
+                     fortschritt: fortschritt(e.eintraege, vorlagen, zustand, blatt || null),
+                     ...(orten_.length ? { orten: orten_.slice(0, 6) } : {}) });
+}
+
+/* Fehlt beim Beweis einer 📌-Stelle noch der Ort auf dem Bild der Lehrerin? */
+function belegFehlt(kreise, s, bilder) {
+  if (s.art !== "pinnwand" || !s.beleg || !bilder || !bilder[s.beleg.vorlage]) return false;
+  const v = kreise.vorlagen && kreise.vorlagen[s.beleg.vorlage];
+  return !(v && v[String(s.beleg.nr)]);
+}
+
+function base64(buf) {
+  const u = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+/* Fehlerkreis: die Stellen eines Blattes orten. Wirft nie; ohne Ergebnis
+   wird nichts geschrieben (der nächste Aufruf versucht es wieder). */
+async function ortenAktion(env, kind, blattId) {
+  if (!env.ANTHROPIC_API_KEY) return json(503, { ok: false, fehler: "Auf dem Server fehlt der Schlüssel." });
+  const e = await stoffLesen(env, kind, MONATE_BLATT);
+  if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
+  const blatt = (e.eintraege || []).find((b) => b.id === blattId);
+  if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+  const vorlagen = await vorlagenLesen(env, kind);
+  const zustand = await zustandLesen(env, kind);
+  const stellen = stellenFuerBlatt(blatt, vorlagen).filter((s) => !zustand.s[s.id]);
+  const kreise = await kreiseLesen(env, kind);
+  const bilder = stellen.some((s) => s.art === "pinnwand") ? await vorlagenBilderLesen(env, kind) : {};
+  const fehlen = stellen.filter((s) => fehltOrt(kreise, s));
+  const ziele = fehlen.flatMap(zieleFuerStelle).filter((z) => !(kreise.b[blattId] && kreise.b[blattId][z.id]));
+  const vorlageZiele = {};
+  for (const s of stellen) if (belegFehlt(kreise, s, bilder)) {
+    const v = vorlageFuerBlatt(vorlagen, blattId);
+    const vz = v && (v.zeilen || []).find((q) => q.nr === s.beleg.nr);
+    if (vz) (vorlageZiele[s.beleg.vorlage] = vorlageZiele[s.beleg.vorlage] || []).push(zielFuerVorlage(vz));
+  }
+  const auftraege = [];
+  if (ziele.length) {
+    const seiten = [];
+    for (let i = 0; i < Math.min(4, Number(blatt.seiten) || 1); i++) {
+      const b = await stoffBild(env, blattId, i);
+      if (!b) break;
+      seiten.push(b);
+    }
+    if (seiten.length) auftraege.push(orten(env.ANTHROPIC_API_KEY, seiten, ziele, { grenze: 45000 })
+      .then((r) => ({ art: "blatt", r, ziele })));
+  }
+  for (const vid of Object.keys(vorlageZiele)) {
+    let daten = null;
+    try { daten = await env.PAUL_KV.get(BILD_SCHLUESSEL(vid), { type: "arrayBuffer" }); } catch (x) {}
+    if (!daten || !daten.byteLength) continue;
+    auftraege.push(orten(env.ANTHROPIC_API_KEY, "data:image/jpeg;base64," + base64(daten), vorlageZiele[vid], { grenze: 45000 })
+      .then((r) => ({ art: "vorlage", vid, r, ziele: vorlageZiele[vid] })));
+  }
+  let geaendert = false;
+  for (const a of await Promise.all(auftraege)) {
+    if (a.r.fehler) continue;   // HTTP-Fehler, Abbruch: nichts merken, später wieder
+    for (const z of a.ziele) {
+      const o = a.r.orte[z.id] || { nicht: 1 };   // geantwortet, aber nicht gefunden: nicht nochmal bezahlen
+      if (a.art === "blatt") { (kreise.b[blattId] = kreise.b[blattId] || {})[z.id] = o; }
+      else if (!o.nicht) { (kreise.vorlagen[a.vid] = kreise.vorlagen[a.vid] || {})[z.id] = { x: o.x, y: o.y, b: o.b, h: o.h }; }
+      else { (kreise.vorlagen[a.vid] = kreise.vorlagen[a.vid] || {})[z.id] = { nicht: 1 }; }
+      geaendert = true;
+    }
+  }
+  if (geaendert) {
+    try { await kreiseSchreiben(env, kind, kreise); }
+    catch (x) { return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken." }); }
+  }
+  return json(200, { ok: true, geortet: geaendert, stellen: stellen.map((s) => {
+    const o = { id: s.id, ort: ortFuer(kreise, s) };
+    if (s.art === "pinnwand" && s.beleg) { const vo = vorlageOrt(kreise, s.beleg.vorlage, s.beleg.nr); if (vo) o.belegOrt = vo; }
+    return o;
+  }) });
+}
+
+/* Verbessert durch Claude: Zeile im Blatt berichtigen, mit dem Ort der Stelle
+   (für die grüne Überlagerung). Gibt die Felder für die Antwort. Wirft nie. */
+async function berichtigen(env, kind, blatt, s) {
+  try {
+    const k = korrekturFuer(s);
+    if (!k) return { korrigiert: false };
+    const kreise = await kreiseLesen(env, kind);
+    const ort = ortFuer(kreise, s);
+    if (ort.length) k.ort = ort;
+    const r = await korrekturSetzen(env, kind, blatt, k);
+    if (!r.ok) return { korrigiert: false };
+    return { korrigiert: true, gruen: gruenFuer({ korrekturen: [k] }) };
+  } catch (x) { return { korrigiert: false }; }
 }
 
 export async function onRequestPost(context) {
@@ -85,6 +204,11 @@ export async function onRequestPost(context) {
   const kind = String(d.kind || "").toLowerCase();
   if (!kindOk(kind) || !KINDER_MIT_PRUEFREITER.includes(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
   if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+  if (String(d.aktion || "") === "orten") {
+    const b = String(d.blatt || "").slice(0, 40);
+    if (!/^[a-z0-9]+$/.test(b)) return json(400, { ok: false, fehler: "Welches Blatt denn?" });
+    return ortenAktion(env, kind, b);
+  }
   const id = String(d.stelle || "").slice(0, 80);
   const aktion = String(d.aktion || "");
   if (!/^[a-z0-9]+:[rpl]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });
@@ -118,9 +242,11 @@ export async function onRequestPost(context) {
     zustand.s[id] = { z: "richtig", t: jetzt };
     try { await zustandSchreiben(env, kind, zustand); }
     catch (x) { return json(200, { ok: true, richtig: true, satz: r.satz, gemerkt: false }); }
-    return json(200, { ok: true, richtig: true, satz: r.satz, gemerkt: true });
+    return json(200, { ok: true, richtig: true, satz: r.satz, gemerkt: true, ...(await berichtigen(env, kind, blatt, s)) });
   }
   try { await zustandSchreiben(env, kind, zustand); }
   catch (x) { return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken. Probier es später nochmal." }); }
+  /* "Stimmt doch so" und "gesehen" ändern das Blatt nicht. */
+  if (aktion === "verbessert") return json(200, { ok: true, ...(await berichtigen(env, kind, blatt, s)) });
   return json(200, { ok: true });
 }

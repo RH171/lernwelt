@@ -24,6 +24,14 @@
  *   - 📌: "Auf der Pinnwand deiner Lehrerin steht:" und der Beweis: ihre
  *     Vorlagenzeile als Zitat und das Bild der Vorlage (über die API, nie als
  *     Datei im Web-Ordner).
+ *
+ * Fehlerkreis (14.10.2026, Denny: "umkringeln, wo der Fehler ist"): roter Kreis
+ * um jede Stelle in Vorschau und Großansicht (/fehlerkreis.js), auch auf dem Bild
+ * der Lehrerin. Fehlt einem Blatt der Ort, fragt diese Seite einmal nach
+ * (POST aktion "orten") und malt nach. "📍 Zeig mir die Stelle" öffnet die
+ * Großansicht vergrößert an genau diesem Kreis. Ist eine Stelle verbessert, wird
+ * der Kreis grün mit der richtigen Antwort und "verbessert · durch Claude" -
+ * das Foto selbst bleibt, wie es ist. Ohne /fehlerkreis.js: keine Kreise, sonst alles gleich.
  */
 (function () {
   "use strict";
@@ -90,6 +98,59 @@
      o = { titel, seiten, holen(nr) -> Promise<url|null> }. Über allem, auch
      über den schwebenden Knöpfen; "✕ Schließen" 48 px, Esc, Blättern über
      /blatt-seiten.js (Pfeile, Wischen), wenn die Seite es geladen hat. */
+  /* Fehlerkreis: je Blatt die Stellen (mit ort) und die grünen Verbesserungen;
+     jede Vorschau dieses Blattes meldet sich hier an und malt bei Änderung neu. */
+  var KR = {};
+  function krBlatt(id) { return KR[id] || (KR[id] = { stellen: [], gruen: [], apis: [] }); }
+  function krKreise(id) {
+    var k = krBlatt(id);
+    return window.LWKreis ? LWKreis.ausStellen(k.stellen, k.gruen) : [];
+  }
+  function krMalen(id) {
+    var k = krBlatt(id), ks = krKreise(id);
+    k.apis = k.apis.filter(function (a) { return a.ebene && a.ebene.isConnected; });
+    k.apis.forEach(function (a) { a.setzen(ks); });
+    k.stellen.forEach(function (s) { if (s._zeigMalen) s._zeigMalen(); });
+    var z = document.querySelectorAll('.lwp-blattkasten[data-blatt="' + id + '"] .lwp-claude');
+    Array.prototype.forEach.call(z, function (el) {
+      el.hidden = !k.gruen.length;
+      el.textContent = "✓ " + (k.gruen.length === 1 ? "1 Stelle" : k.gruen.length + " Stellen") + " verbessert · durch Claude";
+    });
+  }
+  /* Nach "Verbessert ✓" bzw. richtig nachgerechnet: roter Kreis weg, grüner da. */
+  function krErledigt(s, gruen) {
+    var id = s.blatt && s.blatt.id; if (!id) return;
+    var k = krBlatt(id);
+    k.stellen = k.stellen.filter(function (x) { return x.id !== s.id; });
+    (gruen || []).forEach(function (g) { k.gruen.push(g); });
+    krMalen(id);
+  }
+  /* Orte nachholen: ein Blatt nach dem anderen (ein Schreibvorgang je Blatt). */
+  function orteHolen(ids, stellen) {
+    var reihe = (ids || []).slice(0, 6);
+    function weiter() {
+      var id = reihe.shift();
+      if (!id) return Promise.resolve();
+      return fetch("/api/pruefreiter", {
+        method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: KIND, aktion: "orten", blatt: id })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.ok || !Array.isArray(j.stellen)) return;
+        j.stellen.forEach(function (x) {
+          stellen.forEach(function (s) {
+            if (s.id !== x.id) return;
+            if (Array.isArray(x.ort)) s.ort = x.ort;
+            if (x.belegOrt && s.beleg) { s.beleg.ort = x.belegOrt; belegMalen(s); }
+          });
+        });
+        krMalen(id);
+      }).catch(function () {}).then(weiter);
+    }
+    return weiter();
+  }
+  var BELEG = {};
+  function belegMalen(s) { var f = BELEG[s.id]; if (f) f(); }
+
   function gross(o) {
     stilEinmal();
     var alt = document.querySelector(".lwp-gross"); if (alt) alt.remove();
@@ -105,17 +166,46 @@
     document.body.appendChild(g);
     document.documentElement.classList.add("lwp-gross-offen");
     var img = g.querySelector("img"), laedt = g.querySelector(".lwp-gross-laedt");
+    img.setAttribute("data-seite", String(Math.max(0, Number(o.start) || 0)));
+    /* Fehlerkreis in der Großansicht; von einer Karte aus ist ihr Kreis hervorgehoben
+       und das Bild startet vergrößert an dieser Stelle ("🔍 Ganzes Blatt" zeigt alles). */
+    var kreis = window.LWKreis && o.kreise && o.kreise.length ? LWKreis.legen(img, o.kreise, {}) : null;
+    if (kreis && o.aktiv) kreis.aktiv(o.aktiv);
+    var zoomKnopf = null;
+    if (kreis && o.zoom) {
+      zoomKnopf = document.createElement("button");
+      zoomKnopf.type = "button";
+      zoomKnopf.className = "lwp-gross-zoom";
+      g.querySelector(".lwp-gross-oben").insertBefore(zoomKnopf, g.querySelector(".lwp-gross-zu"));
+      var flaeche = g.querySelector(".lwp-gross-bild"), nah = true;
+      var zoomen = function () {
+        g.classList.toggle("lwp-gross-nah", nah);
+        zoomKnopf.textContent = nah ? "🔍 Ganzes Blatt" : "🔍 Näher ran";
+        if (!nah) { flaeche.scrollLeft = 0; flaeche.scrollTop = 0; return; }
+        /* Zur Stelle rollen: Mitte des Kreises in die Mitte der Fläche. */
+        var z = o.zoom, ws = flaeche.scrollWidth, hs = flaeche.scrollHeight;
+        var r = img.naturalWidth && img.clientWidth ? Math.min(img.clientWidth / img.naturalWidth, img.clientHeight / img.naturalHeight) : 0;
+        var dw = r ? img.naturalWidth * r : ws, dh = r ? img.naturalHeight * r : hs;
+        var ox = (img.clientWidth - dw) / 2, oy = (img.clientHeight - dh) / 2;
+        flaeche.scrollLeft = Math.max(0, ox + (z.x + z.b / 2) / 100 * dw - flaeche.clientWidth / 2);
+        flaeche.scrollTop = Math.max(0, oy + (z.y + z.h / 2) / 100 * dh - flaeche.clientHeight / 2);
+      };
+      zoomKnopf.addEventListener("click", function (e) { e.stopPropagation(); nah = !nah; zoomen(); });
+      img.addEventListener("load", function () { setTimeout(zoomen, 30); });
+      zoomen();
+    }
     img.addEventListener("load", function () { laedt.style.display = "none"; });
     img.addEventListener("error", function () { laedt.textContent = "Das Bild kommt gerade nicht. Probier es gleich nochmal."; });
     var blaetter = null;
     var seiten = Math.max(1, Number(o.seiten) || 1);
     if (seiten > 1 && window.LWSeiten) {
-      blaetter = LWSeiten.blaettern({ bild: img, leiste: g.querySelector(".lwp-gross-leiste"), seiten: seiten, holen: o.holen, start: 0 });
+      blaetter = LWSeiten.blaettern({ bild: img, leiste: g.querySelector(".lwp-gross-leiste"), seiten: seiten, holen: o.holen, start: Math.min(seiten - 1, Math.max(0, Number(o.start) || 0)) });
     } else {
-      Promise.resolve(o.holen(0)).then(function (url) { if (url) img.src = url; else laedt.textContent = "Das Bild kommt gerade nicht. Probier es gleich nochmal."; });
+      Promise.resolve(o.holen(Math.max(0, Number(o.start) || 0))).then(function (url) { if (url) img.src = url; else laedt.textContent = "Das Bild kommt gerade nicht. Probier es gleich nochmal."; });
     }
     function zu() {
       if (blaetter) blaetter.weg();
+      if (kreis) kreis.weg();
       document.removeEventListener("keydown", taste, true);
       g.remove();
       document.documentElement.classList.remove("lwp-gross-offen");
@@ -200,14 +290,23 @@
       if (vb) {
         var vimg = vb.querySelector("img");
         /* Kein Bild im Speicher oder kein Ausweis: Zitat ohne Bild, nichts bricht. */
+        /* Fehlerkreis auf dem Blatt der Lehrerin: um ihre Zeile (beleg.ort). */
+        var vKreis = null;
+        var belegKreise = function () { return b.ort ? [{ s: 0, x: b.ort.x, y: b.ort.y, b: b.ort.b, h: b.ort.h, art: "offen", id: s.id }] : []; };
+        BELEG[s.id] = function () { if (vKreis) vKreis.setzen(belegKreise()); };
         vorlageBild(b.vorlage).then(function (url) {
           if (!url) { vb.remove(); return; }
-          vimg.onload = function () { vimg.hidden = false; var l = vb.querySelector(".lwp-vorschau-leer"); if (l) l.remove(); };
+          vimg.onload = function () {
+            vimg.hidden = false; var l = vb.querySelector(".lwp-vorschau-leer"); if (l) l.remove();
+            if (window.LWKreis && !vKreis) vKreis = LWKreis.legen(vimg, belegKreise(), { klein: true, fokus: true });
+          };
           vimg.onerror = function () { vb.remove(); };
           vimg.src = url;
         });
         vb.addEventListener("click", function () {
-          gross({ titel: "Vorlage deiner Lehrerin: " + (b.titel || ""), seiten: 1, zurueck: vb,
+          var ks = belegKreise();
+          gross({ titel: "Vorlage deiner Lehrerin: " + (b.titel || ""), seiten: 1, zurueck: vb, kreise: ks,
+                  aktiv: s.id, zoom: ks.length && b.ort.b < 40 ? b.ort : null,
                   holen: function () { return vorlageBild(b.vorlage); } });
         });
       }
@@ -224,9 +323,27 @@
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
         '<div class="lwp-meldung" aria-live="polite"></div>';
     }
+    /* Fehlerkreis: "📍 Zeig mir die Stelle" - nur, wenn die Stelle geortet ist. */
+    var zeig = document.createElement("button");
+    zeig.type = "button";
+    zeig.className = "lwp-leise lwp-zeig";
+    zeig.textContent = "📍 Zeig mir die Stelle";
+    zeig.hidden = true;
+    d.querySelector(".lwp-kopf").appendChild(zeig);
+    function zeigMalen() { zeig.hidden = !(window.LWKreis && s.ort && s.ort.length); }
+    s._zeigMalen = zeigMalen;
+    zeigMalen();
+    zeig.addEventListener("click", function () {
+      var b = s.blatt || {}, f = fachVon(b.fach), o0 = (s.ort || [])[0];
+      if (!o0) return;
+      gross({ titel: [f.n, b.titel].filter(Boolean).join(" · "), seiten: b.seiten || 1, zurueck: zeig,
+              start: o0.s || 0, kreise: krKreise(b.id), aktiv: s.id, zoom: o0.b < 40 ? o0 : null,
+              holen: function (nr) { return blattBild(b.id, nr); } });
+    });
     var meldung = d.querySelector(".lwp-meldung");
     function sag(text, art) { meldung.textContent = text; meldung.className = "lwp-meldung" + (art ? " lwp-" + art : ""); }
-    function fertig(text) {
+    function fertig(text, j) {
+      krErledigt(s, j && j.gruen);
       d.classList.add("lwp-erledigt");
       Array.prototype.forEach.call(d.querySelectorAll("button,input"), function (x) { x.disabled = true; });
       sag(text, "gut");
@@ -243,7 +360,7 @@
       knoepfe(false);
       senden(s.id, "verbessert").then(function (j) {
         if (!j || !j.ok) throw 0;
-        fertig("Super, du hast es in deinem Heft verbessert!");
+        fertig("Super, du hast es in deinem Heft verbessert!", j);
       }).catch(function () { knoepfe(true); sag("Das hat gerade nicht geklappt. Probier es gleich nochmal.", "fehler"); });
     });
 
@@ -256,7 +373,7 @@
         knoepfe(false);
         senden(s.id, "pruefen", a).then(function (j) {
           if (!j || !j.ok) throw 0;
-          if (j.richtig) { fertig("✓ " + (j.satz || "Super, das stimmt jetzt!")); return; }
+          if (j.richtig) { fertig("✓ " + (j.satz || "Super, das stimmt jetzt!"), j); return; }
           knoepfe(true);
           if (j.tipp) d.querySelector(".lwp-tipptext").textContent = j.tipp;
           sag("Noch nicht ganz. Lies den Tipp und probier es nochmal.", "noch");
@@ -305,20 +422,29 @@
         f.z + " " + esc(f.n) + "</span>" +
         '<div class="lwp-blatt">' + esc(titel) + "</div>" +
         (b.seiten > 1 ? '<div class="lwp-seiten">' + b.seiten + " Seiten · antippen zum Ansehen</div>" : '<div class="lwp-seiten">Antippen zum Ansehen</div>') +
+        '<div class="lwp-claude" hidden></div>' +
       "</div></div>";
     var knopf = k.querySelector(".lwp-blattbild"), img = knopf.querySelector("img");
+    /* Fehlerkreis: Stellen und Verbesserungen dieses Blattes merken. */
+    var kr = krBlatt(b.id);
+    gr.stellen.forEach(function (s) { if (!kr.stellen.some(function (x) { return x.id === s.id; })) kr.stellen.push(s); });
+    if (Array.isArray(b.gruen) && !kr.gruen.length) kr.gruen = b.gruen.slice();
     blattBild(b.id, 0).then(function (url) {
       if (!url) return;
-      img.onload = function () { img.hidden = false; var l = knopf.querySelector(".lwp-vorschau-leer"); if (l) l.remove(); };
+      img.onload = function () {
+        img.hidden = false; var l = knopf.querySelector(".lwp-vorschau-leer"); if (l) l.remove();
+        if (window.LWKreis && !img._kreis) { img._kreis = LWKreis.legen(img, krKreise(b.id), { klein: true, fokus: true }); kr.apis.push(img._kreis); }
+      };
       img.src = url;
     });
     knopf.addEventListener("click", function () {
-      gross({ titel: [f.n, b.titel].filter(Boolean).join(" · "), seiten: b.seiten || 1, zurueck: knopf,
+      gross({ titel: [f.n, b.titel].filter(Boolean).join(" · "), seiten: b.seiten || 1, zurueck: knopf, kreise: krKreise(b.id),
               holen: function (nr) { return blattBild(b.id, nr); } });
     });
     var liste = document.createElement("div");
     liste.className = "lwp-blattstellen";
     k.appendChild(liste);
+    setTimeout(function () { krMalen(b.id); }, 0);
     gr.stellen.forEach(function (s) {
       liste.appendChild(karte(s, function (id, erledigt, sofort) {
         if (!sofort && !liste.querySelector(".lwp-karte")) k.remove();
@@ -392,6 +518,7 @@
       });
       kasten.insertBefore(box, kasten.firstChild);
       try { box.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+      if (window.LWKreis && j.orten && j.orten.length) orteHolen(j.orten, st);
       return st.length;
     });
   }
@@ -478,6 +605,8 @@
       stellen = j.stellen || [];
       stand = { erledigt: (j.fortschritt && j.fortschritt.erledigt) || 0, gesamt: (j.fortschritt && j.fortschritt.gesamt) || stellen.length };
       malen();
+      /* Fehlerkreis: fehlt einem Blatt der Ort, jetzt nachholen - bis Paul öffnet, ist er meist da. */
+      if (window.LWKreis && j.orten && j.orten.length) orteHolen(j.orten, stellen);
       return stellen.length;
     });
   }
@@ -578,7 +707,15 @@
       ".lwp-gross-laedt{position:absolute;font-size:16px;color:#fff}",
       ".lwp-gross-leiste{flex:none;color:#fff;margin-top:8px}",
       ".lwp-gross-leiste .lwseiten button{background:rgba(255,255,255,.22);color:#fff}",
-      "html.lwp-gross-offen{overflow:hidden}"
+      "html.lwp-gross-offen{overflow:hidden}",
+      /* Fehlerkreis */
+      ".lwp-lupe{z-index:3}",
+      ".lwp .lwp-zeig{margin-left:auto;font-size:15px;padding:8px 12px}",
+      ".lwp-claude{font-size:14px;font-weight:800;color:var(--lwp-gruen);margin-top:4px}",
+      ".lwp-claude[hidden]{display:none}",
+      ".lwp .lwp-gross-zoom{flex:none;background:rgba(255,255,255,.22);color:#fff;min-height:48px}",
+      ".lwp-gross-nah .lwp-gross-bild{display:block}",
+      ".lwp-gross-nah .lwp-gross-bild img{width:220%;height:220%;max-width:none}"
     ].join("");
     (document.head || document.documentElement).appendChild(st);
   }

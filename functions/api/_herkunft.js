@@ -19,6 +19,9 @@
  *                nachgerechnet)
  *   eingetragen  ✏️ was das Kind selbst eingetragen hat, unbestätigt
  *   heft         📖 reiner Inhalt des Blattes
+ *   verbessert   ✅ Paul hat es im Heft verbessert, Claude hat die Zeile
+ *                berichtigt (Marke "(✓ verbessert · durch Claude)", _korrektur.js,
+ *                14.10.2026). Eine alte Seite kennt das Wort nicht -> Heft.
  *
  * Alles wird aus dem vorhandenen Text abgeleitet - kein neues Lesen, kein
  * Schreibvorgang im Speicher. Neue Blätter tragen seit 13.10.2026 zusätzlich
@@ -28,6 +31,9 @@
  */
 
 const HAND = /^✍\s*/;
+/* Dieselbe Marke wie in _fehlerkreis.js (MARKE_RE) - hier ohne Import, damit
+   diese Datei für sich allein läuft. */
+const VERBESSERT = /\s*\(✓ verbessert · durch Claude\)/;
 
 /* "richtig: Y" als Urteil - nicht "Färbe richtig ein" oder "Pirat richtig". */
 const URTEIL = /\brichtig(?: ist)?:\s*\S/i;
@@ -67,6 +73,7 @@ export function zeileHerkunft(zeile, inhalt) {
   const roh = String(zeile || "");
   const z = roh.replace(HAND, "").trim();
   if (!z) return "heft";
+  if (VERBESSERT.test(z)) return "verbessert";
   /* Der Lesehelfer rechnet die Lehrerin nach - das Urteil ist seines. */
   if (/Lehrkraft\s+schrieb\b[^,]*,\s*richtig/i.test(z)) return "nachgesehen";
   if (/\bLehrkraft\b|\bLehrerin\b/i.test(z)) return "lehrerin";
@@ -100,6 +107,8 @@ const DU_VERB = {
  * Heftzitat für ein Urteil des Lesehelfers. */
 export function zeileKindgerecht(zeile) {
   let z = String(zeile || "").replace(HAND, "").trim();
+  /* Von Claude berichtigt: die Zeile steht so in Pauls Heft - die Marke sagt der Kasten. */
+  if (VERBESSERT.test(z)) return z.replace(VERBESSERT, "").trim();
   /* "Kind schrieb X, richtig: Y" -> "Du hast „X“ geschrieben. Richtig ist „Y“."
      X gierig bis zum LETZTEN ", richtig:" - X kann selbst Kommas tragen
      ("36: 1, 6, 6"). Eine Klammer am Ende von Y ("räuberische (Fuchs)")
@@ -213,7 +222,8 @@ export function anderesBlatt(antwort, blatt, alle, fachGleich) {
  * oder eine unbestätigte Eintragung schreibt. */
 export function markeFuerModell(zeile, inhalt) {
   const h = zeileHerkunft(zeile, inhalt);
-  return h === "nachgesehen" ? "[nachgesehen vom Lesehelfer, KEINE Korrektur der Lehrerin] "
+  return h === "verbessert" ? "[vom Kind im Heft verbessert, von Claude berichtigt, KEINE Korrektur der Lehrerin] "
+       : h === "nachgesehen" ? "[nachgesehen vom Lesehelfer, KEINE Korrektur der Lehrerin] "
        : h === "eingetragen" ? "[vom Kind eingetragen, von der Lehrerin nicht bestätigt] "
        : h === "lehrerin" ? "[rot von der Lehrerin] " : "";
 }

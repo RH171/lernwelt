@@ -1279,12 +1279,31 @@
     if (!PR.daten.ok) return h + '<p class="unter">Gerade nicht erreichbar.</p></div>';
     var l = PR.daten.stimmtDoch;
     h += '<p class="unter">Stellen aus Pauls Blättern, bei denen er „Stimmt doch so“ getippt hat. Noch offen bei ihm: ' + (PR.daten.offen || 0) + '.</p>';
-    if (!l.length) return h + '<p class="unter">✅ Keine.</p></div>';
+    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + verbessertKarte() + '</div>';
     l.forEach(function(x){
       var b = x.blatt || {};
       h += '<div style="margin-top:10px"><b>' + esc(x.aufgabe || "Stelle") + '</b> <span class="unter">· ' + esc(b.titel || "") +
            (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>Paul: ' + esc(x.du || "") +
            (x.richtig ? ' · nachgerechnet bzw. Vorlage: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
+    });
+    return h + verbessertKarte() + '</div>';
+  }
+  /* Verbessert durch Claude (14.10.2026, Dennys Zusatz): Hat Paul eine Stelle
+     verbessert, berichtigt Claude die Zeile im gespeicherten Blatt (das Foto
+     bleibt). Hier steht nachvollziehbar, was vorher dastand. Ein alter Server
+     liefert kein Feld - dann steht die Liste nicht da. */
+  function verbessertKarte(){
+    if (KIND !== "paul" || !PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.verbessertClaude)) return "";
+    var l = PR.daten.verbessertClaude;
+    var QUELLE = { pinnwand: "Vorlage der Lehrerin", nachgerechnet: "nachgerechnet", lehrerin: "rot von der Lehrerin" };
+    var h = '<div style="margin-top:14px" id="prVerbessert"><b>Verbessert · durch Claude</b>' +
+      '<p class="unter">Paul hat diese Stellen in seinem Heft verbessert. Claude hat sie im gespeicherten Blatt berichtigt – das Foto bleibt, wie es war.</p>';
+    if (!l.length) return h + '<p class="unter">Noch keine.</p></div>';
+    l.forEach(function(x){
+      var b = x.blatt || {};
+      h += '<div style="margin-top:8px">' + (x.war ? '<s>' + esc(x.war) + '</s> → ' : '') + '<b>' + esc(x.korrigiert) + '</b>' +
+           ' <span class="unter">· ' + esc(QUELLE[x.quelle] || x.quelle || "") + ' · ' + esc(b.titel || "") +
+           (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + (x.am ? ' · am ' + esc(kurzDatum(String(x.am).slice(0, 10))) : '') + '</span></div>';
     });
     return h + '</div>';
   }

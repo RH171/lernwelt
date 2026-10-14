@@ -455,6 +455,14 @@
         rahmen.style.height = Math.round(band * zoom) + "px";
         // Mittig starten, damit bei Vergroesserung beide Seiten gleich weit weg sind.
         rahmen.scrollLeft = (breite * zoom - breite) / 2;
+        /* Verbessert durch Claude (14.10.2026): Was Paul verbessert hat, steht
+           auch im Ausschnitt gruen darueber - nie im Foto selbst (/fehlerkreis.js).
+           Nur Seite 0 (die Karten zeigen immer Seite 0) und nur fuer das Blatt,
+           zu dem opt.gruen gehoert. */
+        if (window.LWKreis && Array.isArray(opt.gruen) && opt.gruen.length && bid === opt.blattId) {
+          if (!im._gruen) im._gruen = LWKreis.legen(im, opt.gruen, {});
+          else im._gruen.malen();
+        }
       }
       if (im.complete && im.naturalWidth) { im.src = blattBild; setzen(); }
       else { im.addEventListener("load", setzen); im.src = blattBild; }
