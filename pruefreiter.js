@@ -32,6 +32,11 @@
  * Großansicht vergrößert an genau diesem Kreis. Ist eine Stelle verbessert, wird
  * der Kreis grün mit der richtigen Antwort und "verbessert · durch Claude" -
  * das Foto selbst bleibt, wie es ist. Ohne /fehlerkreis.js: keine Kreise, sonst alles gleich.
+ *
+ * Nachrechnen (14.10.2026): Bringt der Server `nachrechnen: [blatt…]` (Matheblatt
+ * ohne Feld-für-Feld-Abschrift), schickt diese Seite einmal POST aktion
+ * "nachrechnen" und holt die Stellen danach neu. Neue Eingabeart "rest"
+ * (9 R 2); `steht` = die Lehrerin hat dort schon geändert -> "Bei dir steht".
  */
 (function () {
   "use strict";
@@ -144,6 +149,22 @@
           });
         });
         krMalen(id);
+      }).catch(function () {}).then(weiter);
+    }
+    return weiter();
+  }
+  /* Nachrechnen nachholen (14.10.2026): ein Blatt nach dem anderen. Gibt true,
+     wenn mindestens ein Blatt neu nachgerechnet wurde. */
+  function nachrechnenHolen(ids) {
+    var reihe = (ids || []).slice(0, 4), neu = false;
+    function weiter() {
+      var id = reihe.shift();
+      if (!id) return Promise.resolve(neu);
+      return fetch("/api/pruefreiter", {
+        method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: KIND, aktion: "nachrechnen", blatt: id })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.ok && j.nachgerechnet) neu = true;
       }).catch(function () {}).then(weiter);
     }
     return weiter();
@@ -313,11 +334,12 @@
     } else {
       d.innerHTML = kopf +
         '<div class="lwp-aufgabe">' + esc(s.aufgabe) + "</div>" +
-        '<div class="lwp-du">Du hast geschrieben: <span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
+        '<div class="lwp-du">' + (s.steht ? "Bei dir steht: " : "Du hast geschrieben: ") + '<span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
         '<div class="lwp-tipp">💡 <span class="lwp-tipptext">' + esc(s.tipp) + "</span></div>" +
         '<div class="lwp-feld"><input type="text" autocomplete="off" aria-label="Deine Verbesserung" ' +
           (s.eingabe === "zahl" ? 'inputmode="numeric" placeholder="neue Zahl"' :
-           s.eingabe === "liste" ? 'inputmode="numeric" placeholder="z. B. 1, 2, …"' : 'placeholder="dein Wort"') + ">" +
+           s.eingabe === "liste" ? 'inputmode="numeric" placeholder="z. B. 1, 2, …"' :
+           s.eingabe === "rest" ? 'placeholder="z. B. 9 R 2"' : 'placeholder="dein Wort"') + ">" +
           '<button type="button" class="lwp-ja lwp-pruefen">Prüfen</button></div>' +
         '<div class="lwp-knoepfe"><button type="button" class="lwp-leise lwp-stimmt">Stimmt doch so</button>' +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
@@ -492,6 +514,11 @@
     if (!kasten || !blattId) return Promise.resolve(0);
     stilEinmal();
     return holen(blattId).then(function (j) {
+      /* Kam das Durchlesen ohne Abschrift zurück: erst nachrechnen, dann zeigen. */
+      if (j.nachrechnen && j.nachrechnen.length)
+        return nachrechnenHolen(j.nachrechnen).then(function (neu) { return neu ? holen(blattId) : j; });
+      return j;
+    }).then(function (j) {
       var st = j.stellen || [];
       if (!st.length) return 0;
       var box = document.createElement("section");
@@ -601,13 +628,22 @@
       });
     }
     knopf.addEventListener("click", function (e) { e.preventDefault(); oeffnen(); });
-    return holen(null).then(function (j) {
+    function uebernehmen(j) {
       stellen = j.stellen || [];
       stand = { erledigt: (j.fortschritt && j.fortschritt.erledigt) || 0, gesamt: (j.fortschritt && j.fortschritt.gesamt) || stellen.length };
       malen();
       /* Fehlerkreis: fehlt einem Blatt der Ort, jetzt nachholen - bis Paul öffnet, ist er meist da. */
       if (window.LWKreis && j.orten && j.orten.length) orteHolen(j.orten, stellen);
       return stellen.length;
+    }
+    return holen(null).then(function (j) {
+      var n = uebernehmen(j);
+      /* Nachrechnen im Hintergrund; ist die Einblendung noch zu, kommt die neue Zahl dazu. */
+      if (j.nachrechnen && j.nachrechnen.length)
+        nachrechnenHolen(j.nachrechnen).then(function (neu) {
+          if (neu && !ueber) return holen(null).then(uebernehmen);
+        });
+      return n;
     });
   }
 

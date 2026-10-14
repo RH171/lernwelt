@@ -67,6 +67,10 @@ export function korrekturFuer(s, jetzt) {
     const g = { ...s.g, [s.luecke]: s.soll };
     const k = kindSchrieb(zeile);
     if (k) neu = ganzErsetzen(zeile, k.ganz, g.a + " " + OP_ZEIGEN[g.op] + " " + g.b + " = " + g.c);
+  } else if (s.art === "rechnen" && s.typ === "ausdruck") {
+    korrigiert = String(s.soll);
+  } else if (s.art === "rechnen" && s.typ === "rest") {
+    korrigiert = s.soll.q + " R " + s.soll.r;
   } else if (s.art === "pinnwand") {
     korrigiert = String(s.soll || "");
     const k = kindSchrieb(zeile);
@@ -76,6 +80,9 @@ export function korrekturFuer(s, jetzt) {
   if (!korrigiert) return null;
   const quelle = s.art === "pinnwand" ? "pinnwand" : "nachgerechnet";
   const out = { ...grund, quelle, war: String(s.du || "").slice(0, 120), korrigiert: korrigiert.slice(0, 120) };
+  /* Nachrechnen (14.10.2026): Die Stelle steht nicht als Zeile im Inhalt, nur in
+     der Abschrift - also nur Verlauf und grüner Kreis, keine Karten, keine Quizfragen. */
+  if (s.nachgerechnet) { out.eng = true; return out; }
   if (neu && neu !== zeile && !MARKE_RE.test(zeile)) {
     out.vorher = zeile.slice(0, 200);
     out.zeile = (neu.replace(/\s+/g, " ").trim() + " " + MARKE).slice(0, 200);
@@ -94,7 +101,9 @@ export function korrekturAnwenden(eintrag, k) {
     const i = e.inhalt.findIndex((z) => String(z) === k.vorher);
     if (i >= 0) { e.inhalt = e.inhalt.slice(); e.inhalt[i] = k.zeile; zeileGeaendert = true; }
   }
-  if (k.war && k.korrigiert && Array.isArray(e.karten)) {
+  /* eng (Nachrechnen, 14.10.2026): Pauls Wert ist oft eine kleine Zahl ("4") - auf
+     Karten mit derselben Antwort zu anderen Aufgaben darf das nicht wirken. */
+  if (k.war && k.korrigiert && !k.eng && Array.isArray(e.karten)) {
     e.karten = e.karten.map((c) => {
       if (!c || falten(c.richtig) !== falten(k.war)) return c;
       kartenGeaendert++;
@@ -117,7 +126,7 @@ export function frageGegenKorrektur(f, blatt) {
   if (!ks.length || !f) return false;
   const r = falten((f.antworten || [])[f.richtig || 0]);
   if (!r) return false;
-  return ks.some((k) => k && k.war && falten(k.war) === r && falten(k.korrigiert) !== r);
+  return ks.some((k) => k && !k.eng && k.war && falten(k.war) === r && falten(k.korrigiert) !== r);
 }
 
 /* Was der Browser zur Überlagerung bekommt: nur Verbesserungen mit Ort. */

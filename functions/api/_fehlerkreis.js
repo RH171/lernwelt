@@ -91,12 +91,26 @@ export function zieleFuerStelle(s) {
   if (s.art === "rechnen" && s.typ === "teiler")
     return [{ id: s.id, text: "die Aufgabe \"Teiler von " + s.n + "\": dort steht die Zahl " + s.n +
       " und dahinter hat das Kind " + JSON.stringify(s.du) + " geschrieben. Das Rechteck umfasst die Zahl " + s.n + " und die Teiler des Kindes." }];
+  /* Nachrechnen (14.10.2026): Aufgabennummer und - wenn die Lehrerin rot geändert
+     hat - beide Zahlen, damit das Modell das richtige Tabellenfeld findet. */
+  const wo = s.wo ? "In Aufgabe " + s.wo + ": " : "";
+  const rot = s.rotDa && s.paulWert != null && String(s.paulWert) !== String(s.du)
+    ? " (das Kind schrieb " + JSON.stringify(String(s.paulWert)) + ", rot geändert zu " + JSON.stringify(s.du) + ")" : "";
   if (s.art === "rechnen" && s.typ === "gleichung") {
     const g = s.g, op = { "*": "·", "/": ":", "+": "+", "-": "−" }[g.op];
-    return [{ id: s.id, text: "die Rechnung " + g.a + " " + op + " " + g.b + " = " + g.c +
+    return [{ id: s.id, text: wo + "die Rechnung " + g.a + " " + op + " " + g.b + " = " + g.c +
       " (vielleicht in einer Tabelle: Zeile und Spalte ergeben die Rechnung). Das Kind hat dort " + JSON.stringify(s.du) +
-      " eingetragen. Das Rechteck umfasst genau diese eingetragene Zahl " + JSON.stringify(s.du) + "." }];
+      " eingetragen" + rot + ". Das Rechteck umfasst genau diese eingetragene Zahl " + JSON.stringify(s.du) + "." }];
   }
+  if (s.art === "rechnen" && s.typ === "ausdruck")
+    return [{ id: s.id, text: wo + "die Rechnung " + String(s.aufgabe || "").replace(/^Aufgabe [^:]+: /, "").replace("?", JSON.stringify(s.du)) +
+      ". Das Kind hat dort " + JSON.stringify(s.du) + " eingetragen" + rot + ". Das Rechteck umfasst genau diese eingetragene Zahl." }];
+  if (s.art === "rechnen" && s.typ === "rest")
+    return [{ id: s.id, text: wo + "die Rechnung " + s.g.a + " : " + s.g.b + " mit Rest. Das Kind hat dort " + JSON.stringify(s.du) +
+      " eingetragen. Das Rechteck umfasst Ergebnis und Rest des Kindes." }];
+  if (s.art === "rechnen" && s.typ === "liste")
+    return [{ id: s.id, text: wo + "die Aufgabe \"" + (s.liste === "vielfache" ? "Vielfache" : "Teiler") + " von " + s.n +
+      "\": dahinter hat das Kind " + JSON.stringify(s.du) + " geschrieben. Das Rechteck umfasst die Zahlen des Kindes." }];
   if (s.art === "pinnwand")
     return [{ id: s.id, text: "das Feld zur Aufgabe " + JSON.stringify(s.aufgabe) + ". Dort hat das Kind " +
       JSON.stringify(s.du) + " eingetragen. Das Rechteck umfasst genau dieses eingetragene Wort." }];

@@ -1279,14 +1279,38 @@
     if (!PR.daten.ok) return h + '<p class="unter">Gerade nicht erreichbar.</p></div>';
     var l = PR.daten.stimmtDoch;
     h += '<p class="unter">Stellen aus Pauls Blättern, bei denen er „Stimmt doch so“ getippt hat. Noch offen bei ihm: ' + (PR.daten.offen || 0) + '.</p>';
-    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + verbessertKarte() + '</div>';
+    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + verbessertKarte() + nachgerechnetKarte() + '</div>';
     l.forEach(function(x){
       var b = x.blatt || {};
       h += '<div style="margin-top:10px"><b>' + esc(x.aufgabe || "Stelle") + '</b> <span class="unter">· ' + esc(b.titel || "") +
            (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>Paul: ' + esc(x.du || "") +
            (x.richtig ? ' · nachgerechnet bzw. Vorlage: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
     });
-    return h + verbessertKarte() + '</div>';
+    return h + verbessertKarte() + nachgerechnetKarte() + '</div>';
+  }
+  /* Nachgerechnet (14.10.2026): Jedes Matheblatt wird Feld für Feld abgeschrieben
+     und im Code nachgerechnet. Hier steht, ob das vollständig gelang (Soll gegen
+     Ist), welche Fehler auch nach der roten Korrektur bleiben und was die zweite
+     Lesung nicht bestätigt hat (Paul sieht das nicht). Alter Server: kein Feld. */
+  function nachgerechnetKarte(){
+    if (KIND !== "paul" || !PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.nachgerechnet)) return "";
+    var l = PR.daten.nachgerechnet;
+    var voll = l.filter(function(x){ return x.voll; }).length, offen = l.filter(function(x){ return x.offen; }).length;
+    var h = '<div style="margin-top:14px" id="prNachgerechnet"><b>Nachgerechnet · Feld für Feld</b>' +
+      '<p class="unter">' + voll + ' von ' + l.length + ' Matheblättern vollständig nachgerechnet' + (offen ? ', ' + offen + ' noch nicht' : '') + '.</p>';
+    l.forEach(function(x){
+      var b = x.blatt || {};
+      var zeilen = [];
+      if (!x.offen && !x.voll) zeilen.push('❌ <b>unvollständig nachgerechnet</b>: ' + x.ist + ' von ' + x.soll + ' Feldern (' + esc((x.fehlt || []).join("; ")) + ')');
+      (x.rotFalsch || []).forEach(function(r){
+        zeilen.push('⚠️ Auch nach der roten Korrektur stimmt das Ergebnis nicht: ' + esc(r.zeile) + (r.paulGut ? ' (Pauls eigene Zahl stimmte)' : ''));
+      });
+      (x.ungeprueft || []).forEach(function(r){ zeilen.push('⚪ ungeprüft (zweite Lesung anders): ' + esc(r)); });
+      if (!zeilen.length) return;
+      h += '<div style="margin-top:8px">' + esc(b.titel || "") + (b.datum ? ' <span class="unter">· ' + esc(kurzDatum(b.datum)) + '</span>' : '') +
+           '<br>' + zeilen.join('<br>') + '</div>';
+    });
+    return h + '</div>';
   }
   /* Verbessert durch Claude (14.10.2026, Dennys Zusatz): Hat Paul eine Stelle
      verbessert, berichtigt Claude die Zeile im gespeicherten Blatt (das Foto

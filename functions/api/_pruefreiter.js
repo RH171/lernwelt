@@ -25,6 +25,11 @@
  * Tipps sind Regeln, kein Modellaufruf: ohne "weil", ohne Warum-Fragen
  * (Frau Sy erlaubt keine Weil-Antworten), sie zeigen den WEG, nie die Zahl.
  *
+ * Nachrechnen (14.10.2026, _nachrechnen.js): 🧮 kommt zusätzlich aus der Feld-für-
+ * Feld-Abschrift am Blatt (`nachgerechnet`) - nur Fehler, die die zweite Lesung
+ * bestätigt hat, Kennung <blatt>:n:<kurz>. Dieselbe Aufgabe wie eine "Kind
+ * schrieb"-Stelle oder eine schon verbesserte Zeile gibt es nur einmal.
+ *
  * Speicher: EIN Schlüssel `pruefreiter:<kind>` mit dem, was erledigt ist.
  * Ein Schreibvorgang je erledigter Stelle, falsche Versuche schreiben nichts.
  *
@@ -34,6 +39,8 @@ import { kindSchrieb, blattVergleichen, vorlageFuerBlatt, falten, levenshtein, G
 import { ortFuer, vorlageOrt } from "./_fehlerkreis.js";
 import { gruenFuer } from "./_korrektur.js";
 import { zeileKindgerecht } from "./_herkunft.js";
+import { auswerten as nrAuswerten, aktuell as nrAktuell, aufgabeSchluessel, ausdruckZeigen, rechnen as nrRechnen } from "./_nachrechnen.js";
+export { brauchtNachrechnen } from "./_nachrechnen.js";
 
 /* Ab diesem Blattdatum zählt der Bestand mit (Dennys Auftrag: "Die schon
    vorhandenen Blätter seit 06.10.2026 gehören dazu"). Ein Blatt, das gerade
@@ -139,6 +146,104 @@ export function teilerTipp(ist, n) {
   return teile.join(" ");
 }
 
+/* Rest (Nachrechnen 14.10.2026): der Weg, nie die Zahl. */
+export function restTipp(g) {
+  if (g.r >= g.b) return "Schau auf deinen Rest: " + g.r + " ist nicht kleiner als " + g.b + ". Da passt die " + g.b + " noch einmal hinein.";
+  return "Mach die Probe: Rechne " + g.q + " · " + g.b + " + " + g.r + ". Kommt " + g.a + " heraus?";
+}
+export function ausdruckTipp(a, luecke, ist) {
+  if (luecke !== "e") return "Setz deine Zahl " + ist + " in die Aufgabe ein und rechne nach. Kommt " + a.erg + " heraus?";
+  if (a.ops.some((o) => o === "*" || o === "/") && a.ops.some((o) => o === "+" || o === "-"))
+    return "Rechne Schritt für Schritt: erst · und :, dann + und −.";
+  return "Rechne die Aufgabe noch einmal Schritt für Schritt. Schreib dir das Zwischenergebnis auf.";
+}
+export function listeTipp(ist, n, art) {
+  const zaehl = {};
+  ist.forEach((x) => { zaehl[x] = (zaehl[x] || 0) + 1; });
+  const teile = [];
+  Object.keys(zaehl).filter((x) => zaehl[x] > 1).forEach((d) => teile.push("Die " + d + " steht " + (zaehl[d] === 2 ? "zweimal" : zaehl[d] + "-mal") + " da."));
+  [...new Set(ist)].filter((x) => art === "vielfache" ? x % n !== 0 : n % x !== 0).forEach((x) =>
+    teile.push(art === "vielfache" ? "Mach die Probe mit der " + x + ": Geht " + x + " : " + n + " ohne Rest auf?"
+                                   : "Mach die Probe mit der " + x + ": Geht " + n + " : " + x + " ohne Rest auf?"));
+  return teile.join(" ") || "Schau dir jede Zahl noch einmal an.";
+}
+function listeGut(ist, n, art) {
+  return ist.length > 0 && ist.length === new Set(ist).size &&
+    ist.every((x) => x > 0 && (art === "vielfache" ? x % n === 0 : n % x === 0));
+}
+
+/* Schlüssel einer "Kind schrieb"-Stelle - derselbe wie in der Abschrift. */
+function stellenSchluessel(r) {
+  if (r.typ === "teiler") return "T" + r.n;
+  if (r.typ === "gleichung") return aufgabeSchluessel(r.g, r.luecke);
+  return "";
+}
+/* Schon von Claude verbesserte Rechnungen ("180 : 6 = 30 (✓ verbessert · durch Claude)"):
+   jede Lücke dieser Rechnung gilt als erledigt. */
+const GL_ZEILE = /(\d{1,6})\s*([·x×*:÷+\-−–])\s*(\d{1,6})\s*=\s*(\d{1,7})/g;
+function verbesserteSchluessel(inhalt) {
+  const aus = new Set();
+  for (const z of inhalt || []) {
+    if (!/✓ verbessert · durch Claude/.test(String(z))) continue;
+    for (const m of String(z).matchAll(GL_ZEILE)) {
+      const g = { a: +m[1], op: OP[m[2]], b: +m[3], c: +m[4] };
+      ["a", "b", "c"].forEach((l) => aus.add(aufgabeSchluessel(g, l)));
+    }
+  }
+  return aus;
+}
+
+/* Stellen aus der Abschrift (`nachgerechnet`) - nur von der zweiten Lesung
+   bestätigte Fehler. `schon` = Schlüssel, die es schon gibt. */
+export function nachrechenStellen(blatt, bk, schon) {
+  if (!blatt || blatt.fach !== "mathe" || !nrAktuell(blatt)) return [];
+  const w = nrAuswerten(blatt.nachgerechnet);
+  if (!w) return [];
+  const aus = [];
+  for (const x of w.fehler) {
+    if (x.bestaetigt !== true || schon.has(x.u.key)) continue;
+    schon.add(x.u.key);
+    const f = x.f, u = x.u;
+    const nr = f.nr && f.nr !== "-" ? f.nr : "";
+    const vorn = nr ? "Aufgabe " + nr + ": " : "";
+    const grund = { id: bk.id + ":n:" + kurz(x.id + "|" + u.final), art: "rechnen", blatt: bk, nachgerechnet: true,
+                    wo: nr, zeile: f.roh, rotDa: !!u.rotDa, paulGut: u.paulGut };
+    if (u.rotDa) grund.steht = true;   // "Bei dir steht" - die Lehrerin hat dort schon etwas geändert
+    if (f.typ === "gleichung") {
+      aus.push({ ...grund, typ: "gleichung", g: u.g, luecke: u.luecke, ist: +u.final, soll: u.soll,
+                 aufgabe: vorn + zeigen(u.g, u.luecke), du: u.final, tipp: gleichungTipp(u.g, u.luecke, +u.final), eingabe: "zahl",
+                 paulWert: u.paulWert });
+    } else if (f.typ === "ausdruck") {
+      aus.push({ ...grund, typ: "ausdruck", aus: u.aus, luecke: u.luecke, soll: u.soll,
+                 aufgabe: vorn + ausdruckZeigen(u.aus.terme, u.aus.ops, u.aus.erg, u.luecke), du: u.final,
+                 tipp: ausdruckTipp(u.aus, u.luecke, +u.final), eingabe: "zahl", paulWert: u.paulWert });
+    } else if (f.typ === "rest") {
+      aus.push({ ...grund, typ: "rest", g: u.g, soll: u.soll, aufgabe: vorn + u.g.a + " : " + u.g.b + " = ? R ?",
+                 du: u.g.q + " R " + u.g.r, tipp: restTipp(u.g), eingabe: "rest" });
+    } else if (f.typ === "teiler") {
+      aus.push({ ...grund, typ: "teiler", n: f.n, ist: u.ist, soll: teiler(f.n), aufgabe: vorn + "Alle Teiler von " + f.n,
+                 du: u.ist.join(", "), tipp: teilerTipp(u.ist, f.n), eingabe: "liste" });
+    } else {
+      aus.push({ ...grund, typ: "liste", liste: f.typ, n: f.n, ist: u.ist,
+                 aufgabe: vorn + (f.typ === "vielfache" ? "Vielfache von " : "Teiler von ") + f.n,
+                 du: u.ist.join(", "), tipp: listeTipp(u.ist, f.n, f.typ), eingabe: "liste" });
+    }
+  }
+  return aus;
+}
+
+/* Für den Elternbereich: wie vollständig ein Blatt nachgerechnet ist. */
+export function nachrechenStand(blatt) {
+  if (!blatt || blatt.fach !== "mathe") return null;
+  if (!nrAktuell(blatt)) return { offen: true };
+  const w = nrAuswerten(blatt.nachgerechnet);
+  if (!w) return { offen: true };
+  return { voll: w.voll, soll: w.soll, ist: w.ist, fehlt: w.fehlt.slice(0, 8), felder: w.felder,
+           fehler: w.fehler.filter((x) => x.bestaetigt === true).length,
+           ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true).map((x) => x.f.roh).slice(0, 10),
+           rotFalsch: w.fehler.filter((x) => x.bestaetigt === true && x.u.rotDa).map((x) => ({ zeile: x.f.roh, paulGut: !!x.u.paulGut })).slice(0, 10) };
+}
+
 /* Eine Mathe-Zeile mit "Kind schrieb X, richtig: Y" -> nachgerechnete Stelle
    oder null. Gibt die Wahrheit mit (`soll`) - die bleibt auf dem Server. */
 export function rechenStelle(zeile, blatt) {
@@ -220,10 +325,13 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
   const aus = [];
   const bk = blattKurz(blatt);
 
+  const schon = verbesserteSchluessel(inhalt);
   inhalt.forEach((z) => {
     const r = rechenStelle(z, blatt);
-    if (r) aus.push({ id: bk.id + ":r:" + kurz(z), art: "rechnen", blatt: bk, ...r, zeile: String(z) });
+    if (r) { aus.push({ id: bk.id + ":r:" + kurz(z), art: "rechnen", blatt: bk, ...r, zeile: String(z) }); schon.add(stellenSchluessel(r)); }
   });
+  /* Nachrechnen (14.10.2026): Feld für Feld, nur bestätigte Fehler, keine Doppel. */
+  try { aus.push(...nachrechenStellen(blatt, bk, schon)); } catch (e) {}
 
   const vorlage = vorlageFuerBlatt(vorlagenDaten, blatt.id);
   if (vorlage) {
@@ -279,6 +387,7 @@ export function oeffentlich(s, bilder, kreise) {
     return o;
   }
   o.tipp = s.tipp; o.eingabe = s.eingabe;
+  if (s.steht) o.steht = true;
   return o;
 }
 
@@ -348,6 +457,27 @@ export function verbesserungPruefen(s, antwort) {
     if (!ist.length) return { richtig: false, tipp: "Schreib die Teiler mit Komma dazwischen, zum Beispiel 1, 2, …" };
     if (mengeGleich(ist, s.soll) && ist.length === s.soll.length) return { richtig: true, satz: GUT.teiler(s.n, s.soll.length) };
     return { richtig: false, tipp: (mengeGleich(ist, s.soll) ? "Fast! " : "Noch nicht ganz. ") + teilerTipp(ist, s.n) };
+  }
+  if (s.art === "rechnen" && s.typ === "rest") {
+    const m = /^\s*(\d{1,6})\s*(?:(?:R|Rest|r)\s*(\d{1,6}))?\s*$/.exec(a);
+    if (!m) return { richtig: false, tipp: "Schreib das Ergebnis mit Rest, zum Beispiel 9 R 2." };
+    const q = +m[1], r = m[2] == null ? 0 : +m[2];
+    if (q === s.soll.q && r === s.soll.r) return { richtig: true, satz: GUT.gleichung() };
+    return { richtig: false, tipp: "Noch nicht. " + restTipp({ a: s.g.a, b: s.g.b, q, r }) };
+  }
+  if (s.art === "rechnen" && s.typ === "ausdruck") {
+    const m = /^\s*(\d{1,7})\s*$/.exec(a);
+    if (!m) return { richtig: false, tipp: "Schreib nur die Zahl in das Feld." };
+    const t = s.aus.terme.slice(); let e = s.aus.erg;
+    if (s.luecke === "e") e = +m[1]; else t[s.luecke] = +m[1];
+    if (nrRechnen(t, s.aus.ops) === e) return { richtig: true, satz: GUT.gleichung() };
+    return { richtig: false, tipp: "Noch nicht. " + ausdruckTipp(s.aus, s.luecke, +m[1]) };
+  }
+  if (s.art === "rechnen" && s.typ === "liste") {
+    const ist = zahlen(a);
+    if (!ist.length) return { richtig: false, tipp: "Schreib die Zahlen mit Komma dazwischen." };
+    if (listeGut(ist, s.n, s.liste) && ist.length >= new Set(s.ist).size) return { richtig: true, satz: GUT.gleichung() };
+    return { richtig: false, tipp: "Noch nicht ganz. " + listeTipp(ist, s.n, s.liste) };
   }
   if (s.art === "rechnen" && s.typ === "gleichung") {
     const m = /^\s*(\d{1,7})\s*$/.exec(a);

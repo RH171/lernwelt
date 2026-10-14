@@ -611,7 +611,9 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
  * Eintrag. Schreibvorgaenge sind hier die knappe Zahl (1000 am Tag), nicht
  * der Platz - zwei Felder gehoeren deshalb in einen Schluessel, nicht in
  * zwei. */
-export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten) {
+/* nachgerechnet (14.10.2026, _nachrechnen.js): die Feld-für-Feld-Abschrift eines
+   Matheblattes - im selben Schreibvorgang wie der Inhalt, kein zusätzlicher. */
+export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten, nachgerechnet) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   /* Handgeschriebenes zuerst - hier steht der ZWEITE Deckel (14), nachdem
      inhalteZusammen() schon bei INHALT_MAX gekuerzt hat. Ohne diese Zeile
@@ -625,7 +627,8 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten)
     .slice(0, 14);
   const gutSorte = SORTEN[sorte] ? sorte : "";
   const hatKarten = Array.isArray(karten) && karten.length > 0;
-  if (!zeilen.length && !hatKarten && !gutSorte) return { ok: true, nichts: true };
+  const nr = nachgerechnet && typeof nachgerechnet === "object" && Array.isArray(nachgerechnet.z) ? nachgerechnet : null;
+  if (!zeilen.length && !hatKarten && !gutSorte && !nr) return { ok: true, nichts: true };
 
   const heute = heuteBerlin();
   for (let i = 0; i < 4; i++) {
@@ -642,6 +645,7 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten)
     if (gutSorte) liste[treffer].sorte = gutSorte;
     if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, KARTEN_MAX);
     if (halten) { delete liste[treffer].inhaltAlt; delete liste[treffer].kartenAlt; }
+    if (nr) liste[treffer].nachgerechnet = nr;
     /* Korrekturen halten (14.10.2026, _korrekturhalt.js): "verbessert · durch
        Claude" gilt auch nach dem Neueinlesen - im selben Schreibvorgang. */
     let halt = null;
@@ -652,6 +656,27 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten)
     return { ok: true, zeilen: zeilen.length, sorte: gutSorte,
              ...(halt && (halt.zeilen || halt.doppel || halt.karten)
                ? { korrekturHalt: { zeilen: halt.zeilen, doppel: halt.doppel, karten: halt.karten } } : {}) };
+  }
+  return { ok: false, fehlt: true };
+}
+
+/* Nachrechnen nachgeholt (Startseite, Hochladen ohne Ergebnis): EIN Schreibvorgang. */
+export async function nachgerechnetSetzen(env, kind, id, nachgerechnet) {
+  if (!kindOk(kind) || !env || !env.PAUL_KV || !nachgerechnet) return { ok: false };
+  const heute = heuteBerlin();
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try { roh = await env.PAUL_KV.get(LISTE(kind, monat)); } catch (e) { return { ok: false }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false };
+    const t = liste.findIndex((e) => e.id === id);
+    if (t < 0) continue;
+    liste[t].nachgerechnet = nachgerechnet;
+    try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); } catch (e) { return { ok: false }; }
+    return { ok: true };
   }
   return { ok: false, fehlt: true };
 }

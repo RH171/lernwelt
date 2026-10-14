@@ -130,7 +130,7 @@ export function korrekturenErneuern(eintrag) {
   if (Array.isArray(e.karten) && e.karten.length) {
     let geaendert = false;
     let karten = e.karten.map((c) => {
-      const k = c && ks.find((x) => x && x.war && x.korrigiert && x.quelle !== "lehrerin" && falten(c.richtig) === falten(x.war));
+      const k = c && ks.find((x) => x && x.war && x.korrigiert && x.quelle !== "lehrerin" && !x.eng && falten(c.richtig) === falten(x.war));
       if (!k) return c;
       geaendert = true; aus.karten++;
       const falsch = (c.falsch || []).filter((f) => falten(f) !== falten(k.korrigiert));

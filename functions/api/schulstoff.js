@@ -24,6 +24,13 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { tippOk, nebendetail } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import { korrekturenFuerBrowser } from "./_korrektur.js";
+import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
+import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
+
+/* Nachrechnen beim Durchlesen (14.10.2026): läuft NEBEN dem Lesen, gewartet wird
+   höchstens bis NACHRECHNEN_GRENZE nach dem Start - sonst holt es die Seite nach
+   (POST /api/pruefreiter aktion "nachrechnen"). Das Ablegen (Schritt 1) wartet nie. */
+const NACHRECHNEN_GRENZE = 55000;
 import {
   FAECHER, FAECHER_JE_KIND, SCHUELER_JE_KIND, kindOk, datumOk, heuteBerlin, blattDatum,
   stoffAblegen, stoffLesen, stoffBild, stoffAendern, titelSetzen, datumSetzen, artSetzen,
@@ -365,6 +372,10 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
        * Der INHALT dagegen wird ueber alle Seiten aneinandergehaengt. Die
        * beleg_nr des Quiz zaehlt einfach weiter - am Riegel aendert sich
        * dadurch nichts. */
+      /* Nachrechnen (14.10.2026, Kapitel 123): Feld für Feld, nur Pauls Matheblätter. */
+      const nrStart = Date.now();
+      const nrLauf = KINDER_MIT_PRUEFREITER.includes(kind) && eintrag.fach === "mathe" && brauchtNachrechnen(eintrag)
+        ? nachrechnen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { grenze: 45000 }).catch(() => null) : null;
       const themen = await vorhandeneThemen(env, kind, eintrag.fach);
       const alle = await Promise.all(
         seiten.map((s) => blattLesen(env, s, kind, themen).catch(() => null))
@@ -432,8 +443,14 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
         const z = lesungenZusammen(eintrag.inhaltAlt, gelesen.inhalt, eintrag.kartenAlt, karten);
         zeilenNeu = z.zeilen; karten = z.karten;
       }
-      if ((zeilenNeu && zeilenNeu.length) || karten.length) {
-        await inhaltSetzen(env, kind, eintrag.id, zeilenNeu, karten, gelesen.sorte, halten);
+      let nachgerechnet = null;
+      if (nrLauf) {
+        const rest = Math.max(0, NACHRECHNEN_GRENZE - (Date.now() - nrStart));
+        const r = await Promise.race([nrLauf, new Promise((ok) => setTimeout(() => ok(null), rest))]);
+        if (r && r.ok) nachgerechnet = r.nachgerechnet;
+      }
+      if ((zeilenNeu && zeilenNeu.length) || karten.length || nachgerechnet) {
+        await inhaltSetzen(env, kind, eintrag.id, zeilenNeu, karten, gelesen.sorte, halten, nachgerechnet);
       }
       /* Das Thema (30.09.2026): vergibt das Modell, das Kind bestaetigt nichts. */
       /* Nach einer neu fotografierten Seite bleibt das vergebene Thema (02.10.2026). */
@@ -1260,6 +1277,13 @@ async function blattLesen(env, seite, kind, themen) {
   };
 }
 
+function ohneAbschrift(b) {
+  if (!b || !b.nachgerechnet) return b;
+  const c = { ...b };
+  delete c.nachgerechnet;
+  return c;
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   let p;
@@ -1315,14 +1339,17 @@ export async function onRequestGet(context) {
   const nurFach = p.get("fach");
   if (nurFach) {
     const b = await blaetterImFach(env, kind, nurFach);
-    return b.ok ? json(200, { ok: true, blaetter: b.blaetter.map(korrekturenFuerBrowser) })
+    return b.ok ? json(200, { ok: true, blaetter: b.blaetter.map(korrekturenFuerBrowser).map(ohneAbschrift) })
                 : json(503, { ok: false, fehler: b.fehler });
   }
 
   const e = await stoffLesen(env, kind, Number(p.get("monate") || 3));
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
   /* Neues Foto (14.10.2026): grüne Orte vom alten Foto bleiben weg (nur Anzeige). */
-  return json(200, { ok: true, heute: e.heute, faecher: FAECHER, eintraege: e.eintraege.map(korrekturenFuerBrowser) });
+  /* Die Abschrift (`nachgerechnet`) braucht kein Browser - nur der Rohabzug (alle=1). */
+  const roh = p.get("alle") === "1";
+  return json(200, { ok: true, heute: e.heute, faecher: FAECHER,
+                     eintraege: e.eintraege.map(korrekturenFuerBrowser).map(roh ? (x) => x : ohneAbschrift) });
 }
 
 /* Verstecken, wieder zeigen, wegräumen.
