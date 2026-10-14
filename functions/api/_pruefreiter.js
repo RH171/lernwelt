@@ -16,8 +16,12 @@
  *             nur Status "abweichung" - nie unsicher, frei, schreibweise.
  *   lehrerin  ✍️ Die Lehrerin hat rot verbessert - nur zur Kenntnis.
  *
- * DIE LÖSUNG VERLÄSST DEN SERVER NIE. oeffentlich() streift sie ab, und das
+ * Bei 🧮 VERLÄSST DIE LÖSUNG DEN SERVER NIE. oeffentlich() streift sie ab, und das
  * Prüfen einer Verbesserung läuft hier, gegen die nachgerechnete Wahrheit.
+ * Bei 📌 und ✍️ zeigt die Karte die Antwort der Lehrerin SOFORT (Dennys neue
+ * Entscheidung 14.10.2026, 10:30 Uhr): Paul hat dort nur falsch abgeschrieben
+ * und kann es nicht selbst nachprüfen. Er verbessert im Heft und tippt
+ * "Verbessert ✓" (Aktion "verbessert").
  * Tipps sind Regeln, kein Modellaufruf: ohne "weil", ohne Warum-Fragen
  * (Frau Sy erlaubt keine Weil-Antworten), sie zeigen den WEG, nie die Zahl.
  *
@@ -240,7 +244,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
 export function oeffentlich(s) {
   const o = { id: s.id, art: s.art, blatt: s.blatt };
   if (s.art === "lehrerin") { o.zeilen = s.zeilen; return o; }
-  o.aufgabe = s.aufgabe; o.du = s.du; o.tipp = s.tipp; o.eingabe = s.eingabe;
+  o.aufgabe = s.aufgabe; o.du = s.du;
+  if (s.art === "pinnwand") { o.lehrerin = String(s.soll || ""); return o; }
+  o.tipp = s.tipp; o.eingabe = s.eingabe;
   return o;
 }
 

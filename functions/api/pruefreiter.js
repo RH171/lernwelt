@@ -5,7 +5,9 @@
  *      -> { ok, stellen: [ohne Lösung], blaetter: <Zahl der Blätter mit Stellen> }
  * GET  /api/pruefreiter?kind=paul&eltern=1      -> (nur Elternausweis) was Paul mit "Stimmt doch so"
  *      abgelegt hat, zur Kontrolle - hier MIT der nachgerechneten Lösung
- * POST /api/pruefreiter { kind, stelle, aktion: "pruefen"|"stimmt"|"gesehen", antwort? }
+ * POST /api/pruefreiter { kind, stelle, aktion: "pruefen"|"stimmt"|"gesehen"|"verbessert", antwort? }
+ *      verbessert: 📌 und ✍️ (seit 14.10.2026 zeigt die Karte dort die Antwort der Lehrerin);
+ *      "gesehen" und "pruefen" bei 📌 bleiben für alte offene Seiten erlaubt.
  *      -> pruefen: { ok, richtig, satz? , tipp? }   (falsch: kein Schreibvorgang)
  *      -> stimmt/gesehen: { ok }                     (ein Schreibvorgang)
  *
@@ -80,7 +82,7 @@ export async function onRequestPost(context) {
   const id = String(d.stelle || "").slice(0, 80);
   const aktion = String(d.aktion || "");
   if (!/^[a-z0-9]+:[rpl]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });
-  if (!["pruefen", "stimmt", "gesehen"].includes(aktion)) return json(400, { ok: false, fehler: "Unbekannte Aktion." });
+  if (!["pruefen", "stimmt", "gesehen", "verbessert"].includes(aktion)) return json(400, { ok: false, fehler: "Unbekannte Aktion." });
 
   const e = await stoffLesen(env, kind, MONATE_BLATT);
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
@@ -94,7 +96,10 @@ export async function onRequestPost(context) {
   if (zustand.s[id]) return json(200, { ok: true, schon: true, richtig: zustand.s[id].z === "richtig" });
 
   const jetzt = new Date().toISOString();
-  if (aktion === "gesehen") {
+  if (aktion === "verbessert") {
+    if (s.art === "rechnen") return json(400, { ok: false, fehler: "Diese Stelle prüfst du mit „Prüfen“." });
+    zustand.s[id] = { z: "verbessert", t: jetzt };
+  } else if (aktion === "gesehen") {
     if (s.art !== "lehrerin") return json(400, { ok: false, fehler: "Diese Stelle wird verbessert, nicht nur angesehen." });
     zustand.s[id] = { z: "gesehen", t: jetzt };
   } else if (aktion === "stimmt") {

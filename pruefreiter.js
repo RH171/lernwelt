@@ -66,7 +66,20 @@
       d.innerHTML = kopf +
         '<div class="lwp-lehrerin">Deine Lehrerin hat verbessert:<ul class="lwp-rotliste">' +
           (s.zeilen || []).map(function (z) { return "<li>" + esc(z) + "</li>"; }).join("") + "</ul></div>" +
-        '<div class="lwp-knoepfe"><button type="button" class="lwp-ja lwp-gesehen">👍 Gesehen</button>' +
+        '<div class="lwp-hinweis">Verbessere es in deinem Heft.</div>' +
+        '<div class="lwp-knoepfe"><button type="button" class="lwp-ja lwp-verbessert">Verbessert ✓</button>' +
+        '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
+        '<div class="lwp-meldung" aria-live="polite"></div>';
+    } else if (s.art === "pinnwand") {
+      /* Dennys Entscheidung 14.10.2026, 10:30 Uhr: Paul hat nur falsch
+         abgeschrieben und kann es nicht selbst nachprüfen - die Antwort der
+         Lehrerin steht sofort da. */
+      d.innerHTML = kopf +
+        '<div class="lwp-aufgabe">' + esc(s.aufgabe) + "</div>" +
+        '<div class="lwp-du">Du hast geschrieben: <span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
+        '<div class="lwp-lehrerin">Bei deiner Lehrerin steht: <b class="lwp-richtig">' + esc(s.lehrerin) + "</b></div>" +
+        '<div class="lwp-hinweis">Verbessere es in deinem Heft.</div>' +
+        '<div class="lwp-knoepfe"><button type="button" class="lwp-ja lwp-verbessert">Verbessert ✓</button>' +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
         '<div class="lwp-meldung" aria-live="polite"></div>';
     } else {
@@ -95,12 +108,12 @@
     var spaeter = d.querySelector(".lwp-spaeter");
     spaeter.addEventListener("click", function () { d.remove(); weg(s.id, false); });
 
-    var gesehen = d.querySelector(".lwp-gesehen");
-    if (gesehen) gesehen.addEventListener("click", function () {
+    var verbessert = d.querySelector(".lwp-verbessert");
+    if (verbessert) verbessert.addEventListener("click", function () {
       knoepfe(false);
-      senden(s.id, "gesehen").then(function (j) {
+      senden(s.id, "verbessert").then(function (j) {
         if (!j || !j.ok) throw 0;
-        fertig("Danke fürs Anschauen!");
+        fertig("Super, du hast es in deinem Heft verbessert!");
       }).catch(function () { knoepfe(true); sag("Das hat gerade nicht geklappt. Probier es gleich nochmal.", "fehler"); });
     });
 
@@ -151,7 +164,7 @@
       box.setAttribute("data-blatt", blattId);
       box.innerHTML = '<div class="lwp-titel">🔍 Ich habe nachgesehen</div>' +
         '<div class="lwp-satz">' + (st.length === 1 ? "Eine Stelle möchte ich dir zeigen." : st.length + " Stellen möchte ich dir zeigen.") +
-        " Du verbesserst selbst, ich verrate nichts.</div>";
+        " Du verbesserst selbst.</div>";
       var liste = document.createElement("div");
       liste.className = "lwp-liste";
       box.appendChild(liste);
@@ -199,7 +212,7 @@
       ueber.innerHTML = '<div class="lwp lwp-innen"><div class="lwp-oben">' +
         '<button type="button" class="lwp-leise lwp-zu">‹ Zurück</button>' +
         '<div class="lwp-titel">🔍 Nachgesehen</div></div>' +
-        '<div class="lwp-satz">Hier sind Stellen aus deinen Blättern. Du verbesserst selbst, ich verrate nichts.</div>' +
+        '<div class="lwp-satz">Hier sind Stellen aus deinen Blättern. Du verbesserst selbst.</div>' +
         '<div class="lwp-liste"></div></div>';
       document.body.appendChild(ueber);
       document.documentElement.classList.add("lwp-offen");
@@ -250,6 +263,8 @@
       ".lwp-falsch{font-weight:700;text-decoration:underline wavy var(--lwp-rot);text-underline-offset:4px}",
       ".lwp-tipp{background:var(--lwp-gelb);border:1px solid var(--lwp-gelblinie);color:var(--lwp-gelbink);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:16px;line-height:1.4}",
       ".lwp-lehrerin{background:var(--lwp-rotbg);border-left:5px solid var(--lwp-rot);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px;line-height:1.4}",
+      ".lwp-hinweis{font-size:16px;font-weight:600;margin:6px 0 0}",
+      ".lwp-richtig{font-weight:800}",
       ".lwp-rotliste{margin:6px 0 0;padding-left:20px;font-weight:700}",
       ".lwp-rotliste li{margin:3px 0}",
       ".lwp-feld{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}",
