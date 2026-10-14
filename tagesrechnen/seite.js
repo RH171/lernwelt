@@ -95,10 +95,31 @@
         '<p class="probehinweis">🔁 Mach die Probe, bevor du prüfst.</p>';
     }
     $("feld").textContent = lauf.eingabe || "";
+    meinWegZeigen(a);
     document.querySelector('[data-taste="ok"]').textContent = "Prüfen";
     tipp(lauf.versuche ? lauf.tippText || "" : "", false);
     if (lauf.modus === "nach" && !lauf.versuche) tipp("Diese hat vorhin gewackelt. Probier es noch einmal.", false);
     sperre = false;
+  }
+
+  /* „✏️ Mein Rechenweg“ (14.10.2026, Kapitel 121): Jede Textaufgabe in Teil 2 bekommt das Feld
+     (Rechenwörter vorwärts und rückwärts sind zwei Schritte, Sachaufgaben oft auch; lieber einmal zu
+     viel). Keine Vorgabe, Zeilen werden still nachgerechnet, nichts gespeichert. Bleibt beim
+     Fehlversuch stehen, neu erst bei der nächsten Aufgabe. */
+  var mwFuer = null, MW_AUF = "paul-tagesrechnen-mw-auf";
+  function meinWegZeigen(a) {
+    var h = $("meinweg"); if (!h || !window.MeinWeg) return;
+    if (lauf.phase !== "t") { h.innerHTML = ""; h.classList.add("verborgen"); mwFuer = null; return; }
+    h.classList.remove("verborgen");
+    var key = lauf.modus + "|" + lauf.i + "|" + a.k + "|" + (lauf.nachZahl ? lauf.nachZahl[a.k] || 0 : 0);
+    if (mwFuer === key) return;
+    mwFuer = key;
+    var auf = false; try { auf = sessionStorage.getItem(MW_AUF) === "1"; } catch (e) {}
+    window.MeinWeg.malen(h, {
+      offen: auf,
+      beimOeffnen: function (an) { try { sessionStorage.setItem(MW_AUF, an ? "1" : "0"); } catch (e) {} },
+      uebernehmen: function (z) { if (sperre || !lauf) return; lauf.eingabe = String(z).slice(0, 4); $("feld").textContent = lauf.eingabe; }
+    });
   }
 
   function tipp(t, gut) { var el = $("tipp"); el.textContent = t || ""; el.classList.toggle("gut", !!gut); }

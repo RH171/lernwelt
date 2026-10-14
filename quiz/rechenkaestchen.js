@@ -87,7 +87,10 @@
     return e;
   }
 
-  function malen(huelle, text) {
+  /* opts (14.10.2026, Rechenweg im Probenstoff): { ohneBlock, ohneTasten } – die Seite hat
+     schon einen Ziffernblock und lenkt die Ziffern selbst über tippe()/loesche() hierher. */
+  function malen(huelle, text, opts) {
+    opts = opts || {};
     if (!huelle) return false;
     huelle.innerHTML = "";
     feld = null;
@@ -178,9 +181,9 @@
       b.addEventListener("click", function () { if (w === "weg") loeschen(); else tippen(String(w)); });
       block.appendChild(b);
     });
-    koerper.appendChild(block);
+    if (!opts.ohneBlock) koerper.appendChild(block);
 
-    feld = { huelle: huelle, ergebnis: ergebnis, uebertrag: uebertrag, aktiv: null, stellen: stellen };
+    feld = { ohneTasten: !!opts.ohneTasten, huelle: huelle, ergebnis: ergebnis, uebertrag: uebertrag, aktiv: null, stellen: stellen };
 
     ergebnis.forEach(function (b, i) { b.addEventListener("click", function () { waehle("erg", i); }); });
     uebertrag.forEach(function (b, i) { b.addEventListener("click", function () { waehle("ue", i); }); });
@@ -242,7 +245,7 @@
 
   // Am Laptop auch mit der Tastatur. Nur solange ein Feld sichtbar ist.
   document.addEventListener("keydown", function (e) {
-    if (!feld || !feld.huelle.isConnected || feld.huelle.classList.contains("verborgen") ||
+    if (!feld || feld.ohneTasten || !feld.huelle.isConnected || feld.huelle.classList.contains("verborgen") ||
         feld.huelle.classList.contains("rk-zu") || !feld.huelle.offsetParent) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     var t = e["key"];
@@ -250,5 +253,14 @@
     else if (t === "Backspace" || t === "Delete") { loeschen(); e.preventDefault(); }
   });
 
-  window.Rechenkaestchen = { erkenne: erkenne, malen: malen };
+  /* Was in den Ergebniskaestchen steht, als Zahl-Text (leer, wenn nichts drin).
+     Prueft nichts: die Seite entscheidet, was sie damit macht. */
+  function wert() {
+    if (!feld) return "";
+    var s = "";
+    for (var i = feld.stellen - 1; i >= 0; i--) s += inhalt(feld.ergebnis[i]) || "";
+    return s.replace(/^0+(?=\d)/, "");
+  }
+
+  window.Rechenkaestchen = { erkenne: erkenne, malen: malen, tippe: tippen, loesche: loeschen, wert: wert };
 })();

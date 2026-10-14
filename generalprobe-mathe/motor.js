@@ -124,7 +124,7 @@
       var k = n + ":" + d; if (schon[k]) continue; schon[k] = 1;
       info.n = n; info.d = d;
       return {
-        thema: "rest", art: "rest",
+        thema: "rest", art: "rest", schritte: 2,   // teilen, dann den Rest ausrechnen
         text: n + " : " + d,
         felder: [feld("e", n + " : " + d + " = "), feld("r", "R ")],
         loesung: { e: q, r: rest },
@@ -167,7 +167,7 @@
       }
       if (schon[text] || e === zwischen) continue; schon[text] = 1;   // e = Zwischenergebnis wuerde die Hilfe 2 zur Loesung machen
       return {
-        thema: "pvs", art: "zahl",
+        thema: "pvs", art: "zahl", schritte: 2,   // schritte ab 2: „Mein Rechenweg“ (14.10.2026)
         text: text,
         felder: [feld("e", text + " = ")],
         loesung: { e: e },
@@ -224,7 +224,7 @@
     // a) Teilen mit Rest
     var s = eins(r, SACH_REST), d = zahl(r, 4, 9), q = zahl(r, 3, 9), rest = zahl(r, 2, d - 1), n = q * d + rest;
     raus.push({
-      thema: "sach", art: "rest", sach: true,
+      thema: "sach", art: "rest", sach: true, schritte: 2,
       text: s.t(n, d) + " " + s.frage,
       felder: [feld("e", s.a1[0], s.a1[1]), feld("r", s.a2[0], s.a2[1])],
       loesung: { e: q, r: rest },
@@ -238,7 +238,7 @@
     else { a = zahl(r, 2, 4); z = zahl(r, 3, 9) * 10; var kosten = a * z / 10; g = (Math.floor(kosten / 10) + 1 + zahl(r, 0, 1)) * 10; e = g - kosten; }
     rech = t.rechnung(a, z, g);
     raus.push({
-      thema: "sach", art: "zahl", sach: true,
+      thema: "sach", art: "zahl", sach: true, schritte: t.art === "pvs" ? 2 : 1,
       text: t.t(a, z, g) + " " + t.frage,
       felder: [feld("e", t.a[0], t.a[1])],
       loesung: { e: e },

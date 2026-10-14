@@ -12,6 +12,9 @@
 (function () {
   "use strict";
   var M = window.PSMotor;
+  var RW = window.Rechenweg, RK = window.Rechenkaestchen;   // Rechenweg-Hilfe (14.10.2026, Kapitel 121)
+  var RW_ZU = "paul-probenstoff-rw-zu";                       // sessionStorage: Paul hat „Schritt für Schritt“ zugeklappt
+  var MW = window.MeinWeg, MW_AUF = "paul-probenstoff-mw-auf"; // „Mein Rechenweg“ (sessionStorage: zuletzt offen)
   var SPEICHER = "paul-probenstoff", LAUF = "paul-probenstoff-lauf", NACHTRAG = "paul-probenstoff-nachtrag";
   function $(id) { return document.getElementById(id); }
   function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
@@ -97,16 +100,143 @@
       var vorn = x.frage.split(" = ")[0];
       return '<div class="zeile" id="frage"><span>' + esc(vorn) + ' =</span>' + feldHtml("a", "Ergebnis") + '<span>R</span>' + feldHtml("b", "Rest") + '</div>';
     }
-    var teile = x.frage.split("?");
-    return '<div class="zeile" id="frage"><span>' + esc(teile[0]) + '</span>' + feldHtml("a", "Ergebnis") + '<span>' + esc(teile[1] || "") + '</span></div>';
+    var teile = x.frage.split("?"), vorn = esc(teile[0]);
+    var z = rwZerlegung();
+    if (z && x.art === "punkt" && lauf.rw.auf && !lauf.rw.ok[0]) vorn = tokHtml(z.schritte[0].vorher, z.schritte[0].von, z.schritte[0].bis) + " =";
+    return '<div class="zeile" id="frage"><span>' + vorn + '</span>' + feldHtml("a", "Ergebnis") + '<span>' + esc(teile[1] || "") + '</span></div>' + rwHtml();
+  }
+
+  /* ---------- Rechenweg (14.10.2026) ----------
+   * Bei Punkt vor Strich (und bei der Einkaufs-Sachaufgabe ab dem zweiten Fehlversuch) zerlegt
+   * /rechenweg/rechenweg.js die Aufgabe in Zwischenschritte mit eigenen Kästchen. Zwischenschritte
+   * werden geprüft, zählen aber nicht als Versuch und melden nichts. Das letzte Kästchen ist die
+   * Antwort: Prüfen dort geht wie das Feld oben in die Wertung (erster Versuch zählt).
+   * lauf.rw = { k, aus, auf, w:[Eingaben], ok:[bool], v:[Fehlversuche], rk:Schritt mit Kästchen|-1 } */
+  function rwNeu(x, auf) {
+    if (!RW) return null;
+    var aus = x.art === "punkt" ? x.frage.replace(/\s*=\s*\?\s*$/, "") : x.art === "sach" && x.links != null ? x.rechnung : null;
+    if (!aus || !RW.zerlege(aus)) return null;
+    return { k: x.k, aus: aus, auf: auf, w: [], ok: [], v: [], rk: -1 };
+  }
+  function rwZuGemerkt() { try { return sessionStorage.getItem(RW_ZU) === "1"; } catch (e) { return false; } }
+  function rwZerlegung() { return lauf && lauf.rw ? RW.zerlege(lauf.rw.aus) : null; }
+  function rwJetzt(z) { for (var i = 0; i < z.schritte.length; i++) if (!lauf.rw.ok[i]) return i; return -1; }
+  function tokHtml(tok, von, bis) {
+    var s = "";
+    tok.forEach(function (t, i) {
+      var w = t.k ? t.k : t.n != null ? String(t.n) : RW.ANZEIGE[t.o];
+      var teil = esc(w);
+      if (i === von) teil = '<mark class="rw-mark">' + teil;
+      if (i === bis) teil = teil + '</mark>';
+      s += (s && t.k !== ")" && !/\($/.test(s) ? " " : "") + teil;
+    });
+    return s;
+  }
+  function rwZahl(n, von) {
+    return von != null && !lauf.rw.ok[von] ? '<span class="rw-luecke" aria-label="kommt aus dem Schritt davor">?</span>' : esc(n);
+  }
+  function rwHtml() {
+    var rw = lauf && lauf.rw, z = rwZerlegung();
+    if (!z) return "";
+    if (!rw.auf) return '<button type="button" class="rw-auf" data-rw="auf">🪜 Schritt für Schritt</button>';
+    var j = rwJetzt(z);
+    var h = '<div class="rw" role="group" aria-label="Schritt für Schritt"><div class="rw-kopf"><b>🪜 Schritt für Schritt</b>' +
+      '<button type="button" class="rw-zu" data-rw="zu">Zuklappen</button></div>';
+    z.schritte.forEach(function (s, i) {
+      var zustand = rw.ok[i] ? "fertig" : i === j ? "jetzt" : "spaeter";
+      var name = "s" + i, an = lauf.feld === name;
+      h += '<div class="rw-schritt ' + zustand + '"><div class="rw-titel">' + (i + 1) + ". " + esc(RW.titel(s)) + '</div>';
+      if (i > 0 && !s.ganz) h += '<div class="rw-zusammen">' + (zustand === "spaeter" ? "…" : tokHtml(s.vorher, s.von, s.bis)) + '</div>';
+      h += '<div class="rw-rechnung">' + rwZahl(s.a, s.aVon) + " " + esc(s.zeichen) + " " + rwZahl(s.b, s.bVon) + ' =' +
+        '<span class="feld' + (an ? " aktiv" : "") + (rw.ok[i] ? " gut" : "") + '" id="feld-' + name + '" data-feld="' + name + '" role="button" tabindex="0" aria-label="' +
+        (s.letzter ? "Ergebnis" : "Zwischenergebnis " + (i + 1)) + '">' + esc(rw.ok[i] ? s.wert : rw.w[i] || "") + '</span>' +
+        (zustand === "jetzt" && RK && RW.schriftlich(s) ? '<button type="button" class="rw-rkknopf" data-rw="rk" data-i="' + i + '">📝 Untereinander</button>' : "") +
+        '</div>' + (zustand === "jetzt" && rw.rk === i ? '<div class="rk rw-rkfeld" id="rk-' + i + '"></div>' : "") + '</div>';
+    });
+    return h + '</div>';
+  }
+  function rwMalen() {
+    var x = aktuell(); if (!x) return;
+    $("aufgabe").innerHTML = frageHtml(x);
+    var rw = lauf.rw, z = rwZerlegung();
+    if (rw && rw.auf && rw.rk >= 0 && z && !rw.ok[rw.rk] && $("rk-" + rw.rk)) {
+      var s = z.schritte[rw.rk];
+      RK.malen($("rk-" + rw.rk), "schriftlich: " + s.a + " " + s.zeichen + " " + s.b, { ohneBlock: true, ohneTasten: true });
+    }
+  }
+  function rwKnopf(was, i) {
+    var rw = lauf && lauf.rw; if (!rw || sperre) return;
+    if (was === "auf") { rw.auf = true; try { sessionStorage.removeItem(RW_ZU); } catch (e) {} lauf.feld = "s" + Math.max(0, rwJetzt(rwZerlegung())); }
+    if (was === "zu") { rw.auf = false; rw.rk = -1; try { sessionStorage.setItem(RW_ZU, "1"); } catch (e) {} lauf.feld = "a"; }
+    if (was === "rk") { rw.rk = rw.rk === i ? -1 : i; lauf.feld = rw.rk >= 0 ? "rk" : "s" + i; }
+    rwMalen(); laufMerken();
+  }
+  /* „✏️ Mein Rechenweg“: ab zwei Rechenschritten (Punkt vor Strich, Sachaufgabe mit schritte ≥ 2,
+     sonst Rechenzeichen im Text). Bei Sachaufgaben gibt es KEINE Vorgabe: Paul stellt selbst auf.
+     Steht außerhalb von #aufgabe und bleibt deshalb beim Fehlversuch stehen; neu nur bei neuer Aufgabe. */
+  var mwFuer = null;
+  function brauchtWeg(x) {
+    if (!MW || !x) return false;
+    if (x.art === "punkt" || x.typ === "rest") return true;   // Teilen mit Rest: teilen, dann Rest ausrechnen
+    if (x.art === "sach") return (x.schritte || 1) >= 2;
+    return MW.schritte(x.frage) >= 2;
+  }
+  function meinWegZeigen(x) {
+    var h = $("meinweg"); if (!h) return;
+    if (!brauchtWeg(x)) { h.innerHTML = ""; h.classList.add("verborgen"); mwFuer = null; return; }
+    h.classList.remove("verborgen");
+    if (mwFuer === lauf.d + "|" + lauf.phase + "|" + lauf.i + "|" + x.k) return;
+    mwFuer = lauf.d + "|" + lauf.phase + "|" + lauf.i + "|" + x.k;
+    var auf = false; try { auf = sessionStorage.getItem(MW_AUF) === "1"; } catch (e) {}
+    MW.malen(h, {
+      offen: auf,
+      beimOeffnen: function (an) { try { sessionStorage.setItem(MW_AUF, an ? "1" : "0"); } catch (e) {} },
+      uebernehmen: function (z) {
+        if (!lauf || sperre) return;
+        var f = lauf.feld === "b" && $("feld-b") ? "b" : "a";
+        lauf.eingabe[f] = String(z).slice(0, 4); feldWaehlen(f);
+        $("feld-" + f).textContent = lauf.eingabe[f];
+      }
+    });
+  }
+
+  /* Prüfen in einem Rechenweg-Kästchen. */
+  function rwPruefen(i) {
+    var rw = lauf.rw, z = rwZerlegung(); if (!z) return;
+    var s = z.schritte[i], e = rw.w[i] || "";
+    if (lauf.feld === "rk") { e = RK.wert(); if (!e) { tipp("Rechne unten in den Kästchen. Dann drückst du Prüfen.", false); return; } rw.w[i] = e; }
+    if (!e) return;
+    if (s.letzter) {   // die Antwort selbst: zählt wie das Feld oben
+      lauf.eingabe.a = String(+e); $("feld-a").textContent = lauf.eingabe.a;
+      pruefen();
+      return;
+    }
+    if (RW.stimmt(s, e)) {
+      rw.ok[i] = true; rw.rk = -1;
+      lauf.feld = "s" + rwJetzt(z);
+      rwMalen();
+      tipp("Stimmt: " + s.teil + " = " + s.wert + ".", true);
+    } else {
+      rw.v[i] = (rw.v[i] || 0) + 1; rw.w[i] = "";
+      lauf.feld = rw.rk === i ? "rk" : "s" + i;
+      var f = $("feld-s" + i); if (f) { f.textContent = ""; f.classList.remove("rueck"); void f.offsetWidth; f.classList.add("rueck"); }
+      tipp(RW.hinweis(s, rw.v[i], e), false);
+    }
+    laufMerken();
   }
 
   function aufgabeZeigen() {
     var x = aktuell();
     if (!x) { teilFertig(); return; }
+    if (!lauf.rw || lauf.rw.k !== x.k) {
+      // Die geführte Zerlegung ist eine Hilfe-Stufe: zu Beginn nur als Knopf, nach dem ersten
+      // Fehlversuch geht sie von selbst auf (außer Paul hat sie in dieser Sitzung zugeklappt).
+      lauf.rw = x.art === "punkt" ? rwNeu(x, false) : null;
+    }
+    meinWegZeigen(x);
     $("thema").textContent = x.thema;
     $("zaehler").textContent = (lauf.phase === "1" ? "Aufgabe " : "Sachaufgabe ") + (lauf.i + 1) + " von " + lauf.liste.length;
-    $("aufgabe").innerHTML = frageHtml(x);
+    rwMalen();
     $("aufgabe").setAttribute("data-typ", x.typ);
     $("tasten").classList.toggle("nurok", x.typ === "tippen");
     document.querySelector('[data-taste="ok"]').textContent = "Prüfen";
@@ -128,14 +258,24 @@
   function feldWaehlen(name) {
     if (!lauf || sperre) return;
     lauf.feld = name;
-    ["a", "b"].forEach(function (n) { var f = $("feld-" + n); if (f) f.classList.toggle("aktiv", n === name); });
+    [].forEach.call(document.querySelectorAll("#aufgabe .feld"), function (f) { f.classList.toggle("aktiv", f.getAttribute("data-feld") === name); });
   }
   function taste(z) {
     if (!lauf || lauf.phase === "1-fertig") return;
     if (sperre) { if (z === "ok") naechste(); return; }
+    var f = lauf.feld || "a";
+    if ((f === "rk" || f.charAt(0) === "s") && !lauf.rw) f = lauf.feld = "a";
+    if (f === "rk" || f.charAt(0) === "s") {
+      var si = f === "rk" ? lauf.rw.rk : +f.slice(1);
+      if (z === "ok") { rwPruefen(si); return; }
+      if (f === "rk") { if (z === "weg") RK.loesche(); else RK.tippe(z); return; }
+      var w = lauf.rw.w[si] || "";
+      if (z === "weg") w = w.slice(0, -1); else if (w.length < 5) w += z;
+      lauf.rw.w[si] = w; var sf = $("feld-" + f); if (sf) sf.textContent = w;
+      return;
+    }
     if (z === "ok") { pruefen(); return; }
     var x = aktuell(); if (!x || x.typ === "tippen") return;
-    var f = lauf.feld;
     if (z === "weg") lauf.eingabe[f] = lauf.eingabe[f].slice(0, -1);
     else if (lauf.eingabe[f].length < 4) lauf.eingabe[f] += z;
     $("feld-" + f).textContent = lauf.eingabe[f];
@@ -175,17 +315,31 @@
       lauf.eingabe = { a: "", b: "" }; lauf.feld = "a";
       ["a", "b"].forEach(function (n) { var f = $("feld-" + n); if (f) { f.textContent = ""; f.classList.toggle("aktiv", n === "a"); f.classList.remove("rueck"); void f.offsetWidth; f.classList.add("rueck"); } });
     }
+    // Rechenweg: das letzte Kästchen leeren und dort weitermachen; bei der Einkaufs-Sachaufgabe
+    // gibt es den Rechenweg ab dem zweiten Fehlversuch (dann nennt auch die Hilfe die Rechnung).
+    if (lauf.rw && lauf.rw.auf) {
+      var zz = rwZerlegung(), last = zz.schritte.length - 1;
+      lauf.rw.w[last] = ""; lauf.feld = "s" + Math.max(0, rwJetzt(zz));
+      rwMalen();
+    } else if (lauf.rw && !lauf.rw.auf && x.art === "punkt" && !rwZuGemerkt()) {
+      lauf.rw.auf = true; lauf.feld = "s0"; rwMalen();
+    }
     tipp(lauf.tipp, false);
     laufMerken();
   }
   function richtig(x, erster) {
-    ["a", "b"].forEach(function (n) { var f = $("feld-" + n); if (f) f.classList.add("gut"); });
+    if (lauf.rw && lauf.rw.auf) {   // Rechenweg ausgefüllt zeigen
+      var zr = rwZerlegung(); zr.schritte.forEach(function (s, i) { lauf.rw.ok[i] = true; }); lauf.rw.rk = -1; rwMalen();
+      $("feld-a").textContent = lauf.eingabe.a;
+    }
+    [].forEach.call(document.querySelectorAll("#aufgabe .feld"), function (f) { f.classList.add("gut"); });
     [].forEach.call(document.querySelectorAll(".chip.an"), function (b) { b.classList.add("gut"); });
     sperre = true;
     tipp((erster ? "Richtig! " : "Gut, jetzt stimmt es. ") + M.bestaetigung(x) + ".", true);
     document.querySelector('[data-taste="ok"]').textContent = "Weiter";
     $("tasten").classList.add("nurok");
-    lauf.i++; lauf.versuche = 0; lauf.eingabe = { a: "", b: "" }; lauf.feld = "a"; lauf.wahl = []; lauf.tipp = "";
+    if ($("meinweg")) $("meinweg").classList.add("verborgen");
+    lauf.i++; lauf.versuche = 0; lauf.eingabe = { a: "", b: "" }; lauf.feld = "a"; lauf.wahl = []; lauf.tipp = ""; lauf.rw = null;
     laufMerken();
   }
   function naechste() {
@@ -224,6 +378,9 @@
 
   /* ---------- Bedienung ---------- */
   document.addEventListener("click", function (e) {
+    var r = e.target.closest ? e.target.closest("[data-rw]") : null;
+    if (r) { rwKnopf(r.getAttribute("data-rw"), +r.getAttribute("data-i")); return; }
+    if (e.target.closest && e.target.closest(".rw-rkfeld") && !(sperre)) { feldWaehlen("rk"); return; }
     var t = e.target.closest ? e.target.closest("[data-taste]") : null;
     if (t) { taste(t.getAttribute("data-taste")); return; }
     var c = e.target.closest ? e.target.closest("[data-chip]") : null;

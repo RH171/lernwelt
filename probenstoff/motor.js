@@ -100,28 +100,28 @@
     stunde: function (n) {
       var d = eins(zufall("ps-sn|" + n), [["ein Ruderboot", "es"], ["ein Fahrrad", "es"], ["ein Tretboot", "es"], ["ein Kanu", "es"]]);
       return { text: "Für 10 Stunden kostet " + d[0] + " " + n + " €. Wie viel kostet " + d[1] + " für 1 Stunde?",
-        loesung: n / 10, einheit: "€", rechnung: n + " : 10", signal: "„für 1 Stunde“: Teile den Preis für 10 Stunden durch 10." };
+        loesung: n / 10, einheit: "€", rechnung: n + " : 10", schritte: 1, signal: "„für 1 Stunde“: Teile den Preis für 10 Stunden durch 10." };
     },
     gruppen: function (n, d) {
       var w = eins(zufall("ps-sg|" + n + "|" + d), [["Kinder", "Gruppen zu"], ["Kinder", "Teams zu"], ["Spieler", "Mannschaften zu"]]);
       return { text: n + " " + w[0] + " bilden " + w[1] + " " + d + ". Wie viele volle " + w[1].split(" ")[0] + " gibt es? Wie viele " + w[0] + " bleiben übrig?",
         q: Math.floor(n / d), r: n % d, labelA: "volle " + w[1].split(" ")[0], labelB: w[0] + " übrig",
-        rechnung: n + " : " + d, signal: "Wie oft passt " + d + " in " + n + "? Was übrig bleibt, ist der Rest." };
+        rechnung: n + " : " + d, schritte: 2, signal: "Wie oft passt " + d + " in " + n + "? Was übrig bleibt, ist der Rest." };
     },
     kisten: function (b, a) {
       var w = eins(zufall("ps-sk|" + a + "|" + b), [["eine Kiste", "Äpfel", "Kisten"], ["eine Schachtel", "Stifte", "Schachteln"], ["eine Packung", "Blätter", "Packungen"], ["einen Korb", "Nüsse", "Körbe"]]);
       return { text: "In " + w[0] + " passen " + b + " " + w[1] + ". Wie viele " + w[1] + " passen in " + a + " " + w[2] + "?",
-        loesung: a * b, einheit: w[1], rechnung: a + " · " + b, signal: "„in " + a + " " + w[2] + "“: " + a + "-mal so viele. Rechne mal." };
+        loesung: a * b, einheit: w[1], rechnung: a + " · " + b, schritte: 1, signal: "„in " + a + " " + w[2] + "“: " + a + "-mal so viele. Rechne mal." };
     },
     verteilen: function (n, d) {
       var w = eins(zufall("ps-sv|" + n + "|" + d), [["Aufkleber", "Kinder", "jedes Kind"], ["Murmeln", "Kinder", "jedes Kind"], ["Sammelkarten", "Freunde", "jeder Freund"], ["Bonbons", "Kinder", "jedes Kind"]]);
       return { text: n + " " + w[0] + " werden gerecht an " + d + " " + w[1] + " verteilt. Wie viele " + w[0] + " bekommt " + w[2] + "?",
-        loesung: n / d, einheit: w[0], rechnung: n + " : " + d, signal: "„gerecht verteilen“ heißt geteilt." };
+        loesung: n / d, einheit: w[0], rechnung: n + " : " + d, schritte: 1, signal: "„gerecht verteilen“ heißt geteilt." };
     },
     einkauf: function (c, a, b) {
       var w = eins(zufall("ps-se|" + c + "|" + a + "|" + b), [["Bücher", "jedes"], ["Hefte", "jedes"], ["Bälle", "jeder"], ["Spiele", "jedes"]]);
       return { text: "Paul hat " + c + " €. Er kauft " + a + " " + w[0] + ", " + w[1] + " kostet " + b + " €. Wie viel Geld bleibt ihm?",
-        loesung: c - a * b, einheit: "€", rechnung: c + " − " + a + " · " + b, links: (c - a) * b,
+        loesung: c - a * b, einheit: "€", rechnung: c + " − " + a + " · " + b, links: (c - a) * b, schritte: 2,
         signal: "Rechne zuerst, was die " + w[0] + " zusammen kosten. Das ziehst du von " + c + " € ab." };
     }
   };
@@ -178,7 +178,7 @@
       var s = f.apply(null, m[2].split(":").map(Number));
       x = { art: "sach", vorlage: m[1], typ: s.q != null ? "rest" : "zahl", text: s.text, frage: s.q != null ? "? R ?" : "?",
         loesung: s.q != null ? { q: s.q, r: s.r } : s.loesung, einheit: s.einheit || "", labelA: s.labelA, labelB: s.labelB,
-        rechnung: s.rechnung, signal: s.signal, links: s.links };
+        rechnung: s.rechnung, signal: s.signal, links: s.links, schritte: s.schritte || 1 };   // schritte: Rechenschritte (ab 2 „Mein Rechenweg“)
     }
     if (!x) return null;
     x.k = k;

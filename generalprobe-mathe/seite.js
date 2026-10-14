@@ -69,6 +69,23 @@
     $("teil-aufgaben").innerHTML = t.aufgaben.map(function (a) {
       return '<div class="aufg" id="aufg-' + a.id + '"><div class="bu">' + a.buchstabe + ')</div><div class="inhalt">' + aufgabeHtml(a, stand.ein[a.id]) + '</div></div>';
     }).join("");
+    // Schmierblatt (14.10.2026): In der echten Probe rechnet Paul Nebenrechnungen auf dem Blatt.
+    // Hier eine freie Fläche dafür, ohne Zerlegung und ohne Prüfen, in Teilen ohne „Mein Rechenweg“.
+    // Bei „Teiler antippen“ nicht nötig.
+    // „✏️ Mein Rechenweg“ (14.10.2026) bei jeder Aufgabe mit zwei oder mehr Rechenschritten (schritte ≥ 2).
+    // Wie in der Probe: keine Haken, kein „schau noch mal“, keine Vorgabe (pruefen:false).
+    var mitWeg = 0;
+    if (window.MeinWeg) t.aufgaben.forEach(function (a) {
+      if ((a.schritte || 1) < 2 && window.MeinWeg.schritte(a.text) < 2) return;
+      var box = $("aufg-" + a.id), inh = box && box.querySelector(".inhalt"); if (!inh) return;
+      var h = document.createElement("div"); h.id = "mw-" + a.id; inh.appendChild(h); mitWeg++;
+      window.MeinWeg.malen(h, { pruefen: false, uebernehmen: function (z) {
+        var fs = [].slice.call(box.querySelectorAll("input.zahl")), f = fs.filter(function (i) { return !i.value; })[0] || fs[0];
+        if (!f) return; f.value = z; f.dispatchEvent(new Event("input", { bubbles: true }));
+      } });
+    });
+    var sb = $("schmier");
+    if (sb) { if (window.Schmierblatt && t.key !== "teiler" && !mitWeg) { sb.classList.remove("verborgen"); window.Schmierblatt.malen(sb); } else { sb.innerHTML = ""; sb.classList.add("verborgen"); } }
     $("leerhinweis").classList.add("verborgen");
     $("zurueck").disabled = stand.teil === 0;
     $("weiter").textContent = stand.teil === n - 1 ? "Fertig – nachsehen ✓" : "Weiter →";

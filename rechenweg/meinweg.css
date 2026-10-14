@@ -1,0 +1,27 @@
+/* „✏️ Mein Rechenweg“ (14.10.2026). Farben aus den Variablen der Seite (hell und dunkel bei allen
+   drei Kindern), mit Rückfall. Alle Tippziele mindestens 44 px. Kein Rot: „schau noch mal“ ist bernstein. */
+.mw{--mw-karte:var(--karte,var(--card,#fff));--mw-akzent:var(--akzent,#4f46e5);--mw-an:var(--an,var(--akzent-hell,color-mix(in srgb,var(--mw-akzent) 18%,var(--mw-karte))));
+  --mw-line:var(--line,#d5dce7);--mw-ink:var(--ink,#172033);--mw-muted:var(--muted,#5b6070);width:100%;margin:6px 0}
+.mw-auf{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:999px;border:2px solid var(--mw-akzent);
+  background:var(--mw-karte);color:var(--mw-akzent);font:800 16px/1.1 inherit;font-family:inherit;cursor:pointer}
+.mw.mw-zu .mw-koerper{display:none}
+.mw-koerper{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-start;margin-top:8px;padding:10px;border:2px dashed var(--mw-line);border-radius:16px}
+.mw-zeilen{flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.mw-zeile{display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-height:44px;padding:2px 8px;border-radius:10px;
+  font:800 22px/1.2 inherit;font-family:inherit;color:var(--mw-ink);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--mw-line)}
+.mw-zeile.aktiv{background:var(--mw-an)}
+.mw-zeile.aktiv .mw-text::after{content:"▏";color:var(--mw-akzent);animation:mw-blink 1s steps(1) infinite}
+@keyframes mw-blink{50%{opacity:0}}
+.mw-text{flex:1 1 auto;min-width:40px;word-break:break-word}
+.mw-ok{color:var(--gut,#15803d);font-size:22px}
+.mw-schau{color:var(--spaet,#92400e);background:var(--spaet-hell,#fef3c7);border-radius:8px;padding:2px 8px;font-size:15px;font-weight:700}
+.mw-nimm,.mw-antwort{min-height:44px;padding:6px 10px;border-radius:10px;border:1px solid var(--mw-line);background:var(--mw-karte);
+  color:var(--mw-ink);font:700 15px/1 inherit;font-family:inherit;cursor:pointer}
+.mw-antwort{border-color:var(--mw-akzent);color:var(--mw-akzent)}
+.mw-block{display:grid;grid-template-columns:repeat(5,48px);gap:6px;flex:none}
+.mw-taste{min-height:46px;border-radius:10px;border:1px solid var(--mw-line);background:var(--mw-karte);color:var(--mw-ink);
+  font:800 21px/1 inherit;font-family:inherit;cursor:pointer;padding:0}
+.mw-zeichen{color:var(--mw-akzent)}
+.mw-neu{grid-column:span 3;font-size:16px;background:var(--mw-akzent);color:var(--mw-karte);border-color:var(--mw-akzent)}
+.mw-taste:active{transform:scale(.96)}
+@media (max-width:420px){ .mw-block{grid-template-columns:repeat(5,1fr);width:100%} .mw-zeile{font-size:19px} }

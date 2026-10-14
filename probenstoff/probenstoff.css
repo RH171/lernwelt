@@ -68,8 +68,8 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
 
 /* Breit genug: Aufgabe links, Tasten rechts (iPad quer, Laptop). */
 @media (min-width:900px){
-  #spiel{max-width:960px;display:grid;grid-template-columns:1fr 340px;grid-template-areas:"oben oben" "auf tasten" "tipp tasten";align-items:start}
-  .oben{grid-area:oben} #aufgabe{grid-area:auf} .tipp{grid-area:tipp} #tasten{grid-area:tasten}
+  #spiel{max-width:960px;display:grid;grid-template-columns:1fr 340px;grid-template-areas:"oben oben" "auf tasten" "tipp tasten" "mw mw";align-items:start}
+  .oben{grid-area:oben} #aufgabe{grid-area:auf} .tipp{grid-area:tipp} #tasten{grid-area:tasten} #meinweg{grid-area:mw}
 }
 @media (max-height:760px){ .karte h2{font-size:22px} }
 /* Breit, aber niedrig, Tasten unter der Aufgabe (iPad geteilter Bildschirm): eine Reihe. */
@@ -102,4 +102,53 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
   header{margin-bottom:4px} .teil span{display:none} .karte > p{font-size:15px;margin-bottom:6px}
   .chips{grid-template-columns:repeat(8,1fr)}
   .chip{font-size:17px}
+}
+
+/* Rechenweg (14.10.2026, Kapitel 121): Zwischenschritte mit eigenen Kästchen. Die Teilaufgabe,
+   die zuerst dran ist, ist in der Aufgabe markiert. Kein Rot; was fertig ist, wird grün. */
+.rw-mark{background:var(--an);color:var(--akzent);border-radius:8px;padding:0 6px;box-shadow:inset 0 -3px 0 var(--akzent)}
+.rw-auf,.rw-zu,.rw-rkknopf{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:999px;
+  border:2px solid var(--akzent);background:var(--karte);color:var(--akzent);font:800 17px/1 var(--font);cursor:pointer}
+.rw-zu{border-color:var(--line);color:var(--muted);font-size:15px;padding:8px 14px}
+.rw-rkknopf{font-size:15px;padding:8px 12px;border-width:1px}
+.rw{width:100%;max-width:560px;border:2px dashed var(--line);border-radius:16px;padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px}
+.rw-kopf{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rw-kopf b{font:800 17px/1.2 var(--font);color:var(--akzent)}
+.rw-schritt{border-radius:12px;padding:4px 8px}
+.rw-schritt.jetzt{background:var(--an)}
+.rw-schritt.spaeter{opacity:.6}
+.rw-titel{font:700 14px/1.2 var(--font);color:var(--muted)}
+.rw-zusammen{font:700 19px/1.3 var(--font);color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px}
+.rw-rechnung{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font:800 28px/1 var(--font);font-variant-numeric:tabular-nums;margin-top:4px}
+.rw .feld{height:50px;min-width:88px;font-size:28px}
+.rw-schritt.spaeter .feld{pointer-events:none}
+.rw-luecke{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:40px;border:2px dashed var(--line);border-radius:10px;color:var(--muted);font-size:22px}
+/* Rechenkästchen im Schritt: dieselben Regeln wie im Lernquiz, Farben dieser Seite. */
+.rw-rkfeld{--card:var(--karte);--rund:var(--font);--akzent-hell:var(--an);margin:8px 0 2px}
+.rw-rkfeld .rk-auf{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:700 15.5px/1.2 var(--rund);cursor:pointer}
+.rw-rkfeld .rk-pfeil{transition:transform .2s}
+.rw-rkfeld.rk-zu .rk-pfeil{transform:rotate(180deg)}
+.rw-rkfeld.rk-zu .rk-koerper{display:none}
+.rw-rkfeld .rk-koerper{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 22px;margin-top:8px}
+.rw-rkfeld .rk-gitter{display:grid;grid-template-columns:30px repeat(calc(var(--rk-spalten) - 1),48px);column-gap:3px;row-gap:3px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--fest)}
+.rw-rkfeld .rk-kopf{font:800 13px/1 var(--rund);color:var(--muted);text-align:center;padding:2px 0 4px}
+.rw-rkfeld .rk-zelle{height:44px;display:flex;align-items:center;justify-content:center;font:800 28px/1 var(--rund);color:var(--ink);font-variant-numeric:tabular-nums}
+.rw-rkfeld .rk-zeichen{justify-content:flex-start}
+.rw-rkfeld .rk-ziffer{border-radius:8px;border:1px dashed var(--line)}
+.rw-rkfeld .rk-strich{grid-column:1 / -1;height:0;border-top:3px solid var(--ink);margin:2px 0}
+.rw-rkfeld .rk-erg,.rw-rkfeld .rk-ue{border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;padding:0;font-variant-numeric:tabular-nums}
+.rw-rkfeld .rk-erg{height:50px;border-radius:10px;font:800 28px/1 var(--rund)}
+.rw-rkfeld .rk-ue{height:44px;border:none;background:none;display:flex;align-items:center;justify-content:center}
+.rw-rkfeld .rk-ue-k{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:2px solid var(--line);background:var(--card);font:800 16px/1 var(--rund);color:var(--ink)}
+.rw-rkfeld .rk-ue:disabled{cursor:default}
+.rw-rkfeld .rk-ue:disabled .rk-ue-k{visibility:hidden}
+.rw-rkfeld .rk-erg.an{border-color:var(--akzent);box-shadow:0 0 0 3px var(--an)}
+.rw-rkfeld .rk-ue.an .rk-ue-k{border-color:var(--akzent);box-shadow:0 0 0 3px var(--an)}
+@media (max-width:699px){
+  .rw{padding:6px 8px 8px} .rw-rechnung{font-size:24px;gap:6px} .rw .feld{height:48px;min-width:76px;font-size:24px}
+  .rw-rkfeld .rk-gitter{grid-template-columns:24px repeat(calc(var(--rk-spalten) - 1),44px);padding:6px}
+}
+@media (max-height:560px){
+  .rw{gap:3px;padding:4px 8px} .rw-titel{font-size:13px} .rw-zusammen{font-size:16px}
+  .rw-rechnung{font-size:22px} .rw .feld{height:44px;font-size:22px} .rw-kopf b{font-size:15px}
 }

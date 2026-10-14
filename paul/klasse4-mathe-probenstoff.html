@@ -14,7 +14,8 @@
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
-<link rel="stylesheet" href="/probenstoff/probenstoff.css?v=e3207b70">
+<link rel="stylesheet" href="/probenstoff/probenstoff.css?v=d0714a25">
+<link rel="stylesheet" href="/rechenweg/meinweg.css?v=c05717fc">
 <script src="/farbschalter.js?v=383ccf75"></script>
 </head>
 <body>
@@ -51,6 +52,8 @@
     <button data-taste="weg" aria-label="Löschen">⌫</button><button data-taste="0">0</button>
     <button data-taste="ok" class="ok">Prüfen</button>
   </div>
+  <!-- „✏️ Mein Rechenweg“ (14.10.2026) unter dem Ziffernblock: Prüfen bleibt auch auf kurzen Schirmen im Bild. -->
+  <div id="meinweg" class="verborgen"></div>
 </section>
 
 <section id="ende" class="karte verborgen">
@@ -66,8 +69,11 @@
   <div class="mitte"><a class="knopf primaer" href="./">Zur Startseite</a></div>
 </section>
 
-<script src="/probenstoff/motor.js?v=67a64e7d"></script>
-<script src="/probenstoff/seite.js?v=c05dd421" defer></script>
+<script src="/probenstoff/motor.js?v=76f524fb"></script>
+<script src="/rechenweg/rechenweg.js?v=76149099"></script>
+<script src="/quiz/rechenkaestchen.js?v=d5a8bfa9"></script>
+<script src="/rechenweg/meinweg.js?v=fd30c367"></script>
+<script src="/probenstoff/seite.js?v=820b1e6c" defer></script>
 <script src="/lernstand.js?v=3e61289c" defer></script>
 </body>
 </html>

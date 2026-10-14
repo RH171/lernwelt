@@ -976,6 +976,7 @@ function artKurz(art) {
     $("q-fach").textContent = fachName(f.fach);
     $("q-frage").textContent = f.frage;
     rechenfeld(f.frage);
+    meinwegfeld(f);
     $("q-erklaerung").classList.add("verborgen");
     $("q-weiter").classList.add("verborgen");
     versuch = 0; ersterFalsch = "";
@@ -1007,6 +1008,29 @@ function artKurz(art) {
      Es steht VOR der Hilfe, damit Tipp und Antworten direkt darunter folgen,
      und bleibt bei einem Fehlversuch mit seinen Ziffern stehen - neu gemalt
      (und damit geleert) wird es nur mit der naechsten Frage. */
+  /* „✏️ Mein Rechenweg“ (14.10.2026, Kapitel 121): bei Fragen mit zwei oder mehr Rechenschritten.
+     Erkannt aus dem Text: zwei Rechenzeichen zwischen Zahlen, oder eine Mathe-Sachaufgabe (ab zwei
+     Zahlen in einem längeren Text) - lieber einmal zu viel als zu wenig. Keine Vorgabe, die Zeilen
+     werden still nachgerechnet, nichts wird gespeichert, bleibt beim Fehlversuch stehen. */
+  function brauchtWeg(f) {
+    var W = window.MeinWeg, t = String(f && f.frage || "");
+    if (!W || !t) return false;
+    if (W.schritte(t) >= 2) return true;
+    var zahlen = (t.replace(/(\d)\.(\d{3})/g, "$1$2").match(/\d+/g) || []).length;
+    return /^mathe/i.test(String(f.fach || "")) && zahlen >= 2 && t.length >= 45 && W.schritte(t) < 2 && !/schriftlich/i.test(t);
+  }
+  function meinwegfeld(f) {
+    var h = $("q-meinweg");
+    if (!h) {
+      h = document.createElement("div");
+      h.id = "q-meinweg";
+      h.className = "verborgen";
+      ($("q-rechnen") || $("q-frage")).insertAdjacentElement("afterend", h);
+    }
+    if (f && brauchtWeg(f)) { h.classList.remove("verborgen"); window.MeinWeg.malen(h, {}); }
+    else { h.innerHTML = ""; h.classList.add("verborgen"); }
+  }
+
   function rechenfeld(text) {
     var h = $("q-rechnen");
     if (!h) {
@@ -1232,6 +1256,7 @@ function artKurz(art) {
   function nachladen() {
     $("q-frage").textContent = "Einen Moment, ich hole neue Fragen …";
     rechenfeld("");
+    meinwegfeld(null);
     $("q-antworten").innerHTML = "";
     $("q-weiter").classList.add("verborgen");
     $("q-erklaerung").classList.add("verborgen");
