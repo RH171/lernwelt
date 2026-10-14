@@ -64,7 +64,8 @@
       esc([b.art, b.titel, tag(b.datum)].filter(Boolean).join(" · ")) + "</span></div>";
     if (s.art === "lehrerin") {
       d.innerHTML = kopf +
-        '<div class="lwp-lehrerin">Deine Lehrerin hat verbessert: <em>' + esc(s.text) + "</em></div>" +
+        '<div class="lwp-lehrerin">Deine Lehrerin hat verbessert:<ul class="lwp-rotliste">' +
+          (s.zeilen || []).map(function (z) { return "<li>" + esc(z) + "</li>"; }).join("") + "</ul></div>" +
         '<div class="lwp-knoepfe"><button type="button" class="lwp-ja lwp-gesehen">👍 Gesehen</button>' +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
         '<div class="lwp-meldung" aria-live="polite"></div>';
@@ -249,7 +250,8 @@
       ".lwp-falsch{font-weight:700;text-decoration:underline wavy var(--lwp-rot);text-underline-offset:4px}",
       ".lwp-tipp{background:var(--lwp-gelb);border:1px solid var(--lwp-gelblinie);color:var(--lwp-gelbink);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:16px;line-height:1.4}",
       ".lwp-lehrerin{background:var(--lwp-rotbg);border-left:5px solid var(--lwp-rot);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:16px;line-height:1.4}",
-      ".lwp-lehrerin em{font-style:normal;font-weight:700}",
+      ".lwp-rotliste{margin:6px 0 0;padding-left:20px;font-weight:700}",
+      ".lwp-rotliste li{margin:3px 0}",
       ".lwp-feld{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}",
       ".lwp-feld input{flex:1 1 160px;min-width:0;max-width:340px;font-family:inherit;font-weight:600;font-size:20px;padding:10px 12px;min-height:48px;border-radius:12px;",
       "border:2px solid var(--lwp-linie);background:var(--lwp-karte);color:var(--lwp-ink);box-sizing:border-box}",

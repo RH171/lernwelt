@@ -33,6 +33,14 @@ import { zeileKindgerecht } from "./_herkunft.js";
    vorhandenen Blätter seit 06.10.2026 gehören dazu"). Ein Blatt, das gerade
    hochgeladen wird, zählt immer - egal, welches Datum darauf steht. */
 export const AB = "2026-10-06";
+/* Rote Stellen nur von Blättern, die ab diesem Tag (deutsche Zeit) hochgeladen
+   wurden. Ohne `angelegt` gilt ein Blatt als alt. */
+export const ROT_AB = "2026-10-14";
+const TAG_BERLIN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" });
+export function hochgeladenAm(blatt) {
+  const t = Date.parse(String((blatt && blatt.angelegt) || ""));
+  return isNaN(t) ? "" : TAG_BERLIN.format(new Date(t));
+}
 export const KINDER_MIT_PRUEFREITER = ["paul"];
 export const SCHLUESSEL = (kind) => "pruefreiter:" + kind;
 
@@ -217,17 +225,21 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
     });
   }
 
-  rotZeilen(inhalt).forEach((z) => {
-    aus.push({ id: bk.id + ":l:" + kurz(z), art: "lehrerin", blatt: bk,
-               text: rotText(z) });
-  });
+  /* Rot: EINE Karte je Blatt mit allen roten Stellen (Auftrag 14.10.2026), und
+     nur für Blätter, die ab ROT_AB hochgeladen wurden - ältere hat Paul längst
+     von der Lehrerin zurückbekommen und gesehen. */
+  const rz = rotZeilen(inhalt);
+  if (rz.length && hochgeladenAm(blatt) >= ROT_AB) {
+    aus.push({ id: bk.id + ":l:" + kurz(rz.join("\n")), art: "lehrerin", blatt: bk,
+               zeilen: rz.map(rotText) });
+  }
   return aus;
 }
 
 /* Was der Browser bekommt: ohne `soll`, ohne `gleich`, ohne Rohzeile. */
 export function oeffentlich(s) {
   const o = { id: s.id, art: s.art, blatt: s.blatt };
-  if (s.art === "lehrerin") { o.text = s.text; return o; }
+  if (s.art === "lehrerin") { o.zeilen = s.zeilen; return o; }
   o.aufgabe = s.aufgabe; o.du = s.du; o.tipp = s.tipp; o.eingabe = s.eingabe;
   return o;
 }
