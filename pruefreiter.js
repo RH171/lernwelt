@@ -11,6 +11,19 @@
  *
  *   LWPruef.hochladen(kasten, blattId)   nach dem Durchlesen eines Blattes
  *   LWPruef.startseite(knopf)            Knopf oben auf der Startseite
+ *
+ * Umbau 14.10.2026 nachmittags (Denny auf dem iPhone, alle vier Vorschläge
+ * gewählt, dazu zwei Nachträge):
+ *   - Fach sichtbar: Name, Zeichen und Farbe je Blatt (FACH unten).
+ *   - Nach Blatt gruppiert (A): EIN Kasten je Blatt mit Vorschaubild, alle
+ *     Stellen des Blattes darunter, keine doppelte Kopfzeile mehr.
+ *   - Vorschau: Antippen öffnet das Blatt groß, mit Blättern bei mehreren Seiten.
+ *   - Fortschritt (C): "2 von 5 verbessert", Runde = heutiger Tag (Server).
+ *   - Sonnenknopf (D): in der Einblendung oben neben "Zurück"; der schwebende
+ *     Knopf ist dort ausgeblendet, unten bleibt Platz für den 💬-Knopf.
+ *   - 📌: "Auf der Pinnwand deiner Lehrerin steht:" und der Beweis: ihre
+ *     Vorlagenzeile als Zitat und das Bild der Vorlage (über die API, nie als
+ *     Datei im Web-Ordner).
  */
 (function () {
   "use strict";
@@ -25,6 +38,22 @@
     var t = String(iso || "").split("-");
     return t.length === 3 ? (+t[2]) + "." + (+t[1]) + "." : "";
   }
+  /* Fächer wie in der Ablage (paul/schulstoff.html: ZEICHEN, KURZ) mit den
+     Fachfarben von Pauls Startseite (paul/index.html: --deutsch, --mathe, ...).
+     Die Farbe steht nur als Rand und Punkt, nie als Schriftgrund - so bleibt
+     die Schrift in hell und dunkel lesbar. */
+  var FACH = {
+    mathe:    { n: "Mathe",          z: "🔢", c: "#10b981" },
+    deutsch:  { n: "Deutsch",        z: "📖", c: "#4f46e5" },
+    hsu:      { n: "HSU",            z: "🌍", c: "#f3960b" },
+    englisch: { n: "Englisch",       z: "🇬🇧", c: "#ef4444" },
+    rel:      { n: "Religion/Ethik", z: "🕊️", c: "#0891b2" },
+    religion: { n: "Religion/Ethik", z: "🕊️", c: "#0891b2" },
+    musik:    { n: "Musik",          z: "🎵", c: "#8b5cf6" },
+    anderes:  { n: "Anderes",        z: "✏️", c: "#64748b" }
+  };
+  function fachVon(k) { return FACH[k] || { n: "Ohne Fach", z: "📄", c: "#64748b" }; }
+
   var SCHILD = {
     rechnen:  '<span class="lwp-schild lwp-s-rechnen">🧮 Bitte nachrechnen</span>',
     pinnwand: '<span class="lwp-schild lwp-s-pinnwand">📌 Pinnwand deiner Lehrerin</span>',
@@ -39,9 +68,12 @@
         /* Ein alter Server ohne diesen Weg antwortet mit der Startseite oder
            mit {ok:true} ohne Liste - dann gibt es nichts zu zeigen. */
         if (!j || !j.ok || !Array.isArray(j.stellen)) return { stellen: [], blaetter: 0 };
+        /* Ein Server ohne Fortschritt (vor dem 14.10.2026 nachmittags): Runde = was offen ist. */
+        var f = j.fortschritt;
+        if (!f || !(f.gesamt >= j.stellen.length) || !(f.erledigt >= 0)) j.fortschritt = { erledigt: 0, gesamt: j.stellen.length };
         return j;
       })
-      .catch(function () { return { stellen: [], blaetter: 0 }; });
+      .catch(function () { return { stellen: [], blaetter: 0, fortschritt: { erledigt: 0, gesamt: 0 } }; });
   }
   function senden(stelle, aktion, antwort) {
     return fetch("/api/pruefreiter", {
@@ -54,14 +86,82 @@
   /* Eine Karte je Stelle. weg(id, endgueltig) meldet, dass die Karte geht:
      endgueltig = erledigt (verschwindet auch auf der Startseite),
      sonst "Später" (bleibt offen). */
+  /* ---------- Großansicht: ein Bild bildschirmfüllend ----------
+     o = { titel, seiten, holen(nr) -> Promise<url|null> }. Über allem, auch
+     über den schwebenden Knöpfen; "✕ Schließen" 48 px, Esc, Blättern über
+     /blatt-seiten.js (Pfeile, Wischen), wenn die Seite es geladen hat. */
+  function gross(o) {
+    stilEinmal();
+    var alt = document.querySelector(".lwp-gross"); if (alt) alt.remove();
+    var g = document.createElement("div");
+    g.className = "lwp lwp-gross";
+    g.setAttribute("role", "dialog");
+    g.setAttribute("aria-modal", "true");
+    g.setAttribute("aria-label", o.titel || "Großansicht");
+    g.innerHTML = '<div class="lwp-gross-oben"><div class="lwp-gross-titel">' + esc(o.titel || "") + '</div>' +
+      '<button type="button" class="lwp-gross-zu">✕ Schließen</button></div>' +
+      '<div class="lwp-gross-bild"><img alt="' + esc(o.titel || "Bild") + '"><div class="lwp-gross-laedt">Einen Moment …</div></div>' +
+      '<div class="lwp-gross-leiste"></div>';
+    document.body.appendChild(g);
+    document.documentElement.classList.add("lwp-gross-offen");
+    var img = g.querySelector("img"), laedt = g.querySelector(".lwp-gross-laedt");
+    img.addEventListener("load", function () { laedt.style.display = "none"; });
+    img.addEventListener("error", function () { laedt.textContent = "Das Bild kommt gerade nicht. Probier es gleich nochmal."; });
+    var blaetter = null;
+    var seiten = Math.max(1, Number(o.seiten) || 1);
+    if (seiten > 1 && window.LWSeiten) {
+      blaetter = LWSeiten.blaettern({ bild: img, leiste: g.querySelector(".lwp-gross-leiste"), seiten: seiten, holen: o.holen, start: 0 });
+    } else {
+      Promise.resolve(o.holen(0)).then(function (url) { if (url) img.src = url; else laedt.textContent = "Das Bild kommt gerade nicht. Probier es gleich nochmal."; });
+    }
+    function zu() {
+      if (blaetter) blaetter.weg();
+      document.removeEventListener("keydown", taste, true);
+      g.remove();
+      document.documentElement.classList.remove("lwp-gross-offen");
+      if (o.zurueck && o.zurueck.focus) try { o.zurueck.focus(); } catch (e) {}
+    }
+    function taste(e) { if (e.key === "Escape") { e.stopPropagation(); zu(); } }
+    document.addEventListener("keydown", taste, true);
+    g.querySelector(".lwp-gross-zu").addEventListener("click", zu);
+    try { g.querySelector(".lwp-gross-zu").focus(); } catch (e) {}
+    return { zu: zu, wurzel: g };
+  }
+
+  /* Seiten von Pauls Blatt - derselbe Weg wie die Ablage (bildHolen). */
+  var blattBilder = {};
+  function blattBild(id, nr) {
+    var k = id + ":" + nr;
+    if (blattBilder[k]) return Promise.resolve(blattBilder[k]);
+    return fetch("/api/schulstoff?kind=" + KIND + "&bild=" + encodeURIComponent(k), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.ok && j.bild) { blattBilder[k] = j.bild; return j.bild; } return null; })
+      .catch(function () { return null; });
+  }
+  /* Bild der Vorlage der Lehrerin: nur über die API hinter dem Ausweis, als
+     Blob geholt - so bricht nichts, wenn es fehlt (404) oder der Ausweis
+     abgelaufen ist (401): dann gibt es eben kein Bild, nur das Zitat. */
+  var vorlageBilder = {};
+  function vorlageBild(id) {
+    if (vorlageBilder[id]) return vorlageBilder[id];
+    vorlageBilder[id] = fetch("/api/lehrervorlagen?kind=" + KIND + "&bild=" + encodeURIComponent(id), { credentials: "same-origin" })
+      .then(function (r) {
+        if (!r.ok || !/^image\//.test(r.headers.get("content-type") || "")) return null;
+        return r.blob().then(function (b) { return URL.createObjectURL(b); });
+      })
+      .catch(function () { return null; });
+    return vorlageBilder[id];
+  }
+
+  /* Eine Karte je Stelle. weg(id, endgueltig) meldet, dass die Karte geht:
+     endgueltig = erledigt (verschwindet auch auf der Startseite),
+     sonst "Später" (bleibt offen). Das Blatt steht im Kasten darüber. */
   function karte(s, weg) {
     var d = document.createElement("div");
     d.className = "lwp-karte";
     d.setAttribute("data-stelle", s.id);
     d.setAttribute("data-art", s.art);
-    var b = s.blatt || {};
-    var kopf = '<div class="lwp-kopf">' + (SCHILD[s.art] || "") + '<span class="lwp-blatt">' +
-      esc([b.art, b.titel, tag(b.datum)].filter(Boolean).join(" · ")) + "</span></div>";
+    var kopf = '<div class="lwp-kopf">' + (SCHILD[s.art] || "") + "</div>";
     if (s.art === "lehrerin") {
       d.innerHTML = kopf +
         '<div class="lwp-lehrerin">Deine Lehrerin hat verbessert:<ul class="lwp-rotliste">' +
@@ -73,15 +173,44 @@
     } else if (s.art === "pinnwand") {
       /* Dennys Entscheidung 14.10.2026, 10:30 Uhr: Paul hat nur falsch
          abgeschrieben und kann es nicht selbst nachprüfen - die Antwort der
-         Lehrerin steht sofort da. */
+         Lehrerin steht sofort da. Nachmittags: die Quelle klar nennen und
+         den Beweis zeigen (ihre Vorlagenzeile, ihr Blatt). */
+      var b = s.beleg || null;
+      var beleg = "";
+      if (b && (b.aufgabe || b.titel)) {
+        beleg = '<div class="lwp-beleg"><div class="lwp-beleg-satz">So steht es auf ihrer Vorlage' +
+          (b.titel ? " „" + esc(b.titel) + "“" : "") + ":</div>" +
+          '<div class="lwp-beleg-reihe">' +
+          (b.bild ? '<button type="button" class="lwp-vorschau lwp-vorlagebild" aria-label="Vorlage deiner Lehrerin groß ansehen">' +
+                    '<span class="lwp-vorschau-leer" aria-hidden="true">📌</span><img alt="" hidden>' +
+                    '<span class="lwp-lupe" aria-hidden="true">🔍</span></button>' : "") +
+          '<blockquote class="lwp-zitat">' + (b.nr != null ? '<span class="lwp-nr">Nr. ' + esc(b.nr) + "</span> " : "") +
+          esc(b.aufgabe) + ' <span aria-hidden="true">→</span> <b>' + esc(s.lehrerin) + "</b></blockquote></div></div>";
+      }
       d.innerHTML = kopf +
         '<div class="lwp-aufgabe">' + esc(s.aufgabe) + "</div>" +
         '<div class="lwp-du">Du hast geschrieben: <span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
-        '<div class="lwp-lehrerin">Bei deiner Lehrerin steht: <b class="lwp-richtig">' + esc(s.lehrerin) + "</b></div>" +
+        '<div class="lwp-lehrerin">Auf der Pinnwand deiner Lehrerin steht: <b class="lwp-richtig">' + esc(s.lehrerin) + "</b></div>" +
+        beleg +
         '<div class="lwp-hinweis">Verbessere es in deinem Heft.</div>' +
         '<div class="lwp-knoepfe"><button type="button" class="lwp-ja lwp-verbessert">Verbessert ✓</button>' +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
         '<div class="lwp-meldung" aria-live="polite"></div>';
+      var vb = d.querySelector(".lwp-vorlagebild");
+      if (vb) {
+        var vimg = vb.querySelector("img");
+        /* Kein Bild im Speicher oder kein Ausweis: Zitat ohne Bild, nichts bricht. */
+        vorlageBild(b.vorlage).then(function (url) {
+          if (!url) { vb.remove(); return; }
+          vimg.onload = function () { vimg.hidden = false; var l = vb.querySelector(".lwp-vorschau-leer"); if (l) l.remove(); };
+          vimg.onerror = function () { vb.remove(); };
+          vimg.src = url;
+        });
+        vb.addEventListener("click", function () {
+          gross({ titel: "Vorlage deiner Lehrerin: " + (b.titel || ""), seiten: 1, zurueck: vb,
+                  holen: function () { return vorlageBild(b.vorlage); } });
+        });
+      }
     } else {
       d.innerHTML = kopf +
         '<div class="lwp-aufgabe">' + esc(s.aufgabe) + "</div>" +
@@ -101,9 +230,10 @@
       d.classList.add("lwp-erledigt");
       Array.prototype.forEach.call(d.querySelectorAll("button,input"), function (x) { x.disabled = true; });
       sag(text, "gut");
+      weg(s.id, true, "sofort");
       setTimeout(function () { d.remove(); weg(s.id, true); }, 1600);
     }
-    function knoepfe(an) { Array.prototype.forEach.call(d.querySelectorAll("button,input"), function (x) { x.disabled = !an; }); }
+    function knoepfe(an) { Array.prototype.forEach.call(d.querySelectorAll(".lwp-knoepfe button,.lwp-feld button,input"), function (x) { x.disabled = !an; }); }
 
     var spaeter = d.querySelector(".lwp-spaeter");
     spaeter.addEventListener("click", function () { d.remove(); weg(s.id, false); });
@@ -146,6 +276,85 @@
     return d;
   }
 
+  /* ---------- Ein Kasten je Blatt (Dennys Wahl A) ----------
+     Kopf: Fachfarbe als Rand, Fach mit Zeichen, Art · Titel · Datum,
+     Vorschaubild zum Antippen. Darunter alle Stellen dieses Blattes.
+     Geht die letzte Karte, geht der Kasten mit. */
+  function gruppieren(stellen) {
+    var reihe = [], je = {};
+    stellen.forEach(function (s) {
+      var id = (s.blatt && s.blatt.id) || "?";
+      if (!je[id]) { je[id] = { blatt: s.blatt || {}, stellen: [] }; reihe.push(je[id]); }
+      je[id].stellen.push(s);
+    });
+    return reihe;
+  }
+  function blattKasten(gr, weg) {
+    var b = gr.blatt, f = fachVon(b.fach);
+    var k = document.createElement("section");
+    k.className = "lwp-blattkasten";
+    k.setAttribute("data-blatt", b.id || "");
+    k.setAttribute("data-fach", b.fach || "");
+    k.style.setProperty("--lwp-fach", f.c);
+    var titel = [b.art, b.titel, tag(b.datum)].filter(Boolean).join(" · ");
+    k.innerHTML = '<div class="lwp-blattkopf">' +
+      '<button type="button" class="lwp-vorschau lwp-blattbild" aria-label="Dein Blatt groß ansehen">' +
+        '<span class="lwp-vorschau-leer" aria-hidden="true">' + f.z + '</span><img alt="" hidden>' +
+        '<span class="lwp-lupe" aria-hidden="true">🔍</span></button>' +
+      '<div class="lwp-blattinfo"><span class="lwp-fach"><span class="lwp-fachpunkt" aria-hidden="true"></span>' +
+        f.z + " " + esc(f.n) + "</span>" +
+        '<div class="lwp-blatt">' + esc(titel) + "</div>" +
+        (b.seiten > 1 ? '<div class="lwp-seiten">' + b.seiten + " Seiten · antippen zum Ansehen</div>" : '<div class="lwp-seiten">Antippen zum Ansehen</div>') +
+      "</div></div>";
+    var knopf = k.querySelector(".lwp-blattbild"), img = knopf.querySelector("img");
+    blattBild(b.id, 0).then(function (url) {
+      if (!url) return;
+      img.onload = function () { img.hidden = false; var l = knopf.querySelector(".lwp-vorschau-leer"); if (l) l.remove(); };
+      img.src = url;
+    });
+    knopf.addEventListener("click", function () {
+      gross({ titel: [f.n, b.titel].filter(Boolean).join(" · "), seiten: b.seiten || 1, zurueck: knopf,
+              holen: function (nr) { return blattBild(b.id, nr); } });
+    });
+    var liste = document.createElement("div");
+    liste.className = "lwp-blattstellen";
+    k.appendChild(liste);
+    gr.stellen.forEach(function (s) {
+      liste.appendChild(karte(s, function (id, erledigt, sofort) {
+        if (!sofort && !liste.querySelector(".lwp-karte")) k.remove();
+        weg(id, erledigt, sofort);
+      }));
+    });
+    return k;
+  }
+
+  /* ---------- Fortschritt (Dennys Wahl C) ----------
+     "2 von 5 verbessert". gesamt und erledigt kommen vom Server (Runde =
+     heutiger Tag), jede hier erledigte Stelle rückt eins weiter. Ist alles
+     geschafft, lobt sie die Mühe - nie die Zahl der Fehler. */
+  function leiste(f) {
+    var el = document.createElement("div");
+    el.className = "lwp-fortschritt";
+    el.innerHTML = '<div class="lwp-fs-text" aria-live="polite"></div>' +
+      '<div class="lwp-fs-bahn" role="progressbar" aria-valuemin="0"><div class="lwp-fs-fuell"></div></div>';
+    var stand = { erledigt: Math.max(0, f.erledigt | 0), gesamt: Math.max(0, f.gesamt | 0) };
+    function malen() {
+      if (stand.erledigt > stand.gesamt) stand.gesamt = stand.erledigt;
+      var fertig = stand.gesamt > 0 && stand.erledigt >= stand.gesamt;
+      el.querySelector(".lwp-fs-text").textContent = fertig
+        ? "Geschafft! Du hast dir jede Stelle selbst angeschaut. Das war fleißige Arbeit!"
+        : stand.erledigt + " von " + stand.gesamt + " verbessert";
+      el.classList.toggle("lwp-fs-fertig", fertig);
+      var bahn = el.querySelector(".lwp-fs-bahn");
+      bahn.setAttribute("aria-valuemax", String(stand.gesamt));
+      bahn.setAttribute("aria-valuenow", String(stand.erledigt));
+      bahn.setAttribute("aria-label", stand.erledigt + " von " + stand.gesamt + " verbessert");
+      el.querySelector(".lwp-fs-fuell").style.width = (stand.gesamt ? Math.round(100 * stand.erledigt / stand.gesamt) : 0) + "%";
+    }
+    malen();
+    return { el: el, eins: function () { stand.erledigt++; malen(); }, fertig: function () { return stand.gesamt > 0 && stand.erledigt >= stand.gesamt; } };
+  }
+
   function saetze(stellen, blaetter) {
     var n = stellen.length;
     if (n === 1) return "In einem Blatt habe ich eine Stelle gefunden. Schau sie dir an!";
@@ -165,12 +374,15 @@
       box.innerHTML = '<div class="lwp-titel">🔍 Ich habe nachgesehen</div>' +
         '<div class="lwp-satz">' + (st.length === 1 ? "Eine Stelle möchte ich dir zeigen." : st.length + " Stellen möchte ich dir zeigen.") +
         " Du verbesserst selbst.</div>";
+      var fs = leiste(j.fortschritt || { erledigt: 0, gesamt: st.length });
+      box.appendChild(fs.el);
       var liste = document.createElement("div");
       liste.className = "lwp-liste";
       box.appendChild(liste);
       var offen = st.length, spaeter = 0;
-      st.forEach(function (s) {
-        liste.appendChild(karte(s, function (id, erledigt) {
+      gruppieren(st).forEach(function (gr) {
+        liste.appendChild(blattKasten(gr, function (id, erledigt, sofort) {
+          if (sofort) { fs.eins(); return; }
           offen--; if (!erledigt) spaeter++;
           if (offen) return;
           box.innerHTML = '<div class="lwp-titel">🔍 Ich habe nachgesehen</div><div class="lwp-satz lwp-gut">' +
@@ -189,6 +401,7 @@
     if (!knopf) return Promise.resolve(0);
     stilEinmal();
     var stellen = [];
+    var stand = { erledigt: 0, gesamt: 0 };
     function zaehlen() {
       var bl = {};
       stellen.forEach(function (s) { bl[s.blatt && s.blatt.id] = 1; });
@@ -201,8 +414,19 @@
       var z = knopf.querySelector(".lwp-zahl"); if (z) z.textContent = String(stellen.length);
       var t = knopf.querySelector(".cc-s"); if (t) t.textContent = saetze(stellen, zaehlen());
     }
-    var ueber = null;
-    function schliessen() { if (ueber) { ueber.remove(); ueber = null; document.documentElement.classList.remove("lwp-offen"); } malen(); }
+    /* Sonnenknopf in der Kopfzeile (Dennys Wahl D): drückt den schwebenden
+       Schalter (/farbschalter.js) oder Pauls #modeBtn - dieselbe Logik,
+       dieselbe Wahl. Ohne beide steht keiner da. */
+    function schalter() { return document.getElementById("farbschalter") || document.getElementById("modeBtn"); }
+    var ueber = null, sonneBeob = null;
+    function schliessen() {
+      if (ueber) {
+        ueber.remove(); ueber = null;
+        document.documentElement.classList.remove("lwp-offen");
+        if (sonneBeob) { sonneBeob.disconnect(); sonneBeob = null; }
+      }
+      malen();
+    }
     function oeffnen() {
       if (ueber) return;
       ueber = document.createElement("div");
@@ -211,28 +435,51 @@
       ueber.setAttribute("aria-label", "Nachgesehen");
       ueber.innerHTML = '<div class="lwp lwp-innen"><div class="lwp-oben">' +
         '<button type="button" class="lwp-leise lwp-zu">‹ Zurück</button>' +
-        '<div class="lwp-titel">🔍 Nachgesehen</div></div>' +
+        '<div class="lwp-titel">🔍 Nachgesehen</div>' +
+        '<button type="button" class="lwp-leise lwp-sonne"></button></div>' +
         '<div class="lwp-satz">Hier sind Stellen aus deinen Blättern. Du verbesserst selbst.</div>' +
         '<div class="lwp-liste"></div></div>';
       document.body.appendChild(ueber);
       document.documentElement.classList.add("lwp-offen");
       ueber.querySelector(".lwp-zu").addEventListener("click", schliessen);
+      var sonne = ueber.querySelector(".lwp-sonne");
+      function sonneMalen() {
+        var dunkel = document.documentElement.getAttribute("data-theme") === "dark";
+        sonne.textContent = dunkel ? "☀️" : "🌙";
+        var was = dunkel ? "Hell einschalten" : "Dunkel einschalten";
+        sonne.setAttribute("aria-label", was); sonne.title = was;
+      }
+      if (!schalter()) sonne.remove();
+      else {
+        sonneMalen();
+        sonne.addEventListener("click", function () { var x = schalter(); if (x) x.click(); sonneMalen(); });
+        try { sonneBeob = new MutationObserver(sonneMalen); sonneBeob.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch (e) {}
+      }
+      var inner = ueber.querySelector(".lwp-innen");
+      var fs = leiste(stand);
+      inner.insertBefore(fs.el, inner.querySelector(".lwp-liste"));
       var liste = ueber.querySelector(".lwp-liste");
-      stellen.slice().forEach(function (s) {
-        liste.appendChild(karte(s, function (id, erledigt) {
+      gruppieren(stellen.slice()).forEach(function (gr) {
+        liste.appendChild(blattKasten(gr, function (id, erledigt, sofort) {
+          if (sofort) { stand.erledigt++; fs.eins(); return; }
           if (erledigt) stellen = stellen.filter(function (x) { return x.id !== id; });
           malen();
-          if (!liste.children.length) {
+          if (!liste.querySelector(".lwp-karte")) {
             liste.innerHTML = '<div class="lwp-satz lwp-gut">' +
               (stellen.length ? "Für heute reicht das. Der Rest wartet hier auf dich."
                               : "Fertig! Du hast alles selbst nachgesehen. Toll gemacht!") + "</div>";
-            setTimeout(schliessen, 1800);
+            setTimeout(schliessen, 2400);
           }
         }));
       });
     }
     knopf.addEventListener("click", function (e) { e.preventDefault(); oeffnen(); });
-    return holen(null).then(function (j) { stellen = j.stellen || []; malen(); return stellen.length; });
+    return holen(null).then(function (j) {
+      stellen = j.stellen || [];
+      stand = { erledigt: (j.fortschritt && j.fortschritt.erledigt) || 0, gesamt: (j.fortschritt && j.fortschritt.gesamt) || stellen.length };
+      malen();
+      return stellen.length;
+    });
   }
 
   /* ---------- Aussehen: hell und dunkel (data-theme), Finger ab 44 px ---------- */
@@ -243,9 +490,9 @@
     st.textContent = [
       ".lwp{--lwp-karte:#fff;--lwp-ink:#1b1c22;--lwp-neben:#4b5160;--lwp-linie:#dfe3ee;--lwp-blau:#1d4fae;--lwp-blaubg:#e8efff;",
       "--lwp-rot:#b42318;--lwp-rotbg:#fdecec;--lwp-gelb:#fff7ed;--lwp-gelblinie:#fed7aa;--lwp-gelbink:#7a4a12;--lwp-gruen:#0b6b43;--lwp-gruenbg:#e7f6ee;",
-      "--lwp-leise:#eef1f7;color:var(--lwp-ink);font-family:ui-rounded,'SF Pro Rounded',-apple-system,system-ui,sans-serif;text-align:left}",
+      "--lwp-leise:#eef1f7;--lwp-kasten:#f6f8fc;color:var(--lwp-ink);font-family:ui-rounded,'SF Pro Rounded',-apple-system,system-ui,sans-serif;text-align:left}",
       "html[data-theme=\"dark\"] .lwp{--lwp-karte:#1d2030;--lwp-ink:#f1f2f7;--lwp-neben:#b9bfd3;--lwp-linie:#353a50;--lwp-blau:#a9c1ff;--lwp-blaubg:#1e2b4d;",
-      "--lwp-rot:#ffb4ab;--lwp-rotbg:#3a1a1a;--lwp-gelb:#2c2414;--lwp-gelblinie:#6b4f1e;--lwp-gelbink:#fde7c2;--lwp-gruen:#8be0b4;--lwp-gruenbg:#12301f;--lwp-leise:#2a2e40}",
+      "--lwp-rot:#ffb4ab;--lwp-rotbg:#3a1a1a;--lwp-gelb:#2c2414;--lwp-gelblinie:#6b4f1e;--lwp-gelbink:#fde7c2;--lwp-gruen:#8be0b4;--lwp-gruenbg:#12301f;--lwp-leise:#2a2e40;--lwp-kasten:#181c2b}",
       ".lwp-hoch{background:var(--lwp-blaubg);border:2px solid var(--lwp-blau);border-radius:22px;padding:16px;margin:14px 0}",
       ".lwp-titel{font-weight:800;font-size:20px;margin:0 0 4px}",
       ".lwp-satz{font-size:16px;line-height:1.4;margin:0 0 12px;color:var(--lwp-ink)}",
@@ -285,7 +532,53 @@
       "html[data-theme=\"dark\"] .lwp-innen{background:#151a2c}",
       ".lwp-oben{display:flex;align-items:center;gap:12px;margin-bottom:6px}",
       ".lwp-oben .lwp-titel{margin:0}",
-      "html.lwp-offen{overflow:hidden}"
+      "html.lwp-offen{overflow:hidden}",
+      /* Unten Platz für den 💬-Knopf (52 px + 14 px Rand): die letzte Karte bleibt frei. */
+      ".lwp-ueber{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}",
+      /* In der Einblendung sitzt der Sonnenknopf oben; der schwebende ginge über die Karten. */
+      "html.lwp-offen #farbschalter,html.lwp-offen #farbschalter-tafel,html.lwp-gross-offen #farbschalter,html.lwp-gross-offen #farbschalter-tafel{display:none!important}",
+      "html.lwp-gross-offen #melde-knopf{display:none!important}",
+      ".lwp-oben .lwp-titel{flex:1 1 auto;min-width:0}",
+      ".lwp .lwp-sonne{flex:none;width:48px;padding:0;font-size:22px;border:2px solid var(--lwp-linie)}",
+      /* Blattkasten */
+      ".lwp-blattkasten{background:var(--lwp-kasten);border:1px solid var(--lwp-linie);border-left:8px solid var(--lwp-fach,#64748b);border-radius:20px;padding:12px;margin:0 0 14px}",
+      ".lwp-blattkopf{display:flex;gap:12px;align-items:center;margin:0 0 10px}",
+      ".lwp .lwp-vorschau{position:relative;flex:none;width:72px;height:92px;min-height:0;padding:0;border-radius:12px;overflow:hidden;",
+      "background:var(--lwp-leise);border:2px solid var(--lwp-linie);display:grid;place-items:center;font-size:30px}",
+      ".lwp-vorschau img{width:100%;height:100%;object-fit:cover;display:block}",
+      ".lwp-vorschau img[hidden]{display:none}",
+      ".lwp-lupe{position:absolute;right:3px;bottom:3px;font-size:14px;line-height:1;background:rgba(255,255,255,.9);border-radius:999px;padding:3px}",
+      ".lwp-blattinfo{min-width:0;flex:1 1 auto}",
+      ".lwp-fach{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:800;border:2px solid var(--lwp-fach,#64748b);",
+      "border-radius:999px;padding:3px 10px;color:var(--lwp-ink)}",
+      ".lwp-fachpunkt{width:10px;height:10px;border-radius:50%;background:var(--lwp-fach,#64748b);display:inline-block}",
+      ".lwp-blattinfo .lwp-blatt{display:block;font-size:16px;font-weight:700;color:var(--lwp-ink);margin:6px 0 2px;overflow-wrap:anywhere}",
+      ".lwp-seiten{font-size:14px;color:var(--lwp-neben)}",
+      ".lwp-blattstellen .lwp-karte:last-child{margin-bottom:0}",
+      /* Beweis bei der Pinnwand */
+      ".lwp-beleg{margin:8px 0;font-size:16px;line-height:1.4}",
+      ".lwp-beleg-satz{font-weight:600;margin:0 0 6px}",
+      ".lwp-beleg-reihe{display:flex;gap:10px;align-items:flex-start}",
+      ".lwp-zitat{margin:0;flex:1 1 auto;min-width:0;border-left:4px solid var(--lwp-gelblinie);background:var(--lwp-gelb);color:var(--lwp-gelbink);border-radius:10px;padding:8px 12px;overflow-wrap:anywhere}",
+      ".lwp-nr{font-weight:800}",
+      /* Fortschritt */
+      ".lwp-fortschritt{margin:0 0 14px}",
+      ".lwp-fs-text{font-size:17px;font-weight:800;margin:0 0 6px;color:var(--lwp-ink)}",
+      ".lwp-fs-fertig .lwp-fs-text{color:var(--lwp-gruen)}",
+      ".lwp-fs-bahn{height:14px;border-radius:999px;background:var(--lwp-leise);border:1px solid var(--lwp-linie);overflow:hidden}",
+      ".lwp-fs-fuell{height:100%;width:0;background:var(--lwp-gruen);border-radius:999px;transition:width .4s ease}",
+      /* Großansicht */
+      ".lwp-gross{position:fixed;inset:0;z-index:2147483300;background:rgba(8,10,20,.94);display:flex;flex-direction:column;color:#fff;",
+      "padding:calc(10px + env(safe-area-inset-top,0px)) 10px calc(10px + env(safe-area-inset-bottom,0px));box-sizing:border-box}",
+      ".lwp-gross-oben{display:flex;align-items:center;gap:10px;margin:0 0 8px}",
+      ".lwp-gross-titel{flex:1 1 auto;min-width:0;font-weight:800;font-size:17px;color:#fff;overflow-wrap:anywhere}",
+      ".lwp .lwp-gross-zu{flex:none;background:#fff;color:#10142a;min-height:48px;min-width:48px}",
+      ".lwp-gross-bild{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;overflow:auto}",
+      ".lwp-gross-bild img{width:100%;height:100%;object-fit:contain;display:block}",
+      ".lwp-gross-laedt{position:absolute;font-size:16px;color:#fff}",
+      ".lwp-gross-leiste{flex:none;color:#fff;margin-top:8px}",
+      ".lwp-gross-leiste .lwseiten button{background:rgba(255,255,255,.22);color:#fff}",
+      "html.lwp-gross-offen{overflow:hidden}"
     ].join("");
     (document.head || document.documentElement).appendChild(st);
   }

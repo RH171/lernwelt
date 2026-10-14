@@ -2,7 +2,9 @@
  *
  * GET  /api/pruefreiter?kind=paul               -> offene Stellen im Bestand (Blätter ab AB)
  * GET  /api/pruefreiter?kind=paul&blatt=<id>    -> offene Stellen dieses einen Blattes (nach dem Hochladen)
- *      -> { ok, stellen: [ohne Lösung], blaetter: <Zahl der Blätter mit Stellen> }
+ *      -> { ok, stellen: [ohne Lösung], blaetter: <Zahl der Blätter mit Stellen>,
+ *           fortschritt: { erledigt, gesamt } }   (seit 14.10.2026, Runde = heutiger Tag)
+ *      📌-Stellen tragen seit 14.10.2026 beleg: { vorlage, titel, nr, aufgabe, bild }
  * GET  /api/pruefreiter?kind=paul&eltern=1      -> (nur Elternausweis) was Paul mit "Stimmt doch so"
  *      abgelegt hat, zur Kontrolle - hier MIT der nachgerechneten Lösung
  * POST /api/pruefreiter { kind, stelle, aktion: "pruefen"|"stimmt"|"gesehen"|"verbessert", antwort? }
@@ -16,9 +18,9 @@
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen, kindOk } from "./_schulstoff.js";
-import { vorlagenLesen } from "./_lehrervorlagen.js";
+import { vorlagenLesen, vorlagenBilderLesen } from "./_lehrervorlagen.js";
 import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
-         zustandLesen, zustandSchreiben } from "./_pruefreiter.js";
+         zustandLesen, zustandSchreiben, fortschritt } from "./_pruefreiter.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
@@ -69,7 +71,11 @@ export async function onRequestGet(context) {
   }
 
   const offen = offeneStellen(e.eintraege, vorlagen, zustand, blatt || null);
-  return json(200, { ok: true, stellen: offen.map(oeffentlich), blaetter: new Set(offen.map((s) => s.blatt.id)).size });
+  /* Bilder nur, wenn es überhaupt eine 📌-Stelle gibt - sonst ein Lesevorgang umsonst. */
+  const bilder = offen.some((s) => s.art === "pinnwand") ? await vorlagenBilderLesen(env, kind) : {};
+  return json(200, { ok: true, stellen: offen.map((s) => oeffentlich(s, bilder)),
+                     blaetter: new Set(offen.map((s) => s.blatt.id)).size,
+                     fortschritt: fortschritt(e.eintraege, vorlagen, zustand, blatt || null) });
 }
 
 export async function onRequestPost(context) {

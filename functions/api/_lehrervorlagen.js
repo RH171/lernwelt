@@ -28,6 +28,32 @@
 export const SCHLUESSEL = (kind) => "lehrervorlagen:" + kind;
 export const KINDER_MIT_VORLAGE = ["paul"];
 
+/* Bilder der Vorlagen (14.10.2026, Dennys Nachtrag "Auch bitte mit Beweis bei
+ * Pinnwand"): je Vorlage EIN Schlüssel mit dem JPEG (verkleinert, lange Kante
+ * höchstens 1600 px), dazu ein kleines Verzeichnis je Kind, damit der Server
+ * ohne Bild-Lesen weiß, welche Vorlage ein Bild hat. Eingespielt mit
+ * werkzeuge/vorlagenbilder-laden.py, ausgeliefert nur über
+ * /api/lehrervorlagen?kind=paul&bild=<vorlage-id> hinter dem Ausweis.
+ *   vorlagebild:<vorlage-id>   rohes JPEG
+ *   vorlagebilder:<kind>       { v:1, bilder: { <vorlage-id>: { sha, bytes, breite, hoehe } } } */
+export const BILD_SCHLUESSEL = (id) => "vorlagebild:" + id;
+export const BILDER_SCHLUESSEL = (kind) => "vorlagebilder:" + kind;
+export const BILD_ID = /^[a-z0-9][a-z0-9-]{0,59}$/;
+
+/* Welche Vorlagen ein Bild haben: { <id>: true }. Fehlt das Verzeichnis oder
+ * ist es kaputt: {} - dann steht das Zitat ohne Bild da. Nie ein Schreibvorgang. */
+export async function vorlagenBilderLesen(env, kind) {
+  if (!KINDER_MIT_VORLAGE.includes(String(kind || "")) || !env || !env.PAUL_KV) return {};
+  try {
+    const roh = await env.PAUL_KV.get(BILDER_SCHLUESSEL(kind));
+    const d = roh ? JSON.parse(roh) : null;
+    const aus = {};
+    if (d && d.bilder && typeof d.bilder === "object")
+      for (const id of Object.keys(d.bilder)) if (BILD_ID.test(id)) aus[id] = true;
+    return aus;
+  } catch (e) { return {}; }
+}
+
 /* Gleichwertige Namen: zählen als richtig, werden aber genannt. Bewusst klein,
  * nur Paare aus dem Bestand. Dazu kommen je Zeile die `gleich`-Einträge. */
 export const GLEICHWERTIG = [

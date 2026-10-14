@@ -201,8 +201,9 @@ export function rotText(z) {
 /* ---------- Alle Stellen eines Blattes ---------- */
 
 function blattKurz(b) {
+  /* seiten (14.10.2026): für die Vorschau und das Blättern in der Großansicht. */
   return { id: String(b.id || ""), titel: String(b.titel || "").slice(0, 80), datum: String(b.datum || ""),
-           fach: String(b.fach || ""), art: ART_NAME[b.art] || "" };
+           fach: String(b.fach || ""), art: ART_NAME[b.art] || "", seiten: Math.min(9, Math.max(1, Number(b.seiten) || 1)) };
 }
 
 /* Mit Wahrheit - nur für den Server. */
@@ -225,6 +226,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
       if (!vz || vz.unsicher || vz.frei || vz.liste) return;
       aus.push({ id: bk.id + ":p:" + x.nr, art: "pinnwand", blatt: bk, aufgabe: String(x.aufgabe || "").slice(0, 120),
                  du: String(x.paul || "").slice(0, 80), soll: vz.antwort, gleich: vz.gleich || [], eingabe: "text",
+                 /* Beweis (14.10.2026): WO es bei der Lehrerin steht - Vorlage und Zeile. */
+                 beleg: { vorlage: String(vorlage.id || ""), titel: String(vorlage.titel || "").slice(0, 80),
+                          nr: vz.nr, aufgabe: String(vz.aufgabe || "").slice(0, 160) },
                  tipp: "Auf der Vorlage deiner Lehrerin steht hier etwas anderes. Lies die Aufgabe noch einmal genau und schau in deinem Heft nach." });
     });
   }
@@ -240,18 +244,51 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
   return aus;
 }
 
-/* Was der Browser bekommt: ohne `soll`, ohne `gleich`, ohne Rohzeile. */
-export function oeffentlich(s) {
+/* Was der Browser bekommt: ohne `soll`, ohne `gleich`, ohne Rohzeile.
+   `bilder` = { <vorlage-id>: true } aus vorlagenBilderLesen(). Wird die
+   Funktion über .map() gerufen, kommt dort eine Zahl an - dann ohne Bilder. */
+export function oeffentlich(s, bilder) {
+  const bi = bilder && typeof bilder === "object" && !Array.isArray(bilder) ? bilder : {};
   const o = { id: s.id, art: s.art, blatt: s.blatt };
   if (s.art === "lehrerin") { o.zeilen = s.zeilen; return o; }
   o.aufgabe = s.aufgabe; o.du = s.du;
-  if (s.art === "pinnwand") { o.lehrerin = String(s.soll || ""); return o; }
+  if (s.art === "pinnwand") {
+    o.lehrerin = String(s.soll || "");
+    if (s.beleg) o.beleg = { ...s.beleg, bild: !!bi[s.beleg.vorlage] };
+    return o;
+  }
   o.tipp = s.tipp; o.eingabe = s.eingabe;
   return o;
 }
 
 export function imBestand(blatt) {
   return !!blatt && blatt.sichtbar !== false && String(blatt.datum || "") >= AB;
+}
+
+/* Fortschritt (14.10.2026, Dennys Wahl C · Fortschrittsleiste): "2 von 5 verbessert".
+   Die Runde ist der heutige Tag (deutsche Zeit): gesamt = offene Stellen +
+   heute erledigte Stellen im selben Bereich (Bestand oder ein Blatt).
+   So stimmt die Zahl auch, wenn Paul die Ansicht schließt und wieder
+   öffnet, und ab morgen fängt die Leiste wieder bei den offenen an - ein
+   Kind soll nicht wochenlang "40 von 45" lesen. "Stimmt doch so" zählt als
+   erledigt, die Stelle ist ja aus der Liste. */
+export function berlinTag(iso) {
+  const t = Date.parse(String(iso || ""));
+  return isNaN(t) ? "" : TAG_BERLIN.format(new Date(t));
+}
+export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt) {
+  const erl = (zustand && zustand.s) || {};
+  const heute = TAG_BERLIN.format(jetzt ? new Date(jetzt) : new Date());
+  let offen = 0, erledigt = 0;
+  for (const b of blaetter || []) {
+    if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
+    for (const s of stellenFuerBlatt(b, vorlagenDaten)) {
+      const z = erl[s.id];
+      if (!z) offen++;
+      else if (berlinTag(z.t) === heute) erledigt++;
+    }
+  }
+  return { erledigt, gesamt: offen + erledigt };
 }
 
 export function offeneStellen(blaetter, vorlagenDaten, zustand, nurBlatt) {

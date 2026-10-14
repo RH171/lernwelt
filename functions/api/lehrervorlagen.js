@@ -1,6 +1,9 @@
 /* Heft gegen die Lehrerin (13.10.2026)
  *
  * GET /api/lehrervorlagen?kind=paul
+ * GET /api/lehrervorlagen?kind=paul&bild=<vorlage-id>   (14.10.2026) das Bild der
+ *   Vorlage als JPEG, gleicher Ausweis, "private" (kein geteilter Cache). Ohne
+ *   Bild im Speicher: 404 JSON. Die Antwort ohne `bild` ist unverändert.
  *   -> { ok, vergleiche: { <blattId>: { vorlage, geprueft, richtig,
  *          abweichungen, schreibweise, gleichwertig, rot } }, medien: [...] }
  *
@@ -16,7 +19,7 @@
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen, kindOk } from "./_schulstoff.js";
-import { vorlagenLesen, blattVergleichen, vorlageFuerBlatt } from "./_lehrervorlagen.js";
+import { vorlagenLesen, blattVergleichen, vorlageFuerBlatt, BILD_SCHLUESSEL, BILD_ID, KINDER_MIT_VORLAGE } from "./_lehrervorlagen.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
@@ -30,10 +33,25 @@ async function darfRein(request, env, kind) {
 
 export async function onRequestGet(context) {
   const { request, env } = context;
-  let kind = "";
-  try { kind = String(new URL(request.url).searchParams.get("kind") || "").toLowerCase(); } catch (e) {}
+  let kind = "", bild = null;
+  try {
+    const p = new URL(request.url).searchParams;
+    kind = String(p.get("kind") || "").toLowerCase();
+    bild = p.get("bild");
+  } catch (e) {}
   if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
   if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+
+  if (bild != null) {
+    const id = String(bild);
+    if (!KINDER_MIT_VORLAGE.includes(kind) || !BILD_ID.test(id)) return json(404, { ok: false, fehler: "Kein Bild." });
+    let daten = null;
+    try { daten = await env.PAUL_KV.get(BILD_SCHLUESSEL(id), { type: "arrayBuffer" }); } catch (e) { daten = null; }
+    if (!daten || !daten.byteLength) return json(404, { ok: false, fehler: "Kein Bild." });
+    return new Response(daten, { status: 200, headers: {
+      "content-type": "image/jpeg", "cache-control": "private, max-age=3600",
+      "x-robots-tag": "noindex", "x-content-type-options": "nosniff" } });
+  }
 
   const daten = await vorlagenLesen(env, kind);
   const e = await stoffLesen(env, kind, 6);
