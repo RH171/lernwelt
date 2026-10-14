@@ -1258,6 +1258,37 @@
     return h + '</div>';
   }
 
+  /* Prüf-Reiter (14.10.2026): Stellen, bei denen Paul "Stimmt doch so" getippt hat.
+     Denny: "Stimmt doch so" markiert die Stelle für die Eltern zur Kontrolle, statt sie
+     still zu löschen. Hier steht auch die nachgerechnete Lösung - nur für Eltern. */
+  var PR = { daten: null, laedt: false };
+  function pruefKarte(){
+    if (KIND !== "paul") return "";
+    if (!PR.daten && !PR.laedt){
+      PR.laedt = true;
+      fetch("/api/pruefreiter?kind=paul&eltern=1", { credentials: "same-origin" })
+        .then(function(r){ return r.json(); })
+        .catch(function(){ return { ok: false }; })
+        .then(function(d){
+          PR.daten = (d && d.ok && Array.isArray(d.stimmtDoch)) ? d : { ok: false }; PR.laedt = false;
+          var el = document.getElementById("prKarte"); if (el) el.outerHTML = pruefKarte();
+        });
+    }
+    var h = '<div class="karte" id="prKarte"><h2>Nachgesehen: „Stimmt doch so“</h2>';
+    if (!PR.daten) return h + '<p class="unter">Einen Moment …</p></div>';
+    if (!PR.daten.ok) return h + '<p class="unter">Gerade nicht erreichbar.</p></div>';
+    var l = PR.daten.stimmtDoch;
+    h += '<p class="unter">Stellen aus Pauls Blättern, bei denen er „Stimmt doch so“ getippt hat. Noch offen bei ihm: ' + (PR.daten.offen || 0) + '.</p>';
+    if (!l.length) return h + '<p class="unter">✅ Keine.</p></div>';
+    l.forEach(function(x){
+      var b = x.blatt || {};
+      h += '<div style="margin-top:10px"><b>' + esc(x.aufgabe || "Stelle") + '</b> <span class="unter">· ' + esc(b.titel || "") +
+           (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>Paul: ' + esc(x.du || "") +
+           (x.richtig ? ' · nachgerechnet bzw. Vorlage: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
+    });
+    return h + '</div>';
+  }
+
   /* Pauls Tagesaufgabe "1×1 und Textaufgaben" (04.10.2026): die Uebersicht liegt auf eigener
      Seite, damit diese hier nicht noch eine Abfrage mehr macht. */
   function tagesrechnenKarte(){
@@ -1691,12 +1722,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
+      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + probenTermineKarte() + lehrerKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
+    h += notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +

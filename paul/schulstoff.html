@@ -29,6 +29,7 @@
 <script src="/seite-tauschen.js?v=3d5c47be"></script>
 <script src="/blatt-aufnehmen.js?v=dd7a5255"></script>
 <script src="/lehrervergleich.js?v=ca988bf4"></script>
+<script src="/pruefreiter.js"></script>
 <style>
   :root{
     --bg:#eef1f7; --karte:#fff; --ink:#1b1c22; --muted:#5b6070; --line:#e4e7f0;
@@ -133,6 +134,10 @@
        EINMAL in /blatt-aufnehmen.js. -->
   <button class="fach auf-zu" type="button" id="neues-blatt">📸 Neues Blatt</button>
   <div id="aufnehmen" class="verborgen"></div>
+  <!-- Prüf-Reiter (14.10.2026): nach dem Durchlesen "Ich habe nachgesehen" mit
+       den gefundenen Stellen (/pruefreiter.js). Steht AUSSERHALB von #aufnehmen,
+       damit es beim Zuklappen des Aufnehmens nicht mit verschwindet. -->
+  <div id="pruef-hoch"></div>
 
   <!-- Suche in der Ablage (04.10.2026, /ablage-suche.js). -->
   <div id="suche"></div>
@@ -591,7 +596,11 @@
            startet Paul selbst im Lernquiz. Hier wird nur die Liste neu
            geladen - einmal sofort, einmal, wenn das Lesen fertig ist. */
         abgelegt: function(){ laden(); },
-        fertig: function(){ laden(); }
+        fertig: function(j){
+          laden();
+          /* Prüf-Reiter: erst wenn das Blatt gelesen ist - vorher gibt es nichts nachzusehen. */
+          if (window.LWPruef && j && j.id && !j.lesenOffen) LWPruef.hochladen($("pruef-hoch"), j.id);
+        }
       });
     }
     if (zu) k.scrollIntoView({behavior:"smooth", block:"nearest"});
