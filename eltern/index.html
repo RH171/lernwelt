@@ -1261,16 +1261,23 @@
   /* Prüf-Reiter (14.10.2026): Stellen, bei denen Paul "Stimmt doch so" getippt hat.
      Denny: "Stimmt doch so" markiert die Stelle für die Eltern zur Kontrolle, statt sie
      still zu löschen. Hier steht auch die nachgerechnete Lösung - nur für Eltern. */
-  var PR = { daten: null, laedt: false };
+  /* Volllesen (15.10.2026): dieselbe Karte für alle drei Kinder, je Kind ein eigener Abruf. */
+  var PR_JE = {}, PR = { daten: null, laedt: false };
+  var PR_NAME = { paul: "Paul", helena: "Helena", leon: "Leon" };
   function pruefKarte(){
-    if (KIND !== "paul") return "";
+    if (!PR_NAME[KIND]) return "";
+    var kind = KIND;
+    PR = PR_JE[kind] = PR_JE[kind] || { daten: null, laedt: false };
+    var name = PR_NAME[kind];
     if (!PR.daten && !PR.laedt){
       PR.laedt = true;
-      fetch("/api/pruefreiter?kind=paul&eltern=1", { credentials: "same-origin" })
+      var mein = PR;
+      fetch("/api/pruefreiter?kind=" + kind + "&eltern=1", { credentials: "same-origin" })
         .then(function(r){ return r.json(); })
         .catch(function(){ return { ok: false }; })
         .then(function(d){
-          PR.daten = (d && d.ok && Array.isArray(d.stimmtDoch)) ? d : { ok: false }; PR.laedt = false;
+          mein.daten = (d && d.ok && Array.isArray(d.stimmtDoch)) ? d : { ok: false }; mein.laedt = false;
+          if (KIND !== kind) return;
           var el = document.getElementById("prKarte"); if (el) el.outerHTML = pruefKarte();
         });
     }
@@ -1278,22 +1285,46 @@
     if (!PR.daten) return h + '<p class="unter">Einen Moment …</p></div>';
     if (!PR.daten.ok) return h + '<p class="unter">Gerade nicht erreichbar.</p></div>';
     var l = PR.daten.stimmtDoch;
-    h += '<p class="unter">Stellen aus Pauls Blättern, bei denen er „Stimmt doch so“ getippt hat. Noch offen bei ihm: ' + (PR.daten.offen || 0) + '.</p>';
-    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + verbessertKarte() + nachgerechnetKarte() + '</div>';
+    h += '<p class="unter">Stellen aus ' + name + 's Blättern, bei denen ' + (kind === "helena" ? "sie" : "er") + ' „Stimmt doch so“ getippt hat. Noch offen: ' + (PR.daten.offen || 0) + '.</p>';
+    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + verbessertKarte() + nachgerechnetKarte() + volllesenKarte() + '</div>';
     l.forEach(function(x){
       var b = x.blatt || {};
       h += '<div style="margin-top:10px"><b>' + esc(x.aufgabe || "Stelle") + '</b> <span class="unter">· ' + esc(b.titel || "") +
-           (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>Paul: ' + esc(x.du || "") +
-           (x.richtig ? ' · nachgerechnet bzw. Vorlage: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
+           (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>' + name + ': ' + esc(x.du || "") +
+           (x.richtig ? ' · nachgerechnet bzw. Quelle: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
     });
-    return h + verbessertKarte() + nachgerechnetKarte() + '</div>';
+    return h + verbessertKarte() + nachgerechnetKarte() + volllesenKarte() + '</div>';
+  }
+  /* Volllesen (15.10.2026, Denny: „wirklich jedes Dokument gelesen zu 100 %“): je Blatt,
+     ob es Feld für Feld vollständig gelesen ist (Soll gegen Ist), wie viele Einträge eine
+     eindeutige Prüfquelle hatten und was die zweite Lesung nicht bestätigt hat. Ein
+     unvollständig gelesenes Blatt steht hier laut (❌). Alter Server: kein Feld. */
+  function volllesenKarte(){
+    if (!PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.volllesen)) return "";
+    var l = PR.daten.volllesen;
+    var voll = l.filter(function(x){ return x.voll; }).length, offen = l.filter(function(x){ return x.offen; }).length;
+    var np = 0, pb = 0;
+    l.forEach(function(x){ np += x.nichtPruefbar || 0; pb += x.pruefbar || 0; });
+    var h = '<div style="margin-top:14px" id="prVolllesen"><b>Ganz gelesen · Feld für Feld</b>' +
+      '<p class="unter">' + voll + ' von ' + l.length + ' Blättern vollständig gelesen' + (offen ? ', ' + offen + ' noch nicht' : '') +
+      '. Einträge mit Prüfquelle auf dem Blatt: ' + pb + ' · gelesen, nicht prüfbar: ' + np + '.</p>';
+    l.forEach(function(x){
+      var b = x.blatt || {};
+      var zeilen = [];
+      if (!x.offen && !x.voll) zeilen.push('❌ <b>unvollständig gelesen</b>: ' + x.ist + ' von ' + x.soll + ' Feldern' + ((x.fehlt || []).length ? ' (' + esc(x.fehlt.join("; ")) + ')' : ''));
+      (x.ungeprueft || []).forEach(function(r){ zeilen.push('⚪ ungeprüft (zweite Lesung anders): ' + esc(r)); });
+      if (!zeilen.length) return;
+      h += '<div style="margin-top:8px">' + esc(b.titel || "") + (b.datum ? ' <span class="unter">· ' + esc(kurzDatum(b.datum)) + '</span>' : '') +
+           '<br>' + zeilen.join('<br>') + '</div>';
+    });
+    return h + '</div>';
   }
   /* Nachgerechnet (14.10.2026): Jedes Matheblatt wird Feld für Feld abgeschrieben
      und im Code nachgerechnet. Hier steht, ob das vollständig gelang (Soll gegen
      Ist), welche Fehler auch nach der roten Korrektur bleiben und was die zweite
      Lesung nicht bestätigt hat (Paul sieht das nicht). Alter Server: kein Feld. */
   function nachgerechnetKarte(){
-    if (KIND !== "paul" || !PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.nachgerechnet)) return "";
+    if (!PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.nachgerechnet)) return "";
     var l = PR.daten.nachgerechnet;
     var voll = l.filter(function(x){ return x.voll; }).length, offen = l.filter(function(x){ return x.offen; }).length;
     var h = '<div style="margin-top:14px" id="prNachgerechnet"><b>Nachgerechnet · Feld für Feld</b>' +
@@ -1303,7 +1334,7 @@
       var zeilen = [];
       if (!x.offen && !x.voll) zeilen.push('❌ <b>unvollständig nachgerechnet</b>: ' + x.ist + ' von ' + x.soll + ' Feldern (' + esc((x.fehlt || []).join("; ")) + ')');
       (x.rotFalsch || []).forEach(function(r){
-        zeilen.push('⚠️ Auch nach der roten Korrektur stimmt das Ergebnis nicht: ' + esc(r.zeile) + (r.paulGut ? ' (Pauls eigene Zahl stimmte)' : ''));
+        zeilen.push('⚠️ Auch nach der roten Korrektur stimmt das Ergebnis nicht: ' + esc(r.zeile) + (r.paulGut ? ' (' + (PR_NAME[KIND] || '') + 's eigene Zahl stimmte)' : ''));
       });
       (x.ungeprueft || []).forEach(function(r){ zeilen.push('⚪ ungeprüft (zweite Lesung anders): ' + esc(r)); });
       if (!zeilen.length) return;
@@ -1317,11 +1348,11 @@
      bleibt). Hier steht nachvollziehbar, was vorher dastand. Ein alter Server
      liefert kein Feld - dann steht die Liste nicht da. */
   function verbessertKarte(){
-    if (KIND !== "paul" || !PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.verbessertClaude)) return "";
+    if (!PR.daten || !PR.daten.ok || !Array.isArray(PR.daten.verbessertClaude)) return "";
     var l = PR.daten.verbessertClaude;
-    var QUELLE = { pinnwand: "Vorlage der Lehrerin", nachgerechnet: "nachgerechnet", lehrerin: "rot von der Lehrerin" };
+    var QUELLE = { pinnwand: "Vorlage der Lehrerin", nachgerechnet: "nachgerechnet", lehrerin: "rot von der Lehrerin", nachgesehen: "Quelle auf dem Blatt" };
     var h = '<div style="margin-top:14px" id="prVerbessert"><b>Verbessert · durch Claude</b>' +
-      '<p class="unter">Paul hat diese Stellen in seinem Heft verbessert. Claude hat sie im gespeicherten Blatt berichtigt – das Foto bleibt, wie es war.</p>';
+      '<p class="unter">' + (PR_NAME[KIND] || '') + ' hat diese Stellen im Heft verbessert. Claude hat sie im gespeicherten Blatt berichtigt – das Foto bleibt, wie es war.</p>';
     if (!l.length) return h + '<p class="unter">Noch keine.</p></div>';
     l.forEach(function(x){
       var b = x.blatt || {};

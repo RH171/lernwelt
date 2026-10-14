@@ -35,17 +35,30 @@
  * GET ?eltern=1 liefert zusätzlich `nachgerechnet: [{blatt, voll, soll, ist, fehlt, fehler,
  *      ungeprueft, rotFalsch}]` - auch „unvollständig nachgerechnet“ steht dort.
  *
- * Nur Paul (Dennys Auftrag). Für andere Kinder antwortet der Weg leer, damit
- * eine Seite, die ihn trotzdem fragt, einfach nichts zeigt.
+ * Volllesen (15.10.2026, _volllesen.js, anleitung/125): alle drei Kinder, alle Fächer.
+ *   GET liefert `volllesen: [<blatt-id>]` = gelesene Blätter im Bereich ohne (gültige)
+ *       Abschrift des ganzen Blattes; Stellen 🔤 „Schau genau hin“ (art "schreiben",
+ *       Kennung <blatt>:v:<kurz>) - nur mit eindeutiger Quelle und bestätigter Zweitlesung.
+ * POST /api/pruefreiter { kind, aktion: "volllesen", blatt }
+ *      -> 1-3 Modellaufrufe (bei Mathe zusätzlich Nachrechnen, falls es fehlt),
+ *         EIN Schreibvorgang. Kostenriegel: nur, wenn die Abschrift fehlt, halb ist
+ *         (`offen`) oder älter als das Foto.
+ *      -> { ok, volllesen: true, stellen: <Zahl neuer 🔤/🧮> }
+ * GET ?eltern=1 liefert zusätzlich `volllesen: [{blatt, voll, soll, ist, fehlt, mitKind,
+ *      pruefbar, nichtPruefbar, fehler, ungeprueft}]` - „unvollständig gelesen“ steht dort.
+ *
+ * Bis 14.10.2026 nur Paul; seit dem Volllesen alle drei Kinder (KINDER_MIT_PRUEFREITER).
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen, kindOk } from "./_schulstoff.js";
 import { stoffBild } from "./_schulstoff.js";
 import { vorlagenLesen, vorlagenBilderLesen, vorlageFuerBlatt, BILD_SCHLUESSEL } from "./_lehrervorlagen.js";
 import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
-         zustandLesen, zustandSchreiben, fortschritt, imBestand, brauchtNachrechnen, nachrechenStand } from "./_pruefreiter.js";
+         zustandLesen, zustandSchreiben, fortschritt, imBestand, brauchtNachrechnen, nachrechenStand,
+         brauchtVolllesen, volllesStand, optFuer } from "./_pruefreiter.js";
 import { nachrechnen } from "./_nachrechnen.js";
-import { nachgerechnetSetzen } from "./_schulstoff.js";
+import { volllesen, fortsetzbar, vokabelnImFach } from "./_volllesen.js";
+import { nachgerechnetSetzen, abschriftenSetzen } from "./_schulstoff.js";
 import { kreiseLesen, kreiseSchreiben, fehltOrt, ortFuer, vorlageOrt, zieleFuerStelle, zielFuerVorlage,
          orten, orteVerwerfen } from "./_fehlerkreis.js";
 import { korrekturFuer, korrekturSetzen, gruenFuer } from "./_korrektur.js";
@@ -87,7 +100,7 @@ export async function onRequestGet(context) {
   if (p.get("eltern") === "1") {
     if (!(await istEltern(request, env))) return json(401, { ok: false, fehler: "Nur für Eltern." });
     const alle = {};
-    for (const b of e.eintraege || []) for (const s of stellenFuerBlatt(b, vorlagen)) alle[s.id] = s;
+    for (const b of e.eintraege || []) for (const s of stellenFuerBlatt(b, vorlagen, optFuer(e.eintraege, b))) alle[s.id] = s;
     const liste = Object.keys(zustand.s).filter((id) => zustand.s[id].z === "stimmt").map((id) => {
       const s = alle[id], z = zustand.s[id];
       return { id, wann: z.t || "", blatt: s ? s.blatt : { id: id.split(":")[0] }, aufgabe: s ? s.aufgabe : "",
@@ -109,8 +122,15 @@ export async function onRequestGet(context) {
       if (!st) continue;
       nachgerechnet.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "" }, ...st });
     }
+    /* Volllesen (15.10.2026): je Blatt, wie vollständig es gelesen ist. */
+    const gelesen = [];
+    for (const b of e.eintraege || []) {
+      if (b.sichtbar === false || !Array.isArray(b.inhalt) || !b.inhalt.length) continue;
+      const st = volllesStand(b, optFuer(e.eintraege, b).vokabeln);
+      gelesen.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "", fach: b.fach || "" }, ...st });
+    }
     return json(200, { ok: true, stimmtDoch: liste, offen: offen.length, verbessertClaude: verbessert.slice(0, 40),
-                       nachgerechnet: nachgerechnet.slice(0, 60) });
+                       nachgerechnet: nachgerechnet.slice(0, 60), volllesen: gelesen.slice(0, 160) });
   }
 
   const offen = offeneStellen(e.eintraege, vorlagen, zustand, blatt || null);
@@ -122,8 +142,12 @@ export async function onRequestGet(context) {
     ? [...new Set(offen.filter((s) => fehltOrt(kreise, s) || belegFehlt(kreise, s, bilder)).map((s) => s.blatt.id))] : [];
   const nachr = env.ANTHROPIC_API_KEY ? (e.eintraege || []).filter((b) =>
     (blatt ? b.id === blatt : imBestand(b)) && Array.isArray(b.inhalt) && b.inhalt.length && brauchtNachrechnen(b)).map((b) => b.id) : [];
+  /* Volllesen (15.10.2026): gelesene Blätter ohne ganze Abschrift. */
+  const voll = env.ANTHROPIC_API_KEY ? (e.eintraege || []).filter((b) =>
+    (blatt ? b.id === blatt : imBestand(b)) && Array.isArray(b.inhalt) && b.inhalt.length && brauchtVolllesen(b)).map((b) => b.id) : [];
   return json(200, { ok: true, stellen: offen.map((s) => oeffentlich(s, bilder, kreise)),
                      ...(nachr.length ? { nachrechnen: nachr.slice(0, 4) } : {}),
+                     ...(voll.length ? { volllesen: voll.slice(0, 4) } : {}),
                      blaetter: new Set(offen.map((s) => s.blatt.id)).size,
                      fortschritt: fortschritt(e.eintraege, vorlagen, zustand, blatt || null),
                      ...(orten_.length ? { orten: orten_.slice(0, 6) } : {}) });
@@ -153,7 +177,7 @@ async function ortenAktion(env, kind, blattId) {
   if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
   const vorlagen = await vorlagenLesen(env, kind);
   const zustand = await zustandLesen(env, kind);
-  const stellen = stellenFuerBlatt(blatt, vorlagen).filter((s) => !zustand.s[s.id]);
+  const stellen = stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt)).filter((s) => !zustand.s[s.id]);
   const kreise = await kreiseLesen(env, kind);
   /* Neues Foto (14.10.2026): Orte vom alten Foto dieses Blattes verwerfen.
      Gespeichert wird das nur mit dem Schreibvorgang der neuen Ortung - bis
@@ -229,8 +253,47 @@ async function nachrechnenAktion(env, kind, blattId) {
   if (!r.ok) return json(503, { ok: false, fehler: "Nachrechnen ging gerade nicht (" + r.fehler + ")." });
   const w = await nachgerechnetSetzen(env, kind, blattId, r.nachgerechnet);
   if (!w.ok) return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken." });
-  const neu = stellenFuerBlatt({ ...blatt, nachgerechnet: r.nachgerechnet }, await vorlagenLesen(env, kind)).filter((s) => s.id.includes(":n:"));
+  const neu = stellenFuerBlatt({ ...blatt, nachgerechnet: r.nachgerechnet }, await vorlagenLesen(env, kind), optFuer(e.eintraege, blatt)).filter((s) => s.id.includes(":n:"));
   return json(200, { ok: true, nachgerechnet: true, stellen: neu.length });
+}
+
+/* Volllesen nachholen (15.10.2026): das ganze Blatt Feld für Feld, bei Mathe auch das
+   Nachrechnen, wenn es fehlt - EIN Schreibvorgang. Ohne Ergebnis wird nichts geschrieben.
+   Unter der Leitungsgrenze (Kapitel 021): höchstens rund 85 s, ein ausgelassener Schritt
+   wird als `offen` gespeichert und beim nächsten Aufruf fortgesetzt. */
+async function volllesenAktion(env, kind, blattId) {
+  if (!env.ANTHROPIC_API_KEY) return json(503, { ok: false, fehler: "Auf dem Server fehlt der Schlüssel." });
+  const e = await stoffLesen(env, kind, MONATE_BLATT);
+  if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
+  const blatt = (e.eintraege || []).find((b) => b.id === blattId);
+  if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+  const vl = brauchtVolllesen(blatt), nr = blatt.fach === "mathe" && brauchtNachrechnen(blatt);
+  if (!vl && !nr) return json(200, { ok: true, schon: true });
+  const seiten = [];
+  for (let i = 0; i < Math.min(4, Number(blatt.seiten) || 1); i++) {
+    const b = await stoffBild(env, blattId, i);
+    if (!b) break;
+    seiten.push(b);
+  }
+  if (!seiten.length) return json(404, { ok: false, fehler: "Zu dem Blatt liegt kein Bild da." });
+  const start = Date.now();
+  const [rv, rn] = await Promise.all([
+    vl ? volllesen(env.ANTHROPIC_API_KEY, seiten, { fach: blatt.fach, kind, ohneRechnen: blatt.fach === "mathe",
+                                                     vokabeln: vokabelnImFach(e.eintraege, blatt.fach, blatt.id),
+                                                     grenze: 80000, frist: start + 85000 }, fortsetzbar(blatt) || undefined) : null,
+    nr ? nachrechnen(env.ANTHROPIC_API_KEY, seiten, { grenze: 80000 }) : null,
+  ]);
+  const felder = {};
+  if (rv && rv.ok) felder.volllesen = rv.volllesen;
+  if (rn && rn.ok) felder.nachgerechnet = rn.nachgerechnet;
+  if (!felder.volllesen && !felder.nachgerechnet)
+    return json(503, { ok: false, fehler: "Lesen ging gerade nicht (" + ((rv && rv.fehler) || (rn && rn.fehler) || "?") + ")." });
+  const w = await abschriftenSetzen(env, kind, blattId, felder);
+  if (!w.ok) return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken." });
+  const mit = { ...blatt, ...felder };
+  const neu = stellenFuerBlatt(mit, await vorlagenLesen(env, kind), optFuer(e.eintraege, mit)).filter((s) => /:[nv]:/.test(s.id));
+  return json(200, { ok: true, volllesen: !!felder.volllesen, nachgerechnet: !!felder.nachgerechnet, stellen: neu.length,
+                     ...(felder.volllesen && felder.volllesen.offen ? { offen: true } : {}) });
 }
 
 /* Verbessert durch Claude: Zeile im Blatt berichtigen, mit dem Ort der Stelle
@@ -260,6 +323,11 @@ export async function onRequestPost(context) {
     if (!/^[a-z0-9]+$/.test(b)) return json(400, { ok: false, fehler: "Welches Blatt denn?" });
     return ortenAktion(env, kind, b);
   }
+  if (String(d.aktion || "") === "volllesen") {
+    const b = String(d.blatt || "").slice(0, 40);
+    if (!/^[a-z0-9]+$/.test(b)) return json(400, { ok: false, fehler: "Welches Blatt denn?" });
+    return volllesenAktion(env, kind, b);
+  }
   if (String(d.aktion || "") === "nachrechnen") {
     const b = String(d.blatt || "").slice(0, 40);
     if (!/^[a-z0-9]+$/.test(b)) return json(400, { ok: false, fehler: "Welches Blatt denn?" });
@@ -267,7 +335,7 @@ export async function onRequestPost(context) {
   }
   const id = String(d.stelle || "").slice(0, 80);
   const aktion = String(d.aktion || "");
-  if (!/^[a-z0-9]+:[rpln]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });
+  if (!/^[a-z0-9]+:[rplnv]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });
   if (!["pruefen", "stimmt", "gesehen", "verbessert"].includes(aktion)) return json(400, { ok: false, fehler: "Unbekannte Aktion." });
 
   const e = await stoffLesen(env, kind, MONATE_BLATT);
@@ -275,7 +343,7 @@ export async function onRequestPost(context) {
   const blattId = id.split(":")[0];
   const blatt = (e.eintraege || []).find((b) => b.id === blattId);
   const vorlagen = await vorlagenLesen(env, kind);
-  const s = blatt ? stellenFuerBlatt(blatt, vorlagen).find((x) => x.id === id) : null;
+  const s = blatt ? stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt)).find((x) => x.id === id) : null;
   if (!s) return json(404, { ok: false, fehler: "Diese Stelle gibt es nicht mehr." });
 
   const zustand = await zustandLesen(env, kind);

@@ -71,6 +71,9 @@ export function korrekturFuer(s, jetzt) {
     korrigiert = String(s.soll);
   } else if (s.art === "rechnen" && s.typ === "rest") {
     korrigiert = s.soll.q + " R " + s.soll.r;
+  } else if (s.art === "schreiben") {
+    /* Volllesen (15.10.2026): die Stelle steht nur in der Abschrift - Verlauf und Grün. */
+    korrigiert = String(s.soll || "");
   } else if (s.art === "pinnwand") {
     korrigiert = String(s.soll || "");
     const k = kindSchrieb(zeile);
@@ -78,11 +81,11 @@ export function korrekturFuer(s, jetzt) {
     else if (s.du) neu = wortErsetzen(zeile, s.du, korrigiert);
   } else return null;
   if (!korrigiert) return null;
-  const quelle = s.art === "pinnwand" ? "pinnwand" : "nachgerechnet";
+  const quelle = s.art === "pinnwand" ? "pinnwand" : s.art === "schreiben" ? "nachgesehen" : "nachgerechnet";
   const out = { ...grund, quelle, war: String(s.du || "").slice(0, 120), korrigiert: korrigiert.slice(0, 120) };
   /* Nachrechnen (14.10.2026): Die Stelle steht nicht als Zeile im Inhalt, nur in
      der Abschrift - also nur Verlauf und grüner Kreis, keine Karten, keine Quizfragen. */
-  if (s.nachgerechnet) { out.eng = true; return out; }
+  if (s.nachgerechnet || s.volllesen) { out.eng = true; return out; }
   if (neu && neu !== zeile && !MARKE_RE.test(zeile)) {
     out.vorher = zeile.slice(0, 200);
     out.zeile = (neu.replace(/\s+/g, " ").trim() + " " + MARKE).slice(0, 200);

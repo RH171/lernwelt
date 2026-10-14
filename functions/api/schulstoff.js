@@ -25,6 +25,7 @@ import { tippOk, nebendetail } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import { korrekturenFuerBrowser } from "./_korrektur.js";
 import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
+import { volllesen, brauchtVolllesen, vokabelnImFach } from "./_volllesen.js";
 import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
 
 /* Nachrechnen beim Durchlesen (14.10.2026): läuft NEBEN dem Lesen, gewartet wird
@@ -338,12 +339,16 @@ async function blattNachlesen(context) {
  * Sie wirft nie - der Grund landet am Eintrag (titelWarum), damit niemand
  * vor einem leeren Feld ohne Hinweis steht. */
 /* Die Themen, die es im Fach schon gibt - fuer blattLesen(). Ein Lesefehler
-   ist kein Grund, das Blatt nicht zu lesen: dann eben ohne Vorgabe. */
-async function vorhandeneThemen(env, kind, fach) {
+   ist kein Grund, das Blatt nicht zu lesen: dann eben ohne Vorgabe.
+   Volllesen (15.10.2026): aus demselben Lesevorgang die gedruckten Vokabeln des
+   Fachs (Prüfquelle „vokabel“) - kein zweiter Lesevorgang. */
+async function vorhandeneThemen(env, kind, fach, mitVokabeln) {
   try {
     const b = await stoffLesen(env, kind, 13);
-    return b.ok ? themenImFach(b.eintraege, fach || "") : [];
-  } catch (e) { return []; }
+    if (!b.ok) return mitVokabeln ? { themen: [], vokabeln: [] } : [];
+    const themen = themenImFach(b.eintraege, fach || "");
+    return mitVokabeln ? { themen, vokabeln: vokabelnImFach(b.eintraege, fach || "", "") } : themen;
+  } catch (e) { return mitVokabeln ? { themen: [], vokabeln: [] } : []; }
 }
 
 async function blattAuswerten(env, kind, eintrag, seiten, heute) {
@@ -372,11 +377,21 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
        * Der INHALT dagegen wird ueber alle Seiten aneinandergehaengt. Die
        * beleg_nr des Quiz zaehlt einfach weiter - am Riegel aendert sich
        * dadurch nichts. */
-      /* Nachrechnen (14.10.2026, Kapitel 123): Feld für Feld, nur Pauls Matheblätter. */
+      /* Nachrechnen (14.10.2026, Kapitel 123): Feld für Feld - seit dem Volllesen
+         (15.10.2026) für die Matheblätter aller drei Kinder. */
       const nrStart = Date.now();
       const nrLauf = KINDER_MIT_PRUEFREITER.includes(kind) && eintrag.fach === "mathe" && brauchtNachrechnen(eintrag)
         ? nachrechnen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { grenze: 45000 }).catch(() => null) : null;
-      const themen = await vorhandeneThemen(env, kind, eintrag.fach);
+      const tv = await vorhandeneThemen(env, kind, eintrag.fach, true);
+      const themen = tv.themen;
+      /* Volllesen (15.10.2026, anleitung/125): das GANZE Blatt Feld für Feld, jedes Fach,
+         jedes Kind. Läuft neben dem Durchlesen; Matheblätter ohne die Rechenfelder
+         (die stehen in `nachgerechnet`). Dauert es länger als die Grenze, holt es die
+         Seite nach (POST /api/pruefreiter aktion "volllesen"). */
+      const vlLauf = KINDER_MIT_PRUEFREITER.includes(kind) && brauchtVolllesen(eintrag)
+        ? volllesen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { fach: eintrag.fach, kind, ohneRechnen: eintrag.fach === "mathe",
+                                                                 vokabeln: tv.vokabeln, grenze: 50000, frist: nrStart + NACHRECHNEN_GRENZE })
+            .catch(() => null) : null;
       const alle = await Promise.all(
         seiten.map((s) => blattLesen(env, s, kind, themen).catch(() => null))
       );
@@ -443,14 +458,16 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
         const z = lesungenZusammen(eintrag.inhaltAlt, gelesen.inhalt, eintrag.kartenAlt, karten);
         zeilenNeu = z.zeilen; karten = z.karten;
       }
-      let nachgerechnet = null;
-      if (nrLauf) {
+      let nachgerechnet = null, vollGelesen = null;
+      const warten = (lauf) => {
         const rest = Math.max(0, NACHRECHNEN_GRENZE - (Date.now() - nrStart));
-        const r = await Promise.race([nrLauf, new Promise((ok) => setTimeout(() => ok(null), rest))]);
-        if (r && r.ok) nachgerechnet = r.nachgerechnet;
-      }
-      if ((zeilenNeu && zeilenNeu.length) || karten.length || nachgerechnet) {
-        await inhaltSetzen(env, kind, eintrag.id, zeilenNeu, karten, gelesen.sorte, halten, nachgerechnet);
+        return lauf ? Promise.race([lauf, new Promise((ok) => setTimeout(() => ok(null), rest))]) : Promise.resolve(null);
+      };
+      const [rn, rv] = await Promise.all([warten(nrLauf), warten(vlLauf)]);
+      if (rn && rn.ok) nachgerechnet = rn.nachgerechnet;
+      if (rv && rv.ok) vollGelesen = rv.volllesen;
+      if ((zeilenNeu && zeilenNeu.length) || karten.length || nachgerechnet || vollGelesen) {
+        await inhaltSetzen(env, kind, eintrag.id, zeilenNeu, karten, gelesen.sorte, halten, nachgerechnet, vollGelesen);
       }
       /* Das Thema (30.09.2026): vergibt das Modell, das Kind bestaetigt nichts. */
       /* Nach einer neu fotografierten Seite bleibt das vergebene Thema (02.10.2026). */
@@ -1278,9 +1295,10 @@ async function blattLesen(env, seite, kind, themen) {
 }
 
 function ohneAbschrift(b) {
-  if (!b || !b.nachgerechnet) return b;
+  if (!b || (!b.nachgerechnet && !b.volllesen)) return b;
   const c = { ...b };
   delete c.nachgerechnet;
+  delete c.volllesen;   // Volllesen (15.10.2026): bis zu 500 Zeilen je Blatt, braucht kein Browser
   return c;
 }
 

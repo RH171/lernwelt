@@ -613,7 +613,8 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
  * zwei. */
 /* nachgerechnet (14.10.2026, _nachrechnen.js): die Feld-für-Feld-Abschrift eines
    Matheblattes - im selben Schreibvorgang wie der Inhalt, kein zusätzlicher. */
-export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten, nachgerechnet) {
+/* volllesen (15.10.2026, _volllesen.js): die Abschrift des ganzen Blattes - ebenfalls im selben Schreibvorgang. */
+export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten, nachgerechnet, volllesen) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   /* Handgeschriebenes zuerst - hier steht der ZWEITE Deckel (14), nachdem
      inhalteZusammen() schon bei INHALT_MAX gekuerzt hat. Ohne diese Zeile
@@ -628,7 +629,8 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
   const gutSorte = SORTEN[sorte] ? sorte : "";
   const hatKarten = Array.isArray(karten) && karten.length > 0;
   const nr = nachgerechnet && typeof nachgerechnet === "object" && Array.isArray(nachgerechnet.z) ? nachgerechnet : null;
-  if (!zeilen.length && !hatKarten && !gutSorte && !nr) return { ok: true, nichts: true };
+  const vl = volllesen && typeof volllesen === "object" && Array.isArray(volllesen.z) ? volllesen : null;
+  if (!zeilen.length && !hatKarten && !gutSorte && !nr && !vl) return { ok: true, nichts: true };
 
   const heute = heuteBerlin();
   for (let i = 0; i < 4; i++) {
@@ -646,6 +648,7 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
     if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, KARTEN_MAX);
     if (halten) { delete liste[treffer].inhaltAlt; delete liste[treffer].kartenAlt; }
     if (nr) liste[treffer].nachgerechnet = nr;
+    if (vl) liste[treffer].volllesen = vl;
     /* Korrekturen halten (14.10.2026, _korrekturhalt.js): "verbessert · durch
        Claude" gilt auch nach dem Neueinlesen - im selben Schreibvorgang. */
     let halt = null;
@@ -662,7 +665,15 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
 
 /* Nachrechnen nachgeholt (Startseite, Hochladen ohne Ergebnis): EIN Schreibvorgang. */
 export async function nachgerechnetSetzen(env, kind, id, nachgerechnet) {
-  if (!kindOk(kind) || !env || !env.PAUL_KV || !nachgerechnet) return { ok: false };
+  return abschriftenSetzen(env, kind, id, { nachgerechnet });
+}
+/* Volllesen (15.10.2026): Abschrift(en) eines Blattes nachgeholt - `volllesen` und/oder
+   `nachgerechnet` in EINEM Schreibvorgang. */
+export async function abschriftenSetzen(env, kind, id, felder) {
+  const f = felder || {};
+  const nachgerechnet = f.nachgerechnet && Array.isArray(f.nachgerechnet.z) ? f.nachgerechnet : null;
+  const volllesen = f.volllesen && Array.isArray(f.volllesen.z) ? f.volllesen : null;
+  if (!kindOk(kind) || !env || !env.PAUL_KV || (!nachgerechnet && !volllesen)) return { ok: false };
   const heute = heuteBerlin();
   for (let i = 0; i < 14; i++) {
     const d = new Date(heute + "T12:00:00Z");
@@ -674,7 +685,8 @@ export async function nachgerechnetSetzen(env, kind, id, nachgerechnet) {
     if (liste === KAPUTT) return { ok: false };
     const t = liste.findIndex((e) => e.id === id);
     if (t < 0) continue;
-    liste[t].nachgerechnet = nachgerechnet;
+    if (nachgerechnet) liste[t].nachgerechnet = nachgerechnet;
+    if (volllesen) liste[t].volllesen = volllesen;
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); } catch (e) { return { ok: false }; }
     return { ok: true };
   }

@@ -111,6 +111,11 @@ export function zieleFuerStelle(s) {
   if (s.art === "rechnen" && s.typ === "liste")
     return [{ id: s.id, text: wo + "die Aufgabe \"" + (s.liste === "vielfache" ? "Vielfache" : "Teiler") + " von " + s.n +
       "\": dahinter hat das Kind " + JSON.stringify(s.du) + " geschrieben. Das Rechteck umfasst die Zahlen des Kindes." }];
+  /* Volllesen (15.10.2026): ein Wort, das das Kind geschrieben hat. */
+  if (s.art === "schreiben")
+    return [{ id: s.id, text: wo + (s.quelle === "abschrift" ? "in der Abschrift des Kindes " : "im Feld " + JSON.stringify(String(s.aufgabe || "").replace(/^Aufgabe [^:]+: /, "")) + " ") +
+      "das vom Kind geschriebene Wort " + JSON.stringify(s.du) + (s.seite > 1 ? " (Seite " + s.seite + ")" : "") +
+      ". Das Rechteck umfasst genau dieses Wort." }];
   if (s.art === "pinnwand")
     return [{ id: s.id, text: "das Feld zur Aufgabe " + JSON.stringify(s.aufgabe) + ". Dort hat das Kind " +
       JSON.stringify(s.du) + " eingetragen. Das Rechteck umfasst genau dieses eingetragene Wort." }];

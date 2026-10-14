@@ -37,10 +37,23 @@
  * ohne Feld-für-Feld-Abschrift), schickt diese Seite einmal POST aktion
  * "nachrechnen" und holt die Stellen danach neu. Neue Eingabeart "rest"
  * (9 R 2); `steht` = die Lehrerin hat dort schon geändert -> "Bei dir steht".
+ *
+ * Volllesen (15.10.2026, anleitung/125): alle drei Kinder. Das Kind kommt aus
+ * window.LWPRUEF_KIND oder dem Pfad (/paul/, /helena/, /leon/), sonst Paul.
+ * Neue Stellen 🔤 „Schau genau hin“ (art "schreiben"): ein Wort, das nicht so
+ * auf dem Blatt steht (Wörterkasten, Abschreibtext, gedruckte Lösung, Vokabeln) -
+ * das Kind vergleicht selbst und tippt sein Wort ein, geprüft wird auf dem Server.
+ * Bringt der Server `volllesen: [blatt…]`, schickt diese Seite einmal POST aktion
+ * "volllesen" (wie beim Nachrechnen) und holt die Stellen danach neu.
  */
 (function () {
   "use strict";
-  var KIND = "paul";
+  var KIND = (function () {
+    var k = String(window.LWPRUEF_KIND || "").toLowerCase();
+    if (/^(paul|helena|leon)$/.test(k)) return k;
+    var m = /^\/(paul|helena|leon)\//.exec(location.pathname || "");
+    return m ? m[1] : "paul";
+  })();
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -60,6 +73,10 @@
     deutsch:  { n: "Deutsch",        z: "📖", c: "#4f46e5" },
     hsu:      { n: "HSU",            z: "🌍", c: "#f3960b" },
     englisch: { n: "Englisch",       z: "🇬🇧", c: "#ef4444" },
+    franz:    { n: "Französisch",    z: "🇫🇷", c: "#2563eb" },
+    geschichte: { n: "Geschichte",   z: "🏛️", c: "#b45309" },
+    geo:      { n: "Geographie",     z: "🗺️", c: "#0d9488" },
+    info:     { n: "Informatik",     z: "💻", c: "#7c3aed" },
     rel:      { n: "Religion/Ethik", z: "🕊️", c: "#0891b2" },
     religion: { n: "Religion/Ethik", z: "🕊️", c: "#0891b2" },
     musik:    { n: "Musik",          z: "🎵", c: "#8b5cf6" },
@@ -70,7 +87,8 @@
   var SCHILD = {
     rechnen:  '<span class="lwp-schild lwp-s-rechnen">🧮 Bitte nachrechnen</span>',
     pinnwand: '<span class="lwp-schild lwp-s-pinnwand">📌 Pinnwand deiner Lehrerin</span>',
-    lehrerin: '<span class="lwp-schild lwp-s-lehrerin">✍️ Rot von deiner Lehrerin</span>'
+    lehrerin: '<span class="lwp-schild lwp-s-lehrerin">✍️ Rot von deiner Lehrerin</span>',
+    schreiben: '<span class="lwp-schild lwp-s-schreiben">🔤 Schau genau hin</span>'
   };
 
   function holen(blatt) {
@@ -155,19 +173,30 @@
   }
   /* Nachrechnen nachholen (14.10.2026): ein Blatt nach dem anderen. Gibt true,
      wenn mindestens ein Blatt neu nachgerechnet wurde. */
-  function nachrechnenHolen(ids) {
+  function nachrechnenHolen(ids, aktion) {
     var reihe = (ids || []).slice(0, 4), neu = false;
     function weiter() {
       var id = reihe.shift();
       if (!id) return Promise.resolve(neu);
       return fetch("/api/pruefreiter", {
         method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kind: KIND, aktion: "nachrechnen", blatt: id })
+        body: JSON.stringify({ kind: KIND, aktion: aktion || "nachrechnen", blatt: id })
       }).then(function (r) { return r.json(); }).then(function (j) {
-        if (j && j.ok && j.nachgerechnet) neu = true;
+        if (j && j.ok && (j.nachgerechnet || j.volllesen)) neu = true;
       }).catch(function () {}).then(weiter);
     }
     return weiter();
+  }
+  /* Volllesen (15.10.2026): beides nachholen, was der Server meldet - erst
+     nachrechnen, dann ganz lesen (bei Mathe holt "volllesen" ein fehlendes
+     Nachrechnen mit). true, wenn sich etwas geändert hat. */
+  function abschriftenHolen(j) {
+    var nr = (j && j.nachrechnen) || [], vl = (j && j.volllesen) || [];
+    nr = nr.filter(function (id) { return vl.indexOf(id) < 0; });
+    if (!nr.length && !vl.length) return Promise.resolve(false);
+    return nachrechnenHolen(nr).then(function (a) {
+      return nachrechnenHolen(vl, "volllesen").then(function (b) { return a || b; });
+    });
   }
   var BELEG = {};
   function belegMalen(s) { var f = BELEG[s.id]; if (f) f(); }
@@ -514,9 +543,9 @@
     if (!kasten || !blattId) return Promise.resolve(0);
     stilEinmal();
     return holen(blattId).then(function (j) {
-      /* Kam das Durchlesen ohne Abschrift zurück: erst nachrechnen, dann zeigen. */
-      if (j.nachrechnen && j.nachrechnen.length)
-        return nachrechnenHolen(j.nachrechnen).then(function (neu) { return neu ? holen(blattId) : j; });
+      /* Kam das Durchlesen ohne Abschrift zurück: erst nachrechnen bzw. ganz lesen, dann zeigen. */
+      if ((j.nachrechnen && j.nachrechnen.length) || (j.volllesen && j.volllesen.length))
+        return abschriftenHolen(j).then(function (neu) { return neu ? holen(blattId) : j; });
       return j;
     }).then(function (j) {
       var st = j.stellen || [];
@@ -639,8 +668,8 @@
     return holen(null).then(function (j) {
       var n = uebernehmen(j);
       /* Nachrechnen im Hintergrund; ist die Einblendung noch zu, kommt die neue Zahl dazu. */
-      if (j.nachrechnen && j.nachrechnen.length)
-        nachrechnenHolen(j.nachrechnen).then(function (neu) {
+      if ((j.nachrechnen && j.nachrechnen.length) || (j.volllesen && j.volllesen.length))
+        abschriftenHolen(j).then(function (neu) {
           if (neu && !ueber) return holen(null).then(uebernehmen);
         });
       return n;
@@ -669,6 +698,7 @@
       ".lwp-s-rechnen{background:var(--lwp-blaubg);color:var(--lwp-blau)}",
       ".lwp-s-lehrerin{background:var(--lwp-rotbg);color:var(--lwp-rot)}",
       ".lwp-s-pinnwand{background:var(--lwp-gelb);color:var(--lwp-gelbink);border:1px solid var(--lwp-gelblinie)}",
+      ".lwp-s-schreiben{background:var(--lwp-leise);color:var(--lwp-ink);border:1px solid var(--lwp-linie)}",
       ".lwp-blatt{font-size:14px;color:var(--lwp-neben)}",
       ".lwp-aufgabe{font-size:22px;font-weight:800;margin:6px 0;overflow-wrap:anywhere}",
       ".lwp-du{font-size:17px;margin:6px 0;overflow-wrap:anywhere}",

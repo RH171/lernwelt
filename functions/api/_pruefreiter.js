@@ -41,6 +41,8 @@ import { gruenFuer } from "./_korrektur.js";
 import { zeileKindgerecht } from "./_herkunft.js";
 import { auswerten as nrAuswerten, aktuell as nrAktuell, aufgabeSchluessel, ausdruckZeigen, rechnen as nrRechnen } from "./_nachrechnen.js";
 export { brauchtNachrechnen } from "./_nachrechnen.js";
+import { auswerten as vlAuswerten, aktuell as vlAktuell, vokabelnImFach, sauber as vlSauber } from "./_volllesen.js";
+export { brauchtVolllesen } from "./_volllesen.js";
 
 /* Ab diesem Blattdatum zählt der Bestand mit (Dennys Auftrag: "Die schon
    vorhandenen Blätter seit 06.10.2026 gehören dazu"). Ein Blatt, das gerade
@@ -54,7 +56,8 @@ export function hochgeladenAm(blatt) {
   const t = Date.parse(String((blatt && blatt.angelegt) || ""));
   return isNaN(t) ? "" : TAG_BERLIN.format(new Date(t));
 }
-export const KINDER_MIT_PRUEFREITER = ["paul"];
+/* Volllesen (15.10.2026, Denny: „alles, was da hochgeladen worden ist“): alle drei Kinder. */
+export const KINDER_MIT_PRUEFREITER = ["paul", "helena", "leon"];
 export const SCHLUESSEL = (kind) => "pruefreiter:" + kind;
 
 const HAND = /^✍\s*/;
@@ -244,6 +247,55 @@ export function nachrechenStand(blatt) {
            rotFalsch: w.fehler.filter((x) => x.bestaetigt === true && x.u.rotDa).map((x) => ({ zeile: x.f.roh, paulGut: !!x.u.paulGut })).slice(0, 10) };
 }
 
+/* ---------- Volllesen (15.10.2026, _volllesen.js) ----------
+   🔤 „Schau genau hin“: nur Stellen, die eine EINDEUTIGE Quelle auf dem Blatt oder
+   im Heft haben (Wörterkasten, Abschreibvorlage, gedruckte Lösung, gedruckte
+   Vokabelliste) UND die die zweite Lesung Buchstabe für Buchstabe bestätigt hat.
+   Die richtige Schreibweise verlässt den Server nie (wie bei 🧮): Das Kind
+   vergleicht selbst mit seinem Blatt. Kennung <blatt>:v:<kurz>. */
+const VL_TIPP = {
+  woerter: "Vergleiche dein Wort Buchstabe für Buchstabe mit den Wörtern im Kasten auf deinem Blatt.",
+  abschrift: "Vergleiche dein Wort Buchstabe für Buchstabe mit dem Text auf deinem Blatt.",
+  loesung: "Auf deinem Blatt steht die Lösung. Vergleiche sie Buchstabe für Buchstabe mit deinem Eintrag.",
+  vokabel: "Schau in deiner Vokabelliste nach und vergleiche Buchstabe für Buchstabe.",
+};
+export function volllesStellen(blatt, bk, vokabeln) {
+  if (!blatt || !vlAktuell(blatt)) return [];
+  const w = vlAuswerten(blatt.volllesen, vokabeln || []);
+  if (!w) return [];
+  const aus = [], ids = new Set();
+  for (const x of w.fehler) {
+    if (x.bestaetigt !== true) continue;
+    const id = bk.id + ":v:" + kurz(x.fid);
+    if (ids.has(id)) continue;
+    ids.add(id);
+    const vorn = x.nr && !/^[A-Z]$|^Rand$/i.test(x.nr) ? "Aufgabe " + x.nr + ": " : "";
+    const vg = String(x.vorgabe || "").replace(/\s+/g, " ").trim();
+    const aufgabe = x.quelle === "abschrift"
+      ? vorn + "Abschreiben" + (vg ? ": „" + (vg.split(" ").length > 10 ? vg.split(" ").slice(0, 8).join(" ") + " …" : vg) + "“" : "")
+      : vorn + (vg ? "„" + vg.slice(0, 100) + "“" : "dein Eintrag");
+    aus.push({ id, art: "schreiben", typ: "wort", quelle: x.quelle, blatt: bk, volllesen: true, wo: x.nr, seite: x.seite,
+               aufgabe, du: x.ist, soll: x.soll, gross: !!x.gross, zeile: x.roh, eingabe: "text",
+               tipp: (x.gross ? "Schau auf den ersten Buchstaben: groß oder klein? " : "") + (VL_TIPP[x.quelle] || VL_TIPP.abschrift) });
+  }
+  return aus;
+}
+/* Für den Elternbereich: wie vollständig ein Blatt gelesen ist und was prüfbar war. */
+export function volllesStand(blatt, vokabeln) {
+  if (!blatt) return null;
+  if (!vlAktuell(blatt)) return { offen: true };
+  const w = vlAuswerten(blatt.volllesen, vokabeln || []);
+  if (!w) return { offen: true };
+  return { voll: w.voll && !w.leer, soll: w.soll, ist: w.ist, fehlt: w.fehlt.slice(0, 8), felder: w.felder, druck: w.druck,
+           mitKind: w.mitKind, pruefbar: w.pruefbar, nichtPruefbar: w.nichtPruefbar,
+           fehler: w.fehler.filter((x) => x.bestaetigt === true).length,
+           ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true).map((x) => x.ist + " → " + x.soll + " (" + x.quelle + ")").slice(0, 10) };
+}
+/* Die Vokabeln der anderen Blätter desselben Fachs - je Aufruf einmal gerechnet. */
+export function optFuer(blaetter, blatt) {
+  return { vokabeln: blatt && blatt.volllesen ? vokabelnImFach(blaetter || [], blatt.fach, blatt.id) : [] };
+}
+
 /* Eine Mathe-Zeile mit "Kind schrieb X, richtig: Y" -> nachgerechnete Stelle
    oder null. Gibt die Wahrheit mit (`soll`) - die bleibt auf dem Server. */
 export function rechenStelle(zeile, blatt) {
@@ -319,7 +371,7 @@ function blattKurz(b) {
 }
 
 /* Mit Wahrheit - nur für den Server. */
-export function stellenFuerBlatt(blatt, vorlagenDaten) {
+export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
   if (!blatt || blatt.sichtbar === false) return [];
   const inhalt = Array.isArray(blatt.inhalt) ? blatt.inhalt : [];
   const aus = [];
@@ -332,6 +384,8 @@ export function stellenFuerBlatt(blatt, vorlagenDaten) {
   });
   /* Nachrechnen (14.10.2026): Feld für Feld, nur bestätigte Fehler, keine Doppel. */
   try { aus.push(...nachrechenStellen(blatt, bk, schon)); } catch (e) {}
+  /* Volllesen (15.10.2026): Text-Stellen mit eindeutiger Quelle, alle Fächer. */
+  try { aus.push(...volllesStellen(blatt, bk, (opt && opt.vokabeln) || [])); } catch (e) {}
 
   const vorlage = vorlageFuerBlatt(vorlagenDaten, blatt.id);
   if (vorlage) {
@@ -414,7 +468,7 @@ export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt) {
   for (const b of blaetter || []) {
     if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
     bereich.add(b.id);
-    for (const s of stellenFuerBlatt(b, vorlagenDaten)) {
+    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b))) {
       gezaehlt.add(s.id);
       const z = erl[s.id];
       if (!z) offen++;
@@ -436,7 +490,7 @@ export function offeneStellen(blaetter, vorlagenDaten, zustand, nurBlatt) {
   const aus = [];
   for (const b of blaetter || []) {
     if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
-    for (const s of stellenFuerBlatt(b, vorlagenDaten)) if (!erledigt[s.id]) aus.push(s);
+    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b))) if (!erledigt[s.id]) aus.push(s);
   }
   return aus;
 }
@@ -447,6 +501,7 @@ const GUT = {
   teiler: (n, k) => "Super, jetzt hast du alle " + k + " Teiler von " + n + " gefunden!",
   gleichung: () => "Super, du hast nachgerechnet und es selbst verbessert!",
   pinnwand: () => "Super, jetzt steht es wie bei deiner Lehrerin!",
+  schreiben: () => "Super, du hast genau hingeschaut und es selbst verbessert!",
 };
 
 export function verbesserungPruefen(s, antwort) {
@@ -484,6 +539,15 @@ export function verbesserungPruefen(s, antwort) {
     if (!m) return { richtig: false, tipp: "Schreib nur die Zahl in das Feld." };
     if (stimmt({ ...s.g, [s.luecke]: +m[1] })) return { richtig: true, satz: GUT.gleichung() };
     return { richtig: false, tipp: "Noch nicht. " + gleichungTipp(s.g, s.luecke, +m[1]) };
+  }
+  if (s.art === "schreiben") {
+    /* Buchstabe für Buchstabe, mit Groß- und Kleinschreibung - genau das ist die Übung. */
+    const ein = vlSauber(a), soll = vlSauber(s.soll);
+    if (ein === soll) return { richtig: true, satz: GUT.schreiben() };
+    if (ein.toLowerCase() === soll.toLowerCase()) return { richtig: false, tipp: "Fast! Schau auf den ersten Buchstaben: groß oder klein?" };
+    const d = levenshtein(falten(ein), falten(soll));
+    if (d > 0 && d <= 2) return { richtig: false, tipp: "Fast! " + (VL_TIPP[s.quelle] || VL_TIPP.abschrift) };
+    return { richtig: false, tipp: "Noch nicht. " + s.tipp };
   }
   if (s.art === "pinnwand") {
     const gut = [s.soll].concat(s.gleich || []);

@@ -423,6 +423,19 @@ export function gegenLesen(text, fragen) {
 /* ---------- Ein Blatt auswerten (ohne Modell, aus dem Gespeicherten) ----------
    n = blatt.nachgerechnet. Gibt { voll, soll, ist, fehlt, felder, fehler:
    [{ f, u, id, bestaetigt: true|false|null }] }. */
+/* Ganz vom Kind geschriebene Rechnung (15.10.2026, Leons „15 + 4 = 11“ bei „kleine und große Aufgabe“):
+   Die Abschrift trägt dieselbe Rechnung mehrmals, je mit einem anderen Feld des Kindes. Dann ist offen,
+   WELCHE Zahl falsch ist - lieber still als die falsche Stelle anstreichen. */
+function mehrdeutigeFelder(ab) {
+  /* Gleichung a op b = c: Schlüssel aus Aufgabe, Rechenzeichen, a und b (c kann unsicher ohne Wert sein). */
+  const teile = (f) => f.typ === "gleichung" ? [f.teil.a, f.teil.b, f.teil.c] : f.typ === "ausdruck" ? f.terme.concat([f.erg]) : null;
+  const sig = (f) => f.typ === "gleichung" ? (f.nr || "-") + "|g|" + f.op + "|" + f.teil.a.wert + "|" + f.teil.b.wert
+    : (f.nr || "-") + "|a|" + (f.ops || []).join("") + "|" + f.terme.map((x) => x.wert).join(",");
+  const pos = (f) => teile(f).map((x, i) => (x && x.kind ? i : -1)).filter((i) => i >= 0).join(",");
+  const je = {};
+  for (const f of ab.felder) if (teile(f)) (je[sig(f)] = je[sig(f)] || new Set()).add(pos(f));
+  return new Set(ab.felder.filter((f) => teile(f) && je[sig(f)].size > 1));
+}
 export function auswerten(n) {
   if (!n || !Array.isArray(n.z)) return null;
   const ab = abschriftLesen(n.z.join("\n"));
@@ -431,8 +444,9 @@ export function auswerten(n) {
   const fehler = [];
   const zaehl = { richtig: 0, falsch: 0, leer: 0, unsicher: 0, ohneKind: 0, unklar: 0, nichtRechenbar: 0 };
   const gesehen = new Set();
+  const mehr = mehrdeutigeFelder(ab);
   for (const f of ab.felder) {
-    const u = feldUrteil(f);
+    const u = mehr.has(f) ? { urteil: "unklar" } : feldUrteil(f);
     zaehl[u.urteil] = (zaehl[u.urteil] || 0) + 1;
     if (u.urteil !== "falsch") continue;
     const id = feldId(f, u);
@@ -447,8 +461,9 @@ export function auswerten(n) {
 /* Welche Felder brauchen die zweite Lesung? */
 export function gegenFragen(ab) {
   const fragen = [], ids = new Set();
+  const mehr = mehrdeutigeFelder(ab);
   for (const f of ab.felder) {
-    const u = feldUrteil(f);
+    const u = mehr.has(f) ? { urteil: "unklar" } : feldUrteil(f);
     if (u.urteil !== "falsch") continue;
     const id = feldId(f, u);
     if (ids.has(id)) continue;

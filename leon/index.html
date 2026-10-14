@@ -342,6 +342,18 @@
      Denny, 28.09.2026: "danach Leon mit allem wie Paul". Nur dazu, nichts
      ersetzt. Logik: /heft-start.js. Gruen #047857 statt --leon, weil weisse
      Schrift auf #10b981 nur 2,5:1 hat. */
+  /* Prüf-Reiter (Volllesen, 15.10.2026, anleitung/125): wie Pauls blauer Knopf
+     „Nachgesehen“. Weiß auf #1d4fae = 7,7:1 (gemessen, nicht angeschaut). */
+  .lwp-start{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;border-radius:20px;padding:14px 16px;
+    margin:0 0 14px;min-height:56px;box-sizing:border-box;background:linear-gradient(125deg,#0b4f8a 0%,#1d4fae 55%,#1d4fae 100%);
+    box-shadow:0 8px 22px rgba(29,79,174,.32);font-family:inherit}
+  .lwp-start.verborgen,.lwp-start[hidden]{display:none}
+  .lwp-start .cc-ic{font-size:26px;line-height:1}
+  .lwp-start .cc-t{font-weight:800;font-size:19px}
+  .lwp-start .cc-s{font-size:15px;line-height:1.35}
+  .lwp-start .cc-arrow{margin-left:auto;font-size:26px;font-weight:700}
+  .lwp-start .lwp-zahl{display:inline-block;background:#fff;color:#1d4fae;font-weight:800;border-radius:999px;
+    padding:1px 10px;font-size:16px;margin-left:6px;vertical-align:1px}
   .nachsehen{background:var(--card,#fff);color:var(--ink);border:3px solid #f59e0b;border-radius:22px;
     padding:16px 18px;margin:0 0 14px;font-family:var(--rund)}
   .nachsehen.verborgen{display:none}
@@ -424,6 +436,14 @@
     <!-- 18.09.2026: eigenes Hausaufgaben-Heft (Denny: "Ja.") und der Stundenplan
          zum Nachschauen. -->
     <!-- Bitte kurz nachsehen (von Paul, 29.09.2026). -->
+    <!-- Prüf-Reiter (Volllesen, 15.10.2026): Stellen aus Leons Blättern, die beim
+         Ganz-Lesen aufgefallen sind. Nur sichtbar, solange etwas offen ist
+         (/pruefreiter.js); die richtige Schreibweise kennt die Seite nie. -->
+    <a class="lwp-start verborgen" href="#nachgesehen" id="pruefReiter" hidden>
+      <div class="cc-ic" aria-hidden="true">🔍</div>
+      <div><div class="cc-t">Nachgesehen <span class="lwp-zahl"></span></div><div class="cc-s"></div></div>
+      <div class="cc-arrow" aria-hidden="true">›</div>
+    </a>
     <section class="nachsehen verborgen" id="nachsehen" aria-live="polite">
       <div class="ns-kopf">📚 Bitte kurz nachsehen</div>
       <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen.</div>
@@ -1945,6 +1965,11 @@ window.HEFT_START = {
 </script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
 <script src="/heft-start.js?v=66fae067"></script>
+<!-- Prüf-Reiter (Volllesen, 15.10.2026): Großansicht blättert über /blatt-seiten.js, Kreise über /fehlerkreis.js. -->
+<script src="/blatt-seiten.js?v=a370cd04"></script>
+<script src="/fehlerkreis.js?v=6c7c4858"></script>
+<script src="/pruefreiter.js?v=6c767066"></script>
+<script>try{ LWPruef.startseite(document.getElementById("pruefReiter")); }catch(e){}</script>
 <script src="/spielalter.js?v=fe812d69"></script>
 <script>
 /* Neueste Spiele zuerst (Denny, 02.10.2026). */
