@@ -15087,5 +15087,213 @@ window.LEON_GESCHICHTEN = [
     "seite": 6
    }
   ]
+ },
+ {
+  "id": "w42-frueher-aus",
+  "titel": "Heute ist früher Schluss",
+  "bild": "🕐",
+  "ereignis": "2026-10-15",
+  "zeigenAb": "2026-10-14",
+  "zeigenBis": "2026-10-15",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🏫",
+      "🕐"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Don|ners|tag ist ein be|son|de|rer Tag.",
+     "Die Schu|le ist für Le|on frü|her aus.",
+     "Schon um ein Uhr ist Schluss.",
+     "Für Paul gilt das auch.",
+     "Le|on fin|det das pri|ma."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "📋",
+      "✅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Leh|re|rin|nen wis|sen schon Be|scheid.",
+     "Die Schu|le hat es er|laubt.",
+     "Le|on muss sich al|so kei|ne Sor|gen ma|chen.",
+     "Al|les ist gut ge|plant."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎒",
+      "🌅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Mor|gen packt Le|on sei|ne Schul|ta|sche.",
+     "Er denkt schon an den Mit|tag.",
+     "Ob die Zeit heu|te schnell ver|geht?",
+     "Le|on ist ein biss|chen auf|ge|regt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🕐",
+      "👀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In der Klas|se hängt ei|ne gro|ße Uhr.",
+     "Le|on schaut im|mer wie|der hin.",
+     "Um eins zeigt der klei|ne Zei|ger auf die Eins.",
+     "Der gro|ße Zei|ger zeigt dann auf die Zwölf.",
+     "Das kann Le|on schon le|sen!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "👋",
+      "🎒"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann ist es end|lich so weit.",
+     "Le|on packt sei|ne Sa|chen ein.",
+     "Die an|de|ren Kin|der blei|ben noch da.",
+     "Le|on winkt ih|nen zum Ab|schied.",
+     "„Tschüss!“, ruft er fröh|lich."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🏫",
+      "🚸"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Vor der Schu|le trifft er Paul.",
+     "Paul geht in die vier|te Klas|se.",
+     "Le|on geht in die zwei|te Klas|se.",
+     "Heu|te wer|den bei|de zu|sam|men ab|ge|holt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🗺️",
+      "🚗"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Heu|te steht noch et|was Gro|ßes an.",
+     "Es geht nach In|gol|stadt.",
+     "Dort war|tet Ma|mas neu|es Au|to.",
+     "Die Fahrt dau|ert ein|ein|halb Stun|den.",
+     "Da|rum ist frü|her Schluss."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein frei|er Mit|tag ist et|was Schö|nes.",
+     "Am Frei|tag geht es dann wie|der nor|mal wei|ter.",
+     "Dann ist auch wie|der Trai|ning.",
+     "Le|on hat al|so viel zu er|zäh|len."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Um wie viel Uhr ist am Donnerstag Schluss?",
+    "richtig": "um ein Uhr",
+    "falsch": [
+     "um acht Uhr",
+     "um fünf Uhr"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wer weiß schon Bescheid?",
+    "richtig": "die Lehrerinnen",
+    "falsch": [
+     "der Busfahrer",
+     "niemand"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wohin zeigt der kleine Zeiger um eins?",
+    "richtig": "auf die Eins",
+    "falsch": [
+     "auf die Drei",
+     "auf die Sechs"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "In welche Klasse geht Paul?",
+    "richtig": "in die vierte Klasse",
+    "falsch": [
+     "in die dritte Klasse",
+     "in die erste Klasse"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Wohin geht es nach der Schule?",
+    "richtig": "nach Ingolstadt",
+    "falsch": [
+     "ins Schwimmbad",
+     "zum Zahnarzt"
+    ],
+    "seite": 7
+   }
+  ]
  }
 ];
