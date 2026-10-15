@@ -15295,5 +15295,216 @@ window.LEON_GESCHICHTEN = [
     "seite": 7
    }
   ]
+ },
+ {
+  "id": "w42-auto-ist-da",
+  "titel": "Mamas neues Auto ist da",
+  "bild": "🚗",
+  "ereignis": "2026-10-15",
+  "zeigenAb": "2026-10-16",
+  "zeigenBis": "2026-10-18",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "✨"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Am Don|ners|tag war ein be|son|de|rer Tag.",
+     "Ma|ma hat ihr neu|es Au|to ge|holt.",
+     "Le|on und Paul wa|ren da|bei.",
+     "Sie sind zu|sam|men nach In|gol|stadt ge|fah|ren."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🏢",
+      "🚗"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "In In|gol|stadt gibt es das Au|di Fo|rum.",
+     "Dort hat das neu|e Au|to ge|war|tet.",
+     "Ein ganz neu|es Au|to für Ma|ma!",
+     "Für Le|on war das sehr auf|re|gend.",
+     "So et|was er|lebt man nicht je|den Tag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "📱",
+      "📷"
+     ],
+     "leute": [
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Ma|ma hat Fo|tos ge|macht.",
+     "Die Fo|tos hat sie an die Fa|mi|lie ge|schickt.",
+     "Dann wis|sen al|le Be|scheid.",
+     "Al|le sol|len sich mit|freu|en."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📱",
+      "😄"
+     ],
+     "leute": [
+      "Omi"
+     ]
+    },
+    "zeilen": [
+     "Omi hat die Fo|tos an|ge|schaut.",
+     "Sie hat zu|rück|ge|schrie|ben.",
+     "„Die Kin|der üben schon das Fah|ren!“",
+     "Das war na|tür|lich ein Witz von Omi.",
+     "Kin|der dür|fen noch nicht Au|to fah|ren."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🎡",
+      "🧒"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on darf erst fah|ren, wenn er groß ist.",
+     "Bis da|hin dau|ert es noch vie|le Jah|re.",
+     "Aber hin|ter dem Lenk|rad sit|zen macht Spaß.",
+     "Na|tür|lich nur, wenn das Au|to steht."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "📱",
+      "💬"
+     ],
+     "leute": [
+      "Opa"
+     ]
+    },
+    "zeilen": [
+     "Auch Tan|te Ste|fa|nie hat ge|schrie|ben.",
+     "„Kommt gut nach Hau|se“, hat sie ge|schrie|ben.",
+     "Opa hat auch ge|ant|wor|tet.",
+     "„Auch von uns gu|te Fahrt“, schreibt er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🛣️",
+      "🌆"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Dann ging es wie|der nach Hau|se.",
+     "Die Fahrt dau|ert ein|ein|halb Stun|den.",
+     "Da kann man gut aus dem Fens|ter schau|en.",
+     "Oder man zählt die Au|tos auf der Stra|ße.",
+     "Wie vie|le ro|te Au|tos fin|det Le|on wohl?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🛏️",
+      "🚗"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Was für ein Tag!",
+     "Le|on hat jetzt viel zu er|zäh|len.",
+     "Am Frei|tag geht es dann wie|der zum Trai|ning.",
+     "Und am Sams|tag ist das Tur|nier.",
+     "Im Traum fährt Le|on viel|leicht schon selbst."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wohin sind Leon, Paul und Mama gefahren?",
+    "richtig": "nach Ingolstadt",
+    "falsch": [
+     "nach Berlin",
+     "nach Bamberg"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie heißt das Haus, in dem das Auto gewartet hat?",
+    "richtig": "Audi Forum",
+    "falsch": [
+     "Auto Turm",
+     "Fürth Halle"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was hat Mama an die Familie geschickt?",
+    "richtig": "Fotos",
+    "falsch": [
+     "Kuchen",
+     "einen Brief"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was hat Omi als Witz geschrieben?",
+    "richtig": "Die Kinder üben schon das Fahren!",
+    "falsch": [
+     "Ich komme gleich vorbei!",
+     "Das Auto ist zu klein!"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was hat Tante Stefanie geschrieben?",
+    "richtig": "Kommt gut nach Hause",
+    "falsch": [
+     "Gute Nacht",
+     "Viel Spaß im Kino"
+    ],
+    "seite": 6
+   }
+  ]
  }
 ];
