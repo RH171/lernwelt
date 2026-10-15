@@ -12,6 +12,10 @@
  *                       {kind, terminAlt:{datum,fach}, termin:{...}}  -> aendern in einem Schreibvorgang
  *          Seit 13.10.2026 auch mit dem KINDERAUSWEIS - nur fuer sich selbst und nur
  *          Termine (kindTermin unten, Grenzen in _probentermine.js).
+ *   POST   /api/noten  {kind, kindNote:{fach, note, datum, anlass, id?}}  (15.10.2026)
+ *          Mit dem KINDERAUSWEIS: eine zurueckbekommene Note fuer sich selbst
+ *          eintragen oder eine geschriebene Probe ("Note kommt noch") ergaenzen.
+ *          Neu dazu, alte Seiten senden es nie (kindNoteSetzen unten).
  *   POST   /api/noten  {kind, blatt:"data:…"} -> Notenstand auslesen (kostet Geld,
  *                                               speichert NICHTS, schlaegt nur vor)
  */
@@ -64,6 +68,84 @@ async function kindTermin(request, env, kind, daten) {
   } catch (e) {
     return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Die Probe ist NICHT gespeichert." });
   }
+}
+
+/* Die nackten Noten, so wie das Kind sie sieht - keine Auswertung.
+ * offen:true = geschrieben, Note kommt noch (15.10.2026). id und von braucht
+ * Pauls Eintrag, um eine offene Probe zu ergaenzen. "was" faellt auf den
+ * Anlass zurueck, ausser er ist nur der Platzhalter "Leistungsnachweis". */
+function eigeneNoten(noten) {
+  return noten
+    .map((n) => {
+      const was = n.was || (n.anlass && n.anlass !== "Leistungsnachweis" ? n.anlass : "");
+      const e = { fach: n.fach, note: n.note, datum: n.datum, was };
+      if (n.offen && (n.note === undefined || n.note === null)) e.offen = true;
+      if (n.id) e.id = n.id;
+      if (n.von) e.von = n.von;
+      return e;
+    })
+    .sort((x, y) => String(y.datum || "").localeCompare(String(x.datum || "")));
+}
+
+const KIND_FAECHER = ["mathe", "deutsch", "hsu", "englisch", "rel", "musik"];
+const KIND_NOTEN_TAG = 3;     // hoechstens drei eigene Eintraege am Tag
+const KIND_NOTEN_ZURUECK = 120;
+
+/* Paul traegt eine zurueckbekommene Note selbst ein (15.10.2026). Grenzen:
+ * nur fuer sich selbst, ganze Noten 1-6, Datum heute oder bis 120 Tage
+ * zurueck, hoechstens drei Eintraege am Tag. Er darf eine offene Probe
+ * ("Note kommt noch") ergaenzen, auch wenn Mama oder Papa sie angelegt
+ * haben, und seine EIGENEN Eintraege aendern - eine Note der Eltern nie. */
+async function kindNoteSetzen(request, env, kind, roh) {
+  const g = geheimFuer(env, kind);
+  if (!g || !(await ausweisGueltig(request, g, env))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+  let besuch = false;
+  try { besuch = await besuchIstEltern(request, g); } catch (e) {}
+  const von = besuch ? "eltern" : kind;
+
+  const fach = String(roh.fach || "").toLowerCase();
+  if (!KIND_FAECHER.includes(fach)) return json(400, { ok: false, fehler: "Tipp zuerst auf ein Fach." });
+  const note = Number(roh.note);
+  if (!Number.isInteger(note) || note < 1 || note > 6) return json(400, { ok: false, fehler: "Eine Note geht von 1 bis 6." });
+  const heute = berlinHeute();
+  const datum = String(roh.datum || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) return json(400, { ok: false, fehler: "Wann hast du die Probe geschrieben?" });
+  const frueh = new Date(Date.UTC(+heute.slice(0, 4), +heute.slice(5, 7) - 1, +heute.slice(8, 10) - KIND_NOTEN_ZURUECK, 12))
+    .toISOString().slice(0, 10);
+  if (datum > heute) return json(400, { ok: false, fehler: "Dieser Tag kommt erst noch." });
+  if (datum < frueh) return json(400, { ok: false, fehler: "So lange her geht es nicht – frag Mama oder Papa." });
+  const anlass = String(roh.anlass || "").slice(0, 40).trim();
+
+  const noten = await notenLesen(env, kind);
+  if (noten === null) return json(503, { ok: false, fehler: "Der Speicher antwortet gerade nicht. Die Note ist NICHT gespeichert." });
+
+  const id = String(roh.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 12);
+  let i = id ? noten.findIndex((n) => n.id === id) : -1;
+  if (id && i < 0) return json(404, { ok: false, fehler: "Diese Probe gibt es nicht (mehr)." });
+  if (i >= 0) {
+    const n = noten[i];
+    const offen = n.offen && (n.note === undefined || n.note === null);
+    if (!offen && n.von !== kind) return json(403, { ok: false, fehler: "Diese Note haben Mama oder Papa eingetragen." });
+  }
+  const heuteEigene = noten.filter((n) => n.von === kind && String(n.kindAm || "") === heute).length;
+  if (heuteEigene >= KIND_NOTEN_TAG && von === kind)
+    return json(429, { ok: false, fehler: "Für heute ist genug eingetragen. Mama oder Papa können helfen." });
+
+  if (i >= 0) {
+    const n = { ...noten[i], fach, note, datum };
+    if (anlass) n.anlass = anlass;
+    delete n.offen;
+    if (!n.von) n.von = von;
+    n.kindAm = heute;
+    noten[i] = n;
+  } else {
+    const p = notePruefen({ fach, note, datum, anlass: anlass || "Probe", quelle: "heft" });
+    if (p.fehler) return json(400, { ok: false, fehler: p.fehler });
+    noten.push({ ...p.note, von, kindAm: heute });
+  }
+  try { await notenSchreiben(env, kind, noten); }
+  catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Die Note ist NICHT gespeichert." }); }
+  return json(200, { ok: true, noten: eigeneNoten(noten) });
 }
 
 function kindAus(url, daten) {
@@ -190,9 +272,7 @@ export async function onRequestGet(context) {
 
     // Nur die nackten Noten mit Fach und Datum - keine Auswertung, kein
     // "hier bist du schwach".
-    const meine = noten
-      .map((n) => ({ fach: n.fach, note: n.note, datum: n.datum, was: n.was || "" }))
-      .sort((x, y) => String(y.datum || "").localeCompare(String(x.datum || "")));
+    const meine = eigeneNoten(noten);
     // Probentermine (04.10.2026): nur heutige und kuenftige. Antwortet der
     // Speicher nicht, steht null da - nie eine leere Liste, sonst hiesse
     // "kein Termin" in Wahrheit "weiss ich nicht".
@@ -233,7 +313,10 @@ export async function onRequestPost(context) {
   const url = new URL(request.url);
   const kind = kindAus(url, daten);
   if (!alsEltern) {
-    // Ohne Elternausweis geht NUR ein Probentermin des eigenen Kindes.
+    // Ohne Elternausweis geht NUR ein Probentermin des eigenen Kindes -
+    // oder seit 15.10.2026 seine eigene zurueckbekommene Note.
+    if (kind && daten && daten.kindNote && !daten.note && !daten.blatt && !daten.termin && !daten.terminWeg)
+      return kindNoteSetzen(request, env, kind, daten.kindNote);
     const nurTermin = daten && (daten.termin || daten.terminWeg) && !daten.note && !daten.blatt;
     if (!kind || !nurTermin) return json(401, { ok: false, fehler: "Nur mit Elternausweis." });
     return kindTermin(request, env, kind, daten);
@@ -290,6 +373,8 @@ export async function onRequestPost(context) {
   const i = noten.findIndex((n) => n.id === gepruef.note.id);
   if (i >= 0) noten[i] = { ...noten[i], ...gepruef.note };
   else noten.push(gepruef.note);
+  // Kommt zu einer offenen Probe die Note, ist sie nicht mehr offen (15.10.2026).
+  if (i >= 0 && (noten[i].note !== undefined || noten[i].punkte) && !gepruef.note.offen) delete noten[i].offen;
 
   try { await notenSchreiben(env, kind, noten); }
   catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Die Note ist NICHT gespeichert." }); }

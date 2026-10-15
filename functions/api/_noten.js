@@ -86,7 +86,13 @@ export function notePruefen(roh) {
     n.note = Math.round(w * 2) / 2;
   }
   n.punkte = String(roh.punkte || "").slice(0, 20).trim() || undefined;
-  if (n.note === undefined && !n.punkte) return { fehler: "Ohne Note und ohne Punkte kann ich nichts festhalten." };
+  /* Geschrieben, Note kommt noch (15.10.2026): Paul schrieb am 09.10.2026 den
+     Leseverstaendnistest, die Note fehlt noch. Er soll ihn trotzdem bei
+     "Deutsch 1 von 8" mitzaehlen sehen. Ein solcher Eintrag traegt offen:true
+     und KEINE Note; sobald eine Note kommt, faellt offen weg. In jedem
+     Mittelwert zaehlt er nicht mit (mittel() nimmt nur Zahlen). */
+  if (n.note === undefined && !n.punkte && roh.offen === true) n.offen = true;
+  if (n.note === undefined && !n.punkte && !n.offen) return { fehler: "Ohne Note und ohne Punkte kann ich nichts festhalten." };
 
   n.anlass = String(roh.anlass || "").slice(0, 120).trim() || "Leistungsnachweis";
   const d = String(roh.datum || "").slice(0, 10);

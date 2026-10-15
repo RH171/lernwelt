@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meine Proben</title>
+<title>Proben und Zeugnisse</title>
 <!--
   Denny am 23.09.2026: "Paul hat derzeit noch nichts zu seinen Noten, und
   somit hat er auch keine Informationen, wie viele Prüfungen er schreiben
@@ -20,6 +20,15 @@
   Rückmeldungen statt eines Zwischenzeugnisses.
 
   Keine Lernzeit: Nachschauen ist kein Lernen - lernstand.js bleibt draußen.
+
+  15.10.2026, Dennys Wahl "A · Zeugnisplaner mit Schnitt": Die Seite heisst
+  "Proben und Zeugnisse" und bekommt den Zeugnisplaner. Der Beschluss vom
+  23.09.2026 ("kein Durchschnitt") ist NUR fuer die Planer-Karte aufgehoben.
+  Die Notenliste bleibt nackt: kein Schnitt, keine Schwaechenliste, kein
+  Vergleich. Die Messung (mess-schritte-proben.js) prueft das: "Schnitt"
+  darf nur in .zp-karte stehen. Dazu: Probe eintragen oder Note zurueck
+  (paul/probeneintrag.js mit noten:true) und geschriebene Proben ohne Note
+  ("Note kommt noch", offen:true vom Server).
 -->
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <!-- Eine Wahl fuer alle Seiten: siehe /thema.css. Muss VOR dem ersten
@@ -32,8 +41,14 @@
     --paul:#4f46e5; --gut:#12b76a;
     --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
     --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    /* Namen, die paul/probeneintrag.js fuer seinen Dialog erwartet */
+    --card:var(--karte); --round:var(--rund);
+    --zp-gym:#e7f8ef; --zp-gym-rand:#86d6a8; --zp-real:#e8f1fd; --zp-real-rand:#93b9ea;
+    --zp-mittel:#fdf3e4; --zp-mittel-rand:#e8b86a;
   }
-  html[data-theme="dark"]{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;--line:#2e3140}
+  html[data-theme="dark"]{--bg:#14151c;--karte:#1e2029;--ink:#eef1f8;--muted:#a0a6bd;--line:#2e3140;
+    --zp-gym:#0f3b2c;--zp-gym-rand:#2f8f63;--zp-real:#13304d;--zp-real-rand:#3f78b8;
+    --zp-mittel:#3b2a12;--zp-mittel-rand:#b07a2a}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--font);
        padding:18px 16px 70px;-webkit-text-size-adjust:100%}
@@ -102,6 +117,32 @@
   .note .was span{font-size:13.5px;color:var(--muted)}
   .merk{margin-top:14px;border-radius:14px;background:var(--akzent-hell);border:1.5px solid #c7d2fe;
         padding:13px 15px;font-size:15.5px}
+  /* Geschrieben, Note kommt noch (15.10.2026): eine Pille statt der Ziffer. */
+  .note .z.offen{flex:0 0 auto;width:auto;padding:0 10px;font:700 13.5px/38px var(--rund);
+           background:#fff3c4;color:#5a4300}
+  html[data-theme="dark"] .note .z.offen{background:#3a3216;color:#f3d36b}
+  #peSlot .pe-knopf{margin:14px 0 0}
+
+  /* Zeugnisplaner (15.10.2026, Entwurf A). Sechs Knoepfe je Fach, je 44 px. */
+  .zp-zeile{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:12px 0}
+  .zp-zeile .zp-fach{flex:0 0 74px;font:700 16px var(--rund)}
+  .zp-stufen{display:flex;gap:6px;flex-wrap:wrap}
+  .zp-stufen button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);
+           background:var(--feld);color:var(--ink);font:800 18px var(--rund);cursor:pointer;padding:0}
+  .zp-stufen button.an{background:var(--paul);border-color:var(--paul);color:#fff}
+  html[data-theme="dark"] .zp-stufen button.an{background:#a5b4ff;border-color:#a5b4ff;color:#151726}
+  .zp-aus{flex:1 0 100%;font-size:13.5px;color:var(--muted);margin:-2px 0 0;padding-left:84px}
+  .zp-aus button{min-height:44px;border:0;background:transparent;color:var(--paul);font:700 13.5px var(--rund);
+           cursor:pointer;padding:0 6px;text-decoration:underline}
+  html[data-theme="dark"] .zp-aus button{color:#a5b4ff}
+  .zp-erg{border-radius:14px;padding:12px 14px;margin-top:12px;font-size:16px;border:1.5px solid var(--line);background:var(--vertief)}
+  .zp-erg.gym{background:var(--zp-gym);border-color:var(--zp-gym-rand)}
+  .zp-erg.real{background:var(--zp-real);border-color:var(--zp-real-rand)}
+  .zp-erg.mittel{background:var(--zp-mittel);border-color:var(--zp-mittel-rand)}
+  .zp-zahl{font:800 26px/1.2 var(--rund)}
+  .zp-fuss{font-size:13px;color:var(--muted);margin:10px 0 0}
+  @media (max-width:420px){ .zp-aus{padding-left:0} .zp-zeile .zp-fach{flex-basis:100%} }
+
   html[data-theme="dark"] .balken,html[data-theme="dark"] .fzeile .bar{background:#262a38}
   html[data-theme="dark"] .note{background:#232634}
   html[data-theme="dark"] .merk{background:#1b1f38;border-color:#33407a}
@@ -112,13 +153,14 @@
 <div class="huelle">
   <header>
     <a class="zurueck" href="/paul/">‹ Lernwelt</a>
-    <h1>📋 Meine Proben</h1>
+    <h1>📋 Proben und Zeugnisse</h1>
   </header>
   <div id="probenkarte" class="verborgen"></div>
   <div id="inhalt"><div class="karte"><p class="unter">Einen Moment …</p></div></div>
 </div>
 
 <script src="/probenkarte.js?v=db3fb3b8"></script>
+<script src="/paul/probeneintrag.js?v=0924c0f8"></script>
 <script>
 (function(){
   "use strict";
@@ -146,6 +188,17 @@
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
+  /* Probe eintragen oder Note zurueck (15.10.2026): derselbe Dialog wie auf
+     der Startseite, mit noten:true. Der Knopf wird EINMAL gebaut und nach
+     jedem Malen in #peSlot gehaengt - sonst verloere er seinen Klick. */
+  var peKnopf = document.createElement("button");
+  peKnopf.id = "probeEintragen";
+  try {
+    LWProbeneintrag.start({ kind: "paul", knopf: peKnopf, karte: document.getElementById("probenkarte"),
+      noten: true, nachNote: function(){ laden(); } });
+  } catch(e){}
+
+  function laden(){
   fetch("/api/noten?eigene=1&kind=paul", {credentials:"same-origin"})
     .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
     .then(function(a){
@@ -170,6 +223,106 @@
         '<div class="karte"><h2>Das klappt gerade nicht</h2>' +
         '<p class="unter">Probier es gleich nochmal.</p></div>';
     });
+  }
+  laden();
+
+  /* ---------- Zeugnisplaner (15.10.2026, Dennys Wahl A) ----------
+   * Bayerische Regel fuers Uebertrittszeugnis: Schnitt aus Deutsch, Mathe und
+   * HSU. Bis 2,33 Gymnasium, bis 2,66 Realschule, sonst Mittelschule (oder
+   * Probeunterricht). Mit drei ganzen Noten heisst das: Summe 7 oder weniger
+   * = Gymnasium, Summe 8 = Realschule. 7/3 ist 2,333 - die Grenze 2,33 meint
+   * genau diesen Wert, deshalb wird nach der Summe entschieden und die Zahl
+   * auf zwei Stellen ABGESCHNITTEN gezeigt (2,2,4 -> 2,66 -> Realschule).
+   * Gerundet stuende dort 2,67 und es sahe aus, als reiche es nicht.
+   * Nie Druck: jeder Satz sagt, was GEHT. */
+  var ZP_FAECHER = [["deutsch","Deutsch"],["mathe","Mathe"],["hsu","HSU"]];
+  var ZP_SCHLUESSEL = "paul-zeugnisplaner";   // Spielwahl, kein Geheimnis
+  /* Die Wahl lebt im Speicher der Seite; localStorage ist nur die Bequemlichkeit
+     fuers naechste Mal. Ist er gesperrt (privates Fenster), rechnet der Planer
+     trotzdem - nur vergisst er die Wahl beim Neuladen. */
+  var zpEigen = null;
+  function zpGemerkt(){
+    if (!zpEigen){
+      zpEigen = {};
+      try { var w = JSON.parse(localStorage.getItem(ZP_SCHLUESSEL) || "null"); if (w && typeof w === "object") zpEigen = w; }
+      catch(e){}
+    }
+    return zpEigen;
+  }
+  function zpMerken(w){ zpEigen = w; try { localStorage.setItem(ZP_SCHLUESSEL, JSON.stringify(w)); } catch(e){} }
+  function zpAusProben(noten){
+    var aus = {};
+    ZP_FAECHER.forEach(function(f){
+      var z = noten.filter(function(n){ return n.fach === f[0] && typeof n.note === "number" && !n.offen; })
+                   .map(function(n){ return n.note; });
+      if (z.length){
+        var m = Math.round(z.reduce(function(a,b){ return a+b; }, 0) / z.length);
+        aus[f[0]] = Math.min(6, Math.max(1, m));
+      }
+    });
+    return aus;
+  }
+  function zpKomma(summe){
+    var x = Math.floor(summe / 3 * 100 + 1e-9) / 100;
+    return x.toFixed(2).replace(".", ",");
+  }
+  function zpErgebnis(wahl){
+    var fehlt = ZP_FAECHER.filter(function(f){ return !wahl[f[0]]; });
+    if (fehlt.length){
+      return { art: "", html: "Tipp in jedem Fach eine Note an – dann siehst du hier deinen Schnitt." +
+        (fehlt.length < 3 ? " Es fehlt noch: " + fehlt.map(function(f){ return f[1]; }).join(", ") + "." : "") };
+    }
+    var summe = wahl.deutsch + wahl.mathe + wahl.hsu, satz, art;
+    if (summe <= 6){ art = "gym"; satz = "🏛️ <b>Gymnasium</b> geht. Du hast sogar noch Luft."; }
+    else if (summe === 7){ art = "gym"; satz = "🏛️ <b>Gymnasium</b> geht. Ganz knapp, aber es reicht."; }
+    else if (summe === 8){ art = "real"; satz = "🏫 <b>Realschule</b> geht. Fürs Gymnasium fehlt 0,33 – das ist eine Note in einem Fach."; }
+    else { art = "mittel"; satz = "🛠️ <b>Mittelschule</b> geht. Für Realschule und Gymnasium gibt es den Probeunterricht."; }
+    return { art: art, schnitt: zpKomma(summe),
+             html: 'Schnitt <span class="zp-zahl">' + zpKomma(summe) + "</span><br>" + satz };
+  }
+  function zpHtml(noten){
+    var aus = zpAusProben(noten), eigen = zpGemerkt(), h = "";
+    h += '<div class="karte zp-karte" id="zeugnisplaner"><h2>🔮 Zeugnisplaner</h2>' +
+         '<p class="unter">Tipp an, welche Note du im Übertrittszeugnis haben könntest.</p>';
+    var wahl = {};
+    ZP_FAECHER.forEach(function(f){
+      var k = f[0], w = eigen[k] || aus[k] || 0, vonProben = !eigen[k] && !!aus[k];
+      wahl[k] = w;
+      h += '<div class="zp-zeile" data-zp="' + k + '"><span class="zp-fach">' + f[1] + '</span><div class="zp-stufen" role="group" aria-label="' + f[1] + '">';
+      for (var n = 1; n <= 6; n++){
+        h += '<button type="button" data-note="' + n + '" aria-pressed="' + (w === n) + '"' + (w === n ? ' class="an"' : "") + ">" + n + "</button>";
+      }
+      h += "</div>";
+      if (vonProben) h += '<div class="zp-aus" data-zp-aus="' + k + '">aus deinen Proben</div>';
+      else if (aus[k] && eigen[k] && eigen[k] !== aus[k])
+        h += '<div class="zp-aus">aus deinen Proben wäre es eine ' + aus[k] + ' <button type="button" data-zp-zurueck="' + k + '">nehmen</button></div>';
+      h += "</div>";
+    });
+    var e = zpErgebnis(wahl);
+    h += '<div class="zp-erg' + (e.art ? " " + e.art : "") + '" id="zpErgebnis" aria-live="polite">' + e.html + "</div>";
+    h += '<p class="zp-fuss">Gerechnet aus Deutsch, Mathe und HSU im Übertrittszeugnis (Montag, 3. Mai 2027). Die Zeugnisnote gibt deine Lehrerin.</p>';
+    h += "</div>";
+    return h;
+  }
+  function zpBinden(noten){
+    var karte = document.getElementById("zeugnisplaner");
+    if (!karte) return;
+    function neu(){
+      var alt = karte; var tmp = document.createElement("div"); tmp.innerHTML = zpHtml(noten);
+      alt.parentNode.replaceChild(tmp.firstChild, alt); zpBinden(noten);
+    }
+    Array.prototype.forEach.call(karte.querySelectorAll(".zp-zeile[data-zp] .zp-stufen button"), function(b){
+      b.addEventListener("click", function(){
+        var k = b.closest(".zp-zeile").getAttribute("data-zp");
+        var w = zpGemerkt(); w[k] = +b.getAttribute("data-note"); zpMerken(w); neu();
+      });
+    });
+    Array.prototype.forEach.call(karte.querySelectorAll("[data-zp-zurueck]"), function(b){
+      b.addEventListener("click", function(){
+        var w = zpGemerkt(); delete w[b.getAttribute("data-zp-zurueck")]; zpMerken(w); neu();
+      });
+    });
+  }
 
   function malen(d){
     var p = d.proben, noten = d.noten || [], h = "";
@@ -224,18 +377,18 @@
       });
       h += "</div></div>";
 
-      h += '<div class="karte"><h2>Deine Zeugnisse</h2>';
+      var zh = '<div class="karte"><h2>Deine Zeugnisse</h2>';
       if (p.keinZwischenzeugnis){
-        h += '<p class="unter">In der 4. Klasse gibt es <b>kein Zwischenzeugnis</b> – dafür drei Rückmeldungen.</p>';
+        zh += '<p class="unter">In der 4. Klasse gibt es <b>kein Zwischenzeugnis</b> – dafür drei Rückmeldungen.</p>';
       }
-      h += '<ul class="termine">';
+      zh += '<ul class="termine">';
       p.zeugnisse.forEach(function(z){
         var t = tageBis(z.datum);
-        h += "<li><b>" + esc(z.was) + "</b><span" + (t !== null && t >= 0 && t < 30 ? ' class="bald"' : "") + ">" +
+        zh += "<li><b>" + esc(z.was) + "</b><span" + (t !== null && t >= 0 && t < 30 ? ' class="bald"' : "") + ">" +
              lang(z.datum) + (t !== null && t >= 0 ? " · in " + t + (t === 1 ? " Tag" : " Tagen") : "") +
              "</span></li>";
       });
-      h += "</ul></div>";
+      zh += "</ul></div>";
     }
 
     /* Die eigenen Noten - nackt, ohne Auswertung. Denny am 20.09.2026:
@@ -246,19 +399,27 @@
     } else {
       h += '<div class="noten">';
       noten.forEach(function(n){
-        h += '<div class="note"><div class="z">' + esc(n.note) + "</div>" +
+        var offen = n.offen && (n.note === undefined || n.note === null);
+        h += '<div class="note">' + (offen ? '<div class="z offen">Note kommt noch</div>' : '<div class="z">' + esc(n.note) + "</div>") +
              '<div class="was"><b>' + esc(NAMEN[n.fach] || n.fach || "") + "</b>" +
              "<span>" + esc(n.was || "") + (n.was && n.datum ? " · " : "") +
              (n.datum ? lang(n.datum) : "") + "</span></div></div>";
       });
       h += "</div>";
     }
+    h += '<div id="peSlot"></div>';
     h += "</div>";
+
+    if (p) h += zpHtml(noten);
+    if (typeof zh === "string") h += zh;
 
     h += '<div class="merk">Eine Probe wird immer <b>eine Woche vorher</b> angekündigt – ' +
          'über den Schulmanager und in deinem Hausaufgabenheft.</div>';
 
     document.getElementById("inhalt").innerHTML = h;
+    var slot = document.getElementById("peSlot");
+    if (slot) slot.appendChild(peKnopf);
+    zpBinden(noten);
 
     /* Ein Tipp auf ein Fach zeigt, was darin gefragt wird. Immer nur EINES
      * offen - sonst steht Paul vor einer Wand aus Text und sieht die Balken

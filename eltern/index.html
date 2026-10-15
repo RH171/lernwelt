@@ -1581,7 +1581,7 @@
 
     var zeilen = faecher.map(function(f){
       var chips = f.noten.map(function(n){
-        var t = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || "?");
+        var t = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || (n.offen ? "kommt noch" : "?"));
         /* Ein <span>, kein Knopf: Ein Tippziel muss 44 px hoch sein (WCAG 2.5.8),
            und auf 26 px will niemand eine Note loeschen. Geaendert wird ueber
            "Noten bearbeiten" darunter - dort ist jede Zeile gross genug. */
@@ -1671,7 +1671,7 @@
     if (!alle.length) return notenMelde('<p class="unter">Es sind noch keine Noten da.</p>');
     alle.sort(function(a, b){ return a.datum < b.datum ? 1 : -1; });
     var zeilen = alle.map(function(n){
-      var wert = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || "?");
+      var wert = (n.note !== undefined && n.note !== null) ? String(n.note).replace(".", ",") : (n.punkte || (n.offen ? "kommt noch" : "?"));
       return '<div class="nzeile"><span><b>' + esc(wert) + '</b> · ' +
              esc(n.fach.charAt(0).toUpperCase() + n.fach.slice(1)) + ' · ' + esc(n.anlass) +
              ' · ' + esc(kurzDatum(n.datum)) +
@@ -1752,7 +1752,7 @@
     }
     var unsicher = liste.filter(function(n){ return n.sicher === false; }).length;
     var zeilen = liste.map(function(n){
-      return '<li>' + esc(n.fach) + ': <b>' + esc(n.note !== undefined ? String(n.note).replace(".", ",") : (n.punkte || "?")) + '</b>' +
+      return '<li>' + esc(n.fach) + ': <b>' + esc(n.note !== undefined ? String(n.note).replace(".", ",") : (n.punkte || (n.offen ? "kommt noch" : "?"))) + '</b>' +
              ' · ' + esc(n.anlass) + ' · ' + esc(kurzDatum(n.datum)) +
              (n.art === "gross" ? ' · Schulaufgabe' : '') +
              (n.gewicht === 2 ? ' · doppelt' : '') +
