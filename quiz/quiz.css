@@ -53,6 +53,9 @@ h2{font:800 19px/1.2 var(--rund);margin:0 0 4px}
 
 /* Ende */
 .endezahl{font:800 40px/1 var(--rund);color:var(--akzent);margin:6px 0}
+/* Uebungsnote ab 11 Fragen (15.10.2026), nur bei Paul */
+.qnote{margin:10px auto 0;max-width:420px;border-radius:14px;padding:10px 14px;background:var(--akzent-hell);color:var(--ink);font-size:15px;line-height:1.45}
+.qnote .qnote-zahl{display:block;font:800 22px/1.2 var(--rund);margin-bottom:2px}
 .offen{margin-top:14px;border-radius:14px;padding:12px 14px;background:var(--akzent-hell);font-size:15px;line-height:1.5}
 .offen ul{margin:6px 0 0;padding-left:20px}
 .laedt{display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--muted);font-size:15px}

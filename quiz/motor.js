@@ -1278,6 +1278,27 @@ function artKurz(art) {
 
   /* ---------- Ende ---------- */
 
+  /* Uebungsnote (15.10.2026, Dennys Wahl "A · Milder Schluessel"). Paul
+     wuenscht sich ab mehr als 10 Fragen eine Note. Bayern schreibt keinen
+     Notenschluessel vor, die Lehrerin legt ihn fest (befunde/2026-10-15-
+     notenschluessel-quiz.md). DER SCHLUESSEL STEHT NUR HIER: Wird er auf den
+     der Lehrerin umgestellt, aendert sich nur diese Konstante.
+     Gerechnet in Promille mit ganzen Zahlen - 7 von 8 sind genau 875 und
+     damit eine 1, ohne Rundungsfehler. Ganze Noten, keine Zwischennoten. */
+  var UEBUNGSNOTE = {
+    kinder: ["paul"],
+    abFragen: 11,                                           // mehr als 10
+    schluessel: [[875, 1], [750, 2], [625, 3], [500, 4], [250, 5]]   // darunter 6
+  };
+  function uebungsnote(richtig, gesamt) {
+    if (!(gesamt >= UEBUNGSNOTE.abFragen)) return 0;
+    for (var i = 0; i < UEBUNGSNOTE.schluessel.length; i++) {
+      if (richtig * 1000 >= UEBUNGSNOTE.schluessel[i][0] * gesamt) return UEBUNGSNOTE.schluessel[i][1];
+    }
+    return 6;
+  }
+  window.QUIZ_UEBUNGSNOTE = uebungsnote;   // fuer die Messung
+
   function endeMalen() {
     melden();
     var gesamt = antwortenLog.length;
@@ -1290,6 +1311,23 @@ function artKurz(art) {
       : quote >= 80 ? "Stark. Das sitzt."
       : quote >= 50 ? "Gut durchgehalten. Die, die nicht saßen, kommen wieder - dann mit anderen Zahlen."
       : "Das war schwer, und du bist drangeblieben. Genau die Fragen kommen wieder, bis sie sitzen.";
+
+    /* Die Note kommt aus derselben Zahl wie "X von Y" (erster Versuch). Sie
+       ist eine Uebungsnote, keine Probennote, und steht nur bei Paul. */
+    var notenFeld = $("q-ende-note");
+    if (notenFeld) {
+      var note = UEBUNGSNOTE.kinder.indexOf(KIND) >= 0 ? uebungsnote(richtigGesamt, gesamt) : 0;
+      if (note) {
+        notenFeld.innerHTML = '<b class="qnote-zahl">\u00dcbungsnote ' + note + "</b>" +
+          "<span>So h\u00e4ttest du mit diesem Schl\u00fcssel in einer Probe abgeschnitten.</span>";
+        notenFeld.setAttribute("data-note", String(note));
+        notenFeld.classList.remove("verborgen");
+      } else {
+        notenFeld.innerHTML = "";
+        notenFeld.removeAttribute("data-note");
+        notenFeld.classList.add("verborgen");
+      }
+    }
 
     // Was heute nicht saß, beim Namen nennen.
     var offen = {};
