@@ -573,6 +573,24 @@
   <!-- Gelbe Probenkarte (04.10.2026): steht nur da, wenn eine Probe in den
        naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
   <div id="probenkarte" class="verborgen"></div>
+  <!-- Probenstoff Mathe (Denny, 13.10.2026; seit 15.10.2026 direkt unter der Probenkarte): Mathe-Probe am Montag, 19.10.2026. Bis dahin jeden Tag neue
+       Aufgaben, danach verschwindet die Karte still. Der Satz nennt nie einen Rueckstand, eine Serie oder Tage. -->
+  <a class="createcard probenstoff" href="klasse4-mathe-probenstoff.html" id="probenStoff">
+    <div class="cc-ic">📐</div>
+    <div>
+      <div class="cc-t">Probenstoff Mathe</div>
+      <div class="cc-s" id="probenStoffSatz">Jeden Tag neue Aufgaben für deine Mathe-Probe.</div>
+    </div>
+    <div class="cc-arrow">›</div>
+  </a>
+  <script>(function(){try{
+    var d=new Date(), h=window.__psHeute||(d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2));
+    var karte=document.getElementById("probenStoff"), el=document.getElementById("probenStoffSatz");
+    if(h>"2026-10-19"){ karte.parentNode.removeChild(karte); return; }
+    var s=JSON.parse(localStorage.getItem("paul-probenstoff")||"null"), x=s&&s.heute;
+    if(x&&x.d===h&&x.t2){ karte.classList.add("erledigt"); el.textContent="Für heute geschafft – morgen gibt es neue."; }
+    else if(x&&x.d===h&&x.t1){ el.textContent="Teil 1 ist geschafft – jetzt noch die Sachaufgaben."; }
+  }catch(e){}})();</script>
   <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
        (/paul/probeneintrag.js, Server prueft die Grenzen). Steht immer da, auch ohne Probe. -->
   <button type="button" id="probeEintragen" class="pe-knopf">📝 Probe angekündigt? Hier eintragen</button>
@@ -626,24 +644,6 @@
     else if(plan[h]) el.textContent="Heute dran: "+plan[h]+".";
   }catch(e){}})();</script>
 
-  <!-- Probenstoff Mathe (Denny, 13.10.2026): Mathe-Probe am Montag, 19.10.2026. Bis dahin jeden Tag neue
-       Aufgaben, danach verschwindet die Karte still. Der Satz nennt nie einen Rueckstand, eine Serie oder Tage. -->
-  <a class="createcard probenstoff" href="klasse4-mathe-probenstoff.html" id="probenStoff">
-    <div class="cc-ic">📐</div>
-    <div>
-      <div class="cc-t">Probenstoff Mathe</div>
-      <div class="cc-s" id="probenStoffSatz">Jeden Tag neue Aufgaben für deine Mathe-Probe.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-  <script>(function(){try{
-    var d=new Date(), h=window.__psHeute||(d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2));
-    var karte=document.getElementById("probenStoff"), el=document.getElementById("probenStoffSatz");
-    if(h>"2026-10-19"){ karte.parentNode.removeChild(karte); return; }
-    var s=JSON.parse(localStorage.getItem("paul-probenstoff")||"null"), x=s&&s.heute;
-    if(x&&x.d===h&&x.t2){ karte.classList.add("erledigt"); el.textContent="Für heute geschafft – morgen gibt es neue."; }
-    else if(x&&x.d===h&&x.t1){ el.textContent="Teil 1 ist geschafft – jetzt noch die Sachaufgaben."; }
-  }catch(e){}})();</script>
 
   <div id="hauptwege">
   <button class="createcard" id="createBtn" data-weg="erfinden">
