@@ -16,11 +16,74 @@
  *     Übungsblatt der Lehrerin (art "uebung") mit rechenbaren Feldern.
  *   - Blätter ohne ein einziges rechenbares Feld (etwa ein falsch einsortiertes Deutschblatt) bleiben draußen.
  *   - Je Feld nur Formen, die der Motor kennt (mal, malp, teil, teilp, rest, pkt, rech, raet, tl, vf).
+ *
+ * texte (16.10.2026, Denny 19:13 Uhr: „Die Textaufgabe so nah wie möglich an der Lehrerformulierung knüpfen.“):
+ *   Textaufgaben-Schemata der Lehrerin aus dem Inhalt (`inhalt`) jedes Matheblattes ab VON_TEXT
+ *   (Schuljahresbeginn 15.09.2026; Textaufgaben sind Pauls Schwachstelle, nicht nur Probenstoff).
+ *   Erkannt werden nur die Schemata, die der Motor im Wortlaut kennt (raet, lt:unt/add/addt/vd/hb/wenn/du/dz/dif/sum).
+ *   Ein Rechenfeld derselben Zahlen (801 − 563 + 347) wird zum Schema-Schlüssel (lt:unt:801:563:+:347),
+ *   damit ein rot verbesserter Fehler als Textaufgabe in die Kiste kommt, nicht als nackte Rechnung.
  * Rein lesend, kein Schreibvorgang, kein Modellaufruf. Der Motor prüft jeden Schlüssel noch einmal.
  */
 import { abschriftLesen, feldUrteil, feldId, rechnen, sollIst } from "./_nachrechnen.js";
 
 export const VON = "2026-10-05";
+export const VON_TEXT = "2026-09-15";
+const MAX_TEXTE = 20;
+const FACH_Z = { doppelte: 2, dreifache: 3, vierfache: 4, "fünffache": 5 };
+
+/* Eine Inhaltszeile -> Schema-Schlüssel oder null. Versteht den Wortlaut der Lehrerin und die
+   Kurzfassung der Abschrift („Zahl um 18 verkleinert ergibt 50“). Was dahinter steht („– Kind: …“), zählt nicht. */
+export function textSchema(zeile) {
+  let t = String(zeile || "").replace(/\s+[–-]\s*Kind\b.*$/i, "").replace(/\(nicht gelöst\)/i, "").replace(/−/g, "-").trim();
+  if (/^(✍|Kind\b|Name:|Überschrift)/i.test(t)) return null;
+  t = t.replace(/^Aufgabe\s*\d+\s*:\s*/i, "").replace(/^\d+\.\s*/, "");
+  let m;
+  if ((m = /Unterschied (?:von|der Zahlen) (\d+) und (\d+)[.,]?\s*(?:(?:dazu|Addiere zum Ergebnis die Zahl) (\d+)|(?:Teile das )?Ergebnis durch (\d+))/i.exec(t))) {
+    const a = +m[1], b = +m[2];
+    return a > b ? "lt:unt:" + a + ":" + b + ":" + (m[3] ? "+:" + m[3] : "/:" + m[4]) : null;
+  }
+  if ((m = /(?:Zahl|ich sie)\b[^.]*?um (\d+) (verkleiner|vergrößer)\w*,?\s*(?:ergibt|erhalte ich) (?:das (Doppelte|Dreifache|Vierfache|Fünffache) von )?(\d+)/i.exec(t))) {
+    return "raet:" + (/^verkl/i.test(m[2]) ? "m" : "p") + ":" + m[1] + ":" + m[4] + (m[3] ? ":" + FACH_Z[m[3].toLowerCase()] : "");
+  }
+  if ((m = /Du erhältst meine Zahl, wenn du die Zahl (\d+) (halbierst|verdoppelst) und dann (\d+) (addierst|subtrahierst)/i.exec(t)))
+    return "lt:du:" + (/^halb/i.test(m[2]) ? "h" : "v") + ":" + m[1] + ":" + (/^add/i.test(m[4]) ? "+" : "-") + ":" + m[3];
+  if ((m = /Addiere (das Doppelte|die Hälfte) von (\d+) zu der Zahl (\d+)/i.exec(t))) return "lt:dz:" + (/Doppelte/i.test(m[1]) ? "d" : "h") + ":" + m[2] + ":+:" + m[3];
+  if ((m = /Subtrahiere von der Zahl (\d+) (das Doppelte|die Hälfte) von (\d+)/i.exec(t))) return "lt:dz:" + (/Doppelte/i.test(m[2]) ? "d" : "h") + ":" + m[3] + ":-:" + m[1];
+  if ((m = /Subtrahiere von (?:der Zahl )?(\d+) die Zahl (\d+)\. Von der Differenz subtrahiere dann die Zahl (\d+)/i.exec(t))) return "lt:dif:" + m[1] + ":" + m[2] + ":" + m[3];
+  if ((m = /Subtrahiere von der Zahl (\d+) die Summe von (\d+) und (\d+)/i.exec(t))) return "lt:sum:" + m[1] + ":" + m[2] + ":" + m[3];
+  if ((m = /Addiere zu(r Zahl)? (\d+) die Zahl (\d+),? (?:und )?(dividiere|teile) das Ergebnis durch (\d+)/i.exec(t))) return "lt:" + (/^teil/i.test(m[4]) ? "addt" : "add") + ":" + m[2] + ":" + m[3] + ":" + m[5];
+  if ((m = /^(\d+) \+ (\d+), durch (\d+) teilen/i.exec(t))) return "lt:addt:" + m[1] + ":" + m[2] + ":" + m[3];
+  if ((m = /Verdopple die Zahl (\d+)\. Addiere zum Ergebnis (\d+)|^(\d+) verdoppeln, (\d+) addieren/i.exec(t))) return "lt:vd:" + (m[1] || m[3]) + ":" + (m[2] || m[4]);
+  if ((m = /Halbiere die Zahl (\d+)\. Subtrahiere vom Ergebnis (\d+)|^(\d+) halbieren, (\d+) subtrahieren/i.exec(t))) return "lt:hb:" + (m[1] || m[3]) + ":" + (m[2] || m[4]);
+  /* Rückwärts-Rätsel: „Wenn du von meiner Zahl 300 subtrahierst und dann 60 addierst, erhältst du 200.“
+     oder kurz „Zahl - 300 + 60 = 200“, „Von meiner Zahl 35 subtrahieren, durch 3 dividieren, ergibt 30“. */
+  if (/meine[rn]?\s+Zahl|^Zahl\b/i.test(t)) {
+    const i = t.search(/Zahl/i), rest = t.slice(i + 4);
+    const erg = /(?:=|ergibt|erhältst du)\s*(\d+)/i.exec(rest);
+    if (!erg) return null;
+    const vor = rest.slice(0, erg.index), ops = [];
+    const re = /(verdoppel\w*|halbier\w*|durch\s*(\d+)\s*(?:dividier|teil)\w*|(\d+)\s*subtrahier\w*|(\d+)\s*addier\w*|(?:-|minus)\s*(\d+)|(?:\+|plus)\s*(\d+))/gi;
+    let o;
+    while ((o = re.exec(vor))) {
+      if (/^verdoppel/i.test(o[1])) ops.push(["v", 0]);
+      else if (/^halbier/i.test(o[1])) ops.push(["h", 0]);
+      else if (o[2]) ops.push(["/", +o[2]]);
+      else if (o[3] || o[5]) ops.push(["-", +(o[3] || o[5])]);
+      else ops.push(["+", +(o[4] || o[6])]);
+    }
+    if (ops.length !== 2 || "-vh".indexOf(ops[0][0]) < 0 || "+-v/".indexOf(ops[1][0]) < 0) return null;
+    return "lt:wenn:" + ops[0][0] + ":" + ops[0][1] + ":" + ops[1][0] + ":" + ops[1][1] + ":" + erg[1];
+  }
+  return null;
+}
+/* rech:801-563+347 auf einem Blatt mit „Unterschied von 801 und 563, dazu 347“ -> lt:unt:801:563:+:347 */
+function zuSchema(k, schemata) {
+  const m = /^rech:(\d+)-(\d+)([+\/])(\d+)$/.exec(k);
+  if (!m) return k;
+  const z = "lt:unt:" + m[1] + ":" + m[2] + ":" + m[3] + ":" + m[4];
+  return schemata.indexOf(z) >= 0 ? z : k;
+}
 const MAX_STELLEN = 12, MAX_QUELLEN = 40;
 const OPZ = { "*": "*", "/": "/", "+": "+", "-": "-" };
 
@@ -173,7 +236,18 @@ export function blattDrin(b, felder) {
 /* Alle Blätter -> { stellen, quellen, blaetter }. eintraege wie aus stoffLesen (neueste zuerst). */
 export function blattStoff(eintraege, opt) {
   const von = (opt && opt.von) || VON, bis = (opt && opt.bis) || "9999-12-31";
-  const stellen = [], quellen = [], blaetter = [], schonS = new Set(), schonQ = new Set();
+  const vonText = (opt && opt.vonText) || VON_TEXT;
+  const stellen = [], quellen = [], blaetter = [], texte = [], schonS = new Set(), schonQ = new Set(), schonT = new Set();
+  /* Textaufgaben-Schemata zuerst, aus allen Matheblättern ab Schuljahresbeginn (neueste zuerst). */
+  const schemaJe = {};
+  (eintraege || []).filter((b) => b && String(b.fach || "").toLowerCase().startsWith("mat") && b.sichtbar !== false &&
+    String(b.datum || "") >= vonText && String(b.datum || "") <= bis)
+    .sort((x, y) => String(y.datum).localeCompare(String(x.datum)) || String(y.angelegt || "").localeCompare(String(x.angelegt || "")))
+    .forEach((b) => {
+      const ks = (Array.isArray(b.inhalt) ? b.inhalt : []).map(textSchema).filter(Boolean);
+      schemaJe[b.id] = ks;
+      ks.forEach((k) => { if (!schonT.has(k) && texte.length < MAX_TEXTE) { schonT.add(k); texte.push({ k, blatt: b.id, datum: b.datum }); } });
+    });
   const liste = (eintraege || []).filter((b) => b && String(b.fach || "").toLowerCase().startsWith("mat") && b.sichtbar !== false &&
     String(b.datum || "") >= von && String(b.datum || "") <= bis)
     .sort((x, y) => String(y.datum).localeCompare(String(x.datum)) || String(y.angelegt || "").localeCompare(String(x.angelegt || "")));
@@ -188,6 +262,7 @@ export function blattStoff(eintraege, opt) {
       for (const f of ab.felder) {
         if (f.zwischen) continue;
         const s = feldStoff(f, n.g || {});
+        if (s) s.k = zuSchema(s.k, schemaJe[b.id] || []);
         if (!s) { if (f.typ !== "text") zahl.nichtUebernommen++; continue; }
         /* Auf Mal/Geteilt-Blättern nur Mal/Geteilt-Stoff; Plus/Minus nur von Übungsblättern der Lehrerin. */
         if (d.warum !== "Übungsblatt der Lehrerin" && b.art !== "uebung" && !malTeilSchluessel(s.k)) { zahl.nichtUebernommen++; continue; }
@@ -203,5 +278,5 @@ export function blattStoff(eintraege, opt) {
     }
     blaetter.push({ ...info, drin: d.drin, warum: d.warum, soll: si.soll, ist: si.ist, voll: si.voll, ...zahl });
   }
-  return { stellen, quellen, blaetter };
+  return { stellen, quellen, blaetter, texte };
 }

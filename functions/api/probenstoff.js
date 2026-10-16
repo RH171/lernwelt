@@ -1,7 +1,8 @@
 /* Probenstoff Mathe: Stoff aus Pauls Matheblättern (16.10.2026, Kapitel 121, _probenstoff.js)
  *
  * GET /api/probenstoff?kind=paul
- *   -> { ok, stellen: [{k, blatt, datum}], quellen: [{k, blatt, datum}], blaetter: <Zahl im Probenstoff> }
+ *   -> { ok, stellen: [{k, blatt, datum}], quellen: [{k, blatt, datum}], texte: [{k, blatt, datum}] (Textaufgaben
+ *      im Wortlaut der Lehrerin, ab Schuljahresbeginn), blaetter: <Zahl im Probenstoff> }
  *   Nur Pauls Ausweis oder der Elternausweis. NUR LESEN: zwei KV-Lesevorgänge (zwei Monate),
  *   kein Schreibvorgang, kein Modellaufruf. Lösungen stehen nicht drin - sie folgen ohnehin aus
  *   dem Schlüssel, den die Seite rechnet (/probenstoff/motor.js prüft jeden Schlüssel noch einmal).
@@ -27,7 +28,7 @@ export async function onRequestGet(context) {
   const e = await stoffLesen(env, "paul", 2);
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
   const r = blattStoff(e.eintraege, { von: VON, bis: e.heute });
-  const aus = { ok: true, stellen: r.stellen.map(({ k, blatt, datum }) => ({ k, blatt, datum })), quellen: r.quellen,
+  const aus = { ok: true, stellen: r.stellen.map(({ k, blatt, datum }) => ({ k, blatt, datum })), quellen: r.quellen, texte: r.texte,
                 blaetter: r.blaetter.filter((b) => b.drin).length };
   if (p.get("eltern") === "1" && eltern) aus.liste = r.blaetter;
   return json(200, aus);

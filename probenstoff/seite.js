@@ -1,7 +1,7 @@
 /* Pauls Probenstoff Mathe – die Anzeige (13.10.2026). Rechnet nichts selbst: Runde, Prüfung,
  * Hilfen und Buchung kommen aus /probenstoff/motor.js (window.PSMotor).
  *
- * Ablauf: Start → Teil 1 (Kiste + 8 frische, gemischt) → Zwischenschirm → Teil 2 (Sachaufgaben) → Ende.
+ * Ablauf: Start → Teil 1 (Kiste + 8 frische, gemischt) → Zwischenschirm → Teil 2 (Textaufgaben im Wortlaut der Lehrerin und Sachaufgaben) → Ende.
  * Gezählt wird der erste Versuch, Hilfe in Stufen (Kapitel 044). Eingabe: ein Feld, zwei Felder
  * (Ergebnis und R) oder Zahlen antippen (Teiler, Vielfache).
  * Speicher: localStorage "paul-probenstoff" (paul-sync.js schickt ihn mit), EIN Schreibvorgang je
@@ -80,7 +80,7 @@
     zeige("start");
     var hs = h(), runde = M.tagesRunde(stand, datum, hs.t2 ? hs.n : 0, blatt);
     $("teil-1-satz").textContent = runde.teil1.length + " Aufgaben: Mal, Geteilt, Rest, Punkt vor Strich, Teiler und Aufgaben wie auf deinen Blättern.";
-    $("teil-2-satz").textContent = runde.teil2.length + " Aufgaben aus dem Alltag.";
+    $("teil-2-satz").textContent = runde.teil2.length + " Textaufgaben: wie auf deinen Blättern und aus dem Alltag.";
     $("teil-1").classList.toggle("fertig", !!hs.t1);
     $("teil-2").classList.toggle("fertig", !!hs.t2);
     $("los").textContent = hs.t2 ? "Noch eine Runde" : hs.t1 ? "Weiter mit Teil 2" : "Los geht's";
@@ -113,10 +113,11 @@
     }
     var kopf = x.text ? '<p class="sachtext" id="frage">' + esc(x.text) + '</p>' : "";
     var zeile;
-    if (x.art === "sach" || x.art === "raet") {
+    if (x.art === "sach" || x.art === "raet" || x.art === "lt") {
+      /* Zahlenrätsel und Textaufgaben der Lehrerin: Antwortsatz wie auf dem Blatt („Meine Zahl ist …“). */
       zeile = x.typ === "rest"
         ? feldHtml("a", x.labelA) + '<span class="und">und</span>' + feldHtml("b", x.labelB)
-        : feldHtml("a", "Antwort") + (x.einheit ? '<span class="einheit">' + esc(x.einheit) + '</span>' : "");
+        : (x.satz ? '<span class="satz">' + esc(x.satz) + '</span>' : "") + feldHtml("a", "Antwort") + (x.einheit ? '<span class="einheit">' + esc(x.einheit) + '</span>' : "");
       return kopf + '<div class="zeile sach">' + zeile + '</div>';
     }
     if (x.typ === "rest") {
@@ -202,6 +203,7 @@
     if (!MW || !x) return false;
     if (x.art === "punkt" || x.typ === "rest") return true;   // Teilen mit Rest: teilen, dann Rest ausrechnen
     if (x.art === "sach") return (x.schritte || 1) >= 2;
+    if (x.art === "lt" || x.art === "raet") return true;   // Rechenkästchen wie auf dem Blatt der Lehrerin
     return MW.schritte(x.frage) >= 2;
   }
   function meinWegZeigen(x) {
@@ -404,7 +406,7 @@
     }
     if (lauf.phase === "1-fertig") {
       var r1 = lauf.erg[1].filter(function (e) { return e.ok; }).length;
-      $("zwischen-satz").textContent = "Beim ersten Versuch richtig: " + r1 + " von " + lauf.erg[1].length + ". Jetzt noch " + lauf.runde.teil2.length + " Sachaufgaben.";
+      $("zwischen-satz").textContent = "Beim ersten Versuch richtig: " + r1 + " von " + lauf.erg[1].length + ". Jetzt noch " + lauf.runde.teil2.length + " Textaufgaben.";
       zeige("zwischen");
       return;
     }
@@ -414,7 +416,7 @@
     var ra = a.filter(function (e) { return e.ok; }).length, rb = b.filter(function (e) { return e.ok; }).length;
     lauf = null; laufWeg();
     zeige("ende");
-    $("ende-zahlen").textContent = "Beim ersten Versuch richtig: " + (a.length ? "Probenstoff " + ra + " von " + a.length + ", " : "") + "Sachaufgaben " + rb + " von " + b.length + ". Du hast heute fleißig geübt.";
+    $("ende-zahlen").textContent = "Beim ersten Versuch richtig: " + (a.length ? "Probenstoff " + ra + " von " + a.length + ", " : "") + "Textaufgaben " + rb + " von " + b.length + ". Du hast heute fleißig geübt.";
   }
 
   function melden(x, ok, gegeben, sek) {
