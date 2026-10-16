@@ -1279,7 +1279,8 @@ function artKurz(art) {
   /* ---------- Ende ---------- */
 
   /* Uebungsnote (15.10.2026; seit 16.10.2026 Dennys Wahl "D · Strenger wie
-     Frau Sy": ihre Lese-Probe gab fuer 23,5/29 = 81 % eine 3). Paul
+     Frau Sy": ihre Lese-Probe gab fuer 23,5/29 = 81 % eine 3, 24/29 = 82,8 % waere
+     eine 2 gewesen, deshalb 2 ab 82 %). Paul
      wuenscht sich ab mehr als 10 Fragen eine Note. Bayern schreibt keinen
      Notenschluessel vor, die Lehrerin legt ihn fest (befunde/2026-10-15-
      notenschluessel-quiz.md). DER SCHLUESSEL STEHT NUR HIER: Wird er auf den
@@ -1288,7 +1289,7 @@ function artKurz(art) {
   var UEBUNGSNOTE = {
     kinder: ["paul"],
     abFragen: 11,                                           // mehr als 10
-    schluessel: [[950, 1], [850, 2], [700, 3], [500, 4], [250, 5]]   // darunter 6
+    schluessel: [[950, 1], [820, 2], [700, 3], [500, 4], [250, 5]]   // darunter 6
   };
   function uebungsnote(richtig, gesamt) {
     if (!(gesamt >= UEBUNGSNOTE.abFragen)) return 0;
