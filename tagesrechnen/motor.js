@@ -101,6 +101,19 @@
     return l;
   })();
 
+  /* Dieselbe Form, neue Zahlen (Denny, 16.10.2026: „Paul hat immer wieder mit der gleichen
+   * Aufgabenform Probleme“): 56 : 8 → 32 : 8 (Teiler bleibt), 7 · 8 → 7 · 6 (größerer Faktor bleibt).
+   * Neue Zahl 2 … 9, nie dieselbe Aufgabe. */
+  function geschwister1x1(k, saat) {
+    var x = einmaleins(k); if (!x) return null;
+    var r = zufall("1x1-g|" + k + "|" + (saat || "")), kand = [];
+    var alt = x.art === "mal" ? Math.min(x.a, x.b) : x.loesung;
+    for (var n = 2; n <= 9; n++) if (n !== alt) kand.push(n);
+    var n2 = kand[Math.floor(r() * kand.length)];
+    if (x.art === "mal") return x.a >= x.b ? x.a + "x" + n2 : n2 + "x" + x.b;
+    return (n2 * x.b) + ":" + x.b;
+  }
+
   function einmaleins(k) {
     var m = /^(\d+)x(\d+)$/.exec(k);
     if (m) {
@@ -639,7 +652,7 @@
   var M = {
     EIN: EIN, ALLE: ALLE, VARIANTEN: VARIANTEN, ARTNAME: ARTNAME,
     heuteIso: heuteIso, leererStand: leererStand, standPruefen: standPruefen,
-    einmaleins: einmaleins, tipp1x1: tipp1x1, hilfe1x1: hilfe1x1, neueAnzahl: neueAnzahl,
+    einmaleins: einmaleins, geschwister1x1: geschwister1x1, tipp1x1: tipp1x1, hilfe1x1: hilfe1x1, neueAnzahl: neueAnzahl,
     rundeEinmaleins: rundeEinmaleins, buchenEinmaleins: buchenEinmaleins,
     rundeText: rundeText, buchenText: buchenText, rueckmeldung: rueckmeldung,
     beschreibung: beschreibung, bauer: BAUER, zufall: zufall, kurz: kurz,

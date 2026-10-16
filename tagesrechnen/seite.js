@@ -15,6 +15,7 @@
   "use strict";
   var M = window.TRMotor;
   var SPEICHER = "paul-tagesrechnen", LAUF = "paul-tagesrechnen-lauf";
+  var NACH_GESCHWISTER = 8;  // Einmaleins-Fehlerrunde: höchstens so viele Aufgaben derselben Form mit neuen Zahlen (16.10.2026)
   var NACH_HOECHSTENS = 3;   // in der Fehlerrunde gilt eine Aufgabe nach drei Anläufen als erledigt (morgen kommt sie ohnehin wieder)
   function $(id) { return document.getElementById(id); }
   function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
@@ -23,7 +24,10 @@
   var stand = laden();
   var textRunde = null;     // Aufgaben-Objekte des Tages (mit Rückmelde-Funktionen), aus dem Motor neu erzeugt
   var lauf = null;          // { d, phase:"e"|"t", liste:[schlüssel], i, erg:{}, nach:[], nachZahl:{}, modus:"haupt"|"nach", versuche, eingabe }
-  var sperre = false, marke = 0;
+  var sperre = false, marke = 0, ergebnisSeit = 0;
+  // Doppeltipp auf Prüfen überspringt das Ergebnis nicht (16.10.2026): Weiter erst nach 500 ms.
+  var SPERRE_MS = typeof window.__trSperreMs === "number" ? window.__trSperreMs : 500;
+  function jetztMs() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
 
   function laden() {
     var s = null;
@@ -164,6 +168,7 @@
     var lob = erster ? "Richtig!" : "Gut, jetzt stimmt es.";
     sperre = true;
     lauf.wartet = true;
+    ergebnisSeit = jetztMs();
     if (lauf.phase === "t") {
       tipp(lob + " " + a.x.probe, true);
       document.querySelector('[data-taste="ok"]').textContent = "Weiter";
@@ -186,6 +191,7 @@
 
   function naechste() {
     if (!sperre) return;
+    if (jetztMs() - ergebnisSeit < SPERRE_MS) return;
     marke++;
     lauf.wartet = false;
     document.querySelector('[data-taste="ok"]').textContent = "Prüfen";
@@ -195,11 +201,21 @@
   function weiter() {
     if (lauf.modus === "haupt" && lauf.i >= lauf.liste.length) {
       lauf.nach = lauf.liste.filter(function (k) { return lauf.erg[k] === false; });
+      var falschZahl = lauf.nach.length;
+      // Einmaleins: zu jeder falschen Aufgabe eine derselben Form mit neuen Zahlen (16.10.2026),
+      // höchstens NACH_GESCHWISTER. Sie kommen nach den Wiederholungen, zählen nicht in "X von Y".
+      if (lauf.phase === "e") {
+        lauf.nach.slice(0, NACH_GESCHWISTER).forEach(function (k) {
+          var g = M.geschwister1x1(k, datum);
+          if (g && lauf.nach.indexOf(g) < 0) lauf.nach.push(g);
+        });
+      }
       lauf.modus = "nach";
       laufMerken();
       if (lauf.nach.length) {
-        zwischen("Fast geschafft!", (lauf.nach.length === 1 ? "Eine Aufgabe hat" : lauf.nach.length + " Aufgaben haben") +
-          " heute gewackelt. Wir machen sie jetzt noch einmal – bis jede einmal sitzt.", function () { zeige("spiel"); aufgabeZeigen(); });
+        zwischen("Fast geschafft!", (falschZahl === 1 ? "Eine Aufgabe hat" : falschZahl + " Aufgaben haben") +
+          " heute gewackelt. Wir machen sie jetzt noch einmal – bis jede einmal sitzt." +
+          (lauf.nach.length > falschZahl ? " Dazu kommen ähnliche Aufgaben mit neuen Zahlen." : ""), function () { zeige("spiel"); aufgabeZeigen(); });
         return;
       }
     }
@@ -258,6 +274,7 @@
   });
   document.addEventListener("keydown", function (e) {
     if ($("spiel").classList.contains("verborgen")) return;
+    if (e.repeat) return;   // gehaltene Taste wertet nicht mehrfach
     if (/^[0-9]$/.test(e.key)) taste(e.key);
     else if (e.key === "Backspace") taste("weg");
     else if (e.key === "Enter") taste("ok");
