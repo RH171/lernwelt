@@ -138,6 +138,9 @@ export function gruenFuer(blatt) {
   const aus = [];
   for (const k of ks) {
     if (!k || !Array.isArray(k.ort)) continue;
+    /* Rot ist fertig (16.10.2026): neben der roten Verbesserung der Lehrerin steht
+       kein grünes „verbessert · durch Claude“. Der Verlauf bleibt. */
+    if (k.quelle === "lehrerin") continue;
     for (const o of k.ort) {
       /* Neues Foto (14.10.2026): ein Ort vom alten Foto zeigt nichts mehr. */
       if (!ortGilt({ ...o, am: k.am }, blatt.fotoNeu)) continue;
@@ -154,10 +157,13 @@ export function gruenFuer(blatt) {
 /* Für den Browser (GET /api/schulstoff): Korrektur-Orte vom alten Foto
    weglassen - der Verlauf selbst bleibt vollständig. Ändert nichts im Speicher. */
 export function korrekturenFuerBrowser(blatt) {
-  if (!blatt || !blatt.fotoNeu || !Array.isArray(blatt.korrekturen)) return blatt;
+  if (!blatt || !Array.isArray(blatt.korrekturen)) return blatt;
+  if (!blatt.fotoNeu && !blatt.korrekturen.some((k) => k && k.quelle === "lehrerin" && Array.isArray(k.ort))) return blatt;
   return { ...blatt, korrekturen: blatt.korrekturen.map((k) => {
     if (!k || !Array.isArray(k.ort)) return k;
-    const ort = k.ort.filter((o) => ortGilt({ ...o, am: k.am }, blatt.fotoNeu));
+    /* Rot ist fertig (16.10.2026): kein grüner Ort neben dem Rot der Lehrerin
+       (paul/schulstoff.html malt jeden Ort, den es bekommt). */
+    const ort = k.quelle === "lehrerin" ? [] : k.ort.filter((o) => ortGilt({ ...o, am: k.am }, blatt.fotoNeu));
     if (ort.length === k.ort.length) return k;
     const c = { ...k };
     if (ort.length) c.ort = ort; else delete c.ort;
