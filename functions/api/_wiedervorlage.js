@@ -109,8 +109,11 @@ export const EINSTELLUNGEN = {
 
     /* Stellt die Faelligkeit Blaetter in der Auswahl nach oben?
        Die Sorte (Lernziele/Heft/Uebung) entscheidet weiterhin ZUERST -
-       die Faelligkeit sortiert nur innerhalb gleicher Sorte. */
-    sortiert: true,
+       die Faelligkeit sortiert nur innerhalb gleicher Sorte.
+       Seit 16.10.2026 aus: Denny zu einem Blatt vom 28.9. ganz oben ueber den
+       Blaettern vom 16.10.: "Das erste Blatt ist nicht nach dem Datum sortiert."
+       Jetzt neueste zuerst; "viele warten auf dich" steht weiter am Blatt. */
+    sortiert: false,
 
     /* Wird gesagt, dass eine Frage schon einmal dran war?
        true  - "Die hattest du schon einmal" beim Aufdecken
