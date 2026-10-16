@@ -263,7 +263,7 @@
     rwMalen();
     $("aufgabe").setAttribute("data-typ", x.typ);
     $("tasten").classList.toggle("nurok", x.typ === "tippen");
-    document.querySelector('[data-taste="ok"]').textContent = "Prüfen";
+    $("tasten").classList.remove("verborgen"); $("weiter").classList.add("verborgen");
     tipp(lauf.versuche ? lauf.tipp : "", false);
     sperre = false;
     shown = jetzt(); verdeckt = 0; verdecktSeit = document.hidden ? shown : 0;
@@ -383,10 +383,10 @@
     [].forEach.call(document.querySelectorAll("#aufgabe .feld"), function (f) { f.classList.add("gut"); });
     [].forEach.call(document.querySelectorAll(".chip.an"), function (b) { b.classList.add("gut"); });
     // Doppeltippen auf „Prüfen“ springt nicht gleich über das Ergebnis weiter (die Messung darf die Zeit verkürzen).
-    sperre = true; weiterAb = jetzt() + (window.__psWeiterMs != null ? +window.__psWeiterMs : 450);
+    sperre = true; weiterAb = jetzt() + (window.__psWeiterMs != null ? +window.__psWeiterMs : 500);
     tipp((erster ? "Richtig! " : "Gut, jetzt stimmt es. ") + M.bestaetigung(x) + ".", true);
-    document.querySelector('[data-taste="ok"]').textContent = "Weiter";
-    $("tasten").classList.add("nurok");
+    // Eigener großer Weiter-Knopf statt der Zifferntasten: das Ergebnis bleibt stehen, bis Paul weitertippt.
+    $("tasten").classList.add("verborgen"); $("weiter").classList.remove("verborgen");
     if ($("meinweg")) $("meinweg").classList.add("verborgen");
     lauf.i++; lauf.versuche = 0; lauf.eingabe = { a: "", b: "" }; lauf.feld = "a"; lauf.wahl = []; lauf.tipp = ""; lauf.rw = null;
     laufMerken();
@@ -445,10 +445,12 @@
       return;
     }
     if (id === "weiter-sach") { rundeBeginnen("2"); return; }
+    if (id === "weiter") { naechste(); return; }
     if (id === "nochmal") { lauf = null; laufWeg(); startZeigen(); return; }
   });
   document.addEventListener("keydown", function (e) {
     if ($("spiel").classList.contains("verborgen")) return;
+    if (e.repeat) return;   // gehaltene Taste zählt einmal
     var t = e["key"];
     if (/^[0-9]$/.test(t)) taste(t);
     else if (t === "Backspace") taste("weg");
