@@ -51,24 +51,43 @@ const WER = { paul: "eines Kindes der 4. Klasse", leon: "eines Kindes der 2. Kla
 
 /* ---------- Der Auftrag ans Modell ---------- */
 
-export function abschreibAuftrag(fach, kind, seitenZahl, ohneRechnen) {
+/* Die Fächer, die das Modell in der FACH-Zeile nennen darf (16.10.2026, anleitung/054):
+   dieselben Schlüssel wie FAECHER_JE_KIND in _schulstoff.js (ohne „anderes“). */
+const FACH_WORT = { mathe: "mathe", deutsch: "deutsch", hsu: "hsu (Heimat- und Sachunterricht: Natur, Technik, Ort, Geschichte)",
+                    englisch: "englisch", franz: "franz (Französisch)", rel: "rel (Religion oder Ethik)", musik: "musik",
+                    geschichte: "geschichte", geo: "geo (Geographie)", info: "info (Informatik)" };
+const FAECHER_STANDARD = { paul: ["mathe", "deutsch", "hsu", "englisch", "rel", "musik"],
+                           leon: ["mathe", "deutsch", "hsu", "rel", "musik"],
+                           helena: ["deutsch", "mathe", "englisch", "franz", "geschichte", "geo", "info", "rel", "musik"] };
+
+export function abschreibAuftrag(fach, kind, seitenZahl, ohneRechnen, faecher) {
   const fn = FACH_NAME[fach] ? " im Fach " + FACH_NAME[fach] : "";
+  const liste = (Array.isArray(faecher) && faecher.length ? faecher : (FAECHER_STANDARD[kind] || FAECHER_STANDARD.paul))
+    .filter((k) => FACH_WORT[k]).map((k) => FACH_WORT[k]).join(", ");
   return (seitenZahl > 1 ? "Das sind " + seitenZahl + " Fotos (Seiten) von einem Blatt" : "Das ist ein Foto von einem Blatt") +
     fn + " " + (WER[kind] || WER.paul) + ". Schreibe das GANZE Blatt ab – Seite für Seite, Aufgabe für Aufgabe, Zeile für " +
     "Zeile, jedes Feld einzeln. NICHTS zusammenfassen, nichts auslassen, nichts verbessern.\n\n" +
-    "ZUERST zählen: je Aufgabe eine Zeile\nSOLL | <Nr> | <Anzahl Eintragsfelder>\n" +
+    /* Fach mitlesen (16.10.2026): Scheitert das erste Durchlesen, war das hier bisher die einzige
+       Lesung - und das Fach blieb ungeprüft (Pauls „Abschreiben und Trennungsregeln“ unter Mathe). */
+    "GANZ ZUERST eine Zeile\nFACH | <Schulfach>\nwelches Schulfach das Blatt nach seinem INHALT ist – genau eines dieser " +
+    "Wörter: " + liste + ". Das Fach oben hat das Kind angetippt, es kann falsch sein: entscheide nur nach dem, was auf dem " +
+    "Blatt steht. Bist du nicht sicher: FACH | unklar\n\n" +
+    "DANN zählen: je Aufgabe eine Zeile\nSOLL | <Nr> | <Anzahl Eintragsfelder>\n" +
     "Nr = die Nummer auf dem Blatt (1, 2a, 3 …). Abschnitte ohne Nummer von oben nach unten A, B, C …; eine Heftseite ohne " +
     "Aufgaben ist A. Eintragsfeld = jede Stelle, an der das Kind etwas eintragen soll oder eingetragen hat: Lücke, " +
     "Antwortzeile, Tabellenfeld, jedes Kästchen zum Ankreuzen oder Ankreisen, jede Zuordnungslinie, jede selbst geschriebene " +
     "Zeile im Heft. Eine Tabelle: Zeilen x Spalten der Eintragsfelder, z. B. SOLL | 2 | 3x4. JEDE Nr, die unten eine " +
-    "feld-, kreuz-, abschrift- oder zeile-Zeile hat, braucht ihre SOLL-Zeile (auch A, B, Rand); druck-Zeilen zählen nicht.\n\n" +
+    "feld-, kreuz-, abschrift-, berichtigung- oder zeile-Zeile hat, braucht ihre SOLL-Zeile (auch A, B, Rand); druck-Zeilen zählen nicht.\n\n" +
     "DANN das Blatt in seiner Reihenfolge, je Zeile des Blattes eine Zeile:\n" +
     "<Nr> | druck | <gedruckter Text wörtlich>   – Überschrift, Arbeitsauftrag, Lesetext, Beispiel: JEDE gedruckte Zeile. Zählt nicht im SOLL.\n" +
     "<Nr> | feld | <Vorgabe> | [<Eintrag des Kindes>]   – Lücke, Antwort, Tabellenfeld. Vorgabe = der gedruckte Text am Feld, " +
     "die Lücke als ___ (z. B. Der ___ bellt.). Mehrere Lücken in einem Satz: je Lücke eine Zeile, Vorgabe mit (1), (2).\n" +
     "<Nr> | kreuz | <Möglichkeit> | [x]  oder  [ ]   – jedes Kästchen/jede Möglichkeit eine Zeile.\n" +
     "<Nr> | abschrift | <gedruckte Vorlage wörtlich> | [<Abschrift des Kindes wörtlich>]   – NUR wenn das Kind einen Text " +
-    "abschreibt, der auf DIESEM Blatt gedruckt steht; je Satz eine Zeile.\n" +
+    "unverändert abschreibt, der auf DIESEM Blatt gedruckt steht; je Satz eine Zeile.\n" +
+    "<Nr> | berichtigung | <gedruckte Vorlage wörtlich> | [<was das Kind geschrieben hat>]   – statt abschrift, wenn das " +
+    "Kind die Vorlage VERBESSERN oder umformen soll: Auftrag wie „Schreibe richtig ab“, „Achte auf Groß- und Kleinschreibung“, " +
+    "„Trenne die Wörter“, „Finde die Fehler“, oder die Vorlage ist absichtlich klein oder falsch geschrieben. Zählt im SOLL.\n" +
     "<Nr> | zeile | [<was das Kind selbst geschrieben hat>]   – eigene Sätze, Heftzeilen, Notizen, Rand (Nr Rand).\n" +
     "Prüfquellen, NUR wenn sie GEDRUCKT auf dem Blatt stehen (nie, was das Kind geschrieben hat):\n" +
     "WOERTER | <Nr> | <Wort>; <Wort>; …   – Wörterkasten, vorgegebene Wörter zum Einsetzen\n" +
@@ -84,7 +103,7 @@ export function abschreibAuftrag(fach, kind, seitenZahl, ohneRechnen) {
     "- Mehrere Fotos: vor jedem Foto eine Zeile SEITE | <1, 2, 3 …> (das wievielte Foto, nicht die gedruckte Seitenzahl).\n" +
     (ohneRechnen ? "- Reine Rechenfelder (Zahlen in Rechnungen, Rechentabellen, Zahlenmauern) sind schon abgeschrieben – lass sie " +
                    "weg, auch im SOLL. Alles andere schreibst du ab: Antwortsätze, Text, Wörter, Beschriftungen, Ankreuzen.\n" : "") +
-    "Antworte NUR mit den Zeilen (erst alle SOLL, dann das Blatt), ohne weiteren Text.";
+    "Antworte NUR mit den Zeilen (erst FACH, dann alle SOLL, dann das Blatt), ohne weiteren Text.";
 }
 
 /* Zweiter, anders gebauter Zugriff: nur die verdächtigen Stellen, OHNE die
@@ -101,7 +120,7 @@ export function gegenAuftrag(fragen, seitenZahl) {
 
 /* ---------- Lesen der Abschrift ---------- */
 
-const ARTEN = ["feld", "kreuz", "abschrift", "zeile"];
+const ARTEN = ["feld", "kreuz", "abschrift", "berichtigung", "zeile"];
 
 function klammer(s) {
   const m = /^\s*\[([^\]]*)\]\s*$/.exec(String(s || ""));
@@ -128,6 +147,8 @@ export function zeileLesen(z0) {
   if (!z || /^keine\.?$/i.test(z)) return null;
   const s = /^SOLL\s*\|\s*(?:Aufgabe\s*)?([^|]+?)\s*\|\s*(\d{1,3})\s*(?:[x×*]\s*(\d{1,3}))?\s*$/i.exec(z);
   if (s) return { typ: "soll", nr: s[1].replace(/\s+/g, ""), n: s[3] ? +s[2] * +s[3] : +s[2] };
+  const fa = /^FACH\s*\|\s*(.{0,60})$/i.exec(z);
+  if (fa) return { typ: "fach", text: fa[1].trim() };
   const se = /^SEITE\s*\|\s*(\d{1,2})\s*$/i.exec(z);
   if (se) return { typ: "seite", n: +se[1] };
   const t = z.split("|").map((x) => x.trim());
@@ -158,11 +179,12 @@ export function zeileLesen(z0) {
 /* Die ganze Antwort -> { soll, felder, quellen, zeilen (ohne druck), druck: n } */
 export function abschriftLesen(text) {
   const soll = {}, felder = [], quellen = [], zeilen = [];
-  let druck = 0, seite = 1, fotos = 0;
+  let druck = 0, seite = 1, fotos = 0, fach = "";
   for (const z0 of String(text || "").split("\n")) {
     const x = zeileLesen(z0);
     if (!x) continue;
     const z = String(z0).replace(/^[-*•]\s*/, "").trim().slice(0, 240);
+    if (x.typ === "fach") { if (!fach) { fach = x.text; zeilen.push(z); } continue; }
     if (x.typ === "soll") { soll[x.nr] = (soll[x.nr] || 0) + x.n; zeilen.push(z); continue; }
     /* Das wievielte Foto - auch wenn das Modell die gedruckte Seitenzahl schreibt. */
     if (x.typ === "seite") { seite = ++fotos; zeilen.push(z); continue; }
@@ -172,7 +194,15 @@ export function abschriftLesen(text) {
     felder.push(x);
     zeilen.push(z);
   }
-  return { soll, felder, quellen, zeilen, druck };
+  return { soll, felder, quellen, zeilen, druck, fach };
+}
+
+/* Was das Volllesen als Fach gelesen hat (Rohtext der FACH-Zeile, "" ohne). Alte Abschriften
+   vor dem 16.10.2026 haben keine FACH-Zeile. */
+export function fachGelesen(v) {
+  if (!v || !Array.isArray(v.z)) return "";
+  for (const z of v.z) { const x = zeileLesen(z); if (x && x.typ === "fach") return x.text; }
+  return "";
 }
 
 /* Soll gegen Ist: je Aufgabe so viele Feldzeilen, wie gemeldet. */
@@ -205,9 +235,12 @@ function grossKlein(ist, soll) {
   const a = ist[0], b = soll[0];
   return KLAR_GROSS.has(a.toUpperCase()) && a !== b && a.length === 1 && soll.length >= 3;
 }
+/* Trennstriche sind nie ein Fehler (16.10.2026): „wahr-nehmen“ am Zeilenende oder in einer
+   Trennübung ist dasselbe Wort wie „wahrnehmen“. */
+export const ohneTrennung = (w) => String(w || "").replace(/(\p{L})[-–­](?=\p{L})/gu, "$1");
 /* Ein Schreibfehler, keine anderes Wort: 1 Buchstabe ab 4, 2 ab 7 Buchstaben. */
 function schreibfehler(ist, soll) {
-  const a = falten(sauber(ist)), b = falten(sauber(soll));
+  const a = falten(ohneTrennung(sauber(ist))), b = falten(ohneTrennung(sauber(soll)));
   if (!a || !b || a === b) return false;
   const d = levenshtein(a, b);
   const n = Math.max(a.length, b.length);
@@ -241,8 +274,37 @@ function umformungsGruppen(ab, woerter) {
   }
   return { gruppe, umformung };
 }
+/* Berichtigungsaufgaben (16.10.2026, Pauls „Abschreiben und Trennungsregeln“): Die Vorlage ist
+   absichtlich klein oder falsch geschrieben, das Kind soll sie VERBESSERT abschreiben. Dann ist die
+   Vorlage keine Prüfquelle - wer „Ein Regenbogen“ statt „ein regenbogen“ schreibt, hat es richtig
+   gemacht. Neue Abschriften tragen dafür die Art `berichtigung`; für alte (und falls das Modell doch
+   `abschrift` schreibt) erkennt das hier eine Aufgabe (Nr) an drei Zeichen:
+     1. eine Vorlagenzeile beginnt mit einem kleinen Buchstaben (gedruckte Sätze beginnen groß),
+     2. das Kind schreibt mindestens 2 Wörter groß, die die Vorlage klein hat,
+     3. mindestens 3 Wörter weichen um 1-2 Buchstaben ab (ein Fehlertext; wer nur abschreibt,
+        trifft so oft nicht daneben - und Fehlalarme sind schlimmer als übersehene Fehler).
+   Gibt die Nummern zurück; alle Abschrift-Stellen dieser Nummern bleiben still. */
+const ERSTER_BUCHSTABE = /\p{L}/u;
+export function berichtigungsAufgaben(ab) {
+  const nr = new Set(), gross = {}, nah = {};
+  for (const f of ab.felder) {
+    if (f.art === "berichtigung") { nr.add(f.nr); continue; }
+    if (f.art !== "abschrift" || f.kaputt) continue;
+    const m = ERSTER_BUCHSTABE.exec(String(f.vorgabe || ""));
+    if (m && m[0] === m[0].toLowerCase() && m[0] !== m[0].toUpperCase()) nr.add(f.nr);
+    if (!f.kind || f.kind.leer || f.kind.unsicher) continue;
+    for (const x of abschriftVergleich(f.vorgabe, f.kind.text, { roh: true })) {
+      if (x.gross && x.ist[0] !== x.ist[0].toLowerCase() && x.soll[0] === x.soll[0].toLowerCase()) gross[f.nr] = (gross[f.nr] || 0) + 1;
+      else if (!x.gross) nah[f.nr] = (nah[f.nr] || 0) + 1;
+    }
+  }
+  for (const k of Object.keys(gross)) if (gross[k] >= 2) nr.add(k);
+  for (const k of Object.keys(nah)) if (nah[k] >= 3) nr.add(k);
+  return nr;
+}
 export function kandidaten(ab, vokabeln) {
   const aus = [];
+  const berichtigung = berichtigungsAufgaben(ab);
   const woerter = {}, loesung = [];
   for (const q of ab.quellen) {
     if (q.q === "woerter") (woerter[q.nr] = woerter[q.nr] || []).push(...q.woerter.map(sauber).filter(Boolean));
@@ -255,7 +317,8 @@ export function kandidaten(ab, vokabeln) {
   const ortText = (f) => (f.nr && !/^[A-Z]$/.test(f.nr) ? "Aufgabe " + f.nr : "Abschnitt " + f.nr) + (f.seite > 1 ? " auf Seite " + f.seite : "");
   for (const f of ab.felder) {
     if (f.kaputt || !f.kind || f.kind.leer || f.kind.unsicher) continue;
-    if (f.rot && (f.rot.haken || f.rot.text != null || f.rot.unklar)) continue;   // die Lehrkraft hat es schon gesehen
+    /* Die Lehrkraft hat es schon gesehen - auch ein rotes ✗ (16.10.2026, „Rot ist fertig“, anleitung/123). */
+    if (f.rot && (f.rot.haken || f.rot.kreuz || f.rot.text != null || f.rot.unklar)) continue;
     const ist = sauber(f.kind.text);
     if (f.art === "feld") {
       /* 1. gedruckte Lösung */
@@ -298,7 +361,7 @@ export function kandidaten(ab, vokabeln) {
       }
       continue;
     }
-    if (f.art === "abschrift") {
+    if (f.art === "abschrift" && !berichtigung.has(f.nr)) {
       for (const x of abschriftVergleich(f.vorgabe, f.kind.text)) {
         dazu(f, "abschrift", x.ist, x.soll, ortText(f) + ", in der Abschrift des Kindes von „" + kurzSatz(f.vorgabe) + "“: " +
              (x.vor || x.nach ? "das Wort " + (x.vor ? "nach „" + x.vor + "“" : "") + (x.vor && x.nach ? " und " : "") +
@@ -316,9 +379,11 @@ const kurzSatz = (s) => { const w = String(s || "").split(/\s+/); return w.lengt
    lange Lücken paarweise vergleichen. Fehlende und zusätzliche Wörter werden NIE
    gemeldet (kann eine Lesefalle sein), nur ein Wort, das 1-2 Buchstaben von der
    Vorlage abweicht, oder ein klarer Groß-/Kleinbuchstabe. */
-export function abschriftVergleich(vorlage, kind) {
-  const A = String(vorlage || "").split(/\s+/).map(sauber).filter(Boolean);
-  const B = String(kind || "").split(/\s+/).map(sauber).filter(Boolean);
+export function abschriftVergleich(vorlage, kind, opt) {
+  /* Trennstriche zählen nicht (16.10.2026): verglichen wird ohne sie, gemeldet das Wort des Kindes. */
+  const A = String(vorlage || "").split(/\s+/).map(sauber).filter(Boolean).map(ohneTrennung);
+  const B0 = String(kind || "").split(/\s+/).map(sauber).filter(Boolean);
+  const B = B0.map(ohneTrennung);
   if (!A.length || !B.length || A.length > 120 || B.length > 120 || B.some((w) => w.includes("#"))) return [];
   const n = A.length, m = B.length;
   const L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
@@ -341,9 +406,10 @@ export function abschriftVergleich(vorlage, kind) {
   const aus = [];
   for (const [a, b] of paare) {
     const soll = A[a], ist = B[b];
-    const gross = grossKlein(ist, soll);
+    /* roh (für berichtigungsAufgaben): jede Groß-/Klein-Abweichung zählt, nicht nur die klar lesbaren. */
+    const gross = opt && opt.roh ? (ist !== soll && ist.toLowerCase() === soll.toLowerCase()) : grossKlein(ist, soll);
     if (!gross && !schreibfehler(ist, soll)) continue;
-    aus.push({ i: b, ist, soll, gross, vor: b > 0 ? B[b - 1] : "", nach: b + 1 < m ? B[b + 1] : "" });
+    aus.push({ i: b, ist: B0[b], soll, gross, vor: b > 0 ? B0[b - 1] : "", nach: b + 1 < m ? B0[b + 1] : "" });
   }
   return aus;
 }
@@ -464,7 +530,7 @@ async function frage(key, bilder, text, opt) {
 
 /* Ein Blatt ganz lesen: Abschrift, Zählung, Zweitlesung der Verdächtigen.
    bilder = data:-URLs (eine je Seite, höchstens 4). Wirft nie.
-   opt: { fach, kind, ohneRechnen, vokabeln, grenze, fetch, jetzt }
+   opt: { fach, kind, faecher, ohneRechnen, vokabeln, grenze, fetch, jetzt }
    vorher = schon gespeicherte Abschrift: dann nur nachholen, was fehlt.
    Gibt { ok, volllesen, usage, aufrufe, roh } oder { ok:false, fehler }. */
 export async function volllesen(key, bilder, opt, vorher) {
@@ -481,7 +547,7 @@ export async function volllesen(key, bilder, opt, vorher) {
      nächste Aufruf holt ihn mit `vorher` nach, ohne neu abzuschreiben. */
   const zeitDa = (ms) => !o.frist || Date.now() + ms < o.frist;
   let offen = false;
-  const auftrag = abschreibAuftrag(o.fach, o.kind, liste.length, !!o.ohneRechnen);
+  const auftrag = abschreibAuftrag(o.fach, o.kind, liste.length, !!o.ohneRechnen, o.faecher);
   if (!zeilen) {
     const r1 = await frage(key, liste, auftrag, o);
     aufrufe++; plus(r1.usage);

@@ -154,6 +154,9 @@
     <b id="schau-titel"></b>
     <button class="fach weg" type="button" id="schau-zu">✕ Zurück</button>
   </div>
+  <!-- Fachfrage (16.10.2026, /ablage-fachfrage.js): ein offener Vorschlag, der erst nach dem
+       Hochladen entstand (Volllesen), wird hier am Blatt gefragt - nie still getauscht. -->
+  <div id="schau-fachfrage" class="lwf-kasten verborgen" role="status"></div>
   <img id="schau-bild" alt="Dein Blatt">
   <!-- Heft gegen die Lehrerin (13.10.2026, /lehrervergleich.js): Abweichungen
        von ihrer Vorlage und ihre roten Verbesserungen, direkt am Blatt. -->
@@ -179,6 +182,7 @@
   <div class="fachwahl verborgen" id="schau-fachwahl"></div>
 </div>
 
+<script src="/ablage-fachfrage.js?v=ecc30854"></script>
 <script src="/ablage-suche.js?v=c328aefd"></script>
 <script>
 (function(){
@@ -316,6 +320,7 @@
                 '<div class="platzhalter" data-bild="' + e.id + '">' + (ZEICHEN[e.fach||""]||"📄") + '</div>' +
                 (ART[e.art] ? '<span class="art">' + ART[e.art].kurz + '</span>' : '') +
                 (e.seiten > 1 ? '<span class="nr">' + e.seiten + ' Seiten</span>' : '') +
+                (window.LWFachfrage ? LWFachfrage.schild(e) : '') +
                 (window.LWLehrer && lehrer ? LWLehrer.schild(lehrer.vergleiche[e.id]) : '') +
                 '<div class="fuss"><b>' + sicher(e.titel || KURZ[e.fach||""] || "Ohne Fach") + '</b>' +
                 '<span>' + sicher(untertext(e)) + '</span>' +
@@ -404,6 +409,8 @@
     $("schau").classList.remove("fachoffen");
     if (tauscher) tauscher.malen();
     lehrerMalen();
+    if (window.LWFachfrage) LWFachfrage.kasten($("schau-fachfrage"), offen, { kind: "paul", kurz: KURZ, zeichen: ZEICHEN,
+      fertig: function(){ seiteZeigen(); filterMalen(); listeMalen(); } });
     var welche = offen.id + ":" + offenSeite;
     $("schau-bild").setAttribute("data-seite", String(offenSeite));
     gruenMalen();
