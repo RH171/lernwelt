@@ -10,6 +10,10 @@
  * Zwischenstand je Antwort nur im sessionStorage und über LWWeiter (Kapitel 099).
  * Zeit: je Aufgabe vom Anzeigen bis zur richtigen Antwort, verdeckte Zeit (Tab im
  * Hintergrund) zählt nicht. Keine sichtbare Uhr, kein Countdown.
+ * Ergebnis bleibt stehen (16.10.2026, Denny): nach "Prüfen" steht Pauls Zahl grün oder mit der
+ * richtigen Zahl daneben, bis er "Weiter" tippt. Die Uhr ruht dabei (zeitB wird beim Prüfen
+ * gebucht, die nächste Aufgabe startet ihre Zeit erst beim Anzeigen). Tempo-Runde: ein Versuch
+ * je Aufgabe. Weiter erst SPERRE_MS nach dem Ergebnis, damit ein Doppeltipp nichts überspringt.
  */
 (function () {
   "use strict";
@@ -22,7 +26,9 @@
   var stand = laden();
   var gewaehlt = M.setFuerTag(datum);
   var lauf = null;     // { d, set, phase:"a"|"b"|"a-fertig", liste:[{k,r}], i, erg:{a:[],b:[]}, versuche, eingabe, tipp, zeitB }
-  var sperre = false, shown = 0, verdeckt = 0, verdecktSeit = 0, marke = 0;
+  var sperre = false, shown = 0, verdeckt = 0, verdecktSeit = 0, ergebnisSeit = 0;
+  // Die Messung darf die Sperre abkürzen (window.__ewSperreMs), sonst 500 ms.
+  var SPERRE_MS = typeof window.__ewSperreMs === "number" ? window.__ewSperreMs : 500;
 
   function laden() {
     var s = null, n = null;
@@ -118,7 +124,10 @@
     if (!x) { teilFertig(); return; }
     var a = lauf.phase === "a";
     $("teil").textContent = a ? "Zahlendreiecke" : "Tempo-Runde";
-    $("zaehler").textContent = (a ? "Dreieck " : "Aufgabe ") + (lauf.i + 1) + " von " + lauf.liste.length;
+    // "X von 20" zählt nur die ersten Aufgaben; Wiederholungen (w) tragen "Noch einmal".
+    var e = lauf.liste[lauf.i], nr = 0, gesamt = 0;
+    lauf.liste.forEach(function (y, j) { if (!y.w) { gesamt++; if (j <= lauf.i) nr++; } });
+    $("zaehler").textContent = e.w ? "Noch einmal üben" : (a ? "Dreieck " : "Aufgabe ") + nr + " von " + gesamt;
     if (a) {
       $("aufgabe").innerHTML = dreieckHtml(x, lauf.eingabe) + '<p class="rechnung" id="frage">' + esc(x.rechnung) + '</p>';
     } else {
@@ -129,6 +138,7 @@
     $("spiel").setAttribute("data-phase", lauf.phase);
     document.querySelector('[data-taste="ok"]').textContent = "Prüfen";
     tipp(lauf.versuche ? lauf.tipp : "", false);
+    weiterZeigen(false);
     sperre = false;
     shown = jetzt(); verdeckt = 0; verdecktSeit = document.hidden ? shown : 0;
   }
@@ -142,11 +152,20 @@
     else if (verdecktSeit) { verdeckt += jetzt() - verdecktSeit; verdecktSeit = 0; }
   });
 
-  function tipp(t, gut) { var el = $("tipp"); el.textContent = t || ""; el.classList.toggle("gut", !!gut); }
+  function tipp(t, gut, falsch) {
+    var el = $("tipp"); el.textContent = t || "";
+    el.classList.toggle("gut", !!gut); el.classList.toggle("falsch", !!falsch);
+  }
+  /* Ergebnis stehen lassen: großer Knopf "Weiter", Zifferntasten ruhen. */
+  function weiterZeigen(an) {
+    $("weiter").classList.toggle("verborgen", !an);
+    $("tasten").classList.toggle("ruht", !!an);
+    if (an) ergebnisSeit = jetzt();
+  }
 
   function taste(z) {
     if (!lauf || lauf.phase === "a-fertig") return;
-    if (sperre) { if (z === "ok" && lauf.wartet) naechste(); return; }
+    if (sperre) { if (z === "ok") naechste(); return; }
     if (z === "weg") lauf.eingabe = lauf.eingabe.slice(0, -1);
     else if (z === "ok") { pruefen(); return; }
     else if (lauf.eingabe.length < 3) lauf.eingabe += z;
@@ -156,12 +175,17 @@
   function pruefen() {
     if (!lauf.eingabe) return;
     var x = aktuell(), wert = +lauf.eingabe, stimmt = wert === x.loesung, erster = lauf.versuche === 0;
-    if (erster) {
+    var e = lauf.liste[lauf.i], wieder = !!e.w;
+    // Gezählt, gemeldet und gebucht wird nur der erste Versuch einer ersten Aufgabe – keine Wiederholung.
+    if (erster && !wieder) {
       var sek = Math.round(vergangen() * 10) / 10;
       lauf.erg[lauf.phase].push({ k: x.k, r: x.r, ok: stimmt, sek: sek });
       melden(x, stimmt, wert, sek);
     }
+    // Falsch beim ersten Versuch: kommt in dieser Runde wieder, dazu dieselbe Form mit neuen Zahlen.
+    if (erster && !stimmt) M.wiederholungEinreihen(lauf.liste, lauf.i, e, datum + "|" + lauf.phase + "|" + lauf.i);
     if (stimmt) { richtig(x, erster); return; }
+    if (lauf.phase === "b") { tempoFalsch(x, wert); return; }
     lauf.versuche++;
     lauf.eingabe = "";
     var f = $("feld"); f.textContent = ""; f.classList.remove("rueck"); void f.offsetWidth; f.classList.add("rueck");
@@ -173,19 +197,34 @@
   function richtig(x, erster) {
     $("feld").classList.add("gut");
     sperre = true; lauf.wartet = true;
-    if (lauf.phase === "b") lauf.zeitB += vergangen();
+    // Tempo-Zeit nur für die ersten 20 Aufgaben; Wiederholungen zählen nicht in die Zeit.
+    if (lauf.phase === "b" && !lauf.liste[lauf.i].w) lauf.zeitB += vergangen();
     tipp((erster ? "Richtig! " : "Gut, jetzt stimmt es. ") + M.bestaetigung(x) + ".", true);
     document.querySelector('[data-taste="ok"]').textContent = "Weiter";
     lauf.i++; lauf.versuche = 0; lauf.eingabe = ""; lauf.tipp = "";
     laufMerken();
-    // In der Tempo-Runde geht es nach einem Richtig beim ersten Versuch von selbst weiter.
-    if (lauf.phase === "b" && erster) { var m = ++marke; setTimeout(function () { if (m === marke && sperre) naechste(); }, 450); }
+    // Bleibt stehen, bis Paul "Weiter" tippt (Denny, 16.10.2026) – auch in der Tempo-Runde.
+    weiterZeigen(true);
+  }
+
+  /* Tempo-Runde, falsch: Pauls Zahl bleibt stehen, die richtige steht daneben. Ein Versuch. */
+  function tempoFalsch(x, wert) {
+    var f = $("feld"); f.classList.add("falsch");
+    f.insertAdjacentHTML("afterend", '<span class="richtigzahl" id="richtigzahl">' + esc(x.loesung) + '</span>');
+    sperre = true; lauf.wartet = true;
+    if (!lauf.liste[lauf.i].w) lauf.zeitB += vergangen();
+    tipp("Fast! Richtig ist " + x.loesung + ". " + M.bestaetigung(x) + ".", false, true);
+    document.querySelector('[data-taste="ok"]').textContent = "Weiter";
+    lauf.i++; lauf.versuche = 0; lauf.eingabe = ""; lauf.tipp = "";
+    laufMerken();
+    weiterZeigen(true);
   }
 
   function naechste() {
-    if (!sperre) return;
-    marke++;
+    if (!sperre || !lauf || !lauf.wartet) return;
+    if (jetzt() - ergebnisSeit < SPERRE_MS) return;   // Doppeltipp auf Prüfen überspringt nichts
     lauf.wartet = false;
+    weiterZeigen(false);
     if (lauf.i >= lauf.liste.length) teilFertig(); else aufgabeZeigen();
   }
 
@@ -246,10 +285,12 @@
     if (id === "merk-los") { lauf = null; teilBeginnen("a"); return; }
     if (id === "weiter-tempo") { teilBeginnen("b"); return; }
     if (id === "nochmal") { startZeigen(); return; }
+    if (id === "weiter") { naechste(); return; }
   });
   document.addEventListener("keydown", function (e) {
     if ($("spiel").classList.contains("verborgen")) return;
     var t = e["key"];
+    if (e.repeat) return;   // gehaltene Taste wertet nicht mehrfach
     if (/^[0-9]$/.test(t)) taste(t);
     else if (t === "Backspace") taste("weg");
     else if (t === "Enter") taste("ok");

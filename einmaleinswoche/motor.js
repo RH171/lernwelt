@@ -20,7 +20,10 @@
     langsamZahl: 3,       // die langsamsten drei einer Tempo-Runde merken
     zeitenMax: 30,
     tageMax: 60,
-    schreibProTag: 2      // KV: höchstens zwei Schreibvorgänge am Tag
+    schreibProTag: 2,     // KV: höchstens zwei Schreibvorgänge am Tag
+    wiederAbstand: 4,     // falsch: dieselbe Aufgabe kommt 4 Aufgaben später noch einmal (3 dazwischen) …
+    geschwisterAbstand: 3, // … und 3 danach eine derselben Form mit neuen Zahlen (Denny, 16.10.2026)
+    wiederMax: 8          // höchstens so viele Wiederholungen je Teil
   };
 
   var PLAN = {
@@ -156,6 +159,34 @@
     // Wackler bleiben vorn, der Rest wird gemischt, damit Mal und Geteilt abwechseln.
     var wv = liste.filter(function (e) { return e.w; }), rest = mischen(liste.filter(function (e) { return !e.w; }), r);
     return wv.concat(rest).map(function (e) { return { k: e.k, r: e.r }; });
+  }
+
+  /* Dieselbe Form, neue Zahlen (16.10.2026): 24 : 8 → 32 : 8, 7 · 8 → 7 · 6 (die Reihe bleibt).
+   * Keine 0er und 1er, nicht dieselbe Aufgabe, nicht ihre Tauschaufgabe. */
+  function geschwister(k, r, saat) {
+    var x = aufgabe(k, r); if (!x) return null;
+    var z = zufall("ew-g|" + k + "|" + (saat || "")), kand = [];
+    for (var n = 2; n <= 9; n++) if (n !== x.n) kand.push(n);
+    kand = mischen(kand, z);
+    for (var i = 0; i < kand.length; i++) {
+      var k2 = x.art === "mal" ? malSchluessel(x.r, kand[i]) : geteiltSchluessel(x.d, kand[i]);
+      if (k2 !== k && aufgabe(k2, x.r)) return { k: k2, r: x.r, w: 1 };
+    }
+    return null;
+  }
+  /* Falsch beim ersten Versuch: Wiederholung und Geschwister weiter hinten einreihen.
+   * liste wird verändert; e = die Aufgabe, i = ihre Stelle. War sie selbst schon eine
+   * Wiederholung, kommt sie (wenn Platz ist) ans Ende. Höchstens EIN.wiederMax je Teil. */
+  function wiederholungEinreihen(liste, i, e, saat) {
+    var schon = liste.filter(function (x) { return x.w; }).length;
+    if (schon >= EIN.wiederMax) return liste;
+    if (e.w) { liste.push({ k: e.k, r: e.r, w: 1 }); return liste; }
+    var p1 = Math.min(i + EIN.wiederAbstand, liste.length);
+    liste.splice(p1, 0, { k: e.k, r: e.r, w: 1 });
+    if (schon + 1 >= EIN.wiederMax) return liste;
+    var g = geschwister(e.k, e.r, saat);
+    if (g) liste.splice(Math.min(p1 + EIN.geschwisterAbstand, liste.length), 0, g);
+    return liste;
   }
 
   /* Tempo-Runde: 20 Aufgaben aus den Reihen, Mal und Geteilt gemischt, ohne die 1er. */
@@ -347,7 +378,7 @@
   var M = {
     EIN: EIN, PLAN: PLAN, WAHLEN: WAHLEN, heuteIso: heuteIso, wochentag: wochentag,
     wahl: wahl, setFuerTag: setFuerTag,
-    aufgabe: aufgabe, vorrat: vorrat, rundeDreiecke: rundeDreiecke, rundeTempo: rundeTempo,
+    aufgabe: aufgabe, vorrat: vorrat, geschwister: geschwister, wiederholungEinreihen: wiederholungEinreihen, rundeDreiecke: rundeDreiecke, rundeTempo: rundeTempo,
     wacklerListe: wacklerListe, merkKarten: merkKarten, MERK: MERK,
     hilfe: hilfe, bestaetigung: bestaetigung, familie: familie,
     leererStand: leererStand, standPruefen: standPruefen, rueckschau: rueckschau, buchen: buchen,
