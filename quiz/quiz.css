@@ -269,3 +269,21 @@ html[data-theme="dark"] .qstand-leg .ls{color:#6ee7a8} html[data-theme="dark"] .
 .qmedium{display:inline-flex;flex-direction:column;justify-content:center;min-height:44px;padding:6px 14px;border-radius:12px;border:1px solid var(--line,#d8dbe6);background:var(--card,#fff);color:var(--ink,#1c2033);font:700 15px inherit;text-decoration:none}
 .qmedium small{font-weight:500;font-size:13px;opacity:.85}
 .qbeleg-vorlage{border-style:solid}
+
+/* ---------- „💡 Trick“ (16.10.2026, Kapitel 128), nur Paul ----------
+ * Freiwillige Stütze vor dem Antworten: zwei bis drei Wege, umschaltbar, keine Lösung.
+ * Farben nur aus den Variablen der Seite (hell und dunkel), Tippziele mindestens 44 px. */
+.qtrick{margin:4px 0 12px}
+.qtrick-auf{display:inline-flex;align-items:center;gap:6px;min-height:44px;min-width:44px;padding:8px 18px;border-radius:999px;
+  border:2px solid var(--akzent-text,var(--akzent));background:var(--card);color:var(--akzent-text,var(--akzent));
+  font:800 16px/1.1 var(--rund);cursor:pointer}
+.qtrick-auf.an{background:var(--akzent-hell)}
+.qtrick-box{margin-top:9px;background:var(--akzent-hell);border:1px solid var(--akzent);border-radius:13px;padding:11px 13px;color:var(--ink)}
+.qtrick-kopf{font:700 14px/1.35 var(--rund);color:var(--muted);margin-bottom:4px}
+.qtrick-kopf b{color:var(--akzent-text,var(--akzent));font-size:16px}
+.qtrick-zeile{margin:4px 0;font-size:16.5px;line-height:1.5;color:var(--ink)}
+.qtrick-anders{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;margin:6px 0 2px;border-radius:999px;
+  border:2px solid var(--akzent-text,var(--akzent));background:var(--card);color:var(--akzent-text,var(--akzent));font:800 15px/1.1 var(--rund);cursor:pointer}
+.qtrick-probe{margin:8px 0 0;padding-top:8px;border-top:1px dashed var(--akzent);font-size:15.5px;line-height:1.45;color:var(--ink)}
+.qtrick-auch{margin-top:10px;background:var(--akzent-hell);border-radius:11px;padding:10px 12px;font-size:15.5px;line-height:1.45;color:var(--ink)}
+.qtrick-auch span{display:block;font:800 12.5px/1 var(--rund);text-transform:uppercase;letter-spacing:.04em;color:var(--akzent-text,var(--akzent));margin-bottom:5px}

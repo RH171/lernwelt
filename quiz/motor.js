@@ -977,6 +977,7 @@ function artKurz(art) {
     $("q-frage").textContent = f.frage;
     rechenfeld(f.frage);
     meinwegfeld(f);
+    trickfeld(f);
     $("q-erklaerung").classList.add("verborgen");
     $("q-weiter").classList.add("verborgen");
     versuch = 0; ersterFalsch = "";
@@ -1029,6 +1030,51 @@ function artKurz(art) {
     }
     if (f && brauchtWeg(f)) { h.classList.remove("verborgen"); window.MeinWeg.malen(h, {}); }
     else { h.innerHTML = ""; h.classList.add("verborgen"); }
+  }
+
+  /* „💡 Trick“ (16.10.2026, Kapitel 128): nur Paul, nur Mathe. Denny: „Paul hätte hier gerne Hilfe
+     beim Rechenweg – kleine Stützen oder Tricks … viele Wege führen ans Ziel.“ Die Wege kommen aus
+     Regeln in /quiz/trick.js (kein Modellaufruf), aus den Zahlen der Frage, nachgerechnet, ohne Lösung.
+     Freiwillig und kostenlos: Der Trick ist kein Versuch, gezählt wird weiter der erste Tipp auf eine
+     Antwort. Ob er offen war, steht nur im Antwortprotokoll der Runde (kein eigener Schreibvorgang). */
+  var trickAktuell = null, trickGenutzt = false;
+  function trickfeld(f) {
+    var h = $("q-trick");
+    if (!h) {
+      h = document.createElement("div");
+      h.id = "q-trick";
+      h.className = "qtrick verborgen";
+      $("q-frage").insertAdjacentElement("afterend", h);
+    }
+    trickAktuell = null; trickGenutzt = false;
+    h.innerHTML = ""; h.classList.add("verborgen");
+    if (!f || K.kind !== "paul" || !window.QuizTrick || !/^mathe/i.test(String(f.fach || ""))) return;
+    var tr = null;
+    try { tr = window.QuizTrick.erkenne(f.frage, (f.antworten || [])[f.richtig || 0], f.antworten); } catch (e) { tr = null; }
+    if (!tr || !tr.wege || !tr.wege.length) return;
+    trickAktuell = tr;
+    var weg = 0;
+    h.innerHTML = '<button type="button" class="qtrick-auf" aria-expanded="false">\uD83D\uDCA1 Trick</button>' +
+      '<div class="qtrick-box verborgen" aria-live="polite"></div>';
+    h.classList.remove("verborgen");
+    var auf = h.querySelector(".qtrick-auf"), box = h.querySelector(".qtrick-box");
+    function malen() {
+      var w = tr.wege[weg];
+      box.innerHTML = '<div class="qtrick-kopf">' + (tr.wege.length > 1 ? "Weg " + (weg + 1) + " von " + tr.wege.length + ": " : "") +
+        "<b>" + esc(w.titel) + "</b></div>" +
+        w.zeilen.map(function (z) { return '<p class="qtrick-zeile">' + esc(z) + "</p>"; }).join("") +
+        (tr.wege.length > 1 ? '<button type="button" class="qtrick-anders">\u21BB Anderer Weg</button>' : "") +
+        (tr.probe ? '<p class="qtrick-probe">\u2714\uFE0F ' + esc(tr.probe) + "</p>" : "");
+      var anders = box.querySelector(".qtrick-anders");
+      if (anders) anders.addEventListener("click", function () { weg = (weg + 1) % tr.wege.length; malen(); });
+    }
+    auf.addEventListener("click", function () {
+      var zu = box.classList.contains("verborgen");
+      if (zu) { malen(); trickGenutzt = true; }
+      box.classList.toggle("verborgen", !zu);
+      auf.setAttribute("aria-expanded", zu ? "true" : "false");
+      auf.classList.toggle("an", zu);
+    });
   }
 
   function rechenfeld(text) {
@@ -1211,6 +1257,7 @@ function artKurz(art) {
          wenn Paul nach der Eingabe der Lösung auch selber noch nachschlagen
          könnte … wir hätten dazu gerne den Beweis aus seinen Unterlagen
          gesehen." Der Server liefert die Zeile aus dem Heft mit. */
+      (trickAktuell && trickAktuell.auch ? '<div class="qtrick-auch"><span>So geht es auch</span>' + esc(trickAktuell.auch) + "</div>" : "") +
       belegKasten(f) + medienKnoepfe(f);
     var auf = e.querySelector(".qbeleg-auf:not(.qbeleg-auch)");
     if (auf) auf.addEventListener("click", function () { belegZeigen(f); });
@@ -1232,7 +1279,7 @@ function artKurz(art) {
        Wiedervorlage auf dem Server nichts wiedererkennen - `merkmal` taugt
        dafuer nicht, es wird je Bau-Lauf neu erfunden. */
     antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmtEcht,
-                        blatt: f.blatt || "", belegNr: f.belegNr || 0 });
+                        blatt: f.blatt || "", belegNr: f.belegNr || 0, trick: trickGenutzt || undefined });
     // Der Lernstand ist die Quelle für die Wiederholung - hier entsteht sie.
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",
@@ -1257,6 +1304,7 @@ function artKurz(art) {
     $("q-frage").textContent = "Einen Moment, ich hole neue Fragen …";
     rechenfeld("");
     meinwegfeld(null);
+    trickfeld(null);
     $("q-antworten").innerHTML = "";
     $("q-weiter").classList.add("verborgen");
     $("q-erklaerung").classList.add("verborgen");
