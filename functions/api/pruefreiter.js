@@ -112,6 +112,7 @@ export async function onRequestGet(context) {
     const verbessert = [];
     for (const b of e.eintraege || []) for (const k of (Array.isArray(b.korrekturen) ? b.korrekturen : [])) {
       if (!k || k.von !== "claude") continue;
+      if (k.quelle === "lehrerin") continue;   // Rot ist fertig (16.10.2026): das hat die Lehrerin verbessert, nicht Claude
       verbessert.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "", fach: b.fach || "" },
                         war: String(k.war || ""), korrigiert: String(k.korrigiert || ""), quelle: String(k.quelle || ""), am: String(k.am || "") });
     }
@@ -344,7 +345,14 @@ export async function onRequestPost(context) {
   const blatt = (e.eintraege || []).find((b) => b.id === blattId);
   const vorlagen = await vorlagenLesen(env, kind);
   const s = blatt ? stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt)).find((x) => x.id === id) : null;
-  if (!s) return json(404, { ok: false, fehler: "Diese Stelle gibt es nicht mehr." });
+  if (!s) {
+    /* Rot ist fertig (16.10.2026): eine alte offene Seite zeigt vielleicht noch eine
+       ✍️-Karte oder eine Stelle, an der die Lehrerin rot verbessert hat. Tippt Paul
+       dort, verschwindet die Karte still - kein Schreibvorgang, keine Korrektur. */
+    const alt = blatt ? stellenFuerBlatt(blatt, vorlagen, { ...optFuer(e.eintraege, blatt), mitRot: true }).find((x) => x.id === id) : null;
+    if (alt) return json(200, { ok: true, schon: true, rot: true });
+    return json(404, { ok: false, fehler: "Diese Stelle gibt es nicht mehr." });
+  }
 
   const zustand = await zustandLesen(env, kind);
   if (zustand.s[id]) return json(200, { ok: true, schon: true, richtig: zustand.s[id].z === "richtig" });

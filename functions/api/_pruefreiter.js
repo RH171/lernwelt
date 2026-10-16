@@ -14,7 +14,10 @@
  *             längst stimmt (Kapitel 015).
  *   pinnwand  📌 Abweichung von der Vorlage der Lehrerin (_lehrervorlagen.js),
  *             nur Status "abweichung" - nie unsicher, frei, schreibweise.
- *   lehrerin  ✍️ Die Lehrerin hat rot verbessert - nur zur Kenntnis.
+ *   lehrerin  ✍️ Die Lehrerin hat rot verbessert. SEIT 16.10.2026 STILL (ROT_STILL):
+ *             Paul ändert kein Blatt, auf dem die Lehrerin die Lösung schon rot
+ *             hingeschrieben hat. Dieselbe Regel unterdrückt 🧮 (Rot im Feld) und
+ *             📌 (Rot an der Zeile). Kapitel 123, Abschnitt „Rot ist fertig“.
  *
  * Bei 🧮 VERLÄSST DIE LÖSUNG DEN SERVER NIE. oeffentlich() streift sie ab, und das
  * Prüfen einer Verbesserung läuft hier, gegen die nachgerechnete Wahrheit.
@@ -51,6 +54,15 @@ export const AB = "2026-10-06";
 /* Rote Stellen nur von Blättern, die ab diesem Tag (deutsche Zeit) hochgeladen
    wurden. Ohne `angelegt` gilt ein Blatt als alt. */
 export const ROT_AB = "2026-10-14";
+/* Rot ist fertig (16.10.2026, Denny 18:09 Uhr): „Diese Blätter dürfen nicht zum
+   Korrigieren auftauchen, wo sie mit dem roten Stift die Zahl schon selber daneben
+   verbessert hat.“ Gezählt am 16.10.2026: von 71 roten Zeilen aller drei Kinder
+   tragen 55 die Lösung der Lehrerin (von Hand gezählt), die übrigen sind Haken, „noch mal anschauen“,
+   ✗ oder Durchgestrichenes ohne Lösung - die meldet die Lehrerin selbst, und
+   Rechenfehler darin findet das Nachrechnen ohnehin (🧮). Darum keine ✍️-Karte mehr.
+   `mitRot: true` (opt) baut die alten Stellen - nur für POST (alte offene Seiten)
+   und die Gegenprobe. */
+export const ROT_STILL = true;
 const TAG_BERLIN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" });
 export function hochgeladenAm(blatt) {
   const t = Date.parse(String((blatt && blatt.angelegt) || ""));
@@ -198,13 +210,17 @@ function verbesserteSchluessel(inhalt) {
 
 /* Stellen aus der Abschrift (`nachgerechnet`) - nur von der zweiten Lesung
    bestätigte Fehler. `schon` = Schlüssel, die es schon gibt. */
-export function nachrechenStellen(blatt, bk, schon) {
+export function nachrechenStellen(blatt, bk, schon, mitRot) {
   if (!blatt || blatt.fach !== "mathe" || !nrAktuell(blatt)) return [];
   const w = nrAuswerten(blatt.nachgerechnet);
   if (!w) return [];
   const aus = [];
   for (const x of w.fehler) {
     if (x.bestaetigt !== true || schon.has(x.u.key)) continue;
+    /* Rot ist fertig (16.10.2026): hat die Lehrerin in diesem Feld rot etwas
+       hingeschrieben, ändert Paul es nicht - auch wenn ihr Rot nicht stimmt. Die
+       Eltern sehen das weiter als ⚠️ (nachrechenStand().rotFalsch). */
+    if (x.u.rotDa && !mitRot) continue;
     schon.add(x.u.key);
     const f = x.f, u = x.u;
     const nr = f.nr && f.nr !== "-" ? f.nr : "";
@@ -357,6 +373,16 @@ export function rotText(z) {
     .slice(0, 200);
 }
 
+/* Rot ist fertig (16.10.2026): Pauls Zeile trägt Rot der Lehrerin, oder eine rote
+   Zeile nennt die Antwort der Vorlage. Dann hat sie es schon verbessert. */
+export function rotHatAntwort(inhalt, paulZeile, vz) {
+  if (paulZeile && /\bLehrkraft\b|\bLehrerin\b/i.test(String(paulZeile))) return true;
+  const antw = [vz && vz.antwort, ...((vz && vz.gleich) || [])].map((a) => falten(String(a || ""))).filter((a) => a.length >= 3);
+  if (!antw.length) return false;
+  return (inhalt || []).map((z) => String(z || "")).filter((z) => /\bLehrkraft\b/.test(z) && !/Lehrkraft\s+schrieb\b[^,]*,\s*richtig/i.test(z))
+    .some((z) => { const f = falten(z); return antw.some((a) => f.includes(a)); });
+}
+
 /* ---------- Alle Stellen eines Blattes ---------- */
 
 function blattKurz(b) {
@@ -382,8 +408,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
     const r = rechenStelle(z, blatt);
     if (r) { aus.push({ id: bk.id + ":r:" + kurz(z), art: "rechnen", blatt: bk, ...r, zeile: String(z) }); schon.add(stellenSchluessel(r)); }
   });
+  const mitRot = !ROT_STILL || !!(opt && opt.mitRot);
   /* Nachrechnen (14.10.2026): Feld für Feld, nur bestätigte Fehler, keine Doppel. */
-  try { aus.push(...nachrechenStellen(blatt, bk, schon)); } catch (e) {}
+  try { aus.push(...nachrechenStellen(blatt, bk, schon, mitRot)); } catch (e) {}
   /* Volllesen (15.10.2026): Text-Stellen mit eindeutiger Quelle, alle Fächer. */
   try { aus.push(...volllesStellen(blatt, bk, (opt && opt.vokabeln) || [])); } catch (e) {}
 
@@ -393,6 +420,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
     (v && v.abweichungen || []).forEach((x) => {
       const vz = (vorlage.zeilen || []).find((q) => q.nr === x.nr);
       if (!vz || vz.unsicher || vz.frei || vz.liste) return;
+      /* Rot ist fertig (16.10.2026): steht an Pauls Zeile Rot, oder hat die
+         Lehrerin die Antwort der Vorlage rot hingeschrieben, bleibt es still. */
+      if (!mitRot && rotHatAntwort(inhalt, zeileFinden(inhalt, vz), vz)) return;
       aus.push({ id: bk.id + ":p:" + x.nr, art: "pinnwand", blatt: bk, aufgabe: String(x.aufgabe || "").slice(0, 120),
                  du: String(x.paul || "").slice(0, 80), soll: vz.antwort, gleich: vz.gleich || [], eingabe: "text",
                  /* Beweis (14.10.2026): WO es bei der Lehrerin steht - Vorlage und Zeile. */
@@ -407,7 +437,7 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
   /* Rot: EINE Karte je Blatt mit allen roten Stellen (Auftrag 14.10.2026), und
      nur für Blätter, die ab ROT_AB hochgeladen wurden - ältere hat Paul längst
      von der Lehrerin zurückbekommen und gesehen. */
-  const rz = rotZeilen(inhalt);
+  const rz = mitRot ? rotZeilen(inhalt) : [];
   if (rz.length && hochgeladenAm(blatt) >= ROT_AB) {
     aus.push({ id: bk.id + ":l:" + kurz(rz.join("\n")), art: "lehrerin", blatt: bk,
                zeilen: rz.map(rotText) });
