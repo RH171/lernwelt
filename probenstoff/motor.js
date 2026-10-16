@@ -21,8 +21,12 @@
   var EIN = {
     an: true,              // Hauptschalter
     bis: "2026-10-19",     // letzter Übungstag (Tag der Probe), danach still aus
-    frisch: 8,             // A: frische Aufgaben je Runde
-    sach: 2,               // D: Sachaufgaben je Runde
+    frisch: 16,            // A: frische Aufgaben je Runde (16.10.2026 verdoppelt, Denny: „Paul war immer zu schnell fertig“)
+    sach: 4,               // D: Sachaufgaben je Runde (vorher 2)
+    blattMax: 4,           // A: so viele der frischen sind „Geschwister“ von Aufgaben auf Pauls neuesten Blättern
+    wdhMax: 8,             // Fehler in derselben Runde: höchstens so viele Aufgaben mehr je Teil (16.10.2026)
+    wdhAbstand: 4,         // dieselbe Aufgabe kommt nach so vielen Aufgaben wieder
+    wdhAbstandNeu: 7,      // dieselbe Form mit neuen Zahlen nach so vielen
     kisteMax: 5,           // B: Kisten-Aufgaben je Tag (Saat-Stellen füllen bis hierhin auf)
     eigeneMax: 8,          // B: eigene Fehler kommen alle, höchstens so viele
     sitztNach: 3,          // B: an so vielen Übungstagen richtig, dann sitzt sie
@@ -35,11 +39,13 @@
   var THEMEN = ["mal", "teil", "rest", "punkt", "teiler"];
   var NAME = {
     mal: "Mal mit Zehnerzahlen", teil: "Teilen durch Zehnerzahlen", rest: "Teilen mit Rest",
-    punkt: "Punkt vor Strich", teiler: "Teiler und Vielfache", sach: "Sachaufgabe"
+    punkt: "Punkt vor Strich", teiler: "Teiler und Vielfache", sach: "Sachaufgabe",
+    rech: "Rechnen", raet: "Zahlenrätsel"
   };
   var MERKMAL = {
     mal: "probe mal mit zehnerzahlen", teil: "probe teilen durch zehnerzahlen", rest: "probe teilen mit rest",
-    punkt: "probe punkt vor strich", teiler: "probe teiler und vielfache", sach: "probe sachaufgabe"
+    punkt: "probe punkt vor strich", teiler: "probe teiler und vielfache", sach: "probe sachaufgabe",
+    rech: "probe rechnen", raet: "probe zahlenraetsel"
   };
 
   /* Pauls gezählte Fehlerstellen (Blätter 06.–13.10.2026, befunde/2026-10-13-paul-mathe-stoff.txt).
@@ -91,6 +97,28 @@
   function zeichen(op) { return op === "*" ? "·" : op === "/" ? ":" : op === "-" ? "−" : "+"; }
   function rechne(a, op, b) { return op === "*" ? a * b : op === "/" ? a / b : op === "-" ? a - b : a + b; }
   function teilerVon(n) { var t = []; for (var i = 1; i <= n; i++) if (n % i === 0) t.push(i); return t; }
+  function punktOp(o) { return o === "*" || o === "/"; }
+  /* Punkt vor Strich über eine Kette; null, wenn eine Division nicht aufgeht. */
+  function rechneKette(z, o) {
+    var w = z.slice(), op = o.slice();
+    for (var i = 0; i < op.length;) {
+      if (punktOp(op[i])) {
+        if (op[i] === "/" && (!w[i + 1] || w[i] % w[i + 1])) return null;
+        w.splice(i, 2, rechne(w[i], op[i], w[i + 1])); op.splice(i, 1);
+      } else i++;
+    }
+    var v = w[0];
+    for (var j = 0; j < op.length; j++) { v = rechne(v, op[j], w[j + 1]); if (v < 0) return null; }
+    return v;
+  }
+  function linksRechnen(z, o) { var v = z[0]; for (var i = 0; i < o.length; i++) { v = rechne(v, o[i], z[i + 1]); if (v !== Math.floor(v)) return null; } return v; }
+  /* Der erste Rechenschritt einer Kette (Punkt zuerst, sonst von links): {text, wert}. */
+  function ersterSchritt(z, o) {
+    var i = 0; for (var j = 0; j < o.length; j++) if (punktOp(o[j])) { i = j; break; }
+    if (!o.some(punktOp)) i = 0;
+    var w = rechne(z[i], o[i], z[i + 1]);
+    return { text: z[i] + " " + zeichen(o[i]) + " " + z[i + 1], wert: w, i: i };
+  }
   function paare(n) { var p = []; for (var i = 1; i * i <= n; i++) if (n % i === 0) p.push(i + " · " + (n / i)); return p; }
 
   /* ---------- Aufgaben aus dem Schlüssel ----------
@@ -173,6 +201,25 @@
       var vchips = vja.concat(vnein).sort(function (u, v) { return u - v; });
       x = { art: "teiler", typ: "tippen", frage: "Tippe alle Vielfachen von " + vd + " an, die hier stehen.",
         loesung: vja.slice().sort(function (u, v) { return u - v; }), chips: vchips, d: vd, wovon: "vielfache" };
+    } else if ((m = /^rech:(\d{1,4}(?:[-+*\/]\d{1,4}){1,3})$/.exec(k))) {
+      /* Rechnen mit 2 bis 4 Zahlen (vom Blatt: „801 − 563 + 347“, „7 · 8“). Punkt vor Strich, nur ganze Zahlen. */
+      var tz = m[1].split(/[-+*\/]/).map(Number), to = m[1].match(/[-+*\/]/g);
+      var rv = rechneKette(tz, to);
+      if (rv == null || rv < 0 || rv > 10000) return null;
+      var txt = tz.map(function (z, i) { return (i ? zeichen(to[i - 1]) + " " : "") + z; }).join(" ");
+      var gemischt = to.some(punktOp) && !to.every(punktOp);
+      var lk = linksRechnen(tz, to);
+      x = { art: "rech", typ: "zahl", frage: txt + " = ?", loesung: rv, tz: tz, to: to, gemischt: gemischt,
+        links: gemischt && lk != null && lk !== rv ? lk : null, zwischen: tz.length > 2 ? ersterSchritt(tz, to) : null };
+    } else if ((m = /^raet:([mpw]):(\d{1,4}):(\d{1,4})$/.exec(k))) {
+      /* Zahlenrätsel vom Blatt (Lehrerin, 16.10.2026): „Meine Zahl um 18 verkleinert ergibt 50.“ */
+      var ra = +m[2], rc = +m[3], rw = m[1];
+      var rl = rw === "m" ? rc + ra : rw === "p" ? rc - ra : ra - rc;
+      if (rl < 0 || rl > 10000) return null;
+      x = { art: "raet", typ: "zahl", wie: rw, a: ra, c: rc, frage: "?", loesung: rl,
+        text: rw === "m" ? "Ich nehme von meiner Zahl " + ra + " weg. Dann kommt " + rc + " heraus. Wie heißt meine Zahl?"
+          : rw === "p" ? "Ich zähle zu meiner Zahl " + ra + " dazu. Dann kommt " + rc + " heraus. Wie heißt meine Zahl?"
+          : "Ich nehme von " + ra + " meine Zahl weg. Dann bleibt " + rc + " übrig. Wie heißt meine Zahl?" };
     } else if ((m = /^sach:(\w+):([\d:]+)$/.exec(k))) {
       var f = SACH[m[1]]; if (!f) return null;
       var s = f.apply(null, m[2].split(":").map(Number));
@@ -287,13 +334,135 @@
     return k;
   }
 
+
+  /* ---------- Geschwister: dieselbe Aufgabenform mit neuen Zahlen (16.10.2026) ----------
+   * Für die Wiederholung in derselben Runde, für die Kiste an den folgenden Tagen und für
+   * Aufgaben „wie auf dem Blatt“. Gleiche Form heißt: gleiche Rechenzeichen, gleiche Stellenzahl,
+   * gleich viele Nullen, gleicher Platz der Lücke. n = 1, 2, 3 … gibt verschiedene Geschwister. */
+  function wieZahl(z, r) {   // gleiche Stellenzahl und gleich viele Nullen am Ende
+    var nz = nullen(z), kern = ohneNullen(z), st = String(kern).length, lo = Math.pow(10, st - 1), hi = Math.pow(10, st) - 1, k;
+    if (st === 1) lo = 2;
+    for (var t = 0; t < 30; t++) { k = ganz(r, lo, hi); if (k % 10 && k !== kern) break; }
+    return k * Math.pow(10, nz);
+  }
+  function geschwister(k, n) {
+    var r = zufall("ps-g|" + k + "|" + (n || 1)), m, kand, t;
+    for (t = 0; t < 60; t++) {
+      kand = null;
+      if ((m = /^mal:(\d+)x(\d+)$/.exec(k))) kand = "mal:" + wieZahl(+m[1], r) + "x" + wieZahl(+m[2], r);
+      else if ((m = /^malp:(\d+)=(\?|\d+)x(\?|\d+)$/.exec(k))) {
+        var links = m[2] === "?", bek = links ? +m[3] : +m[2], un = +m[1] / bek;
+        var b2 = wieZahl(bek, r), u2 = wieZahl(un, r);
+        kand = "malp:" + (b2 * u2) + "=" + (links ? "?x" + b2 : b2 + "x?");
+      } else if ((m = /^teil:(\d+):(\d+)$/.exec(k))) {
+        var d2 = wieZahl(+m[2], r), q2 = wieZahl(+m[1] / +m[2], r);
+        kand = "teil:" + (d2 * q2) + ":" + d2;
+      } else if ((m = /^teilp:\?:10=(\d+)$/.exec(k))) kand = "teilp:?:10=" + ganz(r, 21, 99);
+      else if ((m = /^rest:(\d+):(\d+)$/.exec(k))) {
+        var rn = +m[1], rd = +m[2], q0 = Math.floor(rn / rd), r0 = rn % rd, dd, qq, rr;
+        if (rd >= 10 && rd % 10 === 0) { dd = 10 * ganz(r, 3, 9); qq = ganz(r, 2, 9); rr = r0 ? 10 * ganz(r, 1, dd / 10 - 1) : 0; }
+        else { dd = ganz(r, 3, 9); qq = q0 >= 10 ? ganz(r, 11, Math.max(12, Math.min(40, q0 + 8))) : ganz(r, 2, 9); rr = r0 ? ganz(r, 1, dd - 1) : 0; }
+        kand = "rest:" + (qq * dd + rr) + ":" + dd;
+      } else if ((m = /^(pkt|rech):(.+)$/.exec(k))) {
+        var zz = m[2].split(/[-+*\/]/).map(Number), oo = m[2].match(/[-+*\/]/g), neu = [];
+        for (var i = 0; i < zz.length; i++) {
+          // Hinter einem Geteilt-Zeichen: ein Teiler der neuen Zahl davor (sonst geht es nicht auf).
+          if (i && oo[i - 1] === "/") { var tv = teilerVon(neu[i - 1]).filter(function (q) { return q > 1 && q < neu[i - 1] && String(q).length === String(zz[i]).length; }); neu.push(tv.length ? eins(r, tv) : zz[i]); }
+          else neu.push(wieZahl(zz[i], r));
+        }
+        kand = m[1] + ":" + neu.map(function (z, j) { return (j ? oo[j - 1] : "") + z; }).join("");
+        var xk = aufgabe(kand);
+        if (xk && xk.typ === "zahl") {
+          var zahlen = neu;
+          var zw = ersterSchritt(neu, oo).wert;   // Zwischenergebnis = Ergebnis wäre verwirrend (70 − 70 : 2)
+          if (zahlen.indexOf(xk.loesung) >= 0 || xk.loesung > 1000 || (neu.length > 2 && zw === xk.loesung)) kand = null;
+        }
+      } else if ((m = /^raet:([mpw]):(\d+):(\d+)$/.exec(k))) {
+        var a2 = wieZahl(+m[2], r), c2 = wieZahl(+m[3], r);
+        if (m[1] === "w" && c2 >= a2) c2 = Math.max(1, a2 - wieZahl(+m[3], r) % a2);
+        kand = "raet:" + m[1] + ":" + a2 + ":" + c2;
+      } else if ((m = /^tl:(\d+)$/.exec(k))) {
+        var tn = +m[1], band = tn <= 28 ? [12, 14, 15, 16, 18, 20, 21, 22, 24, 25, 26, 27, 28] : tn <= 50 ? [30, 32, 33, 34, 35, 36, 38, 39, 40, 42, 44, 45, 48, 50] : [54, 56, 60, 63, 64, 66, 70, 72, 75, 80, 81, 84, 88, 90, 96];
+        kand = "tl:" + eins(r, band);
+      } else if ((m = /^vf:(\d+)(?::(\d+))?$/.exec(k))) kand = "vf:" + ganz(r, 3, 9) + ":" + ganz(r, 1, 4);
+      else if ((m = /^sach:(\w+):/.exec(k)) && SACH_ERZ[m[1]]) kand = SACH_ERZ[m[1]](r);
+      else return k;
+      if (kand && kand !== k) {
+        var xa = aufgabe(kand);
+        if (xa && (xa.typ !== "zahl" || (xa.loesung >= 0 && xa.loesung <= 10000 && xa.loesung === Math.floor(xa.loesung)))) return kand;
+      }
+    }
+    return k;
+  }
+  /* Gleiche Form? (für Messung und Prüfskript) */
+  function form(k) {
+    var x = aufgabe(k); if (!x) return "";
+    if (x.art === "rech" || x.art === "punkt") {
+      var b = k.slice(k.indexOf(":") + 1);
+      return x.art + ":" + b.replace(/\d+/g, function (z) { return "s" + String(ohneNullen(+z)).length + "n" + nullen(+z); });
+    }
+    if (x.art === "raet") return "raet:" + x.wie;
+    if (x.art === "rest") return "rest:" + (x.d % 10 === 0 ? "z" : "e");
+    if (x.art === "sach") return "sach:" + x.vorlage;
+    if (x.art === "mal") return (x.platz ? "malp:" + (k.indexOf("=?") > 0 ? "l" : "r") : "mal") + ":" + nullen(x.platz ? x.bek : x.a) + nullen(x.platz ? 0 : x.b);
+    if (x.art === "teil") return (x.platz ? "teilp" : "teil:" + nullen(x.d));
+    return x.art + ":" + x.wovon;
+  }
+
+  /* ---------- Stoff von Pauls Blättern (16.10.2026) ----------
+   * Kommt von GET /api/probenstoff (functions/api/_probenstoff.js): stellen = Pauls belegte Fehler
+   * (rot verbessert oder doppelt gelesen), quellen = Aufgaben vom Blatt, neueste zuerst. Jeder Schlüssel
+   * wird hier noch einmal geprüft. Ist der Server nicht erreichbar, gilt BLATT_STAND (Stand 16.10.2026, 18:45 Uhr).
+   * Stellen, die eine Saat-Variante schon abdeckt, fallen weg (sonst zweimal in der Kiste). */
+  var BLATT_STAND = {
+    stellen: [{ k: "rech:801-563+347", blatt: "he331mspzq" }, { k: "tl:21", blatt: "oewbd88522" }, { k: "teil:440:10", blatt: "y3hm4vzkrj" },
+      { k: "teil:320:40", blatt: "y3hm4vzkrj" }, { k: "teil:240:40", blatt: "y3hm4vzkrj" }, { k: "teil:280:70", blatt: "y3hm4vzkrj" },
+      { k: "teil:420:70", blatt: "y3hm4vzkrj" }, { k: "teil:360:60", blatt: "y3hm4vzkrj" }, { k: "teil:240:80", blatt: "y3hm4vzkrj" },
+      { k: "teil:400:80", blatt: "y3hm4vzkrj" }],
+    quellen: [{ k: "raet:m:18:50", blatt: "he331mspzq" }, { k: "raet:p:56:100", blatt: "he331mspzq" }, { k: "raet:m:27:320", blatt: "he331mspzq" },
+      { k: "rech:801-563+347", blatt: "he331mspzq" }, { k: "tl:12", blatt: "r7ung8g7u6" }, { k: "tl:56", blatt: "r7ung8g7u6" }, { k: "tl:24", blatt: "r7ung8g7u6" },
+      { k: "rest:52:5", blatt: "5tkzva9rss" }, { k: "rest:86:5", blatt: "5tkzva9rss" }, { k: "rest:103:5", blatt: "5tkzva9rss" },
+      { k: "tl:21", blatt: "oewbd88522" }, { k: "tl:28", blatt: "oewbd88522" }, { k: "tl:32", blatt: "oewbd88522" },
+      { k: "malp:240=60x?", blatt: "8o6ufnxur4" }, { k: "rest:830:90", blatt: "8o6ufnxur4" }, { k: "pkt:80*7-348", blatt: "8o6ufnxur4" }],
+    stand: "2026-10-16"
+  };
+  function inSaat(k) { for (var i = 0; i < SAAT.length; i++) if (SAAT[i].v.indexOf(k) >= 0) return true; return false; }
+  function blattPruefen(d) {
+    var aus = { stellen: [], quellen: [] }, schon = {};
+    if (!d || typeof d !== "object") return aus;
+    (Array.isArray(d.stellen) ? d.stellen : []).forEach(function (e) {
+      var k = e && String(e.k || "");
+      if (!k || schon[k] || !aufgabe(k) || inSaat(k) || aus.stellen.length >= 12) return;
+      var fo = form(k); schon[fo] = (schon[fo] || 0) + 1; if (schon[fo] > 2) return;   // höchstens 2 je Form
+      schon[k] = 1; aus.stellen.push({ k: k, blatt: String(e.blatt || "").slice(0, 20) });
+    });
+    var q = {};
+    (Array.isArray(d.quellen) ? d.quellen : []).forEach(function (e) {
+      var k = e && String(e.k || "");
+      if (!k || q[k] || !aufgabe(k) || aufgabe(k).art === "sach" || aus.quellen.length >= 40) return;
+      q[k] = 1; aus.quellen.push({ k: k, blatt: String(e.blatt || "").slice(0, 20) });
+    });
+    return aus;
+  }
+  /* Aufgaben „wie auf dem Blatt“: je neuestem Blatt eine Vorlage (Tageszufall), höchstens blattMax. */
+  function blattWahl(blatt, r) {
+    var je = {}, reihe = [];
+    (blatt && blatt.quellen || []).forEach(function (q) { if (!je[q.blatt]) { je[q.blatt] = []; reihe.push(q.blatt); } je[q.blatt].push(q.k); });
+    var wahl = [];
+    for (var i = 0; wahl.length < EIN.blattMax && i < reihe.length * 2; i++) {
+      var l = je[reihe[i % reihe.length]]; if (!l.length) continue;
+      wahl.push(l.splice(Math.floor(r() * l.length), 1)[0]);
+    }
+    return wahl;
+  }
+
   /* ---------- Stand ---------- */
   function leererStand() {
     var th = {};
     THEMEN.forEach(function (t) { th[t] = { s: 0, r: 0, f: START_F[t] }; });
     var kiste = {};
     SAAT.forEach(function (e, i) { kiste[e.k] = { s: 0, d: "", z: 0, zd: "", o: i }; });
-    return { v: 1, themen: th, kiste: kiste, o: SAAT.length, benutzt: [], tage: {}, heute: { d: "", t1: 0, t2: 0, n: 0 }, schreib: { d: "", n: 0 } };
+    return { v: 1, themen: th, kiste: kiste, o: SAAT.length, weg: [], benutzt: [], tage: {}, heute: { d: "", t1: 0, t2: 0, n: 0 }, schreib: { d: "", n: 0 } };
   }
   function standPruefen(s) {
     var l = leererStand();
@@ -305,6 +474,7 @@
     l.kiste = s.kiste && typeof s.kiste === "object" ? s.kiste : l.kiste;
     l.o = +s.o || SAAT.length;
     l.benutzt = Array.isArray(s.benutzt) ? s.benutzt.slice(-EIN.benutztMax) : [];
+    l.weg = Array.isArray(s.weg) ? s.weg.slice(-200) : [];   // Blatt-Stellen, die schon sitzen (kommen nicht wieder)
     l.tage = s.tage && typeof s.tage === "object" ? s.tage : {};
     l.heute = s.heute && typeof s.heute === "object" ? { d: String(s.heute.d || ""), t1: +s.heute.t1 || 0, t2: +s.heute.t2 || 0, n: +s.heute.n || 0 } : l.heute;
     l.schreib = s.schreib && typeof s.schreib === "object" ? { d: String(s.schreib.d || ""), n: +s.schreib.n || 0 } : l.schreib;
@@ -320,29 +490,45 @@
       for (var i = 0; i < SAAT.length; i++) if (SAAT[i].k === kk) return SAAT[i].v[(e.z || 0) % SAAT[i].v.length];
       return null;
     }
-    return kk;
+    /* Eigene Fehler und Blatt-Stellen: am ersten Kistentag die Aufgabe selbst, danach dieselbe Form
+       mit neuen Zahlen (16.10.2026, Denny: „Paul hat immer wieder mit der gleichen Aufgabenform Probleme“). */
+    var k = kk.indexOf("auto:") === 0 ? kk.slice(5) : kk;
+    return (e.z || 0) ? geschwister(k, e.z) : k;
   }
   /* Reihenfolge: zuerst Pauls eigene Fehler aus den Runden (die kommen JEDEN Übungstag, bis sie sitzen),
    * dann die Saat-Stellen: wenig gesessen zuerst, dann am längsten nicht dran. */
-  function kistenListe(stand) {
-    return Object.keys(stand.kiste).filter(function (kk) { var a = kistenAufgabe(kk, stand.kiste[kk]); return a && aufgabe(a); })
+  function kistenEintraege(stand, blatt) {
+    var alle = {};
+    Object.keys(stand.kiste).forEach(function (kk) { alle[kk] = stand.kiste[kk]; });
+    (blatt && blatt.stellen || []).forEach(function (st, i) {
+      var kk = "auto:" + st.k;
+      if (!alle[kk] && (stand.weg || []).indexOf(kk) < 0 && !stand.kiste[st.k]) alle[kk] = { s: 0, d: "", z: 0, zd: "", o: 1e6 + i };
+    });
+    return alle;
+  }
+  /* Rang: 0 eigene Fehler aus den Runden, 1 Stellen von Pauls Blättern, 2 Saat. */
+  function rang(kk) { return kk.indexOf("seed:") === 0 ? 2 : kk.indexOf("auto:") === 0 ? 1 : 0; }
+  function kistenListe(stand, blatt) {
+    var K = kistenEintraege(stand, blatt);
+    return Object.keys(K).filter(function (kk) { var a = kistenAufgabe(kk, K[kk]); return a && aufgabe(a); })
       .sort(function (x, y) {
-        var a = stand.kiste[x], b = stand.kiste[y], sx = x.indexOf("seed:") === 0, sy = y.indexOf("seed:") === 0;
-        if (sx !== sy) return sx ? 1 : -1;
-        if (!sx) return (a.o || 0) - (b.o || 0);
+        var a = K[x], b = K[y], sx = rang(x), sy = rang(y);
+        if (sx !== sy) return sx - sy;
+        if (sx === 0) return (a.o || 0) - (b.o || 0);
         return ((a.s || 0) - (b.s || 0)) || ((a.d || "") < (b.d || "") ? -1 : (a.d || "") > (b.d || "") ? 1 : 0) || ((a.o || 0) - (b.o || 0));
       });
   }
 
   /* Die drei freien Plätze gehen an die Themen mit den meisten Fehlern (Gleichstand: Tageszufall). */
-  function verteilung(stand, r) {
-    var zahl = {}, extra = EIN.frisch - THEMEN.length;
+  function verteilung(stand, r, plaetze, blattArt) {
+    var zahl = {}, extra = (plaetze == null ? EIN.frisch : plaetze) - THEMEN.length;
     THEMEN.forEach(function (t) { zahl[t] = 1; });
     var zuf = {}; THEMEN.forEach(function (t) { zuf[t] = r(); });
     for (var i = 0; i < extra; i++) {
       var best = null, bw = -1e9;
       THEMEN.forEach(function (t) {
-        var w = (stand.themen[t].f || 0) - 2.5 * (zahl[t] - 1) + zuf[t] * 0.9;
+        // Themen der neuesten Blätter bekommen etwas mehr Gewicht (höchstens +2).
+        var w = (stand.themen[t].f || 0) + Math.min(2, (blattArt && blattArt[t] || 0) * 0.5) - 2.5 * (zahl[t] - 1) + zuf[t] * 0.9;
         if (w > bw) { bw = w; best = t; }
       });
       zahl[best]++;
@@ -351,20 +537,31 @@
   }
 
   /* Die Runde eines Tages. nr = 0 die Tagesrunde (mit Kiste), nr > 0 eine Extrarunde nur mit frischen. */
-  function tagesRunde(stand, heute, nr) {
+  function tagesRunde(stand, heute, nr, blatt) {
     nr = nr || 0;
+    blatt = blatt ? blattPruefen(blatt) : { stellen: [], quellen: [] };
     var r = zufall("ps|" + heute + "|" + nr), belegt = {}, teil1 = [], teil2 = [];
     if (nr === 0) {
-      var kl = kistenListe(stand), n1 = 0, n2 = 0;
+      var K = kistenEintraege(stand, blatt), kl = kistenListe(stand, blatt), n1 = 0, n2 = 0;
       kl.forEach(function (kk) {
-        var k = kistenAufgabe(kk, stand.kiste[kk]), x = aufgabe(k);
+        var k = kistenAufgabe(kk, K[kk]), x = aufgabe(k);
         if (belegt[k]) return;
         if (x.art === "sach") { if (n2 < 1) { teil2.push({ k: k, kk: kk }); belegt[k] = 1; n2++; } return; }
         // Eigene Fehler immer (bis eigeneMax), Saat-Stellen füllen bis kisteMax auf.
-        if (kk.indexOf("seed:") !== 0 ? n1 < EIN.eigeneMax : n1 < EIN.kisteMax) { teil1.push({ k: k, kk: kk }); belegt[k] = 1; n1++; }
+        // Eigene Fehler immer (bis eigeneMax); Blatt-Stellen und Saat füllen bis kisteMax auf.
+        if (rang(kk) === 0 ? n1 < EIN.eigeneMax : n1 < EIN.kisteMax) { teil1.push({ k: k, kk: kk }); belegt[k] = 1; n1++; }
       });
     }
-    var z = verteilung(stand, r);
+    // Aufgaben wie auf Pauls neuesten Blättern (dieselbe Form, neue Zahlen), dann die Themen.
+    var rb = zufall("ps-b|" + heute + "|" + nr), blattArt = {}, nb = 0;
+    blattWahl(blatt, rb).forEach(function (q, i) {
+      var k = null;
+      for (var v = 1; v < 12; v++) { var g = geschwister(q, hash(heute + "|" + nr + "|" + i) % 997 + v); if (!belegt[g] && stand.benutzt.indexOf(g) < 0) { k = g; break; } }
+      if (!k) return;
+      belegt[k] = 1; teil1.push({ k: k, b: 1 }); nb++;
+      var xa = aufgabe(k).art; blattArt[xa] = (blattArt[xa] || 0) + 1;
+    });
+    var z = verteilung(stand, r, EIN.frisch - nb, blattArt);
     THEMEN.forEach(function (t) {
       for (var i = 0; i < z[t]; i++) teil1.push({ k: frischZiehen(t, stand.themen[t].s, r, belegt, stand.benutzt) });
     });
@@ -421,6 +618,21 @@
       if (s !== n) return "Mach die Probe: " + q + " · " + d + " + " + r + " = " + s + ". Das ist nicht " + n + ".";
       return "";
     }
+    if (x.art === "rech") {
+      v = +e;
+      if (x.links != null && v === x.links) return "Du hast von links nach rechts gerechnet. Punkt vor Strich: Zuerst kommt " + zeichen(x.to[x.zwischen.i]) + ".";
+      if (x.zwischen && v === x.zwischen.wert) return "Das ist erst " + x.zwischen.text + ". Die Aufgabe geht noch weiter.";
+      return "";
+    }
+    if (x.art === "raet") {
+      v = +e;
+      if (x.wie === "m" && v === x.c - x.a) return "Mach die Probe: " + v + " − " + x.a + " = " + (v - x.a) + ". Das ist nicht " + x.c + ". Rechne rückwärts.";
+      if (x.wie === "p" && v === x.c + x.a) return "Mach die Probe: " + v + " + " + x.a + " = " + (v + x.a) + ". Das ist nicht " + x.c + ". Rechne rückwärts.";
+      if (x.wie === "m") return "Mach die Probe: " + v + " − " + x.a + " = " + (v - x.a) + ". Das ist nicht " + x.c + ".";
+      if (x.wie === "p") return "Mach die Probe: " + v + " + " + x.a + " = " + (v + x.a) + ". Das ist nicht " + x.c + ".";
+      if (v === x.c) return "Das ist die Zahl, die übrig bleibt. Gesucht ist die Zahl, die du wegnimmst.";
+      return v <= x.a ? "Mach die Probe: " + x.a + " − " + v + " = " + (x.a - v) + ". Das ist nicht " + x.c + "." : "";
+    }
     if ((x.art === "punkt" || (x.art === "sach" && x.links != null)) && x.links != null && +e === x.links) {
       return "Du hast von links nach rechts gerechnet. Punkt vor Strich: Zuerst kommt " + (x.punktZeichen || "·") + ".";
     }
@@ -461,6 +673,13 @@
         return "Vielfache von " + x.d + " stehen in der " + x.d + "er-Reihe: " + x.d + ", " + (2 * x.d) + ", " + (3 * x.d) + " …";
       case "sach":
         return x.signal;
+      case "rech":
+        if (!x.zwischen) return x.to[0] === "*" ? "Denk an die " + Math.min(x.tz[0], x.tz[1]) + "er-Reihe." : "Rechne Schritt für Schritt.";
+        return (x.gemischt ? "Punkt vor Strich: Rechne zuerst " : "Rechne von links nach rechts: zuerst ") + x.zwischen.text + ".";
+      case "raet":
+        if (x.wie === "m") return "Rechne rückwärts: Was weggenommen wurde, zählst du wieder dazu.";
+        if (x.wie === "p") return "Rechne rückwärts: Was dazugezählt wurde, nimmst du wieder weg.";
+        return "Von " + x.a + " bis " + x.c + ": Wie viel fehlt dazwischen? Rechne " + x.a + " − " + x.c + ".";
     }
     return "";
   }
@@ -493,6 +712,15 @@
         return "Schau: " + reihe(x.d, x.chips[x.chips.length - 1]) + ". Tippe genau die an, die hier stehen.";
       case "sach":
         return "Schau: Rechne " + x.rechnung + " = ?" + t;
+      case "rech":
+        if (!x.zwischen) {
+          var kl = Math.min(x.tz[0], x.tz[1]), gr = Math.max(x.tz[0], x.tz[1]);
+          return x.to[0] === "*" && kl <= 10 ? "Schau: " + kl + "er-Reihe: " + reihe(kl, kl * (gr - 1)) + " … Die " + gr + ". Zahl fehlt noch." + t : "Schau: Rechne " + x.frage.replace(" = ?", "") + " in Ruhe." + t;
+        }
+        var zt = x.tz.slice(), zo = x.to.slice(); zt.splice(x.zwischen.i, 2, x.zwischen.wert); zo.splice(x.zwischen.i, 1);
+        return "Schau: " + x.zwischen.text + " = " + x.zwischen.wert + ". Dann " + zt.map(function (z, i) { return (i ? zeichen(zo[i - 1]) + " " : "") + z; }).join(" ") + " = ?" + t;
+      case "raet":
+        return "Schau: " + (x.wie === "m" ? x.c + " + " + x.a : x.wie === "p" ? x.c + " − " + x.a : x.a + " − " + x.c) + " = ?" + t;
     }
     return "";
   }
@@ -506,6 +734,8 @@
       case "punkt": return x.frage.replace(" = ?", "") + " = " + x.rest(x.pv) + " = " + x.loesung;
       case "teiler": return (x.wovon === "teiler" ? "Teiler von " + x.n + ": " : "Vielfache von " + x.d + ": ") + x.loesung.join(", ");
       case "sach": return x.rechnung + " = " + loesungText(x) + (x.typ === "zahl" && x.einheit === "€" ? " €" : "");
+      case "rech": return x.frage.replace("?", String(x.loesung));
+      case "raet": return "Meine Zahl ist " + x.loesung;
     }
     return x.frage.replace("? R ?", loesungText(x)).replace("?", String(x.loesung));
   }
@@ -518,8 +748,9 @@
     var h = heuteStand(s, heute);
     erg.forEach(function (e) {
       var x = aufgabe(e.k); if (!x) return;
-      if (x.art !== "sach") {
-        var th = s.themen[x.art];
+      if (e.kk && e.kk.indexOf("auto:") === 0 && !s.kiste[e.kk] && s.weg.indexOf(e.kk) < 0) s.kiste[e.kk] = { s: 0, d: "", z: 0, zd: "", o: s.o++ };
+      var th = s.themen[x.art];
+      if (th) {
         if (e.ok) {
           th.r++; th.f = Math.max(0, th.f - 0.5);
           if (th.r >= EIN.stufeNach && th.s < EIN.stufeMax) { th.s++; th.r = 0; }
@@ -529,7 +760,10 @@
         var ke = s.kiste[e.kk];
         if (ke.zd !== heute) { ke.z = (ke.z || 0) + 1; ke.zd = heute; }
         if (!e.ok) { ke.s = 0; ke.d = heute; }
-        else if (ke.d !== heute) { ke.s = (ke.s || 0) + 1; ke.d = heute; if (ke.s >= EIN.sitztNach) delete s.kiste[e.kk]; }
+        else if (ke.d !== heute) {
+          ke.s = (ke.s || 0) + 1; ke.d = heute;
+          if (ke.s >= EIN.sitztNach) { delete s.kiste[e.kk]; if (e.kk.indexOf("auto:") === 0 && s.weg.indexOf(e.kk) < 0) s.weg.push(e.kk); }
+        }
       } else {
         if (!e.ok) {
           if (s.kiste[e.k]) { s.kiste[e.k].s = 0; s.kiste[e.k].d = heute; }
@@ -562,6 +796,7 @@
     EIN: EIN, THEMEN: THEMEN, NAME: NAME, SAAT: SAAT, SACH_ARTEN: SACH_ARTEN,
     heuteIso: heuteIso, aktiv: aktiv, zufall: zufall, ERZEUGE: ERZEUGE, SACH_ERZ: SACH_ERZ,
     aufgabe: aufgabe, tagesRunde: tagesRunde, kistenListe: kistenListe, kistenAufgabe: kistenAufgabe, verteilung: verteilung,
+    geschwister: geschwister, form: form, blattPruefen: blattPruefen, BLATT_STAND: BLATT_STAND, kistenEintraege: kistenEintraege,
     stimmt: stimmt, loesungText: loesungText, eingabeText: eingabeText,
     denkfehler: denkfehler, hilfe: hilfe, bestaetigung: bestaetigung,
     leererStand: leererStand, standPruefen: standPruefen, heuteStand: heuteStand, buchen: buchen,
