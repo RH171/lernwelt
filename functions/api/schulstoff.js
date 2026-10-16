@@ -25,7 +25,7 @@ import { tippOk, nebendetail } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import { korrekturenFuerBrowser } from "./_korrektur.js";
 import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
-import { volllesen, brauchtVolllesen, vokabelnImFach } from "./_volllesen.js";
+import { volllesen, brauchtVolllesen, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
 
 /* Nachrechnen beim Durchlesen (14.10.2026): läuft NEBEN dem Lesen, gewartet wird
@@ -38,7 +38,7 @@ import {
   themenSetzen, themaNormal, themenImFach,
   inhaltSetzen,
   HAND, KARTEN_MAX,
-  fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen,
+  fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen, fachAusText, fachPruefen,
   faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen, lesungenZusammen,
 } from "./_schulstoff.js";
 
@@ -389,7 +389,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
          (die stehen in `nachgerechnet`). Dauert es länger als die Grenze, holt es die
          Seite nach (POST /api/pruefreiter aktion "volllesen"). */
       const vlLauf = KINDER_MIT_PRUEFREITER.includes(kind) && brauchtVolllesen(eintrag)
-        ? volllesen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { fach: eintrag.fach, kind, ohneRechnen: eintrag.fach === "mathe",
+        ? volllesen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { fach: eintrag.fach, kind, faecher: FAECHER_JE_KIND[kind], ohneRechnen: eintrag.fach === "mathe",
                                                                  vokabeln: tv.vokabeln, grenze: 50000, frist: nrStart + NACHRECHNEN_GRENZE })
             .catch(() => null) : null;
       const alle = await Promise.all(
@@ -466,6 +466,14 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       const [rn, rv] = await Promise.all([warten(nrLauf), warten(vlLauf)]);
       if (rn && rn.ok) nachgerechnet = rn.nachgerechnet;
       if (rv && rv.ok) vollGelesen = rv.volllesen;
+      /* Fach aus dem Volllesen (16.10.2026, anleitung/054): Hat das Durchlesen kein Fach
+         geliefert (gescheitert oder „unklar“), zaehlt die FACH-Zeile der Abschrift - mit
+         derselben Regel: nur vermerken, nie still tauschen. Beleg: Pauls „Abschreiben und
+         Trennungsregeln“ (14.10.2026) blieb so unter Mathe stehen. */
+      if (!fachFrage && !fachGelesen && vollGelesen) {
+        const ff = await fachPruefen(env, kind, eintrag, vlFach(vollGelesen));
+        if (ff) fachFrage = ff;
+      }
       if ((zeilenNeu && zeilenNeu.length) || karten.length || nachgerechnet || vollGelesen) {
         await inhaltSetzen(env, kind, eintrag.id, zeilenNeu, karten, gelesen.sorte, halten, nachgerechnet, vollGelesen);
       }
@@ -1023,21 +1031,9 @@ export function inhalteZusammen(alle) {
   return hand.concat(rest).slice(0, INHALT_MAX);
 }
 
-/* Die FACH-Zeile des Modells auf einen Schluessel aus FAECHER bringen.
- * Alles, was nicht eindeutig passt ("unklar", Fliesstext, ein Fach, das es
- * hier nicht gibt), wird zu "" - dann fragt niemand nach. Lieber keine
- * Rueckfrage als eine falsche: Paul soll seiner eigenen Wahl nicht grundlos
- * misstrauen lernen. Exportiert fuer pruefe-schulstoff.mjs. */
-export function fachAusText(s) {
-  const w = String(s || "").toLowerCase().trim().replace(/[^a-zäöüß]/g, " ").trim().split(/\s+/)[0] || "";
-  const ALIAS = { mathematik: "mathe", sachunterricht: "hsu", heimat: "hsu",
-                  religion: "rel", ethik: "rel", english: "englisch",
-                  franzoesisch: "franz", "französisch": "franz", french: "franz",
-                  geographie: "geo", geografie: "geo", erdkunde: "geo",
-                  informatik: "info" };
-  const k = ALIAS[w] || w;
-  return (FAECHER[k] && k !== "anderes") ? k : "";
-}
+/* fachAusText steht seit 16.10.2026 in _schulstoff.js (auch Volllesen und Werkzeug brauchen es);
+ * hier weitergereicht fuer pruefe-schulstoff.mjs. */
+export { fachAusText };
 
 async function blattLesen(env, seite, kind, themen) {
   const schueler = SCHUELER_JE_KIND[kind] || SCHUELER_JE_KIND.paul;
@@ -1624,7 +1620,7 @@ export async function onRequestPatch(context) {
     if (!x) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
     if (!x.fachVorschlag) return json(400, { ok: false, fehler: "Dazu gibt es keine offene Frage." });
     const rf = String(d.was) === "fach-ablehnen"
-      ? await fachSetzen(env, kind, x.id, { vorschlag: "" })
+      ? await fachSetzen(env, kind, x.id, { vorschlag: "", bestaetigt: true })
       : await fachSetzen(env, kind, x.id, { fach: x.fachVorschlag, vorschlag: "" });
     if (!rf.ok) return json(503, { ok: false, fehler: rf.fehler });
     return json(200, { ok: true, fach: rf.auf });

@@ -50,14 +50,14 @@
  * Bis 14.10.2026 nur Paul; seit dem Volllesen alle drei Kinder (KINDER_MIT_PRUEFREITER).
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
-import { stoffLesen, kindOk } from "./_schulstoff.js";
+import { stoffLesen, kindOk, FAECHER_JE_KIND, fachPruefen } from "./_schulstoff.js";
 import { stoffBild } from "./_schulstoff.js";
 import { vorlagenLesen, vorlagenBilderLesen, vorlageFuerBlatt, BILD_SCHLUESSEL } from "./_lehrervorlagen.js";
 import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
          zustandLesen, zustandSchreiben, fortschritt, imBestand, brauchtNachrechnen, nachrechenStand,
          brauchtVolllesen, volllesStand, optFuer } from "./_pruefreiter.js";
 import { nachrechnen } from "./_nachrechnen.js";
-import { volllesen, fortsetzbar, vokabelnImFach } from "./_volllesen.js";
+import { volllesen, fortsetzbar, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { nachgerechnetSetzen, abschriftenSetzen } from "./_schulstoff.js";
 import { kreiseLesen, kreiseSchreiben, fehltOrt, ortFuer, vorlageOrt, zieleFuerStelle, zielFuerVorlage,
          orten, orteVerwerfen } from "./_fehlerkreis.js";
@@ -279,7 +279,7 @@ async function volllesenAktion(env, kind, blattId) {
   if (!seiten.length) return json(404, { ok: false, fehler: "Zu dem Blatt liegt kein Bild da." });
   const start = Date.now();
   const [rv, rn] = await Promise.all([
-    vl ? volllesen(env.ANTHROPIC_API_KEY, seiten, { fach: blatt.fach, kind, ohneRechnen: blatt.fach === "mathe",
+    vl ? volllesen(env.ANTHROPIC_API_KEY, seiten, { fach: blatt.fach, kind, faecher: FAECHER_JE_KIND[kind], ohneRechnen: blatt.fach === "mathe",
                                                      vokabeln: vokabelnImFach(e.eintraege, blatt.fach, blatt.id),
                                                      grenze: 80000, frist: start + 85000 }, fortsetzbar(blatt) || undefined) : null,
     nr ? nachrechnen(env.ANTHROPIC_API_KEY, seiten, { grenze: 80000 }) : null,
@@ -292,8 +292,15 @@ async function volllesenAktion(env, kind, blattId) {
   const w = await abschriftenSetzen(env, kind, blattId, felder);
   if (!w.ok) return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken." });
   const mit = { ...blatt, ...felder };
+  /* Fach (16.10.2026, anleitung/054): Das nachgeholte Volllesen liest das Fach mit. Weicht es ab,
+     wird nur ein Vorschlag vermerkt (zweiter Schreibvorgang, nur dann) - die Rueckfrage erscheint
+     auf der Startseite („Bitte kurz nachsehen“) und in der Ablage. Nie, wenn schon eine Frage
+     offen ist oder das Kind das Fach selbst gewaehlt oder bestaetigt hat. */
+  let fachFrage = null;
+  if (felder.volllesen) { try { fachFrage = await fachPruefen(env, kind, blatt, vlFach(felder.volllesen), { spaet: true }); } catch (x) {} }
   const neu = stellenFuerBlatt(mit, await vorlagenLesen(env, kind), optFuer(e.eintraege, mit)).filter((s) => /:[nv]:/.test(s.id));
   return json(200, { ok: true, volllesen: !!felder.volllesen, nachgerechnet: !!felder.nachgerechnet, stellen: neu.length,
+                     ...(fachFrage ? { fachFrage } : {}),
                      ...(felder.volllesen && felder.volllesen.offen ? { offen: true } : {}) });
 }
 

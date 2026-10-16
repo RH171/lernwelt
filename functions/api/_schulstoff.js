@@ -933,7 +933,10 @@ export async function themenSetzen(env, kind, zuordnung) {
  * Anders als die Art darf das KIND das Fach selbst umstellen: Ein falsch
  * angetipptes Fach ist ein Versehen, keine Antwort auf "wo stand das?".
  * Erst lesen, dann schreiben - ein gleicher Wert kostet keinen Schreibvorgang. */
-export async function fachSetzen(env, kind, id, { fach, vorschlag } = {}) {
+/* bestaetigt (16.10.2026): Das Kind hat eine Rueckfrage mit „Stimmt so“ beantwortet
+ * (fach-ablehnen). Vermerkt als fachBestaetigt, damit eine spaetere Lesung (Volllesen,
+ * Werkzeug) nicht noch einmal fragt. */
+export async function fachSetzen(env, kind, id, { fach, vorschlag, bestaetigt } = {}) {
   if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
   if (!env || !env.PAUL_KV) return { ok: false, fehler: "Der Speicher ist gerade nicht da." };
   if (fach !== undefined && !FAECHER[fach]) return { ok: false, fehler: "Das Fach kenne ich nicht." };
@@ -965,6 +968,7 @@ export async function fachSetzen(env, kind, id, { fach, vorschlag } = {}) {
       if (vorschlag) x.fachVorschlag = vorschlag;
       else delete x.fachVorschlag;
     }
+    if (bestaetigt) x.fachBestaetigt = 1;
     const neu = JSON.stringify(liste);
     if (neu !== roh) {
       try { await env.PAUL_KV.put(LISTE(kind, monat), neu); }
@@ -1014,4 +1018,44 @@ export async function stoffAendern(env, kind, id, was) {
     return { ok: true, was };
   }
   return { ok: false, fehler: "Das finde ich nicht mehr." };
+}
+
+
+/* Die FACH-Zeile des Modells auf einen Schluessel aus FAECHER bringen.
+ * Alles, was nicht eindeutig passt ("unklar", Fliesstext, ein Fach, das es
+ * hier nicht gibt), wird zu "" - dann fragt niemand nach. Lieber keine
+ * Rueckfrage als eine falsche: Paul soll seiner eigenen Wahl nicht grundlos
+ * misstrauen lernen. Seit 16.10.2026 hier (vorher in schulstoff.js), weil
+ * auch das Volllesen (pruefreiter.js) und das Werkzeug fachpruef.mjs es brauchen. */
+export function fachAusText(s) {
+  const w = String(s || "").toLowerCase().trim().replace(/[^a-zäöüß]/g, " ").trim().split(/\s+/)[0] || "";
+  const ALIAS = { mathematik: "mathe", sachunterricht: "hsu", heimat: "hsu",
+                  religion: "rel", ethik: "rel", english: "englisch",
+                  franzoesisch: "franz", "französisch": "franz", french: "franz",
+                  geographie: "geo", geografie: "geo", erdkunde: "geo",
+                  informatik: "info" };
+  const k = ALIAS[w] || w;
+  return (FAECHER[k] && k !== "anderes") ? k : "";
+}
+
+/* Das Fach pruefen (25.09.2026, seit 16.10.2026 auch nach dem Volllesen, anleitung/054):
+ * NIE still tauschen - weicht das gelesene Fach ab, wird nur ein Vorschlag vermerkt, und das
+ * Kind beantwortet die Rueckfrage. Gibt das abweichende Fach oder "".
+ *   gelesen - Rohtext der FACH-Zeile oder ein Schluessel
+ *   spaet   - die Lesung kommt NACH dem Hochladen (Volllesen nachgeholt, Werkzeug): dann nur,
+ *             wenn noch keine Frage offen ist und das Kind das Fach nicht schon selbst
+ *             gewaehlt oder bestaetigt hat (fachGewaehlt, fachBestaetigt) - nicht erneut nerven. */
+export function fachAbweichung(kind, eintrag, gelesen, { spaet } = {}) {
+  if (!eintrag) return "";
+  const f = fachAusText(gelesen);
+  if (!f || !(FAECHER_JE_KIND[kind] || []).includes(f)) return "";
+  if (!eintrag.fach || eintrag.fach === "anderes" || f === eintrag.fach) return "";
+  if (spaet && (eintrag.fachVorschlag || eintrag.fachGewaehlt || eintrag.fachBestaetigt)) return "";
+  return f;
+}
+export async function fachPruefen(env, kind, eintrag, gelesen, opt) {
+  const f = fachAbweichung(kind, eintrag, gelesen, opt);
+  if (!f) return null;
+  const rf = await fachSetzen(env, kind, eintrag.id, { vorschlag: f });
+  return rf.ok ? { gelesen: f, gewaehlt: eintrag.fach } : null;
 }
