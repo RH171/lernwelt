@@ -1,7 +1,7 @@
 /* Pauls Probenstoff Mathe – die Anzeige (13.10.2026). Rechnet nichts selbst: Runde, Prüfung,
  * Hilfen und Buchung kommen aus /probenstoff/motor.js (window.PSMotor).
  *
- * Ablauf: Start → Teil 1 (Kiste + 8 frische, gemischt) → Zwischenschirm → Teil 2 (Sachaufgaben) → Ende.
+ * Ablauf: Start → Teil 1 (Kiste + 8 frische, gemischt) → Zwischenschirm → Teil 2 (Textaufgaben im Wortlaut der Lehrerin und Sachaufgaben) → Ende.
  * Gezählt wird der erste Versuch, Hilfe in Stufen (Kapitel 044). Eingabe: ein Feld, zwei Felder
  * (Ergebnis und R) oder Zahlen antippen (Teiler, Vielfache).
  * Speicher: localStorage "paul-probenstoff" (paul-sync.js schickt ihn mit), EIN Schreibvorgang je
@@ -16,13 +16,36 @@
   var RW_ZU = "paul-probenstoff-rw-zu";                       // sessionStorage: Paul hat „Schritt für Schritt“ zugeklappt
   var MW = window.MeinWeg, MW_AUF = "paul-probenstoff-mw-auf"; // „Mein Rechenweg“ (sessionStorage: zuletzt offen)
   var SPEICHER = "paul-probenstoff", LAUF = "paul-probenstoff-lauf", NACHTRAG = "paul-probenstoff-nachtrag";
+  var BLATT = "paul-probenstoff-blatt";   // sessionStorage: Stoff von Pauls Blättern für heute (16.10.2026)
   function $(id) { return document.getElementById(id); }
   function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
 
   var datum = M.heuteIso();
   var stand = laden();
   var lauf = null;   // { d, nr, phase:"1"|"2"|"1-fertig", liste:[{k,kk}], i, erg:{1:[],2:[]}, versuche, eingabe:{a,b}, feld, wahl:[], tipp }
-  var sperre = false, shown = 0, verdeckt = 0, verdecktSeit = 0;
+  var sperre = false, shown = 0, verdeckt = 0, verdecktSeit = 0, weiterAb = 0;
+
+  /* Stoff von Pauls neuesten Matheblättern (16.10.2026): GET /api/probenstoff, einmal je Tag und Tab
+     (sessionStorage), damit Neuladen dieselbe Runde zeigt. Kommt nichts (offline, Messung), gilt der
+     eingebaute Stand im Motor. Nur lesen, kein Schreibvorgang. */
+  var blatt = null;
+  function blattHolen(fertig) {
+    if (window.__psBlatt) { blatt = window.__psBlatt; fertig(); return; }   // Messung
+    try { var c = JSON.parse(sessionStorage.getItem(BLATT) || "null"); if (c && c.d === datum && c.b) { blatt = c.b; fertig(); return; } } catch (e) {}
+    var fertigGemacht = false;
+    function ende(b) {
+      if (fertigGemacht) return; fertigGemacht = true;
+      blatt = b && b.ok ? { stellen: b.stellen || [], quellen: b.quellen || [] } : M.BLATT_STAND;
+      if (b && b.ok) { try { sessionStorage.setItem(BLATT, JSON.stringify({ d: datum, b: blatt })); } catch (e) {} }
+      fertig();
+    }
+    setTimeout(function () { ende(null); }, 3500);
+    try {
+      fetch("/api/probenstoff?kind=paul", { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok && /json/.test(r.headers.get("content-type") || "") ? r.json() : null; })
+        .then(ende, function () { ende(null); });
+    } catch (e) { ende(null); }
+  }
 
   function laden() {
     var s = null, n = null;
@@ -55,9 +78,9 @@
   function startZeigen() {
     if (!M.aktiv(datum)) { zeige("aus"); return; }
     zeige("start");
-    var hs = h(), runde = M.tagesRunde(stand, datum, hs.t2 ? hs.n : 0);
-    $("teil-1-satz").textContent = runde.teil1.length + " Aufgaben: Mal, Geteilt, Rest, Punkt vor Strich, Teiler.";
-    $("teil-2-satz").textContent = runde.teil2.length + " Aufgaben aus dem Alltag.";
+    var hs = h(), runde = M.tagesRunde(stand, datum, hs.t2 ? hs.n : 0, blatt);
+    $("teil-1-satz").textContent = runde.teil1.length + " Aufgaben: Mal, Geteilt, Rest, Punkt vor Strich, Teiler und Aufgaben wie auf deinen Blättern.";
+    $("teil-2-satz").textContent = runde.teil2.length + " Textaufgaben: wie auf deinen Blättern und aus dem Alltag.";
     $("teil-1").classList.toggle("fertig", !!hs.t1);
     $("teil-2").classList.toggle("fertig", !!hs.t2);
     $("los").textContent = hs.t2 ? "Noch eine Runde" : hs.t1 ? "Weiter mit Teil 2" : "Los geht's";
@@ -67,10 +90,10 @@
   /* ---------- Spiel ---------- */
   function rundeBeginnen(phase) {
     var hs = h(), nr = hs.t2 ? hs.n : 0;
-    var runde = lauf && lauf.runde ? lauf.runde : M.tagesRunde(stand, datum, nr);
+    var runde = lauf && lauf.runde ? lauf.runde : M.tagesRunde(stand, datum, nr, blatt);
     var erg = lauf && lauf.erg ? lauf.erg : { 1: [], 2: [] };
-    lauf = { d: datum, nr: nr, runde: runde, phase: phase, liste: phase === "1" ? runde.teil1 : runde.teil2, i: 0, erg: erg,
-      versuche: 0, eingabe: { a: "", b: "" }, feld: "a", wahl: [], tipp: "" };
+    lauf = { d: datum, nr: nr, runde: runde, phase: phase, liste: (phase === "1" ? runde.teil1 : runde.teil2).slice(), i: 0, erg: erg,
+      versuche: 0, eingabe: { a: "", b: "" }, feld: "a", wahl: [], tipp: "", wdh: 0 };
     laufMerken();
     zeige("spiel");
     aufgabeZeigen();
@@ -90,10 +113,11 @@
     }
     var kopf = x.text ? '<p class="sachtext" id="frage">' + esc(x.text) + '</p>' : "";
     var zeile;
-    if (x.art === "sach") {
+    if (x.art === "sach" || x.art === "raet" || x.art === "lt") {
+      /* Zahlenrätsel und Textaufgaben der Lehrerin: Antwortsatz wie auf dem Blatt („Meine Zahl ist …“). */
       zeile = x.typ === "rest"
         ? feldHtml("a", x.labelA) + '<span class="und">und</span>' + feldHtml("b", x.labelB)
-        : feldHtml("a", "Antwort") + (x.einheit ? '<span class="einheit">' + esc(x.einheit) + '</span>' : "");
+        : (x.satz ? '<span class="satz">' + esc(x.satz) + '</span>' : "") + feldHtml("a", "Antwort") + (x.einheit ? '<span class="einheit">' + esc(x.einheit) + '</span>' : "");
       return kopf + '<div class="zeile sach">' + zeile + '</div>';
     }
     if (x.typ === "rest") {
@@ -114,7 +138,7 @@
    * lauf.rw = { k, aus, auf, w:[Eingaben], ok:[bool], v:[Fehlversuche], rk:Schritt mit Kästchen|-1 } */
   function rwNeu(x, auf) {
     if (!RW) return null;
-    var aus = x.art === "punkt" ? x.frage.replace(/\s*=\s*\?\s*$/, "") : x.art === "sach" && x.links != null ? x.rechnung : null;
+    var aus = x.art === "punkt" || (x.art === "rech" && x.tz.length > 2) ? x.frage.replace(/\s*=\s*\?\s*$/, "") : x.art === "sach" && x.links != null ? x.rechnung : null;
     if (!aus || !RW.zerlege(aus)) return null;
     return { k: x.k, aus: aus, auf: auf, w: [], ok: [], v: [], rk: -1 };
   }
@@ -179,6 +203,7 @@
     if (!MW || !x) return false;
     if (x.art === "punkt" || x.typ === "rest") return true;   // Teilen mit Rest: teilen, dann Rest ausrechnen
     if (x.art === "sach") return (x.schritte || 1) >= 2;
+    if (x.art === "lt" || x.art === "raet") return true;   // Rechenkästchen wie auf dem Blatt der Lehrerin
     return MW.schritte(x.frage) >= 2;
   }
   function meinWegZeigen(x) {
@@ -231,15 +256,16 @@
     if (!lauf.rw || lauf.rw.k !== x.k) {
       // Die geführte Zerlegung ist eine Hilfe-Stufe: zu Beginn nur als Knopf, nach dem ersten
       // Fehlversuch geht sie von selbst auf (außer Paul hat sie in dieser Sitzung zugeklappt).
-      lauf.rw = x.art === "punkt" ? rwNeu(x, false) : null;
+      lauf.rw = x.art === "punkt" || x.art === "rech" ? rwNeu(x, false) : null;
     }
     meinWegZeigen(x);
-    $("thema").textContent = x.thema;
+    var el0 = lauf.liste[lauf.i];
+    $("thema").textContent = x.thema + (el0 && el0.w === 1 ? " · Noch einmal" : el0 && el0.w === 2 ? " · Neue Zahlen" : "");
     $("zaehler").textContent = (lauf.phase === "1" ? "Aufgabe " : "Sachaufgabe ") + (lauf.i + 1) + " von " + lauf.liste.length;
     rwMalen();
     $("aufgabe").setAttribute("data-typ", x.typ);
     $("tasten").classList.toggle("nurok", x.typ === "tippen");
-    document.querySelector('[data-taste="ok"]').textContent = "Prüfen";
+    $("tasten").classList.remove("verborgen"); $("weiter").classList.add("verborgen");
     tipp(lauf.versuche ? lauf.tipp : "", false);
     sperre = false;
     shown = jetzt(); verdeckt = 0; verdecktSeit = document.hidden ? shown : 0;
@@ -303,11 +329,14 @@
     }
     if (x.typ === "tippen" && !lauf.wahl.length) { tipp("Tippe die passenden Zahlen an. Dann drückst du Prüfen.", false); return; }
     var e = eingabe(x), ok = M.stimmt(x, e), erster = lauf.versuche === 0;
-    if (erster) {
-      var sek = Math.round(vergangen() * 10) / 10, el = lauf.liste[lauf.i];
+    var el = lauf.liste[lauf.i];
+    if (erster && !el.w) {
+      // Nur der erste Versuch einer Aufgabe zählt; Wiederholungen in derselben Runde zählen nicht noch einmal.
+      var sek = Math.round(vergangen() * 10) / 10;
       lauf.erg[lauf.phase].push({ k: x.k, kk: el.kk || undefined, ok: ok, sek: sek });
       melden(x, ok, M.eingabeText(x, e), sek);
     }
+    if (erster && !ok) wiederholen(x, el);
     if (ok) { richtig(x, erster); return; }
     lauf.versuche++;
     lauf.tipp = M.hilfe(x, lauf.versuche, e);
@@ -321,11 +350,32 @@
       var zz = rwZerlegung(), last = zz.schritte.length - 1;
       lauf.rw.w[last] = ""; lauf.feld = "s" + Math.max(0, rwJetzt(zz));
       rwMalen();
-    } else if (lauf.rw && !lauf.rw.auf && x.art === "punkt" && !rwZuGemerkt()) {
+    } else if (lauf.rw && !lauf.rw.auf && (x.art === "punkt" || x.art === "rech") && !rwZuGemerkt()) {
       lauf.rw.auf = true; lauf.feld = "s0"; rwMalen();
     }
     tipp(lauf.tipp, false);
     laufMerken();
+  }
+  /* Fehler in derselben Runde üben (Denny, 16.10.2026, 18:36 Uhr: „Fehler bitte auch wiederholen. Paul hat
+     immer wieder mit der gleichen Aufgabenform Probleme.“): Ist der erste Versuch falsch, kommt dieselbe
+     Aufgabe nach wdhAbstand Aufgaben wieder (w:1) und dieselbe Form mit neuen Zahlen nach wdhAbstandNeu (w:2).
+     Ist eine Wiederholung beim ersten Versuch wieder falsch, kommt sie noch einmal ans Ende. Höchstens wdhMax
+     zusätzliche Aufgaben je Teil. Geübt ist die Form für heute, wenn beide beim ersten Versuch sitzen. */
+  function einfuegen(eintrag, ab) {
+    if ((lauf.wdh || 0) >= M.EIN.wdhMax) return false;
+    var pos = Math.min(lauf.liste.length, lauf.i + 1 + ab);
+    lauf.liste.splice(pos, 0, eintrag); lauf.wdh = (lauf.wdh || 0) + 1;
+    return true;
+  }
+  function wiederholen(x, el) {
+    if (!el.w) {
+      einfuegen({ k: x.k, w: 1, von: x.k }, M.EIN.wdhAbstand);
+      var neu = M.geschwister(x.k, 1 + (lauf.wdh || 0));
+      if (neu !== x.k) einfuegen({ k: neu, w: 2, von: x.k }, M.EIN.wdhAbstandNeu);
+    } else {
+      // Wieder daneben: dieselbe Aufgabe noch einmal ganz ans Ende (keine Kette ohne Ende: wdhMax).
+      einfuegen({ k: x.k, w: el.w, von: el.von }, lauf.liste.length);
+    }
   }
   function richtig(x, erster) {
     if (lauf.rw && lauf.rw.auf) {   // Rechenweg ausgefüllt zeigen
@@ -334,16 +384,17 @@
     }
     [].forEach.call(document.querySelectorAll("#aufgabe .feld"), function (f) { f.classList.add("gut"); });
     [].forEach.call(document.querySelectorAll(".chip.an"), function (b) { b.classList.add("gut"); });
-    sperre = true;
+    // Doppeltippen auf „Prüfen“ springt nicht gleich über das Ergebnis weiter (die Messung darf die Zeit verkürzen).
+    sperre = true; weiterAb = jetzt() + (window.__psWeiterMs != null ? +window.__psWeiterMs : 500);
     tipp((erster ? "Richtig! " : "Gut, jetzt stimmt es. ") + M.bestaetigung(x) + ".", true);
-    document.querySelector('[data-taste="ok"]').textContent = "Weiter";
-    $("tasten").classList.add("nurok");
+    // Eigener großer Weiter-Knopf statt der Zifferntasten: das Ergebnis bleibt stehen, bis Paul weitertippt.
+    $("tasten").classList.add("verborgen"); $("weiter").classList.remove("verborgen");
     if ($("meinweg")) $("meinweg").classList.add("verborgen");
     lauf.i++; lauf.versuche = 0; lauf.eingabe = { a: "", b: "" }; lauf.feld = "a"; lauf.wahl = []; lauf.tipp = ""; lauf.rw = null;
     laufMerken();
   }
   function naechste() {
-    if (!sperre) return;
+    if (!sperre || jetzt() < weiterAb) return;
     if (lauf.i >= lauf.liste.length) teilFertig(); else aufgabeZeigen();
   }
 
@@ -355,7 +406,7 @@
     }
     if (lauf.phase === "1-fertig") {
       var r1 = lauf.erg[1].filter(function (e) { return e.ok; }).length;
-      $("zwischen-satz").textContent = "Beim ersten Versuch richtig: " + r1 + " von " + lauf.erg[1].length + ". Jetzt noch " + lauf.runde.teil2.length + " Sachaufgaben.";
+      $("zwischen-satz").textContent = "Beim ersten Versuch richtig: " + r1 + " von " + lauf.erg[1].length + ". Jetzt noch " + lauf.runde.teil2.length + " Textaufgaben.";
       zeige("zwischen");
       return;
     }
@@ -365,7 +416,7 @@
     var ra = a.filter(function (e) { return e.ok; }).length, rb = b.filter(function (e) { return e.ok; }).length;
     lauf = null; laufWeg();
     zeige("ende");
-    $("ende-zahlen").textContent = "Beim ersten Versuch richtig: " + (a.length ? "Probenstoff " + ra + " von " + a.length + ", " : "") + "Sachaufgaben " + rb + " von " + b.length + ". Du hast heute fleißig geübt.";
+    $("ende-zahlen").textContent = "Beim ersten Versuch richtig: " + (a.length ? "Probenstoff " + ra + " von " + a.length + ", " : "") + "Textaufgaben " + rb + " von " + b.length + ". Du hast heute fleißig geübt.";
   }
 
   function melden(x, ok, gegeben, sek) {
@@ -391,15 +442,17 @@
     if (id === "los") {
       var hs = h();
       lauf = null; laufWeg();
-      if (hs.t1 && !hs.t2) { lauf = { runde: M.tagesRunde(stand, datum, 0), erg: { 1: [], 2: [] } }; rundeBeginnen("2"); }
+      if (hs.t1 && !hs.t2) { lauf = { runde: M.tagesRunde(stand, datum, 0, blatt), erg: { 1: [], 2: [] } }; rundeBeginnen("2"); }
       else rundeBeginnen("1");
       return;
     }
     if (id === "weiter-sach") { rundeBeginnen("2"); return; }
+    if (id === "weiter") { naechste(); return; }
     if (id === "nochmal") { lauf = null; laufWeg(); startZeigen(); return; }
   });
   document.addEventListener("keydown", function (e) {
     if ($("spiel").classList.contains("verborgen")) return;
+    if (e.repeat) return;   // gehaltene Taste zählt einmal
     var t = e["key"];
     if (/^[0-9]$/.test(t)) taste(t);
     else if (t === "Backspace") taste("weg");
@@ -419,12 +472,14 @@
   var weiterSeite = { sichern: function () { return lauf; }, laden: function (l) { fortsetzen(l); } };
   if (window.LWWeiter) window.LWWeiter.anmelden(weiterSeite); else window.LW_WEITER = weiterSeite;
 
-  if (!fortsetzen(laufHolen())) startZeigen();
+  // Erst der Stoff von den Blättern, dann die Startseite (ein laufender Durchgang trägt seine Runde selbst).
+  if (!fortsetzen(laufHolen())) blattHolen(function () { if (!lauf) startZeigen(); });
+  else blattHolen(function () {});
 
   // Für die Messung (mess-schritte-probenstoff.js): lesen, nichts verändern.
   window.__probenstoff = {
     motor: M, stand: function () { return stand; }, lauf: function () { return lauf; },
-    datum: function () { return datum; },
+    datum: function () { return datum; }, blatt: function () { return blatt; },
     aktuell: function () { return lauf && lauf.liste && lauf.phase !== "1-fertig" ? aktuell() : null; }
   };
 })();

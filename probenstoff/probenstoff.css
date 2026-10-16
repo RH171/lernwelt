@@ -39,6 +39,7 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
 .zeile{display:flex;align-items:flex-start;justify-content:center;gap:10px;font:800 36px/58px var(--font);font-variant-numeric:tabular-nums;flex-wrap:wrap;padding:6px 0}
 .zeile.sach{font-size:22px;align-items:flex-start}
 .zeile .und,.zeile .einheit{font-size:20px;color:var(--muted)}
+.zeile .satz{font-size:20px;font-weight:600}
 .feldbox{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
 .feldbox small{font:600 13px/1.1 var(--font);color:var(--muted)}
 .feld{display:inline-flex;align-items:center;justify-content:center;min-width:100px;height:58px;padding:0 10px;border-radius:12px;
@@ -65,11 +66,15 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
 /* Antippen (Teiler) und nach einem Richtig: nur der Knopf Prüfen/Weiter. */
 #tasten.nurok{grid-template-columns:1fr}
 #tasten.nurok button:not(.ok){display:none}
+/* Weiter nach einem Richtig (16.10.2026): groß, an der Stelle der Tasten. */
+.weiterknopf{display:block;width:100%;max-width:360px;margin:0 auto;min-height:60px;border-radius:14px;border:1px solid var(--akzent);
+  background:var(--akzent);color:var(--akzent-auf);font:800 22px/1 var(--font);cursor:pointer}
+.weiterknopf:active{transform:scale(.97)}
 
 /* Breit genug: Aufgabe links, Tasten rechts (iPad quer, Laptop). */
 @media (min-width:900px){
   #spiel{max-width:960px;display:grid;grid-template-columns:1fr 340px;grid-template-areas:"oben oben" "auf tasten" "tipp tasten" "mw mw";align-items:start}
-  .oben{grid-area:oben} #aufgabe{grid-area:auf} .tipp{grid-area:tipp} #tasten{grid-area:tasten} #meinweg{grid-area:mw}
+  .oben{grid-area:oben} #aufgabe{grid-area:auf} .tipp{grid-area:tipp} #tasten{grid-area:tasten} #meinweg{grid-area:mw} #weiter{grid-area:tasten}
 }
 @media (max-height:760px){ .karte h2{font-size:22px} }
 /* Breit, aber niedrig, Tasten unter der Aufgabe (iPad geteilter Bildschirm): eine Reihe. */
