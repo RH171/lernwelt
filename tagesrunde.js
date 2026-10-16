@@ -34,8 +34,65 @@
        Bekanntes gibt. Gibt es keins (die ersten Tage), fuellt Neues auf:
        lieber eine Runde mit lauter Neuem als gar keine. */
     unsicherHoechstens: 3,
-    mindestens: 3
+    mindestens: 3,
+    /* Vorrang (16.10.2026, Denny zu Pauls Zahlenraetsel: "Wir finden dieses
+       Blatt nicht in Heute lernen - das ist genau, wo Paul Probleme hat.
+       Textaufgaben."). Gemessen: Die drei Plaetze fuer Unsicheres gingen an
+       drei alte Wackler aus dem September, KEINE neue Karte kam in die Runde.
+       Vorrang haben jetzt: Karten zu einer Stelle, die die Lehrerin rot
+       verbessert hat, je frisches Blatt zwei Karten, dann Textaufgaben.
+       Solange es Vorrang gibt, duerfen es bis zu 5 Unsichere sein (3 Bekannte
+       bleiben) - so weit gelockert wie noetig, nicht weiter. */
+    vorrangHoechstens: 5,
+    jeFrischemBlatt: 2,
+    /* "Frisch" = hochgeladen heute oder in den 2 Tagen davor und noch keine
+       Karte davon gespielt. So geht ein Blatt vom Freitagabend nicht verloren,
+       wenn am Freitag keine Runde mehr kam. */
+    frischTage: 2
   };
+
+  function tagVon(d) {
+    var x = d instanceof Date ? d : new Date(d);
+    if (isNaN(x.getTime())) return "";
+    /* Ortszeit, nicht UTC (anleitung/096) - um 00:30 Uhr ist schon morgen. */
+    return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+  }
+  function tageZwischen(a, b) {
+    var x = Date.parse(a + "T12:00:00Z"), y = Date.parse(b + "T12:00:00Z");
+    return isFinite(x) && isFinite(y) ? Math.round((y - x) / 86400000) : 999;
+  }
+  function knapp(s) {
+    return String(s == null ? "" : s).toLowerCase().replace(/[\s.,'\u2019`\-\u2013\u2014]/g, "");
+  }
+
+  /* Hat Paul auf diesem Blatt Fehler gemacht, die die Lehrerin verbessert hat?
+     Quellen: Korrektur mit quelle "lehrerin" (Pruef-Reiter) und Inhaltszeilen
+     der Lehrkraft mit Verbesserung ("Lehrkraft: f. 585 (Kind schrieb 238)").
+     Ein blosser Haken oder ein Stempel ist kein Fehler. */
+  function lehrerinVerbessert(b) {
+    var raus = [];
+    (b.korrekturen || []).forEach(function (k) {
+      if (!k || k.quelle !== "lehrerin") return;
+      var m = /\bf\.\s*([^\s(]+)/.exec(String(k.korrigiert || ""));
+      raus.push(m ? m[1] : "");
+    });
+    (b.inhalt || []).forEach(function (z) {
+      z = String(z || "");
+      if (!/Lehrkraft/i.test(z)) return;
+      var m = /\bf\.\s*([^\s(]+)/.exec(z) || /richtig:\s*([^,;)]+)/.exec(z);
+      if (m) raus.push(m[1].trim());
+      else if (/Kind schrieb|verbessert|noch ?mal anschauen/i.test(z)) raus.push("");
+    });
+    return raus;
+  }
+  /* Text-, Sach- und Raetselaufgaben: die Karte traegt den Wortlaut vom Blatt
+     (k.text vom Lesen) oder erkennbar die Form einer Textaufgabe. */
+  function istText(k, b) {
+    if (k && k.text) return true;
+    var f = String((k && k.frage) || "");
+    if (/\bich denke mir\b|wie hei(ß|ss)t meine zahl|\b(kostet|kosten|bezahlt|kauft|euro|cent)\b|€/i.test(f)) return true;
+    return /zahlenr(ä|ae)tsel|sachaufgabe|textaufgabe|sachrechnen/i.test(String((b && b.titel) || "") + " " + String((b && b.thema) || ""));
+  }
 
   function schluessel(k) {
     return String((k && k.richtig) || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
@@ -71,6 +128,7 @@
     for (var x in EIN) e[x] = EIN[x];
     for (var y in (opt || {})) e[y] = opt[y];
     stand = stand || {};
+    var heute = e.heute || tagVon(new Date());
 
     var liste = (blaetter || []).filter(function (b) {
       /* Handwerk (Lineatur, Heftregeln) ist kein Probenstoff - 30.09.2026. */
@@ -93,6 +151,7 @@
         for (var z in k) c[z] = k[z];
         c.blatt = b.id; c.blattTitel = b.titel || ""; c.sorte = sorteVon(st);
         c._tage = st && st.tage != null ? st.tage : 0; c._r = st ? st.r : 0;
+        c._b = b;
         if (c.sorte === "neu") neuHier.push(c); else topf[c.sorte].push(c);
       });
       if (neuHier.length) neuJeBlatt.push(neuHier);
@@ -117,10 +176,57 @@
     var bekannt = topf.wieder.concat(topf.sicher);
     var unsicher = topf.wackler.concat(topf.neu);
     var n = e.hoechstens;
-    var platzUnsicher = Math.min(e.unsicherHoechstens, n);
+
+    /* ---- Vorrang (16.10.2026) ---- */
+    var fehlerBlatt = {}, fehlerWert = {}, gespielt = {}, frisch = {};
+    liste.forEach(function (b) {
+      var v = lehrerinVerbessert(b);
+      if (v.length) fehlerBlatt[b.id] = 1;
+      v.forEach(function (w) { if (w) fehlerWert[b.id + "|" + knapp(w)] = 1; });
+    });
+    (quiz || []).forEach(function (q) { if (q && q.blatt) fehlerBlatt[q.blatt] = 1; });   // eigene Quizfehler
+    Object.keys(stand).forEach(function (s) {
+      var i = s.indexOf("#k:"); if (i < 1) return;
+      gespielt[s.slice(0, i)] = 1;
+      if (stand[s] && stand[s].f) fehlerBlatt[s.slice(0, i)] = 1;           // eigene Fundkarten-Fehler
+    });
+    liste.forEach(function (b) {
+      var tag = b.angelegt ? tagVon(b.angelegt) : String(b.datum || "").slice(0, 10);
+      var alter = tageZwischen(tag, heute);
+      if (alter >= 0 && alter <= e.frischTage && !gespielt[b.id]) frisch[b.id] = alter;
+    });
+    var istFehlerKarte = function (c) { return !!fehlerWert[c.blatt + "|" + knapp(c.richtig)]; };
+    var rang = function (c) {   // innerhalb eines Blattes: Fehlerstelle, Textaufgabe, Rest
+      return (istFehlerKarte(c) ? 0 : 2) + (istText(c, c._b) ? 0 : 1);
+    };
+    var vorrang = [], drin = [];
+    var nimm = function (c) { if (c && drin.indexOf(c) < 0) { drin.push(c); vorrang.push(c); } };
+    // 1. Auf frischen Blaettern: Stellen, die die Lehrerin rot verbessert hat (Antwort = ihre Loesung)
+    unsicher.filter(function (c) { return istFehlerKarte(c) && c.blatt in frisch; }).forEach(nimm);
+    // 2. Je frisches Blatt zwei Karten: Fehlerblaetter zuerst, dann Textaufgaben, dann das juengste
+    var frischeBlaetter = liste.filter(function (b) { return b.id in frisch; }).sort(function (a, b) {
+      var ra = (fehlerBlatt[a.id] ? 0 : 2) + (a.karten.some(function (k) { return istText(k, a); }) ? 0 : 1);
+      var rb = (fehlerBlatt[b.id] ? 0 : 2) + (b.karten.some(function (k) { return istText(k, b); }) ? 0 : 1);
+      return (ra - rb) || (frisch[a.id] - frisch[b.id]);
+    });
+    frischeBlaetter.forEach(function (b) {
+      var schon = vorrang.filter(function (c) { return c.blatt === b.id; }).length;
+      unsicher.filter(function (c) { return c.blatt === b.id && drin.indexOf(c) < 0; })
+        .sort(function (a, c) { return rang(a) - rang(c); })
+        .slice(0, Math.max(0, e.jeFrischemBlatt - schon)).forEach(nimm);
+    });
+    // 3. Verbesserte Stellen auf aelteren Blaettern (juengstes Blatt zuerst)
+    unsicher.filter(istFehlerKarte).forEach(nimm);
+    // 4. Textaufgaben: erst von Blaettern mit Fehlern, dann alle (juengstes Blatt zuerst)
+    unsicher.filter(function (c) { return istText(c, c._b) && fehlerBlatt[c.blatt]; }).forEach(nimm);
+    unsicher.filter(function (c) { return istText(c, c._b); }).forEach(nimm);
+
+    var platzVorrang = Math.min(e.vorrangHoechstens, n);
+    var v = vorrang.slice(0, platzVorrang);
+    var platzUnsicher = Math.min(Math.max(e.unsicherHoechstens, v.length), n);
     /* Reicht das Bekannte nicht, bekommt das Unsichere den Rest. */
     if (bekannt.length < n - platzUnsicher) platzUnsicher = n - bekannt.length;
-    var u = unsicher.slice(0, platzUnsicher);
+    var u = v.concat(unsicher.filter(function (c) { return v.indexOf(c) < 0; })).slice(0, platzUnsicher);
     var b2 = bekannt.slice(0, n - u.length);
     var rest = n - u.length - b2.length;
     var r = rest > 0 ? topf.ruht.slice(0, rest) : [];
@@ -128,17 +234,29 @@
     /* Reihenfolge: mit Bekanntem anfangen, Unsicheres dazwischen streuen -
        die ersten Karten sollen gelingen. */
     var sicherTeil = b2.concat(r), karten = [];
-    var jede = u.length ? Math.max(1, Math.floor((sicherTeil.length + u.length) / u.length)) : 0;
     var ui = 0, si = 0;
-    for (var p = 0; karten.length < sicherTeil.length + u.length; p++) {
-      var unsicherHier = u.length && ui < u.length && si > 0 && (p % jede === jede - 1);
-      if (unsicherHier || si >= sicherTeil.length) karten.push(u[ui++]);
-      else karten.push(sicherTeil[si++]);
+    if (u.length > sicherTeil.length) {
+      /* Mehr Unsicheres als Bekanntes (Vorrang-Tag): abwechselnd, mit
+         Bekanntem vorn - nebeneinander steht nur, was nicht anders passt. */
+      while (karten.length < sicherTeil.length + u.length) {
+        if (si < sicherTeil.length) karten.push(sicherTeil[si++]);
+        if (ui < u.length) karten.push(u[ui++]);
+      }
+    } else {
+      var jede = u.length ? Math.max(1, Math.floor((sicherTeil.length + u.length) / u.length)) : 0;
+      for (var p = 0; karten.length < sicherTeil.length + u.length; p++) {
+        var unsicherHier = u.length && ui < u.length && si > 0 && (p % jede === jede - 1);
+        if (unsicherHier || si >= sicherTeil.length) karten.push(u[ui++]);
+        else karten.push(sicherTeil[si++]);
+      }
     }
-    karten.forEach(function (k) { delete k._tage; delete k._r; });
+    karten.forEach(function (k) {
+      if (v.indexOf(k) >= 0) k.vorrang = istFehlerKarte(k) ? "fehler" : (k.blatt in frisch ? "frisch" : "text");
+      delete k._tage; delete k._r; delete k._b;
+    });
 
-    var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0 };
-    karten.forEach(function (k) { zaehl[k.sorte]++; });
+    var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0, vorrang: 0 };
+    karten.forEach(function (k) { zaehl[k.sorte]++; if (k.vorrang) zaehl.vorrang++; });
     if (karten.length < e.mindestens) karten = [];
     return { karten: karten, zaehl: zaehl, blaetter: liste.length };
   }
@@ -203,7 +321,7 @@
     return { karten: karten, offen: dran.length, rest: offen.length - dran.length };
   }
 
-  var LWTag = { waehlen: waehlen, kreise: kreise, schluessel: schluessel, EIN: EIN };
+  var LWTag = { waehlen: waehlen, kreise: kreise, schluessel: schluessel, EIN: EIN, istText: istText, lehrerinVerbessert: lehrerinVerbessert };
   if (typeof module !== "undefined" && module.exports) module.exports = LWTag;
   else global.LWTag = LWTag;
 })(typeof window !== "undefined" ? window : this);

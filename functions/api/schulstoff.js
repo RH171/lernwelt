@@ -696,6 +696,16 @@ export function karteOk(k, inhalt, fach) {
   const mehr = mehrdeutig(frage, richtig, inhalt);
   if (mehr) return mehr;
 
+  /* Nie das falsche Ergebnis des Kindes als Antwort (16.10.2026): "Lehrkraft:
+     f. 585 (Kind schrieb 238)" - die Karte zu dieser Aufgabe fragt nach 585. */
+  const falschVomKind = kindFalsch(inhalt);
+  if (falschVomKind.has(knapp(richtig))) return "Antwort ist das falsche Ergebnis des Kindes: " + richtig;
+  /* Textaufgabe im Wortlaut (16.10.2026): Eine als Textaufgabe markierte Karte
+     mit einem einzigen kurzen Satz ist verkuerzt ("Welche Zahl ergibt um 18
+     verkleinert 50?"). Der Wortlaut vom Blatt hat mehrere Saetze oder ist
+     laenger. */
+  if (k.text && textVerkuerzt(frage)) return "Textaufgabe verkuerzt statt Wortlaut vom Blatt";
+
   const rk = knapp(richtig);
   if (!rk) return "Antwort leer";
   for (const f of falsch) {
@@ -729,6 +739,38 @@ export function karteOk(k, inhalt, fach) {
      halbe Blatt - dann steht die Antwort nicht mehr sichtbar heraus. */
   if (bis - von > 34) return "Ausschnitt zu hoch";
   return "";
+}
+
+/* Was das Kind falsch hatte, bevor die Lehrkraft (oder das Lesen) es
+ * verbessert hat: "Kind schrieb 238" in "Lehrkraft: f. 585 (Kind schrieb 238)"
+ * oder "Kind schrieb 5343, …, richtig: 532". Als Menge in knapp()-Form. */
+export function kindFalsch(inhalt) {
+  const raus = new Set();
+  for (const z of (inhalt || [])) {
+    const re = /Kind schrieb\s+[„"»]?([^,;)"“«]+?)[“"«]?\s*(?:[,;)]|$)/g;
+    let m;
+    while ((m = re.exec(String(z)))) {
+      const w = knapp(m[1]);
+      /* Nur wenn es auch eine richtige Fassung gibt - sonst ist es eine
+         blosse Abschrift ohne Urteil. */
+      if (w && /richtig|\bf\.|verbessert|durchgestrichen/i.test(String(z))) raus.add(w);
+    }
+  }
+  return raus;
+}
+
+/* Sieht die Frage wie eine Textaufgabe aus? Fuer Karten, die das Modell nicht
+ * markiert hat, und fuer den Bestand. */
+export function textForm(frage) {
+  const f = String(frage || "");
+  return /\bich denke mir\b|wie hei(ß|ss)t meine zahl/i.test(f);
+}
+
+/* Ein einziger Satz unter 50 Zeichen ist keine abgeschriebene Textaufgabe. */
+export function textVerkuerzt(frage) {
+  const f = String(frage || "").trim();
+  const saetze = f.split(/[.?!]\s+(?=[A-ZÄÖÜ])/).filter(Boolean).length;
+  return saetze < 2 && f.length < 50;
 }
 
 /* Mehr als eine richtige Antwort? "Welcher Fluss fliesst in Fuerth? ->
@@ -792,7 +834,10 @@ export function kartenLesen(roh, inhalt, fach) {
       stichwort: f[0].slice(0, 30),
       von: parseFloat(f[1]),
       bis: parseFloat(f[2]),
-      frage: f[3].slice(0, 120),
+      /* 260 statt 120 (16.10.2026): Eine Textaufgabe im Wortlaut der Lehrerin
+         ist laenger als eine Kurzfrage - "Ich denke mir eine Zahl. Wenn ich sie
+         um 18 verkleinere, …" hat schon 95 Zeichen. */
+      frage: f[3].slice(0, 260),
       richtig: f[4].slice(0, 60),
       falsch: [f[5].slice(0, 60), f[6].slice(0, 60)],
     };
@@ -802,6 +847,9 @@ export function kartenLesen(roh, inhalt, fach) {
        nicht verraten. Verraet sie sie, faellt nur der Satz weg, nie die Karte. */
     const merke = String(f[7] || "").replace(/\s+/g, " ").trim().slice(0, 180);
     if (merke && tippOk(merke, [k.richtig])) k.merke = merke;
+    /* Art (16.10.2026): "text" = Text-, Sach- oder Raetselaufgabe im Wortlaut
+       vom Blatt. Die Tagesrunde gibt solchen Karten Vorrang. */
+    if (/^text/i.test(String(f[8] || "").trim()) || textForm(k.frage)) k.text = 1;
     let fertig = k;
     const grund = karteOk(k, inhalt, fach);
     if (grund) {
@@ -1112,8 +1160,8 @@ async function blattLesen(env, seite, kind, themen) {
               "einer Verbesserung schreib die richtige Fassung, nicht die " +
               "durchgestrichene.\n" +
               "KARTEN: danach eine Zeile je Fundkarte, ebenfalls mit \"- \" beginnend, " +
-              "acht Felder mit | getrennt:\n" +
-              "Stichwort | von | bis | Frage | richtige Antwort | falsch1 | falsch2 | Merksatz\n" +
+              "neun Felder mit | getrennt:\n" +
+              "Stichwort | von | bis | Frage | richtige Antwort | falsch1 | falsch2 | Merksatz | Art\n" +
               "* Stichwort: ein bis zwei Woerter, worum es geht (z. B. Einwohner).\n" +
               "* von und bis: wo diese Stelle auf dem Blatt steht, als Prozent der " +
               "BILDHOEHE von oben - 0 ist der obere Rand, 100 der untere. Zwei ganze " +
@@ -1128,6 +1176,24 @@ async function blattLesen(env, seite, kind, themen) {
               "gehoeren zu jedem Listeneintrag dazu. Frag nach einer Tatsache - Name, " +
               "Zahl, Fachwort -, nie nach einer Wirkung oder einem Grund (\"Was spart " +
               "man …?\", \"Warum …?\"). Wird daraus keine klare Frage, lass die Karte weg.\n" +
+              /* Wortlaut der Lehrerin (16.10.2026, Denny zu Pauls Zahlenraetsel:
+                 "Die Textaufgabe so nah wie moeglich an der Lehrerformulierung
+                 knuepfen. Da ist ein Schema zu erkennen."). Die Karte fragte
+                 "Welche Zahl ergibt um 18 verkleinert 50?", auf dem Blatt steht
+                 "Ich denke mir eine Zahl. Wenn ich sie um 18 verkleinere, erhalte
+                 ich 50. Wie heisst meine Zahl?". */
+              "* TEXTAUFGABEN, SACHAUFGABEN UND ZAHLENRAETSEL: Die Frage ist der Aufgabentext " +
+              "vom Blatt, WOERTLICH abgeschrieben - alle Saetze, dieselbe Satzform, dieselben " +
+              "Woerter (\"Ich denke mir eine Zahl. Wenn ich sie um 18 verkleinere, erhalte ich " +
+              "50. Wie heisst meine Zahl?\"), NICHT verkuerzt und nicht umformuliert " +
+              "(schlecht: \"Welche Zahl ergibt um 18 verkleinert 50?\"). Steht kein Fragesatz " +
+              "dabei, haeng den Arbeitsauftrag vom Blatt an. Nur Platzhalter wie Luecken " +
+              "oder Kaestchen fallen weg. Bei solchen Karten ist das neunte Feld Art: text, " +
+              "sonst bleibt Art leer.\n" +
+              "* Hat die LEHRKRAFT ein Ergebnis rot verbessert (\"Lehrkraft: f. 585 (Kind schrieb " +
+              "238)\"), gehoert zu dieser Aufgabe eine Karte: Antwort ist die Loesung der " +
+              "Lehrkraft (585), NIE das falsche Ergebnis des Kindes; das falsche Ergebnis " +
+              "darf ein Ablenker sein.\n" +
               "* richtige Antwort: genau der Wert, wie er auf dem Blatt steht. Hat sich " +
               "das Kind dort verschrieben (Kind schrieb X, richtig: Y), nimm die RICHTIGE " +
               "Schreibweise - in Frage und Antwort.\n" +
@@ -1172,8 +1238,10 @@ async function blattLesen(env, seite, kind, themen) {
               "THEMA: Fürth und seine Geschichte\nPROBENSTOFF: ja\n" +
               "INHALT:\n- ! Regnitz\n- Einwohner: 132.000\n- Oberbürgermeister: Dr. Thomas Jung\n" +
               "KARTEN:\n" +
-              "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000 | Es sind über hunderttausend - schau auf die Zeile mit den Einwohnern.\n" +
-              "- Oberbürgermeister | 26 | 31 | Wie heißt der Oberbürgermeister? | Dr. Thomas Jung | Dr. Tobias Jung | Dr. Thomas Jungwirth | Der Oberbürgermeister ist der Chef der Stadt. Lies den Vornamen genau." },
+              "- Einwohner | 22 | 27 | Wie viele Menschen wohnen in Fürth? | 132.000 | 312.000 | 123.000 | Es sind über hunderttausend - schau auf die Zeile mit den Einwohnern. |\n" +
+              "- Oberbürgermeister | 26 | 31 | Wie heißt der Oberbürgermeister? | Dr. Thomas Jung | Dr. Tobias Jung | Dr. Thomas Jungwirth | Der Oberbürgermeister ist der Chef der Stadt. Lies den Vornamen genau. |\n" +
+              "Und eine Textaufgabe von einem Matheblatt:\n" +
+              "- Zahlenrätsel | 16 | 28 | Ich denke mir eine Zahl. Wenn ich sie um 18 verkleinere, erhalte ich 50. Wie heißt meine Zahl? | 68 | 32 | 58 | Rechne rückwärts: Was weggenommen wurde, zählst du wieder dazu. | text" },
           ],
         }],
       }),
