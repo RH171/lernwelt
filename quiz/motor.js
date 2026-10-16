@@ -782,6 +782,12 @@ function artKurz(art) {
       return a;
     }
     return (liste || []).slice().sort(function (a, b) {
+      /* Seit 16.10.2026 nur noch nach Datum, neueste zuerst. Denny zu einer
+         Liste, in der "Wie eine Probe · 17.9." ueber "Übung · 16.10." stand:
+         "Gefunden aber nicht nach Datum sortiert." Die Sorte ordnet nur noch
+         bei gleichem Datum. */
+      var d = String(b.datum || "").localeCompare(String(a.datum || ""));
+      if (d) return d;
       var ra = rang(a), rb = rang(b);
       if (ra !== rb) return ra - rb;
       /* Innerhalb gleicher Sorte zuerst, was wartet - aber nur, wenn
