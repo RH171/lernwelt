@@ -14038,7 +14038,7 @@ window.LEON_GESCHICHTEN = [
   "bild": "🦔",
   "ereignis": "2026-10-10",
   "zeigenAb": "2026-10-12",
-  "zeigenBis": "2026-10-25",
+  "zeigenBis": "2026-10-15",
   "seiten": [
    {
     "szene": {
@@ -15502,6 +15502,418 @@ window.LEON_GESCHICHTEN = [
     "falsch": [
      "Gute Nacht",
      "Viel Spaß im Kino"
+    ],
+    "seite": 6
+   }
+  ]
+ },
+ {
+  "id": "w42-oscar",
+  "titel": "Oscar schläft bei uns",
+  "bild": "🛌",
+  "ereignis": "2026-10-17",
+  "zeigenAb": "2026-10-16",
+  "zeigenBis": "2026-10-17",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🛌",
+      "✨"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag gibt es Be|such.",
+     "Os|car kommt zu Paul und Le|on.",
+     "Os|car ist Pauls Freund.",
+     "Er schläft so|gar ei|ne Nacht bei ih|nen.",
+     "Dar|über freut sich Paul be|stimmt sehr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎒",
+      "🧸"
+     ],
+     "leute": [
+      "Paul",
+      "Oscar"
+     ]
+    },
+    "zeilen": [
+     "Os|car bringt be|stimmt ei|ne Ta|sche mit.",
+     "Da|rin sind Schlaf|an|zug und Zahn|bürs|te.",
+     "Viel|leicht auch ein klei|nes Ku|schel|tier.",
+     "Wer bei Freun|den schläft, packt gut ein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🏠",
+      "👋"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on freut sich auf den Be|such.",
+     "Ein Gast im Haus ist im|mer span|nend.",
+     "Was wer|den die Jun|gen wohl spie|len?",
+     "Le|on hat schon ein paar I|de|en.",
+     "Mit drei Kin|dern wird es lus|tig."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "⚽",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Oscar"
+     ]
+    },
+    "zeilen": [
+     "Viel|leicht spie|len sie Fuß|ball im Gar|ten.",
+     "Le|on steht na|tür|lich im Tor.",
+     "Paul und Os|car schie|ßen aufs Tor.",
+     "Hält Le|on den Ball fest?",
+     "Dann wird ge|tauscht, und Os|car hält."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧱",
+      "🎲"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Oscar"
+     ]
+    },
+    "zeilen": [
+     "Oder sie bau|en zu|sam|men et|was Gro|ßes.",
+     "Oder sie spie|len ein Brett|spiel.",
+     "Bei je|dem Spiel gibt es Re|geln.",
+     "Und je|der darf auch mal ver|lie|ren.",
+     "Dann spielt man ein|fach noch ein|mal."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "🌙",
+      "🔦"
+     ],
+     "leute": [
+      "Paul",
+      "Oscar"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend wird es drau|ßen dun|kel.",
+     "Dann ist Schla|fens|zeit für al|le.",
+     "Mit ei|ner Ta|schen|lam|pe ist es ge|müt|lich.",
+     "Viel|leicht flüs|tern die Jun|gen noch ein biss|chen.",
+     "Dann wird es end|lich ru|hig."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "🛏️",
+      "💤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auch Le|on liegt in sei|nem Bett.",
+     "Er hört, wie es im Haus lei|se wird.",
+     "Ein Gast in der Nacht ist et|was Be|son|de|res.",
+     "Bald schla|fen al|le tief und fest."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🥐",
+      "☀️"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Oscar"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag|mor|gen sind al|le wie|der wach.",
+     "Viel|leicht früh|stü|cken sie zu|sam|men.",
+     "Spä|ter geht Os|car wie|der nach Hau|se.",
+     "Das war ei|ne lus|ti|ge Nacht mit Freun|den!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wer ist Oscar?",
+    "richtig": "Pauls Freund",
+    "falsch": [
+     "Leons Lehrer",
+     "ein Nachbar"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was ist in Oscars Tasche?",
+    "richtig": "Schlafanzug und Zahnbürste",
+    "falsch": [
+     "ein Fußballtor",
+     "ein Kuchen"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wo steht Leon beim Fußball?",
+    "richtig": "im Tor",
+    "falsch": [
+     "auf dem Dach",
+     "in der Küche"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was darf bei jedem Spiel jeder auch mal?",
+    "richtig": "verlieren",
+    "falsch": [
+     "schummeln",
+     "weglaufen"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Womit ist es am Abend gemütlich?",
+    "richtig": "Taschenlampe",
+    "falsch": [
+     "Radio",
+     "Trommel"
+    ],
+    "seite": 6
+   }
+  ]
+ },
+ {
+  "id": "w42-fuerth-braunschweig",
+  "titel": "Fürth gegen die Löwen",
+  "bild": "🍀",
+  "ereignis": "2026-10-17",
+  "zeigenAb": "2026-10-16",
+  "zeigenBis": "2026-10-17",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag spielt wie|der Fürth.",
+     "Das ist Le|ons Lieb|lings|ver|ein.",
+     "Das Spiel be|ginnt um 13 Uhr.",
+     "Es ist ein Heim|spiel in Fürth.",
+     "Le|on ist ein gro|ßer Fan von Fürth."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🦁",
+      "⚽"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Der Geg|ner heißt Ein|tracht Braun|schweig.",
+     "Auf ih|rem Wap|pen ist ein ro|ter Lö|we.",
+     "Des|halb hei|ßen sie auch die Lö|wen.",
+     "Aber die Für|ther wol|len stär|ker sein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📺",
+      "😟"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Das letz|te Spiel war in Ber|lin.",
+     "Fürth hat dort 1:2 ver|lo|ren.",
+     "Nur ein Tor hat ge|fehlt.",
+     "Das war är|ger|lich für al|le Fans.",
+     "Jetzt soll es end|lich wie|der klap|pen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "📋",
+      "🔢"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der Ta|bel|le steht Fürth auf Platz 15.",
+     "Fürth hat bis jetzt 6 Punk|te.",
+     "Für ei|nen Sieg gibt es 3 Punk|te.",
+     "Dann hät|te Fürth schon 9 Punk|te.",
+     "Ein Sieg wä|re al|so sehr wich|tig."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Vor|mit|tag spielt Le|on selbst.",
+     "Er hat ein Tur|nier in Nürn|berg.",
+     "Erst Fuß|ball spie|len, dann an Fürth den|ken?",
+     "Das wä|re ein rich|ti|ger Fuß|ball|tag!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🍀",
+      "💚"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Fürth spielt in Grün und Weiß.",
+     "Das Zei|chen von Fürth ist ein Klee|blatt.",
+     "Des|halb hei|ßen die Spie|ler Klee|blät|ter.",
+     "Ein Klee|blatt soll Glück brin|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "📣",
+      "🎶"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Die Fans sin|gen und klat|schen laut.",
+     "Sie wol|len ihr Team an|feu|ern.",
+     "Das hilft den Spie|lern auf dem Ra|sen.",
+     "Viel|leicht schießt Fürth dies|mal zwei To|re.",
+     "Man hört die Fans im gan|zen Sta|di|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤞",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on drückt Fürth fest die Dau|men.",
+     "Wer wird das Spiel ge|win|nen?",
+     "Das wis|sen wir erst am Sams|tag.",
+     "Hof|fent|lich ju|belt Le|on am En|de."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Um wie viel Uhr beginnt das Spiel?",
+    "richtig": "um 13 Uhr",
+    "falsch": [
+     "um 8 Uhr",
+     "um 20 Uhr"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie heißt der Gegner von Fürth?",
+    "richtig": "Eintracht Braunschweig",
+    "falsch": [
+     "Hertha BSC",
+     "Bayern München"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Auf welchem Platz steht Fürth in der Tabelle?",
+    "richtig": "Platz 15",
+    "falsch": [
+     "Platz 2",
+     "Platz 7"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wo hat Leon am Vormittag ein Turnier?",
+    "richtig": "in Nürnberg",
+    "falsch": [
+     "in Berlin",
+     "in Bamberg"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Was ist das Zeichen von Fürth?",
+    "richtig": "ein Kleeblatt",
+    "falsch": [
+     "ein Löwe",
+     "ein Adler"
     ],
     "seite": 6
    }
