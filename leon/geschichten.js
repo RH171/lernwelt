@@ -16339,5 +16339,206 @@ window.LEON_GESCHICHTEN = [
    "seite": 8
   }
  ]
+},
+{
+ "id": "w42-fuerth-sieg-badewanne",
+ "titel": "Fürth gewinnt – und Leon sitzt in der Wanne",
+ "bild": "🛁",
+ "ereignis": "2026-10-17",
+ "zeigenAb": "2026-10-18",
+ "zeigenBis": "2026-10-20",
+ "seiten": [
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🛁",
+     "⚽"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Am Sams|tag spiel|te Fürth zu Hau|se.",
+    "Der Geg|ner war Ein|tracht Braun|schweig.",
+    "Le|on woll|te das Spiel se|hen.",
+    "Aber wo hat er zu|ge|schaut?",
+    "In der Ba|de|wan|ne!"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🛁",
+     "🍀"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Die Ba|de|wan|ne war in Klee|blatt|far|ben.",
+    "Grün und Weiß, wie bei Fürth.",
+    "Le|on saß im war|men Was|ser.",
+    "So ein Platz ist sel|ten.",
+    "Ein ech|ter Fan schaut über|all zu."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "stadion",
+    "dinge": [
+     "⚽",
+     "🏟️"
+    ],
+    "leute": []
+   },
+   "zeilen": [
+    "Das Spiel fing an.",
+    "Bei|de Mann|schaf|ten woll|ten ge|win|nen.",
+    "Die Für|ther lie|fen viel.",
+    "Le|on schau|te ge|nau hin.",
+    "Wann fällt end|lich ein Tor?"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "stadion",
+    "dinge": [
+     "⚽",
+     "🥅"
+    ],
+    "leute": []
+   },
+   "zeilen": [
+    "In der 32. Mi|nu|te war es so weit.",
+    "Ein Spie|ler na|mens Klaus schoss ins Tor.",
+    "Jetzt stand es 1:0 für Fürth.",
+    "Le|on ju|bel|te in der Wan|ne.",
+    "Das Was|ser schwapp|te ein biss|chen."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "stadion",
+    "dinge": [
+     "⏱️",
+     "⚽"
+    ],
+    "leute": []
+   },
+   "zeilen": [
+    "Dann war Halb|zeit.",
+    "Die Spie|ler ruh|ten sich kurz aus.",
+    "Da|nach ging es wei|ter.",
+    "Braun|schweig woll|te den Aus|gleich.",
+    "Aber Fürth hielt da|ge|gen."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "stadion",
+    "dinge": [
+     "⚽",
+     "🎉"
+    ],
+    "leute": []
+   },
+   "zeilen": [
+    "In der 63. Mi|nu|te kam das nächs|te Tor.",
+    "Wie|der hat|te Klaus ge|trof|fen.",
+    "Jetzt stand es 2:0.",
+    "Zwei To|re von ei|nem Spie|ler!",
+    "So et|was nennt man ei|nen Dop|pel|pack."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🏆",
+     "🍀"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Am En|de ge|wann Fürth 2:0.",
+    "Vor|her war Fürth auf Platz 15.",
+    "Jetzt steht Fürth auf Platz 9.",
+    "Das ist ein gro|ßer Sprung nach o|ben.",
+    "Le|on freu|te sich sehr."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "⚽",
+     "🥈"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Es war ein Tag nach Le|ons Ge|schmack.",
+    "Am Mor|gen wur|de er beim Tur|nier Zwei|ter.",
+    "Am Nach|mit|tag ge|wann sein Ver|ein.",
+    "Das nächs|te Spiel ist in Os|na|brück.",
+    "Le|on drückt schon jetzt die Dau|men."
+   ]
+  }
+ ],
+ "fragen": [
+  {
+   "frage": "Wo schaute Leon das Spiel?",
+   "richtig": "in der Badewanne",
+   "falsch": [
+    "im Stadion",
+    "im Auto"
+   ],
+   "seite": 1
+  },
+  {
+   "frage": "Welche Farben haben die Kleeblätter?",
+   "richtig": "Grün und Weiß",
+   "falsch": [
+    "Rot und Gelb",
+    "Blau und Schwarz"
+   ],
+   "seite": 2
+  },
+  {
+   "frage": "Wer schoss das erste Tor für Fürth?",
+   "richtig": "Klaus",
+   "falsch": [
+    "Leon",
+    "der Torwart"
+   ],
+   "seite": 4
+  },
+  {
+   "frage": "Wie viele Tore schoss Klaus?",
+   "richtig": "zwei",
+   "falsch": [
+    "eins",
+    "drei"
+   ],
+   "seite": 6
+  },
+  {
+   "frage": "Auf welchem Platz steht Fürth jetzt?",
+   "richtig": "Platz 9",
+   "falsch": [
+    "Platz 4",
+    "Platz 20"
+   ],
+   "seite": 7
+  }
+ ]
 }
 ];
