@@ -15918,5 +15918,217 @@ window.LEON_GESCHICHTEN = [
     "seite": 6
    }
   ]
- }
+ },
+{
+ "id": "w42-familienabend",
+ "titel": "Film und Sandwich",
+ "bild": "🥪",
+ "ereignis": "2026-10-16",
+ "zeigenAb": "2026-10-17",
+ "zeigenBis": "2026-10-19",
+ "seiten": [
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🏠",
+     "🌙"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Am Frei|tag|a|bend war Fa|mi|li|en|a|bend.",
+    "Drau|ßen wur|de es schon dun|kel.",
+    "Drin|nen war es warm und hell.",
+    "Le|on hat|te sich da|rauf ge|freut.",
+    "Was wür|de es heu|te ge|ben?"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "kueche",
+    "dinge": [
+     "🍞",
+     "🧀"
+    ],
+    "leute": [
+     "Leon",
+     "Papa"
+    ]
+   },
+   "zeilen": [
+    "Zu|erst ging es in die Kü|che.",
+    "Dort ha|ben sie Sand|wich ge|macht.",
+    "Da|zu braucht man zwei Schei|ben Brot.",
+    "Da|zwi|schen kommt, was man gern mag.",
+    "Je|der durf|te sei|nes selbst be|le|gen."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "kueche",
+    "dinge": [
+     "🥒",
+     "🍅"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Le|on über|leg|te gut.",
+    "Was soll|te auf sein Sand|wich?",
+    "Viel|leicht Kä|se, viel|leicht ei|ne Gur|ke.",
+    "Zum Schluss kam die zwei|te Schei|be drauf.",
+    "Fer|tig war das Sand|wich!"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🛋️",
+     "📺"
+    ],
+    "leute": [
+     "Leon",
+     "Papa"
+    ]
+   },
+   "zeilen": [
+    "Dann gin|gen sie zum Fern|se|her.",
+    "Es gab ei|nen Film zu se|hen.",
+    "Al|le mach|ten es sich be|quem.",
+    "Ei|ne De|cke lag auf dem So|fa.",
+    "Le|on ku|schel|te sich hi|nein."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🥪",
+     "🎬"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Der Film fing an. Es wur|de still.",
+    "Le|on biss in sein Sand|wich.",
+    "Es schmeck|te ihm rich|tig gut.",
+    "Kau|en und gu|cken geht gut zu|sam|men.",
+    "Nur nicht zu viel krü|meln!"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "😮",
+     "😄"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Im Film pas|sier|te viel.",
+    "Mal war es span|nend, mal lus|tig.",
+    "Le|on schau|te ganz ge|nau hin.",
+    "Er woll|te nichts ver|pas|sen.",
+    "Wie geht die Ge|schich|te wohl wei|ter?"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "zimmer",
+    "dinge": [
+     "🎬",
+     "⭐"
+    ],
+    "leute": [
+     "Leon",
+     "Papa"
+    ]
+   },
+   "zeilen": [
+    "Dann war der Film zu En|de.",
+    "Wie fand Le|on ihn wohl?",
+    "Ein Film zu|sam|men ist schö|ner als al|lein.",
+    "Man kann da|nach da|rü|ber re|den.",
+    "Was war die bes|te Stel|le?"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "nacht",
+    "dinge": [
+     "🌙",
+     "🛏️"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Spä|ter ging Le|on ins Bett.",
+    "Sein Bauch war satt.",
+    "Er dach|te noch an den Film.",
+    "Am Sams|tag war|te|te schon das Tur|nier.",
+    "Das war ein ge|müt|li|cher A|bend!"
+   ]
+  }
+ ],
+ "fragen": [
+  {
+   "frage": "Wann war der Familienabend?",
+   "richtig": "am Freitagabend",
+   "falsch": [
+    "am Montagmorgen",
+    "am Sonntagmittag"
+   ],
+   "seite": 1
+  },
+  {
+   "frage": "Was haben sie in der Küche gemacht?",
+   "richtig": "Sandwich",
+   "falsch": [
+    "Pizza",
+    "Kuchen"
+   ],
+   "seite": 2
+  },
+  {
+   "frage": "Wie viele Scheiben Brot braucht ein Sandwich?",
+   "richtig": "zwei",
+   "falsch": [
+    "eine",
+    "fünf"
+   ],
+   "seite": 2
+  },
+  {
+   "frage": "Was lag auf dem Sofa?",
+   "richtig": "eine Decke",
+   "falsch": [
+    "ein Ball",
+    "ein Hund"
+   ],
+   "seite": 4
+  },
+  {
+   "frage": "Was soll man beim Essen nicht zu viel?",
+   "richtig": "krümeln",
+   "falsch": [
+    "lachen",
+    "trinken"
+   ],
+   "seite": 5
+  }
+ ]
+}
 ];
