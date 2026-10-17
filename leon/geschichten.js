@@ -15999,7 +15999,7 @@ window.LEON_GESCHICHTEN = [
    },
    "zeilen": [
     "Dann gin|gen sie zum Fern|se|her.",
-    "Es gab ei|nen Film zu se|hen.",
+    "Der Film hieß „Vi|vo – Vol|ler Le|ben“.",
     "Al|le mach|ten es sich be|quem.",
     "Ei|ne De|cke lag auf dem So|fa.",
     "Le|on ku|schel|te sich hi|nein."
@@ -16036,8 +16036,8 @@ window.LEON_GESCHICHTEN = [
     ]
    },
    "zeilen": [
-    "Im Film pas|sier|te viel.",
-    "Mal war es span|nend, mal lus|tig.",
+    "Vi|vo ist ein klei|ner Wi|ckel|bär.",
+    "Er liebt Mu|sik und singt gern.",
     "Le|on schau|te ganz ge|nau hin.",
     "Er woll|te nichts ver|pas|sen.",
     "Wie geht die Ge|schich|te wohl wei|ter?"
@@ -16112,22 +16112,22 @@ window.LEON_GESCHICHTEN = [
    "seite": 2
   },
   {
-   "frage": "Was lag auf dem Sofa?",
-   "richtig": "eine Decke",
+   "frage": "Wie hieß der Film?",
+   "richtig": "Vivo",
    "falsch": [
-    "ein Ball",
-    "ein Hund"
+    "Ice Age",
+    "Kung Fu Panda"
    ],
    "seite": 4
   },
   {
-   "frage": "Was soll man beim Essen nicht zu viel?",
-   "richtig": "krümeln",
+   "frage": "Was liebt Vivo?",
+   "richtig": "Musik",
    "falsch": [
-    "lachen",
-    "trinken"
+    "Schnee",
+    "Autos"
    ],
-   "seite": 5
+   "seite": 6
   }
  ]
 }
