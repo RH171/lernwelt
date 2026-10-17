@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Videos mit Papa</title>
+<!--
+  Videos mit Papa (17.10.2026, Kapitel 129). Dennys Wahl „C · Beides zusammen“:
+  Paul sieht die Videos seiner Lehrerin von der Klassenpinnwand zusammen mit
+  Papa an. Je Video drei Fragen aus dem, was im Video gesagt wird, und ein
+  Häkchen „zusammen gesehen“.
+
+  In dieser Datei stehen KEINE Videos und KEINE Fragen: Das Repo ist öffentlich
+  lesbar. Alles kommt aus /api/videos (hinter Pauls Ausweis, Speicher
+  "videos:paul", eingespielt mit werkzeuge/videos-laden.py).
+
+  Das Häkchen liegt im normalen Fortschritt: localStorage "videos-papa-gesehen"
+  ({youtube-id: "JJJJ-MM-TT"}), paul-sync.js schickt es nur bei einer Änderung
+  (ein Schreibvorgang je Häkchen). Die Antworten auf die Fragen werden nicht
+  gespeichert - das kostet keinen einzigen Schreibvorgang.
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<style>
+  :root{
+    --bg:#eef3f8; --card:#fff; --ink:#15171f; --muted:#5b6070; --line:#e3e7ee;
+    --akzent:#4f46e5; --akzent-hell:#eef0fb;
+    --gut-hell:#e6f6ee; --gut-text:#0f6b3f;
+    --hinweis-hell:#fff4e0; --hinweis-text:#7a4300; --hinweis-rand:#f0b45f;
+    --rund:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  }
+  html[data-theme="dark"]{ --hinweis-hell:#2d2414; --hinweis-text:#f0c27a; --hinweis-rand:#8a6324; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+  .huelle{max-width:900px;margin:0 auto}
+  header{display:flex;align-items:center;gap:10px;margin:2px 0 8px;flex-wrap:wrap}
+  .zurueck{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink);background:var(--card);
+    border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-weight:600;font-size:15px;min-height:44px}
+  h1{font-family:var(--rund);font-size:22px;margin:0;flex:1;min-width:150px}
+  .unter{color:var(--muted);font-size:15.5px;line-height:1.5;margin:0 0 6px}
+  .stand{font:700 15.5px/1.4 var(--rund);margin:0 0 14px}
+  h2{font-family:var(--rund);font-size:20px;margin:22px 4px 10px}
+  .karte{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:16px;
+    box-shadow:0 1px 2px rgba(20,22,40,.05),0 12px 30px rgba(20,22,40,.08)}
+  .vk-kopf{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .vk-titel{font:800 19px/1.25 var(--rund);flex:1;min-width:180px;margin:0}
+  .vk-meta{color:var(--muted);font-size:14.5px;margin-top:3px}
+  .vk-film{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000}
+  .vk-film iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .gesehen{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;margin:12px 0 4px;padding:10px 14px;
+    border-radius:16px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:800 17px/1.2 var(--rund);cursor:pointer;text-align:left}
+  .gesehen .kasten{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;
+    border:2px solid var(--muted);font-size:18px;flex:none}
+  .gesehen[aria-pressed="true"]{background:var(--gut-hell);border-color:var(--gut-text);color:var(--gut-text)}
+  .gesehen[aria-pressed="true"] .kasten{border-color:var(--gut-text);background:var(--gut-text);color:var(--card)}
+  .fragen{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+  .fragen-kopf{font:800 16px/1.3 var(--rund);margin:6px 0 2px}
+  .frage{padding:10px 0;border-bottom:1px dashed var(--line)}
+  .frage:last-child{border-bottom:0}
+  .f-text{font:700 17px/1.4 var(--rund);margin:0 0 8px}
+  .f-antworten{display:grid;gap:8px}
+  .va{display:block;width:100%;min-height:48px;padding:10px 14px;text-align:left;border-radius:14px;
+    border:2px solid var(--line);background:var(--card);color:var(--ink);font:700 16.5px/1.3 var(--rund);cursor:pointer}
+  .va:disabled{cursor:default}
+  .va.richtig{background:var(--gut-hell);border-color:var(--gut-text);color:var(--gut-text)}
+  .va.richtig::before{content:"✓ "}
+  .va.falsch{opacity:.7;text-decoration:line-through;border-style:dashed}
+  .rueck{margin-top:8px;padding:10px 12px;border-radius:12px;font-size:15.5px;line-height:1.45}
+  .rueck.gut{background:var(--gut-hell);color:var(--gut-text)}
+  .rueck.hinweis{background:var(--hinweis-hell);color:var(--hinweis-text);border:1px solid var(--hinweis-rand)}
+  .nachsehen{display:inline-flex;align-items:center;gap:6px;margin-top:8px;min-height:44px;padding:8px 14px;border-radius:12px;
+    border:2px solid var(--akzent);background:transparent;color:var(--ink);font:700 15.5px/1.2 var(--rund);cursor:pointer}
+  .kommt{color:var(--muted);font-size:15.5px;margin:10px 0 0}
+  .leer{color:var(--muted);font-size:16px;line-height:1.5}
+</style>
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/paul/">‹ Pauls Lernwelt</a>
+    <h1>🎬 Videos mit Papa</h1>
+  </header>
+  <p class="unter">Die Videos von deiner Lehrerin. Schaut sie zusammen an – danach gibt es zu jedem Video drei Fragen.</p>
+  <p class="stand" id="stand"></p>
+  <div id="liste"><p class="leer">Die Videos werden geladen …</p></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SCHLUESSEL = "videos-papa-gesehen";
+  var FACH = { mathe: "Mathe", hsu: "HSU", deutsch: "Deutsch", englisch: "Englisch" };
+  var liste = document.getElementById("liste");
+  var alle = [];
+
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); }
+  function fachName(f){ return FACH[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : "Weitere"); }
+  function sekunden(z){ var t = String(z || "").split(":").map(Number); var s = 0; t.forEach(function(x){ s = s * 60 + (x || 0); }); return s; }
+  function zeitKurz(z){ return String(z || "").replace(/^00:/, ""); }
+  function einbettung(id, start){
+    return "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?rel=0" + (start ? "&start=" + start : "");
+  }
+  function heute(){ var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+
+  function gesehenLesen(){
+    try { var o = JSON.parse(localStorage.getItem(SCHLUESSEL) || "{}"); return (o && typeof o === "object" && !Array.isArray(o)) ? o : {}; }
+    catch (e) { return {}; }
+  }
+  function gesehenSetzen(id, an){
+    var o = gesehenLesen();
+    if (an) o[id] = heute(); else delete o[id];
+    try { localStorage.setItem(SCHLUESSEL, JSON.stringify(o)); } catch (e) {}
+  }
+  function standMalen(){
+    var o = gesehenLesen(), n = alle.filter(function(v){ return o[v.id]; }).length;
+    document.getElementById("stand").textContent = alle.length
+      ? (n === 0 ? alle.length + " Videos warten auf euch." : n + " von " + alle.length + " Videos habt ihr schon zusammen gesehen.")
+      : "";
+  }
+
+  function frageHtml(v, q, i){
+    return '<div class="frage" data-v="' + esc(v.id) + '" data-i="' + i + '">' +
+      '<p class="f-text">' + (i + 1) + ". " + esc(q.frage) + "</p>" +
+      '<div class="f-antworten">' + q.antworten.map(function(a, j){
+        return '<button type="button" class="va" data-j="' + j + '">' + esc(a) + "</button>";
+      }).join("") + "</div>" +
+      '<div class="f-rueck"></div></div>';
+  }
+
+  function karteHtml(v, gesehen){
+    var an = !!gesehen[v.id];
+    var meta = fachName(v.fach) + (v.laenge ? " · " + esc(v.laenge) + " Min" : "");
+    var fragen = v.fragen && v.fragen.length
+      ? '<div class="fragen"><div class="fragen-kopf">Drei Fragen zum Video</div>' + v.fragen.map(function(q, i){ return frageHtml(v, q, i); }).join("") + "</div>"
+      : '<p class="kommt">Fragen kommen noch.</p>';
+    return '<article class="karte video" id="v-' + esc(v.id) + '" data-fach="' + esc(v.fach) + '">' +
+      '<div class="vk-kopf"><div style="flex:1;min-width:180px"><h3 class="vk-titel">' + esc(v.titel) + "</h3>" +
+      '<div class="vk-meta">' + meta + "</div></div></div>" +
+      '<div class="vk-film"><iframe src="' + einbettung(v.id) + '" title="Video: ' + esc(v.titel) + '" loading="lazy" ' +
+      'allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>' +
+      '<button type="button" class="gesehen" data-id="' + esc(v.id) + '" aria-pressed="' + an + '">' +
+      '<span class="kasten" aria-hidden="true">' + (an ? "✓" : "") + "</span>" +
+      "<span>Zusammen gesehen" + (an ? " am " + esc(datumSchoen(gesehen[v.id])) : "") + "</span></button>" +
+      fragen + "</article>";
+  }
+  function datumSchoen(iso){ var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(iso || ""); return m ? (+m[3]) + "." + (+m[2]) + "." : ""; }
+
+  function malen(){
+    var g = gesehenLesen(), html = "", fach = null;
+    alle.forEach(function(v){
+      if (v.fach !== fach){ fach = v.fach; html += '<h2 class="fach-kopf">' + esc(fachName(fach)) + "</h2>"; }
+      html += karteHtml(v, g);
+    });
+    liste.innerHTML = html || '<p class="leer">Noch keine Videos da. Sobald deine Lehrerin eins auf die Pinnwand stellt, erscheint es hier.</p>';
+    standMalen();
+  }
+
+  liste.addEventListener("click", function(e){
+    var k = e.target.closest(".gesehen");
+    if (k){
+      var an = k.getAttribute("aria-pressed") !== "true";
+      gesehenSetzen(k.getAttribute("data-id"), an);
+      var g = gesehenLesen(), id = k.getAttribute("data-id");
+      k.setAttribute("aria-pressed", String(an));
+      k.querySelector(".kasten").textContent = an ? "✓" : "";
+      k.lastElementChild.textContent = "Zusammen gesehen" + (an ? " am " + datumSchoen(g[id]) : "");
+      standMalen();
+      return;
+    }
+    var s = e.target.closest(".nachsehen");
+    if (s){
+      var karte = document.getElementById("v-" + s.getAttribute("data-v"));
+      var f = karte && karte.querySelector("iframe");
+      if (f){ f.src = einbettung(s.getAttribute("data-v"), Number(s.getAttribute("data-start")) || 0);
+        f.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      return;
+    }
+    var b = e.target.closest(".va");
+    if (!b || b.disabled) return;
+    var box = b.closest(".frage"), v = alle.filter(function(x){ return x.id === box.getAttribute("data-v"); })[0];
+    var q = v && v.fragen[Number(box.getAttribute("data-i"))];
+    if (!q) return;
+    var j = Number(b.getAttribute("data-j")), rueck = box.querySelector(".f-rueck");
+    var knoepfe = box.querySelectorAll(".va");
+    function richtigZeigen(lob){
+      Array.prototype.forEach.call(knoepfe, function(x){ x.disabled = true; });
+      knoepfe[q.richtig].classList.add("richtig");
+      rueck.innerHTML = '<div class="rueck gut">' + esc(lob) + esc(q.erklaerung || "") + "</div>";
+    }
+    if (j === q.richtig){ richtigZeigen(box.querySelector(".va.falsch") ? "Jetzt stimmt’s! " : "Richtig! "); return; }
+    b.classList.add("falsch"); b.disabled = true;
+    var uebrig = Array.prototype.filter.call(knoepfe, function(x){ return !x.disabled; }).length;
+    var hinweis = (q.hinweise && q.hinweise[j]) || "Das passt noch nicht.";
+    var start = sekunden(q.beleg);
+    var nach = q.beleg ? '<button type="button" class="nachsehen" data-v="' + esc(v.id) + '" data-start="' + start + '">▶ Im Video ab ' + esc(zeitKurz(q.beleg)) + " nachsehen</button>" : "";
+    if (uebrig <= 1){
+      richtigZeigen("");
+      rueck.innerHTML = '<div class="rueck hinweis">' + esc(hinweis) + "</div>" + rueck.innerHTML + nach;
+      return;
+    }
+    rueck.innerHTML = '<div class="rueck hinweis">' + esc(hinweis) + " Versuch es noch einmal.</div>" + nach;
+  });
+
+  fetch("/api/videos?kind=paul", { credentials: "same-origin", cache: "no-store" })
+    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+    .then(function(a){
+      if (!a.ok || !a.j || !a.j.ok){ liste.innerHTML = '<p class="leer">' + esc((a.j && a.j.fehler) || "Die Videos lassen sich gerade nicht laden.") + "</p>"; return; }
+      // Mathe zuerst (Probe 19.10.2026), dann HSU, dann der Rest - auch wenn der Speicher anders sortiert.
+      var RANG = { mathe: 0, hsu: 1 };
+      alle = (a.j.videos || []).filter(function(v){ return v && v.id; })
+        .map(function(v, i){ return { v: v, i: i }; })
+        .sort(function(x, y){ return ((RANG[x.v.fach] != null ? RANG[x.v.fach] : 9) - (RANG[y.v.fach] != null ? RANG[y.v.fach] : 9)) || x.i - y.i; })
+        .map(function(x){ return x.v; });
+      malen();
+    })
+    .catch(function(){ liste.innerHTML = '<p class="leer">Die Videos lassen sich gerade nicht laden. Ist das Internet an?</p>'; });
+})();
+</script>
+<script src="/spiel-navi.js?v=815914e4" defer></script>
+</body>
+</html>
