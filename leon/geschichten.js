@@ -13827,7 +13827,7 @@ window.LEON_GESCHICHTEN = [
   "bild": "🏆",
   "ereignis": "2026-10-17",
   "zeigenAb": "2026-10-16",
-  "zeigenBis": "2026-10-17",
+  "zeigenBis": "2026-10-16",
   "seiten": [
    {
     "szene": {
@@ -16128,6 +16128,215 @@ window.LEON_GESCHICHTEN = [
     "Autos"
    ],
    "seite": 6
+  }
+ ]
+},
+{
+ "id": "w42-turnier-zweiter",
+ "titel": "Zweiter beim Turnier",
+ "bild": "🥈",
+ "ereignis": "2026-10-17",
+ "zeigenAb": "2026-10-17",
+ "zeigenBis": "2026-10-20",
+ "seiten": [
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "🏟️",
+     "⚽"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Am Sams|tag war das Tur|nier.",
+    "Es fand beim ESV Flü|gel|rad statt.",
+    "Vier Mann|schaf|ten wa|ren da.",
+    "Le|on spiel|te für den ASC Box|dorf.",
+    "End|lich ging es los!"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "🧤",
+     "🏃"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Le|on hat|te zwei Auf|ga|ben.",
+    "Mal stand er im Tor.",
+    "Dann trug er sei|ne Hand|schu|he.",
+    "Mal spiel|te er drau|ßen mit.",
+    "Dann lief er dem Ball hin|ter|her."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "⚽",
+     "🥅"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Im Tor muss man gut auf|pas|sen.",
+    "Wo ist der Ball ge|ra|de?",
+    "Drau|ßen muss man viel ren|nen.",
+    "Man spielt den Ball zu den an|de|ren.",
+    "Bei|des ist wich|tig für die Mann|schaft."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "🥅",
+     "⚽"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Am En|de gab es ein Elf|me|ter|schie|ßen.",
+    "Da|bei schießt ein Spie|ler al|lein aufs Tor.",
+    "Nur der Tor|wart steht da|vor.",
+    "Le|on stand im Tor.",
+    "Er mach|te sich ganz groß."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "🧤",
+     "😮"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Ein Spie|ler nach dem an|de|ren lief an.",
+    "Le|on schau|te ge|nau auf den Ball.",
+    "In wel|che E|cke fliegt er wohl?",
+    "Das Herz klopf|te ganz schnell.",
+    "Es war sehr span|nend."
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "⚽",
+     "🥅"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Ganz am En|de kam et|was Be|son|de|res.",
+    "Le|on durf|te auch selbst schie|ßen.",
+    "Er leg|te den Ball auf den Punkt.",
+    "Er lief an und schoss.",
+    "Tor! Der Ball war drin!"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "🎉",
+     "⚽"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Le|on hat|te sich mit ei|nem Tor be|lohnt.",
+    "Er war Tor|wart und Tor|schüt|ze zu|gleich.",
+    "Das schafft nicht je|der.",
+    "Da darf man rich|tig stolz sein.",
+    "Was für ein Mo|ment!"
+   ]
+  },
+  {
+   "szene": {
+    "ort": "platz",
+    "dinge": [
+     "🥈",
+     "🏆"
+    ],
+    "leute": [
+     "Leon"
+    ]
+   },
+   "zeilen": [
+    "Dann stand das Er|geb|nis fest.",
+    "Le|ons Mann|schaft wur|de Zwei|ter.",
+    "Nur ei|ne Mann|schaft war noch bes|ser.",
+    "Von vier Mann|schaf|ten ist das toll.",
+    "Zu|sam|men hat|ten sie gut ge|kämpft."
+   ]
+  }
+ ],
+ "fragen": [
+  {
+   "frage": "Was machte Leon, wenn er nicht im Tor stand?",
+   "richtig": "draußen mitspielen",
+   "falsch": [
+    "Eis essen",
+    "schlafen"
+   ],
+   "seite": 2
+  },
+  {
+   "frage": "Wo stand Leon beim Elfmeterschießen?",
+   "richtig": "im Tor",
+   "falsch": [
+    "auf der Bank",
+    "im Bus"
+   ],
+   "seite": 4
+  },
+  {
+   "frage": "Was durfte Leon ganz am Ende machen?",
+   "richtig": "selbst schießen",
+   "falsch": [
+    "pfeifen",
+    "nach Hause gehen"
+   ],
+   "seite": 6
+  },
+  {
+   "frage": "Was passierte bei Leons Schuss?",
+   "richtig": "Tor",
+   "falsch": [
+    "daneben",
+    "an die Latte"
+   ],
+   "seite": 6
+  },
+  {
+   "frage": "Der Wievielte wurde Leons Mannschaft?",
+   "richtig": "Zweiter",
+   "falsch": [
+    "Erster",
+    "Vierter"
+   ],
+   "seite": 8
   }
  ]
 }
