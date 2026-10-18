@@ -185,8 +185,18 @@
   /* "18. Jahrhundert" oder "18. Jh." für "18." ist dieselbe Antwort (Helena,
      18.10.2026). Der Punkt faellt in schlicht() ohnehin weg. */
   function ohneArtikel(s) { return s.replace(ARTIKEL, "").replace(/^(\d+) (jahrhundert|jhd|jh)$/, "$1"); }
+  /* Ist die Antwort nur eine Zahl ("19."), zaehlt nur die Zahl: "19. Jahrhundert",
+     "19.Jahundert" und "im 19." sind richtig (Helena, 18.10.2026). Steht mehr als
+     eine Zahl da, bleibt es falsch - sonst ginge "18. oder 19." durch. */
+  function nurZahl(s) { var m = schlicht(s).match(/^\d+$/); return m ? m[0] : null; }
+  function zahlen(s) { return String(s == null ? "" : s).match(/\d+/g) || []; }
   function vergleich(gegeben, aufgabe) {
     if (!schlicht(gegeben)) return "offen";
+    var soll = [aufgabe.antwort].concat(aufgabe.auch || []).map(nurZahl).filter(Boolean);
+    if (soll.length) {
+      var hat = zahlen(gegeben);
+      if (hat.length === 1 && soll.indexOf(String(Number(hat[0]))) >= 0) return "gut";
+    }
     var alle = [aufgabe.antwort].concat(aufgabe.auch || []);
     var i, g = schlicht(gegeben), r;
     for (i = 0; i < alle.length; i++) {
@@ -226,6 +236,32 @@
       else { ga.push([a[i], 1]); i++; }
     }
     return { gegeben: ga, richtig: ra };
+  }
+  /* Richtig, aber ein Wort ist verschrieben ("Jahundert"): Hilfe zum
+     Schreiben statt Kreuz (Denny, 18.10.2026). Bekannt sind die Woerter aus
+     Frage, Antwort und Erklaerung; ab 5 Buchstaben, 1-2 Zeichen daneben. */
+  function abstand(a, b) {
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) { d[i] = [i]; }
+    for (j = 1; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  function schreibhilfe(gegeben, aufgabe) {
+    var bekannt = {}, raus = [];
+    String([aufgabe.frage, aufgabe.antwort].concat(aufgabe.auch || [], [aufgabe.erklaerung]).join(" "))
+      .split(/[^A-Za-zÄÖÜäöüßÀ-ÿ]+/).forEach(function (w) { if (w.length >= 5) bekannt[w.toLowerCase()] = w; });
+    String(gegeben || "").split(/[^A-Za-zÄÖÜäöüßÀ-ÿ]+/).forEach(function (w) {
+      if (w.length < 4 || bekannt[w.toLowerCase()]) return;
+      var best = null, bd = 3;
+      Object.keys(bekannt).forEach(function (k) {
+        var dd = abstand(w.toLowerCase(), k);
+        if (dd > 0 && dd < bd && dd <= Math.max(1, Math.floor(k.length / 5))) { bd = dd; best = bekannt[k]; }
+      });
+      if (best) raus.push([w, best]);
+    });
+    return raus;
   }
   function malen(teile, klasse, gross) {
     var f = document.createDocumentFragment(), puffer = "";
@@ -558,6 +594,10 @@
         if (e.stand === "gut") {
           sagt.appendChild(el("b", null, "✅ Richtig"));
           sagt.appendChild(el("span", null, e.gegeben));
+          schreibhilfe(e.gegeben, e.a).forEach(function (p) {
+            var u = unterschied(p[0], p[1]);
+            sagt.appendChild(zeile("Kleiner Tipp, so schreibt man es:", u ? malen(u.richtig, "neu", true) : p[1]));
+          });
         } else if (e.stand === "fast") {
           sagt.appendChild(el("b", null, "➖ Fast – schau auf die Zeichen"));
           vergleichZeigen(sagt, e.gegeben, e.a.antwort, "So wird es geschrieben:", false);
@@ -636,5 +676,5 @@
     startZeigen("");
   }
 
-  global.LWFotoUebung = { einbauen: einbauen, vergleich: vergleich, unterschied: unterschied, fachSchluessel: fachSchluessel };
+  global.LWFotoUebung = { einbauen: einbauen, vergleich: vergleich, unterschied: unterschied, schreibhilfe: schreibhilfe, fachSchluessel: fachSchluessel };
 })(window);
