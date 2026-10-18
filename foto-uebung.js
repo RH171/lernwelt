@@ -182,7 +182,9 @@
      für "der Papst". Ein FALSCHER Artikel bleibt falsch. Nur deutsche
      und englische Artikel - in Französisch gehört le/la zum Wort. */
   var ARTIKEL = /^(der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|the|a|an) /;
-  function ohneArtikel(s) { return s.replace(ARTIKEL, ""); }
+  /* "18. Jahrhundert" oder "18. Jh." für "18." ist dieselbe Antwort (Helena,
+     18.10.2026). Der Punkt faellt in schlicht() ohnehin weg. */
+  function ohneArtikel(s) { return s.replace(ARTIKEL, "").replace(/^(\d+) (jahrhundert|jhd|jh)$/, "$1"); }
   function vergleich(gegeben, aufgabe) {
     if (!schlicht(gegeben)) return "offen";
     var alle = [aufgabe.antwort].concat(aufgabe.auch || []);
@@ -235,6 +237,12 @@
     });
     raus();
     return f;
+  }
+  /* "(Zahl mit Punkt)" allein versteht niemand, weder Helena noch Denny
+     (18.10.2026). Steht kein Beispiel dabei, kommt eines dazu. */
+  function klarFrage(t) {
+    return String(t || "").replace(/\((?:als |eine )?Zahl mit Punkt\)/i,
+      "(als Zahl mit Punkt, z. B. 12. für das zwölfte Jahrhundert)");
   }
   function zeile(wo, inhalt) {
     var z = el("span", "zeile");
@@ -471,7 +479,7 @@
       u.aufgaben.forEach(function (a, i) {
         var block = el("div", "aufg");
         block.appendChild(el("div", "nr", "AUFGABE " + (i + 1)));
-        block.appendChild(el("p", "t", a.frage));
+        block.appendChild(el("p", "t", klarFrage(a.frage)));
         var feld = el("input");
         feld.type = "text";
         feld.autocapitalize = "off";
@@ -544,7 +552,7 @@
       ergebnisse.forEach(function (e, i) {
         var block = el("div", "aufg fertig");
         block.appendChild(el("div", "nr", "AUFGABE " + (i + 1)));
-        block.appendChild(el("p", "t", e.a.frage));
+        block.appendChild(el("p", "t", klarFrage(e.a.frage)));
 
         var sagt = el("div", "sagt " + e.stand);
         if (e.stand === "gut") {
