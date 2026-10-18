@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wort-Detektiv</title>
+<!--
+  Wort-Detektiv (18.10.2026, Dennys Wahl „L · Wort-Detektiv“): Paul uebt die 14 Mathe-Fachwoerter. 14 Faelle mit
+  markiertem Teil, Antwort eintippen (grosszuegige Schreibtoleranz) oder eines von 4 Woertern antippen, Hilfe in Stufen.
+  Inhalt aus PSMotor.FACHWORT (/probenstoff/motor.js), Anzeige /probenstoff/fachwort-detektiv.js.
+  Gemeldet wird nur der erste Versuch je Fall (lernstand.js), gespeichert sonst nichts. Immer erreichbar
+  ueber die Fachwoerter-Liste, nicht ans Probendatum gebunden. Kapitel 121.
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/probenstoff/fachwort-detektiv.css?v=0d3d1a9a">
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<header>
+  <a class="knopf" href="klasse4-mathe-fachwoerter.html">← Zurück</a>
+  <h1>Wort-Detektiv</h1>
+</header>
+<main id="buehne" aria-live="polite"></main>
+<script src="/probenstoff/motor.js?v=4e20abed"></script>
+<script src="/probenstoff/fachwort-detektiv.js?v=e387cb4c" defer></script>
+<script src="/lernstand.js?v=fe69f5e5" defer></script>
+</body>
+</html>

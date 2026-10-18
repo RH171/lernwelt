@@ -1,7 +1,8 @@
 /* Lernliste der Mathe-Fachwörter (18.10.2026) – Merkplakat (Dennys Wahl „G · Merkplakat“, 18.10.2026):
  * die vier Rechenarten als breite farbige Zeilen (Zeichen, Verb, Rechenart, Beispiel, Ergebnisname),
  * die übrigen sechs Wörter als Kacheln im 2er-Raster. Inhalt aus PSMotor.FACHWORT, rechnet und speichert nichts.
- * Der Knopf „Fachwörter üben“ erscheint nur, solange der Probenstoff läuft (PSMotor.aktiv: bis 19.10.2026). */
+ * Der Knopf „Fachwörter üben“ erscheint nur, solange der Probenstoff läuft (PSMotor.aktiv: bis 19.10.2026).
+ * Der Knopf „🔍 Wort-Detektiv“ (18.10.2026, klasse4-mathe-fachwort-detektiv.html) steht immer da, auch nach der Probe. */
 (function () {
   "use strict";
   var M = window.PSMotor;
@@ -9,6 +10,7 @@
   function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
   if (!M || !M.FACHWORT) return;
   if (M.aktiv(M.heuteIso())) $("fw-ueben").classList.remove("verborgen");
+  if ($("fw-detektiv")) $("fw-detektiv").classList.remove("verborgen");   // immer, nicht ans Probendatum gebunden
   var je = {}; M.FACHWORT.forEach(function (c) { je[c.id] = c; });
   var ARTEN = [["addieren", "summe", "plus"], ["subtrahieren", "differenz", "minus"], ["multiplizieren", "produkt", "mal"], ["dividieren", "quotient", "geteilt"]];
   var REST = ["tausch", "umkehr", "vielfache", "teiler", "primzahl", "punkt"];

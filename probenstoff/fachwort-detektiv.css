@@ -1,0 +1,64 @@
+/* Wort-Detektiv (18.10.2026, Kapitel 121): Farben wie das Merkplakat (fachwoerter.css), hell/dunkel über /thema.css.
+   Kein Rot für Fehler: Hinweise bernsteinfarben, richtig grün. Schrift ab 18 px, Tippziele ab 44 px. */
+:root{ --bg:#eef2f7; --karte:#fff; --ink:#172033; --muted:#4b5263; --line:#d5dce7; --akzent:#6d28d9; --akzent-auf:#fff; --fest:#f4f6fa;
+  --an:#ede9fe; --gut:#15803d; --gut-hell:#dcfce7; --hinweis:#92400e; --hinweis-hell:#fef3c7;
+  --plus:#047857; --minus:#b91c1c; --mal:#1d4ed8; --geteilt:#a14a00; --lila:#6d28d9;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Rounded",system-ui,sans-serif; }
+html[data-theme="dark"]{ --fest:#262935; --an:#2e2454; --akzent:#c4b5fd; --akzent-auf:#160f2b; --gut:#4ade80; --gut-hell:#10281f;
+  --hinweis:#f0b45f; --hinweis-hell:#33280f; --plus:#34d399; --minus:#f87171; --mal:#7cb4ff; --geteilt:#fbbf24; --lila:#c4b5fd; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:19px;padding:10px 14px calc(40px + env(safe-area-inset-bottom))}
+.verborgen{display:none!important}
+header{display:flex;align-items:center;gap:12px;max-width:680px;margin:0 auto 12px}
+header h1{font:800 26px/1.15 var(--font);margin:0;flex:1}
+main{max-width:680px;margin:0 auto}
+.knopf{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 18px;border-radius:999px;
+  border:1px solid var(--line);background:var(--karte);color:var(--ink);font:700 18px/1.1 var(--font);cursor:pointer;text-decoration:none}
+.knopf.primaer{background:var(--akzent);color:var(--akzent-auf);border-color:var(--akzent);min-height:56px;font-size:20px;padding:12px 24px}
+.mitte{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:14px 0 0}
+.plus{--f:var(--plus)} .minus{--f:var(--minus)} .mal{--f:var(--mal)} .geteilt{--f:var(--geteilt)} .lila{--f:var(--lila)}
+
+.fall{background:var(--karte);border:1px solid var(--line);border-top:8px solid var(--f,var(--akzent));border-radius:20px;padding:14px 16px 18px;
+  box-shadow:0 8px 22px rgba(15,40,70,.07)}
+.fall .nr{font:700 18px/1.3 var(--font);color:var(--muted)}
+.fall .bild{font:800 32px/1.35 var(--font);text-align:center;margin:12px 0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.fall .bild .mark{color:var(--f);border:3px solid var(--f);border-radius:10px;padding:0 6px;display:inline-block;line-height:1.25}
+.fall .frage{font:700 21px/1.35 var(--font);margin:0 0 10px}
+.eingabe{display:flex;gap:8px;flex-wrap:wrap}
+input.wort{flex:1 1 200px;min-width:0;font:700 22px/1.2 var(--font);min-height:52px;padding:8px 12px;border-radius:14px;border:2px solid var(--line);
+  background:var(--fest);color:var(--ink)}
+input.wort::placeholder{color:var(--muted);opacity:1;font-weight:600}
+input.wort:focus{outline:none;border-color:var(--akzent)}
+input.wort.nochmal{border-color:var(--hinweis)}
+input.wort.gut{border-color:var(--gut);background:var(--gut-hell)}
+.eingabe .knopf.primaer{flex:0 0 auto;min-height:52px}
+.hilfe{font:600 19px/1.4 var(--font);color:var(--hinweis);margin-top:10px}
+.hilfe:empty{display:none}
+.hilfe .anfang{font-size:26px;color:var(--ink)}
+.hilfe .denk{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
+.oder{font:700 18px/1.3 var(--font);color:var(--muted);margin:14px 0 6px}
+.wahl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wwahl{font:800 20px/1.15 var(--font);min-height:56px;padding:8px 10px;border-radius:14px;border:2px solid var(--line);background:var(--fest);color:var(--ink);
+  cursor:pointer;overflow-wrap:anywhere;transition:opacity .3s,border-color .2s,background .2s}
+.wwahl.vorschlag{border:3px solid var(--akzent);background:var(--an);box-shadow:0 0 0 3px var(--an)}
+.wwahl.blass{opacity:.45}
+.wwahl.richtig{border-color:var(--gut);background:var(--gut-hell);opacity:1}
+.wwahl:disabled{cursor:default}
+.wwahl:disabled:not(.richtig){opacity:.45}
+.merkbox{background:var(--gut-hell);border-left:6px solid var(--gut);border-radius:14px;padding:12px 14px;margin-top:12px}
+.merkbox .lob{font:800 20px/1.3 var(--font)}
+.merkbox .schreib{font:600 18px/1.3 var(--font);color:var(--muted);margin-top:4px}
+.merkbox .gross{font:800 32px/1.2 var(--font);margin:4px 0;color:var(--ink)}
+.merkbox .satz{font:600 19px/1.4 var(--font)}
+.ergebnis{text-align:center;border-top-color:var(--gut)}
+.ergebnis .gross{font:800 48px/1.1 var(--font);color:var(--gut);margin-top:8px}
+.ergebnis .unter{font:700 20px/1.35 var(--font)}
+.wackler{text-align:left;font:600 19px/1.4 var(--font);margin-top:12px;background:var(--fest);border-radius:14px;padding:10px 14px}
+.wackler ul{margin:6px 0 0;padding-left:22px}
+.dran{font:700 19px/1.4 var(--font);margin:12px 0 0}
+@keyframes wackel{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.wackel{animation:wackel .45s}
+@media (prefers-reduced-motion:reduce){.wackel{animation:none}}
+@media (max-width:360px){ .fall{padding:12px} .fall .bild{font-size:28px} .wwahl{font-size:18px} }
+@media (min-width:700px){ header h1{font-size:30px} .fall .bild{font-size:40px} .fall .frage{font-size:23px} .wwahl{font-size:22px} }
