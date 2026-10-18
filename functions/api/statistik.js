@@ -90,8 +90,14 @@ function saeubern(r) {
       stimmt: !!a.stimmt,
       nachspielzeit: !!a.nachspielzeit,
       sekunden: zahl(a.sekunden, 3600),
-      gegeben: text(a.gegeben, 30),
-      richtig: text(a.richtig, 30),
+      /* 80 statt 30 Zeichen (18.10.2026): "die Zeit nach dem Wormser Konk…"
+         war abgeschnitten, und niemand konnte mehr sagen, ob Helenas Antwort
+         stimmte. Dazu die Frage (freiwillig, bis 160 Zeichen) - vorher war
+         nur bei 3 von 28 Fehlwertungen bekannt, was gefragt war. Alte Seiten
+         ohne "frage" laufen unveraendert; dann fehlt das Feld ganz. */
+      gegeben: text(a.gegeben, 80),
+      richtig: text(a.richtig, 80),
+      ...(a.frage ? { frage: text(a.frage, 160) } : {}),
       /* Der Lernpunkt der Aufgabe (29.09.2026, "Kreise fuellen"): Damit weiss
          "Deine Woche", welcher Kreis spaeter doch noch geschafft wurde. */
       ...(a.p ? { p: text(a.p, 70) } : {}),

@@ -1044,7 +1044,10 @@
     // "blatt#k:regnitz" - damit "Deine Woche" spaeter geschaffte Kreise erkennt.
     // sekunden (seit 13.10.2026, freiwillig): Zeit bis zum ersten Versuch. Vorher stand hier
     // immer 0, die Statistik kannte das Feld (functions/api/statistik.js) aber schon.
-    antwort: function (stimmt, merkmal, gegeben, richtig, punkt, sekunden) {
+    // frage (seit 18.10.2026, freiwillig): der Fragetext, bis 160 Zeichen - ohne
+    // ihn war bei Helenas Fehlwertungen nicht mehr zu klaeren, was gefragt war.
+    // gegeben/richtig seit demselben Tag bis 80 statt 30 Zeichen.
+    antwort: function (stimmt, merkmal, gegeben, richtig, punkt, sekunden, frage) {
       try {
         aufgaben.push({
           merkmal: String(merkmal || "").slice(0, 40).toLowerCase(),
@@ -1052,9 +1055,10 @@
           stimmt: !!stimmt,
           nachspielzeit: false,
           sekunden: (typeof sekunden === "number" && isFinite(sekunden) && sekunden > 0) ? Math.min(3600, Math.round(sekunden)) : 0,
-          gegeben: stimmt ? "" : String(gegeben == null ? "" : gegeben).slice(0, 30),
-          richtig: String(richtig == null ? "" : richtig).slice(0, 30),
-          p: punkt ? String(punkt).slice(0, 70) : ""
+          gegeben: stimmt ? "" : String(gegeben == null ? "" : gegeben).slice(0, 80),
+          richtig: String(richtig == null ? "" : richtig).slice(0, 80),
+          p: punkt ? String(punkt).slice(0, 70) : "",
+          frage: frage ? String(frage).slice(0, 160) : ""
         });
       } catch (e) {}
     }

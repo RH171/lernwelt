@@ -576,8 +576,13 @@
         stimmt: !!correct,
         nachspielzeit: false,
         sekunden: karteBegonnen ? Math.round((Date.now()-karteBegonnen)/1000) : 0,
-        gegeben: correct ? "" : String(item.p.de).slice(0,30),
-        richtig: String(item.p.en).slice(0,30)
+        /* Bis 18.10.2026 stand hier item.p.de - also die deutsche Vokabel,
+           nicht das, was Helena getippt hatte. Jetzt ihre Eingabe (auch bei
+           "fast", damit die Eltern die Schreibweise sehen), die erwartete
+           Loesung und das abgefragte Wort. */
+        gegeben: (correct && !item._fast) ? "" : String(item._gegeben != null ? item._gegeben : item._waehlt || "").slice(0,80),
+        richtig: String(item._sol != null ? item._sol : item.p.en).slice(0,80),
+        frage: String(frageText(item)).slice(0,160)
       });
     }
     if(correct){ mastered++; xp+=10; queue.shift(); }
@@ -590,9 +595,20 @@
     writeProgress(mastered, wrongWords.length);
   }
 
-  function afterAnswer(correct,solution,item){
-    var vd=$("#vd");
-    if(correct){ vd.className="verdict ok"; vd.textContent="Richtig! ✦ +10 XP"; good(); }
+  function afterAnswer(correct,solution,item,erg){
+    var vd=$("#vd"), T=window.LWToleranz;
+    var gegeben = item && item._gegeben;
+    var nah = T && gegeben && erg && T.unterschied(gegeben, erg.treffer || solution);
+    if(correct && erg && erg.stufe==="fast"){
+      vd.className="verdict ok"; vd.textContent="Fast richtig! ✦ +10 XP"; good();
+      T.zeigen(vd, gegeben, erg.treffer || solution, { wo: "So schreibt man es:" });
+    }
+    else if(correct){ vd.className="verdict ok"; vd.textContent="Richtig! ✦ +10 XP"; good(); }
+    else if(nah){
+      // Knapp daneben (z. B. falscher Artikel): sehen, WO es hakt.
+      vd.className="verdict no"; vd.textContent="Knapp daneben"; bad();
+      T.zeigen(vd, gegeben, solution, { wo: "Richtig wäre:" });
+    }
     else{ vd.className="verdict no"; vd.textContent="Richtig wäre: "+solution; bad(); }
     if(item && item.p && item.p.ex){ var e=$("#exs"); if(e) e.textContent="„"+item.p.ex+"\u201c"; }
     var b=document.createElement("button"); b.className="next"; b.textContent="Weiter ›";
@@ -601,7 +617,10 @@
   }
 
   function judgeChoice(btn,chosen,solution,item){
+    // Auswahl bleibt exakt: ein Nachbarknopf kann sich nur in einem
+    // Buchstaben unterscheiden und ist trotzdem falsch.
     var correct=(chosen===solution);
+    item._waehlt=chosen; item._gegeben=null; item._fast=false;
     award(item,correct);
     [].forEach.call($("#ch").children,function(x){
       x.disabled=true;
@@ -612,13 +631,51 @@
     afterAnswer(correct,solution,item);
   }
 
+  /* Toleranter Vergleich (18.10.2026, Denny: richtige Antworten von Helena
+     galten als falsch, weil die Schreibweise abwich). Die Regel steht EINMAL
+     in /toleranz.js: kleine Tippfehler und fehlende Akzente sind "fast" -
+     das zaehlt als richtig, die richtige Schreibweise steht aber gross da.
+     Kurzformen (don't = do not), mehrere Loesungen ("der Laden / das
+     Geschaeft", "guten Tag, hallo") und Klammerteile ("(to) run") gelten.
+     Artikel: in Englisch und Deutsch egal wie bisher, in Franzoesisch gehoert
+     le/la zum Wort. Fehlt /toleranz.js, gilt der alte exakte Vergleich. */
+  /* Was auf der Karte gefragt war. Bei Lueckentext und Hoeren ist _prompt
+     die Loesung selbst - dort steht die Bedeutung (p.de) auf der Karte. */
+  function frageText(item){
+    if(item._d) return item._prompt || "";
+    return (item.p && item.p.de) || "";
+  }
+  function spracheVon(item){
+    if(item._solLang==="de") return "de";
+    return String(K.stimmeVorwahl||"en").slice(0,2).toLowerCase()==="fr" ? "fr" : "en";
+  }
+  function andereWoerter(item){
+    var feld = item._solLang==="de" ? "de" : "en";
+    var einheit = allUnits().filter(function(u){return u.id===item.unitId;})[0] || curUnit;
+    return ((einheit && einheit.pairs) || []).map(function(x){ return x[feld]; })
+      .filter(function(w){ return w && w!==item._sol; });
+  }
+  function bewerten(val,item){
+    var T = window.LWToleranz;
+    if(!T) return { stufe: normalize(val)===normalize(item._sol) ? "gut" : "schlecht", treffer: item._sol };
+    var sp = spracheVon(item);
+    /* Steht auch in der Frage ein "/" oder Komma, ist es ein PAAR ("sur / sous"
+       = "auf / unter", "un, deux, trois"): dann muessen alle Teile dastehen.
+       Sonst sind es Alternativen ("enchanté / enchantée" fuer "sehr erfreut"). */
+    var paar = /[\/,;]/.test(String(frageText(item)).replace(/\([^)]*\)/g,""));
+    return T.pruefen(val, item._sol, { sprache: sp, trennen: paar ? "keine" : "alle", artikelEgal: sp!=="fr",
+      verboten: andereWoerter(item) });
+  }
   function judgeText(val,item){
-    var correct = normalize(val)===normalize(item._sol);
+    var erg = bewerten(val,item);
+    var correct = erg.stufe==="gut" || erg.stufe==="fast";
     var ipt=$("#ipt"); ipt.classList.add(correct?"ok":"no"); ipt.disabled=true;
     var chk=$("#chk"); if(chk) chk.disabled=true;
+    item._gegeben = String(val||"").trim();
+    item._fast = erg.stufe==="fast";
     award(item,correct);
     if(item.p && item.p.en) say(item.p.en);
-    afterAnswer(correct,item._sol,item);
+    afterAnswer(correct,item._sol,item,erg);
   }
 
   /* ---------- Statistik, tunnelfest ----------

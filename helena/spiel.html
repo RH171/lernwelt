@@ -116,6 +116,21 @@
     }
     return n(a) === n(b);
   }
+  /* Getippte Antworten (18.10.2026, Denny: Helenas richtige Antworten galten
+     als falsch). Regel aus /toleranz.js: Artikel davor egal, wenn die Loesung
+     keinen hat; kleiner Tippfehler = "fast" (zaehlt, Schreibweise steht gross
+     da); bei Zahlantworten zaehlt nur die Zahl ("19. Jahrhundert" fuer "19.").
+     Die Auswahlknoepfe und bekannte Fehlantworten (diagnosen) bleiben falsch,
+     auch wenn sie nur einen Buchstaben daneben liegen. */
+  function feldStufe(gegeben, soll, a){
+    if (gleich(gegeben, soll)) return { stufe: "gut", treffer: soll };
+    var T = window.LWToleranz;
+    if (!T) return { stufe: "schlecht", treffer: soll };
+    var fach = String((spiel && spiel.fach) || "").toLowerCase();
+    var verboten = (a.antworten || []).concat((a.diagnosen || []).map(function(d){ return d.antwort; }));
+    return T.pruefen(gegeben, soll, { verboten: verboten,
+      sprache: /^engl/.test(fach) ? "en" : /^fran/.test(fach) ? "fr" : "" });
+  }
 
   /* ---------- Laden ---------- */
   var id = "";
@@ -207,7 +222,8 @@
     var imSchritt = art === "teilschritte" && schrittNr < schritte.length;
     var soll = imSchritt ? schritte[schrittNr].richtig : a.richtig;
     if (!String(gegeben).trim()) return;
-    var stimmt = gleich(gegeben, soll);
+    var erg = knopf ? { stufe: gleich(gegeben, soll) ? "gut" : "schlecht", treffer: soll } : feldStufe(gegeben, soll, a);
+    var stimmt = erg.stufe === "gut" || erg.stufe === "fast";
 
     if (imSchritt){
       if (stimmt){
@@ -232,6 +248,11 @@
       });
       $("feld").disabled = true; $("pruefen").classList.add("verborgen");
       rueckmeldung(true, a.erklaerung || a.weg || "", false);
+      if (erg.stufe === "fast" && window.LWToleranz){
+        var e = $("rueckmeldung");
+        e.querySelector("b").textContent = "Fast richtig.";
+        window.LWToleranz.zeigen(e, String(gegeben).trim(), erg.treffer || soll);
+      }
       return;
     }
 
@@ -317,7 +338,8 @@
   $("nochmal").addEventListener("click", function(){ if (spiel) starten(); });
 })();
 </script>
+<script src="/toleranz.js?v=20aedc58"></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
-<script src="/lernstand.js?v=3e61289c" defer></script>
+<script src="/lernstand.js?v=fe69f5e5" defer></script>
 </body>
 </html>

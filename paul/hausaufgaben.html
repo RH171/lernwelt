@@ -866,6 +866,21 @@
     function n(x){ return String(x == null ? "" : x).toLowerCase().trim().replace(/[.,;:!?]+$/,"").replace(/\s+/g," "); }
     return n(a) === n(b);
   }
+  /* Selbst getippte Verbesserung (18.10.2026, Denny: richtige Antworten von
+     Helena galten als falsch). Regel aus /toleranz.js: ein kleiner Tippfehler
+     ist "fast" - das zaehlt, die richtige Schreibweise steht aber gross da.
+     Die Falschform selbst und die anderen Auswahlknoepfe bleiben falsch,
+     auch wenn sie nur einen Buchstaben daneben liegen, und ein Artikel im
+     Soll muss genau so dastehen ("den Hund" ist hier oft der Lernpunkt).
+     Die Auswahlknoepfe vergleichen weiter exakt (wortGleich). */
+  function verbesserungPruefen(wert, s){
+    if (wortGleich(wert, s.richtig)) return "gut";
+    var T = window.LWToleranz;
+    if (!T) return "schlecht";
+    var e = T.pruefen(wert, s.richtig, { artikelPflicht: true,
+      verboten: [s.falsch].concat(s.wahl || []) });
+    return e.stufe === "gut" || e.stufe === "fast" ? e.stufe : "schlecht";
+  }
 
   function stellenMalen(f){
     var alt = document.getElementById("f-stellen");
@@ -956,6 +971,13 @@
         ok.className = "stelle-warum gut";
         ok.textContent = "✓ " + (s.warum || "Stimmt.");
         karte.appendChild(ok);
+        if (stand["f" + i] && window.LWToleranz){
+          var fast = document.createElement("div");
+          fast.className = "stelle-warum gut";
+          fast.textContent = "Fast richtig – achte auf die Schreibweise:";
+          window.LWToleranz.zeigen(fast, stand["f" + i], s.richtig);
+          karte.appendChild(fast);
+        }
         return;
       }
 
@@ -1000,7 +1022,9 @@
         function pruefen(){
           var wert = feld.value.trim();
           if (!wert) return;
-          if (wortGleich(wert, s.richtig)) return geschafftMelden();
+          var stufe = verbesserungPruefen(wert, s);
+          if (stufe === "fast"){ stand["f" + i] = wert.slice(0, 80); return geschafftMelden(); }
+          if (stufe === "gut") return geschafftMelden();
           danebenMelden();
           rueck.textContent = s.warum || "Noch nicht – schau dir die Zeitform an.";
           rueck.classList.remove("verborgen", "gut");
@@ -1046,6 +1070,7 @@
 })();
 </script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
-<script src="/lernstand.js?v=3e61289c" defer></script>
+<script src="/toleranz.js?v=20aedc58"></script>
+<script src="/lernstand.js?v=fe69f5e5" defer></script>
 </body>
 </html>
