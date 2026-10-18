@@ -227,7 +227,10 @@
     for (i = 0; i <= n; i++) { T.push(new Array(m + 1).fill(0)); }
     for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
       T[i][j] = al[i] === bl[j] ? T[i + 1][j + 1] + 1 : Math.max(T[i + 1][j], T[i][j + 1]);
-    if (T[0][0] < Math.max(n, m) * 0.6) return null;
+    /* Nur ein Verschreiber wird markiert (hoechstens 2 Zeichen daneben).
+       "Heinrich der 3" gegen "Heinrich III." ist kein Verschreiber - dort
+       stand frueher ein grosses, verwirrendes "III." (Denny, 18.10.2026). */
+    if (abstand(al, bl) > 2) return null;
     var ga = [], ra = [];
     i = 0; j = 0;
     while (i < n || j < m) {
@@ -566,6 +569,35 @@
         var gegeben = zustand.felder[i] ? zustand.felder[i].value : "";
         return { a: a, gegeben: gegeben, stand: vergleich(gegeben, a) };
       });
+      /* Was der Buchstabenvergleich ablehnt, sieht Claude nach dem Sinn nach
+         (/api/uebung-nachsehen, 18.10.2026). Antwortet der Server nicht in
+         25 Sekunden, bleibt es beim Vergleich der Seite. */
+      var offen = ergebnisse.filter(function (e) { return e.stand === "schlecht"; });
+      if (!offen.length) return ergebnisZeigen(u, ergebnisse);
+      leeren();
+      var warte = el("div", "lwf");
+      var l = el("div", "laedt"); l.appendChild(el("i")); l.appendChild(el("span", null, "Ich lese deine Antworten noch einmal genau …"));
+      warte.appendChild(l); wohin.appendChild(warte);
+      var fertigGezeigt = false;
+      function weiter() { if (fertigGezeigt) return; fertigGezeigt = true; ergebnisZeigen(u, ergebnisse); }
+      var uhr = setTimeout(weiter, 25000);
+      fetch("/api/uebung-nachsehen", {
+        method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: kind, posten: offen.map(function (e) {
+          return { frage: e.a.frage, antwort: e.a.antwort, auch: e.a.auch || [], erklaerung: e.a.erklaerung || "", gegeben: e.gegeben };
+        }) })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (fertigGezeigt || !j || !j.ok || !Array.isArray(j.urteile)) return;
+        offen.forEach(function (e, i) {
+          var t = j.urteile[i];
+          if (!t) return;
+          if (t.richtig) { e.stand = "gut"; e.nachSinn = true; }
+          if (t.tipp) e.tipp = String(t.tipp);
+        });
+      }).catch(function () {}).then(function () { clearTimeout(uhr); weiter(); });
+    }
+
+    function ergebnisZeigen(u, ergebnisse) {
       var gut = ergebnisse.filter(function (e) { return e.stand === "gut"; }).length;
       var fast = ergebnisse.filter(function (e) { return e.stand === "fast"; }).length;
       var offen = ergebnisse.filter(function (e) { return e.stand === "offen"; }).length;
@@ -594,7 +626,8 @@
         if (e.stand === "gut") {
           sagt.appendChild(el("b", null, "✅ Richtig"));
           sagt.appendChild(el("span", null, e.gegeben));
-          schreibhilfe(e.gegeben, e.a).forEach(function (p) {
+          if (e.tipp) sagt.appendChild(zeile("Kleiner Tipp:", e.tipp));
+          else schreibhilfe(e.gegeben, e.a).forEach(function (p) {
             var u = unterschied(p[0], p[1]);
             sagt.appendChild(zeile("Kleiner Tipp, so schreibt man es:", u ? malen(u.richtig, "neu", true) : p[1]));
           });
@@ -607,6 +640,7 @@
         } else {
           sagt.appendChild(el("b", null, "✗ Noch nicht"));
           vergleichZeigen(sagt, e.gegeben, e.a.antwort, "Richtig ist:", true);
+          if (e.tipp) sagt.appendChild(zeile("Tipp:", e.tipp));
         }
         block.appendChild(sagt);
         if (e.a.erklaerung) block.appendChild(el("p", "tipptext", e.a.erklaerung));
