@@ -121,21 +121,25 @@
     /* ---- Aufgaben ---- */
     ".lwf .aufg{border-top:1px solid var(--line,#e4e7f0);padding-top:16px;margin-top:16px}",
     ".lwf .aufg:first-of-type{border-top:none;padding-top:4px;margin-top:10px}",
-    ".lwf .aufg .nr{font:700 13px var(--rund,inherit);color:var(--muted,#6b7280);letter-spacing:.04em}",
-    ".lwf .aufg .t{font:600 17px/1.45 var(--rund,inherit);margin:4px 0 0;overflow-wrap:anywhere}",
+    ".lwf .aufg .nr{font:700 14px var(--rund,inherit);color:var(--muted,#6b7280);letter-spacing:.04em}",
+    ".lwf .aufg .t{font:600 19px/1.45 var(--rund,inherit);margin:4px 0 0;overflow-wrap:anywhere}",
     ".lwf .aufg input{font:600 17px inherit;padding:12px 14px;border-radius:14px;width:100%;",
     "  border:2px solid var(--line,#e4e7f0);background:var(--feld,#fbfaff);color:var(--ink,#1b1c22);",
     "  min-height:48px;box-sizing:border-box;margin-top:10px}",
     ".lwf .aufg input:focus{outline:none;border-color:var(--akzent,var(--paul,#4f46e5))}",
     ".lwf .tippknopf{appearance:none;border:none;background:transparent;cursor:pointer;",
     "  color:var(--akzent,var(--paul,#4f46e5));font:600 15px inherit;padding:10px 0;min-height:44px}",
-    ".lwf .tipptext{margin:2px 0 0;font-size:15px;line-height:1.5;color:var(--muted,#6b7280)}",
-    ".lwf .sagt{margin-top:10px;border-radius:14px;padding:11px 13px;font-size:15.5px;line-height:1.5}",
+    ".lwf .tipptext{margin:6px 0 0;font-size:17.5px;line-height:1.55;color:var(--muted,#6b7280)}",
+    ".lwf .sagt{margin-top:10px;border-radius:14px;padding:12px 14px;font-size:19px;line-height:1.5}",
+    ".lwf .sagt .zeile{display:block;margin-top:3px;overflow-wrap:anywhere}",
+    ".lwf .sagt .zeile .wo{font-size:15px;opacity:.85;display:block}",
+    ".lwf .sagt .neu{font-weight:900;font-size:1.3em;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:3px;padding:0 1px}",
+    ".lwf .sagt .zuviel{text-decoration:line-through;text-decoration-thickness:3px;font-weight:800}",
     ".lwf .sagt.gut{background:var(--gut-hell,#e7f8f1);color:var(--gut-text,#067647)}",
     ".lwf .sagt.fast{background:var(--vertief,#fff7e6);color:var(--ink,#1b1c22)}",
     ".lwf .sagt.offen{background:var(--vertief,#f1f4fa);color:var(--ink,#1b1c22)}",
     ".lwf .sagt.schlecht{background:var(--schlecht-hell,#fff1f0);color:var(--schlecht-text,#a3251c)}",
-    ".lwf .sagt b{display:block;font:700 15.5px var(--rund,inherit);margin-bottom:2px}",
+    ".lwf .sagt b{display:block;font:700 18px var(--rund,inherit);margin-bottom:2px}",
     ".lwf .aufg.fertig input{border-color:var(--line,#e4e7f0);opacity:.85}",
     ".lwf .zahl{font:800 40px/1 var(--rund,inherit);color:var(--akzent,var(--paul,#4f46e5));margin:8px 0 2px}",
     ".lwf .knoepfe{display:grid;gap:10px;margin-top:16px}",
@@ -173,13 +177,76 @@
     try { t = t.normalize("NFD").replace(/[̀-ͯ]/g, ""); } catch (e) {}
     return t;
   }
+  /* Ein Artikel davor ist kein Fehler, wenn die Antwort selbst keinen hat:
+     "Das Zepter" für "Zepter" ist richtig (Helena, 18.10.2026), ebenso "Papst"
+     für "der Papst". Ein FALSCHER Artikel bleibt falsch. Nur deutsche
+     und englische Artikel - in Französisch gehört le/la zum Wort. */
+  var ARTIKEL = /^(der|die|das|den|dem|des|ein|eine|einen|einem|einer|eines|the|a|an) /;
+  function ohneArtikel(s) { return s.replace(ARTIKEL, ""); }
   function vergleich(gegeben, aufgabe) {
     if (!schlicht(gegeben)) return "offen";
     var alle = [aufgabe.antwort].concat(aufgabe.auch || []);
-    var i;
-    for (i = 0; i < alle.length; i++) if (schlicht(gegeben) === schlicht(alle[i])) return "gut";
-    for (i = 0; i < alle.length; i++) if (ohneAkzent(gegeben) === ohneAkzent(alle[i])) return "fast";
+    var i, g = schlicht(gegeben), r;
+    for (i = 0; i < alle.length; i++) {
+      r = schlicht(alle[i]);
+      if (g === r) return "gut";
+      if (!ARTIKEL.test(r) && ohneArtikel(g) === r) return "gut";
+      if (!ARTIKEL.test(g) && ohneArtikel(r) === g) return "gut";
+    }
+    for (i = 0; i < alle.length; i++) {
+      r = ohneAkzent(alle[i]);
+      if (ohneAkzent(gegeben) === r || (!ARTIKEL.test(r) && ohneArtikel(ohneAkzent(gegeben)) === r)) return "fast";
+    }
     return "schlecht";
+  }
+
+  /* ---------- Unterschied sichtbar machen ----------
+     Fehlt nur ein Buchstabe ("Herrschaftrechte"), sieht man das auf dem Handy
+     nicht. Buchstaben, die in der richtigen Antwort fehlen, stehen gross, fett
+     und unterstrichen da (bei "fast", also nur Akzenten, ohne Grossbuchstaben,
+     sonst stuende "ÉlÈve" da); zu viele in "Du hattest" sind durchgestrichen
+     (Denny, 18.10.2026). Nur bei aehnlichen Woertern, sonst ganz normal. */
+  function unterschied(gegeben, richtig) {
+    var a = String(gegeben || "").trim(), b = String(richtig || "").trim();
+    var al = a.toLowerCase(), bl = b.toLowerCase();
+    var n = al.length, m = bl.length;
+    if (!n || !m || n > 80 || m > 80) return null;
+    var T = [], i, j;
+    for (i = 0; i <= n; i++) { T.push(new Array(m + 1).fill(0)); }
+    for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
+      T[i][j] = al[i] === bl[j] ? T[i + 1][j + 1] + 1 : Math.max(T[i + 1][j], T[i][j + 1]);
+    if (T[0][0] < Math.max(n, m) * 0.6) return null;
+    var ga = [], ra = [];
+    i = 0; j = 0;
+    while (i < n || j < m) {
+      if (i < n && j < m && al[i] === bl[j]) { ga.push([a[i], 0]); ra.push([b[j], 0]); i++; j++; }
+      else if (j < m && (i >= n || T[i][j + 1] >= T[i + 1][j])) { ra.push([b[j], 1]); j++; }
+      else { ga.push([a[i], 1]); i++; }
+    }
+    return { gegeben: ga, richtig: ra };
+  }
+  function malen(teile, klasse, gross) {
+    var f = document.createDocumentFragment(), puffer = "";
+    function raus() { if (puffer) { f.appendChild(document.createTextNode(puffer)); puffer = ""; } }
+    teile.forEach(function (t) {
+      if (!t[1] || t[0] === " ") { puffer += t[0]; return; }
+      raus();
+      f.appendChild(el("span", klasse, gross ? t[0].toUpperCase() : t[0]));
+    });
+    raus();
+    return f;
+  }
+  function zeile(wo, inhalt) {
+    var z = el("span", "zeile");
+    z.appendChild(el("span", "wo", wo));
+    if (typeof inhalt === "string") z.appendChild(document.createTextNode(inhalt));
+    else z.appendChild(inhalt);
+    return z;
+  }
+  function vergleichZeigen(sagt, gegeben, richtig, woRichtig, gross) {
+    var u = unterschied(gegeben, richtig);
+    sagt.appendChild(zeile("Du hattest:", u ? malen(u.gegeben, "zuviel", false) : String(gegeben)));
+    sagt.appendChild(zeile(woRichtig, u ? malen(u.richtig, "neu", gross) : String(richtig)));
   }
 
   /* ---------- Die Leitung offen halten ----------
@@ -485,13 +552,13 @@
           sagt.appendChild(el("span", null, e.gegeben));
         } else if (e.stand === "fast") {
           sagt.appendChild(el("b", null, "➖ Fast – schau auf die Zeichen"));
-          sagt.appendChild(el("span", null, "Du hattest: " + e.gegeben + " · So wird es geschrieben: " + e.a.antwort));
+          vergleichZeigen(sagt, e.gegeben, e.a.antwort, "So wird es geschrieben:", false);
         } else if (e.stand === "offen") {
           sagt.appendChild(el("b", null, "➖ Die hast du leer gelassen"));
-          sagt.appendChild(el("span", null, "Richtig wäre: " + e.a.antwort));
+          sagt.appendChild(zeile("Richtig wäre:", String(e.a.antwort)));
         } else {
           sagt.appendChild(el("b", null, "✗ Noch nicht"));
-          sagt.appendChild(el("span", null, "Du hattest: " + e.gegeben + " · Richtig ist: " + e.a.antwort));
+          vergleichZeigen(sagt, e.gegeben, e.a.antwort, "Richtig ist:", true);
         }
         block.appendChild(sagt);
         if (e.a.erklaerung) block.appendChild(el("p", "tipptext", e.a.erklaerung));
@@ -561,5 +628,5 @@
     startZeigen("");
   }
 
-  global.LWFotoUebung = { einbauen: einbauen, vergleich: vergleich, fachSchluessel: fachSchluessel };
+  global.LWFotoUebung = { einbauen: einbauen, vergleich: vergleich, unterschied: unterschied, fachSchluessel: fachSchluessel };
 })(window);
