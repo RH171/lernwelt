@@ -557,7 +557,24 @@
 
       var fertig = el("button", "los", W.fertig);
       fertig.type = "button";
-      fertig.addEventListener("click", function () { pruefenUndZeigen(); });
+      /* Leere Felder: einmal darauf hinweisen und zum ersten springen, beim
+         zweiten Tippen trotzdem pruefen. Helena hatte 6 von 28 "falsch" nur
+         durch leere Felder, oft uebersehen auf dem Handy (18.10.2026). */
+      var leerHinweis = el("p", "melde schlecht");
+      var gewarnt = false;
+      fertig.addEventListener("click", function () {
+        var leer = zustand.felder.filter(function (f) { return f && !String(f.value || "").trim(); });
+        if (leer.length && !gewarnt) {
+          gewarnt = true;
+          leerHinweis.textContent = (leer.length === 1 ? "Ein Feld ist noch leer." : leer.length + " Felder sind noch leer.") +
+            " Tipp nochmal auf den Knopf, dann schaue ich trotzdem nach.";
+          fertig.textContent = "Trotzdem nachsehen";
+          try { leer[0].focus(); leer[0].scrollIntoView({ block: "center" }); } catch (e) {}
+          return;
+        }
+        pruefenUndZeigen();
+      });
+      karte.appendChild(leerHinweis);
       karte.appendChild(fertig);
       wohin.appendChild(karte);
     }
@@ -694,8 +711,9 @@
               stimmt: e.stand === "gut" || e.stand === "fast",
               nachspielzeit: false,
               sekunden: 0,
-              gegeben: e.stand === "gut" ? "" : String(e.gegeben).slice(0, 30),
-              richtig: String(e.a.antwort).slice(0, 30)
+              gegeben: e.stand === "gut" && !e.nachSinn ? "" : String(e.gegeben).slice(0, 80),
+              richtig: String(e.a.antwort).slice(0, 80),
+              frage: String(e.a.frage || "").slice(0, 160)
             };
           })
         };
