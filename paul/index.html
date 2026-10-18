@@ -443,6 +443,11 @@
     box-shadow:0 10px 28px rgba(15,118,110,.32);
   }
   .createcard.einmaleinswoche.erledigt .cc-s::before{content:"✓ ";}
+  /* Mathe-Fachwoerter (18.10.2026): dauerhafte Karte zum Merkplakat und Wort-Detektiv. */
+  .createcard.fachwoerter{
+    background:linear-gradient(125deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);
+    box-shadow:0 10px 28px rgba(29,78,216,.32);
+  }
   /* Probenstoff Mathe (13.10.2026): bis zur Mathe-Probe am 19.10.2026 jeden Tag neue Aufgaben, danach weg. */
   .createcard.probenstoff{
     background:linear-gradient(125deg,#4c1d95 0%,#5b21b6 55%,#6d28d9 100%);
@@ -648,6 +653,16 @@
     if(s&&s.tage&&s.tage[h]&&s.tage[h].length){ document.getElementById("einmaleinsWoche").classList.add("erledigt"); el.textContent="Heute schon geübt – super!"; }
     else if(plan[h]) el.textContent="Heute dran: "+plan[h]+".";
   }catch(e){}})();</script>
+  <!-- Mathe-Fachwoerter (Denny per Klickfrage, 18.10.2026: „Startkarte ab sofort“): dauerhaft, nicht ans Probendatum
+       gebunden. Fuehrt zum Merkplakat der 14 Fachwoerter mit Knopf zum Wort-Detektiv. Kapitel 121. -->
+  <a class="createcard fachwoerter" href="klasse4-mathe-fachwoerter.html" id="fachWoerter">
+    <div class="cc-ic">🔤</div>
+    <div>
+      <div class="cc-t">Mathe-Fachwörter</div>
+      <div class="cc-s">Summe, Produkt &amp; Co. – lesen und als Wort-Detektiv üben.</div>
+    </div>
+    <div class="cc-arrow">›</div>
+  </a>
 
 
   <div id="hauptwege">
