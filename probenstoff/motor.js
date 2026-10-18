@@ -35,18 +35,20 @@
     stufeMax: 2,
     benutztMax: 500,
     tageMax: 40,
-    schreibProTag: 3       // KV: höchstens drei Schreibvorgänge am Tag
+    schreibProTag: 3,      // KV: höchstens drei Schreibvorgänge am Tag (gilt auch mit Teil 3 Fachwörter)
+    fach: 20,              // Teil 3 Fachwörter: Aufgaben je Runde (18.10.2026, Denny wollte die doppelte Menge)
+    fwKisteMax: 6          // Teil 3: so viele Fachwort-Aufgaben von den Vortagen (falsch beim ersten Versuch) kommen zuerst
   };
   var THEMEN = ["mal", "teil", "rest", "punkt", "teiler"];
   var NAME = {
     mal: "Mal mit Zehnerzahlen", teil: "Teilen durch Zehnerzahlen", rest: "Teilen mit Rest",
     punkt: "Punkt vor Strich", teiler: "Teiler und Vielfache", sach: "Sachaufgabe",
-    rech: "Rechnen", raet: "Zahlenrätsel", lt: "Textaufgabe wie im Heft"
+    rech: "Rechnen", raet: "Zahlenrätsel", lt: "Textaufgabe wie im Heft", fw: "Fachwörter"
   };
   var MERKMAL = {
     mal: "probe mal mit zehnerzahlen", teil: "probe teilen durch zehnerzahlen", rest: "probe teilen mit rest",
     punkt: "probe punkt vor strich", teiler: "probe teiler und vielfache", sach: "probe sachaufgabe",
-    rech: "probe rechnen", raet: "probe zahlenraetsel", lt: "probe textaufgabe"
+    rech: "probe rechnen", raet: "probe zahlenraetsel", lt: "probe textaufgabe", fw: "probe fachwoerter"
   };
 
   /* Pauls gezählte Fehlerstellen (Blätter 06.–13.10.2026, befunde/2026-10-13-paul-mathe-stoff.txt).
@@ -324,6 +326,9 @@
     } else if ((m = /^lt:(\w+):([\w:+\/-]+)$/.exec(k))) {
       x = ltAufgabe(m[1], m[2].split(":"));
       if (!x) return null;
+    } else if (/^fw:/.test(k)) {
+      x = fwAufgabe(k);   // Teil 3 Fachwörter (18.10.2026)
+      if (!x) return null;
     } else if ((m = /^sach:(\w+):([\d:]+)$/.exec(k))) {
       var f = SACH[m[1]]; if (!f) return null;
       var s = f.apply(null, m[2].split(":").map(Number));
@@ -481,6 +486,7 @@
     return null;
   }
   function geschwister(k, n) {
+    if (/^fw:/.test(k)) return fwGeschwister(k, n);   // Fachwörter: dasselbe Wort, eine andere Frage
     var r = zufall("ps-g|" + k + "|" + (n || 1)), m, kand, t;
     for (t = 0; t < 60; t++) {
       kand = null;
@@ -535,6 +541,7 @@
   /* Gleiche Form? (für Messung und Prüfskript) */
   function form(k) {
     var x = aufgabe(k); if (!x) return "";
+    if (x.art === "fw") return "fw:" + x.begriff;
     if (x.art === "rech" || x.art === "punkt") {
       var b = k.slice(k.indexOf(":") + 1);
       return x.art + ":" + b.replace(/\d+/g, function (z) { return "s" + String(ohneNullen(+z)).length + "n" + nullen(+z); });
@@ -618,13 +625,396 @@
     return wahl;
   }
 
+
+  /* ---------- Fachwörter (18.10.2026) ----------
+   * Denny am Sonntag, 18.10.2026: Paul kennt die Bedeutung der Mathe-Fachwörter nicht (addieren, multiplizieren …)
+   * und scheitert daran in Aufgaben. Gewählt: „Liste und Übung“ – die Lernliste paul/klasse4-mathe-fachwoerter.html
+   * zum Lesen mit Papa und Teil 3 „Fachwörter“ hier im Probenstoff. Nur Paul (Probe am 19.10.2026).
+   * Die 14 Wörter stehen so in Pauls Heft „Fachbegriffe zum Einmaleins“ (06.10.2026) und auf seinen Blättern:
+   *   Heft 06.10.: Multiplikation (Ergebnis Produkt), dividieren (Ergebnis Quotient), Tauschaufgabe, Umkehraufgabe,
+   *   Vielfache, Teiler, Primzahl („Primzahlen haben als Teiler nur 1 und sich selbst“), Punkt vor Strich.
+   *   Klasse 3 und Blätter 28.–30.09.: addieren, subtrahieren (Zahlenrätsel „Addiere …“, „subtrahierst“),
+   *   Summe und Differenz (Schulbuch S. 11: „die Summe von 287 und 365“, „Von der Differenz subtrahiere …“).
+   * Nicht dabei: Faktor, Summand, Dividend, Divisor (kommen in Pauls Heft nicht vor, gezählt am 18.10.2026).
+   * Eine Quelle für Liste und Übung: FACHWORT. Merksätze ohne Begründungssätze (Frau Sy), keine Frage nach dem Grund. */
+  var FACHWORT = [
+    { id: "addieren", gruppe: "Die vier Rechenarten", wort: "addieren", nomen: "die Addition", zeichen: "+", beispiel: "25 + 17 = 42",
+      ergebnis: "Das Ergebnis heißt Summe.", merk: "Addieren heißt plus rechnen. Die Rechenart heißt Addition.", esel: "Es kommt etwas dazu. Es wird mehr." },
+    { id: "subtrahieren", gruppe: "Die vier Rechenarten", wort: "subtrahieren", nomen: "die Subtraktion", zeichen: "−", beispiel: "42 − 17 = 25",
+      ergebnis: "Das Ergebnis heißt Differenz.", merk: "Subtrahieren heißt minus rechnen. Die Rechenart heißt Subtraktion.", esel: "Es wird etwas weggenommen. Es wird weniger." },
+    { id: "multiplizieren", gruppe: "Die vier Rechenarten", wort: "multiplizieren", nomen: "die Multiplikation", zeichen: "·", beispiel: "7 · 6 = 42",
+      ergebnis: "Das Ergebnis heißt Produkt.", merk: "Multiplizieren heißt mal rechnen. Die Rechenart heißt Multiplikation.", esel: "7 · 6 heißt: siebenmal die 6." },
+    { id: "dividieren", gruppe: "Die vier Rechenarten", wort: "dividieren", nomen: "die Division", zeichen: ":", beispiel: "42 : 6 = 7",
+      ergebnis: "Das Ergebnis heißt Quotient.", merk: "Dividieren heißt geteilt rechnen. Die Rechenart heißt Division.", esel: "42 Murmeln werden gerecht an 6 Kinder verteilt." },
+    { id: "summe", gruppe: "So heißt das Ergebnis", wort: "die Summe", zeichen: "+", beispiel: "25 + 17 = 42",
+      ergebnis: "Die 42 ist die Summe.", merk: "Das Ergebnis beim Addieren (plus) heißt Summe.", esel: "Beim Plus-Rechnen zählst du alles zusammen. Das Wort fängt mit S an." },
+    { id: "differenz", gruppe: "So heißt das Ergebnis", wort: "die Differenz", zeichen: "−", beispiel: "42 − 17 = 25",
+      ergebnis: "Die 25 ist die Differenz.", merk: "Das Ergebnis beim Subtrahieren (minus) heißt Differenz.", esel: "Beim Minus-Rechnen bleibt der Unterschied übrig. Das Wort fängt mit D an." },
+    { id: "produkt", gruppe: "So heißt das Ergebnis", wort: "das Produkt", zeichen: "·", beispiel: "7 · 6 = 42",
+      ergebnis: "Die 42 ist das Produkt.", merk: "Das Ergebnis beim Multiplizieren (mal) heißt Produkt.", esel: "Mal ist eine Punktrechnung. Das Wort fängt mit P an wie Punkt." },
+    { id: "quotient", gruppe: "So heißt das Ergebnis", wort: "der Quotient", zeichen: ":", beispiel: "42 : 6 = 7",
+      ergebnis: "Die 7 ist der Quotient.", merk: "Das Ergebnis beim Dividieren (geteilt) heißt Quotient.", esel: "Beim Geteilt-Rechnen kommt etwas Kleines heraus. Das Wort fängt mit Q an." },
+    { id: "tausch", gruppe: "Aufgaben, die zusammengehören", wort: "die Tauschaufgabe", zeichen: "·", beispiel: "7 · 6 = 42 und 6 · 7 = 42",
+      ergebnis: "Das Ergebnis bleibt gleich.", merk: "Bei der Tauschaufgabe tauschen die zwei Zahlen den Platz. Das Ergebnis bleibt gleich.", esel: "Die Zahlen wechseln den Platz wie zwei Kinder auf einer Bank." },
+    { id: "umkehr", gruppe: "Aufgaben, die zusammengehören", wort: "die Umkehraufgabe", zeichen: "· und :", beispiel: "7 · 6 = 42 und 42 : 6 = 7",
+      ergebnis: "Du kommst zurück zur Zahl vom Anfang.", merk: "Die Umkehraufgabe rechnet rückwärts: Aus mal wird geteilt, aus geteilt wird mal.", esel: "Du gehst den Weg zurück und landest wieder am Anfang." },
+    { id: "vielfache", gruppe: "Teiler und Vielfache", wort: "die Vielfachen", zeichen: "·", beispiel: "Vielfache von 7: 7, 14, 21, 28, …",
+      ergebnis: "Sie stehen in der 7er-Reihe.", merk: "Die Vielfachen einer Zahl stehen in ihrer Einmaleinsreihe.", esel: "Du zählst immer dieselbe Zahl dazu: 7, 14, 21 …" },
+    { id: "teiler", gruppe: "Teiler und Vielfache", wort: "der Teiler", zeichen: ":", beispiel: "Teiler von 20: 1, 2, 4, 5, 10, 20",
+      ergebnis: "20 : 4 = 5 geht glatt auf.", merk: "Ein Teiler teilt eine Zahl glatt, ohne Rest.", esel: "Suche Malaufgaben mit dem Ergebnis: 1 · 20, 2 · 10, 4 · 5." },
+    { id: "primzahl", gruppe: "Teiler und Vielfache", wort: "die Primzahl", zeichen: "", beispiel: "Teiler von 19: 1, 19",
+      ergebnis: "19 ist eine Primzahl.", merk: "Primzahlen haben als Teiler nur 1 und sich selbst.", esel: "So eine Zahl ist ein Einzelgänger: Nur die 1 und sie selbst teilen sie." },
+    { id: "punkt", gruppe: "Die Regel", wort: "Punkt vor Strich", zeichen: "· : vor + −", beispiel: "50 − 3 · 9 = 50 − 27 = 23",
+      ergebnis: "Zuerst 3 · 9, dann minus.", merk: "Punktaufgaben (· und :) rechnest du vor Strichaufgaben (+ und −).", esel: "Erst die Punkte, dann die Striche." }
+  ];
+  var FW = {}; FACHWORT.forEach(function (c) { FW[c.id] = c; });
+  /* Die vier Rechenarten: Zeichen, Fachwort, Rechenart, Ergebnis, Bedeutung. */
+  var OPS = {
+    a: { z: "+", verb: "addieren", nomen: "Addition", erg: "Summe", art: "die", bed: "plus rechnen", v: "addieren", e: "summe", r: function (x, y) { return x + y; } },
+    s: { z: "−", verb: "subtrahieren", nomen: "Subtraktion", erg: "Differenz", art: "die", bed: "minus rechnen", v: "subtrahieren", e: "differenz", r: function (x, y) { return x - y; } },
+    m: { z: "·", verb: "multiplizieren", nomen: "Multiplikation", erg: "Produkt", art: "das", bed: "mal rechnen", v: "multiplizieren", e: "produkt", r: function (x, y) { return x * y; } },
+    d: { z: ":", verb: "dividieren", nomen: "Division", erg: "Quotient", art: "den", bed: "geteilt rechnen", v: "dividieren", e: "quotient", r: function (x, y) { return x / y; } }
+  };
+  var OPK = ["a", "s", "m", "d"];
+  var PRIM = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+  function istPrim(n) { if (n < 2) return false; for (var i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; }
+  /* Zwei Zahlen zu einer Rechenart, klein und ganz (Plus/Minus bis 100, Mal/Geteilt im Einmaleins). */
+  function fwZahlen(o, r) {
+    var a, b;
+    if (o === "a") { a = ganz(r, 12, 59); b = ganz(r, 11, 39); }
+    else if (o === "s") { a = ganz(r, 35, 99); b = ganz(r, 11, a - 12); if (2 * b === a) b++; }   // Ergebnis ≠ zweite Zahl (64 − 32)
+    else if (o === "m") { a = ganz(r, 3, 9); b = ganz(r, 3, 9); if (a === b) b = a === 9 ? 8 : a + 1; }
+    else { var q = ganz(r, 3, 9), dd = ganz(r, 3, 9); if (q === dd) dd = q === 9 ? 8 : q + 1; a = q * dd; b = dd; }
+    return [a, b];
+  }
+  function fwAufg(o, a, b) { return a + " " + OPS[o].z + " " + b + " = " + OPS[o].r(a, b); }
+  /* Ziehen je Fachwort: eine der Fragen dazu (r = Zufall). */
+  var FW_ZIEH = {};
+  OPK.forEach(function (o) {
+    FW_ZIEH[OPS[o].v] = function (r) {
+      var w = r(), z = fwZahlen(o, r);
+      if (w < .25) return "fw:bed:" + o;
+      if (w < .45) return "fw:zei:" + o;
+      if (w < .65) return "fw:art:" + o + ":" + z[0] + ":" + z[1];
+      if (w < .8) return "fw:nom:" + o;
+      return "fw:tu:" + o + ":" + z[0] + ":" + z[1];
+    };
+    FW_ZIEH[OPS[o].e] = function (r) {
+      var w = r(), z = fwZahlen(o, r);
+      if (w < .4) return "fw:erg:" + o + ":" + z[0] + ":" + z[1];
+      if (w < .65) return "fw:ena:" + o;
+      return "fw:ber:" + o + ":" + z[0] + ":" + z[1];
+    };
+  });
+  function malPaar(r) { var z = fwZahlen("m", r); return z[0] + ":" + z[1]; }
+  FW_ZIEH.tausch = function (r) { var w = r(); return (w < .45 ? "fw:tau:" : w < .7 ? "fw:tna:" : "fw:tz:") + malPaar(r); };
+  FW_ZIEH.umkehr = function (r) { var w = r(); return w < .3 ? "fw:umk:" + malPaar(r) : w < .55 ? "fw:umd:" + malPaar(r) : w < .75 ? "fw:una:" + malPaar(r) : "fw:uz:" + (r() < .5 ? "m" : "d") + ":" + malPaar(r); };
+  FW_ZIEH.vielfache = function (r) {
+    var d = ganz(r, 3, 9), w = r();
+    if (w < .4) return "fw:vf:" + d + ":" + ganz(r, 1, 99);
+    if (w < .7) return "fw:vfn:" + d + ":" + ganz(r, 3, 6);
+    return "fw:vja:" + d + ":" + (r() < .5 ? d * ganz(r, 2, 10) : d * ganz(r, 2, 9) + ganz(r, 1, d - 1));
+  };
+  var TEILER_N = [12, 16, 18, 20, 24, 28, 30, 32, 36, 40, 42, 45, 48];
+  FW_ZIEH.teiler = function (r) {
+    var n = eins(r, TEILER_N), w = r();
+    if (w < .55) return "fw:tw:" + n + ":" + ganz(r, 1, 99);
+    var tl = teilerVon(n).filter(function (t) { return t > 1 && t < n; }), nicht = [];
+    for (var i = 2; i < n; i++) if (n % i) nicht.push(i);
+    return "fw:tja:" + (r() < .5 ? eins(r, tl) : eins(r, nicht)) + ":" + n;
+  };
+  FW_ZIEH.primzahl = function (r) {
+    var w = r();
+    if (w < .45) return "fw:pr:" + ganz(r, 1, 99);
+    if (w < .8) { var n = r() < .5 ? eins(r, PRIM.slice(2)) : ganz(r, 4, 50); return "fw:pja:" + n; }
+    return "fw:pna";
+  };
+  var punktFwRoh = function (r) {
+    var a = ganz(r, 2, 9), b = ganz(r, 2, 9), w = r(), e;
+    var form = r();
+    if (form < .4) e = (10 * Math.ceil((a * b + 1) / 10) + 10 * ganz(r, 0, 2)) + "-" + a + "*" + b;
+    else if (form < .7) e = ganz(r, 3, 40) + "+" + (a * b) + "/" + b;
+    else e = a + "*" + b + "+" + ganz(r, 3, 40);
+    if (w < .45) return "fw:pz:" + e;
+    if (w < .6) return "fw:pw";
+    return "fw:pzz:" + e;
+  };
+  /* Punkt vor Strich: kein Ergebnis, das schon als Zahl oder Zwischenergebnis dasteht (60 − 5 · 6 = 30). */
+  FW_ZIEH.punkt = function (r) {
+    var k;
+    for (var i = 0; i < 30; i++) {
+      k = punktFwRoh(r); var x = fwAufgabe(k);
+      if (!x || x.typ !== "zahl") return k;
+      var zz = k.slice(7).split(/[-+*\/]/).map(Number);
+      if (zz.indexOf(x.loesung) < 0 && x.loesung !== x.pw) return k;
+    }
+    return k;
+  };
+  var FW_IDS = FACHWORT.map(function (c) { return c.id; });
+
+  /* Der Fachwort-Teil einer Aufgabe: Text, Antwort, Auswahl, Hilfe-Bausteine. */
+  function fwMischen(k, liste) { return mischen(liste, zufall("fw-o|" + k)); }
+  function fwAufgabe(k) {
+    var p = k.split(":"), f = p[1], x = { art: "fw", typ: "wahl" }, o, a, b, c, n, d;
+    if (f === "bed" || f === "zei" || f === "nom" || f === "ena") {
+      o = p[2]; if (!OPS[o]) return null;
+      x.begriff = f === "ena" ? OPS[o].e : OPS[o].v;
+      if (f === "bed") { x.text = "Was heißt " + OPS[o].verb + "?"; x.loesung = OPS[o].bed; x.optionen = OPK.map(function (q) { return OPS[q].bed; }); }
+      if (f === "zei") { x.text = "Welches Rechenzeichen gehört zu " + OPS[o].verb + "?"; x.loesung = OPS[o].z; x.optionen = OPK.map(function (q) { return OPS[q].z; }); x.zeichen = 1; }
+      if (f === "nom") { x.text = "Wie heißt die Rechenart, bei der du " + OPS[o].bed.replace(" rechnen", "") + " rechnest?"; x.loesung = OPS[o].nomen; x.optionen = OPK.map(function (q) { return OPS[q].nomen; }); }
+      if (f === "ena") { x.text = "Wie nennt man das Ergebnis der " + OPS[o].nomen + "?"; x.loesung = OPS[o].erg; x.optionen = OPK.map(function (q) { return OPS[q].erg; }); }
+      x.schau = FW[x.begriff].beispiel + ". " + (f === "ena" ? FW[x.begriff].ergebnis : OPS[o].verb.charAt(0).toUpperCase() + OPS[o].verb.slice(1) + " heißt " + OPS[o].bed + ".");
+      if (f === "bed") x.schau = FW[x.begriff].beispiel + ". Schau auf das Rechenzeichen " + OPS[o].z + ".";
+      if (f === "ena") x.schau = "Bei " + FW[x.begriff].beispiel + " ist das Ergebnis " + FW[x.begriff].beispiel.split(" = ")[1] + ". " + FW[x.begriff].ergebnis.replace(/^Die \d+ ist /, "Diese Zahl ist ");
+      x.bestaetigung = f === "ena" ? "Das Ergebnis der " + OPS[o].nomen + " heißt " + OPS[o].erg : f === "zei" ? OPS[o].verb + ": " + OPS[o].z : f === "nom" ? OPS[o].bed + " heißt " + OPS[o].nomen : OPS[o].verb + " heißt " + OPS[o].bed;
+    } else if (f === "art" || f === "erg" || f === "tu" || f === "ber") {
+      o = p[2]; a = +p[3]; b = +p[4]; if (!OPS[o] || !(a > 0) || !(b > 0)) return null;
+      c = OPS[o].r(a, b); if (c !== Math.floor(c) || c <= 0) return null;
+      var auf = fwAufg(o, a, b);
+      x.aufg = auf; x.zahlen = [a, b, c];
+      if (f === "art") {
+        x.begriff = OPS[o].v; x.text = auf + ". Welches Fachwort passt zu dieser Aufgabe?"; x.loesung = OPS[o].verb; x.optionen = OPK.map(function (q) { return OPS[q].verb; });
+        x.schau = "Bei " + auf + " steht das Zeichen " + OPS[o].z + ". " + OPS[o].z + " heißt " + OPS[o].bed + "."; x.bestaetigung = auf + ": " + OPS[o].verb;
+      }
+      if (f === "erg") {
+        x.begriff = OPS[o].e; x.text = auf + ". Wie heißt die " + c + "?"; x.loesung = OPS[o].erg; x.optionen = OPK.map(function (q) { return OPS[q].erg; });
+        x.schau = FW[x.begriff].beispiel + ". " + FW[x.begriff].ergebnis; x.bestaetigung = auf + ": Die " + c + " ist " + (OPS[o].art === "den" ? "der" : OPS[o].art) + " " + OPS[o].erg;
+      }
+      if (f === "tu" || f === "ber") {
+        x.typ = "zahl"; x.frage = "?"; x.satz = "Das Ergebnis ist"; x.loesung = c; x.op = o; x.a = a; x.b = b;
+        x.begriff = f === "tu" ? OPS[o].v : OPS[o].e;
+        if (f === "tu") x.text = o === "a" ? "Addiere zu " + a + " die Zahl " + b + "." : o === "s" ? "Subtrahiere von " + a + " die Zahl " + b + "." : o === "m" ? "Multipliziere " + a + " mit " + b + "." : "Dividiere " + a + " durch " + b + ".";
+        else x.text = "Berechne " + OPS[o].art + " " + (o === "d" ? "Quotienten" : OPS[o].erg) + " von " + a + " und " + b + ".";
+        x.schau = (f === "tu" ? OPS[o].verb.charAt(0).toUpperCase() + OPS[o].verb.slice(1) + " heißt " + OPS[o].bed : OPS[o].erg + " heißt: " + OPS[o].bed) + ". Rechne " + a + " " + OPS[o].z + " " + b + " = ?";
+        x.bestaetigung = a + " " + OPS[o].z + " " + b + " = " + c;
+      }
+    } else if (f === "tau" || f === "tna" || f === "tz" || f === "umk" || f === "umd" || f === "una") {
+      a = +p[2]; b = +p[3]; if (!(a >= 2 && b >= 2 && a !== b && a <= 10 && b <= 10)) return null;
+      c = a * b;
+      var mal = a + " · " + b + " = " + c, tausch = b + " · " + a + " = " + c, umk = c + " : " + b + " = " + a, plus = a + " + " + b + " = " + (a + b);
+      x.zahlen = [a, b, c];
+      if (f === "tau") { x.begriff = "tausch"; x.text = "Welche Aufgabe ist die Tauschaufgabe zu " + mal + "?"; x.loesung = tausch; x.optionen = [tausch, umk, plus, a + " · " + a + " = " + (a * a)]; x.aufgaben = 1;
+        x.schau = FW.tausch.beispiel + ". Die zwei Zahlen tauschen den Platz."; x.bestaetigung = "Tauschaufgabe zu " + mal + ": " + tausch; }
+      if (f === "tna") { x.begriff = "tausch"; x.text = mal + " und " + tausch + ". Wie heißen solche Aufgaben?"; x.loesung = "Tauschaufgaben"; x.optionen = ["Tauschaufgaben", "Umkehraufgaben"];
+        x.schau = "Die Zahlen " + a + " und " + b + " haben den Platz getauscht. Das Ergebnis bleibt " + c + "."; x.bestaetigung = mal + " und " + tausch + " sind Tauschaufgaben"; }
+      if (f === "tz") { x.begriff = "tausch"; x.typ = "zahl"; x.text = mal + ". Rechne die Tauschaufgabe."; x.frage = b + " · " + a + " = ?"; x.loesung = c;
+        var bei = c === 18 ? ["3 · 4", "4 · 3", 12] : ["2 · 9", "9 · 2", 18];
+        x.schau = "Bei " + bei[0] + " und " + bei[1] + " kommt beide Male " + bei[2] + " heraus. Schau auf " + mal.replace(" = " + c, "") + "."; x.bestaetigung = tausch; }
+      if (f === "umk") { x.begriff = "umkehr"; x.text = "Welche Aufgabe ist die Umkehraufgabe zu " + mal + "?"; x.loesung = umk; x.optionen = [umk, tausch, plus, c + " − " + b + " = " + (c - b)]; x.aufgaben = 1;
+        x.schau = FW.umkehr.beispiel + ". Aus mal wird geteilt."; x.bestaetigung = "Umkehraufgabe zu " + mal + ": " + umk; }
+      if (f === "umd") { x.begriff = "umkehr"; x.text = "Welche Aufgabe ist die Umkehraufgabe zu " + umk + "?"; x.loesung = a + " · " + b + " = " + c; x.optionen = [x.loesung, c + " − " + b + " = " + (c - b), c + " + " + b + " = " + (c + b), plus]; x.aufgaben = 1;
+        x.schau = "42 : 6 = 7 und 7 · 6 = 42. Aus geteilt wird mal."; x.bestaetigung = "Umkehraufgabe zu " + umk + ": " + x.loesung; }
+      if (f === "una") { x.begriff = "umkehr"; x.text = mal + " und " + umk + ". Wie heißen solche Aufgaben?"; x.loesung = "Umkehraufgaben"; x.optionen = ["Tauschaufgaben", "Umkehraufgaben"];
+        x.schau = "Aus mal wird geteilt: Du rechnest rückwärts und landest wieder bei " + a + "."; x.bestaetigung = mal + " und " + umk + " sind Umkehraufgaben"; }
+      if (f === "tz") x.optionen = null;
+    } else if (f === "uz") {
+      var art2 = p[2]; a = +p[3]; b = +p[4]; if ((art2 !== "m" && art2 !== "d") || !(a >= 2 && b >= 2 && a <= 10 && b <= 10)) return null;
+      c = a * b; x.begriff = "umkehr"; x.typ = "zahl"; x.zahlen = [a, b, c];
+      if (art2 === "m") { x.text = "Bilde die Umkehraufgabe zu " + a + " · " + b + " = " + c + "."; x.frage = c + " : " + b + " = ?"; x.loesung = a; x.bestaetigung = c + " : " + b + " = " + a; x.schau = "Aus mal wird geteilt. Du rechnest rückwärts und landest wieder bei der ersten Zahl."; }
+      else { x.text = "Bilde die Umkehraufgabe zu " + c + " : " + b + " = " + a + "."; x.frage = a + " · " + b + " = ?"; x.loesung = c; x.bestaetigung = a + " · " + b + " = " + c; x.schau = "Aus geteilt wird mal. Du rechnest rückwärts und landest wieder bei der Zahl vom Anfang."; }
+    } else if (f === "vf" || f === "tw" || f === "pr") {
+      n = +p[2]; var rr = zufall("fw-z|" + k), ja, nein = [];
+      if (f === "vf") {
+        if (!(n >= 2 && n <= 10)) return null;
+        x.begriff = "vielfache"; ja = n * ganz(rr, 2, 10);
+        for (var i = n + 1; i < 10 * n; i++) if (i % n && Math.abs(i - ja) <= 3 * n) nein.push(i);
+        x.text = "Welche Zahl ist ein Vielfaches von " + n + "?"; x.schau = "Die " + n + "er-Reihe: " + reihe(n, 5 * n) + " …"; x.bestaetigung = ja + " steht in der " + n + "er-Reihe";
+        x.d = n;
+      } else if (f === "tw") {
+        if (TEILER_N.indexOf(n) < 0) return null;
+        x.begriff = "teiler"; var tl = teilerVon(n).filter(function (t) { return t > 1 && t < n; }); ja = eins(rr, tl);
+        for (var j = 2; j < n; j++) if (n % j) nein.push(j);
+        x.text = "Welche Zahl ist ein Teiler von " + n + "?"; x.schau = "Suche Malaufgaben mit dem Ergebnis " + n + ": " + paare(n).join(", ") + "."; x.bestaetigung = n + " : " + ja + " = " + (n / ja) + ", das geht glatt auf";
+        x.n = n;
+      } else {
+        x.begriff = "primzahl"; ja = eins(rr, PRIM.slice(1));
+        for (var q = 4; q <= 50; q++) if (!istPrim(q)) nein.push(q);
+        x.text = "Welche Zahl ist eine Primzahl?"; x.schau = FW.primzahl.beispiel + ". Die 19 hat nur zwei Teiler: die 1 und sich selbst."; x.bestaetigung = "Teiler von " + ja + ": 1, " + ja + ". " + ja + " ist eine Primzahl";
+        if (ja === 19) x.schau = "Teiler von 13: 1, 13. Die 13 hat nur zwei Teiler: die 1 und sich selbst.";
+      }
+      x.loesung = String(ja);
+      x.optionen = [String(ja)].concat(mischen(nein, rr).slice(0, 3).map(String));
+      if (x.optionen.length < 4) return null;
+    } else if (f === "vfn") {
+      d = +p[2]; n = +p[3]; if (!(d >= 2 && d <= 10 && n >= 2 && n <= 9)) return null;
+      var zz = []; for (var t = 1; t <= n; t++) zz.push(t * d);
+      x.begriff = "vielfache"; x.typ = "zahl"; x.text = "Schreibe die Vielfachen von " + d + " weiter."; x.frage = zz.join(", ") + ", ?"; x.loesung = (n + 1) * d;
+      x.schau = "Du zählst immer " + d + " dazu: " + (n * d) + " + " + d + " = ?"; x.bestaetigung = "Vielfache von " + d + ": " + zz.join(", ") + ", " + ((n + 1) * d);
+    } else if (f === "vja" || f === "tja" || f === "pja") {
+      x.optionen = ["Ja", "Nein"];
+      if (f === "vja") { d = +p[2]; n = +p[3]; if (!(d >= 2 && n > d)) return null; x.begriff = "vielfache"; x.text = "Ist " + n + " ein Vielfaches von " + d + "?"; x.loesung = n % d ? "Nein" : "Ja";
+        x.schau = "Die " + d + "er-Reihe: " + reihe(d, 10 * d) + "."; x.bestaetigung = n % d ? n + " steht nicht in der " + d + "er-Reihe" : n + " steht in der " + d + "er-Reihe"; }
+      if (f === "tja") { d = +p[2]; n = +p[3]; if (!(d >= 2 && n > d)) return null; x.begriff = "teiler"; x.text = "Ist " + d + " ein Teiler von " + n + "?"; x.loesung = n % d ? "Nein" : "Ja";
+        x.schau = "Rechne " + n + " : " + d + ". Geht es glatt auf, ohne Rest?"; x.bestaetigung = n % d ? n + " : " + d + " geht nicht glatt auf" : n + " : " + d + " = " + (n / d) + ", das geht glatt auf"; }
+      if (f === "pja") { n = +p[2]; if (!(n >= 2 && n <= 50)) return null; x.begriff = "primzahl"; x.text = "Ist " + n + " eine Primzahl?"; x.loesung = istPrim(n) ? "Ja" : "Nein";
+        var tn = teilerVon(n); x.schau = "Suche alle Teiler von " + n + ". Sind es nur die 1 und " + n + "?"; x.bestaetigung = "Teiler von " + n + ": " + tn.join(", ") + (istPrim(n) ? ". " + n + " ist eine Primzahl" : ". " + n + " ist keine Primzahl"); }
+    } else if (f === "pna") {
+      x.begriff = "primzahl"; x.text = "Eine Zahl hat als Teiler nur 1 und sich selbst. Wie heißt so eine Zahl?"; x.loesung = "Primzahl"; x.optionen = ["Primzahl", "Vielfaches", "Produkt", "Quotient"];
+      x.schau = "Teiler von 13: 1, 13. So eine Zahl heißt P…"; x.bestaetigung = "So eine Zahl heißt Primzahl";
+    } else if (f === "pw") {
+      x.begriff = "punkt"; x.text = "Punkt vor Strich: Welche Aufgaben rechnest du zuerst?"; x.loesung = "Mal und geteilt (· und :)"; x.optionen = ["Mal und geteilt (· und :)", "Plus und minus (+ und −)"];
+      x.schau = FW.punkt.beispiel + ". Zuerst kommt 3 · 9."; x.bestaetigung = "Punktaufgaben zuerst: mal und geteilt";
+    } else if (f === "pz" || f === "pzz") {
+      var m = /^(\d+)([-+*\/])(\d+)([-+*\/])(\d+)$/.exec(p[2] || ""); if (!m) return null;
+      var A = +m[1], o1 = m[2], B = +m[3], o2 = m[4], C = +m[5], pv = punktOp(o1);
+      if (pv === punktOp(o2)) return null;
+      var pt = pv ? A + " " + zeichen(o1) + " " + B : B + " " + zeichen(o2) + " " + C, st = pv ? B + " " + zeichen(o2) + " " + C : A + " " + zeichen(o1) + " " + B;
+      var pw = pv ? rechne(A, o1, B) : rechne(B, o2, C); if (pw !== Math.floor(pw)) return null;
+      var erg = pv ? rechne(pw, o2, C) : rechne(A, o1, pw); if (!(erg >= 0)) return null;
+      var ausdr = A + " " + zeichen(o1) + " " + B + " " + zeichen(o2) + " " + C;
+      x.begriff = "punkt"; x.punktTeil = pt; x.pw = pw;
+      if (f === "pz") { x.text = "Was rechnest du bei " + ausdr + " zuerst?"; x.loesung = pt; x.optionen = [pt, st]; x.aufgaben = 1;
+        x.schau = "In " + ausdr + " steht ein Punktzeichen. Die Punktaufgabe kommt zuerst."; x.bestaetigung = "Zuerst " + pt + " = " + pw; }
+      else { x.typ = "zahl"; x.text = "Rechne mit Punkt vor Strich."; x.frage = ausdr + " = ?"; x.loesung = erg;
+        var lr = rechne(rechne(A, o1, B), o2, C); x.links = lr === Math.floor(lr) && lr !== erg ? lr : null; x.punktZeichen = zeichen(pv ? o1 : o2);
+        x.schau = "Zuerst " + pt + " = " + pw + ". Dann " + (pv ? pw + " " + zeichen(o2) + " " + C : A + " " + zeichen(o1) + " " + pw) + " = ?";
+        x.bestaetigung = ausdr + " = " + (pv ? pw + " " + zeichen(o2) + " " + C : A + " " + zeichen(o1) + " " + pw) + " = " + erg; }
+    } else return null;
+    if (x.typ === "wahl") {
+      if (!x.optionen || x.optionen.indexOf(x.loesung) < 0) return null;
+      var u = {}; x.optionen.forEach(function (v) { u[v] = 1; }); if (Object.keys(u).length !== x.optionen.length) return null;
+      x.optionen = fwMischen(k, x.optionen);
+    }
+    if (x.typ === "zahl" && (x.loesung !== Math.floor(x.loesung) || x.loesung < 0)) return null;
+    x.bestaetigung = x.bestaetigung.charAt(0).toUpperCase() + x.bestaetigung.slice(1);
+    x.karte = FW[x.begriff];
+    return x;
+  }
+  /* Was ein falsch gewähltes Wort bedeutet (Denkfehler benennen, nicht tadeln). */
+  var FW_BED = {};
+  OPK.forEach(function (o) {
+    FW_BED[OPS[o].bed] = OPS[o].verb.charAt(0).toUpperCase() + OPS[o].verb.slice(1) + " heißt " + OPS[o].bed + ".";
+    FW_BED[OPS[o].verb] = OPS[o].verb.charAt(0).toUpperCase() + OPS[o].verb.slice(1) + " heißt " + OPS[o].bed + ". Das Zeichen ist " + OPS[o].z + ".";
+    FW_BED[OPS[o].nomen] = "Die " + OPS[o].nomen + " ist das " + OPS[o].bed.replace(" rechnen", "") + "-Rechnen.";
+    FW_BED[OPS[o].erg] = FW[OPS[o].e].merk;
+    FW_BED[OPS[o].z] = OPS[o].z + " heißt " + OPS[o].bed + ".";
+  });
+  FW_BED["Tauschaufgaben"] = "Bei Tauschaufgaben tauschen die zwei Zahlen den Platz.";
+  FW_BED["Umkehraufgaben"] = "Bei Umkehraufgaben wird aus mal geteilt.";
+  FW_BED["Vielfaches"] = "Ein Vielfaches steht in einer Einmaleinsreihe.";
+  FW_BED["Plus und minus (+ und −)"] = "Plus und minus sind Strichaufgaben. Die kommen danach.";
+  function fwDenkfehler(x, e) {
+    if (e === "" || e == null) return "";
+    if (x.typ === "zahl") {
+      var v = +e;
+      if (x.op) {
+        for (var i = 0; i < OPK.length; i++) { var q = OPK[i]; if (q !== x.op && OPS[q].r(x.a, x.b) === v) return "Du hast " + OPS[q].bed.replace(" rechnen", "") + " gerechnet. " + (x.text.indexOf("Berechne") === 0 ? OPS[x.op].erg + " heißt " + OPS[x.op].bed + "." : OPS[x.op].verb.charAt(0).toUpperCase() + OPS[x.op].verb.slice(1) + " heißt " + OPS[x.op].bed + "."); }
+      }
+      if (x.links != null && v === x.links) return "Du hast von links nach rechts gerechnet. Punkt vor Strich: Zuerst kommt " + x.punktZeichen + ".";
+      return "";
+    }
+    if (e === x.loesung) return "";
+    if (FW_BED[e]) return FW_BED[e];
+    if (x.d && /^\d+$/.test(e)) return e + " steht nicht in der " + x.d + "er-Reihe.";
+    if (x.n && /^\d+$/.test(e)) return x.n + " : " + e + " geht nicht glatt auf.";
+    if (x.begriff === "primzahl" && /^\d+$/.test(e)) { var tt = teilerVon(+e).filter(function (t) { return t > 1 && t < +e; }); return e + " hat noch mehr Teiler, zum Beispiel " + tt[0] + "."; }
+    if (x.aufgaben) {
+      if (/ · /.test(e) && /Tausch/.test(x.text)) return "Das ist eine Malaufgabe, aber die Zahlen stehen nicht getauscht da.";
+      if (/ · /.test(e)) return e + " ist die Tauschaufgabe. Gesucht ist die Umkehraufgabe.";
+      if (/ : /.test(e)) return /Umkehr/.test(x.text) ? "" : e + " ist die Umkehraufgabe. Gesucht ist die Tauschaufgabe.";
+      if (/ \+ /.test(e)) return "Bei " + e + " wird plus gerechnet.";
+      if (/ − /.test(e)) return "Bei " + e + " wird minus gerechnet.";
+    }
+    return "";
+  }
+  /* Verrät ein Satz die Antwort? (Stufe 1 darf es nicht.) */
+  function fwVerraet(s, x) {
+    var l = String(x.loesung).toLowerCase(), t = s.toLowerCase();
+    if (x.typ === "zahl") return x.loesung >= 10 && new RegExp("(^|[^0-9])" + x.loesung + "([^0-9]|$)").test(s);
+    if (l === "ja" || l === "nein") return false;   // Ja/Nein: der Merksatz nennt keine Antwort
+    var kl = /\(([^)]+)\)/.exec(l); if (kl && t.indexOf(kl[1]) >= 0) return true;   // „(· und :)“
+    if (/^\d+$/.test(l)) return new RegExp("(^|[^0-9])" + l + "([^0-9]|$)").test(s);
+    var stamm = l.replace(/aufgaben$/, "aufgabe").slice(0, Math.max(4, Math.min(l.length, 6)));
+    return t.indexOf(l) >= 0 || t.indexOf(stamm) >= 0;
+  }
+  /* Stufe 1: der Merksatz aus der Lernliste. Würde er die Antwort nennen, die Eselsbrücke derselben Karte. */
+  function fwStufe1(x) {
+    var c = x.karte;
+    if (!fwVerraet(c.merk, x)) return "Merksatz: " + c.merk;
+    if (!fwVerraet(c.esel, x)) return "So merkst du es dir: " + c.esel;
+    return "Lies die Frage noch einmal in Ruhe.";
+  }
+  function fwStufe2(x) { return "Schau: " + x.schau + (x.typ === "zahl" ? " Tipp es jetzt selbst ein." : " Tippe jetzt die passende Antwort an."); }
+
+  /* Die Fachwort-Runde eines Tages: Kiste (gestern falsch, zuerst), dann jedes der 14 Wörter einmal,
+     der Rest nach Fehlergewicht. nr = 0 Tagesrunde (mit Kiste), nr > 0 „Noch eine Runde“ ohne Kiste. */
+  function fwLeer() { var f = {}; FW_IDS.forEach(function (id) { f[id] = 1; }); return { f: f, kiste: {}, o: 0, benutzt: [], heute: { d: "", n: 0 } }; }
+  function fwPruefen(w) {
+    var l = fwLeer();
+    if (!w || typeof w !== "object") return l;
+    FW_IDS.forEach(function (id) { if (w.f && w.f[id] != null) l.f[id] = Math.max(0, +w.f[id] || 0); });
+    if (w.kiste && typeof w.kiste === "object") Object.keys(w.kiste).forEach(function (k) { if (/^fw:/.test(k) && fwAufgabe(k)) l.kiste[k] = w.kiste[k]; });
+    l.o = +w.o || 0;
+    l.benutzt = Array.isArray(w.benutzt) ? w.benutzt.slice(-300) : [];
+    l.heute = w.heute && typeof w.heute === "object" ? { d: String(w.heute.d || ""), n: +w.heute.n || 0 } : l.heute;
+    return l;
+  }
+  function fachNr(stand, heute) { var w = stand.fw || fwLeer(); return w.heute && w.heute.d === heute ? w.heute.n : 0; }
+  function fwGeschwister(k, n) {
+    var x = fwAufgabe(k); if (!x) return k;
+    var r = zufall("fw-g|" + k + "|" + (n || 1));
+    for (var t = 0; t < 40; t++) { var g = FW_ZIEH[x.begriff](r); if (g !== k && fwAufgabe(g)) return g; }
+    return k;
+  }
+  function fachRunde(stand, heute, nr) {
+    nr = nr || 0;
+    var w = fwPruefen(stand.fw), r = zufall("fw|" + heute + "|" + nr), liste = [], belegt = {}, gedeckt = {};
+    if (nr === 0) {
+      Object.keys(w.kiste).sort(function (a, b) { return (w.kiste[a].o || 0) - (w.kiste[b].o || 0); }).slice(0, EIN.fwKisteMax).forEach(function (kk) {
+        var e = w.kiste[kk], k = (e.z || 0) ? fwGeschwister(kk, e.z) : kk, x = fwAufgabe(k);
+        if (!x || belegt[k]) return;
+        belegt[k] = 1; gedeckt[x.begriff] = 1; liste.push({ k: k, kk: kk });
+      });
+    }
+    function ziehe(id) {
+      var k = null;
+      for (var v = 0; v < 30; v++) { k = FW_ZIEH[id](r); if (!belegt[k] && w.benutzt.indexOf(k) < 0) break; }
+      for (var v2 = 0; v2 < 30 && belegt[k]; v2++) k = FW_ZIEH[id](r);
+      if (belegt[k] || !fwAufgabe(k)) return;
+      belegt[k] = 1; liste.push({ k: k });
+    }
+    mischen(FW_IDS, r).forEach(function (id) { if (!gedeckt[id] && liste.length < EIN.fach) ziehe(id); });
+    // Der Rest nach Fehlergewicht: wer oft danebenlag, kommt öfter (Gleichstand: Tageszufall).
+    var extra = {}, zuf = {}; FW_IDS.forEach(function (id) { zuf[id] = r(); extra[id] = 0; });
+    for (var i = 0; liste.length < EIN.fach && i < 40; i++) {
+      var best = null, bw = -1e9;
+      FW_IDS.forEach(function (id) { var g = (w.f[id] || 0) - 1.2 * extra[id] + zuf[id] * 0.8; if (g > bw) { bw = g; best = id; } });
+      extra[best]++; ziehe(best);
+    }
+    return mischen(liste, r);
+  }
+  /* Buchen einer Fachwort-Runde (ein Aufruf je fertiger Runde, danach schreibt die Seite EINMAL). */
+  function buchenFach(stand, heute, erg, nr) {
+    var s = standPruefen(JSON.parse(JSON.stringify(stand))), w = s.fw;
+    erg.forEach(function (e) {
+      var x = fwAufgabe(e.k); if (!x) return;
+      w.f[x.begriff] = e.ok ? Math.max(0, (w.f[x.begriff] || 0) - 0.5) : (w.f[x.begriff] || 0) + 1;
+      if (e.kk && w.kiste[e.kk]) {
+        var ke = w.kiste[e.kk];
+        if (ke.zd !== heute) { ke.z = (ke.z || 0) + 1; ke.zd = heute; }
+        if (!e.ok) { ke.s = 0; ke.d = heute; }
+        else if (ke.d !== heute) { ke.s = (ke.s || 0) + 1; ke.d = heute; if (ke.s >= EIN.sitztNach) delete w.kiste[e.kk]; }
+      } else if (!e.ok) {
+        if (w.kiste[e.k]) { w.kiste[e.k].s = 0; w.kiste[e.k].d = heute; }
+        else w.kiste[e.k] = { s: 0, d: heute, z: 0, zd: heute, o: w.o++ };
+      }
+      if (w.benutzt.indexOf(e.k) < 0) w.benutzt.push(e.k);
+    });
+    if (w.benutzt.length > 300) w.benutzt = w.benutzt.slice(-300);
+    w.heute = w.heute && w.heute.d === heute ? { d: heute, n: w.heute.n + 1 } : { d: heute, n: 1 };
+    var tag = s.tage[heute] = s.tage[heute] || [];
+    tag.push({ t: 3, nr: nr || 0, a: [erg.filter(function (e) { return e.ok; }).length, erg.length],
+      f: erg.filter(function (e) { return !e.ok; }).map(function (e) { return e.k; }).slice(0, 12) });
+    return s;
+  }
+
   /* ---------- Stand ---------- */
   function leererStand() {
     var th = {};
     THEMEN.forEach(function (t) { th[t] = { s: 0, r: 0, f: START_F[t] }; });
     var kiste = {};
     SAAT.forEach(function (e, i) { kiste[e.k] = { s: 0, d: "", z: 0, zd: "", o: i }; });
-    return { v: 1, themen: th, kiste: kiste, o: SAAT.length, weg: [], benutzt: [], tage: {}, heute: { d: "", t1: 0, t2: 0, n: 0 }, schreib: { d: "", n: 0 } };
+    return { v: 1, themen: th, kiste: kiste, o: SAAT.length, weg: [], benutzt: [], tage: {}, heute: { d: "", t1: 0, t2: 0, n: 0 }, schreib: { d: "", n: 0 }, fw: fwLeer() };
   }
   function standPruefen(s) {
     var l = leererStand();
@@ -640,6 +1030,7 @@
     l.tage = s.tage && typeof s.tage === "object" ? s.tage : {};
     l.heute = s.heute && typeof s.heute === "object" ? { d: String(s.heute.d || ""), t1: +s.heute.t1 || 0, t2: +s.heute.t2 || 0, n: +s.heute.n || 0 } : l.heute;
     l.schreib = s.schreib && typeof s.schreib === "object" ? { d: String(s.schreib.d || ""), n: +s.schreib.n || 0 } : l.schreib;
+    l.fw = fwPruefen(s.fw);   // Teil 3 Fachwörter (18.10.2026)
     return l;
   }
   function heuteStand(stand, heute) {
@@ -758,17 +1149,20 @@
   function stimmt(x, e) {
     if (x.typ === "zahl") return zahlOder(e) === x.loesung;
     if (x.typ === "rest") return e && zahlOder(e.q) === x.loesung.q && zahlOder(e.r) === x.loesung.r;
+    if (x.typ === "wahl") return e != null && String(e) === x.loesung;
     var s = (e || []).map(Number).sort(function (a, b) { return a - b; });
     return s.join(",") === x.loesung.join(",");
   }
   function loesungText(x) {
     if (x.typ === "rest") return x.loesung.q + " R " + x.loesung.r;
     if (x.typ === "tippen") return x.loesung.join(", ");
+    if (x.typ === "wahl") return x.loesung;
     return String(x.loesung);
   }
   function eingabeText(x, e) {
     if (x.typ === "rest") return (e && e.q !== "" ? e.q : "?") + " R " + (e && e.r !== "" ? e.r : "?");
     if (x.typ === "tippen") return (e || []).slice().sort(function (a, b) { return a - b; }).join(", ");
+    if (x.typ === "wahl") return String(e == null ? "" : e);
     return String(e);
   }
 
@@ -779,6 +1173,7 @@
   function denkfehler(x, e) {
     var v, s;
     if (e === "" || e == null) return "";
+    if (x.art === "fw") return fwDenkfehler(x, e);
     if (x.art === "mal" && !x.platz) {
       v = +e; var sm = x.sa * x.sb, zz = Math.pow(10, x.z);
       if (v === sm) return x.z === 1 ? "Die Null fehlt noch." : "Die Nullen fehlen noch.";
@@ -837,6 +1232,7 @@
   }
   function stufe1(x) {
     switch (x.art) {
+      case "fw": return fwStufe1(x);
       case "mal":
         if (x.platz) {
           var zb = nullen(x.bek), zp = nullen(x.p);
@@ -880,6 +1276,7 @@
   function stufe2(x) {
     var t = " Tipp es jetzt selbst ein.";
     switch (x.art) {
+      case "fw": return fwStufe2(x);
       case "mal":
         if (x.platz) {
           var b = nullen(x.bek) ? x.bek / 10 : x.bek, p = x.p / 10;
@@ -921,12 +1318,13 @@
     return "";
   }
   function hilfe(x, versuche, e) {
-    if (versuche >= 4) return "Die Lösung ist " + loesungText(x) + (x.typ === "tippen" ? ". Tippe genau diese Zahlen an." : ". Tipp sie jetzt ein.");
+    if (versuche >= 4) return x.typ === "wahl" ? "Die Lösung ist „" + x.loesung + "“. Tippe sie an." : "Die Lösung ist " + loesungText(x) + (x.typ === "tippen" ? ". Tippe genau diese Zahlen an." : ". Tipp sie jetzt ein.");
     var d = denkfehler(x, e), h = versuche >= 2 ? stufe2(x) : stufe1(x);
     return (d ? d + " " : "") + h;
   }
   function bestaetigung(x) {
     switch (x.art) {
+      case "fw": return x.bestaetigung;
       case "punkt": return x.frage.replace(" = ?", "") + " = " + x.rest(x.pv) + " = " + x.loesung;
       case "teiler": return (x.wovon === "teiler" ? "Teiler von " + x.n + ": " : "Vielfache von " + x.d + ": ") + x.loesung.join(", ");
       case "sach": return x.rechnung + " = " + loesungText(x) + (x.typ === "zahl" && x.einheit === "€" ? " €" : "");
@@ -997,7 +1395,8 @@
     stimmt: stimmt, loesungText: loesungText, eingabeText: eingabeText,
     denkfehler: denkfehler, hilfe: hilfe, bestaetigung: bestaetigung,
     leererStand: leererStand, standPruefen: standPruefen, heuteStand: heuteStand, buchen: buchen,
-    darfSchreiben: darfSchreiben, geschrieben: geschrieben, teilerVon: teilerVon
+    darfSchreiben: darfSchreiben, geschrieben: geschrieben, teilerVon: teilerVon,
+    FACHWORT: FACHWORT, FW_IDS: FW_IDS, FW_ZIEH: FW_ZIEH, fachRunde: fachRunde, buchenFach: buchenFach, fachNr: fachNr, fwPruefen: fwPruefen
   };
   if (typeof module !== "undefined" && module.exports) module.exports = M;
   else wurzel.PSMotor = M;

@@ -8,6 +8,8 @@
  * fertigem Teil, höchstens drei am Tag; darüber hinaus bleibt der Stand im sessionStorage und reist mit
  * dem nächsten Schreibvorgang mit. Zwischenstand je Antwort nur im sessionStorage und über LWWeiter.
  * Nach dem 19.10.2026 zeigt die Seite nur noch einen ruhigen Satz (Motor: aktiv()).
+ * Teil 3 Fachwörter (18.10.2026): eigene Runde mit 20 Aufgaben (Antippen eines Wortes oder eine Zahl), jederzeit
+ * startbar, auch über ?fw=1 von der Lernliste. Ein Schreibvorgang je fertiger Runde, innerhalb der drei am Tag.
  */
 (function () {
   "use strict";
@@ -85,10 +87,22 @@
     $("teil-2").classList.toggle("fertig", !!hs.t2);
     $("los").textContent = hs.t2 ? "Noch eine Runde" : hs.t1 ? "Weiter mit Teil 2" : "Los geht's";
     $("start-fertig").textContent = hs.t2 ? "Heute geschafft! Du kannst noch eine Runde mit neuen Aufgaben rechnen." : "";
+    // Teil 3 Fachwörter (18.10.2026): eigene Runde, unabhängig von Teil 1 und 2.
+    var fn = M.fachNr(stand, datum);
+    $("teil-3-satz").textContent = M.EIN.fach + " Aufgaben: addieren, Produkt, Umkehraufgabe, Primzahl und mehr.";
+    $("teil-3").classList.toggle("fertig", fn > 0);
+    $("los-fw").textContent = fn > 0 ? "Noch eine Runde Fachwörter" : "Fachwörter üben";
   }
 
   /* ---------- Spiel ---------- */
   function rundeBeginnen(phase) {
+    if (phase === "3") {   // Teil 3 Fachwörter: eigene Runde, eigener Zähler (fachNr)
+      var fnr = M.fachNr(stand, datum), fl = M.fachRunde(stand, datum, fnr);
+      lauf = { d: datum, nr: fnr, runde: { teil3: fl }, phase: "3", liste: fl.slice(), i: 0, erg: { 3: [] },
+        versuche: 0, eingabe: { a: "", b: "" }, feld: "a", wahl: [], nein: [], tipp: "", wdh: 0 };
+      laufMerken(); zeige("spiel"); aufgabeZeigen();
+      return;
+    }
     var hs = h(), nr = hs.t2 ? hs.n : 0;
     var runde = lauf && lauf.runde ? lauf.runde : M.tagesRunde(stand, datum, nr, blatt);
     var erg = lauf && lauf.erg ? lauf.erg : { 1: [], 2: [] };
@@ -105,6 +119,19 @@
       esc(lauf.eingabe[name]) + '</span><small>' + esc(label) + '</small></span>';
   }
   function frageHtml(x) {
+    if (x.typ === "wahl") {   // Fachwörter: genau ein Wort (oder eine Aufgabe) antippen, dann Prüfen
+      var nein = lauf.nein || [];
+      return '<p class="auftrag" id="frage">' + esc(x.text) + '</p><div class="chips woerter' + (x.zeichen ? " zeichen" : "") + '" role="group">' + x.optionen.map(function (c, i) {
+        var an = lauf.wahl.indexOf(c) >= 0;
+        return '<button type="button" class="chip wort' + (an ? " an" : "") + (nein.indexOf(c) >= 0 ? " nein" : "") + '" data-wahl="' + i + '" aria-pressed="' + an + '">' + esc(c) + '</button>';
+      }).join("") + '</div>';
+    }
+    if (x.art === "fw") {   // Fachwörter mit Zahl: Auftrag im Wortlaut, dann Feld (mit Antwortsatz) oder die Aufgabe mit Lücke
+      var fk = '<p class="sachtext" id="frage">' + esc(x.text) + '</p>';
+      if (x.frage === "?") return fk + '<div class="zeile sach"><span class="satz">' + esc(x.satz) + '</span>' + feldHtml("a", "Antwort") + '</div>';
+      var ft = x.frage.split("?");
+      return fk + '<div class="zeile"><span>' + esc(ft[0]) + '</span>' + feldHtml("a", "Ergebnis") + '<span>' + esc(ft[1] || "") + '</span></div>';
+    }
     if (x.typ === "tippen") {
       return '<p class="auftrag" id="frage">' + esc(x.frage) + '</p><div class="chips" role="group">' + x.chips.map(function (c) {
         var an = lauf.wahl.indexOf(c) >= 0;
@@ -201,6 +228,7 @@
   var mwFuer = null;
   function brauchtWeg(x) {
     if (!MW || !x) return false;
+    if (x.art === "fw") return false;   // Fachwörter: ein Rechenschritt, kein Rechenweg-Feld
     if (x.art === "punkt" || x.typ === "rest") return true;   // Teilen mit Rest: teilen, dann Rest ausrechnen
     if (x.art === "sach") return (x.schritte || 1) >= 2;
     if (x.art === "lt" || x.art === "raet") return true;   // Rechenkästchen wie auf dem Blatt der Lehrerin
@@ -260,11 +288,11 @@
     }
     meinWegZeigen(x);
     var el0 = lauf.liste[lauf.i];
-    $("thema").textContent = x.thema + (el0 && el0.w === 1 ? " · Noch einmal" : el0 && el0.w === 2 ? " · Neue Zahlen" : "");
-    $("zaehler").textContent = (lauf.phase === "1" ? "Aufgabe " : "Sachaufgabe ") + (lauf.i + 1) + " von " + lauf.liste.length;
+    $("thema").textContent = x.thema + (el0 && el0.w === 1 ? " · Noch einmal" : el0 && el0.w === 2 ? (x.art === "fw" ? " · Noch einmal anders" : " · Neue Zahlen") : "");
+    $("zaehler").textContent = (lauf.phase === "2" ? "Sachaufgabe " : "Aufgabe ") + (lauf.i + 1) + " von " + lauf.liste.length;
     rwMalen();
     $("aufgabe").setAttribute("data-typ", x.typ);
-    $("tasten").classList.toggle("nurok", x.typ === "tippen");
+    $("tasten").classList.toggle("nurok", x.typ === "tippen" || x.typ === "wahl");
     $("tasten").classList.remove("verborgen"); $("weiter").classList.add("verborgen");
     tipp(lauf.versuche ? lauf.tipp : "", false);
     sperre = false;
@@ -301,7 +329,7 @@
       return;
     }
     if (z === "ok") { pruefen(); return; }
-    var x = aktuell(); if (!x || x.typ === "tippen") return;
+    var x = aktuell(); if (!x || x.typ === "tippen" || x.typ === "wahl") return;
     if (z === "weg") lauf.eingabe[f] = lauf.eingabe[f].slice(0, -1);
     else if (lauf.eingabe[f].length < 4) lauf.eingabe[f] += z;
     $("feld-" + f).textContent = lauf.eingabe[f];
@@ -314,7 +342,19 @@
     if (b) { b.classList.toggle("an", i < 0); b.setAttribute("aria-pressed", String(i < 0)); }
   }
 
+  /* Fachwörter: ein Wort antippen (eins zur Zeit). Ein falsch gewähltes tritt blass zurück, bleibt aber antippbar. */
+  function wort(i) {
+    if (!lauf || sperre) return;
+    var x = aktuell(); if (!x || x.typ !== "wahl") return;
+    var c = x.optionen[i]; if (c == null) return;
+    lauf.wahl = lauf.wahl[0] === c ? [] : [c];
+    [].forEach.call(document.querySelectorAll("[data-wahl]"), function (b) {
+      var an = x.optionen[+b.getAttribute("data-wahl")] === lauf.wahl[0];
+      b.classList.toggle("an", an); b.setAttribute("aria-pressed", String(an));
+    });
+  }
   function eingabe(x) {
+    if (x.typ === "wahl") return lauf.wahl[0];
     if (x.typ === "tippen") return lauf.wahl.slice();
     if (x.typ === "rest") return { q: lauf.eingabe.a, r: lauf.eingabe.b };
     return lauf.eingabe.a;
@@ -328,6 +368,7 @@
       if (!lauf.eingabe.b) { feldWaehlen("b"); tipp("Trag noch den Rest ein. Geht es glatt auf, ist der Rest 0.", false); return; }
     }
     if (x.typ === "tippen" && !lauf.wahl.length) { tipp("Tippe die passenden Zahlen an. Dann drückst du Prüfen.", false); return; }
+    if (x.typ === "wahl" && !lauf.wahl.length) { tipp("Tippe eine Antwort an. Dann drückst du Prüfen.", false); return; }
     var e = eingabe(x), ok = M.stimmt(x, e), erster = lauf.versuche === 0;
     var el = lauf.liste[lauf.i];
     if (erster && !el.w) {
@@ -340,7 +381,14 @@
     if (ok) { richtig(x, erster); return; }
     lauf.versuche++;
     lauf.tipp = M.hilfe(x, lauf.versuche, e);
-    if (x.typ !== "tippen") {
+    if (x.typ === "wahl") {
+      lauf.nein = (lauf.nein || []).concat(lauf.wahl); lauf.wahl = [];
+      [].forEach.call(document.querySelectorAll("[data-wahl]"), function (b) {
+        var w = x.optionen[+b.getAttribute("data-wahl")];
+        b.classList.remove("an"); b.setAttribute("aria-pressed", "false");
+        if (lauf.nein.indexOf(w) >= 0) { b.classList.add("nein"); b.classList.remove("rueck"); void b.offsetWidth; b.classList.add("rueck"); }
+      });
+    } else if (x.typ !== "tippen") {
       lauf.eingabe = { a: "", b: "" }; lauf.feld = "a";
       ["a", "b"].forEach(function (n) { var f = $("feld-" + n); if (f) { f.textContent = ""; f.classList.toggle("aktiv", n === "a"); f.classList.remove("rueck"); void f.offsetWidth; f.classList.add("rueck"); } });
     }
@@ -390,7 +438,7 @@
     // Eigener großer Weiter-Knopf statt der Zifferntasten: das Ergebnis bleibt stehen, bis Paul weitertippt.
     $("tasten").classList.add("verborgen"); $("weiter").classList.remove("verborgen");
     if ($("meinweg")) $("meinweg").classList.add("verborgen");
-    lauf.i++; lauf.versuche = 0; lauf.eingabe = { a: "", b: "" }; lauf.feld = "a"; lauf.wahl = []; lauf.tipp = ""; lauf.rw = null;
+    lauf.i++; lauf.versuche = 0; lauf.eingabe = { a: "", b: "" }; lauf.feld = "a"; lauf.wahl = []; lauf.nein = []; lauf.tipp = ""; lauf.rw = null;
     laufMerken();
   }
   function naechste() {
@@ -399,6 +447,15 @@
   }
 
   function teilFertig() {
+    if (lauf.phase === "3") {   // Fachwörter: einmal buchen, einmal schreiben
+      stand = M.buchenFach(stand, datum, lauf.erg[3], lauf.nr);
+      speichern();
+      var e3 = lauf.erg[3], r3 = e3.filter(function (e) { return e.ok; }).length;
+      lauf = null; laufWeg();
+      zeige("fw-ende");
+      $("fw-ende-zahlen").textContent = "Beim ersten Versuch richtig: " + r3 + " von " + e3.length + ". Du hast dir viele Fachwörter angeschaut. Gut gemacht!";
+      return;
+    }
     if (lauf.phase === "1") {
       stand = M.buchen(stand, datum, 1, lauf.erg[1], lauf.nr);
       speichern();
@@ -423,7 +480,7 @@
     try { if (window.lernstand) window.lernstand.antwort(ok, x.merkmal, gegeben, M.loesungText(x), x.punkt, sek); } catch (e) {}
   }
   function zeige(welche) {
-    ["start", "zwischen", "spiel", "ende", "aus"].forEach(function (id) { $(id).classList.toggle("verborgen", id !== welche); });
+    ["start", "zwischen", "spiel", "ende", "aus", "fw-ende"].forEach(function (id) { $(id).classList.toggle("verborgen", id !== welche); });
     window.scrollTo(0, 0);
   }
 
@@ -436,6 +493,8 @@
     if (t) { taste(t.getAttribute("data-taste")); return; }
     var c = e.target.closest ? e.target.closest("[data-chip]") : null;
     if (c) { chip(+c.getAttribute("data-chip")); return; }
+    var wo = e.target.closest ? e.target.closest("[data-wahl]") : null;
+    if (wo) { wort(+wo.getAttribute("data-wahl")); return; }
     var f = e.target.closest ? e.target.closest("[data-feld]") : null;
     if (f) { feldWaehlen(f.getAttribute("data-feld")); return; }
     var b = e.target.closest ? e.target.closest("button") : null, id = b ? b.id : "";
@@ -449,6 +508,8 @@
     if (id === "weiter-sach") { rundeBeginnen("2"); return; }
     if (id === "weiter") { naechste(); return; }
     if (id === "nochmal") { lauf = null; laufWeg(); startZeigen(); return; }
+    if (id === "los-fw" || id === "fw-nochmal") { lauf = null; laufWeg(); rundeBeginnen("3"); return; }
+    if (id === "fw-zurueck") { lauf = null; laufWeg(); startZeigen(); return; }
   });
   document.addEventListener("keydown", function (e) {
     if ($("spiel").classList.contains("verborgen")) return;
@@ -473,7 +534,9 @@
   if (window.LWWeiter) window.LWWeiter.anmelden(weiterSeite); else window.LW_WEITER = weiterSeite;
 
   // Erst der Stoff von den Blättern, dann die Startseite (ein laufender Durchgang trägt seine Runde selbst).
-  if (!fortsetzen(laufHolen())) blattHolen(function () { if (!lauf) startZeigen(); });
+  // ?fw=1 (Knopf „Fachwörter üben“ auf der Lernliste): gleich Teil 3 starten, solange die Übung läuft.
+  var fwDirekt = /[?&]fw=1(&|$)/.test(location.search);
+  if (!fortsetzen(laufHolen())) blattHolen(function () { if (lauf) return; if (fwDirekt && M.aktiv(datum)) rundeBeginnen("3"); else startZeigen(); });
   else blattHolen(function () {});
 
   // Für die Messung (mess-schritte-probenstoff.js): lesen, nichts verändern.

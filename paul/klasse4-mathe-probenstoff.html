@@ -10,11 +10,13 @@
   (EIN.bis im Motor). Motor /probenstoff/motor.js (reine Logik), Anzeige /probenstoff/seite.js,
   Speicher paul-probenstoff (localStorage, ueber paul-sync.js, hoechstens drei Schreibvorgaenge am Tag).
   Nur fuer Paul. Kapitel 121.
+  Teil 3 Fachwoerter (18.10.2026, Dennys Wahl „Liste und Uebung“): 20 Aufgaben zu den 14 Fachwoertern aus dem Heft,
+  Lernliste daneben: klasse4-mathe-fachwoerter.html.
 -->
 <script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
 <link rel="stylesheet" href="/thema.css?v=e8d09026">
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
-<link rel="stylesheet" href="/probenstoff/probenstoff.css?v=e1344ed5">
+<link rel="stylesheet" href="/probenstoff/probenstoff.css?v=4874dd69">
 <link rel="stylesheet" href="/rechenweg/meinweg.css?v=c05717fc">
 <script src="/farbschalter.js?v=383ccf75"></script>
 </head>
@@ -33,6 +35,11 @@
   </div>
   <p id="start-fertig"></p>
   <div class="mitte"><button id="los" class="knopf primaer">Los geht's</button></div>
+  <!-- Teil 3 Fachwörter (18.10.2026): eigene Runde, jederzeit; die Liste zum Lesen mit Papa daneben. -->
+  <div class="fw-block">
+    <div class="teil" id="teil-3"><div class="ic">🔤</div><div><b>Teil 3: Fachwörter</b><span id="teil-3-satz"></span></div></div>
+    <div class="mitte"><button id="los-fw" class="knopf">Fachwörter üben</button><a id="fw-liste" class="knopf" href="klasse4-mathe-fachwoerter.html">📖 Fachwörter-Liste</a></div>
+  </div>
 </section>
 
 <section id="zwischen" class="karte verborgen">
@@ -65,17 +72,23 @@
   <div class="mitte"><button id="nochmal" class="knopf">Noch eine Runde</button><a class="knopf primaer" href="./">Zur Startseite</a></div>
 </section>
 
+<section id="fw-ende" class="karte verborgen">
+  <h2>🎉 Fachwörter geschafft!</h2>
+  <p id="fw-ende-zahlen"></p>
+  <div class="mitte"><button id="fw-nochmal" class="knopf">Noch eine Runde Fachwörter</button><a class="knopf" href="klasse4-mathe-fachwoerter.html">📖 Zur Liste</a><button id="fw-zurueck" class="knopf primaer">Zum Probenstoff</button></div>
+</section>
+
 <section id="aus" class="karte verborgen">
   <h2>Die Mathe-Probe ist vorbei</h2>
   <p>Diese Übung war für deine Probe am 19.10.2026. Deine anderen Mathe-Übungen findest du auf der Startseite.</p>
   <div class="mitte"><a class="knopf primaer" href="./">Zur Startseite</a></div>
 </section>
 
-<script src="/probenstoff/motor.js?v=2429f55d"></script>
+<script src="/probenstoff/motor.js?v=4e20abed"></script>
 <script src="/rechenweg/rechenweg.js?v=76149099"></script>
 <script src="/quiz/rechenkaestchen.js?v=d5a8bfa9"></script>
 <script src="/rechenweg/meinweg.js?v=fd30c367"></script>
-<script src="/probenstoff/seite.js?v=61040bd3" defer></script>
+<script src="/probenstoff/seite.js?v=490cde1f" defer></script>
 <script src="/lernstand.js?v=3e61289c" defer></script>
 </body>
 </html>

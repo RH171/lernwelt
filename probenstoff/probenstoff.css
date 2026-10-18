@@ -157,3 +157,15 @@ header h1{font:800 21px/1.1 var(--font);margin:0;flex:1}
   .rw{gap:3px;padding:4px 8px} .rw-titel{font-size:13px} .rw-zusammen{font-size:16px}
   .rw-rechnung{font-size:22px} .rw .feld{height:44px;font-size:22px} .rw-kopf b{font-size:15px}
 }
+
+/* Teil 3 Fachwörter (18.10.2026): Wörter antippen, groß und fingerfreundlich; ein falsch gewähltes tritt blass zurück. */
+.fw-block{border-top:2px dashed var(--line);margin-top:16px;padding-top:14px;display:grid;gap:10px}
+#fw-ende-zahlen{font:700 19px/1.45 var(--font)!important;color:var(--ink)!important}
+.chips.woerter{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));max-width:620px}
+.chips.woerter.zeichen{grid-template-columns:repeat(4,1fr)}
+.chip.wort{min-height:58px;padding:8px 12px;font:700 21px/1.25 var(--font);font-variant-numeric:tabular-nums}
+.chips.zeichen .chip.wort{font-size:34px}
+.chip.nein{opacity:.45}
+@media (max-width:699px){ .chips.woerter{grid-template-columns:repeat(2,1fr)} .chip.wort{font-size:18px;min-height:52px;padding:6px 8px} .chips.woerter.zeichen{grid-template-columns:repeat(4,1fr)} }
+@media (max-height:560px){ .chip.wort{min-height:46px;font-size:17px} .fw-block{margin-top:10px;padding-top:8px;gap:6px} }
+@media (max-height:420px){ .chips.woerter{grid-template-columns:repeat(4,1fr)} .chip.wort{font-size:15px} }
