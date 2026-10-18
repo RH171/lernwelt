@@ -101,7 +101,7 @@ export async function onRequestPost({ request, env }) {
     const j = await r.json();
     const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
     const urteile = lesen(text, posten.length);
-    if (!urteile) return antwort(200, { ok: false, fehler: "unlesbar" });
+    if (!urteile) return antwort(200, { ok: false, fehler: "unlesbar", stop: j.stop_reason, arten: (j.content || []).map((c) => c.type), anfang: kurz(text, 160) });
     return antwort(200, { ok: true, urteile });
   } catch (e) {
     return antwort(200, { ok: false, fehler: "keine Verbindung" });
