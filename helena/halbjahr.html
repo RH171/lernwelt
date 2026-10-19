@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mein Halbjahr</title>
+<!--
+  Helenas Halbjahr (19.10.2026, Startseite D, Denny mit Helena per Klickfrage):
+  "Noten eintragen + Zeugnis-Hochrechnung in Mein Halbjahr: Helena sieht die
+  hochgerechnete Note je Fach selbst und hat ein Planspiel. Auf der Startseite
+  steht KEIN Schnitt."
+
+  Rechnung: helena/zeugnis-rechnung.js nach GSO § 28 (gesetze-bayern.de,
+  Fassung ab 01.08.2026, gelesen 19.10.2026). Grosse und kleine
+  Leistungsnachweise je ein eigener Schnitt; mehr als zwei Schulaufgaben 2:1,
+  zwei 1:1; Faecher ohne Schulaufgabe nur klein. Je Fach einstellbar,
+  Standard 2:1 in den vier Hauptfaechern.
+
+  Die Einstellung (Verhaeltnis, Gewichte der kleinen) liegt in localStorage
+  "helena-gewichtung" - kein Geheimnis, wandert mit paul-sync auf ihre anderen
+  Geraete und kostet nur beim Aendern einen Schreibvorgang. Das Planspiel
+  liegt NUR im Speicher der Seite: jedes Antippen waere sonst ein
+  KV-Schreibvorgang (1000 am Tag fuer die ganze Lernwelt).
+
+  Noten nur als Zahlen, ohne Wertung (Kapitel 025): kein "gut", kein "schlecht",
+  keine Farbe nach Note, kein "weil", kein Vergleich.
+-->
+<script>(function(){var h=document.documentElement;try{h.setAttribute("data-theme",localStorage.getItem("helena-theme")==="dark"?"dark":"light");}catch(e){h.setAttribute("data-theme","light");}})();</script>
+<link rel="stylesheet" href="/helena-thema.css?v=49fa7838">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+  :root{
+    --bg:#0e1320; --surface:#171d2e; --card:#171d2e; --surface2:#1f2740; --ink:#eef2fb;
+    --muted:#9aa3b8; --line:#2a3350; --brand:#a78bfa;
+    --schul:#a78bfa; --schul-tx:#160d33;
+    --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  html[data-theme="light"]{ --schul:#5b21b6; --schul-tx:#fff; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);min-height:100vh;padding:12px;
+       padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+  .huelle{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  header h1{font-family:var(--round);font-size:23px;margin:0;flex:1;min-width:0}
+  .zurueck{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;background:var(--surface);
+    border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:700}
+  .karte{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .karte h2{margin:0;font-family:var(--round);font-size:19px}
+  .unter{margin:0;color:var(--muted);font-size:14.5px;line-height:1.45}
+  .zwei{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border-radius:12px;
+    border:0;font-family:inherit;font-weight:750;font-size:15px;cursor:pointer;text-decoration:none;flex:1 1 auto}
+  .btn.voll{background:var(--schul);color:var(--schul-tx)}
+  .btn.ruhig{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+  .knr{display:flex;flex-wrap:wrap;gap:8px}
+  .art{display:inline-flex;align-items:center;min-height:26px;padding:0 9px;border-radius:8px;font-size:13px;font-weight:800;
+    white-space:nowrap;background:var(--surface2);color:var(--ink)}
+  .art.gross{background:var(--schul);color:var(--schul-tx)}
+  .prl,.nt{display:flex;flex-direction:column;gap:6px}
+  .pr{display:grid;grid-template-columns:54px 1fr;gap:10px;align-items:center;min-height:56px;padding:6px 8px;border-radius:12px;background:var(--surface2)}
+  .pr .dt{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;background:var(--surface);
+    border:1px solid var(--line);height:46px;line-height:1.05}
+  .pr .dt b{font-size:15px}.pr .dt span{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}
+  .pr .wo{min-width:0;font-size:14.5px;font-weight:700;line-height:1.3}
+  .pr .wo .kz{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .pr .wo small{display:block;font-weight:500;color:var(--muted);font-size:13.5px;overflow-wrap:anywhere}
+  .nz{display:flex;flex-direction:column;gap:4px;padding:7px 9px;border-radius:12px;background:var(--surface2)}
+  .nz .fn{font-weight:800;font-size:15px}
+  .nz .pn{display:flex;flex-wrap:wrap;gap:5px}
+  .nz .pn i{font-style:normal;font-size:13px;font-weight:700;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:2px 7px}
+  .leer{color:var(--muted);font-size:14px;line-height:1.4;padding:4px}
+
+  /* Hochrechnung je Fach */
+  .hr{display:flex;flex-direction:column;gap:8px}
+  .hz{border:1px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface2)}
+  .hz .kopf{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .hz .fn{font-weight:800;font-size:16px;flex:1;min-width:0}
+  .hz .wert{font-family:var(--round);font-size:28px;font-weight:800;line-height:1;text-align:right}
+  .hz .wert small{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-top:3px;font-family:var(--font)}
+  .hz .teile{font-size:13.5px;color:var(--muted);line-height:1.4}
+  .hz .plan{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:8px}
+  .hz .plan .pl{font-size:13.5px;font-weight:700;color:var(--muted);flex:1 1 180px}
+  .wahl{display:flex;gap:4px;flex-wrap:wrap}
+  .wahl button{min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    font:800 16px var(--font);cursor:pointer;padding:0 8px}
+  .wahl button[aria-pressed="true"]{background:var(--schul);color:var(--schul-tx);border-color:transparent}
+  .hz .mitplan{font-size:14px;font-weight:700}
+  .gz{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;min-height:52px;border-bottom:1px solid var(--line);font-weight:700;font-size:15px}
+  .gz:last-child{border-bottom:0}
+  .gz small{display:block;font-weight:500;color:var(--muted);font-size:13px}
+  .step{display:inline-flex;align-items:center;gap:6px}
+  .step b{min-width:28px;text-align:center;font-size:17px}
+  .tipp{font-size:14px;color:var(--muted);background:var(--surface2);border-radius:12px;padding:9px 12px;line-height:1.45}
+  details.einst summary{min-height:48px;display:flex;align-items:center;font-weight:800;font-size:16px;cursor:pointer;list-style:none}
+  details.einst summary::-webkit-details-marker{display:none}
+  details.einst[open] summary{margin-bottom:6px}
+  @media (max-width:760px){ .zwei{grid-template-columns:1fr} }
+</style>
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <h1>📋 Mein Halbjahr</h1>
+    <a class="zurueck" href="./">‹ Lernwelt</a>
+  </header>
+
+  <div class="zwei">
+    <section class="karte" aria-label="Nächste Prüfungen">
+      <h2>Nächste Prüfungen</h2>
+      <div id="hjPruefungen"><div class="leer">Einen Moment …</div></div>
+      <button class="btn voll" type="button" id="pruefungNeu">＋ Prüfung eintragen</button>
+    </section>
+    <section class="karte" aria-label="Meine Noten">
+      <h2>Meine Noten</h2>
+      <div id="hjNoten"><div class="leer">Einen Moment …</div></div>
+      <button class="btn ruhig" type="button" id="noteNeu">＋ Note eintragen</button>
+    </section>
+  </div>
+
+  <section class="karte" id="hochrechnung" aria-label="Zeugnis-Hochrechnung">
+    <h2>🔮 Zeugnis · Hochrechnung</h2>
+    <p class="unter">So stünde dein Schnitt je Fach mit den Noten, die du eingetragen hast. Tipp unten eine Note an, um zu sehen, was die nächste ändern würde. Die Zeugnisnote gibt deine Lehrkraft.</p>
+    <div class="hr" id="hrListe"><div class="leer">Einen Moment …</div></div>
+  </section>
+
+  <section class="karte" aria-label="So wird gerechnet">
+    <details class="einst" id="einstellung">
+      <summary>⚙️ So wird gerechnet</summary>
+      <div class="tipp">Schulaufgaben und kleine Leistungsnachweise (Ex, Kurzarbeit, mündlich, Tests) bekommen je einen eigenen Schnitt. Bei mehr als zwei Schulaufgaben im Jahr zählen die Schulaufgaben doppelt so viel wie die kleinen, bei zwei gleich viel. Fächer ohne Schulaufgaben rechnen nur mit den kleinen. (Schulordnung für die Gymnasien in Bayern, § 28)</div>
+      <h3 style="margin:12px 0 4px;font-size:15px">Schulaufgaben zu kleinen</h3>
+      <div id="verhListe"></div>
+      <h3 style="margin:12px 0 4px;font-size:15px">Kleine untereinander</h3>
+      <div class="tipp">Wie stark Ex, Kurzarbeit und mündlich zählen, legt deine Schule fest. Stell es um, wenn deine Lehrkraft es anders sagt.</div>
+      <div id="kleinListe"></div>
+      <div class="gz"><span>BET 7<small>doppelt, so legt es das Kultusministerium fest</small></span><b>× 2</b></div>
+      <div class="knr" style="margin-top:8px"><button class="btn ruhig" type="button" id="gewichtZurueck">Wie vorher: 2 : 1, alles × 1</button></div>
+      <p class="unter" style="margin-top:8px">Gezeigt wird der Schnitt auf zwei Stellen abgeschnitten.</p>
+    </details>
+  </section>
+</div>
+
+<script src="/probeneintrag.js?v=a167a963"></script>
+<script src="/helena/zeugnis-rechnung.js?v=a9f4ebcd"></script>
+<script src="/helena/halbjahr.js?v=787b7d80"></script>
+<script>
+(function(){
+  "use strict";
+  var Z = window.LWZeugnis, HJ = window.LWHalbjahr;
+  if (!Z || !HJ) return;
+  function $(i){ return document.getElementById(i); }
+  function el(t, c, x){ var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  var SCHLUESSEL = "helena-gewichtung";
+  var G = Z.gewichtung(null);
+  try { G = Z.gewichtung(JSON.parse(localStorage.getItem(SCHLUESSEL) || "null")); } catch (e) {}
+  /* Gespeichert wird nur, wenn sich etwas aendert - und gebuendelt: paul-sync
+     macht aus jedem setItem einen KV-Schreibvorgang (1,5 s zusammengefasst). */
+  function sichern(){ try { localStorage.setItem(SCHLUESSEL, JSON.stringify(G)); } catch (e) {} }
+  var plan = {};   // nur im Speicher der Seite
+
+  /* Pruefungen, Noten und Dialog aus /helena/halbjahr.js */
+  HJ.dialogBauen($("pruefungNeu"));
+  $("noteNeu").addEventListener("click", function(){ var d = HJ.dialog(); if (d) d.oeffnen("note"); });
+  HJ.beimLaden(function(){ HJ.pruefungenMalen($("hjPruefungen")); HJ.notenMalen($("hjNoten")); hochrechnen(); });
+  HJ.laden();
+
+  function hochrechnen(){
+    var box = $("hrListe"), st = HJ.stand();
+    box.innerHTML = "";
+    if (st.fehler) { box.appendChild(el("div", "leer", "Deine Noten kommen gerade nicht. Versuch es gleich noch einmal.")); return; }
+    var je = HJ.notenJeFach();
+    var faecher = Z.FAECHER.filter(function(f){ return Z.HAUPT.indexOf(f.k) >= 0 || (je[f.k] && je[f.k].length); });
+    faecher.forEach(function(f){
+      var r = Z.rechnen(je[f.k] || [], f.k, G);
+      var p = plan[f.k] ? Z.rechnen(je[f.k] || [], f.k, G, { note: plan[f.k], gross: f.sa > 0 }) : null;
+      var z = el("div", "hz"); z.setAttribute("data-fach", f.k);
+      var kopf = el("div", "kopf");
+      kopf.appendChild(el("span", "fn", f.e + " " + f.n));
+      var w = el("span", "wert"); w.setAttribute("data-hr", f.k);
+      w.appendChild(document.createTextNode(r.text));
+      w.appendChild(el("small", null, r.art));
+      kopf.appendChild(w); z.appendChild(kopf);
+      if (f.sa > 0 && (r.gross !== null || r.klein !== null)) {
+        z.appendChild(el("div", "teile", "Schulaufgaben " + Z.abschneiden(r.gross) + " · kleine " + Z.abschneiden(r.klein) +
+          " · " + f.sa + " Schulaufgaben im Jahr"));
+      }
+      var pl = el("div", "plan");
+      pl.appendChild(el("span", "pl", f.sa > 0 ? "Planspiel: Wenn die nächste Schulaufgabe so ausfällt …" : "Planspiel: Wenn die nächste Note so ausfällt …"));
+      var wahl = el("span", "wahl"); wahl.setAttribute("data-plan", f.k);
+      [1,2,3,4,5,6].forEach(function(n){
+        var b = el("button", null, String(n)); b.type = "button";
+        b.setAttribute("aria-pressed", plan[f.k] === n ? "true" : "false");
+        b.setAttribute("aria-label", "Planspiel " + f.n + ": " + n);
+        b.addEventListener("click", function(){ plan[f.k] = plan[f.k] === n ? 0 : n; hochrechnen(); });
+        wahl.appendChild(b);
+      });
+      pl.appendChild(wahl); z.appendChild(pl);
+      if (p) {
+        var m = el("div", "mitplan"); m.setAttribute("data-mitplan", f.k);
+        m.textContent = "Mit einer " + plan[f.k] + (f.sa > 0 ? " in der nächsten Schulaufgabe: " : " als nächste Note: ") + p.text;
+        z.appendChild(m);
+      }
+      box.appendChild(z);
+    });
+  }
+
+  /* ---------- Einstellungen ---------- */
+  function einstellungMalen(){
+    var v = $("verhListe"); v.innerHTML = "";
+    Z.HAUPT.forEach(function(k){
+      var f = Z.FACH[k];
+      var z = el("div", "gz");
+      var t = el("span", null, f.e + " " + f.n); t.appendChild(el("small", null, f.sa + " Schulaufgaben im Jahr"));
+      var w = el("span", "wahl"); w.setAttribute("data-verh", k);
+      [[1, "1 : 1"], [2, "2 : 1"]].forEach(function(x){
+        var b = el("button", null, x[1]); b.type = "button";
+        b.setAttribute("aria-pressed", G.verh[k] === x[0] ? "true" : "false");
+        b.addEventListener("click", function(){ if (G.verh[k] === x[0]) return; G.verh[k] = x[0]; sichern(); einstellungMalen(); hochrechnen(); });
+        w.appendChild(b);
+      });
+      z.appendChild(t); z.appendChild(w); v.appendChild(z);
+    });
+    var kl = $("kleinListe"); kl.innerHTML = "";
+    Z.KLEINE.forEach(function(k){
+      var z = el("div", "gz");
+      var t = el("span", null, Z.ART[k].n); t.appendChild(el("small", null, "Standard × 1"));
+      var s = el("span", "step wahl"); s.setAttribute("data-step", k);
+      var minus = el("button", null, "−"); minus.type = "button"; minus.setAttribute("aria-label", Z.ART[k].n + " weniger");
+      var plus = el("button", null, "＋"); plus.type = "button"; plus.setAttribute("aria-label", Z.ART[k].n + " mehr");
+      var b = el("b", null, "× " + G.klein[k]);
+      minus.addEventListener("click", function(){ if (G.klein[k] > 1) { G.klein[k]--; sichern(); einstellungMalen(); hochrechnen(); } });
+      plus.addEventListener("click", function(){ if (G.klein[k] < 3) { G.klein[k]++; sichern(); einstellungMalen(); hochrechnen(); } });
+      s.appendChild(minus); s.appendChild(b); s.appendChild(plus);
+      z.appendChild(t); z.appendChild(s); kl.appendChild(z);
+    });
+  }
+  $("gewichtZurueck").addEventListener("click", function(){
+    G = Z.gewichtung(null);
+    try { localStorage.removeItem(SCHLUESSEL); } catch (e) {}
+    einstellungMalen(); hochrechnen();
+  });
+  einstellungMalen();
+  window.__halbjahr = { G: function(){ return G; }, plan: plan, hochrechnen: hochrechnen };
+})();
+</script>
+<script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
+<script src="/lernstand.js?v=fe69f5e5"></script>
+<script src="/spiel-navi.js?v=815914e4" defer></script>
+</body>
+</html>

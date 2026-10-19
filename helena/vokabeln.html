@@ -3377,5 +3377,22 @@ window.HELENA_KONFIG = {
   });
 })();
 </script>
+<script>
+/* Direkt zum Fotografieren (19.10.2026, Startseite D): Die Sprachkarte
+   "Vokabeln aus dem Buch (1–5 Seiten)" fuehrt hierher mit #foto. Dann klappt
+   "Neue Einheit aus Foto" auf und rueckt ins Bild. Den Ablauf selbst baut
+   trainer.js - hier wird nur geoeffnet. */
+(function(){
+  function auf(){
+    if (location.hash !== "#foto") return;
+    var d = document.querySelector("details.adder");
+    if (!d) return;
+    d.open = true;
+    try { d.scrollIntoView({ block: "start" }); } catch (e) {}
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", auf); else auf();
+  window.addEventListener("hashchange", auf);
+})();
+</script>
 </body>
 </html>
