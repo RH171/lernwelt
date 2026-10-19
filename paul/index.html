@@ -634,6 +634,10 @@
     <div class="controls">
       <!-- 14.09.2026: Von Pauls Uebersicht fuehrte kein Weg zur Lernwelt-Startseite. -->
       <a class="iconbtn" href="/" title="Zur Lernwelt-Startseite" style="text-decoration:none;display:inline-flex;align-items:center">🏠 Lernwelt</a>
+      <!-- 19.10.2026, Denny: Paul schaut morgens oft in den Stundenplan - deshalb auch oben, die Karte in
+           "Meine Sachen" bleibt. Bewusst OHNE data-weg (globale Messwähler suchen [data-weg="stundenplan"] und
+           meinen die Karte); der Tipp wird über data-merke trotzdem in "paul-hauptwege" gemerkt. -->
+      <a class="iconbtn" id="kopfStundenplan" href="stundenplan.html" data-merke="stundenplan" title="Mein Stundenplan" style="text-decoration:none;display:inline-flex;align-items:center">📅 Stundenplan</a>
       <!-- 16.09.2026, Meldung 4rq8ghes95: Paul will, dass sein Bereich den Code
            wieder verlangt, wenn er das Geraet aus der Hand gibt. -->
       <button class="iconbtn" id="abmeldenBtn" type="button" title="Abschliessen - dann fragt die Lernwelt wieder nach deinem Code">🔒 Abschliessen</button>
@@ -1821,10 +1825,11 @@
     // Startseite D (19.10.2026): Die Wege stehen jetzt in drei Bereichen (Lernquiz und Übung zum Blatt unter
     // "Üben", "Neues Spiel erfinden" unter "Spielen und Bauen", die übrigen sechs in "Meine Sachen").
     // Gemerkt wird jeder Tipp wie bisher; sortiert wird die Liste "Meine Sachen" (#hauptwege).
-    Array.prototype.forEach.call(document.querySelectorAll(".wrap [data-weg]"), function(k){
+    // Der Kopfknopf "📅 Stundenplan" (19.10.2026) trägt data-merke statt data-weg und zählt wie die Karte.
+    Array.prototype.forEach.call(document.querySelectorAll(".wrap [data-weg], .wrap [data-merke]"), function(k){
       k.addEventListener("click", function(){
         var d = lesen();
-        d[k.getAttribute("data-weg")] = Date.now();
+        d[k.getAttribute("data-weg") || k.getAttribute("data-merke")] = Date.now();
         try { localStorage.setItem(SCHLUESSEL, JSON.stringify(d)); } catch (e){}
       });
     });
