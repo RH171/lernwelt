@@ -991,15 +991,79 @@
     s.onerror=function(){ cb(false); };
     document.head.appendChild(s);
   }
+  /* Seit 19.10.2026 liest zuerst der Server (Opus 5.5, /api/vokabel-foto) -
+     dasselbe Modell wie bei Pauls Blättern. Tesseract im Browser bleibt nur
+     der Rückfall, wenn der Server nicht antwortet oder das Limit erreicht ist.
+     Tesseract las vorher "eng+deu" auch bei Französisch, also ohne é, è, ç, à. */
+  var SPRACHE_SERVER = K.fach==="franzoesisch" ? "franzoesisch" : "englisch";
+  var TESS_SPRACHEN  = K.fach==="franzoesisch" ? "fra+deu" : "eng+deu";
+  var SERVER_FRIST   = 75000;   /* danach liest Tesseract */
+
+  // Groß genug für Handschrift, klein genug für die Leitung (wie im Hausaufgaben-Heft).
+  function fotoVerkleinern(file, fertig){
+    var l=new FileReader();
+    l.onerror=function(){ fertig(null); };
+    l.onload=function(){
+      var bild=new Image();
+      bild.onerror=function(){ fertig(null); };
+      bild.onload=function(){
+        try{
+          var f=Math.min(1, 2000/Math.max(bild.width,bild.height));
+          var c=document.createElement("canvas"); c.width=Math.round(bild.width*f); c.height=Math.round(bild.height*f);
+          c.getContext("2d").drawImage(bild,0,0,c.width,c.height);
+          var url="", q=0.85;
+          do { url=c.toDataURL("image/jpeg",q); q-=0.1; } while(url.length>880*1024 && q>0.3);
+          fertig(url);
+        }catch(e){ fertig(null); }
+      };
+      bild.src=String(l.result);
+    };
+    l.readAsDataURL(file);
+  }
+  function serverLesen(file, fertig){
+    if(!window.fetch || !window.FileReader){ fertig(null); return; }
+    fotoVerkleinern(file, function(url){
+      if(!url || url.indexOf(",")<0){ fertig(null); return; }
+      var ctl = window.AbortController ? new AbortController() : null;
+      var uhr = setTimeout(function(){ if(ctl) ctl.abort(); }, SERVER_FRIST);
+      var erledigt=false;
+      function ende(x){ if(erledigt) return; erledigt=true; clearTimeout(uhr); fertig(x); }
+      fetch("/api/vokabel-foto", {
+        method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
+        signal: ctl ? ctl.signal : undefined,
+        body: JSON.stringify({ kind:"helena", sprache:SPRACHE_SERVER,
+          bild:{ media_type:"image/jpeg", data:url.split(",")[1] } })
+      }).then(function(r){ return r.json().catch(function(){ return null; }); })
+        .then(function(d){ ende(d && d.ok && Array.isArray(d.paare) ? d : null); })
+        .catch(function(){ ende(null); });
+      if(!ctl) setTimeout(function(){ ende(null); }, SERVER_FRIST);
+    });
+  }
   function handleImage(file){
     if(!file) return;
+    var msg=$("#addMsg"); msg.textContent="";
+    setOcr("Lese Wortliste … (dauert etwa 10–20 Sekunden)");
+    serverLesen(file, function(d){
+      if(d){
+        setOcr("");
+        var pairs=d.paare.map(function(p){ return {en:String(p.fremd||""), de:String(p.deutsch||"")}; })
+          .filter(function(p){ return p.en && p.de; });
+        nichtErkannt=(d.unsicher||[]).map(String).filter(Boolean);
+        if(!pairs.length && !nichtErkannt.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
+        renderPreview(pairs);
+        return;
+      }
+      tesseractLesen(file);
+    });
+  }
+  function tesseractLesen(file){
     var msg=$("#addMsg"); msg.textContent="";
     setOcr("Texterkennung wird geladen … (beim ersten Mal etwas Geduld)");
     loadTesseract(function(ok){
       if(!ok){ setOcr(""); msg.textContent="Texterkennung ließ sich nicht laden – Internet prüfen oder Liste als Text einfügen."; msg.style.color="var(--no)"; return; }
       setOcr("Lese Wortliste … 0 %");
       var worker;
-      window.Tesseract.createWorker("eng+deu",1,{ logger:function(m){
+      window.Tesseract.createWorker(TESS_SPRACHEN,1,{ logger:function(m){
           if(m && m.status==="recognizing text"){ setOcr("Lese Wortliste … "+Math.round((m.progress||0)*100)+" %"); }
           else if(m && m.status){ setOcr("Bereite Texterkennung vor …"); }
         }})
