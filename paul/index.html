@@ -437,23 +437,22 @@
     box-shadow:0 10px 28px rgba(79,70,229,.32);
   }
   .createcard.tagesrechnen.erledigt .cc-s::before{content:"✓ ";}
-  /* 1×1-Woche (13.10.2026): Paul uebt diese Woche jeden Tag Reihen mit Trick, Dreieck und Tempo-Runde. */
-  .createcard.einmaleinswoche{
-    background:linear-gradient(125deg,#115e59 0%,#0f766e 55%,#0d8074 100%);
-    box-shadow:0 10px 28px rgba(15,118,110,.32);
-  }
-  .createcard.einmaleinswoche.erledigt .cc-s::before{content:"✓ ";}
   /* Mathe-Fachwoerter (18.10.2026): dauerhafte Karte zum Merkplakat und Wort-Detektiv. */
   .createcard.fachwoerter{
     background:linear-gradient(125deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);
     box-shadow:0 10px 28px rgba(29,78,216,.32);
   }
-  /* Probenstoff Mathe (13.10.2026): bis zur Mathe-Probe am 19.10.2026 jeden Tag neue Aufgaben, danach weg. */
-  .createcard.probenstoff{
-    background:linear-gradient(125deg,#4c1d95 0%,#5b21b6 55%,#6d28d9 100%);
-    box-shadow:0 10px 28px rgba(109,40,217,.32);
+  /* Probenfokus Deutsch und HSU (19.10.2026): oben unter der Probenkarte. Weiss auf den dunkelsten
+     Verlaufsfarben >= 4,5:1 (gemessen in mess-schritte-probenfokus-start.js). */
+  .createcard.fokus.deutsch{
+    background:linear-gradient(125deg,#9f1239 0%,#be123c 55%,#b91c5c 100%);
+    box-shadow:0 10px 28px rgba(190,18,60,.3);
   }
-  .createcard.probenstoff.erledigt .cc-s::before{content:"✓ ";}
+  .createcard.fokus.hsu{
+    background:linear-gradient(125deg,#14532d 0%,#166534 55%,#15803d 100%);
+    box-shadow:0 10px 28px rgba(22,101,52,.3);
+  }
+  .createcard.fokus.erledigt .cc-s::before{content:"✓ ";}
   .createcard.hausaufgabe:hover{box-shadow:0 16px 38px rgba(18,160,140,.4);}
   .createcard.werkstatt:hover{box-shadow:0 16px 38px rgba(240,112,90,.4);}
   .createcard:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(92,108,255,.42);}
@@ -583,23 +582,62 @@
   <!-- Gelbe Probenkarte (04.10.2026): steht nur da, wenn eine Probe in den
        naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
   <div id="probenkarte" class="verborgen"></div>
-  <!-- Probenstoff Mathe (Denny, 13.10.2026; seit 15.10.2026 direkt unter der Probenkarte): Mathe-Probe am Montag, 19.10.2026. Bis dahin jeden Tag neue
-       Aufgaben, danach verschwindet die Karte still. Der Satz nennt nie einen Rueckstand, eine Serie oder Tage. -->
-  <a class="createcard probenstoff" href="klasse4-mathe-probenstoff.html" id="probenStoff">
-    <div class="cc-ic">📐</div>
+  <!-- Probenfokus Deutsch und HSU (Denny, 19.10.2026: "Nun sollte Deutsch in den Fokus gehen … mindestens am Tag
+       10-30 Minuten ueben und HSU soll er auch jeden Tag 10-30 Minuten mindestens ueben … Daher soll Deutsch und
+       HSU jetzt in den obersten Reitern sein"). Deutsch-Probe Fr 23.10.2026, HSU-Probe in der Woche 26.-30.10.2026
+       (Tag noch offen). Die Karte zeigt die heute aktiv geuebten Minuten (/fachzeit.js), ab 10 Minuten "Fuer heute
+       geschafft". Kein Rueckstand, keine Serie, kein "noch X Tage", kein Verlust (Bauregeln). Die Karte geht nach
+       ihrer Probe still weg: am Probentag ab 13 Uhr (wie probenkarte.js); steht der HSU-Termin fest und ist
+       vorbei, auch frueher. Kapitel 131. Die Mathe-Karten "Probenstoff Mathe" und "1×1-Woche" sind seit
+       19.10.2026 weg (Probe geschrieben, Plan endete 17.10.); ihre Seiten bleiben erreichbar. -->
+  <a class="createcard fokus deutsch" href="klasse4-deutsch-probenstoff.html" id="fokusDeutsch" data-fach="deutsch">
+    <div class="cc-ic">📘</div>
     <div>
-      <div class="cc-t">Probenstoff Mathe</div>
-      <div class="cc-s" id="probenStoffSatz">Jeden Tag neue Aufgaben für deine Mathe-Probe.</div>
+      <div class="cc-t">Deutsch für die Probe</div>
+      <div class="cc-s" id="fokusDeutschSatz">Jeden Tag neue Aufgaben: Nomen, Verben, richtig schreiben.</div>
     </div>
     <div class="cc-arrow">›</div>
   </a>
+  <a class="createcard fokus hsu" href="quiz.html?heute=1&amp;fach=hsu" id="fokusHsu" data-fach="hsu">
+    <div class="cc-ic">🌍</div>
+    <div>
+      <div class="cc-t">HSU für die Probe</div>
+      <div class="cc-s" id="fokusHsuSatz">Etwa 10 Fragen aus deinen HSU-Blättern.</div>
+    </div>
+    <div class="cc-arrow">›</div>
+  </a>
+  <script src="/fachzeit.js?v=5b66c926"></script>
   <script>(function(){try{
-    var d=new Date(), h=window.__psHeute||(d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2));
-    var karte=document.getElementById("probenStoff"), el=document.getElementById("probenStoffSatz");
-    if(h>"2026-10-19"){ karte.parentNode.removeChild(karte); return; }
-    var s=JSON.parse(localStorage.getItem("paul-probenstoff")||"null"), x=s&&s.heute;
-    if(x&&x.d===h&&x.t2){ karte.classList.add("erledigt"); el.textContent="Für heute geschafft – morgen gibt es neue."; }
-    else if(x&&x.d===h&&x.t1){ el.textContent="Teil 1 ist geschafft – jetzt noch die Sachaufgaben."; }
+    // bis = Probentag (ab 13 Uhr vorbei). ab = fruehester Tag der Probe, falls Paul den Termin noch eintraegt.
+    var FOKUS = [
+      { fach: "deutsch", el: "fokusDeutsch", satz: "fokusDeutschSatz", bis: "2026-10-23",
+        leer: "Jeden Tag neue Aufgaben: Nomen, Verben, richtig schreiben." },
+      { fach: "hsu", el: "fokusHsu", satz: "fokusHsuSatz", bis: "2026-10-30", ab: "2026-10-26",
+        leer: "Etwa 10 Fragen aus deinen HSU-Blättern." }
+    ];
+    var jetzt = window.__fzJetzt ? new Date(window.__fzJetzt) : new Date();
+    var h = window.__fzHeute || jetzt.toLocaleDateString("sv-SE"), std = window.__fzHeute ? (+window.__fzStunde || 0) : jetzt.getHours();
+    function vorbei(tag){ return h > tag || (h === tag && std >= 13); }
+    var sek = window.LWFachzeit ? LWFachzeit.lesen("paul", h) : { s: {} };
+    FOKUS.forEach(function(f){
+      var k = document.getElementById(f.el), el = document.getElementById(f.satz);
+      if (!k) return;
+      if (vorbei(f.bis)) { k.parentNode.removeChild(k); return; }
+      var min = Math.floor((sek.s[f.fach] || 0) / 60);
+      if (min >= 10) { k.classList.add("erledigt"); el.textContent = "Für heute geschafft – " + min + " Min geübt. Mehr geht immer."; }
+      else if (min > 0) el.textContent = "Heute " + min + " Min geübt – 10 Min sind ein gutes Ziel.";
+      else el.textContent = f.leer + " 10 Min sind ein gutes Ziel.";
+    });
+    // Steht der HSU-Termin fest (Paul traegt ihn ueber "Probe angekuendigt?" ein) und ist er vorbei: Karte weg.
+    document.addEventListener("lw-probentermine", function(e){
+      var t = (e.detail && e.detail.termine) || [];
+      FOKUS.forEach(function(f){
+        if (!f.ab) return;
+        var k = document.getElementById(f.el); if (!k) return;
+        var weg = t.some(function(x){ return x && String(x.fach).toLowerCase() === f.fach && x.datum >= f.ab && x.datum <= f.bis && vorbei(x.datum); });
+        if (weg) k.parentNode.removeChild(k);
+      });
+    });
   }catch(e){}})();</script>
   <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
        (/paul/probeneintrag.js, Server prueft die Grenzen). Steht immer da, auch ohne Probe. -->
@@ -635,24 +673,6 @@
     else if(x&&x.d===h&&x.e){ document.getElementById("tagesRechnenSatz").textContent="Teil 1 ist geschafft – jetzt noch die Textaufgaben."; }
   }catch(e){}})();</script>
 
-  <!-- 1×1-Woche (Denny, 13.10.2026): Reihen mit Trick, Zahlendreiecke und Tempo-Runde. Der Satz nennt
-       die Reihen von heute und ob schon geuebt wurde - nie einen Rueckstand oder eine Serie. -->
-  <a class="createcard einmaleinswoche" href="klasse4-mathe-einmaleinswoche.html" id="einmaleinsWoche">
-    <div class="cc-ic">🔺</div>
-    <div>
-      <div class="cc-t">1×1-Woche</div>
-      <div class="cc-s" id="einmaleinsWocheSatz">Jeden Tag eine Reihe: Trick, Zahlendreiecke, Tempo-Runde.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-  <script>(function(){try{
-    var d=new Date(), h=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
-    var plan={"2026-10-13":"1er, 2er, 5er und 10er","2026-10-14":"3er und 4er","2026-10-15":"6er und 9er","2026-10-16":"7er und 8er","2026-10-17":"alle Reihen gemischt"};
-    var el=document.getElementById("einmaleinsWocheSatz");
-    var s=JSON.parse(localStorage.getItem("paul-einmaleinswoche")||"null");
-    if(s&&s.tage&&s.tage[h]&&s.tage[h].length){ document.getElementById("einmaleinsWoche").classList.add("erledigt"); el.textContent="Heute schon geübt – super!"; }
-    else if(plan[h]) el.textContent="Heute dran: "+plan[h]+".";
-  }catch(e){}})();</script>
   <!-- Mathe-Fachwoerter (Denny per Klickfrage, 18.10.2026: „Startkarte ab sofort“): dauerhaft, nicht ans Probendatum
        gebunden. Fuehrt zum Merkplakat der 14 Fachwoerter mit Knopf zum Wort-Detektiv. Kapitel 121. -->
   <a class="createcard fachwoerter" href="klasse4-mathe-fachwoerter.html" id="fachWoerter">
@@ -1796,7 +1816,7 @@
 <script src="/fehlerkreis.js?v=6c7c4858"></script>
 <script src="/pruefreiter.js?v=9fd18dac"></script>
 <script>try{ LWPruef.startseite(document.getElementById("pruefReiter")); }catch(e){}</script>
-<script src="/probenkarte.js?v=db3fb3b8"></script>
+<script src="/probenkarte.js?v=7b57bdf0"></script>
 <script>try{ LWProbenkarte.laden("paul", document.getElementById("probenkarte")); }catch(e){}</script>
 <script src="/paul/probeneintrag.js?v=0924c0f8"></script>
 <script>try{ LWProbeneintrag.start({ kind: "paul", knopf: document.getElementById("probeEintragen"), karte: document.getElementById("probenkarte") }); }catch(e){}</script>

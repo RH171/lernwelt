@@ -130,9 +130,20 @@
     stand = stand || {};
     var heute = e.heute || tagVon(new Date());
 
+    /* Ein Fach (19.10.2026, Probenfokus Deutsch und HSU, Kapitel 131): opt.fach = "hsu" nimmt nur
+       Blaetter dieses Fachs (Heft-Schluessel, "deutsch-…" zaehlt zu "deutsch"). Damit fallen auch
+       Quizfehler anderer Faecher weg (sie haengen an ihrem Blatt). Ohne opt.fach alles wie vorher. */
+    var fachPasst = function (b) {
+      if (!e.fach) return true;
+      var f = String(b.fach || "").toLowerCase();
+      return f === e.fach || f.indexOf(e.fach + "-") === 0;
+    };
+    /* opt.ohne: Schluessel, die in dieser Sitzung schon dran waren ("<blatt>#k:<antwort>", "q:<frageId>") -
+       fuer "Noch 10 Fragen". */
+    var ohne = e.ohne || {};
     var liste = (blaetter || []).filter(function (b) {
       /* Handwerk (Lineatur, Heftregeln) ist kein Probenstoff - 30.09.2026. */
-      return b && b.id && b.sichtbar !== false && b.probenstoff !== false && Array.isArray(b.karten) && b.karten.length;
+      return b && b.id && b.sichtbar !== false && b.probenstoff !== false && Array.isArray(b.karten) && b.karten.length && fachPasst(b);
     }).slice().sort(function (a, b) {
       return String(b.datum || "").localeCompare(String(a.datum || ""));  // juengstes zuerst
     });
@@ -144,7 +155,7 @@
       b.karten.forEach(function (k) {
         if (!k || !k.frage || !k.richtig || !k.falsch || k.falsch.length !== 2) return;
         var key = b.id + "#k:" + schluessel(k);
-        if (gesehen[key]) return;             // dieselbe Antwort zweimal auf einem Blatt
+        if (gesehen[key] || ohne[key]) return;  // dieselbe Antwort zweimal auf einem Blatt / schon dran
         gesehen[key] = 1;
         var st = stand[key];
         var c = {};
@@ -160,7 +171,8 @@
     liste.forEach(function (b) { titel[b.id] = b.titel || ""; });
     (quiz || []).forEach(function (q) {
       if (!q || !q.frage || !q.richtig || !q.falsch || q.falsch.length !== 2) return;
-      if (!(q.blatt in titel)) return;          // ausgeblendetes Blatt: nicht abfragen
+      if (!(q.blatt in titel)) return;          // ausgeblendetes Blatt (oder anderes Fach): nicht abfragen
+      if (q.frageId != null && ohne["q:" + q.frageId]) return;
       topf.wackler.push({ frage: q.frage, richtig: q.richtig, falsch: q.falsch,
         merke: q.merke || "", stichwort: "Aus dem Quiz", blatt: q.blatt,
         blattTitel: titel[q.blatt], sorte: "wackler",
@@ -174,7 +186,11 @@
     topf.neu = reihum(neuJeBlatt, Infinity);
 
     var bekannt = topf.wieder.concat(topf.sicher);
-    var unsicher = topf.wackler.concat(topf.neu);
+    /* opt.ruhtUnsicher (19.10.2026, Denny zur HSU-Runde: "alles, was er falsch hatte und was noch nicht
+       sitzt"): Danebengetipptes, das noch nicht wieder faellig ist, zaehlt mit zum Unsicheren - nach
+       den faelligen Wacklern, vor dem Neuen. Ohne die Angabe bleibt es Fuellstoff wie bisher. */
+    var unsicher = e.ruhtUnsicher ? topf.wackler.concat(topf.ruht, topf.neu) : topf.wackler.concat(topf.neu);
+    if (e.ruhtUnsicher) topf.ruht = [];
     var n = e.hoechstens;
 
     /* ---- Vorrang (16.10.2026) ---- */

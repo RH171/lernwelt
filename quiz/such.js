@@ -22,6 +22,7 @@
   var FACH = {};
   ((window.QUIZ && window.QUIZ.faecher) || []).forEach(function(f){ FACH[f.k] = f.n; });
   function zurueck(){
+    if (window.LWFachzeit) LWFachzeit.fach(null);
     $("fundkarten").innerHTML = "";
     $("sicht-such").classList.add("verborgen");
     $("sicht-start").classList.remove("verborgen");
@@ -180,19 +181,37 @@
   /* Heute lernen. Der Satz sagt ehrlich, was drin ist - ohne Rueckstand-Zahl:
      "3 kommen wieder dran, 2 sind neu", nie "5 offen". */
   var autostart = /[?&]heute=1\b/.test(location.search);
+  /* Tagesrunde fuer EIN Fach (19.10.2026, Denny: Paul hatte alle HSU-Blaetter mit ueber 100 Fragen
+     durchgemacht, "das ist ihm zu viel"). ?heute=1&fach=hsu: etwa 10 Fragen zum Ankreuzen - seine
+     Fehler und Wackelkandidaten (auch noch nicht faellige), Neues von frischen Blaettern, dazu 3-4
+     Fragen, die schon sitzen, wie eine Karteikarte. Was sicher sitzt, kommt nur selten (sicher
+     sortiert nach wenig Treffern zuerst, tagesrunde.js). Danach freiwillig "Noch 10 Fragen".
+     Keine Serie, kein Zwang. Nur Paul ruft das auf (Startseite, Deutsch-Probenstoff). Kapitel 131. */
+  var FACH_RUNDE = { hoechstens: 10, unsicherHoechstens: 7, vorrangHoechstens: 7, ruhtUnsicher: true };   // 7 Unsichere + 3 Bekannte
+  var rundeFach = autostart ? ((/[?&]fach=([a-z-]{2,20})/.exec(location.search) || [])[1] || "") : "";
+  var schonDran = {}, mehrGleich = false;
+  function fachWort(f){ return FACH[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : ""); }
   var blattWahl = (/[?&]blatt=([^&#]+)/.exec(location.search) || [])[1];
   blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
   function heuteAnbieten(eintraege, ohneStart){
-    heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, null, quizWackler) : null;
+    var o = null;
+    if (rundeFach) { o = { fach: rundeFach, ohne: schonDran }; for (var x in FACH_RUNDE) o[x] = FACH_RUNDE[x]; }
+    heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
+    if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }
     $("heute-wahl").classList.toggle("verborgen", !da);
+    if (rundeFach) {
+      var h2 = $("heute-wahl").querySelector("h2");
+      if (h2) h2.textContent = da ? "☀️ " + fachWort(rundeFach) + " für heute" : "☀️ Heute lernen";
+    }
     if (!da) return;
     var z = heute.zaehl, teile = [];
     var wieder = z.wieder + z.wackler + z.sicher + z.ruht;
     if (wieder) teile.push(wieder === 1 ? "1 Karte kommt wieder dran" : wieder + " Karten kommen wieder dran");
     if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
-    $("heute-unter").textContent = heute.karten.length + " Karten aus deinen Blättern: " +
-      teile.join(", ") + ". Dauert ein paar Minuten.";
+    $("heute-unter").textContent = rundeFach
+      ? heute.karten.length + " Fragen aus deinen " + fachWort(rundeFach) + "-Blättern: " + teile.join(", ") + ". Dauert etwa 5 Minuten."
+      : heute.karten.length + " Karten aus deinen Blättern: " + teile.join(", ") + ". Dauert ein paar Minuten.";
     /* Von der Startseite (?heute=1) geht es NICHT mehr sofort los: Paul
        sieht erst, was kommt, und entscheidet selbst (25.09.2026). */
     if (autostart && !ohneStart) $("heute-selbst").classList.remove("verborgen");
@@ -264,15 +283,37 @@
     $("sicht-such").classList.remove("verborgen");
     window.scrollTo(0, 0);
   }
+  // Fach-Runde: Was in dieser Sitzung dran war, kommt bei "Noch 10 Fragen" nicht gleich wieder.
+  function merkeDran(karten){
+    (karten || []).forEach(function(k){
+      if (k.quiz && k.quiz.frageId != null) schonDran["q:" + k.quiz.frageId] = 1;
+      else if (k.blatt) schonDran[k.blatt + "#k:" + kartenSchluessel(k)] = 1;
+    });
+  }
+  function allesDurch(){
+    $("fundkarten").innerHTML = "";
+    var p = document.createElement("div"); p.className = "lwf-karte rein";
+    var h = document.createElement("h2"); h.textContent = "Für heute sind alle " + fachWort(rundeFach) + "-Fragen dran gewesen.";
+    var b = document.createElement("button"); b.type = "button"; b.className = "lwf-knopf"; b.textContent = "Zurück zur Auswahl";
+    b.addEventListener("click", function(){ zurueck(); laden(); });
+    p.appendChild(h); p.appendChild(b); $("fundkarten").appendChild(p);
+    $("heute-wahl").classList.add("verborgen");
+    $("sicht-start").classList.add("verborgen");
+    $("sicht-such").classList.remove("verborgen");
+  }
   function heuteStarten(){
     if (!heute || !heute.karten.length || !window.LWFund) return;
+    var f = rundeFach;
+    if (f) merkeDran(heute.karten);
+    if (f && window.LWFachzeit) LWFachzeit.fach(f);     // Minuten fuer die Karte auf der Startseite
     var ok = LWFund.zeigen($("fundkarten"), {
       karten: heute.karten, kind: KIND, mindestens: 1,
-      kicker: "Heute lernen", mitBlattTitel: heute.blaetter > 1, gruenJe: gruenJeBlatt(),
-      ueberschrift: heute.karten.length + " Karten für heute",
+      kicker: f ? fachWort(f) + " für heute" : "Heute lernen", mitBlattTitel: heute.blaetter > 1, gruenJe: gruenJeBlatt(),
+      ueberschrift: heute.karten.length + (f ? " Fragen für heute" : " Karten für heute"),
       unter: "Aus deinen Blättern. Schau auf den Ausschnitt und tipp an, was dort steht.",
-      fertigSatz: "Deine Runde für heute ist geschafft.",
+      fertigSatz: f ? "Deine " + fachWort(f) + "-Runde für heute ist geschafft. Mehr geht immer – musst du aber nicht." : "Deine Runde für heute ist geschafft.",
       ergebnis: function(liste){ merken("", liste); },
+      mehrText: f ? "Noch 10 Fragen" : "", mehr: f ? function(){ mehrGleich = true; laden(); } : null,
       fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
     });
     if (!ok) return;

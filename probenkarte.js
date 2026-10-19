@@ -35,6 +35,17 @@
         satz: "Üb in Ruhe – so viel du magst." }
     }
   };
+  /* Thema nach Muster (19.10.2026, Denny: "Nun sollte Deutsch in den Fokus gehen"). Pauls Deutsch-Probe
+   * am 23.10.2026 heisst im Speicher "Sprachuntersuchen | RS" (Sprache untersuchen / Richtig schreiben);
+   * Paul oder die Eltern koennen es auch anders schreiben. Reihenfolge: genau (UEBUNGEN) vor Muster vor
+   * NAH vor "<fach>|*". Kapitel 131. */
+  var MUSTER = {
+    paul: [
+      { fach: "deutsch", thema: /sprach|untersuch|richtig\s*schreib|rechtschreib|\brs\b|grammatik|wortart|nomen|verb|satzglied/i,
+        href: "/paul/klasse4-deutsch-probenstoff.html", knopf: "▶ Deutsch üben",
+        satz: "Jeden Tag neue Aufgaben – so viel du magst." }
+    ]
+  };
   /* Kurz vor der Probe (13.10.2026, Dennys Wahl C): In den letzten Tagen vor einer Probe, deren
    * Thema passt, fuehrt die Karte auf die Generalprobe statt auf die allgemeine Uebung.
    * Mathe "Einmaleins und Teilen" am 19.10.2026: ab Samstag 17.10. (2 Tage vorher) bis zum
@@ -94,6 +105,8 @@
     var u = UEBUNGEN[kind] || {}, f = String(t.fach || "").toLowerCase();
     var genau = u[f + "|" + String(t.thema || "").trim().toLowerCase()];
     if (genau) return genau;
+    var m = (MUSTER[kind] || []).filter(function(x){ return x.fach === f && x.thema.test(String(t.thema || "")); })[0];
+    if (m) return m;
     var nah = (NAH[kind] || {})[f], th = String(t.thema || "").trim();
     if (nah && typeof tage === "number" && tage >= 0 && tage <= nah.tage && (!th || nah.thema.test(th))) return nah;
     if (u[f + "|*"]) return u[f + "|*"];
@@ -101,14 +114,27 @@
       satz: "Wiederhol, was in deinem Heft steht – so viel du magst.", heft: true };
   }
 
+  /* Am Probentag ist die Probe ab 13:00 Uhr Ortszeit geschrieben (19.10.2026, Denny: "Paul hat heute
+   * seine Mathe-Pruefung geschrieben … Somit koennen die Matheprobe-Gleiter verschwinden"). Proben
+   * liegen vormittags; ab 13 Uhr steht der Termin nicht mehr da, und die naechste Probe rueckt vor.
+   * Gilt fuer jedes Kind und jede Probe. Die Stunde kommt von der Uhr; setzt eine Messung den Tag
+   * (window.__probenHeute), setzt sie die Stunde mit window.__probenStunde (sonst 0 = vormittags). */
+  var GESCHRIEBEN_AB = 13;
+  function stunde(){
+    if (window.__probenHeute) return +window.__probenStunde || 0;
+    return new Date().getHours();
+  }
+  function geschrieben(n, std){ return n === 0 && std >= GESCHRIEBEN_AB; }
+
   // Alle Termine von heute bis +14 Tage, nach Datum: [{termin, tage, uebung}].
   function anstehend(termine, kind, h){
+    var std = stunde();
     var liste = (Array.isArray(termine) ? termine : []).slice().sort(function(a, b){ return a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : 0; });
     var raus = [];
     for (var i = 0; i < liste.length; i++) {
       var t = liste[i]; if (!t || typeof t.datum !== "string" || !t.fach) continue;
       var n = tageBis(t.datum, h);
-      if (n < 0 || n > TAGE) continue;
+      if (n < 0 || n > TAGE || geschrieben(n, std)) continue;
       raus.push({ termin: t, tage: n, uebung: uebungFuer(t, kind, n) });
     }
     return raus;
@@ -176,5 +202,6 @@
   }
 
   window.LWProbenkarte = { laden: laden, zeigen: zeigen, waehle: waehle, anstehend: anstehend, UEBUNGEN: UEBUNGEN, NAH: NAH,
+    MUSTER: MUSTER, GESCHRIEBEN_AB: GESCHRIEBEN_AB, geschrieben: geschrieben, stunde: stunde,
     FAECHER: FAECHER, termine: undefined, faecher: {}, nah: {} };
 })();

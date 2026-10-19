@@ -820,6 +820,8 @@ function artKurz(art) {
   }
 
   function zeige(welche) {
+    // Geuebte Minuten je Fach (19.10.2026, /fachzeit.js, nur wo die Seite es laedt): ausserhalb des Spiels zaehlt kein Fach.
+    if (welche !== "spiel" && window.LWFachzeit) window.LWFachzeit.fach(null);
     ["start", "merken", "spiel", "ende"].forEach(function (x) {
       if (!$("sicht-" + x)) return;      // nicht jede Seite hat jeden Schirm
       $("sicht-" + x).classList.toggle("verborgen", x !== welche);
@@ -980,6 +982,7 @@ function artKurz(art) {
     wahlOffen = true;
     $("q-nr").textContent = "Frage " + (nr + 1) + (stand.laenge ? " von " + Math.min(stand.laenge, fragen.length) : "");
     $("q-fach").textContent = fachName(f.fach);
+    if (window.LWFachzeit) window.LWFachzeit.fach(f.fach);   // zaehlt nur deutsch und hsu (/fachzeit.js)
     $("q-frage").textContent = f.frage;
     rechenfeld(f.frage);
     meinwegfeld(f);

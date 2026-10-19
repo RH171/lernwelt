@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deutsch für die Probe</title>
+<!--
+  Pauls Deutsch-Probenstoff (Denny, 19.10.2026: "Nun sollte Deutsch in den Fokus gehen … mindestens am Tag
+  10-30 Minuten ueben"). Deutsch-Probe am Freitag, 23.10.2026, "Sprachuntersuchen | RS"; am Probentag ab
+  13 Uhr ist die Seite still aus (EIN.bis im Motor). Luecken laut der Lehrerin: Nomen, Verben.
+  Motor /deutsch-probenstoff/motor.js (reine Logik), Anzeige /deutsch-probenstoff/seite.js.
+  Minuten fuer die Startkarte: /fachzeit.js (aktive Zeit, Fach deutsch). Kein eigener Speicher sonst.
+  Nur fuer Paul (Proben-Uebungen nur fuer das Kind mit der Probe, Kapitel 105). Kapitel 131.
+-->
+<script>(function(){try{ if(localStorage.getItem("hub-theme")!=="light") document.documentElement.setAttribute("data-theme","dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }})();</script>
+<link rel="stylesheet" href="/thema.css?v=e8d09026">
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<link rel="stylesheet" href="/deutsch-probenstoff/deutsch-probenstoff.css?v=1adf346c">
+<script src="/farbschalter.js?v=383ccf75"></script>
+</head>
+<body>
+<header>
+  <a class="knopf" href="./">← Zurück</a>
+  <h1>Deutsch für die Probe</h1>
+</header>
+
+<section id="start" class="karte">
+  <h2>📘 Fit für die Deutsch-Probe</h2>
+  <p id="start-satz">Jeden Tag neue Aufgaben: Wortarten, Perfekt, Satzglieder und richtig schreiben.</p>
+  <p id="start-zeit" class="zeit"></p>
+  <div class="mitte"><button id="los" class="knopf primaer">Los geht's</button></div>
+  <div class="mitte unten"><a id="blaetter" class="knopf" href="quiz.html?heute=1&amp;fach=deutsch">📄 Fragen aus meinen Deutsch-Blättern</a></div>
+</section>
+
+<section id="spiel" class="verborgen">
+  <div class="oben"><span id="thema"></span><span id="zaehler"></span></div>
+  <div id="aufgabe" aria-live="polite"></div>
+  <div id="tipp" class="tipp" aria-live="polite"></div>
+  <div id="knoepfe" class="knoepfe"></div>
+  <button id="weiter" type="button" class="weiterknopf verborgen">Weiter ›</button>
+</section>
+
+<section id="ende" class="karte verborgen">
+  <h2>🎉 Runde geschafft!</h2>
+  <p id="ende-zahlen"></p>
+  <p id="ende-zeit" class="zeit"></p>
+  <div class="mitte">
+    <button id="nochmal" class="knopf primaer">Noch eine Runde</button>
+    <a class="knopf" href="quiz.html?heute=1&amp;fach=deutsch">📄 Fragen aus meinen Deutsch-Blättern</a>
+    <a class="knopf" href="./">Zur Startseite</a>
+  </div>
+</section>
+
+<section id="aus" class="karte verborgen">
+  <h2>Die Deutsch-Probe ist vorbei</h2>
+  <p>Diese Übung war für deine Probe am 23.10.2026. Deine anderen Übungen findest du auf der Startseite.</p>
+  <div class="mitte"><a class="knopf primaer" href="./">Zur Startseite</a></div>
+</section>
+
+<script src="/toleranz.js?v=122870a5"></script>
+<script src="/deutsch-probenstoff/motor.js?v=97b10fc8"></script>
+<script src="/fachzeit.js?v=5b66c926"></script>
+<script src="/deutsch-probenstoff/seite.js?v=2f7c6cd6" defer></script>
+<script src="/lernstand.js?v=fe69f5e5" defer></script>
+</body>
+</html>

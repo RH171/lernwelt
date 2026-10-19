@@ -541,7 +541,14 @@
           });
           fertig.appendChild(bw);
         }
-        var b1 = el("button", "lwf-knopf", opt.fertigText || "Weiter");
+        /* "Noch 10 Fragen" (19.10.2026, Fach-Runde aus quiz/such.js): freiwillig weiter, nur wenn die Seite es anbietet. */
+        if (opt.mehrText && opt.mehr) {
+          var bm = el("button", "lwf-knopf lwf-mehr", opt.mehrText);
+          bm.type = "button";
+          bm.addEventListener("click", function () { opt.mehr(); });
+          fertig.appendChild(bm);
+        }
+        var b1 = el("button", "lwf-knopf" + (opt.mehrText && opt.mehr ? " leise" : ""), opt.fertigText || "Weiter");
         b1.type = "button";
         b1.addEventListener("click", function () { if (opt.fertig) opt.fertig(); });
         fertig.appendChild(b1);
