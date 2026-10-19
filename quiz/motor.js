@@ -877,7 +877,9 @@ function artKurz(art) {
 
   function merkkartenZeigen() {
     if (!$("sicht-merken")) return false;
-    var mit = fragen.filter(function (f) { return f.merke; });
+    /* Keine Merkkarte zu einer Tipp-Frage (19.10.2026) - sie zeigte die
+       Antwort, die Paul gleich selbst schreiben soll. */
+    var mit = fragen.filter(function (f) { return f.merke && f.eingabe !== "frei"; });
     if (mit.length < 3) return false;
 
     var box = $("m-karten");
@@ -1010,7 +1012,83 @@ function artKurz(art) {
       b.addEventListener("click", function () { waehlen(platz, originalIndex, b); });
       box.appendChild(b);
     });
+    freiMalen(f);
     fortschrittMalen();
+  }
+
+  /* ---------- Tippen statt Ankreuzen (19.10.2026, Kapitel 132) ----------
+     Dennys Entscheidung: "Grundsätzlich bleibt es beim Ankreuzen. Getippt
+     wird nur bei einer Tatsache, die Paul schon zweimal richtig hatte, und
+     dann höchstens 1–2 Mal je Runde: ein kurzes Wort." Welche Frage das ist,
+     entscheidet der Server (`eingabe: "frei"`, _fragerichtung.js). Gewertet
+     mit /toleranz.js; "fast" zaehlt und zeigt die Schreibweise. Ein
+     Fehlversuch ist kein Ende: Tipp und die Antworten zum Ankreuzen kommen
+     als Hilfe. Gezaehlt wird der erste Versuch. Ohne toleranz.js (alte Seite)
+     wird einfach angekreuzt. */
+  var freiAktiv = false, freiGegeben = "", freiErgebnis = null;
+  function freiSprache(f) {
+    var k = String(f.fach || "");
+    return /^englisch/.test(k) ? "en" : /^franz/.test(k) ? "fr" : "de";
+  }
+  function freiSoll(f) {
+    var a = f.antworten || [], r = [a[f.richtig || 0]];
+    if (Array.isArray(f.auchRichtig)) f.auchRichtig.forEach(function (i) { if (a[i] != null) r.push(a[i]); });
+    return r;
+  }
+  window.QUIZ_FREI_PRUEFEN = function (f, text) {      // auch fuer die Messung
+    var T = window.LWToleranz;
+    if (!T) return null;
+    var soll = freiSoll(f), sp = freiSprache(f), best = null;
+    var verboten = (f.antworten || []).filter(function (x) { return soll.indexOf(x) < 0; });
+    for (var i = 0; i < soll.length; i++) {
+      var e = T.pruefen(text, soll[i], { sprache: sp, verboten: verboten, trennen: "keine",
+        artikelEgal: sp !== "fr", zusatzWorte: sp === "de" && !/^deutsch/.test(String(f.fach || "")) });
+      if (!best || e.stufe === "gut" || (e.stufe === "fast" && best.stufe !== "gut")) best = e;
+      if (e.stufe === "gut") break;
+    }
+    return best;
+  };
+  function freiMalen(f) {
+    var h = $("q-frei");
+    if (!h) {
+      h = document.createElement("div");
+      h.id = "q-frei";
+      h.className = "qfrei verborgen";
+      $("q-antworten").insertAdjacentElement("beforebegin", h);
+    }
+    freiAktiv = !!(f && f.eingabe === "frei" && window.LWToleranz);
+    freiGegeben = ""; freiErgebnis = null;
+    if (!freiAktiv) { h.innerHTML = ""; h.classList.add("verborgen"); $("q-antworten").classList.remove("verborgen"); return; }
+    h.innerHTML = '<label class="qfrei-kopf" for="q-frei-feld">\u270F\uFE0F Das kannst du schon \u2013 schreib die Antwort selbst</label>' +
+      '<div class="qfrei-reihe"><input id="q-frei-feld" class="qfrei-feld" type="text" autocomplete="off" autocorrect="off" ' +
+      'autocapitalize="off" spellcheck="false" enterkeyhint="done" maxlength="60">' +
+      '<button type="button" class="qfrei-los">Pr\u00fcfen</button></div><div class="qfrei-hinweis" aria-live="polite"></div>';
+    h.classList.remove("verborgen");
+    $("q-antworten").classList.add("verborgen");
+    var feld = h.querySelector(".qfrei-feld"), los = h.querySelector(".qfrei-los");
+    los.addEventListener("click", function () { freiPruefen(f, feld.value); });
+    feld.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); freiPruefen(f, feld.value); } });
+  }
+  function freiPruefen(f, text) {
+    if (!wahlOffen || !freiAktiv || versuch > 0) return;
+    var h = $("q-frei"), hinweis = h.querySelector(".qfrei-hinweis");
+    var e = window.QUIZ_FREI_PRUEFEN(f, text);
+    if (!e || e.stufe === "offen") { hinweis.textContent = "Schreib zuerst deine Antwort hinein."; return; }
+    freiGegeben = String(text).trim(); freiErgebnis = e;
+    h.querySelector(".qfrei-feld").disabled = true;
+    h.querySelector(".qfrei-los").disabled = true;
+    versuch = 1;
+    if (e.stufe === "gut" || e.stufe === "fast") return abschliessen(true, null, freiGegeben);
+    ersterFalsch = freiGegeben;
+    $("q-antworten").classList.remove("verborgen");
+    if (f.tipp || f.zeile) {
+      /* Hilfe: Tipp wie nach einem Fehlklick, darunter die Antworten zum
+         Ankreuzen. Es geht mit waehlen() weiter (versuch zaehlt weiter). */
+      hinweis.textContent = "Noch nicht. Such die Antwort unten aus.";
+      stufeZeigen(f, 1);
+      return;
+    }
+    abschliessen(false, null, freiGegeben);
   }
 
   /* Rechenkaestchen (13.10.2026): bei "Rechne schriftlich: 794 − 283" ein
@@ -1244,7 +1322,13 @@ function artKurz(art) {
       stufeZeigen(f, 2);
       return;
     }
+    abschliessen(stimmt, knopf, f.antworten[originalIndex]);
+  }
 
+  /* Das Ende einer Frage - nach einem Klick oder nach dem Tippen.
+     `gegeben` ist der Text der gewaehlten bzw. getippten Antwort. */
+  function abschliessen(stimmt, knopf, gegeben) {
+    var f = fragen[nr];
     wahlOffen = false;
     if (stimmt && versuch === 1) richtigGesamt++;
 
@@ -1253,11 +1337,16 @@ function artKurz(art) {
       if (reihenfolge[i] === (f.richtig || 0) ||
           (Array.isArray(f.auchRichtig) && f.auchRichtig.indexOf(reihenfolge[i]) >= 0)) b.classList.add("richtig");
     });
-    if (!stimmt) knopf.classList.add("falsch");
+    if (!stimmt && knopf) knopf.classList.add("falsch");
+    /* Nach falschem Tippen ohne Hilfe: die Antworten mit der richtigen zeigen. */
+    if (!stimmt && !knopf) $("q-antworten").classList.remove("verborgen");
 
     var e = $("q-erklaerung");
+    var getippt = !knopf && freiErgebnis && versuch === 1;
     var kopf = stimmt
-      ? (versuch === 1 ? "Richtig." : "Jetzt stimmt es.")
+      ? (getippt && freiErgebnis.stufe === "fast"
+          ? (freiErgebnis.grund === "zusatz" ? "Richtig \u2013 k\u00fcrzer reicht auch." : "Richtig \u2013 achte auf die Schreibweise.")
+          : versuch === 1 ? "Richtig." : "Jetzt stimmt es.")
       : "Schau es dir an.";
     e.innerHTML = "<b>" + kopf + "</b> " + esc(f.erklaerung || "") +
       (f.merke ? '<div class="qmerke"><span>Damit du es behältst</span>' + esc(f.merke) + "</div>" : "") +
@@ -1274,6 +1363,12 @@ function artKurz(art) {
     if (aufAuch) aufAuch.addEventListener("click", function () {
       belegZeigen(f, f.beleg.auch.blatt, f.beleg.auch.titel);
     });
+    if (getippt && freiErgebnis.stufe === "fast" && window.LWToleranz) {
+      var platz = document.createElement("div");
+      e.insertBefore(platz, e.children[1] || null);
+      window.LWToleranz.zeigen(platz, gegeben, f.antworten[f.richtig || 0],
+        { wo: freiErgebnis.grund === "zusatz" ? "Das h\u00e4tte gereicht:" : "So schreibt man es:" });
+    }
     e.classList.remove("verborgen");
     e.classList.toggle("gut", stimmt);
     $("q-weiter").classList.remove("verborgen");
@@ -1288,11 +1383,12 @@ function artKurz(art) {
        Wiedervorlage auf dem Server nichts wiedererkennen - `merkmal` taugt
        dafuer nicht, es wird je Bau-Lauf neu erfunden. */
     antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmtEcht,
-                        blatt: f.blatt || "", belegNr: f.belegNr || 0, trick: trickGenutzt || undefined });
+                        blatt: f.blatt || "", belegNr: f.belegNr || 0, trick: trickGenutzt || undefined,
+                        form: f.form || undefined, frei: f.eingabe === "frei" ? 1 : undefined });
     // Der Lernstand ist die Quelle für die Wiederholung - hier entsteht sie.
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",
-        stimmtEcht ? "" : (ersterFalsch || f.antworten[originalIndex]), f.antworten[f.richtig || 0],
+        stimmtEcht ? "" : (ersterFalsch || gegeben), f.antworten[f.richtig || 0],
         !f.blatt ? "" : Number(f.belegNr) >= 1 ? f.blatt + "#" + Math.floor(Number(f.belegNr))
                        : f.id ? f.blatt + "#f:" + String(f.id).slice(0, 24) : "");
     fortschrittMalen();

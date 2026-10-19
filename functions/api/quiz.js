@@ -50,6 +50,7 @@ import {
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
   fundFaelligJeBlatt, fundStandJeKarte, wartendText,
 } from "./_wiedervorlage.js";
+import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN } from "./_fragerichtung.js";
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -72,18 +73,32 @@ const GESTELLT = (kind) => "quiz-gestellt:" + kind;
 // So viele Fragen baut ein Nachschub-Lauf. Gross genug, dass es sich lohnt
 // (ein Lauf kostet echtes Geld), klein genug fuer eine Antwort ohne Abbruch.
 const JE_LAUF = 24;
+/* Seit 19.10.2026: 8 Tatsachen mit je bis zu vier Formen = bis zu 32 Fragen.
+   Gemeinsames steht einmal je Tatsache - die Ausgabe ist damit etwa so lang
+   wie vorher bei 24 Einzelfragen (Laufzeit und Kosten je Lauf gleich). */
+const TATSACHEN_JE_LAUF = 8;
 // Darunter wird nachgefuellt, damit nie jemand vor einem leeren Quiz sitzt.
 const NACHFUELLEN_AB = 10;
 /* Vorbauen: so viele Fragen je Blatt sind genug, so viele Blaetter je Aufruf
    (vier halten den Aufruf unter einer Minute). */
-const VORBAU_ZIEL = 6;
-const VORBAU_JE_LAUF = 4;
+/* Seit 19.10.2026 zaehlt VORBAU_ZIEL TATSACHEN je Blatt, nicht Fragen (eine
+   Tatsache hat jetzt bis zu vier). 4 statt 6: Ein altes Blatt mit 6 Fragen hat
+   6 Tatsachen und loest KEINEN neuen (bezahlten) Bau aus. Zwei Blaetter je
+   Aufruf: 8 Tatsachen / 2 = 4 je Blatt, ein Lauf macht ein Blatt fertig. */
+const VORBAU_ZIEL = 4;
+const VORBAU_JE_LAUF = 2;
 /* 200 reichten fuer zwei Wochen Blaetter; bei ~40 Blaettern im Monat verdraengte
    der Deckel laufend fertige Fragen - und jede fehlende heisst Warten. */
-const VORRAT_MAX = 800;
+/* 3000 seit 19.10.2026: Mit drei Fragerichtungen je Tatsache hat jede Tatsache
+   bis zu vier Fragen. Bei 800 haette der Nachbau fuer Pauls HSU (768 + ~330)
+   beim naechsten Schreiben die AELTESTEN Fragen abgeschnitten. Gemessen
+   19.10.2026: 768 Fragen = 294 KB; 3000 = ~1,2 MB, ein KV-Wert darf 25 MiB. */
+const VORRAT_MAX = 3000;
 // Mehr als so viele Kennungen werden nicht aufgehoben - sonst waechst der
 // Eintrag endlos und jeder Schreibvorgang wird teurer.
-const GESTELLT_MAX = 400;
+/* 1000 seit 19.10.2026 (vorher 400): Die Fragerichtungen lesen hieraus, welche
+   Tatsache in welcher Form zuletzt dran war. ~12 Zeichen je Kennung = 12 KB. */
+const GESTELLT_MAX = 1000;
 /* Hoechstens so viele Fragen je Runde, auch bei "Alle Fragen" (29.09.2026,
    vorher 40). Die Seite zeigt "Alle Fragen (N)" - das muss dann auch kommen. */
 const ALLE_HOECHSTENS = 100;
@@ -148,14 +163,18 @@ export async function onRequestGet(context) {
       kreiseKarten = [...zusammen.values()];
     }
     const zahl = fragenZaehlen(vorratBereinigen(v.fragen, bn));
+    /* Je Tatsache zaehlt nur die zuletzt gestellte Form (19.10.2026) - sonst
+       "wartet" eine Tatsache doppelt, die Paul eben in anderer Form hatte. */
+    const proTatsache = RICHTUNG.an
+      ? vertreter(v.fragen, begegnungen(await gestellteLesen(env, kind), nachKennung(v.fragen))) : v.fragen;
     const fund = fundFaelligJeBlatt(pk, Date.now());
     const fundText = {};
     for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
     return json(200, { ok: true, wiedervorlage: fuerDieSeite(), fragenZahl: zahl,
-                       wartend: wartendJeBlatt(v.fragen, pk, Date.now()),
+                       wartend: wartendJeBlatt(proTatsache, pk, Date.now()),
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
-                       quizWackler: quizWacklerListe(v.fragen, pk, Date.now()),
+                       quizWackler: quizWacklerListe(proTatsache, pk, Date.now()),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
@@ -168,7 +187,14 @@ export async function onRequestGet(context) {
   if (url.searchParams.get("vorbauen") === "1") {
     const v0 = await vorratLesen(env, kind);
     const jeBlatt = {};
-    for (const f of v0.fragen) if (f.blatt) jeBlatt[f.blatt] = (jeBlatt[f.blatt] || 0) + 1;
+    const schonGezaehlt = new Set();
+    for (const f of v0.fragen) {
+      if (!f.blatt) continue;
+      const t = tatsacheVon(f);
+      if (schonGezaehlt.has(t)) continue;
+      schonGezaehlt.add(t);
+      jeBlatt[f.blatt] = (jeBlatt[f.blatt] || 0) + 1;
+    }
     let kandidaten = gewuenschteBlaetter;
     if (!kandidaten.length) {
       const e = await stoffLesen(env, kind, 4).catch(() => ({ ok: false }));
@@ -208,7 +234,8 @@ export async function onRequestGet(context) {
   }
 
   let vorrat = await vorratLesen(env, kind);
-  const gestellt = new Set(await gestellteLesen(env, kind));
+  const gestelltListe = await gestellteLesen(env, kind);
+  const gestellt = new Set(gestelltListe);
   /* Die Blaetter selbst - fuer zwei Dinge (28.09.2026):
      1. Alte Fragen mit falschem Fach-Etikett fallen raus (eine Frage vom
         Mathe-Blatt ist keine Deutschfrage).
@@ -261,19 +288,32 @@ export async function onRequestGet(context) {
   const punkte = await punkteLesen(env, kind);
   const jetzt = Date.now();
   const alleDazu = vorrat.fragen.filter(passt);
+  /* Drei Fragerichtungen (19.10.2026): "gestellt" heisst ab jetzt "die
+     TATSACHE war schon dran", nicht "genau diese Frage". Je Tatsache geht
+     EINE Frage in die Auswahl; welche Form, entscheidet richtungAnwenden(). */
+  const beg = RICHTUNG.an ? begegnungen(gestelltListe, nachKennung(vorrat.fragen)) : null;
+  const schonDran = (f) => (beg ? beg.has(tatsacheVon(f)) : gestellt.has(f.id));
   /* "Alle Fragen" (anzahl 0) heisst ALLE der Auswahl, nicht NACHFUELLEN_AB.
      Am 29.09.2026 waehlte Paul "Alle Fragen (31)" in HSU und bekam 10: Die
      meisten Fragen hatte er schon gehabt, also zaehlten nur die frischen, 4
      faellige und aufgefuellt bis 10. */
   const gebraucht = anzahl ? Math.max(NACHFUELLEN_AB, anzahl)
-                           : Math.min(ALLE_HOECHSTENS, Math.max(NACHFUELLEN_AB, alleDazu.length));
+                           : Math.min(ALLE_HOECHSTENS, Math.max(NACHFUELLEN_AB,
+                               beg ? new Set(alleDazu.map(tatsacheVon)).size : alleDazu.length));
   let wiederholt = 0;
   let offen;
 
   if (WV.an) {
-    const frisch = alleDazu.filter((f) => !gestellt.has(f.id));
+    let frisch = alleDazu.filter((f) => !schonDran(f));
+    let dran = alleDazu.filter(schonDran);
+    if (beg) {
+      /* Je neuer Tatsache eine zufaellige Form, je bekannter der Vertreter
+         (zuletzt gestellte Form - dessen Lernpunkt ist der frischeste). */
+      const k = frisch.slice(); mischen(k); frisch = eineJeTatsache(k);
+      dran = vertreter(dran, beg);
+    }
     // nachFaelligkeit() stellt die faelligen nach vorn, am laengsten her zuerst.
-    const schonMal = nachFaelligkeit(alleDazu.filter((f) => gestellt.has(f.id)), punkte, jetzt);
+    const schonMal = nachFaelligkeit(dran, punkte, jetzt);
     const faellig = schonMal.filter((f) => {
       const s = punktSchluessel(f);
       return s && punkte[s] && istFaellig(punkte[s], jetzt);
@@ -328,7 +368,24 @@ export async function onRequestGet(context) {
         ? "Zu diesen Blättern habe ich gerade keine neuen Fragen. Nimm noch eines dazu."
         : "Für diese Auswahl habe ich gerade keine neuen Fragen. Versuch es mit mehr Fächern." });
 
+  /* Kommt eine Tatsache wieder, dann in einer ANDEREN Form als beim letzten
+     Mal, und hoechstens 2 je Runde zum Tippen (Dennys Entscheidung
+     19.10.2026). Eine Tatsache je Runde. */
+  if (beg) offen = richtungAnwenden(offen, alleDazu, beg, { kind, punkte, schluessel: punktSchluessel });
   mischen(offen);
+  /* Die Tipp-Fragen nicht wegschneiden lassen: Bei "10 aus 40" saehe Paul
+     sonst meist keine. Liegt eine hinter dem Schnitt, tauscht sie mit einer
+     zufaelligen Ankreuz-Frage davor. */
+  if (anzahl && offen.length > anzahl) {
+    for (let i = anzahl; i < offen.length; i++) {
+      if (offen[i].eingabe !== "frei") continue;
+      const vorn = [];
+      for (let j = 0; j < anzahl; j++) if (offen[j].eingabe !== "frei") vorn.push(j);
+      if (!vorn.length) break;
+      const j = vorn[Math.floor(Math.random() * vorn.length)];
+      [offen[i], offen[j]] = [offen[j], offen[i]];
+    }
+  }
   const raus = (anzahl ? offen.slice(0, anzahl) : offen.slice(0, ALLE_HOECHSTENS))
     .map((f) => {
       const b = belegFuer(f, blattNach[f.blatt], blattNach);
@@ -557,7 +614,17 @@ export function vorratBereinigen(fragen, blattNach) {
    Gestelltes: Paul darf wiederholen (Beschluss 24.09.2026). */
 export function fragenZaehlen(fragen) {
   const blatt = {}, fach = {};
+  /* Gezaehlt werden TATSACHEN, nicht Fragen (19.10.2026): Je Runde kommt eine
+     Frage je Tatsache. Mit drei Fragerichtungen stuende sonst "Alle Fragen
+     (120)" da, und es kaemen 30. Ohne Fragerichtung ist jede Frage ihre
+     eigene Tatsache - die Zahl bleibt wie vorher. */
+  const gezaehlt = new Set();
   for (const f of fragen || []) {
+    if (RICHTUNG.an) {
+      const t = tatsacheVon(f);
+      if (gezaehlt.has(t)) continue;
+      gezaehlt.add(t);
+    }
     if (f.blatt) blatt[f.blatt] = (blatt[f.blatt] || 0) + 1;
     const k = String(f.fach || "").toLowerCase();
     if (k) fach[k] = (fach[k] || 0) + 1;
@@ -591,6 +658,12 @@ async function gestellteLesen(env, kind) {
   return [];
 }
 
+function nachKennung(fragen) {
+  const m = new Map();
+  for (const f of fragen || []) if (f && f.id) m.set(String(f.id), f);
+  return m;
+}
+
 function mischen(a) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -606,37 +679,139 @@ function json(status, daten) {
 
 /* ---------- Nachschub ---------- */
 
+/* Seit 19.10.2026 baut das Modell TATSACHEN mit je bis zu vier Formen
+   (Dennys Wahl "Drei Fragerichtungen"). Gemeinsames (Zeile, Erklaerung,
+   Eselsbruecke) steht EINMAL an der Tatsache - das spart Ausgabe, und die
+   Formen gehoeren mechanisch zusammen, ohne dass das Modell Nummern
+   abgleichen muss. Jede Form hat eigene Antworten und einen eigenen Tipp:
+   Der Tipp darf die Antwort DIESER Form nicht verraten (tippOk je Form). */
+const FORM_SCHEMA = {
+  type: "object",
+  properties: {
+    form: { type: "string", enum: FORMEN, description: "standard = die naheliegende Frage; umgekehrt = Frage und Antwort vertauscht; luecke = Satz mit genau einer Lücke ___; zuordnung = was gehört wozu (Beispiel zu Oberbegriff, Begriff zu Aufgabe)." },
+    frage: { type: "string", description: "Eine Frage, höchstens 20 Wörter. Bei luecke ein Satz mit genau einer Lücke ___ (nie am Satzanfang)." },
+    antworten: { type: "array", minItems: 3, maxItems: 4, items: { type: "string" },
+                 description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
+    tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Antwort DIESER Form NICHT enthält. Keine Zahl daraus, kein Wort daraus. Schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
+    frei: { type: "boolean", description: "true, wenn man die richtige Antwort auch OHNE Auswahl eindeutig eintippen könnte: genau eine richtige Antwort, ein kurzes Wort oder eine Zahl. false bei mehreren möglichen Antworten oder langen Antworten." },
+  },
+  required: ["form", "frage", "antworten", "tipp", "frei"],
+};
+
 const WERKZEUG = {
-  name: "quiz_fragen",
-  description: "Die Quizfragen als Liste.",
+  name: "quiz_tatsachen",
+  description: "Die Quizfragen als Liste von Tatsachen, je Tatsache mehrere Fragerichtungen.",
   input_schema: {
     type: "object",
     properties: {
-      fragen: {
-        type: "array", minItems: 12, maxItems: 30,
+      tatsachen: {
+        type: "array", minItems: 4, maxItems: 12,
         items: {
           type: "object",
           properties: {
             fach: { type: "string", description: "Kürzel des Fachs, genau wie in der Fächerliste vorgegeben." },
-            frage: { type: "string", description: "Eine Frage, höchstens 20 Wörter. Keine Aufzählung, kein Lückentext über mehrere Zeilen." },
-            antworten: { type: "array", minItems: 3, maxItems: 4, items: { type: "string" },
-                         description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
-            erklaerung: { type: "string", description: "Ein Satz, warum das stimmt. Für das Kind, nicht für Erwachsene." },
-            merkmal: { type: "string", description: 'Was die Frage übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Gleiche Sache = gleicher Schlüssel, damit sich zählen lässt, ob es sitzt. Gut: "zehneruebergang plus", "m in cm", "steigerung adjektive", "passe compose". Schlecht: "Frage 3", "gemischt".' },
-            beleg_nr: { type: "integer", description: "Nummer der Zeile des Blattes, in der die Antwort steht (die Zahl vor der Zeile, z. B. 3 bei \"Z3: ...\"). 0, wenn die Frage nicht von einem Blatt stammt." },
-            blatt_nr: { type: "integer", description: "Nummer des Blattes aus der Liste oben, auf dem diese Frage steht (1 = das erste). 0, wenn die Frage nicht von einem Blatt stammt." },
-            tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Lösung NICHT enthält. Nenne nie die richtige Antwort, keine Zahl daraus, kein Wort daraus. Gut: \"Denk an die Zeile, in der die Postleitzahlen stehen - deine eigene steht ganz hinten.\" Schlecht: \"Es ist 90765.\" Und schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
-            merke: { type: "string", description: "ESELSBRÜCKE, die nach der Lösung stehenbleibt - etwas, woran das Kind es beim nächsten Mal wiedererkennt. Eine Merkregel, ein Bild, eine Verbindung zu etwas Bekanntem. Gut: \"FÜ wie die ersten zwei Buchstaben von FÜrth.\" Leer lassen, wenn dir nichts Tragfähiges einfällt - eine erfundene Eselsbrücke ist schlimmer als keine." },
-            symbol: { type: "string", description: "EIN Zeichen für die Merkkarte vor dem Quiz - nur wenn es eindeutig und sachlich richtig passt, sonst LEER lassen. Es muss zum Inhalt stimmen: Für ein dreiblättriges Kleeblatt ist ☘️ richtig und 🍀 falsch (das hat vier Blätter). Im Zweifel leer - ein Bild, das dem Blatt widerspricht, ist schlimmer als gar keines." },
-            zeile: { type: "string", description: "Nur bei Fragen von einem Blatt: das STICHWORT der Zeile, in der die Antwort steht, genau so wie es dort links steht (z. B. \"Einwohner\", \"Telefonvorwahl\", \"Eingemeindung\"). Damit kann das Kind auf seinem eigenen Foto nachschlagen. Leer, wenn die Frage nicht von einem Blatt kommt." },
+            merkmal: { type: "string", description: 'Was die Tatsache übt, als kurzer Schlüssel in Kleinbuchstaben, 2-4 Wörter. Gleiche Sache = gleicher Schlüssel. Gut: "zehneruebergang plus", "m in cm", "fuerth jahreszahlen". Schlecht: "Frage 3", "gemischt".' },
+            blatt_nr: { type: "integer", description: "Nummer des Blattes aus der Liste oben, auf dem diese Tatsache steht (1 = das erste). 0, wenn sie nicht von einem Blatt stammt." },
+            beleg_nr: { type: "integer", description: "Nummer der Zeile des Blattes, in der die Tatsache steht (die Zahl vor der Zeile, z. B. 3 bei \"Z3: ...\"). 0, wenn sie nicht von einem Blatt stammt." },
+            zeile: { type: "string", description: "Nur bei Tatsachen von einem Blatt: das STICHWORT der Zeile, genau so wie es dort links steht (z. B. \"Einwohner\", \"Eingemeindung\"). Damit kann das Kind auf seinem eigenen Foto nachschlagen. Leer, wenn nicht von einem Blatt." },
+            erklaerung: { type: "string", description: "Ein Satz, warum das stimmt. Für das Kind, nicht für Erwachsene. Passt zu allen Formen." },
+            merke: { type: "string", description: "ESELSBRÜCKE, die nach der Lösung stehenbleibt - eine Merkregel, ein Bild, eine Verbindung zu etwas Bekanntem. Gut: \"FÜ wie die ersten zwei Buchstaben von FÜrth.\" Leer lassen, wenn dir nichts Tragfähiges einfällt." },
+            symbol: { type: "string", description: "EIN Zeichen für die Merkkarte - nur wenn es eindeutig und sachlich richtig passt, sonst LEER. Für ein dreiblättriges Kleeblatt ist ☘️ richtig und 🍀 falsch (vier Blätter)." },
+            formen: { type: "array", minItems: 2, maxItems: 4, items: FORM_SCHEMA,
+                      description: "Dieselbe Tatsache in verschiedenen Fragerichtungen, jede Form höchstens einmal. Möglichst alle vier: standard, umgekehrt, luecke, zuordnung." },
           },
-          required: ["fach", "frage", "antworten", "erklaerung", "merkmal", "blatt_nr", "beleg_nr", "tipp", "merke"],
+          required: ["fach", "merkmal", "blatt_nr", "beleg_nr", "erklaerung", "merke", "formen"],
         },
       },
     },
-    required: ["fragen"],
+    required: ["tatsachen"],
   },
 };
+
+/* Die Tatsachen des Modells flach machen und durch DIESELBEN Riegel schicken
+   wie bisher - je FORM: belegt, nicht verneint, kein Blattgedaechtnis, kein
+   Beiwerk, Fach passt, Tipp verraet nichts. Faellt eine Form durch, bleiben
+   die anderen. Exportiert, damit werkzeuge/fragerichtungen-nachbau.mjs genau
+   dieselben Riegel benutzt. `schluessel` (optional) setzt den
+   Tatsachen-Schluessel, sonst wird er hier vergeben. */
+export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schluessel) {
+  const raus = [];
+  for (const t of tatsachen || []) {
+    if (!t || !Array.isArray(t.formen)) continue;
+    const key = (schluessel && schluessel(t)) || ("t" + Math.random().toString(36).slice(2, 10));
+    const gesehen = new Set();
+    for (const fo of t.formen) {
+      if (!fo || !fo.frage || !Array.isArray(fo.antworten) || fo.antworten.length < 3) continue;
+      const form = FORMEN.includes(fo.form) ? fo.form : "standard";
+      if (gesehen.has(form)) continue;
+      const f = { fach: t.fach, frage: fo.frage, antworten: fo.antworten, blatt_nr: t.blatt_nr, richtig: 0 };
+      if (!frageBelegt(f, schule, nurDaraus)) continue;
+      if (verneint(f.frage) || blattGedaechtnis(f.frage) || nebendetail(f)) continue;
+      if (!fachPasstZumBlatt(f, schule.blaetter)) continue;
+      if (erlaubt && !erlaubt.has(heftFach(t.fach))) continue;
+      /* Eine Luecke braucht genau EINE Luecke, und zwar fuer ein ganzes Wort
+         ("Parkhaus___" im Baulauf 19.10.2026 - eine Bitte ist keine Pruefung). */
+      if (form === "luecke" && !lueckeOk(fo.frage)) continue;
+      gesehen.add(form);
+      const blatt = blattVon(t.blatt_nr, schule.blaetter);
+      raus.push({
+        id: kennung(),
+        fach: heftFach(t.fach),
+        frage: String(fo.frage).slice(0, 300),
+        antworten: fo.antworten.slice(0, 4).map((a) => String(a).slice(0, 120)),
+        richtig: 0,                       // die erste ist richtig; gemischt wird auf der Seite
+        erklaerung: String(t.erklaerung || "").slice(0, 300),
+        merkmal: String(t.merkmal || "").toLowerCase().slice(0, 40),
+        ...(tippOk(fo.tipp, fo.antworten) ? { tipp: String(fo.tipp).slice(0, 200) } : {}),
+        ...(t.merke ? { merke: String(t.merke).slice(0, 200) } : {}),
+        ...(t.zeile ? { zeile: String(t.zeile).slice(0, 40) } : {}),
+        ...(t.symbol && String(t.symbol).length <= 4 ? { symbol: String(t.symbol) } : {}),
+        ...(blatt ? { blatt } : {}),
+        ...(Number(t.beleg_nr) >= 1 ? { belegNr: Math.floor(Number(t.beleg_nr)) } : {}),
+        tatsache: key,
+        form,
+        ...(fo.frei === false ? { frei: false } : {}),
+      });
+    }
+  }
+  return raus;
+}
+
+export function lueckeOk(frage) {
+  const s = String(frage || "");
+  const treffer = s.match(/_{2,}/g) || [];
+  if (treffer.length !== 1) return false;
+  return !/[A-Za-zÄÖÜäöüß]_{2,}|_{2,}[A-Za-zÄÖÜäöüß]/.test(s) && !/^\s*_{2,}/.test(s);
+}
+
+/* Die Regeln fuer die Fragerichtungen - eine Stelle, auch fuer den Nachbau. */
+export const REGEL_RICHTUNGEN = `FRAGERICHTUNGEN (Denny, 19.10.2026: Das Kind soll die Antwort nicht stumpf
+auswendig lernen, sondern dieselbe Sache auch unter einer anderen Fragestellung
+wiedergeben können.) Baue zu JEDER Tatsache bis zu vier Fragen im Feld "formen",
+jede Form höchstens einmal:
+- "standard": die naheliegende Frage.
+  "In welchem Jahr gründete Karl der Große Fürth?" -> 793
+- "umgekehrt": Frage und Antwort vertauscht - was oben gefragt war, steht jetzt
+  in der Frage, gefragt wird nach dem, was oben in der Frage stand.
+  "Wer gründete Fürth im Jahr 793?" -> Karl der Große
+- "luecke": ein kurzer Satz mit genau einer Lücke ___, die Antwort füllt sie.
+  Die Lücke steht nie am Satzanfang. "Im Jahr ___ gründete Karl der Große Fürth." -> 793
+- "zuordnung": was gehört wozu - ein Beispiel zu seinem Oberbegriff, ein Begriff
+  zu seiner Aufgabe, eine Sache zu ihrer Gruppe.
+  "Zu welchen Einnahmen gehört die Hundesteuer?" -> Steuern
+  "Welches Amt passt zu: Fundsachen abholen?" -> Fundbüro
+Bei Rechenaufgaben: umgekehrt = die Umkehraufgabe (695 + 200 = ?), luecke =
+Platzhalteraufgabe (895 - ___ = 695), zuordnung = welche Aufgabe zum Ergebnis
+gehört ("Welche Aufgabe hat das Ergebnis 695?").
+Jede Form hat EIGENE Antworten (die erste richtig, Ablenker aus derselben Art,
+nach Möglichkeit vom Blatt) und einen EIGENEN Tipp, der die Antwort dieser Form
+nicht verrät. Die richtige Antwort jeder Form muss auf dem Blatt stehen.
+ALLE Formen fragen DIESELBE Tatsache ab - kein anderes Beispiel von derselben
+Zeile (gehoert die Tatsache zur Abfallgebuehr, fragt die Luecke nicht nach der
+Parkhausgebuehr). Die Luecke ersetzt immer ein GANZES Wort, nie einen Wortteil
+("Parkhaus___" ist falsch).
+Gibt eine Tatsache eine Form nicht sinnvoll her, lass sie weg - lieber zwei
+gute Formen als eine erzwungene. Keine Form darf eine Warum-Frage sein.`;
 
 async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   if (!env.ANTHROPIC_API_KEY) return [];
@@ -683,7 +858,7 @@ Zusatzfragen zum selben Thema, kein Allgemeinwissen, nichts aus dem Lehrplan
 drumherum. Steht auf dem Blatt "Fürth", dann frage nicht nach Nürnberg - das
 Kind war im Unterricht dabei und hat das andere nie gehört. Es hält sich sonst
 für dumm, obwohl es alles gewusst hat, was drankam.
-Trag zu JEDER Frage die Nummer des Blattes in das Feld "blatt_nr" ein.
+Trag zu JEDER Tatsache die Nummer des Blattes in das Feld "blatt_nr" ein.
 ` : `
 DAS WAR ZULETZT WIRKLICH DRAN
 Das Kind hat aus dem Unterricht fotografiert:
@@ -699,7 +874,7 @@ gestellt werden (Arbeitsauftrag, Format, Schwierigkeit). Stell keine Aufgabe aus
 dem Buch nach, sondern baue neue derselben Art mit anderen Zahlen und Woertern.
 Ein ARBEITSHEFT ist Uebung wie ein Uebungsblatt; was das Kind dort eingetragen
 hat, zeigt, was es schon kann und wo es hakt.
-Trag zu jeder Frage, die daher stammt, die Nummer des Blattes in "blatt_nr" ein.
+Trag zu jeder Tatsache, die daher stammt, die Nummer des Blattes in "blatt_nr" ein.
 `) : ""}${schwaechen.length ? `
 DAS HAT ZULETZT NICHT GESESSEN
 ${schwaechen.map((s) => `- "${s.merkmal}"${s.beispiel ? ` (zuletzt: ${s.beispiel})` : ""}`).join("\n")}
@@ -708,7 +883,8 @@ Feld "merkmal". Aber: andere Zahlen, andere Wörter, anderer Zusammenhang.
 Wer die alte Frage wiedererkennt, lernt die Antwort auswendig statt der Regel.
 ` : ""}
 REGELN
-1. ${JE_LAUF} Fragen. Wenn mehrere Fächer dabei sind, verteile sie gleichmäßig.
+1. ${TATSACHEN_JE_LAUF} Tatsachen, jede mit ihren Fragerichtungen (siehe unten). Wenn mehrere
+   Fächer dabei sind, verteile sie gleichmäßig.
 2. Eine Frage = ein Gedanke. Höchstens 20 Wörter, beantwortbar in unter 30 Sekunden.
 3. Die ERSTE Antwort ist die richtige. Die falschen müssen AUS DERSELBEN ART
    sein wie die richtige: Zahl gegen Zahl, Ort gegen Ort, Name gegen Name.
@@ -728,7 +904,7 @@ REGELN
 4b3. Frag im SINGULAR nur, wenn es auch eine einzige Antwort gibt. Stehen fuenf
    Orte auf dem Blatt, heisst die Frage "Welcher DIESER Orte kam 1972 dazu?" -
    nicht "Welcher Ort wurde eingemeindet?", denn darauf gibt es fuenf richtige.
-4c. Keine zwei Fragen zur selben Zeile des Blattes. Nimm die genauere.
+4c. Keine zwei TATSACHEN zur selben Zeile des Blattes. Nimm die genauere.
 4d. Frag nicht "ungefähr", wenn auf dem Blatt eine genaue Zahl steht.
 4e. Das Kind hat sein Blatt beim Quiz NICHT vor sich. Frag den STOFF, nie das
    Blatt: nicht "Welche Farbe hatten die Socken auf deinem Blatt?", sondern
@@ -769,6 +945,7 @@ REGELN
    Fundsachen auf."). Nur "[rot von der Lehrerin]" darf die Lehrerin nennen.
    Zwei Namen fuer dieselbe Sache (Fundbüro und Fundamt) nie als richtige
    und falsche Antwort in dieselbe Frage.
+4j. ${REGEL_RICHTUNGEN}
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
@@ -800,6 +977,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
   let daten = null;
   try { daten = await antwort.json(); } catch (e) { return []; }
   const block = (daten.content || []).find((c) => c.type === "tool_use");
+  const tatsachen = block && block.input && Array.isArray(block.input.tatsachen) ? block.input.tatsachen : null;
   const fragen = (block && block.input && block.input.fragen) || [];
 
   const erlaubt = new Set(faecher.map((f) => heftFach(f.kuerzel)));
@@ -824,6 +1002,9 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
    * stammen - dann ist eine Frage ohne Blatt schon der Fehler. */
   const belegt = (f) => frageBelegt(f, schule, nurDaraus);
 
+  /* Seit 19.10.2026 Tatsachen mit Formen (siehe fragenAusTatsachen). Ein
+     falsches Fachkuerzel macht die Faecherauswahl kaputt - lieber weglassen. */
+  if (Array.isArray(tatsachen)) return fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt);
   return fragen
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
     .filter(belegt)
