@@ -20447,5 +20447,358 @@ window.LEON_GESCHICHTEN = [
     "seite": 14
    }
   ]
+ },
+ {
+  "id": "w43-paul-stadtmuseum",
+  "titel": "Paul geht ins Stadtmuseum",
+  "bild": "🏛️",
+  "lang": true,
+  "ereignis": "2026-10-22",
+  "zeigenAb": "2026-10-20",
+  "zeigenBis": "2026-10-22",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🏛️",
+      "🎒"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat ei|nen gro|ßen Bru|der.",
+     "Paul geht in die vier|te Klas|se.",
+     "Am Don|ners|tag macht Pauls Klas|se ei|nen Aus|flug.",
+     "Sie ge|hen am Vor|mit|tag ins Stadt|mu|seum.",
+     "Das Stadt|mu|seum ist bei uns in Fürth."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤔",
+      "🏺"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on ist neu|gie|rig.",
+     "Was gibt es in so ei|nem Mu|seum?",
+     "In ei|nem Mu|seum lie|gen al|te Sa|chen.",
+     "Man darf sie ganz ge|nau an|schau|en.",
+     "Sie er|zäh|len, wie es frü|her war."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🏫",
+      "📚"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Das Stadt|mu|seum ist et|was Be|son|de|res.",
+     "Es ist in ei|nem al|ten Schul|haus.",
+     "Frü|her hieß es die Ot|to|schu|le.",
+     "Dort ha|ben frü|her vie|le Kin|der ge|lernt.",
+     "Heu|te ste|hen dort Bil|der und al|te Din|ge."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🕰️",
+      "🔔"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Das Haus ist aus Sand|stein ge|baut.",
+     "O|ben am Haus ist ei|ne Uhr.",
+     "Und ein klei|nes Türm|chen mit ei|ner Glo|cke.",
+     "Ge|baut wur|de es vor ü|ber 150 Jah|ren.",
+     "Pauls Klas|se be|sucht al|so ei|ne al|te Schu|le!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🌊",
+      "👣"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Im Mu|seum geht es um Fürth.",
+     "Fürth ist ei|ne sehr al|te Stadt.",
+     "Der Na|me Fürth kommt von ei|ner Furt.",
+     "Ei|ne Furt ist ei|ne fla|che Stel|le im Fluss.",
+     "Dort kann man durch das Was|ser ge|hen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📜",
+      "👑"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Vor ü|ber tau|send Jah|ren leb|te ein Kö|nig.",
+     "Er hieß Hein|rich.",
+     "Er hat den Ort Fürth ver|schenkt.",
+     "Das steht in ei|ner al|ten Ur|kun|de.",
+     "Dort steht Fürth zum ers|ten Mal ge|schrie|ben."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📜",
+      "🔢"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Das war im Jahr 1007.",
+     "Le|on rech|net nach.",
+     "Das ist mehr als tau|send Jah|re her!",
+     "Ei|ne al|te Sa|ge er|zählt so|gar noch mehr.",
+     "Kai|ser Karl der Gro|ße soll hier ge|we|sen sein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🍀",
+      "🛡️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt kommt et|was für Le|on.",
+     "Fürth hat ein Wap|pen.",
+     "Auf dem Wap|pen ist ein Klee|blatt!",
+     "Das gibt es schon ü|ber 200 Jah|re.",
+     "Wie bei sei|nen Klee|blät|tern im Sta|di|on!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚂",
+      "💨"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Im Mu|seum geht es auch um die Ei|sen|bahn.",
+     "Die ers|te Ei|sen|bahn in Deutsch|land fuhr hier.",
+     "Sie fuhr von Nürn|berg nach Fürth.",
+     "Das war im Jahr 1835.",
+     "Die Lok hieß Ad|ler."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚂",
+      "🇬🇧"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Der Ad|ler kam aus Eng|land.",
+     "Auch der Lok|füh|rer kam von dort.",
+     "Am 7. De|zem|ber fuhr der Zug zum ers|ten Mal.",
+     "Le|on staunt.",
+     "Die ers|te Ei|sen|bahn fuhr zu uns nach Fürth!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧸",
+      "🪞"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In Fürth wur|de frü|her viel Spiel|zeug ge|macht.",
+     "Das ist bis heu|te so.",
+     "Auch Spie|gel und Bril|len ka|men aus Fürth.",
+     "Wer hät|te das ge|dacht?",
+     "Le|on setzt im Kopf ei|ne Bril|le auf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👃",
+      "🥽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Im Mu|seum gibt es auch Duft|sta|ti|o|nen.",
+     "Da darf man an Sa|chen rie|chen.",
+     "Und es gibt ei|ne be|son|de|re Bril|le.",
+     "Mit ihr sieht man Bil|der wie in echt.",
+     "Ob Paul die Bril|le auf|set|zen darf?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "✒️",
+      "📜"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Das Mu|seum hat Füh|run|gen für vier|te Klas|sen.",
+     "Manch|mal schrei|ben die Kin|der mit Fe|der und Tu|sche.",
+     "Sie schrei|ben in ei|ner ur|al|ten Schrift.",
+     "Was Pauls Klas|se dort macht, weiß Le|on nicht.",
+     "Das will er Paul fra|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🍽️",
+      "💬"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat schon ei|nen Plan.",
+     "Beim Abend|es|sen will er Paul aus|fra|gen.",
+     "Er ü|ber|legt sich schon jetzt sei|ne Fra|gen.",
+     "Dann kann er rich|tig mit|re|den.",
+     "Denn Le|on weiß jetzt auch schon ei|ni|ges."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "❓",
+      "🍀"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Das sind Le|ons Fra|gen für Paul:",
+     "Hast du das Klee|blatt im Wap|pen ge|fun|den?",
+     "Hast du mit Fe|der und Tu|sche ge|schrie|ben?",
+     "Was hast du ü|ber den Ad|ler ge|hört?",
+     "Und hast du an et|was ge|ro|chen?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "😊",
+      "🚂"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Le|on freut sich auf Pauls Ge|schich|ten.",
+     "Paul weiß im|mer so viel.",
+     "Und dies|mal weiß Le|on auch et|was.",
+     "Viel|leicht fragt Paul so|gar zu|rück.",
+     "Wie hieß die ers|te Lok? Le|on weiß es!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wohin geht Pauls Klasse am Donnerstag?",
+    "richtig": "ins Stadtmuseum",
+    "falsch": [
+     "in den Zoo",
+     "ins Schwimmbad"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was war das Haus vom Museum früher?",
+    "richtig": "ein altes Schulhaus",
+    "falsch": [
+     "ein Bahnhof",
+     "eine Bäckerei"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was ist auf dem Wappen von Fürth?",
+    "richtig": "ein Kleeblatt",
+    "falsch": [
+     "ein Löwe",
+     "ein Fußball"
+    ],
+    "seite": 8
+   },
+   {
+    "frage": "Wie hieß die erste Lok?",
+    "richtig": "Adler",
+    "falsch": [
+     "Blitz",
+     "Rakete"
+    ],
+    "seite": 9
+   },
+   {
+    "frage": "Womit schreiben die Kinder manchmal im Museum?",
+    "richtig": "mit Feder und Tusche",
+    "falsch": [
+     "mit Kreide",
+     "mit einem Tablet"
+    ],
+    "seite": 13
+   }
+  ]
  }
 ];
