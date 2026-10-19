@@ -37,8 +37,16 @@ const MAX = 400;
    unterlagen/. Deutsch 3, Englisch 3 + 1 Projekt-Schulaufgabe, Mathematik 4,
    Franzoesisch 3 + 1 muendliche. */
 export const SCHULAUFGABEN = {
-  helena: { deutsch: 3, englisch: 4, mathematik: 4, franzoesisch: 4 },
+  /* "mathe" und "franz" (19.10.2026): Seit Helena ihre Noten selbst eintraegt,
+     kommen sie mit den Heft-Schluesseln (wie Schulheft und Probentermine,
+     heftFach() in quiz.js). Die langen Namen bleiben fuer Eintraege der Eltern. */
+  helena: { deutsch: 3, englisch: 4, mathematik: 4, franzoesisch: 4, mathe: 4, franz: 4 },
 };
+
+/* Art des Leistungsnachweises, wenn das Kind selbst eintraegt (19.10.2026,
+   Helena): nur die Schulaufgabe ist ein GROSSER Leistungsnachweis (GSO § 28),
+   alles andere ist klein. Gespeichert als lnArt, alte Eintraege haben keins. */
+export const LN_ARTEN = ["schulaufgabe", "kurzarbeit", "ex", "muendlich", "test"];
 
 export const RECHNUNG = {
   // Grundschule: alles einfach, ein Topf.

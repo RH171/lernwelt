@@ -650,5 +650,20 @@
   laden();
 })();
 </script>
+<script>
+/* Direkt ein neues Blatt ablegen (19.10.2026, Startseite D: "Blatt ablegen"):
+   schulstoff.html?neu=1[&fach=<heft-schluessel>]. Klappt "Neues Blatt" auf und
+   tippt das Fach an, wenn eins mitkommt. */
+(function(){
+  var u; try { u = new URL(location.href).searchParams; } catch (e) { return; }
+  if (!u.get("neu")) return;
+  var k = document.getElementById("neues-blatt");
+  if (!k) return;
+  k.click();
+  var f = u.get("fach");
+  if (f) { var c = document.querySelector('#aufnehmen [data-fach="' + f.replace(/[^a-z]/g, "") + '"]'); if (c) c.click(); }
+  try { k.scrollIntoView({ block: "start" }); } catch (e) {}
+})();
+</script>
 </body>
 </html>

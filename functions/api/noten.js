@@ -21,7 +21,7 @@
  */
 
 import { ausweisGueltig, geheimFuer, besuchIstEltern } from "./_riegel.js";
-import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId } from "./_noten.js";
+import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId, LN_ARTEN, SCHULAUFGABEN } from "./_noten.js";
 import { termineLesen, terminSetzen, terminWeg, terminPruefen, kuenftige, berlinHeute,
          kindSchreiben, terminAendern } from "./_probentermine.js";
 
@@ -82,13 +82,26 @@ function eigeneNoten(noten) {
       if (n.offen && (n.note === undefined || n.note === null)) e.offen = true;
       if (n.id) e.id = n.id;
       if (n.von) e.von = n.von;
+      /* Fuer Helenas Hochrechnung (19.10.2026): ob gross oder klein, die Art
+         und das doppelte Gewicht (BET). Das sind Angaben zur Note, keine
+         Auswertung - gerechnet wird nur auf ihrer eigenen Seite. Fehlen sie,
+         steht nichts da (alte Seiten lesen sie nicht). */
+      if (n.art === "gross") e.art = "gross";
+      if (n.lnArt) e.lnArt = n.lnArt;
+      if (n.gewicht === 2) e.gewicht = 2;
       return e;
     })
     .sort((x, y) => String(y.datum || "").localeCompare(String(x.datum || "")));
 }
 
 const KIND_FAECHER = ["mathe", "deutsch", "hsu", "englisch", "rel", "musik"];
+/* Helena (19.10.2026): ihre Faecher mit den Heft-Schluesseln, wie im Schulheft
+   und bei den Pruefungsterminen (Abschnitt "Faecher gegen den Stundenplan"). */
+const KIND_FAECHER_JE = {
+  helena: ["deutsch", "mathe", "englisch", "franz", "geschichte", "geo", "info", "rel", "musik"],
+};
 const KIND_NOTEN_TAG = 3;     // hoechstens drei eigene Eintraege am Tag
+const KIND_NOTEN_TAG_JE = { helena: 6 };  // Helena: Noten vom Halbjahresanfang nachtragen
 const KIND_NOTEN_ZURUECK = 120;
 
 /* Paul traegt eine zurueckbekommene Note selbst ein (15.10.2026). Grenzen:
@@ -104,7 +117,9 @@ async function kindNoteSetzen(request, env, kind, roh) {
   const von = besuch ? "eltern" : kind;
 
   const fach = String(roh.fach || "").toLowerCase();
-  if (!KIND_FAECHER.includes(fach)) return json(400, { ok: false, fehler: "Tipp zuerst auf ein Fach." });
+  if (!(KIND_FAECHER_JE[kind] || KIND_FAECHER).includes(fach)) return json(400, { ok: false, fehler: "Tipp zuerst auf ein Fach." });
+  // Art (19.10.2026, Helena). Freiwillig: Pauls Seite schickt keine.
+  const lnArt = LN_ARTEN.includes(String(roh.art || "")) ? String(roh.art) : "";
   const note = Number(roh.note);
   if (!Number.isInteger(note) || note < 1 || note > 6) return json(400, { ok: false, fehler: "Eine Note geht von 1 bis 6." });
   const heute = berlinHeute();
@@ -128,20 +143,26 @@ async function kindNoteSetzen(request, env, kind, roh) {
     if (!offen && n.von !== kind) return json(403, { ok: false, fehler: "Diese Note haben Mama oder Papa eingetragen." });
   }
   const heuteEigene = noten.filter((n) => n.von === kind && String(n.kindAm || "") === heute).length;
-  if (heuteEigene >= KIND_NOTEN_TAG && von === kind)
+  if (heuteEigene >= (KIND_NOTEN_TAG_JE[kind] || KIND_NOTEN_TAG) && von === kind)
     return json(429, { ok: false, fehler: "Für heute ist genug eingetragen. Mama oder Papa können helfen." });
 
   if (i >= 0) {
     const n = { ...noten[i], fach, note, datum };
     if (anlass) n.anlass = anlass;
+    if (lnArt) { n.lnArt = lnArt; n.art = lnArt === "schulaufgabe" ? "gross" : "klein"; }
     delete n.offen;
     if (!n.von) n.von = von;
     n.kindAm = heute;
     noten[i] = n;
   } else {
-    const p = notePruefen({ fach, note, datum, anlass: anlass || "Probe", quelle: "heft" });
+    const p = notePruefen({ fach, note, datum, anlass: anlass || (kind === "helena" ? "Prüfung" : "Probe"), quelle: "heft",
+      art: lnArt === "schulaufgabe" ? "gross" : "klein" });
     if (p.fehler) return json(400, { ok: false, fehler: p.fehler });
-    noten.push({ ...p.note, von, kindAm: heute });
+    const neu = { ...p.note, von, kindAm: heute };
+    // Eine Schulaufgabe ist nie zentral - notePruefen stellt den BET selbst auf klein und doppelt.
+    if (lnArt && !p.note.zentral) neu.lnArt = lnArt;
+    else if (lnArt) neu.lnArt = lnArt === "schulaufgabe" ? "test" : lnArt;
+    noten.push(neu);
   }
   try { await notenSchreiben(env, kind, noten); }
   catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Die Note ist NICHT gespeichert." }); }
@@ -278,7 +299,10 @@ export async function onRequestGet(context) {
     // "kein Termin" in Wahrheit "weiss ich nicht".
     const alle = await termineLesen(env, k);
     const termine = alle === null ? null : kuenftige(alle, berlinHeute());
-    return json(200, { ok: true, noten: meine, proben: PROBEN[k] || null, termine });
+    const antwort = { ok: true, noten: meine, proben: PROBEN[k] || null, termine };
+    // Helena (19.10.2026): Zahl der Schulaufgaben je Fach fuer ihre Hochrechnung.
+    if (SCHULAUFGABEN[k]) antwort.schulaufgaben = SCHULAUFGABEN[k];
+    return json(200, antwort);
   }
 
   if (!(await eltern(request, env))) return json(401, { ok: false, fehler: "Nur mit Elternausweis." });
