@@ -14,6 +14,7 @@
 
 export const TERMIN_SCHLUESSEL = (kind) => "proben-termine:" + kind;
 export const TERMINE_MAX = 40;
+export const TERMIN_ARTEN = ["schulaufgabe", "kurzarbeit", "ex", "muendlich", "test"];
 
 /* "Heute" in deutscher Zeit - der Worker laeuft in UTC, bis 2 Uhr waere es
  * sonst noch gestern (dieselbe Falle wie am 30.09.2026 im Elternbereich). */
@@ -31,6 +32,11 @@ export function terminPruefen(roh, optionen = {}) {
   if (isNaN(d) || d.toISOString().slice(0, 10) !== datum) return { fehler: "Dieses Datum gibt es nicht." };
   if (!/^[a-z][a-z-]{1,19}$/.test(fach)) return { fehler: "Fach bitte als kurzes Wort, z. B. deutsch." };
   if ((!thema && !optionen.themaOptional) || thema.length > 40) return { fehler: "Thema fehlt oder ist zu lang (höchstens 40 Zeichen)." };
+  /* Art der Pruefung (19.10.2026, Helena: Schulaufgabe, Kurzarbeit, Ex,
+     muendlich, Test). Freiwillig - alte Seiten schicken keine, dann bleibt
+     der Termin wie bisher {datum, fach, thema}. Unbekanntes faellt still weg. */
+  const art = String(t.art || "").trim().toLowerCase();
+  if (TERMIN_ARTEN.includes(art)) return { termin: { datum, fach, thema, art } };
   return { termin: { datum, fach, thema } };
 }
 
@@ -60,7 +66,7 @@ export async function terminSetzen(env, kind, termin) {
   if (dok === null) throw new Error("lesen");
   const liste = dok.termine;
   const alt = liste.find((t) => gleich(t, termin));
-  if (alt && alt.thema === termin.thema) return { geschrieben: false, termine: ordnen(liste) };
+  if (alt && alt.thema === termin.thema && (alt.art || "") === (termin.art || "")) return { geschrieben: false, termine: ordnen(liste) };
   const neu = ordnen(liste.filter((t) => !gleich(t, termin)).concat([termin])).slice(-TERMINE_MAX);
   await env.PAUL_KV.put(TERMIN_SCHLUESSEL(kind), JSON.stringify(mitZaehler({ termine: neu }, dok)));
   return { geschrieben: true, termine: neu };
@@ -102,6 +108,19 @@ export const KIND_TAGE_VORAUS = 60;
 export const KIND_KUENFTIG_MAX = 10;
 export const KIND_SCHREIB_MAX = 5;
 
+/* Helena (19.10.2026, Denny: "Prüfungen eintragen"): Am Gymnasium stehen die
+   Schulaufgaben oft schon zu Beginn des Halbjahrs fest, und es sind in den vier
+   Hauptfaechern 15 im Jahr. Deshalb darf sie weiter voraus (150 Tage, bis zum
+   Halbjahr), mehr kuenftige (20) und an einem Tag mehr (10) eintragen - ein
+   Schulaufgabenplan auf einmal. Paul und Leon bleiben bei den Werten oben. */
+export const KIND_GRENZEN = {
+  helena: { voraus: 150, kuenftig: 20, schreib: 10 },
+};
+export function kindGrenzen(kind) {
+  const g = KIND_GRENZEN[kind] || {};
+  return { voraus: g.voraus || KIND_TAGE_VORAUS, kuenftig: g.kuenftig || KIND_KUENFTIG_MAX, schreib: g.schreib || KIND_SCHREIB_MAX };
+}
+
 export function plusTage(iso, n) {
   const d = new Date(iso + "T12:00:00Z");
   d.setUTCDate(d.getUTCDate() + n);
@@ -132,35 +151,39 @@ export async function kindSchreiben(env, kind, { neu, alt, von = kind }, heute =
   const dok = await dokLesen(env, kind);
   if (dok === null) throw new Error("lesen");
   const liste = dok.termine;
-  const bis = plusTage(heute, KIND_TAGE_VORAUS);
+  const grenze = kindGrenzen(kind);
+  const bis = plusTage(heute, grenze.voraus);
 
   let altEintrag = null;
   if (alt) {
     altEintrag = liste.find((t) => t.datum === alt.datum && t.fach === alt.fach) || null;
-    if (!altEintrag) return { status: 404, fehler: "Diese Probe gibt es nicht (mehr)." };
-    if (altEintrag.von !== kind) return { status: 403, fehler: "Diese Probe hat ein Erwachsener eingetragen. Ändern können sie nur Mama oder Papa." };
-    if (altEintrag.datum < heute) return { status: 403, fehler: "Diese Probe ist schon vorbei." };
+    const w = kind === "helena" ? "Prüfung" : "Probe";
+    if (!altEintrag) return { status: 404, fehler: "Diese " + w + " gibt es nicht (mehr)." };
+    if (altEintrag.von !== kind) return { status: 403, fehler: "Diese " + w + " hat ein Erwachsener eingetragen. Ändern können sie nur Mama oder Papa." };
+    if (altEintrag.datum < heute) return { status: 403, fehler: "Diese " + w + " ist schon vorbei." };
   }
   if (neu) {
     if (neu.datum < heute) return { status: 400, fehler: "Dieser Tag ist schon vorbei." };
-    if (neu.datum > bis) return { status: 400, fehler: "So weit voraus geht es nicht – höchstens zwei Monate." };
+    if (neu.datum > bis) return { status: 400, fehler: grenze.voraus === KIND_TAGE_VORAUS
+      ? "So weit voraus geht es nicht – höchstens zwei Monate."
+      : "So weit voraus geht es nicht – höchstens " + grenze.voraus + " Tage." };
     if (istWochenende(neu.datum)) return { status: 400, fehler: "Das ist ein Wochenende – da ist keine Schule." };
     const fremd = liste.find((t) => gleich(t, neu) && t !== altEintrag);
-    if (fremd && fremd.von !== kind) return { status: 409, fehler: "Diese Probe steht schon drin." };
+    if (fremd && fremd.von !== kind) return { status: 409, fehler: (kind === "helena" ? "Diese Prüfung" : "Diese Probe") + " steht schon drin." };
   }
 
   let rest = liste.filter((t) => t !== altEintrag);
   if (neu) {
     const schonGleich = rest.find((t) => gleich(t, neu));
-    if (!altEintrag && schonGleich && schonGleich.thema === neu.thema) return { geschrieben: false, termine: ordnen(liste) };
+    if (!altEintrag && schonGleich && schonGleich.thema === neu.thema && (schonGleich.art || "") === (neu.art || "")) return { geschrieben: false, termine: ordnen(liste) };
     rest = rest.filter((t) => !gleich(t, neu));
     const kuenftigOhne = rest.filter((t) => t.datum >= heute).length;
-    if (kuenftigOhne >= KIND_KUENFTIG_MAX) return { status: 400, fehler: "Es stehen schon " + KIND_KUENFTIG_MAX + " Proben drin. Lösch erst eine alte." };
+    if (kuenftigOhne >= grenze.kuenftig) return { status: 400, fehler: "Es stehen schon " + grenze.kuenftig + (kind === "helena" ? " Prüfungen" : " Proben") + " drin. Lösch erst eine alte." };
     rest = rest.concat([{ ...neu, von, am: heute }]);
   }
 
   const z = dok.kindSchreib && dok.kindSchreib.tag === heute ? dok.kindSchreib.n : 0;
-  if (z >= KIND_SCHREIB_MAX) return { status: 429, fehler: "Für heute hast du genug eingetragen. Morgen geht es wieder – oder frag Mama oder Papa." };
+  if (z >= grenze.schreib) return { status: 429, fehler: "Für heute hast du genug eingetragen. Morgen geht es wieder – oder frag Mama oder Papa." };
 
   const termine = ordnen(rest).slice(-TERMINE_MAX);
   await env.PAUL_KV.put(TERMIN_SCHLUESSEL(kind), JSON.stringify({ termine, kindSchreib: { tag: heute, n: z + 1 } }));

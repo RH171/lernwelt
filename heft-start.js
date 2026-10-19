@@ -99,6 +99,9 @@
         // Gescheitertes Durchlesen nachholen (29.09.2026, siehe /nachlesen.js).
         if (window.LWNachlesen) LWNachlesen(KIND, j.eintraege);
         heuteZeigen(j.eintraege);
+        /* Die Seite darf mitlesen, ohne selbst noch einmal zu fragen (19.10.2026,
+           Helenas Startseite D: "Aus deinem Heft" zeigt die Faecher mit Blatt). */
+        try { document.dispatchEvent(new CustomEvent("lw-heft-eintraege", { detail: j.eintraege || [] })); } catch (e) {}
         if (!$("nachsehen") || !$("nachsehenListe")) return;
         var liste = $("nachsehenListe"); liste.innerHTML = "";
         (j.eintraege || []).forEach(function (e) {
@@ -187,7 +190,11 @@
     var s = document.createElement("style"); s.id = "lww-stil";
     s.textContent =
       ".lww{--wg:#047857;--wn:#1d4ed8;--ws:#8a5a00;margin:0 0 14px}" +
-      "html[data-theme=dark] .lww,.lww.dunkel{--wg:#6ee7a8;--wn:#8cb8ff;--ws:#f5d77a}" +
+      /* .dunkel (Helena) galt, als ihre Welt fest dunkel war. Seit 04.10.2026 ist
+         sie standardmaessig hell - dort gaben die hellen Kreisfarben 1,41:1
+         (mess-schritte-kreise-geteilt.js, 19.10.2026). Jetzt nur, wenn die
+         Seite nicht ausdruecklich hell ist. */
+      "html[data-theme=dark] .lww,html:not([data-theme=light]) .lww.dunkel{--wg:#6ee7a8;--wn:#8cb8ff;--ws:#f5d77a}" +
       ".lww .wsum{border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin:0 0 8px}" +
       ".lww .wleg{color:var(--muted);font-size:13.5px;margin-top:4px}" +
       ".lww i{font-style:normal;letter-spacing:1px}.lww i.g{color:var(--wg)}.lww i.n{color:var(--wn)}.lww i.s{color:var(--ws)}" +

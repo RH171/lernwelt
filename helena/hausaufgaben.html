@@ -1079,5 +1079,24 @@
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/toleranz.js?v=122870a5"></script>
 <script src="/lernstand.js?v=fe69f5e5" defer></script>
+<script>
+/* Direkt eine neue Hausaufgabe in einem Fach (19.10.2026, Startseite D:
+   "Hausaufgabe fotografieren" je Fach): hausaufgaben.html?neu=<fach>. Oeffnet
+   dieselbe Maske wie "Neue Hausaufgabe" und tippt das Fach schon an. */
+(function(){
+  var f = ""; try { f = new URL(location.href).searchParams.get("neu") || ""; } catch (e) {}
+  if (!f) return;
+  var neu = document.getElementById("neu");
+  if (!neu) return;
+  neu.click();
+  var namen = { englisch: "Englisch", franzoesisch: "Französisch", mathe: "Mathematik", deutsch: "Deutsch",
+                geschichte: "Geschichte", geographie: "Geographie", informatik: "Informatik", ethik: "Ethik", musik: "Musik" };
+  var soll = namen[f]; if (!soll) return;
+  Array.prototype.forEach.call(document.querySelectorAll("#faecher .fach"), function(b){
+    var n = b.querySelector(".n");
+    if (n && n.textContent === soll) b.click();
+  });
+})();
+</script>
 </body>
 </html>
