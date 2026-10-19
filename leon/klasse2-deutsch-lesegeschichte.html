@@ -14,7 +14,8 @@
   nicht live erzeugt. Mit den echten Menschen aus Leons Leben, deshalb liegt
   die Datei hinter dem Riegel unter /leon/ und NIE in einer offenen Notiz.
 
-  Ablauf: Geschichte lesen (8 Seiten, ein Satz pro Zeile, Silben einfärbbar)
+  Ablauf: Geschichte lesen (8 Seiten, lange Wochengeschichten seit 19.10.2026 bis 16,
+  ein Satz pro Zeile, Silben einfärbbar)
   -> 5 Fragen -> Lesebeweis-Stempel. Eine falsche Antwort ist kein Fehlschlag:
   Die Seite, auf der es steht, lässt sich aufschlagen - Nachschlagen IST lesen.
 
@@ -388,7 +389,8 @@
     "Leon": ["👦", "#10b981"], "Theo": ["👦", "#2563eb"], "Leo": ["🧒", "#f59e0b"],
     "Xaver": ["🧑", "#7c3aed"], "Paul": ["👦", "#ea580c"], "Helena": ["👧", "#db2777"],
     "Papa": ["👨", "#0f766e"], "Mama": ["👩", "#e11d48"], "Elisabeth": ["👩", "#9333ea"],
-    "Herr Celis": ["👨‍🏫", "#475569"], "Omi": ["👵", "#b45309"], "Opi": ["👴", "#1d4ed8"], "Oma": ["👵", "#be185d"], "Opa": ["👴", "#4d7c0f"]
+    "Herr Celis": ["👨‍🏫", "#475569"], "Omi": ["👵", "#b45309"], "Opi": ["👴", "#1d4ed8"], "Oma": ["👵", "#be185d"], "Opa": ["👴", "#4d7c0f"],
+    "Steffi": ["👩", "#0e7490"], "Robert": ["👨", "#7c2d12"], "Marianne": ["👩", "#a21caf"]
   };
   // Deko gehoert zum Ort, nicht zur Geschichte - und darf deshalb nie eine
   // Antwort verraten. Ein Baum auf dem Pausenhof hat "Wo steht Leo? Am Baum"
@@ -478,8 +480,21 @@
     window.scrollTo(0, 0);
   }
 
+  /* Lesetempo (19.10.2026, Denny: Geschichten von 7-10 Minuten, an Leons Tempo angepasst).
+     Gemessen wird mit derselben ehrlichen Uhr wie die Statistik (lernstand.aktiveSekunden), aber
+     getrennt: "leseSek" bis "Zu den Fragen", "sek" bis zum Lesebeweis. lernstand.js stellt seine Uhr
+     beim Wegschalten auf null (es sendet dann einen Teil) - dieser Zuhoerer laeuft VOR dem von
+     lernstand.js (der wird spaeter geladen) und rettet den Stand in "uhrVorher". Ausgewertet von
+     werkzeuge/wochengeschichten/lesetempo.py. */
+  var uhrVorher = 0, leseSek = 0, liestGerade = false;
+  function uhrJetzt(){ try { return uhrVorher + (window.lernstand ? window.lernstand.aktiveSekunden() : 0); } catch(e){ return uhrVorher; } }
+  document.addEventListener("visibilitychange", function(){
+    if (document.hidden && liestGerade){ try { uhrVorher += window.lernstand ? window.lernstand.aktiveSekunden() : 0; } catch(e){} }
+  });
+
   function losLesen(){
     seite = 0; nachschauenFuer = -1; schonGelesen = {}; fragenNr = 0; gleichRichtig = 0; ersterVersuch = true;
+    uhrVorher = 0; leseSek = 0; liestGerade = true;
     document.title = "Lesegeschichte: " + geschichte.titel;
     try { window.lernstand && window.lernstand.uhrZuruecksetzen(); } catch(e){}
     $("lese-titel").textContent = (geschichte.bild || "📖") + " " + geschichte.titel;
@@ -505,7 +520,7 @@
     if (nachschauenFuer >= 0){ nachschauenFuer = -1; zeige("fragen"); return; }
     schonGelesen[seite] = true;
     if (seite < geschichte.seiten.length - 1){ seite++; seiteMalen(); }
-    else { fragenNr = 0; frageMalen(); zeige("fragen"); }
+    else { if (!leseSek) leseSek = uhrJetzt(); fragenNr = 0; frageMalen(); zeige("fragen"); }
   });
 
   /* ---------- Fragen ---------- */
@@ -569,8 +584,8 @@
 
   /* ---------- Lesebeweis ---------- */
   function beweisZeigen(){
-    var sek = 0;
-    try { sek = window.lernstand ? window.lernstand.aktiveSekunden() : 0; } catch(e){}
+    var sek = uhrJetzt();
+    liestGerade = false;
     var minuten = Math.max(1, Math.round(sek / 60));
     var d = lesen(), heute = heuteText();
     var vorher = d.gelesen[geschichte.id];
@@ -578,6 +593,10 @@
     // nochmal, wird nur das Datum frisch - der Stempel wandert nach vorn.
     d.gelesen[geschichte.id] = { datum: heute, minuten: minuten, gleichRichtig: gleichRichtig,
                                  erstesMal: (vorher && vorher.erstesMal) || heute };
+    // Tempo nur von der ERSTEN Lesung - wiederlesen geht schneller und wuerde das Tempo schoenen.
+    var t = vorher ? vorher : { sek: sek, leseSek: leseSek,
+      woerter: geschichte.seiten.reduce(function(n, s){ return n + s.zeilen.join(" ").split(/\s+/).filter(Boolean).length; }, 0) };
+    if (t.sek != null) { d.gelesen[geschichte.id].sek = t.sek; d.gelesen[geschichte.id].leseSek = t.leseSek; d.gelesen[geschichte.id].woerter = t.woerter; }
     schreiben(d);
     $("b-titel").textContent = "Lesebeweis: " + geschichte.titel;
     $("b-text").textContent = "Du hast die ganze Geschichte gelesen und alle " + geschichte.fragen.length +

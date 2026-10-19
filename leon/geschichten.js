@@ -15919,1853 +15919,4533 @@ window.LEON_GESCHICHTEN = [
    }
   ]
  },
-{
- "id": "w42-familienabend",
- "titel": "Film und Sandwich",
- "bild": "🥪",
- "ereignis": "2026-10-16",
- "zeigenAb": "2026-10-17",
- "zeigenBis": "2026-10-19",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🏠",
-     "🌙"
-    ],
-    "leute": [
-     "Leon"
+ {
+  "id": "w42-familienabend",
+  "titel": "Film und Sandwich",
+  "bild": "🥪",
+  "ereignis": "2026-10-16",
+  "zeigenAb": "2026-10-17",
+  "zeigenBis": "2026-10-19",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🏠",
+      "🌙"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag|a|bend war Fa|mi|li|en|a|bend.",
+     "Drau|ßen wur|de es schon dun|kel.",
+     "Drin|nen war es warm und hell.",
+     "Le|on hat|te sich da|rauf ge|freut.",
+     "Was wür|de es heu|te ge|ben?"
     ]
    },
-   "zeilen": [
-    "Am Frei|tag|a|bend war Fa|mi|li|en|a|bend.",
-    "Drau|ßen wur|de es schon dun|kel.",
-    "Drin|nen war es warm und hell.",
-    "Le|on hat|te sich da|rauf ge|freut.",
-    "Was wür|de es heu|te ge|ben?"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "kueche",
-    "dinge": [
-     "🍞",
-     "🧀"
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🍞",
+      "🧀"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Zu|erst ging es in die Kü|che.",
+     "Dort ha|ben sie Sand|wich ge|macht.",
+     "Da|zu braucht man zwei Schei|ben Brot.",
+     "Da|zwi|schen kommt, was man gern mag.",
+     "Je|der durf|te sei|nes selbst be|le|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🥒",
+      "🍅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on über|leg|te gut.",
+     "Was soll|te auf sein Sand|wich?",
+     "Viel|leicht Kä|se, viel|leicht ei|ne Gur|ke.",
+     "Zum Schluss kam die zwei|te Schei|be drauf.",
+     "Fer|tig war das Sand|wich!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🛋️",
+      "📺"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Dann gin|gen sie zum Fern|se|her.",
+     "Der Film hieß „Vi|vo – Vol|ler Le|ben“.",
+     "Al|le mach|ten es sich be|quem.",
+     "Ei|ne De|cke lag auf dem So|fa.",
+     "Le|on ku|schel|te sich hi|nein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🥪",
+      "🎬"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Film fing an. Es wur|de still.",
+     "Le|on biss in sein Sand|wich.",
+     "Es schmeck|te ihm rich|tig gut.",
+     "Kau|en und gu|cken geht gut zu|sam|men.",
+     "Nur nicht zu viel krü|meln!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "😮",
+      "😄"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Vi|vo ist ein klei|ner Wi|ckel|bär.",
+     "Er liebt Mu|sik und singt gern.",
+     "Le|on schau|te ganz ge|nau hin.",
+     "Er woll|te nichts ver|pas|sen.",
+     "Wie geht die Ge|schich|te wohl wei|ter?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎬",
+      "⭐"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Dann war der Film zu En|de.",
+     "Wie fand Le|on ihn wohl?",
+     "Ein Film zu|sam|men ist schö|ner als al|lein.",
+     "Man kann da|nach da|rü|ber re|den.",
+     "Was war die bes|te Stel|le?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "🌙",
+      "🛏️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Spä|ter ging Le|on ins Bett.",
+     "Sein Bauch war satt.",
+     "Er dach|te noch an den Film.",
+     "Am Sams|tag war|te|te schon das Tur|nier.",
+     "Das war ein ge|müt|li|cher A|bend!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wann war der Familienabend?",
+    "richtig": "am Freitagabend",
+    "falsch": [
+     "am Montagmorgen",
+     "am Sonntagmittag"
     ],
-    "leute": [
+    "seite": 1
+   },
+   {
+    "frage": "Was haben sie in der Küche gemacht?",
+    "richtig": "Sandwich",
+    "falsch": [
+     "Pizza",
+     "Kuchen"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wie viele Scheiben Brot braucht ein Sandwich?",
+    "richtig": "zwei",
+    "falsch": [
+     "eine",
+     "fünf"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wie hieß der Film?",
+    "richtig": "Vivo",
+    "falsch": [
+     "Ice Age",
+     "Kung Fu Panda"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was liebt Vivo?",
+    "richtig": "Musik",
+    "falsch": [
+     "Schnee",
+     "Autos"
+    ],
+    "seite": 6
+   }
+  ]
+ },
+ {
+  "id": "w42-turnier-zweiter",
+  "titel": "Zweiter beim Turnier",
+  "bild": "🥈",
+  "ereignis": "2026-10-17",
+  "zeigenAb": "2026-10-17",
+  "zeigenBis": "2026-10-20",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🏟️",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag war das Tur|nier.",
+     "Es fand beim ESV Flü|gel|rad statt.",
+     "Vier Mann|schaf|ten wa|ren da.",
+     "Le|on spiel|te für den ASC Box|dorf.",
+     "End|lich ging es los!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "🏃"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat|te zwei Auf|ga|ben.",
+     "Mal stand er im Tor.",
+     "Dann trug er sei|ne Hand|schu|he.",
+     "Mal spiel|te er drau|ßen mit.",
+     "Dann lief er dem Ball hin|ter|her."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Im Tor muss man gut auf|pas|sen.",
+     "Wo ist der Ball ge|ra|de?",
+     "Drau|ßen muss man viel ren|nen.",
+     "Man spielt den Ball zu den an|de|ren.",
+     "Bei|des ist wich|tig für die Mann|schaft."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am En|de gab es ein Elf|me|ter|schie|ßen.",
+     "Da|bei schießt ein Spie|ler al|lein aufs Tor.",
+     "Nur der Tor|wart steht da|vor.",
+     "Le|on stand im Tor.",
+     "Er mach|te sich ganz groß."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "😮"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Spie|ler nach dem an|de|ren lief an.",
+     "Le|on schau|te ge|nau auf den Ball.",
+     "In wel|che E|cke fliegt er wohl?",
+     "Das Herz klopf|te ganz schnell.",
+     "Es war sehr span|nend."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ganz am En|de kam et|was Be|son|de|res.",
+     "Le|on durf|te auch selbst schie|ßen.",
+     "Er leg|te den Ball auf den Punkt.",
+     "Er lief an und schoss.",
+     "Tor! Der Ball war drin!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🎉",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat|te sich mit ei|nem Tor be|lohnt.",
+     "Er war Tor|wart und Tor|schüt|ze zu|gleich.",
+     "Das schafft nicht je|der.",
+     "Da darf man rich|tig stolz sein.",
+     "Was für ein Mo|ment!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥈",
+      "🏆"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann stand das Er|geb|nis fest.",
+     "Le|ons Mann|schaft wur|de Zwei|ter.",
+     "Nur ei|ne Mann|schaft war noch bes|ser.",
+     "Von vier Mann|schaf|ten ist das toll.",
+     "Zu|sam|men hat|ten sie gut ge|kämpft."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Was machte Leon, wenn er nicht im Tor stand?",
+    "richtig": "draußen mitspielen",
+    "falsch": [
+     "Eis essen",
+     "schlafen"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wo stand Leon beim Elfmeterschießen?",
+    "richtig": "im Tor",
+    "falsch": [
+     "auf der Bank",
+     "im Bus"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was durfte Leon ganz am Ende machen?",
+    "richtig": "selbst schießen",
+    "falsch": [
+     "pfeifen",
+     "nach Hause gehen"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Was passierte bei Leons Schuss?",
+    "richtig": "Tor",
+    "falsch": [
+     "daneben",
+     "an die Latte"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Der Wievielte wurde Leons Mannschaft?",
+    "richtig": "Zweiter",
+    "falsch": [
+     "Erster",
+     "Vierter"
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "w42-fuerth-sieg-badewanne",
+  "titel": "Fürth gewinnt – und Leon sitzt in der Wanne",
+  "bild": "🛁",
+  "ereignis": "2026-10-17",
+  "zeigenAb": "2026-10-18",
+  "zeigenBis": "2026-10-20",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🛁",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag spiel|te Fürth zu Hau|se.",
+     "Der Geg|ner war Ein|tracht Braun|schweig.",
+     "Le|on woll|te das Spiel se|hen.",
+     "Aber wo hat er zu|ge|schaut?",
+     "In der Ba|de|wan|ne!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🛁",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Ba|de|wan|ne war in Klee|blatt|far|ben.",
+     "Grün und Weiß, wie bei Fürth.",
+     "Le|on saß im war|men Was|ser.",
+     "So ein Platz ist sel|ten.",
+     "Ein ech|ter Fan schaut über|all zu."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Das Spiel fing an.",
+     "Bei|de Mann|schaf|ten woll|ten ge|win|nen.",
+     "Die Für|ther lie|fen viel.",
+     "Le|on schau|te ge|nau hin.",
+     "Wann fällt end|lich ein Tor?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der 32. Mi|nu|te war es so weit.",
+     "Ein Spie|ler na|mens Klaus schoss ins Tor.",
+     "Jetzt stand es 1:0 für Fürth.",
+     "Le|on ju|bel|te in der Wan|ne.",
+     "Das Was|ser schwapp|te ein biss|chen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⏱️",
+      "⚽"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Dann war Halb|zeit.",
+     "Die Spie|ler ruh|ten sich kurz aus.",
+     "Da|nach ging es wei|ter.",
+     "Braun|schweig woll|te den Aus|gleich.",
+     "Aber Fürth hielt da|ge|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🎉"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der 63. Mi|nu|te kam das nächs|te Tor.",
+     "Wie|der hat|te Klaus ge|trof|fen.",
+     "Jetzt stand es 2:0.",
+     "Zwei To|re von ei|nem Spie|ler!",
+     "So et|was nennt man ei|nen Dop|pel|pack."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🏆",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am En|de ge|wann Fürth 2:0.",
+     "Vor|her war Fürth auf Platz 15.",
+     "Jetzt steht Fürth auf Platz 9.",
+     "Das ist ein gro|ßer Sprung nach o|ben.",
+     "Le|on freu|te sich sehr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "🥈"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Es war ein Tag nach Le|ons Ge|schmack.",
+     "Am Mor|gen wur|de er beim Tur|nier Zwei|ter.",
+     "Am Nach|mit|tag ge|wann sein Ver|ein.",
+     "Das nächs|te Spiel ist in Os|na|brück.",
+     "Le|on drückt schon jetzt die Dau|men."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wo schaute Leon das Spiel?",
+    "richtig": "in der Badewanne",
+    "falsch": [
+     "im Stadion",
+     "im Auto"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Welche Farben haben die Kleeblätter?",
+    "richtig": "Grün und Weiß",
+    "falsch": [
+     "Rot und Gelb",
+     "Blau und Schwarz"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wer schoss das erste Tor für Fürth?",
+    "richtig": "Klaus",
+    "falsch": [
      "Leon",
-     "Papa"
+     "der Torwart"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie viele Tore schoss Klaus?",
+    "richtig": "zwei",
+    "falsch": [
+     "eins",
+     "drei"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Auf welchem Platz steht Fürth jetzt?",
+    "richtig": "Platz 9",
+    "falsch": [
+     "Platz 4",
+     "Platz 20"
+    ],
+    "seite": 7
+   }
+  ]
+ },
+ {
+  "id": "w43-training",
+  "titel": "Training nach dem Turnier",
+  "bild": "⚽",
+  "lang": true,
+  "ereignis": "2026-10-21",
+  "zeigenAb": "2026-10-20",
+  "zeigenBis": "2026-10-21",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Mitt|woch ist wie|der Trai|ning.",
+     "Le|on packt sei|ne Fuß|ball|sa|chen.",
+     "Schu|he, Stut|zen, Schien|bein|scho|ner.",
+     "Und na|tür|lich sei|ne Tor|wart|hand|schu|he.",
+     "Er freut sich schon den gan|zen Tag."
     ]
    },
-   "zeilen": [
-    "Zu|erst ging es in die Kü|che.",
-    "Dort ha|ben sie Sand|wich ge|macht.",
-    "Da|zu braucht man zwei Schei|ben Brot.",
-    "Da|zwi|schen kommt, was man gern mag.",
-    "Je|der durf|te sei|nes selbst be|le|gen."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "kueche",
-    "dinge": [
-     "🥒",
-     "🍅"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🥈",
+      "💭"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag war ein Tur|nier.",
+     "Le|ons Mann|schaft wur|de Zwei|ter.",
+     "Le|on war mal im Tor.",
+     "Und mal hat er im Feld ge|spielt.",
+     "Das war ein tol|ler Tag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am En|de gab es ein Elf|me|ter|schie|ßen.",
+     "Da stand Le|on im Tor.",
+     "Zum Schluss durf|te er selbst schie|ßen.",
+     "Und er hat ge|trof|fen!",
+     "Da|rauf ist er im|mer noch stolz."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🕔",
+      "🚗"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Das Trai|ning ist beim ASC Box|dorf.",
+     "Es fängt um fünf Uhr an.",
+     "Um halb sie|ben ist es zu En|de.",
+     "Le|on spielt bei den F-Ju|ni|o|ren.",
+     "Da spie|len die jun|gen Kin|der."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💃",
+      "🎶"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Auch Paul hat am Mitt|woch et|was vor.",
+     "Er geht in die Tanz|schu|le.",
+     "Um halb fünf be|ginnt sein Kurs.",
+     "Der Kurs heißt Kids-Dance.",
+     "Da tan|zen Kin|der zu flot|ter Mu|sik."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "💃"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Le|on spielt Fuß|ball, Paul tanzt.",
+     "Bei|des ist Sport.",
+     "Bei|des braucht schnel|le Fü|ße.",
+     "Und bei|des macht rich|tig Spaß.",
+     "Nur der Ball fehlt beim Tan|zen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "👟"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf dem Platz sind schon die an|de|ren.",
+     "Al|le lau|fen sich warm.",
+     "Le|on rennt ei|ne Run|de mit.",
+     "Sei|ne Bei|ne sind ganz schnell.",
+     "Dann holt je|des Kind ei|nen Ball."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🏃",
+      "🔥"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Warm|lau|fen ist wich|tig.",
+     "Da|bei wer|den die Mus|keln warm.",
+     "War|me Mus|keln ver|let|zen sich nicht so leicht.",
+     "Dann kann das Trai|ning rich|tig los|ge|hen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🔺"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Oft gibt es zu|erst ei|ne Ü|bung mit Hüt|chen.",
+     "Die Kin|der drib|beln um die Hüt|chen he|rum.",
+     "Der Ball soll da|bei nah am Fuß blei|ben.",
+     "Das ist gar nicht so leicht.",
+     "A|ber mit Ü|bung klappt es im|mer bes|ser."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥅",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Was übt Le|on heu|te wohl?",
+     "Viel|leicht hält er wie|der Bäl|le.",
+     "Viel|leicht schießt er auch auf das Tor.",
+     "Bei|des macht ihm gro|ßen Spaß.",
+     "Am liebs|ten steht er a|ber im Tor."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🧤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Als Tor|wart muss man mu|tig sein.",
+     "Man springt nach dem Ball.",
+     "Man fängt ihn mit bei|den Hän|den.",
+     "Und man hält ihn ganz fest.",
+     "Le|on kann das schon rich|tig gut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🎯",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Beim Schuss aufs Tor zielt man ge|nau.",
+     "Am bes|ten in ei|ne E|cke.",
+     "Da kommt der Tor|wart schwer hin.",
+     "Le|on kennt das von bei|den Sei|ten.",
+     "Mal schießt er, mal hält er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "🏃"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am En|de vom Trai|ning gibt es oft ein Spiel.",
+     "Zwei Mann|schaf|ten spie|len ge|gen|ein|an|der.",
+     "Je|der will ein Tor schie|ßen.",
+     "Da wird viel ge|lacht und ge|ru|fen.",
+     "Al|le ru|fen: „Hier, zu mir!“"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "⚽",
+      "💪"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Nach dem Tur|nier ist Le|on stolz.",
+     "A|ber er will noch bes|ser wer|den.",
+     "Da|rum geht er gern zum Trai|ning.",
+     "Wer übt, wird im|mer bes|ser.",
+     "Das weiß Le|on ge|nau."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "platz",
+     "dinge": [
+      "🥤",
+      "😅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Nach dem Trai|ning hat Le|on gro|ßen Durst.",
+     "Er trinkt sei|ne Fla|sche fast leer.",
+     "Sei|ne Wan|gen sind ganz rot.",
+     "Das war an|stren|gend, a|ber schön.",
+     "Dann geht es nach Hau|se."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend ist Le|on mü|de.",
+     "Sei|ne Fü|ße tun ein biss|chen weh.",
+     "A|ber er ist glück|lich.",
+     "Im Bett denkt er an das nächs|te Spiel.",
+     "Fuß|ball ist ein|fach das Bes|te!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "An welchem Tag ist das Training?",
+    "richtig": "am Mittwoch",
+    "falsch": [
+     "am Sonntag",
+     "am Montag"
     ],
-    "leute": [
+    "seite": 1
+   },
+   {
+    "frage": "Was hat Leon zum Schluss beim Turnier gemacht?",
+    "richtig": "Er hat geschossen und getroffen.",
+    "falsch": [
+     "Er hat geweint.",
+     "Er ist nach Hause gegangen."
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wann ist das Training zu Ende?",
+    "richtig": "um halb sieben",
+    "falsch": [
+     "um acht Uhr",
+     "um zwölf Uhr"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wohin geht Paul am Mittwoch?",
+    "richtig": "in die Tanzschule",
+    "falsch": [
+     "ins Schwimmbad",
+     "in die Bücherei"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wer übt, wird ...",
+    "richtig": "immer besser",
+    "falsch": [
+     "immer müder",
+     "immer kleiner"
+    ],
+    "seite": 14
+   }
+  ]
+ },
+ {
+  "id": "w43-maria",
+  "titel": "Maria feiert im Monkey Town",
+  "bild": "🐒",
+  "lang": true,
+  "ereignis": "2026-10-23",
+  "zeigenAb": "2026-10-21",
+  "zeigenBis": "2026-10-23",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎉",
+      "💌"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag hat Ma|ri|a Ge|burts|tag.",
+     "Sie fei|ert ei|ne Par|ty.",
+     "Und Le|on ist ein|ge|la|den!",
+     "Da|rü|ber freut er sich sehr.",
+     "Er zählt schon die Ta|ge."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🐒",
+      "🏠"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Par|ty ist im Mon|key Town in Fürth.",
+     "Das ist ein gro|ßer Spiel|platz.",
+     "Er ist a|ber nicht drau|ßen.",
+     "Er ist in ei|ner Hal|le.",
+     "Da ist es auch bei Re|gen schön."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🐒",
+      "🔤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Mon|key Town ist Eng|lisch.",
+     "Mon|key heißt Af|fe.",
+     "Town heißt Stadt.",
+     "Al|so ist es ei|ne Af|fen|stadt!",
+     "Le|on muss la|chen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🛝",
+      "🧗"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Was gibt es dort wohl al|les?",
+     "Le|on stellt sich lan|ge Rut|schen vor.",
+     "Viel|leicht gibt es auch Klet|ter|net|ze.",
+     "Und viel|leicht ein Bad mit bun|ten Bäl|len.",
+     "Le|on kann es kaum er|war|ten."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🏊",
+      "🔴"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Bäl|le|bad ist ein Be|cken vol|ler Bäl|le.",
+     "Statt Was|ser sind da tau|send bun|te Bäl|le.",
+     "Man springt hi|nein und ver|sinkt fast.",
+     "Nur der Kopf schaut noch he|raus.",
+     "Das kit|zelt ü|ber|all!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🐒",
+      "🌴"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In ei|ner Af|fen|stadt darf man klet|tern.",
+     "Ge|nau wie ein Af|fe im Ur|wald.",
+     "Hoch hi|nauf und schnell wie|der run|ter.",
+     "Le|on klet|tert für sein Le|ben gern.",
+     "Da ist er selbst fast ein klei|ner Af|fe."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🕝",
+      "📅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Par|ty fängt um halb drei an.",
+     "Sie geht bis halb sechs.",
+     "Das sind drei gan|ze Stun|den.",
+     "Da ist viel Zeit zum Spie|len.",
+     "Le|on will kei|ne Mi|nu|te ver|pas|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📝",
+      "🏫"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag|mor|gen schreibt Paul sei|ne Deutsch|pro|be.",
+     "Am Nach|mit|tag geht Le|on zur Par|ty.",
+     "Für bei|de ist es ein vol|ler Tag.",
+     "A|ber Le|ons Teil ist ein|deu|tig lus|ti|ger.",
+     "Pro|be o|der Par|ty? Le|on weiß, was er lie|ber mag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎁",
+      "💭"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu ei|nem Ge|burts|tag ge|hört ein Ge|schenk.",
+     "Was wünscht sich Ma|ri|a wohl?",
+     "Le|on denkt lan|ge nach.",
+     "Viel|leicht malt er ihr noch ei|ne Kar|te.",
+     "Ei|ne Kar|te macht im|mer Freu|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🖍️",
+      "🎈"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf die Kar|te könn|te ein Af|fe kom|men.",
+     "Ein Af|fe mit ei|nem Luft|bal|lon.",
+     "Da|zu schreibt Le|on: Al|les Gu|te!",
+     "Das kann er schon ganz al|lein.",
+     "In der zwei|ten Klas|se lernt man so was."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🛝",
+      "😄"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on mag es, wild zu to|ben.",
+     "Er rennt gern und klet|tert gern.",
+     "Auf ei|nem Spiel|platz ist er schnell.",
+     "Im Mon|key Town kann er das al|les.",
+     "Da wird er be|stimmt ganz ver|schwitzt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🔄",
+      "🏃"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Viel|leicht spie|len die Kin|der Fan|gen.",
+     "Ei|ner ist der Fän|ger.",
+     "Die an|de|ren ren|nen weg.",
+     "Wer ge|fan|gen wird, ist jetzt der Fän|ger.",
+     "Le|on ist schnell und schwer zu fan|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🧦",
+      "👟"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf so ei|nem Spiel|platz trägt man oft Stop|per|so|cken.",
+     "Die ha|ben klei|ne Nop|pen un|ten dran.",
+     "Da|mit rutscht man nicht aus.",
+     "Le|on fin|det die Nop|pen wit|zig.",
+     "Sie se|hen aus wie klei|ne Punk|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🎂",
+      "🕯️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Bei ei|ner Par|ty gibt es oft Ku|chen.",
+     "Al|le sin|gen dann ein Lied.",
+     "Das Ge|burts|tags|kind pus|tet die Ker|zen aus.",
+     "Le|on singt be|stimmt laut mit.",
+     "Viel|leicht be|kommt er ein Stück Ku|chen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤝",
+      "😊"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf ei|ner Par|ty trifft man vie|le Kin|der.",
+     "Man|che kennt man schon.",
+     "Man|che lernt man neu ken|nen.",
+     "Beim Spie|len wer|den sie schnell zu Freun|den.",
+     "Spie|len geht ganz o|hne Wor|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎈",
+      "🎂"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Und am Tag da|nach?",
+     "Da hat Le|on selbst Ge|burts|tag!",
+     "Was für ei|ne Wo|che!",
+     "Erst Ma|ri|as Par|ty, dann sein ei|ge|ner Tag.",
+     "Le|on ist rich|tig ge|spannt."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wer hat am Freitag Geburtstag?",
+    "richtig": "Maria",
+    "falsch": [
+     "Paul",
+     "Omi"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was heißt Monkey?",
+    "richtig": "Affe",
+    "falsch": [
+     "Hund",
+     "Baum"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wann fängt die Party an?",
+    "richtig": "um halb drei",
+    "falsch": [
+     "um acht Uhr",
+     "um Mitternacht"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Was könnte auf Leons Karte kommen?",
+    "richtig": "ein Affe mit einem Luftballon",
+    "falsch": [
+     "ein Auto",
+     "ein Schneemann"
+    ],
+    "seite": 10
+   },
+   {
+    "frage": "Wer hat am Tag danach Geburtstag?",
+    "richtig": "Leon",
+    "falsch": [
+     "Maria",
+     "Mama"
+    ],
+    "seite": 16
+   }
+  ]
+ },
+ {
+  "id": "w43-leon-acht",
+  "titel": "Leon wird acht",
+  "bild": "🎂",
+  "lang": true,
+  "ereignis": "2026-10-24",
+  "zeigenAb": "2026-10-22",
+  "zeigenBis": "2026-10-24",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "🎈"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag ist ein ganz be|son|de|rer Tag.",
+     "Da hat Le|on Ge|burts|tag!",
+     "Er wird acht Jah|re alt.",
+     "Le|on kann es kaum glau|ben.",
+     "Acht Jah|re, das ist schon rich|tig viel."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "7️⃣",
+      "8️⃣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt ist Le|on noch sie|ben.",
+     "Bald ist er schon acht.",
+     "Das ist ein Jahr mehr.",
+     "Le|on fühlt sich schon ganz groß.",
+     "Groß und ein biss|chen stolz."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "✋",
+      "🤚"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on zeigt die Acht mit den Fin|gern.",
+     "An ei|ner Hand zeigt er fünf.",
+     "An der an|de|ren Hand zeigt er drei.",
+     "Fünf und drei sind acht.",
+     "Das kann er schon gut rech|nen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📏",
+      "🌱"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In ei|nem Jahr ist Le|on ge|wach|sen.",
+     "Sei|ne Schu|he sind grö|ßer ge|wor|den.",
+     "Er kann jetzt viel mehr le|sen.",
+     "Und im Tor hält er schon vie|le Bäl|le."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🥐",
+      "🍳"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag gibt es ei|nen Brunch zu Hau|se.",
+     "Brunch ist ein lus|ti|ges Wort.",
+     "Es ist Früh|stück und Mit|tag|es|sen zu|sam|men.",
+     "Man isst spät am Mor|gen und lan|ge.",
+     "Das passt gut zu ei|nem Fest|tag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🍽️",
+      "👨"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Die Fa|mi|lie fei|ert mit Le|on.",
+     "Auch Pa|pa freut sich schon sehr.",
+     "Am Ge|burts|tag sitzt man lan|ge am Tisch.",
+     "Man re|det, lacht und isst.",
+     "So ein Tag geht nie zu schnell vor|bei."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚪",
+      "🔔"
+     ],
+     "leute": [
+      "Leon",
+      "Steffi"
+     ]
+    },
+    "zeilen": [
+     "Es kom|men auch Gäs|te.",
+     "Tan|te Stef|fi kommt.",
+     "Stef|fi ist Le|ons Tan|te.",
+     "Le|on freut sich, wenn sie kommt.",
+     "Sie um|armt ihn be|stimmt ganz fest."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "🔔"
+     ],
+     "leute": [
+      "Robert",
+      "Marianne"
+     ]
+    },
+    "zeilen": [
+     "Auch Ro|bert kommt.",
+     "Ro|bert ist Le|ons Tauf|pa|te.",
+     "Er bringt Ma|ri|an|ne mit.",
+     "Bei|de wol|len Le|on gra|tu|lie|ren.",
+     "Le|on wird ganz schön oft um|armt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👶",
+      "💧"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Was ist ei|gent|lich ein Tauf|pa|te?",
+     "Als Le|on ein Ba|by war, wur|de er ge|tauft.",
+     "Ro|bert war da|bei und ist sein Pa|te.",
+     "Ein Pa|te ist ein Be|glei|ter fürs Le|ben.",
+     "Das fin|det Le|on schön."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👦",
+      "👦"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul ist schon zehn Jah|re alt.",
+     "Er ist Le|ons gro|ßer Bru|der.",
+     "Paul bleibt im|mer der Äl|te|re.",
+     "A|ber Le|on holt ein biss|chen auf.",
+     "Das fin|det er lus|tig."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🎂",
+      "🕯️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auf ei|nen Ku|chen für acht Jah|re ...",
+     "... pas|sen acht Ker|zen.",
+     "Acht klei|ne Flam|men in ei|ner Rei|he!",
+     "Le|on möch|te sie al|le auf ein|mal aus|pus|ten.",
+     "Da|zu muss er tief Luft ho|len."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎶",
+      "🥳"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Be|stimmt singt dann je|mand ein Lied.",
+     "Hoch soll er le|ben!",
+     "Viel|leicht sin|gen al|le mit.",
+     "Le|on wird da|bei ganz rot.",
+     "A|ber in|nen drin freut er sich sehr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎁",
+      "💭"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat vie|le Wün|sche.",
+     "Am liebs|ten mag er Fuß|ball.",
+     "Und na|tür|lich die Klee|blät|ter aus Fürth.",
+     "Was er wohl be|kommt?",
+     "Das bleibt noch ein Ge|heim|nis."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🔴",
+      "🌙"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend spielt so|gar der Club.",
+     "Ge|gen Kai|sers|lau|tern, um halb neun.",
+     "Das ist spät für ein Ge|burts|tags|kind.",
+     "Das Er|geb|nis kann Le|on am Sonn|tag le|sen.",
+     "Am Sonn|tag spielt dann Fürth."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎉",
+      "📅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Und das Bes|te kommt noch.",
+     "Am Sonn|tag fei|ert Le|on wei|ter.",
+     "Dann ist sein Kin|der|ge|burts|tag.",
+     "Zwei Fes|te hin|ter|ein|an|der!",
+     "Das gibt es nicht oft."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "⭐"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend vor|her ist Le|on auf|ge|regt.",
+     "Er kann gar nicht rich|tig ein|schla|fen.",
+     "Mor|gen bin ich acht, denkt er.",
+     "Dann lä|chelt er und schließt die Au|gen.",
+     "Bald ist es so weit."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wie alt wird Leon?",
+    "richtig": "acht Jahre",
+    "falsch": [
+     "sechs Jahre",
+     "zehn Jahre"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was ist ein Brunch?",
+    "richtig": "Frühstück und Mittagessen zusammen",
+    "falsch": [
+     "ein Fußballspiel",
+     "ein Haustier"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wer ist Leons Tante?",
+    "richtig": "Steffi",
+    "falsch": [
+     "Marianne",
+     "Maria"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wer ist Leons Taufpate?",
+    "richtig": "Robert",
+    "falsch": [
+     "Paul",
+     "Klaus"
+    ],
+    "seite": 8
+   },
+   {
+    "frage": "Wie viele Kerzen passen auf den Kuchen?",
+    "richtig": "acht",
+    "falsch": [
+     "zwei",
+     "zwanzig"
+    ],
+    "seite": 11
+   }
+  ]
+ },
+ {
+  "id": "w43-uhr",
+  "titel": "Eine Stunde geschenkt",
+  "bild": "🕒",
+  "lang": true,
+  "ereignis": "2026-10-25",
+  "zeigenAb": "2026-10-23",
+  "zeigenBis": "2026-10-25",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🕒",
+      "❓"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In der Nacht zum Sonn|tag pas|siert et|was.",
+     "Die Uhr wird um|ge|stellt.",
+     "Le|on run|zelt die Stirn.",
+     "Wie stellt man denn ei|ne Uhr um?",
+     "Er fragt sich das den gan|zen Tag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "🕒",
+      "🌙"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Um drei Uhr nachts ist es so weit.",
+     "Dann springt die Uhr zu|rück.",
+     "Aus drei Uhr wird zwei Uhr.",
+     "Die Stun|de gibt es al|so zwei|mal.",
+     "Ko|misch, o|der?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "😴",
+      "🛏️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Da schla|fen fast al|le Men|schen.",
+     "Auch Le|on liegt in sei|nem Bett.",
+     "Er merkt von al|lem nichts.",
+     "A|ber er darf ei|ne Stun|de län|ger schla|fen!",
+     "Das ist die ge|schenk|te Stun|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "📱",
+      "⏰"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Vie|le Uh|ren stel|len sich selbst um.",
+     "Das Han|dy macht es ganz al|lein.",
+     "Ei|ne al|te Wand|uhr kann das nicht.",
+     "Bei ihr muss man selbst dre|hen.",
+     "Man dreht den Zei|ger ei|ne Stun|de zu|rück."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "📱",
+      "📡"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Wo|her weiß das Han|dy, dass die Zeit wech|selt?",
+     "Es be|kommt ein Sig|nal.",
+     "Dann stellt es sich in der Nacht um.",
+     "Ganz von al|lein, wie von Zau|ber|hand."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🕰️",
+      "🔍"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on schaut sich ei|ne Uhr ge|nau an.",
+     "Sie hat ei|nen kur|zen und ei|nen lan|gen Zei|ger.",
+     "Der kur|ze Zei|ger zeigt die Stun|den.",
+     "Der lan|ge Zei|ger zeigt die Mi|nu|ten.",
+     "Das hat Le|on in der Schu|le ge|lernt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🕰️",
+      "⬅️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Bei der Um|stel|lung wan|dert der kur|ze Zei|ger.",
+     "Er geht ei|ne Zahl zu|rück.",
+     "Von der Drei auf die Zwei.",
+     "Der lan|ge Zei|ger bleibt, wo er ist.",
+     "Ganz ein|fach ei|gent|lich."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "☀️",
+      "🍂"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt be|ginnt die Win|ter|zeit.",
+     "Am Mor|gen wird es frü|her hell.",
+     "Am A|bend wird es frü|her dun|kel.",
+     "Das ist im Herbst und Win|ter so.",
+     "Die Ta|ge wer|den kür|zer."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🌆",
+      "🍂"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Nach der Schu|le kommt bald die Dun|kel|heit.",
+     "Dann ge|hen die La|ter|nen frü|her an.",
+     "Le|on fin|det das ein biss|chen ge|müt|lich.",
+     "Drin|nen ist es warm und hell.",
+     "Dann kann man gut ku|scheln und le|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🐿️",
+      "🌰"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auch die Tie|re mer|ken den Herbst.",
+     "Die Eich|hörn|chen sam|meln Nüs|se.",
+     "Vie|le Vö|gel flie|gen in den Sü|den.",
+     "Für die Tie|re gibt es kei|ne Uhr.",
+     "Sie rich|ten sich nach der Son|ne."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🐿️",
+      "🍂"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Man|che Tie|re hal|ten so|gar Win|ter|schlaf.",
+     "Der Sie|ben|schlä|fer ge|hört da|zu.",
+     "Er schläft ganz vie|le Mo|na|te lang.",
+     "Da ist ei|ne Stun|de mehr gar nichts!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌸",
+      "🕒"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Im Früh|ling geht es an|ders|he|rum.",
+     "Dann wird die Uhr vor|ge|stellt.",
+     "Dann fehlt ei|ne Stun|de Schlaf.",
+     "Das mag Le|on gar nicht so gern.",
+     "Im Herbst ist es zum Glück an|ders."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧠",
+      "💡"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on merkt sich ei|nen Trick.",
+     "Im Herbst stellt man die Gar|ten|mö|bel zu|rück.",
+     "Und die Uhr auch.",
+     "Im Früh|ling stellt man sie wie|der vor.",
+     "So ver|gisst man es nie."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "🕜"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag spielt Fürth um halb zwei.",
+     "Das ist schon die neu|e Zeit.",
+     "Le|on muss sich die Uhr gut an|se|hen.",
+     "Sonst ver|passt er noch den An|pfiff!",
+     "Das wä|re wirk|lich scha|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎂",
+      "🕒"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die|se Nacht kommt nach Le|ons Ge|burts|tag.",
+     "Er hat al|so ei|ne lan|ge Nacht.",
+     "Erst ein schö|ner Tag, dann lan|ger Schlaf.",
+     "Bes|ser geht es fast nicht!",
+     "Gu|te Nacht, Le|on!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Was passiert in der Nacht zum Sonntag?",
+    "richtig": "Die Uhr wird umgestellt.",
+    "falsch": [
+     "Es schneit.",
+     "Die Schule fängt an."
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was wird aus drei Uhr?",
+    "richtig": "zwei Uhr",
+    "falsch": [
+     "vier Uhr",
+     "zwölf Uhr"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was zeigt der kurze Zeiger?",
+    "richtig": "die Stunden",
+    "falsch": [
+     "die Tage",
+     "das Wetter"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Wonach richten sich die Tiere?",
+    "richtig": "nach der Sonne",
+    "falsch": [
+     "nach dem Handy",
+     "nach dem Fernseher"
+    ],
+    "seite": 10
+   },
+   {
+    "frage": "Wann spielt Fürth am Sonntag?",
+    "richtig": "um halb zwei",
+    "falsch": [
+     "um sieben Uhr",
+     "um Mitternacht"
+    ],
+    "seite": 14
+   }
+  ]
+ },
+ {
+  "id": "w43-fuerth-osnabrueck",
+  "titel": "Fürth fährt nach Osnabrück",
+  "bild": "🍀",
+  "lang": true,
+  "ereignis": "2026-10-25",
+  "zeigenAb": "2026-10-24",
+  "zeigenBis": "2026-10-25",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍀",
+      "📅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag spielt Fürth wie|der.",
+     "Der Geg|ner heißt VfL Os|na|brück.",
+     "Das Spiel be|ginnt um halb zwei.",
+     "Le|on hat sich die Zeit ge|merkt.",
+     "Er ist schon ganz ge|spannt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚌",
+      "🗺️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Die|ses Mal spielt Fürth nicht zu Hau|se.",
+     "Os|na|brück liegt weit im Nor|den.",
+     "Die Spie|ler müs|sen weit rei|sen.",
+     "Von Fürth aus dau|ert das Stun|den.",
+     "Das ist ei|ne gro|ße Rei|se."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🗺️",
+      "🌳"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Os|na|brück liegt in Nie|der|sach|sen.",
+     "Fürth liegt in Bay|ern.",
+     "Da|zwi|schen lie|gen vie|le Fel|der und Wäl|der.",
+     "Mit dem Au|to dau|ert die Fahrt fast fünf Stun|den."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Ein Spiel in ei|ner frem|den Stadt ...",
+     "... nennt man ein Aus|wärts|spiel.",
+     "Dort ju|beln die meis|ten Fans für den Geg|ner.",
+     "Das ist für Fürth nicht leicht.",
+     "Zu Hau|se spielt es sich leich|ter."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🍀",
+      "📣"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "A|ber ei|ni|ge Für|ther Fans fah|ren mit.",
+     "Sie sin|gen und fei|ern ihr Team.",
+     "Sie tra|gen Grün und Weiß.",
+     "So sind die Spie|ler nicht al|lein.",
+     "Sie hö|ren ih|re Fans sin|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on denkt an das letz|te Spiel.",
+     "Da hat Fürth zwei zu null ge|won|nen.",
+     "Klaus hat bei|de To|re ge|schos|sen.",
+     "Viel|leicht trifft er ja wie|der?",
+     "Das wä|re su|per."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🍀",
+      "👕"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Die Für|ther spie|len in Grün und Weiß.",
+     "Os|na|brück spielt in Li|la und Weiß.",
+     "Auf dem Platz kann man sie gut un|ter|schei|den.",
+     "So weiß je|der, wer zu wem ge|hört."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "🔟"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on schaut noch ein|mal auf die Ta|bel|le.",
+     "Fürth steht auf Platz zehn.",
+     "Fürth hat neun Punk|te.",
+     "Os|na|brück hat acht Punk|te.",
+     "Das ist nur ei|ner we|ni|ger."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚖️",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Bei|de Mann|schaf|ten sind al|so fast gleich gut.",
+     "Das macht das Spiel be|son|ders span|nend.",
+     "Je|der Punkt ist wich|tig.",
+     "Wer ge|winnt, klet|tert in der Ta|bel|le.",
+     "Wer ver|liert, rutscht nach un|ten."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "😕"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Os|na|brück hat zu|letzt in Bie|le|feld ge|spielt.",
+     "Dort hat Os|na|brück ver|lo|ren.",
+     "Es ging zwei zu eins für Bie|le|feld aus.",
+     "Jetzt will Os|na|brück zu Hau|se ge|win|nen.",
+     "Fürth muss al|so gut auf|pas|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔢",
+      "🏆"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Für ei|nen Sieg gibt es drei Punk|te.",
+     "Dann hät|te Fürth zwölf Punk|te.",
+     "Neun und drei sind zwölf.",
+     "Le|on rech|net gern mit Fuß|ball.",
+     "Fuß|ball und Ma|the pas|sen gut zu|sam|men."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤝",
+      "🔢"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Und bei ei|nem Un|ent|schie|den?",
+     "Dann gibt es für je|den ei|nen Punkt.",
+     "Fürth hät|te dann zehn Punk|te.",
+     "Das wä|re auch nicht schlecht.",
+     "Bei ei|ner Nie|der|la|ge gibt es kei|nen Punkt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📺",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt sich das Spiel vor.",
+     "Ein Pass, noch ein Pass, dann ein Schuss.",
+     "Tor für Fürth!",
+     "So soll es am Sonn|tag sein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🕒",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Vor dem Spiel wird nachts die Uhr um|ge|stellt.",
+     "Le|on darf ei|ne Stun|de län|ger schla|fen.",
+     "So ist er beim An|pfiff rich|tig wach.",
+     "Das passt doch gut!",
+     "Gut ge|schla|fen schaut es sich bes|ser zu."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎂",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag hat Le|on Ge|burts|tag.",
+     "Am Sonn|tag spielt sein Ver|ein.",
+     "Ein Sieg wä|re wie ein Ge|schenk.",
+     "Das wünscht sich Le|on sehr.",
+     "Ein Tor von Klaus wä|re das Größ|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤞",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on drückt fest die Dau|men.",
+     "„Auf geht's, Klee|blät|ter!“, ruft er.",
+     "Ob Fürth ge|winnt?",
+     "Das weiß noch nie|mand.",
+     "Ge|nau das macht Fuß|ball so span|nend."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wie heißt der Gegner von Fürth?",
+    "richtig": "VfL Osnabrück",
+    "falsch": [
+     "Eintracht Braunschweig",
+     "Bayern München"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie nennt man ein Spiel in einer fremden Stadt?",
+    "richtig": "Auswärtsspiel",
+    "falsch": [
+     "Heimspiel",
+     "Training"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie viele Punkte hat Osnabrück?",
+    "richtig": "acht",
+    "falsch": [
+     "zwei",
+     "zwanzig"
+    ],
+    "seite": 8
+   },
+   {
+    "frage": "Wie viele Punkte gibt es für einen Sieg?",
+    "richtig": "drei",
+    "falsch": [
+     "sieben",
+     "hundert"
+    ],
+    "seite": 11
+   },
+   {
+    "frage": "Was ruft Leon?",
+    "richtig": "Auf geht's, Kleeblätter!",
+    "falsch": [
+     "Gute Nacht!",
+     "Ich will nach Hause!"
+    ],
+    "seite": 16
+   }
+  ]
+ },
+ {
+  "id": "w43-club",
+  "titel": "Der Club spielt am Abend",
+  "bild": "📺",
+  "lang": true,
+  "ereignis": "2026-10-24",
+  "zeigenAb": "2026-10-23",
+  "zeigenBis": "2026-10-24",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍀",
+      "🔴"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on ist ein Fan von Fürth.",
+     "Ganz in der Nä|he liegt Nürn|berg.",
+     "Dort spielt der 1. FC Nürn|berg.",
+     "Al|le nen|nen ihn nur den Club.",
+     "Das ist ein kur|zer Na|me."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚔️",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Fürth und der Club sind Ri|va|len.",
+     "So nennt man zwei Geg|ner, die sich gut ken|nen.",
+     "Spie|len sie ge|gen|ein|an|der, ist es laut.",
+     "Das ist ein ganz be|son|de|res Spiel.",
+     "Man nennt es auch Fran|ken|der|by."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚋",
+      "🗺️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Fürth und Nürn|berg lie|gen ganz dicht bei|ein|an|der.",
+     "Man kann mit der U-Bahn hin|fah|ren.",
+     "Die Städ|te sind wie Nach|barn.",
+     "Nur beim Fuß|ball sind sie Geg|ner.",
+     "Da|nach ver|tra|gen sie sich wie|der."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "2️⃣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on schaut auf die Ta|bel|le.",
+     "Der Club steht auf Platz zwei.",
+     "Er hat schon acht|zehn Punk|te.",
+     "Fürth hat neun Punk|te.",
+     "Der Club hat dop|pelt so vie|le."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🥇",
+      "🏆"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Wer ist ei|gent|lich Ers|ter?",
+     "Das ist Her|tha BSC aus Ber|lin.",
+     "Her|tha hat zwei|und|zwan|zig Punk|te.",
+     "Der Club ist al|so knapp da|hin|ter.",
+     "Vier Punk|te Ab|stand sind nicht viel."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🤝"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Am Frei|tag hat der Club in Cott|bus ge|spielt.",
+     "Das Spiel ging eins zu eins aus.",
+     "Das nennt man Un|ent|schie|den.",
+     "Bei|de Mann|schaf|ten be|ka|men ei|nen Punkt.",
+     "Für den Club war es kein Sieg."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🏟️",
+      "🌙"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Am Sams|tag spielt der Club wie|der.",
+     "Der Geg|ner kommt aus Kai|sers|lau|tern.",
+     "Das Spiel be|ginnt erst um halb neun.",
+     "Da ist es drau|ßen schon dun|kel.",
+     "Die meis|ten Kin|der schla|fen dann schon."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "💡",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Im Dun|keln spielt man mit Flut|licht.",
+     "Das sind rie|si|ge Lam|pen am Sta|di|on.",
+     "Sie ma|chen den Ra|sen ganz hell.",
+     "Fast so hell wie am Tag.",
+     "Das sieht im Fern|se|hen toll aus."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "4️⃣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Kai|sers|lau|tern ist auch ziem|lich gut.",
+     "Die Mann|schaft steht auf Platz vier.",
+     "Sie hat fünf|zehn Punk|te.",
+     "Das sind drei we|ni|ger als beim Club.",
+     "Am letz|ten Spiel|tag hat Kai|sers|lau|tern ge|won|nen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "😈",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Spie|ler aus Kai|sers|lau|tern ha|ben ei|nen Spitz|na|men.",
+     "Man nennt sie die Ro|ten Teu|fel.",
+     "Das klingt ge|fähr|lich.",
+     "Da|bei sind es ganz nor|ma|le Fuß|ball|spie|ler."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔢",
+      "➕"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on rech|net nach.",
+     "Ge|winnt der Club, hat er ein|und|zwan|zig Punk|te.",
+     "Ge|winnt Kai|sers|lau|tern, hat es acht|zehn Punk|te.",
+     "Dann hät|ten bei|de gleich viel.",
+     "Das wä|re dann ein en|ges Ren|nen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🔴",
+      "📣"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Im Sta|di|on in Nürn|berg wird es voll.",
+     "Vie|le Fans tra|gen Rot und Schwarz.",
+     "Das sind die Far|ben vom Club.",
+     "Sie sin|gen das gan|ze Spiel lang.",
+     "Das hört man bis drau|ßen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🧣",
+      "🎶"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Fans ha|ben oft ei|nen Schal da|bei.",
+     "Den hal|ten sie hoch, wenn ihr Team ein|läuft.",
+     "Dann sieht das Sta|di|on aus wie ein Far|ben|meer.",
+     "Das ist ein tol|ler An|blick."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎂",
+      "🛏️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Halb neun ist spät für ein Kind.",
+     "Und am Sams|tag hat Le|on Ge|burts|tag.",
+     "Da ist er am A|bend be|stimmt mü|de.",
+     "Viel|leicht schläft er dann schon.",
+     "Ein Ge|burts|tag macht näm|lich mü|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "📰",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Das Er|geb|nis kann man spä|ter le|sen.",
+     "Es steht im In|ter|net und in der Zei|tung.",
+     "So er|fährt Le|on es am Sonn|tag.",
+     "Dann kennt er die neu|e Ta|bel|le.",
+     "Ob der Club dann im|mer noch Zwei|ter ist?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍀",
+      "💚"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Für wen ist Le|on wohl?",
+     "Na klar, er bleibt ein Klee|blatt!",
+     "Sein Herz schlägt für Grün und Weiß.",
+     "Am Sonn|tag ist dann Fürth dran.",
+     "Da|rauf freut er sich am meis|ten."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wie nennen alle den 1. FC Nürnberg?",
+    "richtig": "den Club",
+    "falsch": [
+     "die Löwen",
+     "die Kleeblätter"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie nennt man zwei Gegner, die sich gut kennen?",
+    "richtig": "Rivalen",
+    "falsch": [
+     "Zwillinge",
+     "Lehrer"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wann beginnt das Spiel am Samstag?",
+    "richtig": "um halb neun",
+    "falsch": [
+     "um acht Uhr morgens",
+     "um zwölf Uhr"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Was macht den Rasen im Dunkeln hell?",
+    "richtig": "das Flutlicht",
+    "falsch": [
+     "der Mond",
+     "eine Taschenlampe"
+    ],
+    "seite": 8
+   },
+   {
+    "frage": "Auf welchem Platz steht Kaiserslautern?",
+    "richtig": "Platz vier",
+    "falsch": [
+     "Platz zehn",
+     "Platz eins"
+    ],
+    "seite": 9
+   }
+  ]
+ },
+ {
+  "id": "w43-fussball-montag",
+  "titel": "Fußball-Montag: Fürth und der Club",
+  "bild": "⚽",
+  "lang": true,
+  "ereignis": "2026-10-19",
+  "zeigenAb": "2026-10-19",
+  "zeigenBis": "2026-10-21",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Heu|te ist Mon|tag.",
+     "Am Mon|tag schaut Le|on auf den Fuß|ball.",
+     "Was ist am Wo|chen|en|de pas|siert?",
+     "Wie ste|hen sei|ne Ver|ei|ne in der Ta|bel|le?",
+     "Und wann spie|len sie wie|der?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍀",
+      "🔴"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat zwei Ver|ei|ne im Blick.",
+     "Sein Lieb|lings|ver|ein ist Greu|ther Fürth.",
+     "Die Spie|ler hei|ßen auch die Klee|blät|ter.",
+     "Der zwei|te Ver|ein ist der 1. FC Nürn|berg.",
+     "Al|le nen|nen ihn nur den Club."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🍀",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Zu|erst kommt Fürth dran.",
+     "Am Sams|tag hat Fürth zu Hau|se ge|spielt.",
+     "Der Geg|ner war Ein|tracht Braun|schweig.",
+     "Das Spiel be|gann um ein Uhr mit|tags.",
+     "Die Klee|blät|ter spiel|ten im ei|ge|nen Sta|di|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der 32. Mi|nu|te fiel das ers|te Tor.",
+     "Ge|schos|sen hat es Klaus.",
+     "Jetzt stand es eins zu null für Fürth.",
+     "Die Fans im Sta|di|on ju|bel|ten laut.",
+     "Das war noch vor der Halb|zeit."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🎉"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der 63. Mi|nu|te traf Klaus noch ein|mal.",
+     "Nun stand es zwei zu null.",
+     "So ging das Spiel auch zu En|de.",
+     "Fürth hat ge|won|nen!",
+     "Ein Spie|ler mit zwei To|ren, toll!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "📖"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zwei To|re von ei|nem Spie|ler.",
+     "Das gibt es nicht in je|dem Spiel.",
+     "Le|on merkt sich den Na|men gut.",
+     "Klaus ist ein kur|zer Na|me.",
+     "Den kann Le|on leicht le|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔢",
+      "➕"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Für ei|nen Sieg gibt es drei Punk|te.",
+     "Vor|her hat|te Fürth sechs Punk|te.",
+     "Sechs und drei sind neun.",
+     "Jetzt hat Fürth al|so neun Punk|te.",
+     "Le|on rech|net das ganz schnell im Kopf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "🔟"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on schaut auf die Ta|bel|le.",
+     "Fürth steht dort auf Platz zehn.",
+     "Am Sams|tag war es noch Platz neun.",
+     "Am Sonn|tag ha|ben an|de|re Mann|schaf|ten ge|won|nen.",
+     "Da|rum ist Fürth ei|nen Platz ge|rutscht."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "🤏"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Di|rekt vor Fürth steht Ener|gie Cott|bus.",
+     "Cott|bus hat auch neun Punk|te.",
+     "A|ber Cott|bus hat mehr To|re ge|schos|sen.",
+     "Di|rekt hin|ter Fürth steht Dy|na|mo Dres|den.",
+     "Dres|den hat acht Punk|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🔴",
+      "🚌"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Jetzt kommt der Club.",
+     "Er hat schon am Frei|tag ge|spielt.",
+     "Das Spiel war am A|bend in Cott|bus.",
+     "Die Mann|schaft muss|te weit fah|ren.",
+     "Cott|bus liegt weit im Os|ten."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "😮"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Lan|ge stand es null zu null.",
+     "Dann schoss But|ler ein Tor für Cott|bus.",
+     "Das war in der 56. Mi|nu|te.",
+     "Jetzt lag der Club hin|ten.",
+     "Für den Club sah es nicht gut aus."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🤝"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Doch in der 79. Mi|nu|te kam der Aus|gleich.",
+     "Der Tor|schüt|ze hat ei|nen schwe|ren Na|men: Mkrtchyan.",
+     "Am En|de stand es eins zu eins.",
+     "Das nennt man Un|ent|schie|den.",
+     "Je|de Mann|schaft be|kam ei|nen Punkt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "2️⃣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Club steht auf Platz zwei.",
+     "Er hat schon acht|zehn Punk|te.",
+     "Das sind dop|pelt so vie|le wie bei Fürth.",
+     "Nur Her|tha BSC aus Ber|lin ist noch bes|ser.",
+     "Her|tha hat zwei|und|zwan|zig Punk|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🌙",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Und wann spielt der Club wie|der?",
+     "Am Sams|tag, um halb neun am A|bend.",
+     "Dann kommt Kai|sers|lau|tern nach Nürn|berg.",
+     "Kai|sers|lau|tern steht auf Platz vier.",
+     "Das wird ein star|ker Geg|ner."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍀",
+      "📅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Und wann spielt Fürth?",
+     "Fürth spielt am Sonn|tag um halb zwei.",
+     "Dann fährt die Mann|schaft nach Os|na|brück.",
+     "Os|na|brück hat acht Punk|te.",
+     "Das ist ei|ner we|ni|ger als Fürth."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎂",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag hat Le|on auch noch Ge|burts|tag.",
+     "Was für ein Wo|chen|en|de!",
+     "Erst sein Ge|burts|tag, dann spielt der Club.",
+     "Und am Sonn|tag sind die Klee|blät|ter dran.",
+     "Le|on drückt Fürth ganz fest die Dau|men."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Gegen wen hat Fürth am Samstag gespielt?",
+    "richtig": "gegen Eintracht Braunschweig",
+    "falsch": [
+     "gegen Hertha BSC",
+     "gegen Bayern München"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wer hat beide Tore für Fürth geschossen?",
+    "richtig": "Klaus",
+    "falsch": [
+     "Butler",
+     "Hertha"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wie viele Punkte hat Fürth jetzt?",
+    "richtig": "neun",
+    "falsch": [
+     "zwei",
+     "dreißig"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wie ging das Spiel vom Club in Cottbus aus?",
+    "richtig": "eins zu eins",
+    "falsch": [
+     "drei zu null",
+     "null zu fünf"
+    ],
+    "seite": 12
+   },
+   {
+    "frage": "Wann spielt Fürth in Osnabrück?",
+    "richtig": "am Sonntag um halb zwei",
+    "falsch": [
+     "am Montag um acht",
+     "am Freitag um elf"
+    ],
+    "seite": 15
+   }
+  ]
+ },
+ {
+  "id": "w43-paul-matheprobe",
+  "titel": "Paul schreibt eine Matheprobe",
+  "bild": "✏️",
+  "lang": true,
+  "ereignis": "2026-10-19",
+  "zeigenAb": "2026-10-19",
+  "zeigenBis": "2026-10-19",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "✏️"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Heu|te ist Mon|tag.",
+     "Für Paul ist das ein gro|ßer Tag.",
+     "Paul schreibt heu|te ei|ne Pro|be in Ma|the.",
+     "Sie fängt gleich am Mor|gen an.",
+     "Um acht Uhr geht es los."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📖",
+      "🤔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Wenn Le|on das liest, ist sie viel|leicht schon vor|bei.",
+     "Dann hat Paul die Pro|be schon ge|schrie|ben.",
+     "O|der er sitzt ge|ra|de noch da|ran.",
+     "Le|on denkt an sei|nen gro|ßen Bru|der.",
+     "Hof|fent|lich läuft al|les gut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "📝",
+      "❓"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Was ist ei|gent|lich ei|ne Pro|be?",
+     "In ei|ner Pro|be zeigt man, was man kann.",
+     "Al|le Kin|der be|kom|men ein Blatt mit Auf|ga|ben.",
+     "Je|des Kind rech|net ganz al|lein.",
+     "Ab|schrei|ben ist nicht er|laubt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🤫",
+      "⏳"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "In der Klas|se ist es dann ganz still.",
+     "Man hört nur die Stif|te auf dem Pa|pier.",
+     "Nie|mand re|det.",
+     "Je|der denkt an sei|ne ei|ge|nen Auf|ga|ben.",
+     "Das hilft beim Nach|den|ken."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "✖️",
+      "➗"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul ist in der vier|ten Klas|se.",
+     "Er rech|net viel mit dem Ein|mal|eins.",
+     "Und er teilt Zah|len in glei|che Tei|le.",
+     "Das hat er in den letz|ten Wo|chen ge|übt.",
+     "Mal|neh|men und Tei|len ge|hö|ren zu|sam|men."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📱",
+      "⭐"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul hat viel ge|übt.",
+     "Auch in sei|ner Lern|welt hat er ge|rech|net.",
+     "Im|mer wie|der ein paar Auf|ga|ben.",
+     "So wird man im|mer si|che|rer.",
+     "Und die Auf|ga|ben wer|den leich|ter."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧮",
+      "💡"
+     ],
+     "leute": [
+      "Paul",
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on kann auch schon rech|nen.",
+     "Er ist in der zwei|ten Klas|se.",
+     "Er übt ge|ra|de das Ein|mal|eins.",
+     "Paul kann ihm be|stimmt ein paar Tricks zei|gen.",
+     "Zwei Brü|der, zwei Re|chen|pro|fis!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "✏️",
+      "🔍"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Bei ei|ner Pro|be hilft ein Trick.",
+     "Am En|de schaut man al|les noch ein|mal an.",
+     "Stimmt je|des Er|geb|nis?",
+     "Hat man kei|ne Auf|ga|be ver|ges|sen?",
+     "So fin|det man klei|ne Feh|ler."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "📄",
+      "🗂️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Nach der Pro|be sam|melt die Leh|re|rin die Blät|ter ein.",
+     "Dann nimmt sie die Blät|ter mit.",
+     "Sie schaut je|de Auf|ga|be ge|nau an.",
+     "Das dau|ert ein paar Ta|ge.",
+     "Erst dann gibt sie die Pro|ben zu|rück."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "🗓️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Das Er|geb|nis kennt al|so noch nie|mand.",
+     "Auch Paul weiß es noch nicht.",
+     "Er muss ein biss|chen war|ten.",
+     "War|ten ist manch|mal ganz schön schwer.",
+     "Das kennt Le|on: Er war|tet auf sei|nen Ge|burts|tag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤞",
+      "💚"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on drückt Paul ganz fest die Dau|men.",
+     "Er fin|det, Paul hat sich toll vor|be|rei|tet.",
+     "E|gal, was he|raus|kommt.",
+     "Ge|übt hat Paul auf je|den Fall.",
+     "Und Ü|ben macht stark."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🍎",
+      "🥤"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Nach ei|ner Pro|be ist man oft mü|de.",
+     "Der Kopf hat ja viel ge|ar|bei|tet.",
+     "Dann tut ei|ne Pau|se rich|tig gut.",
+     "Viel|leicht ein Ap|fel und et|was zu trin|ken.",
+     "Da|nach denkt man an et|was an|de|res."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "📚"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Die|se Wo|che hat Paul so|gar zwei Pro|ben.",
+     "Am Frei|tag schreibt er noch ei|ne.",
+     "Dann geht es um Deutsch.",
+     "A|ber jetzt ist erst ein|mal Ma|the dran.",
+     "Ein Schritt nach dem an|de|ren."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "📖"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat sei|ne ei|ge|nen Auf|ga|ben.",
+     "Er liest gern ei|ne Ge|schich|te.",
+     "So wie die|se hier.",
+     "Le|sen ist ein biss|chen wie Trai|ning.",
+     "Je mehr man übt, des|to leich|ter geht es."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "💬"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Viel|leicht fragt Le|on spä|ter:",
+     "„Paul, wie war die Pro|be?“",
+     "Und Paul er|zählt ihm da|von.",
+     "Brü|der hal|ten e|ben zu|sam|men.",
+     "Das ist das Wich|tigs|te."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Um wie viel Uhr fängt die Probe an?",
+    "richtig": "um acht Uhr",
+    "falsch": [
+     "um zwölf Uhr",
+     "um drei Uhr"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was ist in einer Probe nicht erlaubt?",
+    "richtig": "Abschreiben",
+    "falsch": [
+     "Rechnen",
+     "Nachdenken"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "In welcher Klasse ist Paul?",
+    "richtig": "in der vierten Klasse",
+    "falsch": [
+     "in der ersten Klasse",
+     "in der achten Klasse"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wer schaut jede Aufgabe genau an?",
+    "richtig": "die Lehrerin",
+    "falsch": [
+     "der Hausmeister",
      "Leon"
+    ],
+    "seite": 9
+   },
+   {
+    "frage": "Was macht Leon für Paul?",
+    "richtig": "Er drückt ganz fest die Daumen.",
+    "falsch": [
+     "Er schreibt die Probe für ihn.",
+     "Er schläft ein."
+    ],
+    "seite": 11
+   }
+  ]
+ },
+ {
+  "id": "w43-friseur",
+  "titel": "Paul und Leon gehen zum Friseur",
+  "bild": "💇",
+  "lang": true,
+  "ereignis": "2026-10-20",
+  "zeigenAb": "2026-10-19",
+  "zeigenBis": "2026-10-20",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "✂️"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Am Diens|tag steht et|was Be|son|de|res an.",
+     "Paul und Le|on ge|hen zum Fri|seur.",
+     "Bei|de Brü|der kom|men dran.",
+     "Le|on fasst sich in die Haa|re.",
+     "Wie lang sie wohl in|zwi|schen sind?"
     ]
    },
-   "zeilen": [
-    "Le|on über|leg|te gut.",
-    "Was soll|te auf sein Sand|wich?",
-    "Viel|leicht Kä|se, viel|leicht ei|ne Gur|ke.",
-    "Zum Schluss kam die zwei|te Schei|be drauf.",
-    "Fer|tig war das Sand|wich!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🛋️",
-     "📺"
-    ],
-    "leute": [
-     "Leon",
-     "Papa"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🪞",
+      "💭"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on schaut in den Spie|gel.",
+     "Haa|re wach|sen näm|lich je|den Tag.",
+     "Im|mer nur ein win|zi|ges Stück.",
+     "Man merkt es nicht so|fort.",
+     "Ir|gend|wann müs|sen sie wie|der kür|zer wer|den."
     ]
    },
-   "zeilen": [
-    "Dann gin|gen sie zum Fern|se|her.",
-    "Der Film hieß „Vi|vo – Vol|ler Le|ben“.",
-    "Al|le mach|ten es sich be|quem.",
-    "Ei|ne De|cke lag auf dem So|fa.",
-    "Le|on ku|schel|te sich hi|nein."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🥪",
-     "🎬"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💇",
+      "❓"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Wie sol|len die Haa|re wer|den?",
+     "Kurz o|der ein biss|chen län|ger?",
+     "Das be|spricht man vor|her mit dem Fri|seur.",
+     "Der Fri|seur hat oft gu|te I|de|en."
     ]
    },
-   "zeilen": [
-    "Der Film fing an. Es wur|de still.",
-    "Le|on biss in sein Sand|wich.",
-    "Es schmeck|te ihm rich|tig gut.",
-    "Kau|en und gu|cken geht gut zu|sam|men.",
-    "Nur nicht zu viel krü|meln!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "😮",
-     "😄"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "💈",
+      "🚪"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Ein Fri|seur schnei|det Haa|re.",
+     "Da|für hat er ei|nen ei|ge|nen La|den.",
+     "Dort ste|hen gro|ße Stüh|le vor gro|ßen Spie|geln.",
+     "Es riecht nach Sham|poo und Haar|spray.",
+     "Ü|ber|all lie|gen Käm|me und Bürs|ten."
     ]
    },
-   "zeilen": [
-    "Vi|vo ist ein klei|ner Wi|ckel|bär.",
-    "Er liebt Mu|sik und singt gern.",
-    "Le|on schau|te ganz ge|nau hin.",
-    "Er woll|te nichts ver|pas|sen.",
-    "Wie geht die Ge|schich|te wohl wei|ter?"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎬",
-     "⭐"
-    ],
-    "leute": [
-     "Leon",
-     "Papa"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🪑",
+      "⏳"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Oft muss man erst ein biss|chen war|ten.",
+     "Dann setzt man sich auf ei|ne Bank.",
+     "Wer kommt wohl zu|erst dran?",
+     "Paul ist der Gro|ße.",
+     "A|ber viel|leicht darf Le|on an|fan|gen."
     ]
    },
-   "zeilen": [
-    "Dann war der Film zu En|de.",
-    "Wie fand Le|on ihn wohl?",
-    "Ein Film zu|sam|men ist schö|ner als al|lein.",
-    "Man kann da|nach da|rü|ber re|den.",
-    "Was war die bes|te Stel|le?"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "nacht",
-    "dinge": [
-     "🌙",
-     "🛏️"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🪑",
+      "⬆️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Stuhl beim Fri|seur ist be|son|ders.",
+     "Man kann ihn hoch und run|ter pum|pen.",
+     "Für Kin|der geht er ganz weit nach o|ben.",
+     "Dann sieht der Fri|seur gut auf den Kopf.",
+     "Le|on fühlt sich da o|ben wie ein Kö|nig."
     ]
    },
-   "zeilen": [
-    "Spä|ter ging Le|on ins Bett.",
-    "Sein Bauch war satt.",
-    "Er dach|te noch an den Film.",
-    "Am Sams|tag war|te|te schon das Tur|nier.",
-    "Das war ein ge|müt|li|cher A|bend!"
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Wann war der Familienabend?",
-   "richtig": "am Freitagabend",
-   "falsch": [
-    "am Montagmorgen",
-    "am Sonntagmittag"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Was haben sie in der Küche gemacht?",
-   "richtig": "Sandwich",
-   "falsch": [
-    "Pizza",
-    "Kuchen"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wie viele Scheiben Brot braucht ein Sandwich?",
-   "richtig": "zwei",
-   "falsch": [
-    "eine",
-    "fünf"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wie hieß der Film?",
-   "richtig": "Vivo",
-   "falsch": [
-    "Ice Age",
-    "Kung Fu Panda"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Was liebt Vivo?",
-   "richtig": "Musik",
-   "falsch": [
-    "Schnee",
-    "Autos"
-   ],
-   "seite": 6
-  }
- ]
-},
-{
- "id": "w42-turnier-zweiter",
- "titel": "Zweiter beim Turnier",
- "bild": "🥈",
- "ereignis": "2026-10-17",
- "zeigenAb": "2026-10-17",
- "zeigenBis": "2026-10-20",
- "seiten": [
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🏟️",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧥",
+      "🙂"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu|erst be|kommt man ei|nen Um|hang.",
+     "Der Um|hang reicht bis zu den Fü|ßen.",
+     "Nur der Kopf schaut o|ben he|raus.",
+     "So fal|len kei|ne Haa|re auf den Pul|li.",
+     "Le|on sieht da|rin aus wie ein klei|ner Su|per|held."
     ]
    },
-   "zeilen": [
-    "Am Sams|tag war das Tur|nier.",
-    "Es fand beim ESV Flü|gel|rad statt.",
-    "Vier Mann|schaf|ten wa|ren da.",
-    "Le|on spiel|te für den ASC Box|dorf.",
-    "End|lich ging es los!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🧤",
-     "🏃"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💧",
+      "🪮"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Manch|mal sprüht der Fri|seur Was|ser auf die Haa|re.",
+     "Das fühlt sich kühl an.",
+     "Dann kämmt er die Haa|re glatt.",
+     "Nas|se Haa|re kann man gut schnei|den.",
+     "So wird der Schnitt schön ge|ra|de."
     ]
    },
-   "zeilen": [
-    "Le|on hat|te zwei Auf|ga|ben.",
-    "Mal stand er im Tor.",
-    "Dann trug er sei|ne Hand|schu|he.",
-    "Mal spiel|te er drau|ßen mit.",
-    "Dann lief er dem Ball hin|ter|her."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "⚽",
-     "🥅"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "✂️",
+      "🎶"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt kommt die Sche|re.",
+     "Schnipp, schnapp, macht sie ganz lei|se.",
+     "Klei|ne Haar|bü|schel fal|len he|run|ter.",
+     "Le|on hält ganz still.",
+     "Nur nicht wa|ckeln!"
     ]
    },
-   "zeilen": [
-    "Im Tor muss man gut auf|pas|sen.",
-    "Wo ist der Ball ge|ra|de?",
-    "Drau|ßen muss man viel ren|nen.",
-    "Man spielt den Ball zu den an|de|ren.",
-    "Bei|des ist wich|tig für die Mann|schaft."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🥅",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🐝",
+      "✂️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Manch|mal nimmt der Fri|seur ei|ne Ma|schi|ne.",
+     "Sie brummt wie ei|ne klei|ne Bie|ne.",
+     "Am Na|cken kit|zelt das ein biss|chen.",
+     "Le|on muss da|bei ki|chern.",
+     "Still|hal|ten ist jetzt gar nicht so leicht."
     ]
    },
-   "zeilen": [
-    "Am En|de gab es ein Elf|me|ter|schie|ßen.",
-    "Da|bei schießt ein Spie|ler al|lein aufs Tor.",
-    "Nur der Tor|wart steht da|vor.",
-    "Le|on stand im Tor.",
-    "Er mach|te sich ganz groß."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🧤",
-     "😮"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🪞",
+      "👀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zum Schluss hält der Fri|seur ei|nen Spie|gel hoch.",
+     "So kann man sich von hin|ten se|hen.",
+     "Das sieht lus|tig aus.",
+     "Den ei|ge|nen Hin|ter|kopf sieht man sonst nie!",
+     "Le|on dreht den Kopf hin und her."
     ]
    },
-   "zeilen": [
-    "Ein Spie|ler nach dem an|de|ren lief an.",
-    "Le|on schau|te ge|nau auf den Ball.",
-    "In wel|che E|cke fliegt er wohl?",
-    "Das Herz klopf|te ganz schnell.",
-    "Es war sehr span|nend."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "⚽",
-     "🥅"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧹",
+      "💇"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann pin|selt der Fri|seur die Haa|re vom Hals.",
+     "Der Pin|sel ist ganz weich.",
+     "Der Um|hang kommt ab.",
+     "Auf dem Bo|den liegt ein klei|ner Haar|berg.",
+     "Gleich wird er weg|ge|fegt."
     ]
    },
-   "zeilen": [
-    "Ganz am En|de kam et|was Be|son|de|res.",
-    "Le|on durf|te auch selbst schie|ßen.",
-    "Er leg|te den Ball auf den Punkt.",
-    "Er lief an und schoss.",
-    "Tor! Der Ball war drin!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🎉",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👦",
+      "✂️"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Dann ist der an|de|re Bru|der dran.",
+     "Paul setzt sich auf den gro|ßen Stuhl.",
+     "Er be|kommt auch ei|nen Um|hang.",
+     "Paul ist schon groß und hält gut still.",
+     "Le|on schaut ihm da|bei zu."
     ]
    },
-   "zeilen": [
-    "Le|on hat|te sich mit ei|nem Tor be|lohnt.",
-    "Er war Tor|wart und Tor|schüt|ze zu|gleich.",
-    "Das schafft nicht je|der.",
-    "Da darf man rich|tig stolz sein.",
-    "Was für ein Mo|ment!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🥈",
-     "🏆"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👦",
+      "👦"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul und Le|on schau|en sich an.",
+     "Bei|de se|hen ganz an|ders aus.",
+     "Ir|gend|wie fri|scher.",
+     "Der Kopf fühlt sich leicht an.",
+     "Fast so, als wä|re ein Hut weg."
     ]
    },
-   "zeilen": [
-    "Dann stand das Er|geb|nis fest.",
-    "Le|ons Mann|schaft wur|de Zwei|ter.",
-    "Nur ei|ne Mann|schaft war noch bes|ser.",
-    "Von vier Mann|schaf|ten ist das toll.",
-    "Zu|sam|men hat|ten sie gut ge|kämpft."
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Was machte Leon, wenn er nicht im Tor stand?",
-   "richtig": "draußen mitspielen",
-   "falsch": [
-    "Eis essen",
-    "schlafen"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wo stand Leon beim Elfmeterschießen?",
-   "richtig": "im Tor",
-   "falsch": [
-    "auf der Bank",
-    "im Bus"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Was durfte Leon ganz am Ende machen?",
-   "richtig": "selbst schießen",
-   "falsch": [
-    "pfeifen",
-    "nach Hause gehen"
-   ],
-   "seite": 6
-  },
-  {
-   "frage": "Was passierte bei Leons Schuss?",
-   "richtig": "Tor",
-   "falsch": [
-    "daneben",
-    "an die Latte"
-   ],
-   "seite": 6
-  },
-  {
-   "frage": "Der Wievielte wurde Leons Mannschaft?",
-   "richtig": "Zweiter",
-   "falsch": [
-    "Erster",
-    "Vierter"
-   ],
-   "seite": 8
-  }
- ]
-},
-{
- "id": "w42-fuerth-sieg-badewanne",
- "titel": "Fürth gewinnt – und Leon sitzt in der Wanne",
- "bild": "🛁",
- "ereignis": "2026-10-17",
- "zeigenAb": "2026-10-18",
- "zeigenBis": "2026-10-20",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🛁",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎂",
+      "📸"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Ter|min passt gut.",
+     "Am Sams|tag hat Le|on näm|lich Ge|burts|tag.",
+     "Dann sind be|stimmt al|le da und ma|chen Fo|tos.",
+     "Mit fri|schen Haa|ren sieht Le|on rich|tig schick aus.",
+     "Das passt zu ei|nem Ge|burts|tags|kind."
     ]
    },
-   "zeilen": [
-    "Am Sams|tag spiel|te Fürth zu Hau|se.",
-    "Der Geg|ner war Ein|tracht Braun|schweig.",
-    "Le|on woll|te das Spiel se|hen.",
-    "Aber wo hat er zu|ge|schaut?",
-    "In der Ba|de|wan|ne!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🛁",
-     "🍀"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧢",
+      "🤔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu Hau|se fährt Le|on sich durch die Haa|re.",
+     "Sie füh|len sich ganz neu an.",
+     "Ob die Freun|de es mor|gen mer|ken?",
+     "Le|on ist ge|spannt.",
+     "Ein neu|er Haar|schnitt ist im|mer auf|re|gend."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wohin gehen Paul und Leon am Dienstag?",
+    "richtig": "zum Friseur",
+    "falsch": [
+     "zum Zahnarzt",
+     "ins Kino"
     ],
-    "leute": [
-     "Leon"
+    "seite": 1
+   },
+   {
+    "frage": "Was bekommt man zuerst um?",
+    "richtig": "einen Umhang",
+    "falsch": [
+     "eine Mütze",
+     "einen Schal"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wie klingt die Maschine?",
+    "richtig": "wie eine kleine Biene",
+    "falsch": [
+     "wie ein Hund",
+     "wie ein Auto"
+    ],
+    "seite": 10
+   },
+   {
+    "frage": "Was liegt am Ende auf dem Boden?",
+    "richtig": "ein kleiner Haarberg",
+    "falsch": [
+     "ein Ball",
+     "ein Buch"
+    ],
+    "seite": 12
+   },
+   {
+    "frage": "Was hat Leon am Samstag?",
+    "richtig": "Geburtstag",
+    "falsch": [
+     "ein Turnier",
+     "eine Probe"
+    ],
+    "seite": 15
+   }
+  ]
+ },
+ {
+  "id": "w43-paul-deutschprobe",
+  "titel": "Paul hat eine Deutschprobe",
+  "bild": "📝",
+  "lang": true,
+  "ereignis": "2026-10-23",
+  "zeigenAb": "2026-10-21",
+  "zeigenBis": "2026-10-23",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "📝"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag hat Paul wie|der ei|ne Pro|be.",
+     "Am Mon|tag war Ma|the dran.",
+     "Jetzt geht es um Deutsch.",
+     "Die Pro|be be|ginnt um acht Uhr mor|gens.",
+     "Da sind al|le noch ganz frisch."
     ]
    },
-   "zeilen": [
-    "Die Ba|de|wan|ne war in Klee|blatt|far|ben.",
-    "Grün und Weiß, wie bei Fürth.",
-    "Le|on saß im war|men Was|ser.",
-    "So ein Platz ist sel|ten.",
-    "Ein ech|ter Fan schaut über|all zu."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "⚽",
-     "🏟️"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Das Spiel fing an.",
-    "Bei|de Mann|schaf|ten woll|ten ge|win|nen.",
-    "Die Für|ther lie|fen viel.",
-    "Le|on schau|te ge|nau hin.",
-    "Wann fällt end|lich ein Tor?"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "⚽",
-     "🥅"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "In der 32. Mi|nu|te war es so weit.",
-    "Ein Spie|ler na|mens Klaus schoss ins Tor.",
-    "Jetzt stand es 1:0 für Fürth.",
-    "Le|on ju|bel|te in der Wan|ne.",
-    "Das Was|ser schwapp|te ein biss|chen."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "⏱️",
-     "⚽"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Dann war Halb|zeit.",
-    "Die Spie|ler ruh|ten sich kurz aus.",
-    "Da|nach ging es wei|ter.",
-    "Braun|schweig woll|te den Aus|gleich.",
-    "Aber Fürth hielt da|ge|gen."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "⚽",
-     "🎉"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "In der 63. Mi|nu|te kam das nächs|te Tor.",
-    "Wie|der hat|te Klaus ge|trof|fen.",
-    "Jetzt stand es 2:0.",
-    "Zwei To|re von ei|nem Spie|ler!",
-    "So et|was nennt man ei|nen Dop|pel|pack."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🏆",
-     "🍀"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔤",
+      "🔍"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "In der Pro|be geht es um zwei Sa|chen.",
+     "Die ers|te heißt Sprach|un|ter|su|chung.",
+     "Was für ein lan|ges Wort!",
+     "Le|on liest es gleich noch ein|mal.",
+     "Sprach|un|ter|su|chung. Ge|schafft!"
     ]
    },
-   "zeilen": [
-    "Am En|de ge|wann Fürth 2:0.",
-    "Vor|her war Fürth auf Platz 15.",
-    "Jetzt steht Fürth auf Platz 9.",
-    "Das ist ein gro|ßer Sprung nach o|ben.",
-    "Le|on freu|te sich sehr."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "⚽",
-     "🥈"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🔍",
+      "📄"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Bei der Sprach|un|ter|su|chung schaut man ge|nau hin.",
+     "Man sucht in Sät|zen nach be|stimm|ten Wör|tern.",
+     "Wie ein De|tek|tiv mit ei|ner Lu|pe.",
+     "Nur dass man nach Wör|tern sucht.",
+     "Das kann rich|tig Spaß ma|chen."
     ]
    },
-   "zeilen": [
-    "Es war ein Tag nach Le|ons Ge|schmack.",
-    "Am Mor|gen wur|de er beim Tur|nier Zwei|ter.",
-    "Am Nach|mit|tag ge|wann sein Ver|ein.",
-    "Das nächs|te Spiel ist in Os|na|brück.",
-    "Le|on drückt schon jetzt die Dau|men."
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Wo schaute Leon das Spiel?",
-   "richtig": "in der Badewanne",
-   "falsch": [
-    "im Stadion",
-    "im Auto"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Welche Farben haben die Kleeblätter?",
-   "richtig": "Grün und Weiß",
-   "falsch": [
-    "Rot und Gelb",
-    "Blau und Schwarz"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wer schoss das erste Tor für Fürth?",
-   "richtig": "Klaus",
-   "falsch": [
-    "Leon",
-    "der Torwart"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Wie viele Tore schoss Klaus?",
-   "richtig": "zwei",
-   "falsch": [
-    "eins",
-    "drei"
-   ],
-   "seite": 6
-  },
-  {
-   "frage": "Auf welchem Platz steht Fürth jetzt?",
-   "richtig": "Platz 9",
-   "falsch": [
-    "Platz 4",
-    "Platz 20"
-   ],
-   "seite": 7
-  }
- ]
-},
-{
- "id": "w43-training",
- "titel": "Training nach dem Turnier",
- "bild": "⚽",
- "ereignis": "2026-10-21",
- "zeigenAb": "2026-10-20",
- "zeigenBis": "2026-10-21",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "📅",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🐶",
+      "🏃"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Es gibt zum Bei|spiel No|men.",
+     "Das sind Na|men für Din|ge, Tie|re und Men|schen.",
+     "Hund, Ball und Schu|le sind No|men.",
+     "No|men schreibt man im|mer groß.",
+     "Auch Fürth ist ein No|men."
     ]
    },
-   "zeilen": [
-    "Heu|te ist wie|der Trai|ning.",
-    "Es ist Mitt|woch.",
-    "Le|on packt sei|ne Fuß|ball|sa|chen.",
-    "Er freut sich schon den gan|zen Tag.",
-    "Fuß|ball ist sein Lieb|lings|sport."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🥈",
-     "💭"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🏃",
+      "⚽"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Dann gibt es Ver|ben.",
+     "Ver|ben sa|gen, was je|mand tut.",
+     "Lau|fen, schie|ßen und la|chen sind Ver|ben.",
+     "Le|on fin|det: Fuß|ball ist voll mit Ver|ben!",
+     "Ren|nen, schie|ßen, hal|ten, ju|beln."
     ]
    },
-   "zeilen": [
-    "Am Sams|tag war ein Tur|nier.",
-    "Le|ons Mann|schaft wur|de Zwei|ter.",
-    "Le|on war mal im Tor.",
-    "Und mal hat er im Feld ge|spielt.",
-    "Das war ein tol|ler Tag."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "⚽",
-     "🥅"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌈",
+      "🐘"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Und es gibt Ad|jek|ti|ve.",
+     "Sie sa|gen, wie et|was ist.",
+     "Groß, klein, schnell und bunt sind Ad|jek|ti|ve.",
+     "Ein E|le|fant ist groß.",
+     "Ei|ne Maus ist klein."
     ]
    },
-   "zeilen": [
-    "Am En|de gab es ein Elf|me|ter|schie|ßen.",
-    "Da stand Le|on im Tor.",
-    "Zum Schluss durf|te er selbst schie|ßen.",
-    "Und er hat ge|trof|fen!",
-    "Dar|auf ist er im|mer noch stolz."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "strasse",
-    "dinge": [
-     "🕔",
-     "🚗"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "✍️",
+      "✅"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Die zwei|te Sa|che heißt Recht|schrei|bung.",
+     "Da geht es da|rum, Wör|ter rich|tig zu schrei|ben.",
+     "Mit al|len Buch|sta|ben am rich|ti|gen Platz.",
+     "Das ist manch|mal ganz schön knif|fe|lig.",
+     "Da hilft nur gut hin|schau|en."
     ]
    },
-   "zeilen": [
-    "Das Trai|ning ist beim ASC Box|dorf.",
-    "Es fängt um fünf Uhr an.",
-    "Um sechs Uhr ist es zu En|de.",
-    "Le|on spielt bei den F-Ju|ni|o|ren.",
-    "Da spie|len die jun|gen Kin|der."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "⚽",
-     "👟"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔤",
+      "🤔"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Schreibt man Fahr|rad mit ei|nem r o|der zwei?",
+     "Kommt ein h hin|ein o|der nicht?",
+     "Sol|che Fra|gen gibt es im Deut|schen viel.",
+     "Paul muss gut auf|pas|sen.",
+     "Je|des Wort ist ein klei|nes Rät|sel."
     ]
    },
-   "zeilen": [
-    "Auf dem Platz sind schon die an|de|ren.",
-    "Al|le lau|fen sich warm.",
-    "Le|on rennt ei|ne Run|de mit.",
-    "Sei|ne Bei|ne sind ganz schnell.",
-    "Dann holt je|des Kind ei|nen Ball."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "🥅",
-     "🧤"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👂",
+      "🗣️"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Ein Trick hilft beim Schrei|ben.",
+     "Man spricht das Wort lang|sam vor sich hin.",
+     "Sil|be für Sil|be.",
+     "Dann hört man vie|le Buch|sta|ben ge|nau.",
+     "Le|on macht das beim Le|sen ge|nau|so."
     ]
    },
-   "zeilen": [
-    "Was übt Le|on heu|te wohl?",
-    "Viel|leicht hält er wie|der Bäl|le.",
-    "Viel|leicht schießt er auch auf das Tor.",
-    "Bei|des macht ihm gro|ßen Spaß."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "platz",
-    "dinge": [
-     "⚽",
-     "💪"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📖",
+      "🔤"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Ein an|de|rer Trick ist das Ver|län|gern.",
+     "Hört man am En|de ein t o|der ein d?",
+     "Bei Hund sagt man: die Hun|de.",
+     "Jetzt hört man das d ganz deut|lich."
     ]
    },
-   "zeilen": [
-    "Nach dem Tur|nier ist Le|on stolz.",
-    "Aber er will noch bes|ser wer|den.",
-    "Dar|um geht er zum Trai|ning.",
-    "Wer übt, wird im|mer bes|ser.",
-    "Das weiß Le|on ge|nau."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🌙",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📚",
+      "⏰"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Vor ei|ner Pro|be hilft Ü|ben.",
+     "Man schreibt Wör|ter auf und prüft sie.",
+     "Ein biss|chen je|den Tag hilft am meis|ten.",
+     "So bleibt es im Kopf."
     ]
    },
-   "zeilen": [
-    "Am A|bend ist Le|on mü|de.",
-    "Sei|ne Fü|ße tun ein biss|chen weh.",
-    "Aber er ist glück|lich.",
-    "Im Bett denkt er an das nächs|te Spiel.",
-    "Fuß|ball ist ein|fach das Bes|te!"
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "An welchem Tag ist das Training?",
-   "richtig": "am Mittwoch",
-   "falsch": [
-    "am Sonntag",
-    "am Montag"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Welcher Platz war Leons Mannschaft beim Turnier?",
-   "richtig": "Zweiter",
-   "falsch": [
-    "Erster",
-    "Letzter"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Was hat Leon zum Schluss gemacht?",
-   "richtig": "Er hat geschossen und getroffen.",
-   "falsch": [
-    "Er hat geweint.",
-    "Er ist nach Hause gegangen."
-   ],
-   "seite": 3
-  },
-  {
-   "frage": "Um wie viel Uhr fängt das Training an?",
-   "richtig": "um fünf Uhr",
-   "falsch": [
-    "um acht Uhr",
-    "um zwölf Uhr"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Wer übt, wird ...",
-   "richtig": "immer besser",
-   "falsch": [
-    "immer müder",
-    "immer kleiner"
-   ],
-   "seite": 7
-  }
- ]
-},
-{
- "id": "w43-maria",
- "titel": "Maria feiert im Monkey Town",
- "bild": "🐒",
- "ereignis": "2026-10-23",
- "zeigenAb": "2026-10-21",
- "zeigenBis": "2026-10-23",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎉",
-     "💌"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👦",
+      "📖"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Le|on kennt das Ü|ben auch.",
+     "In der zwei|ten Klas|se schreibt er schon Wör|ter.",
+     "Und er liest gern Ge|schich|ten.",
+     "Le|sen hilft auch beim Schrei|ben.",
+     "Wer viel liest, sieht vie|le Wör|ter."
     ]
    },
-   "zeilen": [
-    "Am Frei|tag hat Ma|ri|a Ge|burts|tag.",
-    "Sie fei|ert ei|ne Par|ty.",
-    "Und Le|on ist ein|ge|la|den!",
-    "Dar|über freut er sich sehr.",
-    "Er zählt schon die Ta|ge."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🐒",
-     "🏠"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "😄"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat ei|ne lus|ti|ge I|dee.",
+     "Er sucht in die|ser Ge|schich|te No|men.",
+     "Paul ist ei|nes, Pro|be ist ei|nes.",
+     "Und Le|on ist na|tür|lich auch ei|nes!",
+     "Le|on fin|det noch mehr: Wo|che, Frei|tag, Kopf."
     ]
    },
-   "zeilen": [
-    "Die Par|ty ist im Mon|key Town.",
-    "Das ist ein gro|ßer Spiel|platz.",
-    "Er ist aber nicht drau|ßen.",
-    "Er ist in ei|ner Hal|le.",
-    "Da ist es auch bei Re|gen schön."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "park",
-    "dinge": [
-     "🛝",
-     "🧗"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🤫",
+      "✏️"
+     ],
+     "leute": [
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag in der Klas|se ist es dann still.",
+     "Je|des Kind liest die Auf|ga|ben ge|nau.",
+     "Man schreibt or|dent|lich und in Ru|he.",
+     "Am En|de schaut man al|les noch ein|mal an.",
+     "Den Trick kennt Paul ja schon von Ma|the."
     ]
    },
-   "zeilen": [
-    "Was gibt es dort wohl al|les?",
-    "Le|on stellt sich lan|ge Rut|schen vor.",
-    "Viel|leicht gibt es auch Klet|ter|net|ze.",
-    "Und viel|leicht ein Bad mit bun|ten Bäl|len.",
-    "Le|on kann es kaum er|war|ten."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "klasse",
-    "dinge": [
-     "🕝",
-     "📅"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤞",
+      "💚"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on drückt Paul die Dau|men.",
+     "Ganz fest, mit bei|den Hän|den.",
+     "Da ist sich Le|on ganz si|cher:",
+     "Zwei Pro|ben in ei|ner Wo|che sind viel.",
+     "Paul schafft das!"
     ]
    },
-   "zeilen": [
-    "Die Par|ty fängt um halb drei an.",
-    "Sie geht bis halb sechs.",
-    "Das sind drei gan|ze Stun|den.",
-    "Da ist viel Zeit zum Spie|len.",
-    "Le|on will kei|ne Mi|nu|te ver|pas|sen."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎁",
-     "💭"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎉",
+      "🛝"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Nach der Pro|be fängt das Wo|chen|en|de bald an.",
+     "Am Frei|tag geht Le|on noch zu ei|ner Par|ty.",
+     "Und am Sams|tag hat Le|on Ge|burts|tag.",
+     "Da ist die Pro|be schnell ver|ges|sen.",
+     "Und das Wo|chen|en|de kann kom|men."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Um welches Fach geht es am Freitag?",
+    "richtig": "um Deutsch",
+    "falsch": [
+     "um Mathe",
+     "um Sport"
     ],
-    "leute": [
-     "Leon"
+    "seite": 1
+   },
+   {
+    "frage": "Welches lange Wort liest Leon gleich noch einmal?",
+    "richtig": "Sprachuntersuchung",
+    "falsch": [
+     "Turnstunde",
+     "Pausenhof"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wie schreibt man Nomen?",
+    "richtig": "immer groß",
+    "falsch": [
+     "immer klein",
+     "nur rückwärts"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was hilft beim Schreiben?",
+    "richtig": "das Wort langsam sprechen",
+    "falsch": [
+     "ganz schnell schreiben",
+     "die Augen zumachen"
+    ],
+    "seite": 9
+   },
+   {
+    "frage": "Was sucht Leon in der Geschichte?",
+    "richtig": "Nomen",
+    "falsch": [
+     "Kekse",
+     "Fehler"
+    ],
+    "seite": 13
+   }
+  ]
+ },
+ {
+  "id": "w43-kindergeburtstag",
+  "titel": "Noch ein Fest: der Kindergeburtstag",
+  "bild": "🎈",
+  "lang": true,
+  "ereignis": "2026-10-25",
+  "zeigenAb": "2026-10-24",
+  "zeigenBis": "2026-10-25",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎈",
+      "📅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sams|tag hat Le|on Ge|burts|tag.",
+     "Dann wird er acht.",
+     "A|ber das ist noch nicht al|les.",
+     "Am Sonn|tag gibt es noch ein Fest!",
+     "Le|on freut sich dop|pelt."
     ]
    },
-   "zeilen": [
-    "Zu ei|nem Ge|burts|tag ge|hört ein Ge|schenk.",
-    "Was wünscht sich Ma|ri|a wohl?",
-    "Le|on denkt lan|ge nach.",
-    "Viel|leicht malt er ihr noch ei|ne Kar|te.",
-    "Ei|ne Kar|te macht im|mer Freu|de."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "park",
-    "dinge": [
-     "🛝",
-     "😄"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎉",
+      "🧒"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag fei|ert Le|on sei|nen Kin|der|ge|burts|tag.",
+     "Das ist ei|ne Fei|er mit an|de|ren Kin|dern.",
+     "Da wird ge|spielt, ge|lacht und ge|tobt.",
+     "Le|on freut sich rie|sig.",
+     "Das ist sein ei|ge|nes Fest."
     ]
    },
-   "zeilen": [
-    "Le|on mag es, wild zu to|ben.",
-    "Er rennt gern und klet|tert gern.",
-    "Auf ei|nem Spiel|platz ist er schnell.",
-    "Im Mon|key Town kann er das al|les.",
-    "Da wird er be|stimmt ganz ver|schwitzt."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "kueche",
-    "dinge": [
-     "🎂",
-     "🕯️"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "🤫"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Wie wird der Kin|der|ge|burts|tag wohl?",
+     "Die|se Ge|schich|te ver|rät es nicht.",
+     "Le|on wird es selbst er|le|ben.",
+     "Das ist doch das Schöns|te!",
+     "Ü|ber|ra|schun|gen ma|chen ein Fest erst rich|tig schön."
     ]
    },
-   "zeilen": [
-    "Bei ei|ner Par|ty gibt es oft Ku|chen.",
-    "Al|le sin|gen dann ein Lied.",
-    "Das Ge|burts|tags|kind pus|tet die Ker|zen aus.",
-    "Le|on singt be|stimmt laut mit."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎈",
-     "🎂"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎈",
+      "🎀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu ei|nem Fest ge|hö|ren oft Luft|bal|lons.",
+     "Man bläst sie auf, bis sie rund sind.",
+     "Dann kno|tet man sie zu.",
+     "Manch|mal platzt ei|ner mit ei|nem lau|ten Knall.",
+     "Dann er|schre|cken sich al|le und la|chen."
     ]
    },
-   "zeilen": [
-    "Und am Tag da|nach?",
-    "Da hat Le|on selbst Ge|burts|tag!",
-    "Was für ei|ne Wo|che!",
-    "Erst Ma|ri|as Par|ty, dann sein ei|ge|ner Tag.",
-    "Le|on ist rich|tig ge|spannt."
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Wer hat am Freitag Geburtstag?",
-   "richtig": "Maria",
-   "falsch": [
-    "Paul",
-    "Omi"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Wo ist der Spielplatz im Monkey Town?",
-   "richtig": "in einer Halle",
-   "falsch": [
-    "auf einer Wiese",
-    "im Wald"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wann fängt die Party an?",
-   "richtig": "um halb drei",
-   "falsch": [
-    "um acht Uhr",
-    "um Mitternacht"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Was gehört zu einem Geburtstag?",
-   "richtig": "ein Geschenk",
-   "falsch": [
-    "ein Zeugnis",
-    "ein Regenschirm"
-   ],
-   "seite": 5
-  },
-  {
-   "frage": "Wer hat am Tag danach Geburtstag?",
-   "richtig": "Leon",
-   "falsch": [
-    "Maria",
-    "Mama"
-   ],
-   "seite": 8
-  }
- ]
-},
-{
- "id": "w43-leon-acht",
- "titel": "Leon wird acht",
- "bild": "🎂",
- "ereignis": "2026-10-24",
- "zeigenAb": "2026-10-22",
- "zeigenBis": "2026-10-24",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "📅",
-     "🎈"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💭",
+      "🎲"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on denkt an an|de|re Fes|te.",
+     "Auf Kin|der|ge|burts|ta|gen gibt es oft Spie|le.",
+     "Zum Bei|spiel Topf|schla|gen.",
+     "O|der ei|ne Schatz|su|che.",
+     "Man|che Spie|le gibt es schon sehr lan|ge."
     ]
    },
-   "zeilen": [
-    "Am Sams|tag ist ein ganz be|son|de|rer Tag.",
-    "Da hat Le|on Ge|burts|tag!",
-    "Er wird acht Jah|re alt.",
-    "Le|on kann es kaum glau|ben."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "7️⃣",
-     "8️⃣"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🥄",
+      "🙈"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Beim Topf|schla|gen sind die Au|gen zu.",
+     "Man hat ei|nen Löf|fel in der Hand.",
+     "Man klopft auf den Bo|den und sucht ei|nen Topf.",
+     "Die an|de|ren ru|fen: Heiß! O|der: Kalt!",
+     "Heiß heißt: Du bist ganz nah dran."
     ]
    },
-   "zeilen": [
-    "Jetzt ist Le|on noch sie|ben.",
-    "Bald ist er schon acht.",
-    "Das ist ein Jahr mehr.",
-    "Le|on fühlt sich schon ganz groß."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "✋",
-     "🤚"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🗺️",
+      "💎"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Bei ei|ner Schatz|su|che folgt man Hin|wei|sen.",
+     "Ein Hin|weis führt zum nächs|ten.",
+     "Am En|de fin|det man den Schatz.",
+     "Das ist be|son|ders auf|re|gend.",
+     "Al|le su|chen zu|sam|men."
     ]
    },
-   "zeilen": [
-    "Le|on zeigt die Acht mit den Fin|gern.",
-    "An ei|ner Hand zeigt er fünf.",
-    "An der an|de|ren Hand zeigt er drei.",
-    "Fünf und drei sind acht.",
-    "Das kann er schon gut rech|nen."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "👦",
-     "👦"
-    ],
-    "leute": [
-     "Leon",
-     "Paul"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🪑",
+      "🎶"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Es gibt auch die Rei|se nach Je|ru|sa|lem.",
+     "Da lau|fen al|le um Stüh|le he|rum.",
+     "Hört die Mu|sik auf, setzt sich je|der schnell.",
+     "Ein Stuhl fehlt im|mer!",
+     "Wer kei|nen Stuhl fin|det, ist drau|ßen."
     ]
    },
-   "zeilen": [
-    "Paul ist schon zehn Jah|re alt.",
-    "Er ist Le|ons gro|ßer Bru|der.",
-    "Paul ist im|mer noch äl|ter.",
-    "Aber Le|on holt ein biss|chen auf.",
-    "Das fin|det er lus|tig."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "kueche",
-    "dinge": [
-     "🎂",
-     "🕯️"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧊",
+      "🎶"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein an|de|res Spiel heißt Stopp|tanz.",
+     "Al|le tan|zen zur Mu|sik.",
+     "Hört die Mu|sik auf, bleibt je|der ste|hen.",
+     "Wer wa|ckelt, hat ver|lo|ren.",
+     "Da muss man rich|tig gut zu|hö|ren."
     ]
    },
-   "zeilen": [
-    "Auf ei|nen Ku|chen für acht Jah|re ...",
-    "... pas|sen acht Ker|zen.",
-    "Le|on über|legt, wie das aus|sieht.",
-    "Acht klei|ne Flam|men in ei|ner Rei|he!",
-    "Er möch|te sie al|le auf ein|mal aus|pus|ten."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎁",
-     "💭"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🎂",
+      "🕯️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Zu ei|nem Fest ge|hört oft ein Ku|chen.",
+     "Mit Ker|zen da|rauf.",
+     "Viel|leicht darf Le|on wie|der pus|ten.",
+     "Das wä|re zwei|mal pus|ten in zwei Ta|gen!",
+     "Das schaf|fen nicht vie|le Kin|der."
     ]
    },
-   "zeilen": [
-    "Le|on hat vie|le Wün|sche.",
-    "Am liebs|ten mag er Fuß|ball.",
-    "Und na|tür|lich die Klee|blät|ter aus Fürth.",
-    "Was er wohl be|kommt?",
-    "Das bleibt noch ein Ge|heim|nis."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "klasse",
-    "dinge": [
-     "🏫",
-     "🎶"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎁",
+      "🤝"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Frei|tag war Le|on bei Ma|ri|a ein|ge|la|den.",
+     "Da war er der Gast.",
+     "Jetzt ist es um|ge|kehrt.",
+     "Jetzt ist Le|on das Ge|burts|tags|kind.",
+     "Das fühlt sich ganz an|ders an."
     ]
    },
-   "zeilen": [
-    "In der Schu|le war es schon oft so:",
-    "Hat ein Kind Ge|burts|tag, sin|gen al|le.",
-    "Doch der Sams|tag ist schul|frei.",
-    "Sein Ge|burts|tag ist al|so am Wo|chen|en|de."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🌙",
-     "⭐"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👑",
+      "😊"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Ge|burts|tags|kind fühlt sich wie ein Kö|nig.",
+     "Al|le gra|tu|lie|ren.",
+     "Al|le sin|gen.",
+     "Le|on wird da|bei be|stimmt ein biss|chen rot.",
+     "A|ber das macht gar nichts."
     ]
    },
-   "zeilen": [
-    "Am A|bend vor|her ist Le|on auf|ge|regt.",
-    "Er kann gar nicht rich|tig ein|schla|fen.",
-    "Mor|gen bin ich acht, denkt er.",
-    "Dann lä|chelt er und schließt die Au|gen.",
-    "Bald ist es so weit."
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Wie alt wird Leon?",
-   "richtig": "acht Jahre",
-   "falsch": [
-    "sechs Jahre",
-    "zehn Jahre"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Wie alt ist Leon jetzt noch?",
-   "richtig": "sieben",
-   "falsch": [
-    "neun",
-    "drei"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wie viele Finger zeigt Leon an der zweiten Hand?",
-   "richtig": "drei",
-   "falsch": [
-    "fünf",
-    "eins"
-   ],
-   "seite": 3
-  },
-  {
-   "frage": "Wie alt ist Paul?",
-   "richtig": "zehn Jahre",
-   "falsch": [
-    "acht Jahre",
-    "zwei Jahre"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Wie viele Kerzen passen auf den Kuchen?",
-   "richtig": "acht",
-   "falsch": [
-    "zwei",
-    "zwanzig"
-   ],
-   "seite": 5
-  }
- ]
-},
-{
- "id": "w43-uhr",
- "titel": "Eine Stunde geschenkt",
- "bild": "🕒",
- "ereignis": "2026-10-25",
- "zeigenAb": "2026-10-23",
- "zeigenBis": "2026-10-25",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🕒",
-     "❓"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎁",
+      "🙏"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Gäs|te brin|gen oft ein Ge|schenk mit.",
+     "Le|on sagt dann Dan|ke.",
+     "Das ge|hört sich so.",
+     "Und er freut sich ü|ber je|des Ge|schenk."
     ]
    },
-   "zeilen": [
-    "In der Nacht zum Sonn|tag pas|siert et|was.",
-    "Die Uhr wird um|ge|stellt.",
-    "Le|on run|zelt die Stirn.",
-    "Wie stellt man denn ei|ne Uhr um?",
-    "Er fragt sich das den gan|zen Tag."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "nacht",
-    "dinge": [
-     "🕒",
-     "🌙"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am Sonn|tag spielt auch noch Fürth.",
+     "Um halb zwei geht es in Os|na|brück los.",
+     "Was für ein vol|ler Tag!",
+     "Le|on hofft auf ein Tor zum Ge|burts|tag.",
+     "Am bes|ten gleich zwei!"
     ]
    },
-   "zeilen": [
-    "Um drei Uhr nachts ist es so weit.",
-    "Dann springt die Uhr zu|rück.",
-    "Aus drei Uhr wird zwei Uhr.",
-    "Die Stun|de gibt es al|so zwei|mal."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "nacht",
-    "dinge": [
-     "😴",
-     "🛏️"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "🕒",
+      "😴"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In der Nacht da|vor wird die Uhr um|ge|stellt.",
+     "Le|on darf ei|ne Stun|de län|ger schla|fen.",
+     "Das ist gut.",
+     "Für so ein Fest braucht man viel Kraft.",
+     "Und gu|te Lau|ne."
     ]
    },
-   "zeilen": [
-    "Da schla|fen fast al|le Men|schen.",
-    "Auch Le|on liegt in sei|nem Bett.",
-    "Er merkt von al|lem nichts.",
-    "Aber er darf ei|ne Stun|de län|ger schla|fen!"
-   ]
-  },
-  {
-   "szene": {
-    "ort": "kueche",
-    "dinge": [
-     "📱",
-     "⏰"
-    ],
-    "leute": [
-     "Leon"
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "🎈"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Am A|bend ist Le|on be|stimmt mü|de.",
+     "Und satt und glück|lich.",
+     "Zwei Ta|ge Ge|burts|tag!",
+     "Mit acht Jah|ren fängt das gut an.",
+     "Was für ein Wo|chen|en|de!"
     ]
-   },
-   "zeilen": [
-    "Vie|le Uh|ren stel|len sich selbst um.",
-    "Das Han|dy macht es ganz al|lein.",
-    "Ei|ne al|te Wand|uhr kann das nicht.",
-    "Bei ihr muss man selbst dre|hen.",
-    "Man dreht den Zei|ger ei|ne Stun|de zu|rück."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "garten",
-    "dinge": [
-     "☀️",
-     "❄️"
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wann feiert Leon seinen Kindergeburtstag?",
+    "richtig": "am Sonntag",
+    "falsch": [
+     "am Montag",
+     "am Mittwoch"
     ],
-    "leute": [
-     "Leon"
-    ]
+    "seite": 2
    },
-   "zeilen": [
-    "Jetzt be|ginnt die Win|ter|zeit.",
-    "Am Mor|gen wird es frü|her hell.",
-    "Am A|bend wird es frü|her dun|kel.",
-    "Das ist im Herbst und Win|ter so.",
-    "Die Ta|ge wer|den kür|zer."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "strasse",
-    "dinge": [
-     "🌆",
-     "🍂"
+   {
+    "frage": "Was ist beim Topfschlagen zu?",
+    "richtig": "die Augen",
+    "falsch": [
+     "die Tür",
+     "der Mund"
     ],
-    "leute": [
-     "Leon"
-    ]
+    "seite": 6
    },
-   "zeilen": [
-    "Nach der Schu|le kommt bald die Dun|kel|heit.",
-    "Dann gehen die La|ter|nen frü|her an.",
-    "Le|on fin|det das ein biss|chen ge|müt|lich.",
-    "Drin|nen ist es warm und hell."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🌸",
-     "🕒"
+   {
+    "frage": "Wem folgt man bei einer Schatzsuche?",
+    "richtig": "Hinweisen",
+    "falsch": [
+     "einem Hund",
+     "einem Bus"
     ],
-    "leute": [
-     "Leon"
-    ]
+    "seite": 7
    },
-   "zeilen": [
-    "Im Früh|ling geht es an|ders|her|um.",
-    "Dann wird die Uhr vor|ge|stellt.",
-    "Dann fehlt ei|ne Stun|de Schlaf.",
-    "Das mag Le|on gar nicht so gern.",
-    "Im Herbst ist es zum Glück an|ders."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎂",
-     "🕒"
+   {
+    "frage": "Wo war Leon am Freitag eingeladen?",
+    "richtig": "bei Maria",
+    "falsch": [
+     "bei Omi",
+     "im Kino"
     ],
-    "leute": [
-     "Leon"
-    ]
+    "seite": 11
    },
-   "zeilen": [
-    "Die|se Nacht kommt nach Le|ons Ge|burts|tag.",
-    "Er hat al|so ei|ne lan|ge Nacht.",
-    "Erst ein schö|ner Tag, dann lan|ger Schlaf.",
-    "Bes|ser geht es fast nicht!"
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Was passiert in der Nacht zum Sonntag?",
-   "richtig": "Die Uhr wird umgestellt.",
-   "falsch": [
-    "Es schneit.",
-    "Die Schule fängt an."
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Was wird aus drei Uhr?",
-   "richtig": "zwei Uhr",
-   "falsch": [
-    "vier Uhr",
-    "zwölf Uhr"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wie viel länger darf Leon schlafen?",
-   "richtig": "eine Stunde",
-   "falsch": [
-    "einen Tag",
-    "eine Minute"
-   ],
-   "seite": 3
-  },
-  {
-   "frage": "Welche Uhr muss man selbst drehen?",
-   "richtig": "eine alte Wanduhr",
-   "falsch": [
-    "das Handy",
-    "der Fernseher"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Wann wird es jetzt früher dunkel?",
-   "richtig": "am Abend",
-   "falsch": [
-    "am Mittag",
-    "nie"
-   ],
-   "seite": 5
-  }
- ]
-},
-{
- "id": "w43-fuerth-osnabrueck",
- "titel": "Fürth fährt nach Osnabrück",
- "bild": "🍀",
- "ereignis": "2026-10-25",
- "zeigenAb": "2026-10-24",
- "zeigenBis": "2026-10-25",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🍀",
-     "📅"
+   {
+    "frage": "Wann spielt Fürth am Sonntag?",
+    "richtig": "um halb zwei",
+    "falsch": [
+     "um acht Uhr",
+     "um Mitternacht"
     ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Am Sonn|tag spielt Fürth wie|der.",
-    "Der Geg|ner heißt VfL Os|na|brück.",
-    "Das Spiel be|ginnt um halb zwei.",
-    "Le|on hat sich die Zeit ge|merkt.",
-    "Er ist schon ganz ge|spannt."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "strasse",
-    "dinge": [
-     "🚌",
-     "🗺️"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Die|ses Mal spielt Fürth nicht zu Hau|se.",
-    "Os|na|brück liegt weit im Nor|den.",
-    "Die Spie|ler müs|sen weit rei|sen.",
-    "Von Fürth aus dau|ert das Stun|den.",
-    "Das ist ei|ne gro|ße Rei|se."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "⚽",
-     "🏟️"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Ein Spiel in ei|ner frem|den Stadt ...",
-    "... nennt man ein Aus|wärts|spiel.",
-    "Dort ju|beln die meis|ten Fans für den Geg|ner.",
-    "Das ist für Fürth nicht leicht."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "🍀",
-     "📣"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Aber ei|ni|ge Für|ther Fans fah|ren mit.",
-    "Sie sin|gen und fei|ern ihr Team.",
-    "Sie tra|gen Grün und Weiß.",
-    "So sind die Spie|ler nicht al|lein."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "⚽",
-     "🥅"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Le|on denkt an das letz|te Spiel.",
-    "Da hat Fürth 2:0 ge|won|nen.",
-    "Klaus hat bei|de To|re ge|schos|sen.",
-    "Viel|leicht trifft er ja wie|der?",
-    "Das wä|re su|per."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🔢",
-     "🏆"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Fürth hat jetzt neun Punk|te.",
-    "Für ei|nen Sieg gibt es drei Punk|te.",
-    "Dann hät|te Fürth zwölf Punk|te.",
-    "Neun und drei sind zwölf.",
-    "Le|on rech|net gern mit Fuß|ball."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎂",
-     "🍀"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Am Sams|tag hat Le|on Ge|burts|tag.",
-    "Am Sonn|tag spielt sein Ver|ein.",
-    "Ein Sieg wä|re wie ein Ge|schenk.",
-    "Das wünscht sich Le|on sehr.",
-    "Ein Sieg macht ihn im|mer froh."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🤞",
-     "🍀"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Le|on drückt fest die Dau|men.",
-    "„Auf geht's, Klee|blät|ter!“, ruft er.",
-    "Ob Fürth ge|winnt?",
-    "Das weiß noch nie|mand.",
-    "Ge|nau das macht Fuß|ball so span|nend."
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Wie heißt der Gegner von Fürth?",
-   "richtig": "VfL Osnabrück",
-   "falsch": [
-    "Eintracht Braunschweig",
-    "Bayern München"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Wo liegt Osnabrück?",
-   "richtig": "weit im Norden",
-   "falsch": [
-    "gleich neben Fürth",
-    "im Meer"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Wie nennt man ein Spiel in einer fremden Stadt?",
-   "richtig": "Auswärtsspiel",
-   "falsch": [
-    "Heimspiel",
-    "Training"
-   ],
-   "seite": 3
-  },
-  {
-   "frage": "Wie viele Punkte hat Fürth jetzt?",
-   "richtig": "neun",
-   "falsch": [
-    "zwei",
-    "zwanzig"
-   ],
-   "seite": 6
-  },
-  {
-   "frage": "Was ruft Leon?",
-   "richtig": "Auf geht's, Kleeblätter!",
-   "falsch": [
-    "Gute Nacht!",
-    "Ich will nach Hause!"
-   ],
-   "seite": 8
-  }
- ]
-},
-{
- "id": "w43-club",
- "titel": "Der Club spielt am Abend",
- "bild": "📺",
- "ereignis": "2026-10-24",
- "zeigenAb": "2026-10-23",
- "zeigenBis": "2026-10-24",
- "seiten": [
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🍀",
-     "🔴"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Le|on ist ein Fan von Fürth.",
-    "Ganz in der Nä|he liegt Nürn|berg.",
-    "Dort spielt der 1. FC Nürn|berg.",
-    "Al|le nen|nen ihn nur den Club."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "⚔️",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Fürth und der Club sind Ri|va|len.",
-    "So nennt man zwei Geg|ner, die sich gut ken|nen.",
-    "Wenn sie ge|gen|ein|an|der spie|len, ist es laut.",
-    "Das ist ein ganz be|son|de|res Spiel."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "📋",
-     "2️⃣"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Le|on schaut auf die Ta|bel|le.",
-    "Der Club steht auf Platz zwei.",
-    "Er hat schon acht|zehn Punk|te.",
-    "Fürth hat neun Punk|te.",
-    "Der Club hat dop|pelt so vie|le."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "⚽",
-     "🤝"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Am Frei|tag hat der Club in Cott|bus ge|spielt.",
-    "Das Spiel ging eins zu eins aus.",
-    "Das nennt man Un|ent|schie|den.",
-    "Bei|de Mann|schaf|ten be|ka|men ei|nen Punkt."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "stadion",
-    "dinge": [
-     "🏟️",
-     "🌙"
-    ],
-    "leute": []
-   },
-   "zeilen": [
-    "Am Sams|tag spielt der Club wie|der.",
-    "Der Geg|ner kommt aus Kai|sers|lau|tern.",
-    "Das Spiel be|ginnt erst um halb neun.",
-    "Da ist es drau|ßen schon dun|kel."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🎂",
-     "🛏️"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Halb neun ist spät für ein Kind.",
-    "Und am Sams|tag hat Le|on Ge|burts|tag.",
-    "Da ist er am A|bend be|stimmt mü|de.",
-    "Viel|leicht schläft er dann schon."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "kueche",
-    "dinge": [
-     "📰",
-     "⚽"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Das Er|geb|nis kann man spä|ter le|sen.",
-    "Es steht im In|ter|net und in der Zei|tung.",
-    "So er|fährt Le|on es am Sonn|tag.",
-    "Dann kennt er die neu|e Ta|bel|le."
-   ]
-  },
-  {
-   "szene": {
-    "ort": "zimmer",
-    "dinge": [
-     "🍀",
-     "💚"
-    ],
-    "leute": [
-     "Leon"
-    ]
-   },
-   "zeilen": [
-    "Für wen ist Le|on wohl?",
-    "Na klar, er bleibt ein Klee|blatt!",
-    "Sein Herz schlägt für Grün und Weiß.",
-    "Am Sonn|tag ist dann Fürth dran."
-   ]
-  }
- ],
- "fragen": [
-  {
-   "frage": "Wie nennen alle den 1. FC Nürnberg?",
-   "richtig": "den Club",
-   "falsch": [
-    "die Löwen",
-    "die Kleeblätter"
-   ],
-   "seite": 1
-  },
-  {
-   "frage": "Wie nennt man zwei Gegner, die sich gut kennen?",
-   "richtig": "Rivalen",
-   "falsch": [
-    "Zwillinge",
-    "Nachbarn"
-   ],
-   "seite": 2
-  },
-  {
-   "frage": "Auf welchem Platz steht der Club?",
-   "richtig": "Platz zwei",
-   "falsch": [
-    "Platz zehn",
-    "Platz eins"
-   ],
-   "seite": 3
-  },
-  {
-   "frage": "Wie ging das Spiel in Cottbus aus?",
-   "richtig": "eins zu eins",
-   "falsch": [
-    "drei zu null",
-    "null zu fünf"
-   ],
-   "seite": 4
-  },
-  {
-   "frage": "Wann beginnt das Spiel am Samstag?",
-   "richtig": "um halb neun",
-   "falsch": [
-    "um acht Uhr morgens",
-    "um zwölf Uhr"
-   ],
-   "seite": 5
-  }
- ]
-}
+    "seite": 14
+   }
+  ]
+ }
 ];
