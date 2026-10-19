@@ -358,9 +358,7 @@
       <a class="chip" href="vokabeln.html" title="Englisch-Vokabeln üben">🇬🇧 Vokabeln</a>
       <a class="chip" href="spiele.html" title="Grammatik- und Mathe-Spiele">🎮 Spiele</a>
       <a class="chip" href="index.html" title="Zum Englisch-Trainer">🇬🇧 Englisch</a>
-      <div class="chip">🔥 <span id="streak">0</span><small>Tage</small></div>
-      <div class="chip">✦ <span id="xp">0</span><small>XP</small></div>
-      <div class="chip">🧠 <span id="sitzt">0</span><small>sitzen</small></div>
+      <div class="chip" title="Gelernte Wörter im Wiederholungsordner">📁 <span id="sitzt">0</span><small>im Ordner</small></div>
     </div>
   </header>
 
@@ -371,10 +369,10 @@
       <div class="heutezahl" id="heuteZahl">–</div>
       <div class="heutetext" id="faelligText">wird geladen …</div>
     </div>
-    <button class="start" id="startBtn">Los geht's</button>
+    <button class="start" id="startBtn" type="button">Jetzt lernen</button>
 
     <details class="feineinst">
-      <summary>Lieber selbst aussuchen</summary>
+      <summary>Frei üben – zählt nicht für die Stufen</summary>
       <div class="feinbody">
         <div class="field">
           <label for="unit">Einheit</label>
@@ -2117,10 +2115,9 @@ window.HELENA_KONFIG = {
 </script>
 <script>window.LERNSTAND_SCHREIBT_SELBST = true;</script>
 <script src="/lernstand.js?v=fe69f5e5"></script>
-<script src="/toleranz.js?v=122870a5"></script>
-<!-- Vokabel-Logik (19.10.2026): wird nur geladen, trainer.js benutzt sie noch nicht. -->
+<!-- Vokabel-Logik (19.10.2026): Stufen, Ordner, strenge Wertung. trainer.js baut die Oberflaeche darauf. -->
 <script src="/vokabel-logik.js?v=a53d06df"></script>
-<script src="/helena/trainer.js?v=1cf13102"></script>
+<script src="/helena/trainer.js?v=c817bd86"></script>
 <script>
 /* Direkt zum Fotografieren (19.10.2026, Startseite D): Die Sprachkarte
    "Vokabeln aus dem Buch (1–5 Seiten)" fuehrt hierher mit #foto. Dann klappt

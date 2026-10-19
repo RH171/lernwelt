@@ -579,11 +579,16 @@
     ["en", "fr"].forEach(function(spr){
       var s = st[spr], f = $(SPRACHEN[spr].feld);
       if (!s || !f) return;
-      var z = s.faellig > 0 ? s.faellig : s.neu > 0 ? s.neu : 0;
+      /* Seit 19.10.2026 (Vokabel-Logik) traegt der Stand auch "inArbeit":
+         Woerter auf Stufe 1-3, die gerade gelernt werden. Fehlt das Feld
+         (alter Trainer), bleibt alles wie bisher. */
+      var arbeit = typeof s.inArbeit === "number" ? s.inArbeit : 0;
+      var z = s.faellig > 0 ? s.faellig : arbeit > 0 ? arbeit : s.neu > 0 ? s.neu : 0;
       if (!z) return;
       f.innerHTML = "";
       var b = document.createElement("b"); b.textContent = String(z); f.appendChild(b);
-      f.appendChild(document.createTextNode(s.faellig > 0 ? " fällig" + (s.neu ? " · " + s.neu + " neu" : "") : " noch nie geübt"));
+      f.appendChild(document.createTextNode(s.faellig > 0 ? " fällig" + (arbeit ? " · " + arbeit + " in Arbeit" : s.neu ? " · " + s.neu + " neu" : "")
+        : arbeit > 0 ? " in Arbeit" : " noch nie geübt"));
     });
     if (!was || !warum || !karte) return;
 
@@ -594,6 +599,14 @@
     }
     var betTage = tageBis(new Date(2026, 9, 1));
     var spr = beste("faellig");
+    var sprA = spr ? null : beste("inArbeit");
+    if (sprA){
+      var sa = st[sprA];
+      was.textContent = SPRACHEN[sprA].name + ": " + sa.inArbeit + (sa.inArbeit === 1 ? " Wort in Arbeit" : " Wörter in Arbeit");
+      warum.textContent = "Weiterlernen, wo du warst – kurze Runden, du entscheidest, wie lange.";
+      karte.href = SPRACHEN[sprA].seite;
+      return;
+    }
     if (spr){
       var s = st[spr];
       was.textContent = SPRACHEN[spr].name + ": " + s.faellig + (s.faellig === 1 ? " Wort ist dran" : " Wörter sind dran");

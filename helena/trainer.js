@@ -13,40 +13,45 @@
      fortschritt    Schluessel fuer die Kachel im Hub
      spielId/titel/fach   fuer die Statistik
      units          die Wortlisten
-*/
+
+   OBERFLAECHE AUF DER VOKABEL-LOGIK (19.10.2026, Denny ~22:50 Uhr, Klickfrage
+   "Heute umbauen"; Logik: /vokabel-logik.js, Kapitel 136):
+   - "Jetzt lernen" laeuft ueber window.VokabelLogik: Stufe 1 Auswahl (a/b),
+     Stufe 2 Lueckenwort, Stufe 3 Selberschreiben, Wiederholungsordner.
+     Wertung STRENG (jeder Tipp-, Akzent-, Artikelfehler ist falsch), die
+     Fehlerstelle neutral (gelb, unterstrichen), nie rot. /toleranz.js gilt
+     hier nicht mehr.
+   - Paketende "Paket 2 von 4 geschafft" bzw. Runde mit "Weiter"/"Pause".
+   - Gespeichert wird sparsam: waehrend der Sitzung nur im sessionStorage
+     (Sammler der Logik), localStorage erst bei "Pause" oder beim Verlassen.
+   - "Frei ueben" (Einheit, Richtung, Uebungsart, Zeitmodus, Hoeren) bleibt,
+     zaehlt aber NICHT fuer die Stufen (Denny, entschieden 19.10.2026).
+   - Ausgebaut (Antworten Nr. 11): Serie/Streak, "Neuer Rekord", Flamme,
+     Sterne, XP-Zaehler je Antwort, rote Markierungen. */
 (function(){
   "use strict";
   var K = window.HELENA_KONFIG;
   if (!K) { console.error("HELENA_KONFIG fehlt - der Trainer startet nicht."); return; }
+  var V = window.VokabelLogik;
+  if (!V) { console.error("/vokabel-logik.js fehlt - der Trainer startet nicht."); return; }
   var PRE   = K.praefix;
   var UNITS = K.units || [];
+  var SP    = K.fach === "franzoesisch" ? "fr" : "en";
+  var SCHL  = V.schluessel(PRE);
+  var TASTEN = (V.SPRACHEN[SP] && V.SPRACHEN[SP].tasten) || [];
   var $   = function(s){ return document.querySelector(s); };
   var get = function(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } };
   var set = function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} };
+  function jsonLesen(k, d){ try{ var v = JSON.parse(get(k, "null")); return v == null ? d : v; }catch(e){ return d; } }
+  function esc2(s){ var d=document.createElement("div"); d.textContent=String(s==null?"":s); return d.innerHTML; }
+  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=String(text); return e; }
 
-  /* ---------- Vorlieben: was uebt sie tatsaechlich? ----------
-     Wir zaehlen mit, welche Uebungsart, welche Richtung und welche Einheit
-     Helena waehlt. Beim naechsten Oeffnen ist das schon eingestellt - sie
-     soll nicht jedes Mal dieselben drei Knoepfe druecken muessen. Was wir
-     NICHT tun: die Anforderung senken. Wer nur Multiple-Choice waehlt,
-     bekommt in der gemischten Runde trotzdem Karten zum Eintippen. */
-  /* ---------- Was ausdruecklich eingestellt wurde ----------
-     Helena am 07.09.2026: "Wenn ich bei ,lieber selbst aussuchen' etwas selber
-     aussuche ist es wenn ich aufhoere und wieder rein gehe alles wieder so als
-     haette ich nichts geaendert. Mach dass, das was ich eingestellt habe so
-     bleibt biss ich es selbst wieder aendere."
-
-     Sie hat recht. Die Vorlieben unten zaehlen mit, was jemand OFT waehlt, und
-     greifen erst ab dreimal - das war als Schutz gedacht, damit ein einmaliges
-     Ausprobieren nicht gleich zur Gewohnheit erklaert wird. Fuer eine
-     ABSICHTLICHE Einstellung ist das aber schlicht falsch: Wer etwas einstellt,
-     will es behalten, und zwar sofort.
-
-     Deshalb zwei getrennte Dinge: die Einstellung hier gilt immer und sofort,
-     die Vorlieben weiter unten sind nur noch der Rueckfall fuer den allerersten
-     Besuch. */
+  /* ---------- Was im freien Ueben ausdruecklich eingestellt wurde ----------
+     Helena am 07.09.2026: "Mach dass, das was ich eingestellt habe so bleibt
+     biss ich es selbst wieder aendere." Gilt sofort und bleibt. Die alten
+     Vorlieben werden nur noch gelesen (Rueckfall fuer den ersten Besuch) -
+     mitgezaehlt wird nicht mehr, das waren fuenf Schreibvorgaenge je Runde. */
   var EINSTELLUNG = PRE+"-einstellung";
-
   function einstellungLaden(){
     try { var e = JSON.parse(get(EINSTELLUNG,"{}")); return (e && typeof e==="object") ? e : {}; }
     catch(e){ return {}; }
@@ -59,48 +64,128 @@
       }));
     } catch(e){}
   }
-
-  var VORLIEBEN = PRE+"-vorlieben";
-  function vorliebenLaden(){
-    try { var v=JSON.parse(get(VORLIEBEN,"{}")); return (v&&typeof v==="object")?v:{}; }
-    catch(e){ return {}; }
-  }
-  function vorliebeZaehlen(art, wert){
-    if(!wert) return;
-    var v=vorliebenLaden();
-    v[art]=v[art]||{};
-    v[art][wert]=(v[art][wert]||0)+1;
-    try{ set(VORLIEBEN, JSON.stringify(v)); }catch(e){}
-  }
   function liebste(art, rueckfall){
-    var t=vorliebenLaden()[art]; if(!t) return rueckfall;
+    var t; try { t = (JSON.parse(get(PRE+"-vorlieben","{}")) || {})[art]; } catch(e){ t = null; }
+    if(!t) return rueckfall;
     var bester=rueckfall, hoechste=0;
     for(var k in t){ if(t[k]>hoechste){ hoechste=t[k]; bester=k; } }
-    return hoechste>=3 ? bester : rueckfall;   // erst ab dreimal ist es eine Gewohnheit
+    return hoechste>=3 ? bester : rueckfall;
   }
 
   function customUnits(){ try{var a=JSON.parse(get(PRE+"-custom-units","[]"));return Array.isArray(a)?a:[];}catch(e){return [];} }
   function allUnits(){ return UNITS.concat(customUnits()); }
 
+  /* ---------- Lernstand (Vokabel-Logik) ----------
+     Der Sammler haelt den Stand waehrend der Sitzung im sessionStorage und
+     schreibt localStorage erst bei "Pause" oder beim Verlassen der Seite
+     (paul-sync macht aus jedem setItem einen KV-Schreibvorgang, 1000 am Tag
+     fuer alle Kinder - Gedaechtnis kv-kontingent). */
+  var sam = V.sammler({ local: window.localStorage, session: window.sessionStorage, schluessel: SCHL.wissen, fenster: window });
+  var zustand = sam.lies() || {};
+  var migriert = 0;
+  /* Migration beim ersten Oeffnen je Sprache (Fach 0->1, 1->2, 2->3 ...),
+     genau EIN Schreibvorgang. Die alten Felder bleiben, eine alte offene
+     Seite liest und schreibt weiter wie bisher (Kapitel 099). */
+  (function(){
+    var m = V.migration(zustand, Date.now());
+    if (!m.geaendert) return;
+    zustand = m.zustand; migriert = m.geaendert;
+    if (sam.offen()) sam.merken(zustand);
+    else set(SCHL.wissen, JSON.stringify(zustand));
+  })();
+
+  function planLesen(){ var p = jsonLesen(SCHL.plan, {}); return (p && typeof p === "object") ? p : {}; }
+  function pausenLesen(){ var p = jsonLesen(SCHL.pause, []); return Array.isArray(p) ? p : []; }
+  function pruefungenLesen(){ var p = jsonLesen(SCHL.pruefung, []); return Array.isArray(p) ? p : (p && p.termin ? [p] : []); }
+  var plan = planLesen(), pausen = pausenLesen(), pruefungen = pruefungenLesen();
+  function lopt(){ return { sprache: SP, pruefungen: pruefungen, pausen: pausen }; }
+
+  /* ---------- Datum, sachlich ---------- */
+  var WT = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+  function datumText(iso){
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||"")); if(!m) return String(iso||"");
+    var d = new Date(+m[1], +m[2]-1, +m[3]);
+    return WT[d.getDay()] + ", " + m[3] + "." + m[2] + "." + m[1];
+  }
+  function heuteIso(plus){
+    var d = new Date(); d.setHours(12,0,0,0); if(plus) d.setDate(d.getDate()+plus);
+    return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+  }
+
+  /* ---------- Uebersicht ----------
+     Stufe 1/2/3/Ordner, faellig, in Arbeit, Pruefung, Pause. Dazu der
+     Kurzstand fuer die Startseite (helena-vokabelstand-en/-fr) - geschrieben
+     nur, wenn sich etwas geaendert hat oder der Stand aelter als 12 Stunden
+     ist (die Startseite zeigt Staende ueber drei Tage nicht mehr). */
+  function standSchreiben(u){
+    var k = "helena-vokabelstand-" + SP, kurz = V.kurzStand(u, Date.now());
+    var alt = jsonLesen(k, null);
+    var gleich = alt && ["faellig","neu","inArbeit","pruefungTage","pause"].every(function(f){ return alt[f] === kurz[f]; });
+    if (gleich && Date.now() - (alt.stand || 0) < 12 * 3600e3) return;
+    set(k, JSON.stringify(kurz));
+  }
+  var letzteUebersicht = null;
+  function uebersichtMalen(){
+    var u = V.uebersicht(zustand, allUnits(), Date.now(), plan, lopt());
+    letzteUebersicht = u;
+    standSchreiben(u);
+    var zahl=$("#heuteZahl"), txt=$("#faelligText");
+    var dran = u.faellig + u.inArbeit;
+    if (zahl && txt){
+      if (dran){
+        zahl.textContent = dran;
+        txt.textContent = (dran===1 ? "Wort ist dran" : "Wörter sind dran") + (u.neu ? " · " + u.neu + " noch nie geübt" : "");
+      } else if (u.neu){
+        zahl.textContent = u.neu;
+        txt.textContent = (u.neu===1 ? "neues Wort wartet" : "neue Wörter warten") + " · nichts Altes ist dran";
+      } else {
+        zahl.textContent = "✓";
+        txt.textContent = "Gerade ist nichts dran. Du kannst frei üben oder neue Wörter fotografieren.";
+      }
+    }
+    var box = $("#vlStufen");
+    if (!box){
+      box = el("div", "vlstufen"); box.id = "vlStufen";
+      // Unter "Jetzt lernen": der Knopf bleibt auf dem Handy ohne Scrollen erreichbar.
+      var h = $("#startBtn") || $("#heute"); if (h && h.parentNode) h.parentNode.insertBefore(box, h.nextSibling);
+    }
+    box.innerHTML = "";
+    var reihe = el("div", "vlkacheln");
+    [["Stufe 1", u.stufe1, "Ankreuzen"], ["Stufe 2", u.stufe2, "Lückenwort"], ["Stufe 3", u.stufe3, "Schreiben"], ["Ordner", u.ordner, "gelernt"]]
+      .forEach(function(x, i){
+        var k = el("div", "vlkachel"); k.setAttribute("data-stufe", String(i+1));
+        k.appendChild(el("b", null, x[1])); k.appendChild(el("span", null, x[0])); k.appendChild(el("small", null, x[2]));
+        reihe.appendChild(k);
+      });
+    box.appendChild(reihe);
+    box.appendChild(el("p", "vlinfo", "Zum Wiederholen dran: " + u.faellig + " · In Arbeit: " + u.inArbeit + " · Neu: " + u.neu));
+    if (u.pruefung){
+      var p = u.pruefung;
+      var pz = el("p", "vlinfo vlpruefung");
+      pz.id = "vlPruefungZeile";
+      pz.textContent = "📋 Prüfung " + (p.thema ? "„" + p.thema + "“ " : "") + "am " + datumText(p.termin) + ", " + p.text +
+        " · " + p.stoff + " Wörter, " + p.sicher + " davon im Ordner" +
+        (p.neuProTag ? " · Empfehlung: etwa " + p.neuProTag + " neue Wörter pro Tag" : "");
+      box.appendChild(pz);
+    }
+    if (u.pause){
+      var pa = el("p", "vlinfo vlpause"); pa.id = "vlPauseZeile";
+      pa.textContent = "⏸ Pause bis " + datumText(u.pause.bis) + " – bis dahin wird nichts fällig" + (u.pruefung ? " (außer den Prüfungswörtern)" : "") + ".";
+      box.appendChild(pa);
+    }
+    var sz = $("#sitzt"); if (sz){ sz.textContent = u.ordner; var sm = sz.nextElementSibling; if (sm && sm.tagName === "SMALL") sm.textContent = "im Ordner"; }
+    var sb = $("#startBtn"); if (sb) sb.textContent = sitzungLaden() ? "Weiter lernen" : "Jetzt lernen";
+    return u;
+  }
+
+  /* ---------- Freies Ueben: Einheit, Richtung, Uebungsart, Dauer ---------- */
   var unitSel=$("#unit");
   function fillUnits(sel){
+    if(!unitSel) return;
     unitSel.innerHTML="";
-    // Der Normalfall zuerst: Das System stellt zusammen, was ansteht.
-    var o0=document.createElement("option");
-    o0.value="__faellig"; o0.textContent="★ Was heute dran ist";
-    unitSel.appendChild(o0);
-    // Nach Jahrgangsstufe gruppieren: Helena soll auf einen Blick sehen,
-    // was Grundwortschatz ist und was Wiederholung aus der 6. Klasse.
-    var gruppen=K.gruppen.concat([
-      {stufe:0, titel:"Meine eigenen Einheiten"}
-    ]);
+    var gruppen=K.gruppen.concat([{stufe:0, titel:"Meine eigenen Einheiten"}]);
     gruppen.forEach(function(g){
-      var drin=allUnits().filter(function(u){
-        // Eigene Einheiten haben keine Stufe. Ohne die zweite Bedingung
-        // rutschten sie zusaetzlich in die Gruppe mit der Stufe 5 und standen
-        // zweimal im Menue.
-        return g.stufe===0 ? !u.stufe : (u.stufe===g.stufe);
-      });
+      var drin=allUnits().filter(function(u){ return g.stufe===0 ? !u.stufe : (u.stufe===g.stufe); });
       if(!drin.length) return;
       var gr=document.createElement("optgroup"); gr.label=g.titel;
       drin.forEach(function(u){
@@ -110,94 +195,25 @@
       });
       unitSel.appendChild(gr);
     });
-    if(sel) unitSel.value=sel;
+    if(sel && unitSel.querySelector("option[value='"+String(sel).replace(/'/g,"")+"']")) unitSel.value=sel;
   }
-  // Auch die gewaehlte Einheit bleibt stehen - sie gehoert zu dem, was
-  // Helena "selbst ausgesucht" hat.
   fillUnits(einstellungLaden().einheit || "");
-  unitSel.value="__faellig";
-
-  // Die Zahl oben: Was steht heute an?
-  function heuteMalen(){
-    var z=faelligZaehlen();
-    /* Den Stand fuer die Uebersicht hinterlegen (21.09.2026). Helenas
-       Startseite ist seitdem nicht mehr der Trainer selbst, sondern eine
-       Uebersicht - und die soll sagen koennen, wie viel heute ansteht, ohne
-       den ganzen Vokabelbestand mitzuladen. Steht nichts da, sagt sie das
-       ehrlich, statt eine Zahl zu erfinden.
-       Seit 19.10.2026 je Sprache ein eigener Schluessel: Vorher schrieben
-       Englisch und Franzoesisch beide nach "helena-vokabelstand", und die
-       Startseite las den Wert immer als Englisch - nach einer Franzoesisch-
-       Runde zeigte sie franzoesische Zahlen und fuehrte zum Englisch-Trainer.
-       Weiterhin genau EIN Schreibvorgang je Aufruf (paul-sync: jedes
-       setItem wird ein KV-Schreibvorgang). Der alte Schluessel wird nicht
-       mehr geschrieben, die Startseite liest ihn nur noch als Rueckfall. */
-    try {
-      var kurz = K.fach==="franzoesisch" ? "fr" : "en";
-      localStorage.setItem("helena-vokabelstand-"+kurz, JSON.stringify({
-        faellig: z.faellig, neu: z.neu, sprache: kurz,
-        stand: Date.now()
-      }));
-    } catch(e){}
-    var zahl=$("#heuteZahl"), txt=$("#faelligText");
-    if(!zahl||!txt) return;
-    var offen=z.faellig;
-    if(offen){
-      zahl.textContent=offen;
-      txt.textContent=(offen===1?"Wort ist heute dran":"W\u00f6rter sind heute dran")+
-        (z.neu?" \u00b7 "+z.neu+" noch nie ge\u00fcbt":"");
-    } else if(z.neu){
-      zahl.textContent=Math.min(z.neu,20);
-      txt.textContent="neue W\u00f6rter zum Kennenlernen \u00b7 nichts Altes f\u00e4llig";
-    } else {
-      zahl.textContent="\u2713";
-      txt.textContent="Alles sitzt. Komm morgen wieder \u2013 oder such dir unten etwas aus.";
-    }
-  }
-  heuteMalen();
-
-  /* ---------- XP & Streak ---------- */
-  var xp=parseInt(get(PRE+"-xp","0"),10)||0;
-  var streak=parseInt(get(PRE+"-streak","0"),10)||0;
-  // Ist heute der erste Besuch des Tages - die Serie also gerade eben
-  // gewachsen? Nur dann wird sie am Rundenende hervorgehoben.
-  var serieNeuHeute=false;
-  (function(){
-    var today=new Date(); today.setHours(0,0,0,0);
-    var iso=today.toISOString().slice(0,10);
-    var last=get(PRE+"-last",null);
-    if(last!==iso){
-      var y=new Date(today); y.setDate(y.getDate()-1);
-      streak=(last===y.toISOString().slice(0,10))?streak+1:1;
-      set(PRE+"-streak",String(streak)); set(PRE+"-last",iso);
-      serieNeuHeute=true;
-    }
-    if(streak<1){streak=1; set(PRE+"-streak","1");}
-  })();
-  function paintStats(){ $("#xp").textContent=xp; $("#streak").textContent=streak; }
-  paintStats();
 
   function writeProgress(best,uebung){
-    try{ set(K.fortschritt,
-      JSON.stringify({xp:xp,best:best||0,uebung:uebung||0})); }catch(e){}
+    var alt = jsonLesen(K.fortschritt, {}) || {};
+    try{ set(K.fortschritt, JSON.stringify({xp: alt.xp||0, best:best||0, uebung:uebung||0})); }catch(e){}
   }
 
-  /* ---------- Einstellungen ---------- */
   var eingestellt = einstellungLaden();
   var dir  = eingestellt.richtung || liebste("richtung","de2en");
   var mode = eingestellt.modus    || liebste("modus","mc");
-  var dauerMin = eingestellt.dauer !== undefined
-    ? (parseInt(eingestellt.dauer,10)||0)
-    : (parseInt(liebste("dauer","0"),10)||0);           // 0 = nach Woertern, sonst Minuten
-  // Wie viele Antworten stehen bei Multiple-Choice zur Wahl? Mehr heisst
-  // schwerer: bei zwei ist die Haelfte geraten, bei fuenf muss man das Wort
-  // schon fast wissen.
+  var dauerMin = eingestellt.dauer !== undefined ? (parseInt(eingestellt.dauer,10)||0) : (parseInt(liebste("dauer","0"),10)||0);
   var wahlAnzahl = parseInt(eingestellt.auswahl || liebste("auswahl","4"),10)||4;
   function seg(id,cb){
-    var g=$(id);
+    var g=$(id); if(!g) return;
     g.addEventListener("click",function(e){
       var b=e.target.closest("button"); if(!b) return;
-      [].forEach.call(g.children,function(x){x.setAttribute("aria-pressed","false");});
+      [].forEach.call(g.children,function(x){ if(x.tagName==="BUTTON") x.setAttribute("aria-pressed","false"); });
       b.setAttribute("aria-pressed","true"); cb(b.getAttribute("data-v")); blip();
     });
   }
@@ -206,26 +222,19 @@
   seg("#dauer",function(v){dauerMin=parseInt(v,10)||0; einstellungMerken();});
   seg("#auswahl",function(v){wahlAnzahl=Math.max(2,Math.min(5,parseInt(v,10)||4)); einstellungMerken();});
   if (unitSel) unitSel.addEventListener("change", einstellungMerken);
-
-  // War die Feineinstellung offen, ist sie es beim naechsten Mal wieder.
   (function(){
     var f = document.querySelector("details.feineinst");
     if (!f) return;
     try { if (get(PRE+"-feineinst","") === "auf") f.open = true; } catch(e){}
-    f.addEventListener("toggle", function(){
-      try { set(PRE+"-feineinst", f.open ? "auf" : "zu"); } catch(e){}
-    });
+    // Nur schreiben, wenn sich etwas aendert: Das Wiederherstellen beim Laden
+    // loest selbst ein "toggle" aus - vorher ein Schreibvorgang je Seitenaufruf.
+    f.addEventListener("toggle", function(){ var w = f.open ? "auf" : "zu"; if (get(PRE+"-feineinst","") !== w) set(PRE+"-feineinst", w); });
   })();
-
-  // Was sie zuletzt am haeufigsten genommen hat, steht schon da.
   function segSetzen(id,wert){
     var g=$(id); if(!g) return;
-    [].forEach.call(g.children,function(x){
-      x.setAttribute("aria-pressed", x.getAttribute("data-v")===String(wert) ? "true":"false");
-    });
+    [].forEach.call(g.children,function(x){ if(x.tagName==="BUTTON") x.setAttribute("aria-pressed", x.getAttribute("data-v")===String(wert) ? "true":"false"); });
   }
-  segSetzen("#dir",dir); segSetzen("#mode",mode); segSetzen("#dauer",dauerMin);
-  segSetzen("#auswahl",wahlAnzahl);
+  segSetzen("#dir",dir); segSetzen("#mode",mode); segSetzen("#dauer",dauerMin); segSetzen("#auswahl",wahlAnzahl);
 
   /* ---------- Sound ---------- */
   var actx=null;
@@ -239,8 +248,8 @@
   }
   function blip(){tone(620,.1,0,"triangle");}
   function good(){tone(660,.12,0);tone(880,.16,.1);}
-  function bad(){tone(300,.18,0,"sawtooth");}
-  function fanfare(){tone(523,.15,0);tone(659,.15,.12);tone(784,.28,.24);}
+  // Kein schnarrender Fehlerton mehr: ein leiser, tiefer Hinweis genuegt.
+  function hinweisTon(){tone(392,.14,0,"triangle");}
 
   /* ---------- Vorlesen – beste verfügbare Stimme der Zielsprache ---------- */
   var bestVoice=null;
@@ -249,460 +258,640 @@
       var vs=speechSynthesis.getVoices()||[]; if(!vs.length) return;
       function score(v){
         var n=(v.name||"").toLowerCase(), l=(v.lang||"").toLowerCase().replace("_","-"), s=0;
-        if(l.indexOf(K.stimmeVorwahl)!==0) return -1;      // nur die Zielsprache
-        if(l.indexOf(K.stimmeBevorzugt)===0) s+=3; else s+=1;  // die bevorzugte Variante
-        if(n.indexOf("google")>=0) s+=6;                    // Chrome-Google-Stimmen: sehr gut
-        if(v.localService===false) s+=3;                    // Netz-Stimmen meist besser
+        if(l.indexOf(K.stimmeVorwahl)!==0) return -1;
+        if(l.indexOf(K.stimmeBevorzugt)===0) s+=3; else s+=1;
+        if(n.indexOf("google")>=0) s+=6;
+        if(v.localService===false) s+=3;
         if(/(daniel|kate|serena|arthur|martha|libby|sonia|aria|natasha|jenny|ryan|neural|enhanced|premium|siri)/.test(n)) s+=4;
-        if(/compact|kompakt|eloquence|fred|albert/.test(n)) s-=4;   // blecherne Altstimmen meiden
+        if(/compact|kompakt|eloquence|fred|albert/.test(n)) s-=4;
         return s;
       }
-      var ranked=vs.map(function(v){return {v:v,s:score(v)};})
-                   .filter(function(x){return x.s>=0;})
-                   .sort(function(a,b){return b.s-a.s;});
+      var ranked=vs.map(function(v){return {v:v,s:score(v)};}).filter(function(x){return x.s>=0;}).sort(function(a,b){return b.s-a.s;});
       if(ranked.length) bestVoice=ranked[0].v;
     }catch(e){}
   }
   chooseVoice();
   try{ speechSynthesis.onvoiceschanged=chooseVoice; }catch(e){}
-
   function say(text){
     try{
-      var u=new SpeechSynthesisUtterance(text);
+      var u=new SpeechSynthesisUtterance(String(text).replace(/\s*\([^)]*\)/g,""));
       if(bestVoice){ u.voice=bestVoice; u.lang=bestVoice.lang; } else { u.lang=K.stimmeRueckfall; }
       u.rate=.88;
       speechSynthesis.cancel(); speechSynthesis.speak(u);
     }catch(e){}
   }
+  function kannSprechen(){ return typeof speechSynthesis!=="undefined"; }
 
-  /* ---------- Helfer ---------- */
-  function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
-  function normalize(s){
-    return (s||"").toLowerCase().trim()
-      .replace(/^(to|der|die|das|the|a|an)\s+/,"")
-      .replace(/[.,!?;:'’]/g,"").replace(/\s+/g," ");
+  /* ---------- Gemeinsame Bausteine der Karten ---------- */
+  var protokoll=[], rundeBegonnen=0, karteBegonnen=0;
+  function LS(){ return window.lernstand || null; }
+  function ansicht(was){ document.body.classList.toggle("konzentriert", was === "spiel" || was === "ende"); }
+  function zeigeSpiel(){
+    $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
+    ansicht("spiel"); window.scrollTo(0,0);
   }
-  function clozeTarget(en){ return en.replace(/^to\s+/,"").trim(); }
-  function esc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+  function zeigeSetup(){
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    $("#play").style.display="none"; $("#end").style.display="none"; $("#setup").style.display="block";
+    ansicht("start"); window.scrollTo(0,0);
+  }
+
+  /* Die Akzentleiste (Franzoesisch): e è ê à â ç ô û ù ë ï œ. Fuegt an der
+     Cursorstelle des zuletzt angetippten Feldes ein; pointerdown haelt den
+     Fokus im Feld, damit die Handytastatur offen bleibt. */
+  var letztesFeld = null;
+  function akzentLeiste(){
+    if (!TASTEN.length) return null;
+    var leiste = el("div", "vltasten"); leiste.setAttribute("role", "group"); leiste.setAttribute("aria-label", "Akzente");
+    TASTEN.forEach(function(ch){
+      var b = el("button", "vltaste", ch); b.type = "button"; b.setAttribute("aria-label", ch + " einfügen"); b.setAttribute("data-zeichen", ch);
+      b.addEventListener("pointerdown", function(e){ e.preventDefault(); });
+      b.addEventListener("mousedown", function(e){ e.preventDefault(); });
+      b.addEventListener("click", function(){ einfuegen(ch); });
+      leiste.appendChild(b);
+    });
+    return leiste;
+  }
+  function einfuegen(ch){
+    var f = letztesFeld;
+    if (!f || !document.body.contains(f) || f.disabled) f = document.querySelector("#card input:not([disabled])");
+    if (!f) return;
+    if (f.maxLength === 1){
+      f.value = ch; f.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
+    var v = f.value, a = f.selectionStart, z = f.selectionEnd;
+    if (a == null){ a = z = v.length; }
+    f.value = v.slice(0, a) + ch + v.slice(z);
+    try { f.setSelectionRange(a + ch.length, a + ch.length); } catch(e){}
+    try { f.focus(); } catch(e){}
+  }
+  document.addEventListener("focusin", function(e){ if (e.target && e.target.tagName === "INPUT" && e.target.closest && e.target.closest("#card")) letztesFeld = e.target; });
+
+  function eingabeFeld(platzhalter){
+    var i = el("input"); i.id = "ipt"; i.type = "text";
+    i.setAttribute("autocomplete","off"); i.setAttribute("autocapitalize","off"); i.setAttribute("autocorrect","off");
+    i.setAttribute("spellcheck","false"); i.placeholder = platzhalter || "…";
+    return i;
+  }
+
+  /* Die Markierung der Logik ([[zeichen, 0|1], ...]) als Text mit neutral
+     hervorgehobenen Stellen: gelb hinterlegt und unterstrichen, nie rot. */
+  function markiert(liste){
+    var s = el("span", "vlwort");
+    (liste || []).forEach(function(x){
+      if (x[1]) { var m = el("span", "vlmark", x[0] === " " ? " " : x[0]); s.appendChild(m); }
+      else s.appendChild(document.createTextNode(x[0]));
+    });
+    return s;
+  }
+  var ARTTEXT = { akzent: "Akzentfehler", artikel: "Artikelfehler", tippfehler: "Tippfehler", falsch: "Nicht ganz", leer: "Keine Antwort" };
+  function rueckmeldungFalsch(vd, erg, loesungAnzeige){
+    vd.className = "verdict neutral";
+    var art = (erg.arten && erg.arten.indexOf("leer") >= 0) ? "leer" : erg.art;
+    vd.innerHTML = "";
+    vd.appendChild(el("div", "vlart", ARTTEXT[art] || "Nicht ganz"));
+    var box = el("div", "vlrm");
+    if (erg.markierung && erg.eingabe){
+      var z1 = el("div", "vlzeile"); z1.appendChild(el("small", null, "Deine Antwort:")); z1.appendChild(markiert(erg.markierung.gegeben)); box.appendChild(z1);
+      var z2 = el("div", "vlzeile vlrichtig"); z2.appendChild(el("small", null, "So schreibt man es:")); z2.appendChild(markiert(erg.markierung.richtig)); box.appendChild(z2);
+    } else {
+      var z3 = el("div", "vlzeile vlrichtig"); z3.appendChild(el("small", null, "Richtig ist:")); z3.appendChild(el("span", "vlwort", loesungAnzeige || erg.treffer)); box.appendChild(z3);
+    }
+    vd.appendChild(box);
+  }
+  function weiterKnopf(fn){
+    var b=el("button","next","Weiter ›"); b.type="button"; b.id="weiterKarte";
+    b.addEventListener("click",fn);
+    $("#card").appendChild(b);
+    // focus() ohne preventScroll: rueckt "Weiter" ins Bild, auch bei offener Tastatur.
+    try{ b.focus(); }catch(e){}
+    return b;
+  }
+
+  /* =====================================================================
+     JETZT LERNEN - die Sitzung ueber die Vokabel-Logik
+     ===================================================================== */
+  var sitz = null, ab = null, beantwortet = false, lernenLaeuft = false, sitzGeschrieben = "";
+  function sitzungLaden(){
+    var s = null;
+    try { s = JSON.parse(sessionStorage.getItem(SCHL.sitzung) || "null"); } catch(e){}
+    if (!s) s = jsonLesen(SCHL.sitzung, null);
+    return V.sitzungGueltig(s, Date.now()) ? s : null;
+  }
+  function sitzungMerken(){ try { sessionStorage.setItem(SCHL.sitzung, JSON.stringify(sitz)); } catch(e){} }
+  function sitzungVergessen(){
+    try { sessionStorage.removeItem(SCHL.sitzung); } catch(e){}
+    if (get(SCHL.sitzung, null) != null) { try { localStorage.removeItem(SCHL.sitzung); } catch(e){} }
+    sitzGeschrieben = "";
+  }
+  /* Beim Verlassen: eine laufende Sitzung bleibt fortsetzbar (Busfahrt,
+     Netzabbruch). Den Lernstand selbst sichert der Sammler. */
+  function beimVerlassen(){
+    if (lernenLaeuft && sitz){
+      var t = JSON.stringify(sitz);
+      if (t !== sitzGeschrieben){ set(SCHL.sitzung, t); sitzGeschrieben = t; }
+    }
+    if (protokoll.length) lernstandSichernFuerSpaeter();
+  }
+  window.addEventListener("pagehide", beimVerlassen);
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") beimVerlassen(); });
+
+  function lernenStarten(einheitId){
+    var jetzt = Date.now();
+    plan = planLesen(); pausen = pausenLesen(); pruefungen = pruefungenLesen();
+    var alt = !einheitId && sitzungLaden();
+    sitz = alt || V.sitzungStarten(zustand, allUnits(), jetzt, plan, { sprache: SP, pruefungen: pruefungen, pausen: pausen, einheit: einheitId || null });
+    if (!sitz || sitz.modus === "leer"){
+      sitz = null;
+      var txt = $("#faelligText");
+      if (txt) txt.textContent = "Gerade ist nichts dran. Du kannst unten frei üben oder neue Wörter fotografieren.";
+      zeigeSetup();
+      return false;
+    }
+    lernenLaeuft = true; frei = false;
+    if (!alt || !protokoll.length){ protokoll = []; rundeBegonnen = jetzt; if(LS()) LS().uhrZuruecksetzen(); }
+    sitzungMerken();
+    var u = $("#uhrRest"); if (u) u.textContent = "";
+    zeigeSpiel();
+    naechste();
+    return true;
+  }
+
+  function fortschrittMalen(){
+    var balken = $("#prog"); if (!balken || !sitz) return;
+    var anteil = 0;
+    if (sitz.modus === "paket" && sitz.paket.length){
+      var ein = V.einstellungen(plan), ziel = 3 + ein.gelerntNach, summe = 0;
+      sitz.paket.forEach(function(k){
+        var e = V.lesen(zustand[k], V.tagVon(Date.now()));
+        if (!e) return;
+        if (e.stufe === "ordner") summe += ziel;
+        else if (e.stufe === 3) summe += 3 + Math.min(ein.gelerntNach, e.folge || 0);
+        else if (e.stufe === 2) summe += 2;
+        else summe += (e.r1a ? 1 : 0) + (e.r1b ? 1 : 0);
+      });
+      anteil = summe / (ziel * sitz.paket.length);
+    } else if (sitz.modus === "runde"){
+      anteil = (sitz.anzahl || 0) / V.einstellungen(plan).sitzungGroesse;
+    }
+    balken.style.width = Math.round(Math.min(1, Math.max(0, anteil)) * 100) + "%";
+  }
+
+  function naechste(){
+    var r = V.naechsteAbfrage(sitz, zustand, allUnits(), Date.now(), plan, { pruefungen: pruefungen, pausen: pausen });
+    if (r.ende){ endeZeigen(r.ende); return; }
+    ab = r.abfrage; beantwortet = false; karteBegonnen = Date.now();
+    fortschrittMalen();
+    karteMalen(ab);
+  }
+
+  function kickerText(a){
+    var form = { auswahl: "Ankreuzen", luecke: "Lückenwort", schreiben: "Selbst schreiben" }[a.form];
+    var vorn;
+    if (a.zwischen) vorn = "Zwischendurch";
+    else if (a.grund === "wiederholung") vorn = "Wiederholung";
+    else if (a.grund === "pruefung") vorn = "Für die Prüfung";
+    else if (a.grund === "extra") vorn = "Extra";
+    else vorn = "Stufe " + (a.stufe === "ordner" ? 3 : a.stufe);
+    if (a.form === "auswahl") form += " · " + (a.richtung === "b" ? K.sprache + " → Deutsch" : "Deutsch → " + K.sprache);
+    return vorn + " · " + form;
+  }
+
+  function karteMalen(a){
+    var c = $("#card"); c.innerHTML = ""; c.setAttribute("data-form", a.form);
+    c.appendChild(el("div", "kicker", kickerText(a)));
+    var pr = el("div", "prompt", a.frage);
+    var fremdOben = a.form === "auswahl" && a.richtung === "b";
+    if (fremdOben){
+      var sb = el("button", "say", "🔊"); sb.type = "button"; sb.title = "Aussprache"; sb.setAttribute("aria-label", "Vorlesen");
+      sb.addEventListener("click", function(){ say(a.paar.en); });
+      pr.appendChild(sb);
+    }
+    c.appendChild(pr);
+    if (a.form === "auswahl"){
+      c.appendChild(el("div", "hint", "Wähle die richtige Übersetzung"));
+      var ch = el("div", "choices vlliste"); ch.id = "ch";
+      a.optionen.forEach(function(o){
+        var b = el("button", "choice", o); b.type = "button";
+        b.addEventListener("click", function(){ antworten(o, b); });
+        ch.appendChild(b);
+      });
+      c.appendChild(ch);
+      if (fremdOben) say(a.paar.en);
+    } else if (a.form === "luecke"){
+      c.appendChild(el("div", "hint", "Setze die fehlenden Buchstaben ein"));
+      var wort = el("div", "vlluecke"); wort.id = "vlLuecke";
+      var stellen = a.luecke.stellen, ziel = a.luecke.ziel, felder = [];
+      var gruppe = el("span", "vlgruppe");
+      for (var i = 0; i < ziel.length; i++){
+        var zch = ziel.charAt(i);
+        if (zch === " "){ wort.appendChild(gruppe); gruppe = el("span", "vlgruppe"); continue; }
+        var k = stellen.indexOf(i);
+        if (k >= 0){
+          var f = el("input", "vlgap"); f.type = "text"; f.maxLength = 1; f.setAttribute("data-nr", String(k));
+          f.setAttribute("autocomplete","off"); f.setAttribute("autocapitalize","off"); f.setAttribute("autocorrect","off"); f.setAttribute("spellcheck","false");
+          f.setAttribute("aria-label", "Fehlender Buchstabe " + (k + 1));
+          gruppe.appendChild(f); felder.push(f);
+        } else gruppe.appendChild(el("span", "vlbst", zch));
+      }
+      wort.appendChild(gruppe);
+      var t1 = akzentLeiste(); if (t1) c.appendChild(t1);
+      c.appendChild(wort);
+      felder.forEach(function(f, n){
+        f.addEventListener("input", function(){
+          if (f.value.length > 1) f.value = f.value.slice(-1);
+          if (f.value && felder[n + 1]) felder[n + 1].focus();
+        });
+        f.addEventListener("keydown", function(e){
+          if (e.key === "Backspace" && !f.value && felder[n - 1]){ felder[n - 1].focus(); e.preventDefault(); }
+          if (e.key === "Enter"){ e.preventDefault(); if (beantwortet) naechste(); else pruefLuecke(); }
+        });
+      });
+      var zeile = el("div", "answer vlprueffeld");
+      var chk = el("button", null, "Prüfen"); chk.id = "chk"; chk.type = "button";
+      zeile.appendChild(chk); c.appendChild(zeile);
+      var pruefLuecke = function(){ antworten(felder.map(function(x){ return x.value; })); };
+      chk.addEventListener("click", pruefLuecke);
+      if (felder[0]) { letztesFeld = felder[0]; try { felder[0].focus({preventScroll:true}); } catch(e){} }
+    } else {
+      var nomen = SP === "fr" && V.wortartVon(a.paar, SP) === "nomen";
+      c.appendChild(el("div", "hint", "Schreib das " + K.spracheAdj + " Wort" + (nomen ? " mit Artikel" : "")));
+      var t2 = akzentLeiste(); if (t2) c.appendChild(t2);
+      var an = el("div", "answer");
+      var ipt = eingabeFeld(nomen ? "mit Artikel, z. B. le / la …" : "…");
+      var chk2 = el("button", null, "Prüfen"); chk2.id = "chk"; chk2.type = "button";
+      an.appendChild(ipt); an.appendChild(chk2); c.appendChild(an);
+      var go = function(){ antworten(ipt.value); };
+      chk2.addEventListener("click", go);
+      ipt.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); if (beantwortet) naechste(); else go(); } });
+      letztesFeld = ipt;
+      try { ipt.focus({preventScroll:true}); } catch(e){}
+    }
+    var vd = el("div", "verdict"); vd.id = "vd"; c.appendChild(vd);
+    var exs = el("div", "exs"); exs.id = "exs"; c.appendChild(exs);
+  }
+
+  function antworten(antwort, knopf){
+    if (beantwortet || !ab) return;
+    beantwortet = true;
+    var jetzt = Date.now();
+    var erg = V.werten(ab, antwort, plan);
+    var res = V.anwenden(zustand, ab, erg, jetzt, plan);
+    if (!ab.zwischen){ zustand = res.zustand; sam.merken(zustand); }
+    sitz = V.nachAntwort(sitz, ab, erg, res); sitzungMerken();
+    if (!ab.zwischen){
+      var einheit = allUnits().filter(function(u){ return u.id === ab.unitId; })[0];
+      protokoll.push({
+        merkmal: (einheit ? einheit.name : "Vokabeln").toLowerCase(),
+        art: { auswahl: "vok-auswahl-4", luecke: "vok-luecke", schreiben: "vok-tippen" }[ab.form] || "vokabel",
+        stimmt: !!erg.richtig, nachspielzeit: false,
+        sekunden: karteBegonnen ? Math.round((jetzt - karteBegonnen)/1000) : 0,
+        gegeben: erg.richtig ? "" : String(Array.isArray(antwort) ? (erg.eingabe || "") : (antwort || "")).slice(0,80),
+        richtig: String(ab.loesung || "").slice(0,80),
+        frage: String(ab.frage || "").slice(0,160)
+      });
+    }
+    // Karte sperren und Rueckmeldung zeigen.
+    var c = $("#card");
+    [].forEach.call(c.querySelectorAll("input"), function(i){ i.disabled = true; });
+    var chk = $("#chk"); if (chk) chk.disabled = true;
+    [].forEach.call(c.querySelectorAll(".vltaste"), function(b){ b.disabled = true; });
+    if (ab.form === "auswahl"){
+      [].forEach.call($("#ch").children, function(x){
+        x.disabled = true;
+        if (x.textContent === ab.loesung) x.classList.add("ok");
+        else if (x === knopf && !erg.richtig) x.classList.add("vlgewaehlt");
+      });
+    } else {
+      var ipt = $("#ipt"); if (ipt) ipt.classList.add(erg.richtig ? "ok" : "vlneutral");
+    }
+    var vd = $("#vd");
+    if (erg.richtig){
+      vd.className = "verdict ok";
+      var ev = res.ereignis || {};
+      vd.textContent = "Richtig!" + (ab.zwischen ? "" : ev.gelernt ? " Gelernt – das Wort kommt in den Ordner." : ev.aufgestiegen ? " Eine Stufe weiter." : "");
+      good();
+    } else {
+      rueckmeldungFalsch(vd, erg, ab.loesung);
+      hinweisTon();
+    }
+    if (ab.paar && ab.paar.ex){ var e = $("#exs"); if (e) e.textContent = "„" + ab.paar.ex + "“"; }
+    if (ab.paar && ab.paar.en && !(ab.form === "auswahl" && ab.richtung === "b")) say(ab.paar.en);
+    fortschrittMalen();
+    weiterKnopf(naechste);
+  }
+
+  function endeZeigen(ende){
+    lernenLaeuft = false;
+    var z = V.zusammenfassung(sitz);
+    var quelle = sitz && sitz.quelle;
+    sitzungVergessen();
+    $("#play").style.display = "none";
+    ansicht("ende"); window.scrollTo(0,0);
+    var e = $("#end"); e.style.display = "block"; e.innerHTML = "";
+    var d = el("div", "done"); d.id = "vlEnde"; d.setAttribute("data-art", ende.art);
+    d.appendChild(el("h2", null, ende.text));
+    if (ende.art === "paket" || ende.art === "runde"){
+      d.appendChild(el("p", null, ende.art === "paket" ? "Du entscheidest: weiter mit dem nächsten Paket oder Pause." : "Du entscheidest: noch eine Runde oder Pause."));
+      var w = el("button", "start", "Weiter"); w.id = "vlWeiter"; w.type = "button";
+      w.addEventListener("click", function(){
+        var naechsteEinheit = quelle && quelle.id && quelle.art !== "runde" && quelle.art !== "pruefung" ? quelle.id : null;
+        if (!lernenStarten(naechsteEinheit)) lernenBeenden();
+      });
+      var pz = el("button", "ghost", "Pause"); pz.id = "vlPause"; pz.type = "button";
+      pz.addEventListener("click", lernenBeenden);
+      d.appendChild(w); d.appendChild(pz);
+    } else {
+      d.appendChild(el("p", null, "Alles, was gerade dran war, ist geübt."));
+      var zu = el("button", "start", "Zur Übersicht"); zu.id = "vlZurUebersicht"; zu.type = "button";
+      zu.addEventListener("click", lernenBeenden);
+      d.appendChild(zu);
+    }
+    // Die Zusammenfassung steht UNTER den Knoepfen: "Weiter"/"Pause" bleiben
+    // auch auf kleinen Schirmen ohne Scrollen erreichbar.
+    if (z.abfragen){
+      var bil = el("div", "bilanz vlbilanz");
+      [[z.abfragen, z.abfragen === 1 ? "Abfrage" : "Abfragen"], [z.richtig, "richtig"], [z.aufgestiegen, "eine Stufe weiter"], [z.gelernt, "gelernt"]]
+        .forEach(function(x){ var k = el("div"); k.appendChild(el("b", null, x[0])); k.appendChild(el("small", null, x[1])); bil.appendChild(k); });
+      d.appendChild(bil);
+      var teile = [];
+      if (SP === "fr" || z.akzent) teile.push("Akzentfehler: " + z.akzent);
+      if (SP === "fr" || z.artikel) teile.push("Artikelfehler: " + z.artikel);
+      if (z.tippfehler) teile.push("Tippfehler: " + z.tippfehler);
+      if (teile.length){ var p = el("p", "vlfehlerarten", teile.join(" · ")); p.id = "vlFehlerarten"; d.appendChild(p); }
+    }
+    e.appendChild(d);
+    good();
+  }
+
+  /* "Pause" (oder Zurueck): JETZT wird gespeichert - ein Schreibvorgang fuer
+     Lernstand, Kurzstand und Statistik zusammen (paul-sync buendelt alles,
+     was innerhalb von 1,5 s geschrieben wird). */
+  function lernenBeenden(){
+    lernenLaeuft = false;
+    sitzungVergessen();
+    sam.sichern();
+    var u = letzteUebersicht = V.uebersicht(zustand, allUnits(), Date.now(), plan, lopt());
+    var richtig = protokoll.filter(function(x){ return x.stimmt; }).length;
+    if (protokoll.length) writeProgress(richtig, protokoll.length - richtig);
+    lernstandSenden();
+    standSchreiben(u);
+    zeigeSetup();
+    uebersichtMalen();
+    blip();
+  }
+  function lernenUnterbrechen(){
+    // Zurueck mitten in der Sitzung: Stand sichern, Sitzung bleibt im Tab fortsetzbar.
+    lernenLaeuft = false;
+    sam.sichern();
+    lernstandSenden();
+    zeigeSetup();
+    uebersichtMalen();
+    blip();
+  }
+
+  /* =====================================================================
+     FREI UEBEN - Einheit, Richtung, Uebungsart, Zeitmodus, Hoeren.
+     Streng gewertet wie das Lernen, aber OHNE Einfluss auf die Stufen:
+     hier wird kein Lernstand gelesen oder geschrieben (Denny, 19.10.2026).
+     ===================================================================== */
+  var frei=false, queue=[], curUnit=null, roundDir="de2en", total=0, mastered=0, wrongWords=[], answered=false;
+  var zeitEnde=0, gesehen={}, rundenModus="mc", erstRichtig=0, erstGesamt=0;
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+  function clozeTarget(en){ return String(en).replace(/^to\s+/,"").replace(/\s*\([^)]*\)/g,"").trim(); }
+  function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
   function makeCloze(sentence, target){
     if(!sentence) return null;
-    var pat=new RegExp("\\b"+esc(target).replace(/\s+/g,"\\s+")+"\\b","i");
+    var pat=new RegExp("\\b"+escRe(target).replace(/\s+/g,"\\s+")+"\\b","i");
     if(!pat.test(sentence)) return null;
     var blank='<span class="gap">'+Array(Math.max(4,target.replace(/\s/g,"").length)+1).join("_")+'</span>';
-    return sentence.replace(pat, blank);
+    return esc2(sentence).replace(new RegExp("\\b"+escRe(esc2(target)).replace(/\s+/g,"\\s+")+"\\b","i"), blank);
   }
   function maskWord(w){
     return w.split("").map(function(ch,i){
-      if(!/[a-zA-ZäöüÄÖÜß]/.test(ch)) return ch;
+      if(!/[a-zA-ZäöüÄÖÜßÀ-ÿœ]/.test(ch)) return ch;
       if(i===0 || i===w.length-1) return ch;
       return Math.random()<.55 ? "_" : ch;
     }).join("");
   }
-
-
-  /* ---------- Wort-Gedächtnis (Leitner) ----------
-     Bis hierher merkte sich der Trainer XP, Serie und Datum - aber nicht,
-     WELCHE Wörter sitzen. Jede Sitzung fing bei null an: Ein Wort, das
-     fünfmal danebenging, kam so oft dran wie eines, das man im Schlaf kann.
-     Verteiltes Wiederholen ist aber der stärkste Einzeleffekt beim
-     Vokabellernen - also merken wir uns pro Wort, wann es zuletzt saß.
-
-     Fünf Fächer mit wachsendem Abstand. Richtig: eine Stufe hoch.
-     Daneben: zurück auf Anfang, das Wort kommt morgen wieder. */
-
-  var FACH_TAGE = [0, 1, 3, 7, 16, 35];      // Fach 0 = heute noch einmal
-  var WISSEN_SCHLUESSEL = PRE+"-wissen";
-
-  function wissenLaden(){
-    try { var o = JSON.parse(get(WISSEN_SCHLUESSEL, "{}")); return (o && typeof o === "object") ? o : {}; }
-    catch(e){ return {}; }
-  }
-  function wissenSichern(w){ try { set(WISSEN_SCHLUESSEL, JSON.stringify(w)); } catch(e){} }
-
-  // Ein Wort eindeutig benennen - die Einheit gehört dazu, sonst kollidieren
-  // gleiche Wörter aus verschiedenen Einheiten.
-  function wortSchluessel(unitId, p){ return unitId + "|" + p.en; }
-
-  function heuteZahl(){ return Math.floor(Date.now() / 86400000); }
-
-  function standVon(wissen, schl){
-    return wissen[schl] || { fach: 0, faellig: 0, richtig: 0, falsch: 0 };
-  }
-
-  // Was ist heute dran? Fällige zuerst, dann neue Wörter zum Auffüllen.
-  function faelligeAuswahl(maxAnzahl){
-    var wissen = wissenLaden(), heute = heuteZahl();
-    var faellig = [], neu = [];
-    allUnits().forEach(function(u){
-      u.pairs.forEach(function(p){
-        var st = wissen[wortSchluessel(u.id, p)];
-        if (!st) neu.push({p:p, tries:0, unitId:u.id});
-        else if (st.faellig <= heute) faellig.push({p:p, tries:0, unitId:u.id, faellig:st.faellig});
-      });
-    });
-    // Am längsten überfällig zuerst - das ist am ehesten am Vergessen.
-    faellig.sort(function(a,b){ return a.faellig - b.faellig; });
-    var raus = faellig.slice(0, maxAnzahl);
-    if (raus.length < maxAnzahl) raus = raus.concat(shuffle(neu).slice(0, maxAnzahl - raus.length));
-    // Mischen: Themen durcheinander üben sitzt besser als Block für Block,
-    // auch wenn es sich schwerer anfühlt.
-    return shuffle(raus);
-  }
-
-  // Der ehrlichste Wert der ganzen App: Wie viele Woerter sind so oft richtig
-  // wiedergekommen, dass sie im Langzeitgedaechtnis stehen? Fach 4 heisst,
-  // das Wort hat 16 Tage Pause ueberstanden.
-  function sitztZaehlen(){
-    var w=wissenLaden(), n=0, fast=0;
-    for(var k in w){ if(w[k].fach>=4) n++; else if(w[k].fach>=2) fast++; }
-    return { sitzt:n, aufDemWeg:fast };
-  }
-
-  function faelligZaehlen(){
-    var wissen = wissenLaden(), heute = heuteZahl(), n = 0, neu = 0;
-    allUnits().forEach(function(u){
-      u.pairs.forEach(function(p){
-        var st = wissen[wortSchluessel(u.id, p)];
-        if (!st) neu++; else if (st.faellig <= heute) n++;
-      });
-    });
-    return { faellig: n, neu: neu };
-  }
-
-  // Nach jeder Antwort das Fach nachführen.
-  function wortMerken(unitId, p, richtig){
-    if (!unitId) return;
-    var wissen = wissenLaden(), schl = wortSchluessel(unitId, p);
-    var st = standVon(wissen, schl);
-    if (richtig){
-      st.fach = Math.min(st.fach + 1, FACH_TAGE.length - 1);
-      st.richtig++;
-    } else {
-      st.fach = 0;
-      st.falsch++;
-    }
-    st.faellig = heuteZahl() + FACH_TAGE[st.fach];
-    st.zuletzt = new Date().toLocaleDateString("sv-SE");
-    wissen[schl] = st;
-    wissenSichern(wissen);
-  }
-
-  /* ---------- Übungslogik ---------- */
-  var queue=[], curUnit=null, roundDir="de2en", total=0, mastered=0, wrongWords=[], answered=false;
-  // Mitschrift für den Lernstand: Was wurde geübt, was saß, wie lange.
-  var protokoll=[], rundeBegonnen=0, karteBegonnen=0;
-  var zeitEnde=0, gesehen={}, rundenModus="mc";
-  var erstRichtig=0, erstGesamt=0, lauf=0, laufBest=0;
-  function kannSprechen(){ return typeof speechSynthesis!=="undefined"; }
-
-  // Sagt der Seite, ob gerade gespielt wird. Auf dem Handy blendet das die
-  // Kopfzeile aus - siehe die Begruendung im CSS der Seite.
-  function ansicht(was){
-    // Beim Spielen UND beim Ergebnis: Kopf- und Fusszeile weg. Beides sind
-    // Momente, in denen sie weiterkommen will, nicht Punktestaende lesen.
-    document.body.classList.toggle("konzentriert", was === "spiel" || was === "ende");
-  }
-
-  function startSession(){
-    roundDir=dir;
-    rundenModus=mode;
-    vorliebeZaehlen("richtung",dir); vorliebeZaehlen("modus",mode);
-    vorliebeZaehlen("dauer",String(dauerMin)); vorliebeZaehlen("einheit",unitSel.value);
-    vorliebeZaehlen("auswahl",String(wahlAnzahl));
+  function freiStarten(){
+    frei=true; lernenLaeuft=false;
+    roundDir=dir; rundenModus=mode;
     zeitEnde = dauerMin ? Date.now() + dauerMin*60000 : 0;
-    erstRichtig=0; erstGesamt=0; lauf=0; laufBest=0;
-    if (unitSel.value === "__faellig"){
-      // Das System stellt zusammen, was ansteht - fällige zuerst, dann Neues.
-      queue = faelligeAuswahl(20);
-      // pairs mitgeben: Daraus werden die falschen Antwortmöglichkeiten
-      // gezogen, und das Ergebnisbild braucht die Anzahl. Ohne sie blieb
-      // die Karte leer.
-      curUnit = { id:"__faellig", name:"Was heute dran ist",
-                  pairs: queue.map(function(it){ return it.p; }) };
-    } else {
-      curUnit=allUnits().filter(function(u){return u.id===unitSel.value;})[0]||UNITS[0];
-      queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0, unitId:curUnit.id};}));
-    }
+    erstRichtig=0; erstGesamt=0;
+    curUnit=allUnits().filter(function(u){return unitSel && u.id===unitSel.value;})[0]||UNITS[0];
+    queue=shuffle(curUnit.pairs.map(function(p){return {p:p, tries:0, unitId:curUnit.id};}));
     total=queue.length; mastered=0; wrongWords=[];
     protokoll=[]; rundeBegonnen=Date.now();
     if(LS()) LS().uhrZuruecksetzen();
     gesehen={};
-    queue.forEach(function(it){ gesehen[wortSchluessel(it.unitId,it.p)]=1; });
-    if (!total){ meldungKeineWoerter(); return; }
-    $("#setup").style.display="none"; $("#end").style.display="none"; $("#play").style.display="block";
-    ansicht("spiel");
-    window.scrollTo(0,0);
+    queue.forEach(function(it){ gesehen[it.unitId+"|"+it.p.en]=1; });
+    if (!total) return;
+    zeigeSpiel();
     nextCard();
   }
-  function meldungKeineWoerter(){
-    ansicht("start");
-    $("#setup").style.display="block"; $("#play").style.display="none";
-    var e=$("#faelligText");
-    if(e) e.textContent="Gerade ist nichts fällig - alles sitzt. Wähle unten eine Einheit, wenn du trotzdem üben willst.";
-  }
-
   function pickDir(){ return roundDir==="mix" ? (Math.random()<.5?"de2en":"en2de") : roundDir; }
-
-  // Im Zeitmodus laeuft die Runde, bis die Minuten um sind - nicht, bis eine
-  // feste Zahl Woerter durch ist. Genau dafuer ist die Zugfahrt da.
+  // Im Zeitmodus laeuft die Runde, bis die Minuten um sind: aus allen
+  // Einheiten wird zufaellig nachgefuellt - ohne Blick auf den Lernstand.
   function nachfuellen(){
-    var neue = faelligeAuswahl(12).filter(function(it){
-      return !gesehen[wortSchluessel(it.unitId,it.p)];
-    });
+    var alle=[];
+    allUnits().forEach(function(u){ u.pairs.forEach(function(p){ if(!gesehen[u.id+"|"+p.en]) alle.push({p:p, tries:0, unitId:u.id}); }); });
+    var neue=shuffle(alle).slice(0,12);
     if(!neue.length) return false;
-    neue.forEach(function(it){ gesehen[wortSchluessel(it.unitId,it.p)]=1; });
+    neue.forEach(function(it){ gesehen[it.unitId+"|"+it.p.en]=1; });
     queue = queue.concat(neue);
     total = mastered + queue.length;
-    if(curUnit && curUnit.id==="__faellig")
-      curUnit.pairs = curUnit.pairs.concat(neue.map(function(it){return it.p;}));
     return true;
   }
-
   function restZeit(){ return zeitEnde ? Math.max(0, zeitEnde - Date.now()) : 0; }
-
   function nextCard(){
-    answered=false;
-    karteBegonnen=Date.now();
+    answered=false; karteBegonnen=Date.now();
     if(zeitEnde){
       var anteil = 1 - restZeit() / (dauerMin*60000);
       $("#prog").style.width=Math.round(Math.min(1,Math.max(0,anteil))*100)+"%";
-      var u=$("#uhrRest");
-      if(u) u.textContent=Math.ceil(restZeit()/60000)+" Min";
+      var u=$("#uhrRest"); if(u) u.textContent=Math.ceil(restZeit()/60000)+" Min";
     } else {
       $("#prog").style.width=(total? Math.round(mastered/total*100):0)+"%";
+      var u2=$("#uhrRest"); if(u2) u2.textContent="";
     }
     if(zeitEnde && restZeit()<=0){ finish(); return; }
     if(!queue.length && zeitEnde && nachfuellen()){ /* weiter */ }
     if(!queue.length){ finish(); return; }
     var item=queue[0], p=item.p;
-    var c=$("#card");
-
+    var c=$("#card"); c.removeAttribute("data-form");
+    var frei1 = '<div class="kicker">Frei üben · ';
+    var freiHinweis = '<div class="vlfrei">Zählt nicht für die Stufen.</div>';
     if(mode==="hoeren" && kannSprechen()){
-      item._sol=p.en; item._solLang="en"; item._prompt=p.en;
-      c.innerHTML='<div class="kicker">Hören &amp; schreiben · '+K.sprache+'</div>'+
-        '<div class="hoerfeld"><button class="hoerknopf" id="nochmal" type="button" '+
-          'aria-label="Nochmal vorlesen">&#128266;</button></div>'+
-        '<div class="clozemean">bedeutet: <b>'+p.de+'</b></div>'+
-        '<div class="hint">Tippe, was du hörst</div>'+
-        '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="…"><button id="chk">Prüfen</button></div>'+
-        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
-      var iph=$("#ipt"); iph.focus();
-      var goh=function(){ if(!answered) judgeText(iph.value,item); };
-      $("#chk").addEventListener("click",goh);
-      iph.addEventListener("keydown",function(e){ if(e.key==="Enter") goh(); });
+      item._sol=p.en; item._solLang=SP; item._prompt=p.en; item._d=null;
+      c.innerHTML=frei1+'Hören &amp; schreiben · '+K.sprache+'</div>'+freiHinweis+
+        '<div class="hoerfeld"><button class="hoerknopf" id="nochmal" type="button" aria-label="Nochmal vorlesen">&#128266;</button></div>'+
+        '<div class="clozemean">bedeutet: <b>'+esc2(p.de)+'</b></div>'+
+        '<div class="hint">Tippe, was du hörst</div>';
+      freiEingabe(c, item, "…");
       $("#nochmal").addEventListener("click",function(){ say(p.en); });
       say(p.en);
       return;
     }
-
     if(mode==="cloze"){
       var tgt=clozeTarget(p.en);
       var sentHtml=makeCloze(p.ex, tgt);
-      item._sol=p.en; item._solLang="en"; item._prompt=p.en;
+      item._sol=sentHtml ? tgt : p.en; item._solLang=SP; item._prompt=p.en; item._d=null;
       if(sentHtml){
-        c.innerHTML='<div class="kicker">Lückentext · '+K.sprache+'</div>'+
-          '<div class="clozemean">bedeutet: <b>'+p.de+'</b></div>'+
-          '<div class="clozesent">'+sentHtml+'</div>'+
-          '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="fehlendes Wort"><button id="chk">Prüfen</button></div>'+
-          '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+        c.innerHTML=frei1+'Lückentext · '+K.sprache+'</div>'+freiHinweis+
+          '<div class="clozemean">bedeutet: <b>'+esc2(p.de)+'</b></div>'+
+          '<div class="clozesent">'+sentHtml+'</div>';
+        freiEingabe(c, item, "fehlendes Wort");
       } else {
-        c.innerHTML='<div class="kicker">Lückentext · '+K.sprache+'</div>'+
-          '<div class="prompt">'+p.de+'</div>'+
-          '<div class="hint">Ergänze das '+K.spracheAdj+' Wort: <span class="masked">'+maskWord(p.en)+'</span></div>'+
-          '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ganzes Wort"><button id="chk">Prüfen</button></div>'+
-          '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+        c.innerHTML=frei1+'Lückentext · '+K.sprache+'</div>'+freiHinweis+
+          '<div class="prompt">'+esc2(p.de)+'</div>'+
+          '<div class="hint">Ergänze das '+K.spracheAdj+' Wort: <span class="masked">'+esc2(maskWord(p.en))+'</span></div>';
+        freiEingabe(c, item, "ganzes Wort");
       }
-      var ipc=$("#ipt"); ipc.focus();
-      var goc=function(){ if(!answered) judgeText(ipc.value,item); };
-      $("#chk").addEventListener("click",goc);
-      ipc.addEventListener("keydown",function(e){ if(e.key==="Enter") goc(); });
       return;
     }
-
     var d=pickDir();
     var promptWord = d==="de2en" ? p.de : p.en;
     var solution   = d==="de2en" ? p.en : p.de;
-    item._d=d; item._sol=solution; item._solLang=(d==="de2en"?"en":"de"); item._prompt=promptWord;
-
-    var sayBtn = (d==="en2de")
-      ? '<button class="say" title="Aussprache" data-say="'+p.en.replace(/"/g,'')+'">🔊</button>' : '';
-    var head='<div class="kicker">'+(d==="de2en"?"Deutsch → "+K.sprache:K.sprache+" → Deutsch")+'</div>'+
-             '<div class="prompt">'+promptWord+sayBtn+'</div>';
-
+    item._d=d; item._sol=solution; item._solLang=(d==="de2en"?SP:"de"); item._prompt=promptWord;
+    var sayBtn = (d==="en2de") ? '<button class="say" type="button" title="Aussprache" aria-label="Vorlesen" data-say="'+esc2(p.en).replace(/"/g,'')+'">🔊</button>' : '';
+    c.innerHTML=frei1+(d==="de2en"?"Deutsch → "+K.sprache:K.sprache+" → Deutsch")+'</div>'+freiHinweis+
+      '<div class="prompt">'+esc2(promptWord)+sayBtn+'</div>';
     if(mode==="mc"){
       var opts=[solution];
-      var pool=shuffle(curUnit.pairs.map(function(x){return d==="de2en"?x.en:x.de;})
-                 .filter(function(w){return w!==solution;}));
+      var pool=shuffle(curUnit.pairs.map(function(x){return d==="de2en"?x.en:x.de;}).filter(function(w){return w!==solution;}));
+      if(pool.length < wahlAnzahl-1){
+        allUnits().forEach(function(u){ u.pairs.forEach(function(x){ var w=d==="de2en"?x.en:x.de; if(w!==solution && pool.indexOf(w)<0) pool.push(w); }); });
+        pool=shuffle(pool);
+      }
       while(opts.length<wahlAnzahl && pool.length) opts.push(pool.pop());
       opts=shuffle(opts);
-      c.innerHTML=head+'<div class="hint">Wähle die richtige Übersetzung</div><div class="choices" id="ch"></div>'+
-        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
+      c.insertAdjacentHTML("beforeend",'<div class="hint">Wähle die richtige Übersetzung</div><div class="choices" id="ch"></div><div class="verdict" id="vd"></div><div class="exs" id="exs"></div>');
       var ch=$("#ch");
       opts.forEach(function(o){
-        var b=document.createElement("button"); b.className="choice"; b.textContent=o;
+        var b=el("button","choice",o); b.type="button";
         b.addEventListener("click",function(){ if(answered) return; judgeChoice(b,o,solution,item); });
         ch.appendChild(b);
       });
-    } else { /* type */
-      c.innerHTML=head+'<div class="hint">Tippe die Übersetzung ein</div>'+
-        '<div class="answer"><input id="ipt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="…"><button id="chk">Prüfen</button></div>'+
-        '<div class="verdict" id="vd"></div><div class="exs" id="exs"></div>';
-      var ipt=$("#ipt"); ipt.focus();
-      var go=function(){ if(!answered) judgeText(ipt.value,item); };
-      $("#chk").addEventListener("click",go);
-      ipt.addEventListener("keydown",function(e){ if(e.key==="Enter") go(); });
+    } else {
+      c.insertAdjacentHTML("beforeend",'<div class="hint">Tippe die Übersetzung ein</div>');
+      freiEingabe(c, item, "…");
     }
-
     var sb=c.querySelector("[data-say]");
     if(sb) sb.addEventListener("click",function(){ say(sb.getAttribute("data-say")); });
     if(d==="en2de") say(p.en);
   }
-
+  function freiEingabe(c, item, platz){
+    if (item._solLang !== "de"){ var t = akzentLeiste(); if (t) c.appendChild(t); }
+    var an=el("div","answer"), ipt=eingabeFeld(platz), chk=el("button",null,"Prüfen"); chk.id="chk"; chk.type="button";
+    an.appendChild(ipt); an.appendChild(chk); c.appendChild(an);
+    var vd=el("div","verdict"); vd.id="vd"; c.appendChild(vd);
+    var exs=el("div","exs"); exs.id="exs"; c.appendChild(exs);
+    letztesFeld=ipt;
+    try{ ipt.focus({preventScroll:true}); }catch(e){}
+    var go=function(){ if(!answered) judgeText(ipt.value,item); };
+    chk.addEventListener("click",go);
+    ipt.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); if(answered) nextCard(); else go(); } });
+  }
   function artName(){
-    // Bei Multiple-Choice steht die Anzahl mit dabei: "vok-auswahl-5" ist eine
-    // ganz andere Aufgabe als "vok-auswahl-2", und in der Auswertung soll man
-    // das auseinanderhalten koennen.
     if (rundenModus === "mc") return "vok-auswahl-" + wahlAnzahl;
     return { type:"vok-tippen", cloze:"vok-luecke", hoeren:"vok-hoeren" }[rundenModus] || "vokabel";
   }
-
+  function frageText(item){ if(item._d) return item._prompt || ""; return (item.p && item.p.de) || ""; }
   function award(item,correct){
     answered=true;
-    // Beim ERSTEN Versuch zählt es fürs Gedächtnis - wer dreimal rät und
-    // dann trifft, kann das Wort noch nicht.
     if(item.tries === 0){
-      wortMerken(item.unitId, item.p, correct);
-      erstGesamt++;
-      if(correct){ erstRichtig++; lauf++; if(lauf>laufBest) laufBest=lauf; } else { lauf=0; }
-      // Einheit als Merkmal - daran sieht man in der Auswertung, wo es hakt.
+      erstGesamt++; if(correct) erstRichtig++;
       var einheit = allUnits().filter(function(u){return u.id===item.unitId;})[0];
       protokoll.push({
         merkmal: (einheit ? einheit.name : "Vokabeln").toLowerCase(),
-        // Die Uebungsart steht mit in der Auswertung - daran sieht man, ob
-        // sie wirklich abruft (tippen, hoeren) oder nur wiedererkennt (mc).
-        art: artName(),
-        stimmt: !!correct,
-        nachspielzeit: false,
+        art: artName(), stimmt: !!correct, nachspielzeit: false,
         sekunden: karteBegonnen ? Math.round((Date.now()-karteBegonnen)/1000) : 0,
-        /* Bis 18.10.2026 stand hier item.p.de - also die deutsche Vokabel,
-           nicht das, was Helena getippt hatte. Jetzt ihre Eingabe (auch bei
-           "fast", damit die Eltern die Schreibweise sehen), die erwartete
-           Loesung und das abgefragte Wort. */
-        gegeben: (correct && !item._fast) ? "" : String(item._gegeben != null ? item._gegeben : item._waehlt || "").slice(0,80),
+        gegeben: correct ? "" : String(item._gegeben != null ? item._gegeben : item._waehlt || "").slice(0,80),
         richtig: String(item._sol != null ? item._sol : item.p.en).slice(0,80),
         frage: String(frageText(item)).slice(0,160)
       });
     }
-    if(correct){ mastered++; xp+=10; queue.shift(); }
+    if(correct){ mastered++; queue.shift(); }
     else{
       item.tries++; if(wrongWords.indexOf(item.p)<0) wrongWords.push(item.p);
       queue.shift(); queue.splice(Math.min(3,queue.length),0,item);
       total=mastered+queue.length;
     }
-    xp=Math.max(0,xp); set(PRE+"-xp",String(xp)); paintStats();
-    writeProgress(mastered, wrongWords.length);
   }
-
-  function afterAnswer(correct,solution,item,erg){
-    var vd=$("#vd"), T=window.LWToleranz;
-    var gegeben = item && item._gegeben;
-    var nah = T && gegeben && erg && T.unterschied(gegeben, erg.treffer || solution);
-    if(correct && erg && erg.stufe==="fast"){
-      vd.className="verdict ok"; vd.textContent="Fast richtig! ✦ +10 XP"; good();
-      T.zeigen(vd, gegeben, erg.treffer || solution, { wo: "So schreibt man es:" });
-    }
-    else if(correct){ vd.className="verdict ok"; vd.textContent="Richtig! ✦ +10 XP"; good(); }
-    else if(nah){
-      // Knapp daneben (z. B. falscher Artikel): sehen, WO es hakt.
-      vd.className="verdict no"; vd.textContent="Knapp daneben"; bad();
-      T.zeigen(vd, gegeben, solution, { wo: "Richtig wäre:" });
-    }
-    else{ vd.className="verdict no"; vd.textContent="Richtig wäre: "+solution; bad(); }
-    if(item && item.p && item.p.ex){ var e=$("#exs"); if(e) e.textContent="„"+item.p.ex+"\u201c"; }
-    var b=document.createElement("button"); b.className="next"; b.textContent="Weiter ›";
-    b.addEventListener("click",nextCard);
-    $("#card").appendChild(b); b.focus();
-  }
-
   function judgeChoice(btn,chosen,solution,item){
-    // Auswahl bleibt exakt: ein Nachbarknopf kann sich nur in einem
-    // Buchstaben unterscheiden und ist trotzdem falsch.
     var correct=(chosen===solution);
-    item._waehlt=chosen; item._gegeben=null; item._fast=false;
+    item._waehlt=chosen; item._gegeben=null;
     award(item,correct);
     [].forEach.call($("#ch").children,function(x){
       x.disabled=true;
       if(x.textContent===solution) x.classList.add("ok");
-      else if(x===btn && !correct) x.classList.add("no");
+      else if(x===btn && !correct) x.classList.add("vlgewaehlt");
     });
     if(item.p && item.p.en) say(item.p.en);
-    afterAnswer(correct,solution,item);
+    var vd=$("#vd");
+    if(correct){ vd.className="verdict ok"; vd.textContent="Richtig!"; good(); }
+    else { rueckmeldungFalsch(vd, { art:"falsch", arten:["falsch"], treffer:solution, markierung:null }, solution); hinweisTon(); }
+    if(item.p && item.p.ex){ var e=$("#exs"); if(e) e.textContent="„"+item.p.ex+"“"; }
+    weiterKnopf(nextCard);
   }
-
-  /* Toleranter Vergleich (18.10.2026, Denny: richtige Antworten von Helena
-     galten als falsch, weil die Schreibweise abwich). Die Regel steht EINMAL
-     in /toleranz.js: kleine Tippfehler und fehlende Akzente sind "fast" -
-     das zaehlt als richtig, die richtige Schreibweise steht aber gross da.
-     Kurzformen (don't = do not), mehrere Loesungen ("der Laden / das
-     Geschaeft", "guten Tag, hallo") und Klammerteile ("(to) run") gelten.
-     Artikel: in Englisch und Deutsch egal wie bisher, in Franzoesisch gehoert
-     le/la zum Wort. Fehlt /toleranz.js, gilt der alte exakte Vergleich. */
-  /* Was auf der Karte gefragt war. Bei Lueckentext und Hoeren ist _prompt
-     die Loesung selbst - dort steht die Bedeutung (p.de) auf der Karte. */
-  function frageText(item){
-    if(item._d) return item._prompt || "";
-    return (item.p && item.p.de) || "";
-  }
-  function spracheVon(item){
-    if(item._solLang==="de") return "de";
-    return String(K.stimmeVorwahl||"en").slice(0,2).toLowerCase()==="fr" ? "fr" : "en";
-  }
-  function andereWoerter(item){
-    var feld = item._solLang==="de" ? "de" : "en";
-    var einheit = allUnits().filter(function(u){return u.id===item.unitId;})[0] || curUnit;
-    return ((einheit && einheit.pairs) || []).map(function(x){ return x[feld]; })
-      .filter(function(w){ return w && w!==item._sol; });
-  }
-  function bewerten(val,item){
-    var T = window.LWToleranz;
-    if(!T) return { stufe: normalize(val)===normalize(item._sol) ? "gut" : "schlecht", treffer: item._sol };
-    var sp = spracheVon(item);
-    /* Steht auch in der Frage ein "/" oder Komma, ist es ein PAAR ("sur / sous"
-       = "auf / unter", "un, deux, trois"): dann muessen alle Teile dastehen.
-       Sonst sind es Alternativen ("enchanté / enchantée" fuer "sehr erfreut"). */
-    var paar = /[\/,;]/.test(String(frageText(item)).replace(/\([^)]*\)/g,""));
-    return T.pruefen(val, item._sol, { sprache: sp, trennen: paar ? "keine" : "alle", artikelEgal: sp!=="fr",
-      verboten: andereWoerter(item) });
-  }
+  /* Streng wie beim Lernen (Logik werteText), nur ohne Stufen. */
   function judgeText(val,item){
-    var erg = bewerten(val,item);
-    var correct = erg.stufe==="gut" || erg.stufe==="fast";
-    var ipt=$("#ipt"); ipt.classList.add(correct?"ok":"no"); ipt.disabled=true;
+    var sp = item._solLang === "de" ? "de" : SP;
+    var erg = V.werteText(val, item._sol, { sprache: sp, paar: V.istPaar(item.p, SP), einst: V.einstellungen(plan) });
+    var correct = !!erg.richtig;
+    var ipt=$("#ipt"); ipt.classList.add(correct?"ok":"vlneutral"); ipt.disabled=true;
     var chk=$("#chk"); if(chk) chk.disabled=true;
+    [].forEach.call($("#card").querySelectorAll(".vltaste"), function(b){ b.disabled = true; });
     item._gegeben = String(val||"").trim();
-    item._fast = erg.stufe==="fast";
     award(item,correct);
     if(item.p && item.p.en) say(item.p.en);
-    afterAnswer(correct,item._sol,item,erg);
+    var vd=$("#vd");
+    if(correct){ vd.className="verdict ok"; vd.textContent="Richtig!"; good(); }
+    else { rueckmeldungFalsch(vd, erg, item._sol); hinweisTon(); }
+    if(item.p && item.p.ex){ var e=$("#exs"); if(e) e.textContent="„"+item.p.ex+"“"; }
+    weiterKnopf(nextCard);
+  }
+  function finish(){
+    var geuebteSekunden = LS() ? LS().aktiveSekunden() : (rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0);
+    lernstandSenden();
+    $("#play").style.display="none";
+    ansicht("ende"); window.scrollTo(0,0);
+    var e=$("#end"); e.style.display="block";
+    var reviewHtml="";
+    if(wrongWords.length){
+      reviewHtml='<div class="review"><b>Nochmal anschauen:</b>'+
+        wrongWords.map(function(p){return '<div>'+esc2(p.en)+' — '+esc2(p.de)+'</div>';}).join("")+'</div>';
+    }
+    var minuten = Math.round(geuebteSekunden / 60);
+    e.innerHTML='<div class="done" id="vlFreiEnde">'+
+      '<h2>Runde beendet</h2>'+
+      '<p>Frei geübt – das zählt nicht für die Stufen.</p>'+
+      '<div class="bilanz">'+
+        '<div><b>'+erstGesamt+'</b><small>Wörter geübt</small></div>'+
+        '<div><b>'+erstRichtig+'</b><small>beim ersten Mal richtig</small></div>'+
+        '<div><b>'+(minuten||"<1")+'</b><small>Minuten</small></div>'+
+      '</div>'+
+      reviewHtml+
+      '<button class="start" id="again" type="button">Noch eine Runde</button>'+
+      '<button class="ghost" id="zurueckUebersicht" type="button">Zur Übersicht</button>'+
+      '</div>';
+    $("#again").addEventListener("click",function(){ $("#end").style.display="none"; freiStarten(); });
+    $("#zurueckUebersicht").addEventListener("click",function(){ frei=false; zeigeSetup(); uebersichtMalen(); blip(); });
+    good();
   }
 
   /* ---------- Statistik, tunnelfest ----------
      Im Zug bricht die Verbindung weg. Eine Runde, die nicht durchgeht, wandert
-     in eine Warteschlange im Browser und wird beim naechsten Mal mitgeschickt.
-     Sonst waere ausgerechnet das Ueben unterwegs das, was nie gezaehlt wird. */
+     in eine Warteschlange im Browser und wird beim naechsten Mal mitgeschickt. */
   var AUSGANG = PRE+"-ausgang";
-
-  function ausgangLaden(){
-    try{ var a=JSON.parse(get(AUSGANG,"[]")); return Array.isArray(a)?a:[]; }catch(e){ return []; }
-  }
+  function ausgangLaden(){ try{ var a=JSON.parse(get(AUSGANG,"[]")); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
   function ausgangSichern(a){ try{ set(AUSGANG, JSON.stringify(a.slice(-30))); }catch(e){} }
-
   function ausgangLeeren(){
     var warten=ausgangLaden();
     if(!warten.length) return;
-    ausgangSichern([]);                       // erst raus, dann senden
-    var uebrig=[];
-    var offen=warten.length;
+    ausgangSichern([]);
+    var uebrig=[], offen=warten.length;
     warten.forEach(function(runde){
       fetch("/api/statistik",{method:"POST",credentials:"same-origin",
         headers:{"content-type":"application/json"},
@@ -712,146 +901,328 @@
         .then(function(){ if(--offen===0 && uebrig.length) ausgangSichern(ausgangLaden().concat(uebrig)); });
     });
   }
-
-  function LS(){ return window.lernstand || null; }
-
-  function lernstandSenden(){
-    if(!protokoll.length) return;
+  function rundeBauen(){
+    if(!protokoll.length) return null;
+    var thema = frei ? ((curUnit&&curUnit.name)||"Vokabeln") : (sitz && sitz.quelle && sitz.quelle.name) || "Vokabeln lernen";
     var runde={
       spielId:K.spielId, titel:K.titel,
-      quelle:(curUnit&&curUnit.id)||"", fach:K.fach,
-      thema:(curUnit&&curUnit.name)||"Vokabeln", lernbereich:"",
-      // Dieselbe ehrliche Uhr wie in Pauls Welt: Wanduhrzeit ist keine
-      // Lernzeit. Wer das Handy weglegt und wiederkommt, sammelt sonst
-      // Minuten, in denen nichts geübt wurde.
-      sekunden: LS() ? LS().aktiveSekunden()
-                     : (rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0),
+      quelle: frei ? ((curUnit&&curUnit.id)||"") : "lernen", fach:K.fach,
+      thema: thema, lernbereich:"",
+      sekunden: LS() ? LS().aktiveSekunden() : (rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0),
       pause: LS() ? Math.max(0, LS().wanduhrSekunden() - LS().aktiveSekunden()) : 0,
       zeitart: "lernen",
-      // Ohne das stand bei Helenas Runden kein Geraet - und damit liess sich
-      // nicht pruefen, wogegen ihr Layout eigentlich stimmen muss.
       geraet: LS() ? LS().geraet() : "",
-      // Wie viele Woerter stehen ueberhaupt zur Verfuegung? Ohne das kann die
-      // Elternseite nicht sagen, wie viel vom Vorrat schon angefasst ist.
       vorrat: allUnits().reduce(function(n,u){ return n + (u.pairs ? u.pairs.length : 0); }, 0),
       aufgaben: protokoll
     };
     protokoll=[];
     if(LS()) LS().uhrZuruecksetzen();
-    ausgangSichern(ausgangLaden().concat([runde]));
+    return runde;
+  }
+  function lernstandSenden(){
+    var r = rundeBauen(); if (!r) return;
+    ausgangSichern(ausgangLaden().concat([r]));
     ausgangLeeren();
   }
-
+  function lernstandSichernFuerSpaeter(){
+    var r = rundeBauen(); if (!r) return;
+    ausgangSichern(ausgangLaden().concat([r]));
+  }
   ausgangLeeren();
   window.addEventListener("online", ausgangLeeren);
 
-  function finish(){
-    // Erst ablesen, dann senden: lernstandSenden stellt die Uhr zurueck.
-    var geuebteSekunden = LS() ? LS().aktiveSekunden()
-                               : (rundeBegonnen ? Math.round((Date.now()-rundeBegonnen)/1000) : 0);
-    lernstandSenden();
-    heuteMalen(); sitztMalen();
-    $("#play").style.display="none";
-    ansicht("ende");
-    window.scrollTo(0,0);
-    var e=$("#end"); e.style.display="block";
+  /* ---------- Knoepfe ---------- */
+  $("#startBtn").addEventListener("click", function(){ lernenStarten(null); });
+  (function(){
+    var body = document.querySelector("details.feineinst .feinbody");
+    if (!body || $("#freiBtn")) return;
+    var b = el("button", "vlfreistart", "Frei üben ›"); b.id = "freiBtn"; b.type = "button";
+    b.addEventListener("click", freiStarten);
+    body.appendChild(b);
+  })();
+  $("#backBtn").addEventListener("click", function(){
+    if (frei){ frei=false; lernstandSenden(); zeigeSetup(); uebersichtMalen(); blip(); return; }
+    lernenUnterbrechen();
+  });
 
-    var reviewHtml="";
-    if(wrongWords.length){
-      reviewHtml='<div class="review"><b>Nochmal anschauen:</b>'+
-        wrongWords.map(function(p){return '<div>'+esc2(p.en)+' \u2014 '+esc2(p.de)+'</div>';}).join("")+'</div>';
+  /* =====================================================================
+     LERNPLAN: Rhythmus, "gelernt nach", Pause, Pruefung (je Sprache)
+     ===================================================================== */
+  function planSpeichern(neu){
+    var p = planLesen();
+    for (var k in neu) if (Object.prototype.hasOwnProperty.call(neu, k)) p[k] = neu[k];
+    set(SCHL.plan, JSON.stringify(p));
+    plan = p;
+    uebersichtMalen();
+  }
+  function lernplanBauen(){
+    var setup = $("#setup"), start = $("#startBtn");
+    if (!setup || !start || $("#vlPlan")) return;
+    var d = el("details", "feineinst vlplan"); d.id = "vlPlan";
+    d.appendChild(el("summary", null, "Lernplan, Pause und Prüfung"));
+    var body = el("div", "feinbody");
+    var ein = V.einstellungen(plan);
+    // Rhythmus
+    var f1 = el("div", "field"); f1.appendChild(el("label", null, "Wiederholen im Ordner"));
+    var s1 = el("div", "seg"); s1.id = "vlRhythmus";
+    [["normal","Normal"],["intensiv","Intensiv"],["entspannt","Entspannt"],["eigene","Eigene"]].forEach(function(x){
+      var b = el("button", null, x[1]); b.type = "button"; b.setAttribute("data-v", x[0]); b.setAttribute("aria-pressed", ein.rhythmus === x[0] ? "true" : "false");
+      s1.appendChild(b);
+    });
+    f1.appendChild(s1);
+    var tage = el("p", "tipp"); tage.id = "vlRhythmusTage"; f1.appendChild(tage);
+    var eigen = el("div", "vleigene"); eigen.id = "vlEigene";
+    var werte = (ein.rhythmus === "eigene" && ein.abstaende) ? ein.abstaende : V.RHYTHMEN.normal;
+    for (var i = 0; i < 5; i++){
+      var inp = el("input", "vlzahl"); inp.type = "number"; inp.min = "1"; inp.max = "60"; inp.inputMode = "numeric";
+      inp.value = String(werte[i]); inp.setAttribute("aria-label", (i+1) + ". Abstand in Tagen");
+      eigen.appendChild(inp);
     }
-
-    // Sterne sind eine Ruueckschau, keine Huerde: Wer mitgemacht hat, bekommt
-    // mindestens einen. Gezaehlt wird der erste Versuch - wer dreimal raet und
-    // dann trifft, kann das Wort noch nicht.
-    var quote = erstGesamt ? erstRichtig/erstGesamt : 0;
-    var sterne = erstGesamt===0 ? 0 : (quote>=.9 ? 3 : (quote>=.7 ? 2 : 1));
-    var sternHtml='<div class="sterne" aria-label="'+sterne+' von 3 Sternen">'+
-      "\u2605\u2605\u2605".slice(0,sterne).replace(/./g,'<span class="an">\u2605</span>')+
-      "\u2606\u2606\u2606".slice(0,3-sterne).replace(/./g,'<span class="aus">\u2606</span>')+
-      '</div>';
-
-    // Ueber die Anstrengung reden, nicht ueber Begabung.
-    var kopf, unter;
-    if(erstGesamt===0){ kopf="Runde beendet"; unter="Beim n\u00e4chsten Mal geht\u2019s los."; }
-    else if(sterne===3){ kopf="Sitzt \u2013 fast alles auf Anhieb"; unter="Du hast "+erstRichtig+" von "+erstGesamt+" gleich beim ersten Versuch gewusst."; }
-    else if(sterne===2){ kopf="Gut drangeblieben"; unter="Die "+(erstGesamt-erstRichtig)+" W\u00f6rter, die geklemmt haben, kommen wieder \u2013 genau darum sitzen sie danach."; }
-    else { kopf="Schwere Runde durchgezogen"; unter="Genau das bringt am meisten. Was heute wackelte, ist morgen wieder dran."; }
-
-    var neuerRekord=false;
-    var alterRekord=parseInt(get(PRE+"-rekord","0"),10)||0;
-    if(laufBest>alterRekord){ set(PRE+"-rekord",String(laufBest)); neuerRekord=true; }
-    var rekordHtml = laufBest>=3
-      ? '<p class="rekord">'+(neuerRekord?"Neuer Rekord: ":"L\u00e4ngste Serie: ")+laufBest+
-        " richtige hintereinander"+(neuerRekord?" \ud83c\udf89":"")+'</p>'
-      : "";
-
-    // Helena am 07.09.2026: die Serie stand nur oben in der Leiste und war
-    // nach der Runde weg - dabei ist genau das der Moment, in dem sie gerade
-    // um einen Tag gewachsen ist.
-    var serieText, serieZusatz;
-    if(streak>1){
-      serieText=streak+" Tage in Folge";
-      serieZusatz=serieNeuHeute ? "heute drangeh\u00e4ngt" : "";
-    } else {
-      serieText="Heute ge\u00fcbt";
-      serieZusatz="Tag 1 deiner Serie";
+    var ueb = el("button", "mini vlueb", "Übernehmen"); ueb.type = "button"; ueb.id = "vlEigeneOk"; eigen.appendChild(ueb);
+    var em = el("div", "vlmeldung"); em.id = "vlEigeneMeldung"; eigen.appendChild(em);
+    f1.appendChild(eigen);
+    function rhythmusMalen(r){
+      var e2 = V.einstellungen(planLesen());
+      var a = r === "eigene" ? null : V.RHYTHMEN[r];
+      tage.textContent = a ? "Wieder dran nach " + a.join(", ") + " Tagen (danach bleibt es bei " + a[a.length-1] + ")." : "Eigene Abstände: jeder länger als der vorige, höchstens 60 Tage.";
+      eigen.style.display = r === "eigene" ? "flex" : "none";
+      [].forEach.call(s1.children, function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-v") === r ? "true" : "false"); });
+      return e2;
     }
-    var serieHtml='<div class="serie'+(serieNeuHeute?" gewachsen":"")+'">'+
-      "\ud83d\udd25 "+serieText+
-      (serieZusatz?' <small>'+serieZusatz+'</small>':'')+'</div>';
-
-    var s=sitztZaehlen();
-    // Dieselbe Zahl, die auch in der Auswertung landet - sonst stimmt das
-    // eine nicht mit dem anderen überein.
-    var minuten = Math.round(geuebteSekunden / 60);
-
-    e.innerHTML='<div class="done">'+
-      sternHtml+
-      '<h2>'+kopf+'</h2>'+
-      '<p>'+unter+'</p>'+
-      rekordHtml+
-      serieHtml+
-      '<div class="bilanz">'+
-        '<div><b>'+erstGesamt+'</b><small>W\u00f6rter ge\u00fcbt</small></div>'+
-        '<div><b>'+s.sitzt+'</b><small>sitzen fest</small></div>'+
-        '<div><b>'+(minuten||"<1")+'</b><small>Minuten</small></div>'+
-      '</div>'+
-      // Am Anfang steht dort eine Null. Die ist richtig - aber sie braucht
-      // eine Erklaerung, sonst sieht ein guter Durchgang nach nichts aus.
-      (s.sitzt===0
-        ? '<p class="fussnote">\u201esitzen fest\u201c z\u00e4hlt erst, wenn du ein Wort nach ' +
-          'Tagen Pause noch konntest. Daf\u00fcr hast du heute den Grundstein gelegt' +
-          (s.aufDemWeg ? ' \u2013 '+s.aufDemWeg+' sind schon auf dem Weg.' : '.') + '</p>'
-        : '')+
-      reviewHtml+
-      '<button class="start" id="again">Noch eine Runde</button>'+
-      '<button class="ghost" id="zurueckUebersicht" type="button">Zur \u00dcbersicht</button>'+
-      '</div>';
-    $("#again").addEventListener("click",function(){ $("#end").style.display="none"; startSession(); });
-    $("#zurueckUebersicht").addEventListener("click",endToSetup);
-    writeProgress(mastered, wrongWords.length);
-    if(sterne===3){ confetti(); fanfare(); } else { good(); }
+    rhythmusMalen(ein.rhythmus);
+    s1.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if (!b) return;
+      var r = b.getAttribute("data-v"); rhythmusMalen(r);
+      if (r !== "eigene") planSpeichern({ rhythmus: r });
+      blip();
+    });
+    ueb.addEventListener("click", function(){
+      var a = [].map.call(eigen.querySelectorAll("input"), function(x){ return parseInt(x.value, 10); });
+      var ok = V.abstaendePruefen(a, 60);
+      if (!ok.ok){ em.textContent = ok.fehler; return; }
+      em.textContent = "Gespeichert.";
+      planSpeichern({ rhythmus: "eigene", abstaende: a });
+    });
+    body.appendChild(f1);
+    // gelernt nach
+    var f2 = el("div", "field"); f2.appendChild(el("label", null, "Gelernt nach so oft richtig auf Stufe 3"));
+    var s2 = el("div", "seg"); s2.id = "vlGelernt";
+    [3,4,5].forEach(function(n){
+      var b = el("button", null, n + "×"); b.type = "button"; b.setAttribute("data-v", String(n)); b.setAttribute("aria-pressed", ein.gelerntNach === n ? "true" : "false");
+      s2.appendChild(b);
+    });
+    s2.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if (!b) return;
+      [].forEach.call(s2.children, function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      planSpeichern({ gelerntNach: parseInt(b.getAttribute("data-v"), 10) }); blip();
+    });
+    f2.appendChild(s2);
+    body.appendChild(f2);
+    // Pause und Pruefung
+    var f3 = el("div", "vlplanknoepfe");
+    var pb = el("button", "ghost vlplanknopf", "⏸ Pause einstellen"); pb.type = "button"; pb.id = "vlPauseBtn";
+    var qb = el("button", "ghost vlplanknopf", "📋 Prüfung anlegen"); qb.type = "button"; qb.id = "vlPruefBtn";
+    pb.addEventListener("click", pauseDialog); qb.addEventListener("click", pruefungDialog);
+    f3.appendChild(pb); f3.appendChild(qb);
+    body.appendChild(f3);
+    d.appendChild(body);
+    var fein = document.querySelector("details.feineinst:not(.vlplan)");
+    setup.insertBefore(d, fein || start.nextSibling);
   }
 
-  function esc2(s){ var d=document.createElement("div"); d.textContent=String(s==null?"":s); return d.innerHTML; }
-
-  function sitztMalen(){
-    var el=$("#sitzt"); if(!el) return;
-    el.textContent=sitztZaehlen().sitzt;
+  /* ---------- Dialoge (eigene Huelle, kein <dialog>: laeuft ueberall gleich) ---------- */
+  function dialogOeffnen(id, titel){
+    var alt = document.getElementById(id); if (alt && alt.parentNode) alt.parentNode.removeChild(alt);
+    var h = el("div", "vldlg"); h.id = id;
+    var p = el("div", "vldlgpanel"); p.setAttribute("role", "dialog"); p.setAttribute("aria-modal", "true"); p.setAttribute("aria-label", titel);
+    p.appendChild(el("h3", null, titel));
+    var inhalt = el("div", "vldlginhalt"); p.appendChild(inhalt);
+    var knoepfe = el("div", "vldlgknoepfe"); p.appendChild(knoepfe);
+    h.appendChild(p);
+    h.addEventListener("click", function(e){ if (e.target === h) zu(); });
+    document.body.appendChild(h);
+    document.body.classList.add("vldlgoffen");
+    function zu(){ if (h.parentNode) h.parentNode.removeChild(h); if (!document.querySelector(".vldlg")) document.body.classList.remove("vldlgoffen"); }
+    function knopf(text, cls, fn, kid){ var b = el("button", cls || "ghost", text); b.type = "button"; if (kid) b.id = kid; b.addEventListener("click", fn); knoepfe.appendChild(b); return b; }
+    return { huelle: h, inhalt: inhalt, knoepfe: knoepfe, zu: zu, knopf: knopf };
   }
-  sitztMalen();
-
-  $("#startBtn").addEventListener("click",startSession);
-
-  function endToSetup(){
-    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
-    $("#play").style.display="none"; $("#end").style.display="none"; $("#setup").style.display="block";
-    ansicht("start"); window.scrollTo(0,0);
-    blip();
+  function hinweisDialog(text, danach){
+    var d = dialogOeffnen("vlHinweis", "Hinweis");
+    d.inhalt.appendChild(el("p", "vlhinweistext", text));
+    d.knopf("OK", "start", function(){ d.zu(); if (danach) danach(); }, "vlHinweisOk");
   }
-  $("#backBtn").addEventListener("click", endToSetup);
+  function datumFeld(id, wert, label){
+    var w = el("label", "vldatum"); w.appendChild(el("span", null, label));
+    var i = el("input"); i.type = "date"; i.id = id; i.value = wert || ""; w.appendChild(i);
+    return w;
+  }
+
+  function pauseDialog(){
+    pausen = pausenLesen();
+    var d = dialogOeffnen("vlPauseDlg", "Pause einstellen");
+    d.inhalt.appendChild(el("p", "tipp", "In der Pause wird nichts fällig. Danach rücken alle Wiederholungen um die Pausenlänge nach hinten – nichts staut sich."));
+    var reihe = el("div", "vldatumreihe");
+    reihe.appendChild(datumFeld("vlPauseVon", heuteIso(0), "von"));
+    reihe.appendChild(datumFeld("vlPauseBis", heuteIso(7), "bis"));
+    d.inhalt.appendChild(reihe);
+    var wahl = el("div", "seg vlsprachen"); wahl.id = "vlPauseSprachen";
+    [["nur", "Nur " + K.sprache], ["beide", "Englisch und Französisch"]].forEach(function(x, i){
+      var b = el("button", null, x[1]); b.type = "button"; b.setAttribute("data-v", x[0]); b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+      wahl.appendChild(b);
+    });
+    wahl.addEventListener("click", function(e){ var b = e.target.closest("button"); if (!b) return; [].forEach.call(wahl.children, function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); });
+    d.inhalt.appendChild(wahl);
+    var meld = el("div", "vlmeldung"); meld.id = "vlPauseMeldung"; d.inhalt.appendChild(meld);
+    var h = heuteIso(0);
+    var laufend = pausen.filter(function(p){ return p && p.bis >= h; });
+    if (laufend.length){
+      var liste = el("div", "vlliste2");
+      liste.appendChild(el("b", null, "Eingestellte Pausen"));
+      laufend.forEach(function(p){
+        var z = el("div", "vlzeile2");
+        var spr = (p.sprachen && p.sprachen.length === 1) ? (p.sprachen[0] === "fr" ? "Französisch" : "Englisch") : "beide Sprachen";
+        z.appendChild(el("span", null, datumText(p.von) + " bis " + datumText(p.bis) + " · " + spr));
+        var w = el("button", "mini", "Pause beenden"); w.type = "button";
+        w.addEventListener("click", function(){
+          var rest = pausenLesen().filter(function(x){ return !(x.von === p.von && x.bis === p.bis); });
+          set(SCHL.pause, JSON.stringify(rest)); pausen = rest; d.zu(); uebersichtMalen();
+        });
+        z.appendChild(w); liste.appendChild(z);
+      });
+      d.inhalt.appendChild(liste);
+    }
+    d.knopf("Pause speichern", "start", function(){
+      var von = $("#vlPauseVon").value, bis = $("#vlPauseBis").value;
+      if (!von || !bis || bis < von){ meld.textContent = "Bitte ein Datum „bis“ ab dem Datum „von“ wählen."; return; }
+      if (bis < h){ meld.textContent = "Die Pause muss heute oder später enden."; return; }
+      var nur = wahl.querySelector("[aria-pressed='true']").getAttribute("data-v") === "nur";
+      var neu = pausenLesen().filter(function(p){ return p && p.bis >= h; });
+      neu.push({ von: von, bis: bis, sprachen: nur ? [SP] : ["en", "fr"] });
+      set(SCHL.pause, JSON.stringify(neu)); pausen = neu;
+      d.zu();
+      uebersichtMalen();
+      if (pruefungen.some(function(p){ return p && p.termin > h; }))
+        hinweisDialog("Die Wörter deiner Prüfung werden auch in der Pause abgefragt.");
+    }, "vlPauseOk");
+    d.knopf("Abbrechen", "ghost", d.zu, "vlPauseAbbrechen");
+  }
+
+  function termineHolen(fertig){
+    if (!window.fetch){ fertig(null); return; }
+    fetch("/api/noten?eigene=1&kind=helena", { credentials: "same-origin" })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ fertig(j && j.ok && Array.isArray(j.termine) ? j.termine : null); })
+      .catch(function(){ fertig(null); });
+  }
+  function pruefungDialog(){
+    pruefungen = pruefungenLesen(); pausen = pausenLesen();
+    var d = dialogOeffnen("vlPruefDlg", "Prüfung " + K.sprache);
+    var h = heuteIso(0);
+    var aktiv = pruefungen.filter(function(p){ return p && p.termin > h; })[0];
+    if (aktiv){
+      var ak = el("div", "vlliste2"); ak.id = "vlPruefAktiv";
+      ak.appendChild(el("b", null, "Eingestellt"));
+      var z = el("div", "vlzeile2");
+      z.appendChild(el("span", null, (aktiv.thema ? aktiv.thema + " · " : "") + datumText(aktiv.termin)));
+      var w = el("button", "mini", "Prüfung entfernen"); w.type = "button"; w.id = "vlPruefWeg";
+      w.addEventListener("click", function(){ set(SCHL.pruefung, JSON.stringify([])); pruefungen = []; d.zu(); uebersichtMalen(); });
+      z.appendChild(w); ak.appendChild(z);
+      d.inhalt.appendChild(ak);
+    }
+    // Termin
+    var ft = el("div", "field"); ft.appendChild(el("label", null, "Termin"));
+    var tl = el("div", "vltermine"); tl.id = "vlTermine"; tl.appendChild(el("p", "tipp", "Deine eingetragenen Prüfungen werden geladen …"));
+    ft.appendChild(tl);
+    var eig = datumFeld("vlPrTermin", "", "oder eigenes Datum"); ft.appendChild(eig);
+    d.inhalt.appendChild(ft);
+    var gewaehlt = { termin: "", thema: "" };
+    function terminWaehlen(t, knopf){
+      gewaehlt = { termin: t.datum, thema: t.thema || "" };
+      [].forEach.call(tl.querySelectorAll("button"), function(x){ x.setAttribute("aria-pressed", x === knopf ? "true" : "false"); });
+      $("#vlPrTermin").value = "";
+    }
+    $("#vlPrTermin").addEventListener("change", function(){
+      gewaehlt = { termin: this.value, thema: "" };
+      [].forEach.call(tl.querySelectorAll("button"), function(x){ x.setAttribute("aria-pressed", "false"); });
+    });
+    termineHolen(function(alle){
+      tl.innerHTML = "";
+      if (!alle){ tl.appendChild(el("p", "tipp", "Deine eingetragenen Prüfungen kommen gerade nicht – wähle unten ein Datum.")); return; }
+      var R = V.SPRACHEN[SP];
+      var meine = alle.filter(function(t){ return t && t.datum > h && R.faecher.indexOf(String(t.fach || "").toLowerCase()) >= 0; })
+        .sort(function(a, b){ return a.datum < b.datum ? -1 : 1; });
+      if (!meine.length){ tl.appendChild(el("p", "tipp", "In " + K.sprache + " ist noch keine Prüfung eingetragen – wähle unten ein Datum.")); return; }
+      var vorschlag = V.pruefungAusTerminen(alle, SP, Date.now());
+      meine.forEach(function(t){
+        var tage = V.tagAusIso(t.datum) - V.tagVon(Date.now());
+        var b = el("button", "vltermin", datumText(t.datum) + (t.thema ? " · " + t.thema : "") + " · " + (tage === 1 ? "morgen" : "in " + tage + " Tagen"));
+        b.type = "button"; b.setAttribute("data-datum", t.datum); b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function(){ terminWaehlen(t, b); });
+        tl.appendChild(b);
+        if (vorschlag && vorschlag.termin === String(t.datum).slice(0, 10) && !gewaehlt.termin) terminWaehlen(t, b);
+      });
+    });
+    // Stoff
+    var fs = el("div", "field"); fs.appendChild(el("label", null, "Stoff"));
+    var sw = el("div", "seg"); sw.id = "vlStoffArt";
+    [["zeitraum", "Zeitraum"], ["einheiten", "Einheiten"], ["gws", "Grundwortschatz"]].forEach(function(x, i){
+      var b = el("button", null, x[1]); b.type = "button"; b.setAttribute("data-v", x[0]); b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+      sw.appendChild(b);
+    });
+    fs.appendChild(sw);
+    var pz = el("div", "vlstoff"); pz.setAttribute("data-art", "zeitraum");
+    var zr = el("div", "vldatumreihe"); zr.appendChild(datumFeld("vlStoffVon", heuteIso(-28), "hochgeladen von")); zr.appendChild(datumFeld("vlStoffBis", h, "bis"));
+    pz.appendChild(zr);
+    var pe = el("div", "vlstoff vleinheiten"); pe.setAttribute("data-art", "einheiten"); pe.style.display = "none";
+    var eigene = customUnits();
+    var reihenfolge = eigene.slice().reverse().concat(UNITS);
+    reihenfolge.forEach(function(u){
+      var lab = el("label", "vlhaken");
+      var cb = el("input"); cb.type = "checkbox"; cb.value = u.id;
+      lab.appendChild(cb); lab.appendChild(el("span", null, u.name + " (" + u.pairs.length + ")" + (u.id && /^u\d{12,14}$/.test(u.id) ? "" : " · eingebaut")));
+      pe.appendChild(lab);
+    });
+    var pg = el("div", "vlstoff"); pg.setAttribute("data-art", "gws"); pg.style.display = "none";
+    pg.appendChild(el("p", "tipp", "Alle eingebauten Wörter (" + UNITS.reduce(function(n, u){ return n + u.pairs.length; }, 0) + "). Deine Fotos zählen hier nicht mit."));
+    fs.appendChild(pz); fs.appendChild(pe); fs.appendChild(pg);
+    sw.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if (!b) return;
+      [].forEach.call(sw.children, function(x){ x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      [pz, pe, pg].forEach(function(x){ x.style.display = x.getAttribute("data-art") === b.getAttribute("data-v") ? "" : "none"; });
+    });
+    d.inhalt.appendChild(fs);
+    var meld = el("div", "vlmeldung"); meld.id = "vlPruefMeldung"; d.inhalt.appendChild(meld);
+    d.knopf("Prüfung anlegen", "start", function(){
+      var termin = gewaehlt.termin;
+      if (!termin){ meld.textContent = "Bitte einen Termin wählen."; return; }
+      var art = sw.querySelector("[aria-pressed='true']").getAttribute("data-v"), stoff;
+      if (art === "zeitraum") stoff = { von: $("#vlStoffVon").value || null, bis: $("#vlStoffBis").value || null };
+      else if (art === "einheiten") stoff = { einheiten: [].filter.call(pe.querySelectorAll("input"), function(x){ return x.checked; }).map(function(x){ return x.value; }) };
+      else stoff = { quellen: ["grundwortschatz"] };
+      if (art === "einheiten" && !stoff.einheiten.length){ meld.textContent = "Bitte mindestens eine Einheit ankreuzen."; return; }
+      var r = V.pruefungAnlegen(zustand, allUnits(), { termin: termin, thema: gewaehlt.thema, stoff: stoff }, Date.now(), plan, { sprache: SP, pausen: pausen });
+      if (r.fehler){ meld.textContent = r.fehler; return; }
+      pruefungen = [r.pruefung];
+      set(SCHL.pruefung, JSON.stringify(pruefungen));
+      d.zu();
+      uebersichtMalen();
+      var z = r.zahlen;
+      var text = "Prüfung am " + datumText(z.termin) + ", " + z.text + ". Im Stoff sind " + z.stoff + " Wörter" +
+        (z.sicher ? ", " + z.sicher + " davon schon im Ordner" : "") + "." +
+        (z.neuProTag ? " Empfehlung: etwa " + z.neuProTag + " neue Wörter pro Tag – mehr geht immer." : "");
+      var hinweise = (r.hinweise || []).slice();
+      var e = dialogOeffnen("vlPruefFertig", "Prüfung angelegt");
+      e.inhalt.appendChild(el("p", "vlhinweistext", text));
+      hinweise.forEach(function(x){ var p = el("p", "vlhinweistext vlhinweis-" + x.art, x.text); e.inhalt.appendChild(p); });
+      e.knopf("OK", "start", e.zu, "vlPruefFertigOk");
+    }, "vlPruefOk");
+    d.knopf("Abbrechen", "ghost", d.zu, "vlPruefAbbrechen");
+  }
+
+  lernplanBauen();
+  uebersichtMalen();
+  /* Nur zum Nachsehen (Messung): die aktuelle Abfrage, als Kopie. */
+  window.VokabelTrainer = { abfrage: function(){ return ab ? JSON.parse(JSON.stringify(ab)) : null; }, migriert: function(){ return migriert; } };
 
   /* ---------- Neue Einheit aus gescanntem Text ---------- */
   function attrEsc(s){ return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
@@ -938,19 +1309,26 @@
      Unbestätigtes rutscht in die Einheit, und nichts wird still geändert:
      der Hinweis „Erwartet eher …“ ist nur ein Hinweis, das Buch gilt.
      Gewählte Paare werden normale Zeilen an ihrem Platz in der Liste. */
+  /* Wortart je Paar (19.10.2026): der Foto-Server bestimmt sie im selben
+     Aufruf, Helena sieht sie in der Vorschau und kann sie korrigieren; sie
+     wird mitgespeichert und hilft bei plausiblen Ablenkern in Stufe 1. */
+  var WORTARTEN = [["","Wortart \u2013"],["nomen","Nomen"],["verb","Verb"],["adjektiv","Adjektiv"],["adverb","Adverb"],["wendung","Wendung"],["sonstiges","Sonstiges"]];
+  function wortartName(w){ for(var i=1;i<WORTARTEN.length;i++) if(WORTARTEN[i][0]===w) return WORTARTEN[i][1]; return ""; }
+  var pvHerkunft = "foto";
   var pvOffen = 0;
   function pvOffenMalen(){
     var z=$("#vfOffen"), b=$("#saveUnit");
     if(z){ z.textContent = pvOffen ? ("Noch "+pvOffen+" Rückfrage"+(pvOffen>1?"n":"")+" offen – erst dann kannst du speichern.") : ""; z.style.display = pvOffen ? "block" : "none"; }
     if(b){ b.disabled = pvOffen>0; }
   }
-  function zeileEinfuegen(en,de,pos){
+  function zeileEinfuegen(en,de,pos,wortart){
     var rows=$("#pvrows"); if(!rows) return null;
     var r=document.createElement("div"); r.className="pvrow";
     r.setAttribute("data-pos", pos==null ? "1e9" : String(pos));
     r.innerHTML='<input class="pven" placeholder="'+K.spracheKlein+'" value="'+attrEsc(en)+'">'+
       '<span class="pvarr">→</span>'+
       '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
+      '<select class="pvwa" aria-label="Wortart">'+WORTARTEN.map(function(w){ return '<option value="'+w[0]+'"'+(w[0]===(wortart||"")?' selected':'')+'>'+w[1]+'</option>'; }).join("")+'</select>'+
       '<button class="pvx" type="button" title="Zeile entfernen" aria-label="Zeile entfernen">✕</button>';
     r.querySelector(".pvx").addEventListener("click",function(){ if(r.parentNode) r.parentNode.removeChild(r); });
     // An ihren Platz auf dem Blatt (Seite, Zeile), neue Zeilen ans Ende.
@@ -999,10 +1377,11 @@
     ausschnitt(urls && urls[(r.seite||1)-1], r.ort, el.querySelector(".vfbildplatz"));
     var wahl=el.querySelector(".vfwahl"), tipp=el.querySelector(".vftipp"), fertig=el.querySelector(".vffertig");
     var zeile=null, erledigt=false;
-    function setzen(en,de,text){
+    function setzen(en,de,text,wortart){
       if(!erledigt){ erledigt=true; pvOffen--; }
       if(zeile && zeile.parentNode) zeile.parentNode.removeChild(zeile);
-      zeile = (en && de) ? zeileEinfuegen(en,de,r.pos) : null;
+      zeile = (en && de) ? zeileEinfuegen(en,de,r.pos,wortart) : null;
+      if(wortart && wortartName(wortart)) text += ' <small class="vfwa">· '+wortartName(wortart)+' (unten änderbar)</small>';
       wahl.style.display="none"; tipp.style.display="none"; fertig.style.display="flex";
       fertig.innerHTML='<span>'+text+'</span><button type="button" class="mini vfaendern">ändern</button>';
       fertig.querySelector(".vfaendern").addEventListener("click",oeffnen);
@@ -1018,8 +1397,8 @@
     }
     gute.forEach(function(l){
       var b=document.createElement("button"); b.type="button"; b.className="vfopt";
-      b.textContent=(gute.length>1?"So steht es da: ":"Stimmt so: ")+l.fremd+" → "+l.deutsch;
-      b.addEventListener("click",function(){ setzen(l.fremd,l.deutsch,"✓ "+attrEsc(l.fremd)+" → "+attrEsc(l.deutsch)); blip(); });
+      b.textContent=(gute.length>1?"So steht es da: ":"Stimmt so: ")+l.fremd+" → "+l.deutsch+(l.wortart && wortartName(l.wortart) ? " · "+wortartName(l.wortart) : "");
+      b.addEventListener("click",function(){ setzen(l.fremd,l.deutsch,"✓ "+attrEsc(l.fremd)+" → "+attrEsc(l.deutsch),l.wortart||""); blip(); });
       wahl.appendChild(b);
     });
     var bt=document.createElement("button"); bt.type="button"; bt.className="vfopt vfneben"; bt.textContent="✎ Selbst eintippen";
@@ -1036,7 +1415,8 @@
     tipp.querySelector(".vfuebernehmen").addEventListener("click",function(){
       var en=tipp.querySelector(".vften").value.trim(), de=tipp.querySelector(".vfde").value.trim();
       if(!en||!de){ (en?tipp.querySelector(".vfde"):tipp.querySelector(".vften")).focus(); return; }
-      setzen(en,de,"✓ "+attrEsc(en)+" → "+attrEsc(de)+" <small>(selbst getippt)</small>"); blip();
+      var v0=gute[0]||alle[0]||{};
+      setzen(en,de,"✓ "+attrEsc(en)+" → "+attrEsc(de)+" <small>(selbst getippt)</small>",v0.wortart||""); blip();
     });
     pvOffen++;
     liste.appendChild(el);
@@ -1077,7 +1457,9 @@
       '<div class="vfoffen" id="vfOffen" style="display:none"></div>'+
       '<div class="pvsave"><button id="saveUnit" type="button">Einheit speichern</button>'+
       '<button class="ghost" id="cancelUnit" type="button">Abbrechen</button></div>';
-    pairs.forEach(function(p,i){ zeileEinfuegen(p.en,p.de,p.pos!=null?p.pos:i); });
+    pvHerkunft = opt.herkunft === "text" ? "text" : "foto";
+    var nach=$("#vlNachUpload"); if(nach) nach.parentNode.removeChild(nach);
+    pairs.forEach(function(p,i){ zeileEinfuegen(p.en,p.de,p.pos!=null?p.pos:i,p.wortart||""); });
     if(opt.pruefen && opt.pruefen.length){
       var liste=$("#vfListe");
       opt.pruefen.forEach(function(r){ rueckfrageBauen(r, opt.urls, liste); });
@@ -1097,30 +1479,42 @@
   function saveFromPreview(){
     var msg=$("#addMsg");
     // Nichts Unbestätigtes rutscht in die Einheit.
-    if(pvOffen>0){ msg.textContent="Bitte erst die Rückfragen oben beantworten."; msg.style.color="var(--no)"; var k=$("#vfKasten"); if(k) k.scrollIntoView({block:"start"}); return; }
+    if(pvOffen>0){ msg.textContent="Bitte erst die Rückfragen oben beantworten."; msg.style.color="var(--ink)"; var k=$("#vfKasten"); if(k) k.scrollIntoView({block:"start"}); return; }
     var name=($("#unitName").value||"").trim() || "Neue Einheit";
     var pairs=[];
     [].forEach.call($("#pvrows").children,function(r){
       var en=r.querySelector(".pven").value.trim(), de=r.querySelector(".pvde").value.trim();
-      if(en && de) pairs.push({en:en, de:de});
+      var wa=r.querySelector(".pvwa"), w=wa ? wa.value : "";
+      if(en && de) pairs.push(w ? {en:en, de:de, wortart:w} : {en:en, de:de});
     });
-    if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare."; msg.style.color="var(--no)"; return; }
-    var units=customUnits(); var id="u"+Date.now();
-    units.push({id:id, name:name, pairs:pairs});
+    if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare."; msg.style.color="var(--ink)"; return; }
+    /* Upload-Datum und Herkunft (Foto oder Text) gehoeren zur Einheit (Logik
+       einheitNeu) - danach fuehrt "Jetzt lernen" direkt in ihr erstes Paket. */
+    var units=customUnits(), unit=V.einheitNeu(name, pairs, Date.now(), pvHerkunft, SP), id=unit.id;
+    units.push(unit);
     set(PRE+"-custom-units",JSON.stringify(units));
     fillUnits(id); renderMyUnits();
     $("#unitName").value=""; $("#pasteBox").value="";
     var box=$("#preview"); box.style.display="none"; box.innerHTML="";
     seitenLeeren();
     msg.textContent="Gespeichert: „"+name+"“ ("+pairs.length+" Vokabeln) ✓"; msg.style.color="var(--ok)";
+    var alt=$("#vlNachUpload"); if(alt) alt.parentNode.removeChild(alt);
+    var los=document.createElement("button"); los.type="button"; los.id="vlNachUpload"; los.className="start vlnachupload";
+    los.textContent="Jetzt lernen ›";
+    los.addEventListener("click",function(){ lernenStarten(id); });
+    // Ganz oben im Foto-Kasten: sofort im Bild, auch auf kleinen Schirmen.
+    var kasten=document.querySelector(".adderbody")||msg.parentNode.parentNode;
+    kasten.insertBefore(los, kasten.firstChild);
+    try{ los.scrollIntoView({block:"nearest"}); }catch(e){}
+    uebersichtMalen();
     blip();
   }
 
   $("#detectBtn").addEventListener("click",function(){
     var pairs=parseVocab($("#pasteBox").value);
     var msg=$("#addMsg");
-    if(!pairs.length){ msg.textContent="Nichts erkannt – bitte Text einfügen und erneut auf Erkennen tippen."; msg.style.color="var(--no)"; return; }
-    msg.textContent=""; renderPreview(pairs);
+    if(!pairs.length){ msg.textContent="Nichts erkannt – bitte Text einfügen und erneut auf Erkennen tippen."; msg.style.color="var(--ink)"; return; }
+    msg.textContent=""; renderPreview(pairs, { herkunft:"text" });
   });
 
   /* ---------- Fotos aufnehmen -> Server liest (Opus 5.5), Rückfall Tesseract ----------
@@ -1192,7 +1586,7 @@
     var neu=[].slice.call(files||[]).filter(function(f){ return f && /^image\//.test(f.type||"image/"); });
     var platz=MAX_SEITEN-vfSeiten.length;
     if(neu.length>platz){
-      msg.textContent="Höchstens "+MAX_SEITEN+" Seiten – "+(neu.length-platz)+" Foto"+(neu.length-platz>1?"s":"")+" habe ich weggelassen."; msg.style.color="var(--no)";
+      msg.textContent="Höchstens "+MAX_SEITEN+" Seiten – "+(neu.length-platz)+" Foto"+(neu.length-platz>1?"s":"")+" habe ich weggelassen."; msg.style.color="var(--ink)";
       neu=neu.slice(0,Math.max(0,platz));
     }
     var offen=neu.length; if(!offen) return;
@@ -1200,7 +1594,7 @@
     seitenMalen();
     reserv.forEach(function(s){
       fotoVerkleinern(s.file,function(url){
-        if(url) s.url=url; else { vfSeiten=vfSeiten.filter(function(x){ return x!==s; }); msg.textContent="Ein Foto ließ sich nicht öffnen."; msg.style.color="var(--no)"; }
+        if(url) s.url=url; else { vfSeiten=vfSeiten.filter(function(x){ return x!==s; }); msg.textContent="Ein Foto ließ sich nicht öffnen."; msg.style.color="var(--ink)"; }
         seitenMalen();
       });
     });
@@ -1253,7 +1647,7 @@
       .catch(function(){ ende(null); });
   }
   function serverPaare(d){
-    return (d.paare||[]).map(function(p){ return {en:String(p.fremd||""), de:String(p.deutsch||""), pos:p.pos}; })
+    return (d.paare||[]).map(function(p){ return {en:String(p.fremd||""), de:String(p.deutsch||""), pos:p.pos, wortart:p.wortart||""}; })
       .filter(function(p){ return p.en && p.de; });
   }
   function lesenStarten(){
@@ -1274,7 +1668,7 @@
           (d.unsicher||[]).map(function(z,i){ return { seite:1, pos:500+i, ort:null, arten:["unsicher"],
             lesungen:[{fremd:String(z), deutsch:"", unsicher:true}], hinweis:"Nicht sicher lesbar." }; });
         var einmal=(d.seiten||[]).filter(function(s){ return s.ok && !s.zweitlesung; }).map(function(s){ return s.nr; });
-        if(!pairs.length && !pruefen.length && !(d.fehlend||[]).length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
+        if(!pairs.length && !pruefen.length && !(d.fehlend||[]).length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--ink)"; return; }
         var fehlend=d.fehlend||[];
         renderPreview(pairs, { meldung:d.meldung, fehlend:fehlend, einmal:einmal, pruefen:pruefen, urls:urls,
           nochmal: fehlend.length ? function(){ fehlendNachlesen(fehlend, urls); } : null });
@@ -1282,7 +1676,7 @@
         try{ $("#preview").scrollIntoView({block:"start", behavior:"smooth"}); }catch(e){}
         return;
       }
-      if(d && d.ok===false && d.rueckfall===false){ setOcr(""); msg.textContent=d.fehler||"Das ging nicht."; msg.style.color="var(--no)"; return; }
+      if(d && d.ok===false && d.rueckfall===false){ setOcr(""); msg.textContent=d.fehler||"Das ging nicht."; msg.style.color="var(--ink)"; return; }
       tesseractLesen(seiten.map(function(s){ return s.file; }));
     });
   }
@@ -1297,7 +1691,7 @@
       var umrechnen=function(pos){ var s=Math.floor(pos/1000); return nrs[s-1]*1000 + (pos%1000); };
       var vorhanden={};
       [].forEach.call($("#pvrows").children,function(r){ vorhanden[(r.querySelector(".pven").value+"|"+r.querySelector(".pvde").value).toLowerCase()]=1; });
-      serverPaare(d).forEach(function(p){ if(!vorhanden[(p.en+"|"+p.de).toLowerCase()]) zeileEinfuegen(p.en,p.de,umrechnen(p.pos)); });
+      serverPaare(d).forEach(function(p){ if(!vorhanden[(p.en+"|"+p.de).toLowerCase()]) zeileEinfuegen(p.en,p.de,umrechnen(p.pos),p.wortart); });
       var pruefen=(d.pruefen||[]).map(function(r){ var x={}; for(var k in r) x[k]=r[k]; x.seite=nrs[(r.seite||1)-1]; x.pos=umrechnen(r.pos); return x; });
       if(pruefen.length){
         var liste=$("#vfListe");
@@ -1320,7 +1714,7 @@
     var msg=$("#addMsg"); msg.textContent="";
     setOcr("Texterkennung wird geladen … (beim ersten Mal etwas Geduld)");
     loadTesseract(function(ok){
-      if(!ok){ setOcr(""); msg.textContent="Texterkennung ließ sich nicht laden – Internet prüfen oder Liste als Text einfügen."; msg.style.color="var(--no)"; return; }
+      if(!ok){ setOcr(""); msg.textContent="Texterkennung ließ sich nicht laden – Internet prüfen oder Liste als Text einfügen."; msg.style.color="var(--ink)"; return; }
       var worker, alle=[], i=0;
       window.Tesseract.createWorker(TESS_SPRACHEN,1,{ logger:function(m){
           if(m && m.status==="recognizing text"){ setOcr("Lese Seite "+(i+1)+" von "+files.length+" … "+Math.round((m.progress||0)*100)+" %"); }
@@ -1339,10 +1733,10 @@
         .then(function(){
           try{ if(worker) worker.terminate(); }catch(e){}
           setOcr("");
-          if(!alle.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
+          if(!alle.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--ink)"; return; }
           msg.textContent=""; renderPreview(alle, { ohnePruefung:true });
         })
-        .catch(function(){ try{ if(worker) worker.terminate(); }catch(e){} setOcr(""); msg.textContent="Bei der Erkennung ging etwas schief – bitte nochmal versuchen."; msg.style.color="var(--no)"; });
+        .catch(function(){ try{ if(worker) worker.terminate(); }catch(e){} setOcr(""); msg.textContent="Bei der Erkennung ging etwas schief – bitte nochmal versuchen."; msg.style.color="var(--ink)"; });
     });
   }
   $("#photoBtn").addEventListener("click",function(){ $("#photoInput").click(); });
@@ -1364,11 +1758,11 @@
       ".vfseite-zeile img{width:44px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);flex:none}"+
       ".vfladen{width:44px;height:56px;display:grid;place-items:center;color:var(--muted);flex:none}"+
       ".vfname{flex:1;font-weight:700;font-size:14px;color:var(--ink)}"+
-      ".adder button.vfweg{background:transparent;color:var(--no);border:1px solid var(--line);min-height:44px;padding:8px 12px;font-size:13px}"+
+      ".adder button.vfweg{background:transparent;color:var(--ink);border:1px solid var(--line);min-height:44px;padding:8px 12px;font-size:13px}"+
       ".vfzahl{color:var(--muted);font-size:12.5px;margin-top:6px}"+
       ".photobtn.vflesen{margin-top:10px;min-height:50px}"+
       ".photobtn.vflesen:disabled{opacity:.55;cursor:default}"+
-      ".vfwarn{background:color-mix(in srgb,var(--no) 14%,var(--surface2));border:1px solid var(--no);border-radius:12px;padding:11px 13px;margin:10px 0;font-size:13.5px;line-height:1.55;color:var(--ink)}"+
+      ".vfwarn{background:color-mix(in srgb,var(--gold) 12%,var(--surface2));border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;margin:10px 0;font-size:13.5px;line-height:1.55;color:var(--ink)}"+
       ".vfwarn .mini{margin-top:8px;min-height:44px}"+
       ".vfkasten{background:color-mix(in srgb,var(--gold) 14%,var(--surface2));border:1.5px solid color-mix(in srgb,var(--gold) 60%,var(--line));border-radius:14px;padding:12px;margin:12px 0}"+
       ".vfkastenkopf{font-family:var(--round);font-weight:800;font-size:15.5px;color:var(--ink)}"+
@@ -1391,7 +1785,7 @@
       ".vffertig{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-size:14px;color:var(--ink);font-weight:700;word-break:break-word}"+
       ".vffertig small{color:var(--muted);font-weight:600}"+
       ".vffertig .mini{min-height:44px;flex:none}"+
-      ".vfoffen{margin-top:10px;font-size:13px;font-weight:700;color:var(--no)}"+
+      ".vfoffen{margin-top:10px;font-size:13px;font-weight:700;color:var(--ink)}"+
       "#saveUnit:disabled{opacity:.5;cursor:default}"+
       ".pvx{min-width:44px;min-height:44px}"+
       ".pvrow input{min-height:44px}";
@@ -1413,27 +1807,91 @@
         var id=btn.getAttribute("data-id");
         var left=customUnits().filter(function(u){return u.id!==id;});
         set(PRE+"-custom-units",JSON.stringify(left));
-        fillUnits(); renderMyUnits(); blip();
+        fillUnits(); renderMyUnits(); uebersichtMalen(); blip();
       });
     });
   }
   renderMyUnits();
 
-  /* ---------- Konfetti ---------- */
-  function confetti(){
-    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var c=$("#cf"); if(!c.getContext) return; var x=c.getContext("2d");
-    c.width=innerWidth; c.height=innerHeight;
-    var cols=["#a78bfa","#7c5cff","#49d6bd","#ffce5c","#ff7a6b"], P=[];
-    for(var i=0;i<120;i++)P.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.4,
-      r:5+Math.random()*6,vy:2+Math.random()*3.5,vx:-1.5+Math.random()*3,
-      rot:Math.random()*6.28,vr:-.2+Math.random()*.4,col:cols[i%cols.length]});
-    var f=0;(function loop(){ x.clearRect(0,0,c.width,c.height); f++;
-      P.forEach(function(p){ p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.vy+=.05;
-        x.save();x.translate(p.x,p.y);x.rotate(p.rot);x.fillStyle=p.col;
-        x.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);x.restore(); });
-      if(f<200)requestAnimationFrame(loop); else x.clearRect(0,0,c.width,c.height);
-    })();
-  }
+  /* Aussehen der Lern-Oberflaeche (19.10.2026). Farben nur aus den
+     Seitenvariablen, damit hell und dunkel stimmen. Fehlerstellen sind gelb
+     hinterlegt und unterstrichen, nie rot (Antworten Nr. 11). */
+  (function(){
+    var css=
+      ".choices.vlliste{grid-template-columns:1fr}"+
+      ".choices.vlliste .choice{min-height:52px;font-size:17px;text-align:left;word-break:break-word}"+
+      ".choice.vlgewaehlt{border:2px dashed var(--muted)}"+
+      ".answer input.vlneutral{border-color:var(--muted);border-style:dashed}"+
+      ".verdict.neutral{color:var(--ink)}"+
+      ".vlart{font-weight:800;font-size:15px;color:var(--ink)}"+
+      ".vlrm{margin-top:10px;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}"+
+      ".vlzeile{display:flex;flex-direction:column;gap:2px;margin:4px 0;word-break:break-word;overflow-wrap:anywhere}"+
+      ".vlzeile small{color:var(--muted);font-size:12.5px;font-weight:600}"+
+      ".vlwort{font-family:var(--round);font-size:19px;font-weight:700;color:var(--ink);letter-spacing:.02em}"+
+      ".vlrichtig .vlwort{font-size:26px;font-weight:800}"+
+      ".vlmark{background:#6b5410;color:var(--ink);text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:3px;border-radius:3px;padding:0 1px}"+
+      "html[data-theme=\"light\"] .vlmark{background:#fde68a;color:#1b1c22}"+
+      ".vlluecke{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 16px;margin:10px 0 14px}"+
+      ".vlgruppe{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;max-width:100%}"+
+      ".vlbst{font-family:var(--round);font-size:26px;font-weight:800;color:var(--ink);min-width:.55em;text-align:center}"+
+      ".vlgap{width:2.1em;min-width:36px;height:48px;min-height:48px;padding:0;text-align:center;font-size:24px;font-weight:800;font-family:var(--round);color:var(--ink);background:var(--surface2);border:2px solid var(--brand);border-radius:10px;outline:none}"+
+      ".vlgap:focus{border-color:var(--ok)}"+
+      ".vlgap:disabled{opacity:1;color:var(--ink)}"+
+      ".vlprueffeld{justify-content:center}"+
+      ".vlprueffeld button{min-height:48px;padding:0 28px}"+
+      ".vltasten{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 10px}"+
+      ".vltaste{min-width:44px;min-height:44px;padding:0 6px;font-size:20px;font-weight:700;font-family:var(--font);color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:10px;cursor:pointer}"+
+      ".vltaste:disabled{opacity:.55}"+
+      ".vlstufen{margin:6px 0 12px}"+
+      "@media (max-height:440px){.setup{padding:12px}.heute{display:flex;align-items:center;gap:12px;text-align:left;padding:2px 4px 8px}.heutezahl{font-size:34px;flex:none}.heutetext{font-size:13.5px;margin-top:0}.done h2{font-size:20px;margin:0 0 2px}.done{padding:14px 14px}}"+
+      ".vlkacheln{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}"+
+      ".vlkachel{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;gap:1px;min-width:0}"+
+      ".vlkachel b{font-family:var(--round);font-size:20px;font-weight:800;color:var(--ink)}"+
+      ".vlkachel span{font-size:12.5px;font-weight:700;color:var(--ink)}"+
+      ".vlkachel small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}"+
+      ".vlinfo{font-size:13.5px;color:var(--muted);margin:8px 2px 0;line-height:1.45;text-align:center}"+
+      ".vlinfo.vlpruefung,.vlinfo.vlpause{color:var(--ink)}"+
+      ".done p.vlfehlerarten{color:var(--ink);font-weight:600}"+
+      ".done .ghost{min-height:48px;color:var(--ink)}"+
+      ".vlfrei{text-align:center;color:var(--muted);font-size:12.5px;margin-top:2px}"+
+      ".vlfreistart{width:100%;margin-top:6px;min-height:48px;border:none;border-radius:14px;padding:13px;cursor:pointer;font-family:var(--round);font-weight:800;font-size:15.5px;color:var(--auf-brand,#150f2e);background:var(--brand)}"+
+      ".vlnachupload{margin:0 0 10px}"+
+      ".vlplanknoepfe{display:flex;flex-direction:column;gap:8px}"+
+      ".vlplanknopf{min-height:48px;width:100%;color:var(--ink)}"+
+      ".vleigene{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}"+
+      ".vlzahl{width:64px;min-height:44px;font-size:16px;text-align:center;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:10px}"+
+      ".vleigene .mini{min-height:44px}"+
+      ".vldlg{position:fixed;inset:0;z-index:80;background:rgba(10,12,20,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}"+
+      "@media (min-width:600px){.vldlg{align-items:center}}"+
+      ".vldlgpanel{width:100%;max-width:520px;max-height:calc(100vh - 24px);overflow-y:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:18px 16px;box-shadow:var(--shadow)}"+
+      ".vldlgpanel h3{font-family:var(--round);font-size:18px;margin:0 0 10px;color:var(--ink)}"+
+      ".vldlgknoepfe{display:flex;flex-direction:column;gap:8px;margin:14px -16px -18px;padding:10px 16px 14px;position:sticky;bottom:-18px;background:var(--surface);z-index:2;border-top:1px solid var(--line)}"+
+      ".vldlgknoepfe button{min-height:48px;width:100%;margin:0}"+
+      ".vldlgknoepfe .ghost{color:var(--ink)}"+
+      ".vldatumreihe{display:flex;gap:8px;flex-wrap:wrap}"+
+      ".vldatum{flex:1 1 140px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:700;min-width:0}"+
+      ".vldatum input{min-height:44px;font-size:16px;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}"+
+      ".vlmeldung{font-size:13.5px;color:var(--ink);font-weight:700;min-height:18px;margin-top:8px}"+
+      ".vlliste2{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 12px;font-size:14px;color:var(--ink)}"+
+      ".vlzeile2{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;flex-wrap:wrap}"+
+      ".vlzeile2 .mini{min-height:44px;color:var(--ink)}"+
+      ".vltermine{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}"+
+      ".vltermin{min-height:48px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font-size:14.5px;font-weight:700;cursor:pointer;font-family:var(--font)}"+
+      ".vltermin[aria-pressed=\"true\"]{border:2px solid var(--brand)}"+
+      ".vleinheiten{max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:4px 8px}"+
+      ".vlhaken{display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--line)}"+
+      ".vlhaken input{width:22px;height:22px;flex:none}"+
+      ".vlstoff{margin-top:8px}"+
+      ".vlhinweistext{font-size:15px;line-height:1.5;color:var(--ink)}"+
+      ".vldlgpanel .tipp{color:var(--muted)}"+
+      "body.vldlgoffen{overflow:hidden}"+
+      ".pvrow{flex-wrap:wrap}"+
+      ".pvrow .pven,.pvrow .pvde{flex:1 1 38%}"+
+      ".pvrow select.pvwa{flex:1 1 140px;width:auto;min-height:44px;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;background-image:none}"+
+      ".pvx{color:var(--ink)}"+
+      ".myunit .del{color:var(--ink);min-height:44px}"+
+      ".vfwa{color:var(--muted)}";
+    var st=document.createElement("style"); st.textContent=css; document.head.appendChild(st);
+  })();
 
 })();
