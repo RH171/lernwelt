@@ -927,50 +927,183 @@
     return parseVocab(data.text||"");   /* Fallback, falls kein klares Spaltenbild */
   }
 
-  function renderPreview(pairs){
+  /* ---------- Vorschau: prüfen, nachsehen, speichern ----------
+     Seit 19.10.2026 kann die Vorschau eine Rückfrage tragen (Helena über
+     Denny: „Solltest du hier Fehler bemerken oder dir unsicher sein, kommt
+     auch eine Rückfrage an die Helena, weil sie in dem Moment das Buch offen
+     hat“). Paare, bei denen die zwei Lesungen abweichen, eine unsicher war
+     oder die Bedeutung nicht zu passen scheint, stehen oben im Kasten „Bitte
+     kurz im Buch nachsehen“. Helena wählt eine Lesung, tippt selbst oder
+     lässt das Paar weg. Erst danach lässt sich speichern - nichts
+     Unbestätigtes rutscht in die Einheit, und nichts wird still geändert:
+     der Hinweis „Erwartet eher …“ ist nur ein Hinweis, das Buch gilt.
+     Gewählte Paare werden normale Zeilen an ihrem Platz in der Liste. */
+  var pvOffen = 0;
+  function pvOffenMalen(){
+    var z=$("#vfOffen"), b=$("#saveUnit");
+    if(z){ z.textContent = pvOffen ? ("Noch "+pvOffen+" Rückfrage"+(pvOffen>1?"n":"")+" offen – erst dann kannst du speichern.") : ""; z.style.display = pvOffen ? "block" : "none"; }
+    if(b){ b.disabled = pvOffen>0; }
+  }
+  function zeileEinfuegen(en,de,pos){
+    var rows=$("#pvrows"); if(!rows) return null;
+    var r=document.createElement("div"); r.className="pvrow";
+    r.setAttribute("data-pos", pos==null ? "1e9" : String(pos));
+    r.innerHTML='<input class="pven" placeholder="'+K.spracheKlein+'" value="'+attrEsc(en)+'">'+
+      '<span class="pvarr">→</span>'+
+      '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
+      '<button class="pvx" type="button" title="Zeile entfernen" aria-label="Zeile entfernen">✕</button>';
+    r.querySelector(".pvx").addEventListener("click",function(){ if(r.parentNode) r.parentNode.removeChild(r); });
+    // An ihren Platz auf dem Blatt (Seite, Zeile), neue Zeilen ans Ende.
+    var p = pos==null ? 1e9 : pos, vor=null;
+    [].some.call(rows.children,function(x){ if(parseFloat(x.getAttribute("data-pos"))>p){ vor=x; return true; } return false; });
+    rows.insertBefore(r, vor);
+    return r;
+  }
+
+  // Der Ausschnitt der Zeile aus dem eigenen Foto (Ort vom Server in Promille).
+  function ausschnitt(url, ort, ziel){
+    if(!url || !ort || ort.length!==4) return;
+    var bild=new Image();
+    bild.onload=function(){
+      try{
+        var w=bild.width, h=bild.height;
+        var bx=(ort[2]-ort[0]), by=(ort[3]-ort[1]);
+        var x0=Math.max(0,ort[0]-Math.max(20,bx*0.08)), x1=Math.min(1000,ort[2]+Math.max(20,bx*0.08));
+        var y0=Math.max(0,ort[1]-Math.max(15,by*0.6)), y1=Math.min(1000,ort[3]+Math.max(15,by*0.6));
+        var sx=x0/1000*w, sy=y0/1000*h, sw=(x1-x0)/1000*w, sh=(y1-y0)/1000*h;
+        if(sw<8||sh<8) return;
+        var c=document.createElement("canvas"); c.className="vfbild";
+        var f=Math.min(1, 900/sw); c.width=Math.round(sw*f); c.height=Math.round(sh*f);
+        c.getContext("2d").drawImage(bild,sx,sy,sw,sh,0,0,c.width,c.height);
+        c.setAttribute("role","img"); c.setAttribute("aria-label","Diese Zeile auf deinem Foto");
+        ziel.appendChild(c);
+      }catch(e){}
+    };
+    bild.src=url;
+  }
+
+  function rueckfrageBauen(r, urls, liste){
+    var el=document.createElement("div"); el.className="vfrf";
+    var gute=(r.lesungen||[]).filter(function(l){ return l && l.fremd && l.deutsch && !/\?/.test(l.fremd+l.deutsch); });
+    var alle=(r.lesungen||[]).filter(function(l){ return l && (l.fremd||l.deutsch); });
+    var kopf='<div class="vfrfkopf"><span class="vfseite">Seite '+(r.seite||1)+'</span> '+attrEsc(r.hinweis||"Bitte nachsehen.")+'</div>';
+    var gelesen = alle.length>1
+      ? '<div class="vfles">'+alle.map(function(l,i){ return '<div><small>'+(i+1)+'. Lesung:</small> '+attrEsc(l.fremd||"–")+' → '+attrEsc(l.deutsch||"–")+'</div>'; }).join("")+'</div>'
+      : (alle.length && !gute.length ? '<div class="vfles"><div><small>Gelesen:</small> '+attrEsc(alle[0].fremd||"–")+' → '+attrEsc(alle[0].deutsch||"–")+'</div></div>' : '');
+    var erw = r.erwartet ? '<div class="vferw">Erwartet eher: <b>'+attrEsc(r.erwartet)+'</b> – nimm aber, was im Buch steht.</div>' : '';
+    el.innerHTML=kopf+'<div class="vfbildplatz"></div>'+gelesen+erw+
+      '<div class="vfwahl"></div>'+
+      '<div class="vftipp" style="display:none"><input class="vften" placeholder="'+K.spracheKlein+'"><input class="vfde" placeholder="deutsch">'+
+        '<button type="button" class="vfuebernehmen">Übernehmen</button></div>'+
+      '<div class="vffertig" style="display:none"></div>';
+    ausschnitt(urls && urls[(r.seite||1)-1], r.ort, el.querySelector(".vfbildplatz"));
+    var wahl=el.querySelector(".vfwahl"), tipp=el.querySelector(".vftipp"), fertig=el.querySelector(".vffertig");
+    var zeile=null, erledigt=false;
+    function setzen(en,de,text){
+      if(!erledigt){ erledigt=true; pvOffen--; }
+      if(zeile && zeile.parentNode) zeile.parentNode.removeChild(zeile);
+      zeile = (en && de) ? zeileEinfuegen(en,de,r.pos) : null;
+      wahl.style.display="none"; tipp.style.display="none"; fertig.style.display="flex";
+      fertig.innerHTML='<span>'+text+'</span><button type="button" class="mini vfaendern">ändern</button>';
+      fertig.querySelector(".vfaendern").addEventListener("click",oeffnen);
+      el.classList.add("erledigt");
+      pvOffenMalen();
+    }
+    function oeffnen(){
+      if(erledigt){ erledigt=false; pvOffen++; }
+      if(zeile && zeile.parentNode) zeile.parentNode.removeChild(zeile);
+      zeile=null;
+      wahl.style.display="flex"; fertig.style.display="none"; el.classList.remove("erledigt");
+      pvOffenMalen();
+    }
+    gute.forEach(function(l){
+      var b=document.createElement("button"); b.type="button"; b.className="vfopt";
+      b.textContent=(gute.length>1?"So steht es da: ":"Stimmt so: ")+l.fremd+" → "+l.deutsch;
+      b.addEventListener("click",function(){ setzen(l.fremd,l.deutsch,"✓ "+attrEsc(l.fremd)+" → "+attrEsc(l.deutsch)); blip(); });
+      wahl.appendChild(b);
+    });
+    var bt=document.createElement("button"); bt.type="button"; bt.className="vfopt vfneben"; bt.textContent="✎ Selbst eintippen";
+    bt.addEventListener("click",function(){
+      var v=gute[0]||alle[0]||{fremd:"",deutsch:""};
+      tipp.querySelector(".vften").value=String(v.fremd||"").replace(/\?/g,"");
+      tipp.querySelector(".vfde").value=String(v.deutsch||"").replace(/\?/g,"");
+      tipp.style.display="flex"; tipp.querySelector(gute.length?".vfde":".vften").focus();
+    });
+    wahl.appendChild(bt);
+    var bw=document.createElement("button"); bw.type="button"; bw.className="vfopt vfneben"; bw.textContent="Weglassen";
+    bw.addEventListener("click",function(){ setzen("","","Weggelassen"); blip(); });
+    wahl.appendChild(bw);
+    tipp.querySelector(".vfuebernehmen").addEventListener("click",function(){
+      var en=tipp.querySelector(".vften").value.trim(), de=tipp.querySelector(".vfde").value.trim();
+      if(!en||!de){ (en?tipp.querySelector(".vfde"):tipp.querySelector(".vften")).focus(); return; }
+      setzen(en,de,"✓ "+attrEsc(en)+" → "+attrEsc(de)+" <small>(selbst getippt)</small>"); blip();
+    });
+    pvOffen++;
+    liste.appendChild(el);
+  }
+
+  /* opt: { meldung, fehlend:[nr], einmal:[nr], pruefen:[…], urls:[dataURL je Seite], ohnePruefung, nochmal:fn } */
+  function renderPreview(pairs, opt){
+    opt=opt||{};
+    pvOffen=0;
     var box=$("#preview"); box.style.display="block";
+    var hinweise="";
+    if(opt.fehlend && opt.fehlend.length){
+      hinweise+='<div class="vfwarn" id="vfFehlend"><b>Seite '+opt.fehlend.join(", ")+' ließ sich nicht lesen.</b> '+
+        'Die Wörter davon fehlen noch.'+(opt.nochmal?' <button type="button" class="mini" id="vfNochmal">Seite '+opt.fehlend.join(", ")+' nochmal lesen</button>':'')+'</div>';
+    }
+    if(opt.einmal && opt.einmal.length){
+      hinweise+='<div class="pvrest"><b>Seite '+opt.einmal.join(", ")+' wurde nur einmal gelesen.</b> Vergleiche sie bitte selbst kurz mit dem Buch.</div>';
+    }
+    if(opt.ohnePruefung){
+      hinweise+='<div class="pvrest"><b>Ohne Prüfung gelesen</b> (der Server war gerade nicht erreichbar). Vergleiche bitte jede Zeile mit dem Buch.</div>';
+    }
     box.innerHTML=
-      '<div class="pvhead"><span><b>'+pairs.length+' Paare erkannt</b> – bitte prüfen</span>'+
+      '<div class="pvhead"><span><b>'+(opt.meldung ? attrEsc(opt.meldung)+' · ' : '')+pairs.length+' Paare sicher</b> – bitte prüfen</span>'+
       '<button class="mini" id="swapBtn" type="button">↔ Spalten tauschen</button></div>'+
+      hinweise+
       (nichtErkannt.length
         ? '<div class="pvrest"><b>'+nichtErkannt.length+' Zeile'+(nichtErkannt.length>1?'n':'')+
           ' konnte ich nicht aufteilen.</b> Trag sie unten von Hand ein – oder lass sie weg.'+
           nichtErkannt.slice(0,8).map(function(z){ return '<div>'+attrEsc(z)+'</div>'; }).join("")+
           (nichtErkannt.length>8 ? '<div>…</div>' : '')+'</div>'
         : '')+
+      ((opt.pruefen && opt.pruefen.length)
+        ? '<div class="vfkasten" id="vfKasten"><div class="vfkastenkopf">📖 Bitte kurz im Buch nachsehen ('+opt.pruefen.length+')</div>'+
+          '<div class="vfkastenunter">Hier war ich mir nicht sicher. Schau ins Buch und wähle, was dort steht.</div><div id="vfListe"></div></div>'
+        : '')+
       '<div id="pvrows"></div>'+
       '<button class="mini" id="addRow" type="button">＋ Zeile</button>'+
+      '<div class="vfoffen" id="vfOffen" style="display:none"></div>'+
       '<div class="pvsave"><button id="saveUnit" type="button">Einheit speichern</button>'+
       '<button class="ghost" id="cancelUnit" type="button">Abbrechen</button></div>';
-    var rows=$("#pvrows");
-    function addRowEl(en,de){
-      var r=document.createElement("div"); r.className="pvrow";
-      r.innerHTML='<input class="pven" placeholder="'+K.spracheKlein+'" value="'+attrEsc(en)+'">'+
-        '<span class="pvarr">→</span>'+
-        '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
-        '<button class="pvx" type="button" title="Zeile entfernen">✕</button>';
-      r.querySelector(".pvx").addEventListener("click",function(){ r.parentNode.removeChild(r); });
-      rows.appendChild(r);
+    pairs.forEach(function(p,i){ zeileEinfuegen(p.en,p.de,p.pos!=null?p.pos:i); });
+    if(opt.pruefen && opt.pruefen.length){
+      var liste=$("#vfListe");
+      opt.pruefen.forEach(function(r){ rueckfrageBauen(r, opt.urls, liste); });
     }
-    pairs.forEach(function(p){ addRowEl(p.en,p.de); });
-    $("#addRow").addEventListener("click",function(){ addRowEl("",""); });
+    pvOffenMalen();
+    if(opt.nochmal && $("#vfNochmal")) $("#vfNochmal").addEventListener("click",opt.nochmal);
+    $("#addRow").addEventListener("click",function(){ zeileEinfuegen("","",null); });
     $("#swapBtn").addEventListener("click",function(){
-      [].forEach.call(rows.querySelectorAll(".pvrow"),function(r){
+      [].forEach.call($("#pvrows").querySelectorAll(".pvrow"),function(r){
         var a=r.querySelector(".pven"), b=r.querySelector(".pvde"); var t=a.value; a.value=b.value; b.value=t;
       });
     });
-    $("#cancelUnit").addEventListener("click",function(){ box.style.display="none"; box.innerHTML=""; });
+    $("#cancelUnit").addEventListener("click",function(){ box.style.display="none"; box.innerHTML=""; pvOffen=0; });
     $("#saveUnit").addEventListener("click",saveFromPreview);
   }
 
   function saveFromPreview(){
+    var msg=$("#addMsg");
+    // Nichts Unbestätigtes rutscht in die Einheit.
+    if(pvOffen>0){ msg.textContent="Bitte erst die Rückfragen oben beantworten."; msg.style.color="var(--no)"; var k=$("#vfKasten"); if(k) k.scrollIntoView({block:"start"}); return; }
     var name=($("#unitName").value||"").trim() || "Neue Einheit";
     var pairs=[];
     [].forEach.call($("#pvrows").children,function(r){
       var en=r.querySelector(".pven").value.trim(), de=r.querySelector(".pvde").value.trim();
       if(en && de) pairs.push({en:en, de:de});
     });
-    var msg=$("#addMsg");
     if(pairs.length<2){ msg.textContent="Bitte mindestens 2 Paare."; msg.style.color="var(--no)"; return; }
     var units=customUnits(); var id="u"+Date.now();
     units.push({id:id, name:name, pairs:pairs});
@@ -978,7 +1111,8 @@
     fillUnits(id); renderMyUnits();
     $("#unitName").value=""; $("#pasteBox").value="";
     var box=$("#preview"); box.style.display="none"; box.innerHTML="";
-    msg.textContent="Gespeichert: „"+name+"\u201c ("+pairs.length+" Vokabeln) ✓"; msg.style.color="var(--ok)";
+    seitenLeeren();
+    msg.textContent="Gespeichert: „"+name+"“ ("+pairs.length+" Vokabeln) ✓"; msg.style.color="var(--ok)";
     blip();
   }
 
@@ -989,7 +1123,13 @@
     msg.textContent=""; renderPreview(pairs);
   });
 
-  /* ---------- Foto aufnehmen -> Texterkennung im Browser ---------- */
+  /* ---------- Fotos aufnehmen -> Server liest (Opus 5.5), Rückfall Tesseract ----------
+     Seit 19.10.2026 liest zuerst der Server (Opus 5.5, /api/vokabel-foto) -
+     dasselbe Modell wie bei Pauls Blättern. Tesseract im Browser bleibt nur
+     der Rückfall, wenn der Server nicht antwortet oder das Limit erreicht ist.
+     Seit dem Abend desselben Tages (Helenas Wunsch): 1 bis 5 Seiten, einzeln
+     mit der Kamera oder mehrere aus der Galerie. Der Server liest jede Seite
+     zweimal unabhängig und prüft den Sinn jedes Paares. */
   function setOcr(txt){ var s=$("#ocrStatus"); if(!txt){ s.style.display="none"; s.textContent=""; return; } s.style.display="block"; s.textContent=txt; }
   function loadTesseract(cb){
     if(window.Tesseract){ cb(true); return; }
@@ -999,13 +1139,10 @@
     s.onerror=function(){ cb(false); };
     document.head.appendChild(s);
   }
-  /* Seit 19.10.2026 liest zuerst der Server (Opus 5.5, /api/vokabel-foto) -
-     dasselbe Modell wie bei Pauls Blättern. Tesseract im Browser bleibt nur
-     der Rückfall, wenn der Server nicht antwortet oder das Limit erreicht ist.
-     Tesseract las vorher "eng+deu" auch bei Französisch, also ohne é, è, ç, à. */
   var SPRACHE_SERVER = K.fach==="franzoesisch" ? "franzoesisch" : "englisch";
   var TESS_SPRACHEN  = K.fach==="franzoesisch" ? "fra+deu" : "eng+deu";
-  var SERVER_FRIST   = 75000;   /* danach liest Tesseract */
+  var SERVER_FRIST   = 90000;   /* Server liest alle Seiten parallel und hört nach 80 s auf */
+  var MAX_SEITEN     = 5;
 
   // Groß genug für Handschrift, klein genug für die Leitung (wie im Hausaufgaben-Heft).
   function fotoVerkleinern(file, fertig){
@@ -1028,68 +1165,238 @@
     };
     l.readAsDataURL(file);
   }
-  function serverLesen(file, fertig){
-    if(!window.fetch || !window.FileReader){ fertig(null); return; }
-    fotoVerkleinern(file, function(url){
-      if(!url || url.indexOf(",")<0){ fertig(null); return; }
-      var ctl = window.AbortController ? new AbortController() : null;
-      var uhr = setTimeout(function(){ if(ctl) ctl.abort(); }, SERVER_FRIST);
-      var erledigt=false;
-      function ende(x){ if(erledigt) return; erledigt=true; clearTimeout(uhr); fertig(x); }
-      fetch("/api/vokabel-foto", {
-        method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
-        signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({ kind:"helena", sprache:SPRACHE_SERVER,
-          bild:{ media_type:"image/jpeg", data:url.split(",")[1] } })
-      }).then(function(r){ return r.json().catch(function(){ return null; }); })
-        .then(function(d){ ende(d && d.ok && Array.isArray(d.paare) ? d : null); })
-        .catch(function(){ ende(null); });
-      if(!ctl) setTimeout(function(){ ende(null); }, SERVER_FRIST);
-    });
-  }
-  function handleImage(file){
-    if(!file) return;
+
+  /* Die gesammelten Seiten. Jede: { file, url } (url = verkleinertes JPEG). */
+  var vfSeiten = [];
+  (function aufbauen(){
+    var knopf=$("#photoBtn"); if(!knopf) return;
+    // Die zweite Eingabe: Galerie, mehrere auf einmal, ohne Kamera-Zwang.
+    var gal=document.createElement("input"); gal.type="file"; gal.id="galerieInput"; gal.accept="image/*"; gal.multiple=true; gal.style.display="none";
+    var reihe=document.createElement("div"); reihe.className="vfknoepfe";
+    knopf.parentNode.insertBefore(reihe, knopf);
+    reihe.appendChild(knopf);
+    var gb=document.createElement("button"); gb.type="button"; gb.id="galerieBtn"; gb.className="photobtn vfgalerie"; gb.textContent="🖼️ Aus der Galerie";
+    reihe.appendChild(gb); reihe.appendChild(gal);
+    var liste=document.createElement("div"); liste.id="vfSeiten"; liste.className="vfseiten";
+    reihe.parentNode.insertBefore(liste, reihe.nextSibling);
+    var los=document.createElement("button"); los.type="button"; los.id="lesenBtn"; los.className="photobtn vflesen"; los.style.display="none";
+    liste.parentNode.insertBefore(los, liste.nextSibling);
+    gb.addEventListener("click",function(){ gal.click(); });
+    gal.addEventListener("change",function(e){ dateienDazu(e.target.files); e.target.value=""; });
+    los.addEventListener("click",lesenStarten);
+    seitenMalen();
+  })();
+
+  function dateienDazu(files){
     var msg=$("#addMsg"); msg.textContent="";
-    setOcr("Lese Wortliste … (dauert etwa 10–20 Sekunden)");
-    serverLesen(file, function(d){
-      if(d){
-        setOcr("");
-        var pairs=d.paare.map(function(p){ return {en:String(p.fremd||""), de:String(p.deutsch||"")}; })
-          .filter(function(p){ return p.en && p.de; });
-        nichtErkannt=(d.unsicher||[]).map(String).filter(Boolean);
-        if(!pairs.length && !nichtErkannt.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
-        renderPreview(pairs);
+    var neu=[].slice.call(files||[]).filter(function(f){ return f && /^image\//.test(f.type||"image/"); });
+    var platz=MAX_SEITEN-vfSeiten.length;
+    if(neu.length>platz){
+      msg.textContent="Höchstens "+MAX_SEITEN+" Seiten – "+(neu.length-platz)+" Foto"+(neu.length-platz>1?"s":"")+" habe ich weggelassen."; msg.style.color="var(--no)";
+      neu=neu.slice(0,Math.max(0,platz));
+    }
+    var offen=neu.length; if(!offen) return;
+    var reserv=neu.map(function(f){ var s={file:f, url:null}; vfSeiten.push(s); return s; });
+    seitenMalen();
+    reserv.forEach(function(s){
+      fotoVerkleinern(s.file,function(url){
+        if(url) s.url=url; else { vfSeiten=vfSeiten.filter(function(x){ return x!==s; }); msg.textContent="Ein Foto ließ sich nicht öffnen."; msg.style.color="var(--no)"; }
+        seitenMalen();
+      });
+    });
+    // Neue Seiten = neue Lesung: eine alte Vorschau passt nicht mehr dazu.
+    var box=$("#preview"); if(box && box.style.display!=="none" && box.innerHTML){ box.style.display="none"; box.innerHTML=""; pvOffen=0; }
+  }
+  function seitenLeeren(){ vfSeiten=[]; seitenMalen(); }
+  function seitenMalen(){
+    var liste=$("#vfSeiten"), los=$("#lesenBtn"), kam=$("#photoBtn"), gal=$("#galerieBtn");
+    if(!liste) return;
+    liste.innerHTML="";
+    vfSeiten.forEach(function(s,i){
+      var z=document.createElement("div"); z.className="vfseite-zeile";
+      z.innerHTML=(s.url?'<img alt="Seite '+(i+1)+'" src="'+s.url+'">':'<span class="vfladen">…</span>')+
+        '<span class="vfname">Seite '+(i+1)+'</span>'+
+        '<button type="button" class="vfweg" aria-label="Seite '+(i+1)+' entfernen">✕ Entfernen</button>';
+      z.querySelector(".vfweg").addEventListener("click",function(){
+        vfSeiten.splice(vfSeiten.indexOf(s),1); seitenMalen();
+      });
+      liste.appendChild(z);
+    });
+    var n=vfSeiten.length, voll=n>=MAX_SEITEN;
+    if(kam){ kam.textContent = voll ? "5 Seiten – mehr geht nicht" : (n ? "📷 Seite dazu" : "📷 Seite fotografieren"); kam.disabled=voll; }
+    if(gal){ gal.disabled=voll; }
+    if(n){
+      var z2=document.createElement("div"); z2.className="vfzahl";
+      z2.textContent=n+" von höchstens "+MAX_SEITEN+" Seiten";
+      liste.appendChild(z2);
+    }
+    if(los){
+      var bereit=n && vfSeiten.every(function(s){ return !!s.url; });
+      los.style.display=n?"block":"none"; los.disabled=!bereit;
+      los.textContent="Wortliste lesen › ("+n+" Seite"+(n===1?"":"n")+")";
+    }
+  }
+
+  function serverLesen(urls, fertig){
+    if(!window.fetch){ fertig(null); return; }
+    var ctl = window.AbortController ? new AbortController() : null;
+    var uhr = setTimeout(function(){ if(ctl) ctl.abort(); ende(null); }, SERVER_FRIST);
+    var erledigt=false;
+    function ende(x){ if(erledigt) return; erledigt=true; clearTimeout(uhr); fertig(x); }
+    fetch("/api/vokabel-foto", {
+      method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
+      signal: ctl ? ctl.signal : undefined,
+      body: JSON.stringify({ kind:"helena", sprache:SPRACHE_SERVER,
+        bilder: urls.map(function(u){ return { media_type:"image/jpeg", data:u.split(",")[1] }; }) })
+    }).then(function(r){ return r.json().catch(function(){ return null; }); })
+      .then(function(d){ ende(d); })
+      .catch(function(){ ende(null); });
+  }
+  function serverPaare(d){
+    return (d.paare||[]).map(function(p){ return {en:String(p.fremd||""), de:String(p.deutsch||""), pos:p.pos}; })
+      .filter(function(p){ return p.en && p.de; });
+  }
+  function lesenStarten(){
+    var msg=$("#addMsg"); msg.textContent="";
+    var seiten=vfSeiten.filter(function(s){ return !!s.url; });
+    if(!seiten.length) return;
+    var urls=seiten.map(function(s){ return s.url; });
+    var n=urls.length;
+    var los=$("#lesenBtn"); if(los) los.disabled=true;
+    setOcr("Lese "+(n===1?"die Seite":n+" Seiten")+" … zweimal und mit Sinnprüfung (etwa 15–40 Sekunden)");
+    serverLesen(urls, function(d){
+      if(los) los.disabled=false;
+      if(d && d.ok && Array.isArray(d.paare)){
+        setOcr(""); nichtErkannt=[];
+        var pairs=serverPaare(d);
+        var pruefen=Array.isArray(d.pruefen)?d.pruefen:
+          /* Antwort in alter Form (nur „unsicher“ als Text): auch das wird eine Rückfrage. */
+          (d.unsicher||[]).map(function(z,i){ return { seite:1, pos:500+i, ort:null, arten:["unsicher"],
+            lesungen:[{fremd:String(z), deutsch:"", unsicher:true}], hinweis:"Nicht sicher lesbar." }; });
+        var einmal=(d.seiten||[]).filter(function(s){ return s.ok && !s.zweitlesung; }).map(function(s){ return s.nr; });
+        if(!pairs.length && !pruefen.length && !(d.fehlend||[]).length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
+        var fehlend=d.fehlend||[];
+        renderPreview(pairs, { meldung:d.meldung, fehlend:fehlend, einmal:einmal, pruefen:pruefen, urls:urls,
+          nochmal: fehlend.length ? function(){ fehlendNachlesen(fehlend, urls); } : null });
+        // Die Vorschau steht unter dem Textfeld - dorthin springen, die Rückfragen zuerst.
+        try{ $("#preview").scrollIntoView({block:"start", behavior:"smooth"}); }catch(e){}
         return;
       }
-      tesseractLesen(file);
+      if(d && d.ok===false && d.rueckfall===false){ setOcr(""); msg.textContent=d.fehler||"Das ging nicht."; msg.style.color="var(--no)"; return; }
+      tesseractLesen(seiten.map(function(s){ return s.file; }));
     });
   }
-  function tesseractLesen(file){
+  /* Fehlende Seiten noch einmal: nur diese gehen zum Server, das Ergebnis
+     kommt dazu (Zeilen an ihren Platz, Rückfragen in den Kasten). */
+  function fehlendNachlesen(nrs, urls){
+    var knopf=$("#vfNochmal"); if(knopf){ knopf.disabled=true; knopf.textContent="Lese …"; }
+    var teil=nrs.map(function(nr){ return urls[nr-1]; });
+    serverLesen(teil, function(d){
+      var warn=$("#vfFehlend");
+      if(!(d && d.ok && Array.isArray(d.paare))){ if(knopf){ knopf.disabled=false; knopf.textContent="Nochmal versuchen"; } return; }
+      var umrechnen=function(pos){ var s=Math.floor(pos/1000); return nrs[s-1]*1000 + (pos%1000); };
+      var vorhanden={};
+      [].forEach.call($("#pvrows").children,function(r){ vorhanden[(r.querySelector(".pven").value+"|"+r.querySelector(".pvde").value).toLowerCase()]=1; });
+      serverPaare(d).forEach(function(p){ if(!vorhanden[(p.en+"|"+p.de).toLowerCase()]) zeileEinfuegen(p.en,p.de,umrechnen(p.pos)); });
+      var pruefen=(d.pruefen||[]).map(function(r){ var x={}; for(var k in r) x[k]=r[k]; x.seite=nrs[(r.seite||1)-1]; x.pos=umrechnen(r.pos); return x; });
+      if(pruefen.length){
+        var liste=$("#vfListe");
+        if(!liste){
+          var k=document.createElement("div"); k.className="vfkasten"; k.id="vfKasten";
+          k.innerHTML='<div class="vfkastenkopf">📖 Bitte kurz im Buch nachsehen</div><div class="vfkastenunter">Hier war ich mir nicht sicher. Schau ins Buch und wähle, was dort steht.</div><div id="vfListe"></div>';
+          $("#pvrows").parentNode.insertBefore(k, $("#pvrows")); liste=$("#vfListe");
+        }
+        pruefen.forEach(function(r){ rueckfrageBauen(r, urls, liste); });
+        pvOffenMalen();
+      }
+      var noch=(d.fehlend||[]).map(function(i){ return nrs[i-1]; });
+      if(warn){
+        if(noch.length){ warn.innerHTML='<b>Seite '+noch.join(", ")+' ließ sich wieder nicht lesen.</b> Fotografiere sie bitte neu – oder trag die Wörter unten selbst ein.'; }
+        else { warn.className="pvrest"; warn.innerHTML='<b>Jetzt sind alle Seiten gelesen.</b>'; }
+      }
+    });
+  }
+  function tesseractLesen(files){
     var msg=$("#addMsg"); msg.textContent="";
     setOcr("Texterkennung wird geladen … (beim ersten Mal etwas Geduld)");
     loadTesseract(function(ok){
       if(!ok){ setOcr(""); msg.textContent="Texterkennung ließ sich nicht laden – Internet prüfen oder Liste als Text einfügen."; msg.style.color="var(--no)"; return; }
-      setOcr("Lese Wortliste … 0 %");
-      var worker;
+      var worker, alle=[], i=0;
       window.Tesseract.createWorker(TESS_SPRACHEN,1,{ logger:function(m){
-          if(m && m.status==="recognizing text"){ setOcr("Lese Wortliste … "+Math.round((m.progress||0)*100)+" %"); }
+          if(m && m.status==="recognizing text"){ setOcr("Lese Seite "+(i+1)+" von "+files.length+" … "+Math.round((m.progress||0)*100)+" %"); }
           else if(m && m.status){ setOcr("Bereite Texterkennung vor …"); }
         }})
-        .then(function(w){ worker=w; return w.recognize(file, {}, { blocks:true }); })
-        .then(function(res){
+        .then(function(w){
+          worker=w;
+          function naechste(){
+            if(i>=files.length) return Promise.resolve();
+            return w.recognize(files[i], {}, { blocks:true }).then(function(res){
+              alle=alle.concat(pairsFromOCR(res && res.data)); i++; return naechste();
+            });
+          }
+          return naechste();
+        })
+        .then(function(){
           try{ if(worker) worker.terminate(); }catch(e){}
           setOcr("");
-          var pairs=pairsFromOCR(res && res.data);
-          if(!pairs.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
-          msg.textContent=""; renderPreview(pairs);
+          if(!alle.length){ msg.textContent="Keine Wortpaare gefunden. Bitte die reine Wortliste gerade & scharf fotografieren – oder Text einfügen."; msg.style.color="var(--no)"; return; }
+          msg.textContent=""; renderPreview(alle, { ohnePruefung:true });
         })
         .catch(function(){ try{ if(worker) worker.terminate(); }catch(e){} setOcr(""); msg.textContent="Bei der Erkennung ging etwas schief – bitte nochmal versuchen."; msg.style.color="var(--no)"; });
     });
   }
   $("#photoBtn").addEventListener("click",function(){ $("#photoInput").click(); });
   $("#photoInput").addEventListener("change",function(e){
-    var f=e.target.files && e.target.files[0]; handleImage(f); e.target.value="";
+    dateienDazu(e.target.files); e.target.value="";
   });
+
+  /* Aussehen der neuen Teile - steht hier, damit beide Seiten (Englisch,
+     Französisch) es gleich haben. Farben nur aus den Seitenvariablen, damit
+     hell und dunkel stimmen. */
+  (function(){
+    var css=
+      ".vfknoepfe{display:flex;gap:8px;flex-wrap:wrap}"+
+      ".vfknoepfe .photobtn{flex:1 1 180px;min-height:48px}"+
+      ".vfknoepfe .photobtn:disabled{opacity:.55;cursor:default}"+
+      ".photobtn.vfgalerie{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}"+
+      ".vfseiten{margin-top:10px}"+
+      ".vfseite-zeile{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}"+
+      ".vfseite-zeile img{width:44px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);flex:none}"+
+      ".vfladen{width:44px;height:56px;display:grid;place-items:center;color:var(--muted);flex:none}"+
+      ".vfname{flex:1;font-weight:700;font-size:14px;color:var(--ink)}"+
+      ".adder button.vfweg{background:transparent;color:var(--no);border:1px solid var(--line);min-height:44px;padding:8px 12px;font-size:13px}"+
+      ".vfzahl{color:var(--muted);font-size:12.5px;margin-top:6px}"+
+      ".photobtn.vflesen{margin-top:10px;min-height:50px}"+
+      ".photobtn.vflesen:disabled{opacity:.55;cursor:default}"+
+      ".vfwarn{background:color-mix(in srgb,var(--no) 14%,var(--surface2));border:1px solid var(--no);border-radius:12px;padding:11px 13px;margin:10px 0;font-size:13.5px;line-height:1.55;color:var(--ink)}"+
+      ".vfwarn .mini{margin-top:8px;min-height:44px}"+
+      ".vfkasten{background:color-mix(in srgb,var(--gold) 14%,var(--surface2));border:1.5px solid color-mix(in srgb,var(--gold) 60%,var(--line));border-radius:14px;padding:12px;margin:12px 0}"+
+      ".vfkastenkopf{font-family:var(--round);font-weight:800;font-size:15.5px;color:var(--ink)}"+
+      ".vfkastenunter{color:var(--muted);font-size:13px;margin:3px 0 8px;line-height:1.45}"+
+      ".vfrf{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}"+
+      ".vfrf.erledigt{opacity:.85}"+
+      ".vfrfkopf{font-size:13.5px;color:var(--ink);line-height:1.45}"+
+      ".vfseite{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700;color:var(--muted);margin-right:4px}"+
+      ".vfbild{display:block;max-width:100%;height:auto;margin:8px 0 4px;border-radius:8px;border:1px solid var(--line);background:#fff}"+
+      ".vfles{font-size:13.5px;color:var(--ink);margin:6px 0;line-height:1.5;word-break:break-word}"+
+      ".vfles small{color:var(--muted);font-size:12px}"+
+      ".vferw{font-size:13px;color:var(--muted);margin:4px 0;line-height:1.45}"+
+      ".vferw b{color:var(--ink)}"+
+      ".vfwahl{display:flex;flex-direction:column;gap:6px;margin-top:8px}"+
+      ".adder button.vfopt{min-height:44px;text-align:left;font-size:14px;padding:10px 12px;word-break:break-word}"+
+      ".adder button.vfopt.vfneben{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}"+
+      ".vftipp{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}"+
+      ".vftipp input{flex:1 1 120px;min-width:0;min-height:44px;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 10px}"+
+      ".adder .vftipp button{min-height:44px}"+
+      ".vffertig{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-size:14px;color:var(--ink);font-weight:700;word-break:break-word}"+
+      ".vffertig small{color:var(--muted);font-weight:600}"+
+      ".vffertig .mini{min-height:44px;flex:none}"+
+      ".vfoffen{margin-top:10px;font-size:13px;font-weight:700;color:var(--no)}"+
+      "#saveUnit:disabled{opacity:.5;cursor:default}"+
+      ".pvx{min-width:44px;min-height:44px}"+
+      ".pvrow input{min-height:44px}";
+    var st=document.createElement("style"); st.textContent=css; document.head.appendChild(st);
+  })();
 
   /* ---------- Eigene Einheiten verwalten (löschen) ---------- */
   function renderMyUnits(){
