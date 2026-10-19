@@ -5,7 +5,7 @@
  * Jedes Blatt kommt aus einer Saat: gleiche Saat = gleiches Blatt (Neuladen), neue Saat = neue Zahlen.
  * Keine Sofort-Korrektur: geprueft wird erst am Ende (pruefe), dann Rueckschau je Thema ohne Note
  * und ohne Punkte. Zweiter Versuch mit Hilfe in Stufen (hilfe(a, 1|2)), danach der Rechenweg (weg).
- * Hinweise ohne Begruendungssaetze und ohne Warum-Fragen (Frau Sy, Kapitel 103).
+ * Hinweise ohne Begruendungssaetze und ohne Warum-Fragen (Lehrerin, Kapitel 103).
  * Pruefen: node pruefe-generalprobe-mathe.mjs
  */
 (function (wurzel) {
@@ -388,7 +388,7 @@
     });
   }
 
-  /* Was Paul sieht, darf kein Begruendungswort und keine Warum-Frage enthalten (Frau Sy). */
+  /* Was Paul sieht, darf kein Begruendungswort und keine Warum-Frage enthalten (Lehrerin). */
   var VERBOTEN = /\b(weil|warum|wieso|weshalb|begründe|begruende)\b/i;
   function alleTexte(b) {
     var t = [];

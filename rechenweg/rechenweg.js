@@ -11,7 +11,7 @@
  * Die Hinweise zu einem falschen Zwischenergebnis kommen in Stufen (Kapitel 044): erst der
  * Denkfehler, wenn er sich erkennen lässt, dann ein Tipp ohne Ergebnis, ab dem zweiten
  * Fehlversuch ein Rechenweg mit offener Lücke, ab dem vierten das Zwischenergebnis zum
- * Abtippen, damit Paul nie feststeckt. Kein w-e-i-l, keine Frage nach dem Grund (Frau Sy).
+ * Abtippen, damit Paul nie feststeckt. Kein w-e-i-l, keine Frage nach dem Grund (Lehrerin).
  *
  *   RW.zerlege("50 − 9 · 4")   -> { schritte:[…], loesung:14 } | null
  *   RW.stimmt(schritt, "36")   -> true/false

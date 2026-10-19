@@ -37,7 +37,7 @@ const KINDER = {
     datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10,
     anrede: "du", name: "Paul",
     ton: "Freundlich und knapp, wie zu einem Zehnjährigen. Keine Babysprache, kein Gejubel vorweg.",
-    /* Pauls Lehrerin (Frau Sy) erlaubt keine Weil-Antworten (04.10.2026,
+    /* Pauls Lehrerin erlaubt keine Weil-Antworten (04.10.2026,
        über Denny). Eine Übung, die hier "Begründe!" fragt, übt genau das,
        was in der Probe nicht gewollt ist. */
     extra: "KEINE WARUM- ODER BEGRÜNDE-AUFGABEN und kein \"weil\" in Frage, Tipp oder Erklärung. Pauls Lehrerin lässt Weil-Antworten nicht zu. Eine Meinung wird als \"Schreibe deine Meinung in einem ganzen Satz\" gefragt.",

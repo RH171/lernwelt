@@ -29,14 +29,14 @@ const REGELN =
   "(hoechstens 22 Woerter, du-Form, freundlich, kein Rot, keine Fehlerliste). " +
   "Worauf du achtest: ganzer Satz mit Subjekt und Verb? Punkt am Ende? Grossschreibung am " +
   "Satzanfang und bei Nomen? Passt die Antwort zur Frage und zum Text? Bei der Meinungsfrage: " +
-  "steht eine klare Meinung im ganzen Satz da? WICHTIG: Die Lehrerin erlaubt KEINE Antworten mit 'weil'. Verlange oder lobe nie 'weil'; steht 'weil' in der Antwort, sag freundlich, dass Frau Sy Antworten ohne 'weil' moechte. Ist etwas gut, sag das zuerst in drei Woertern. " +
+  "steht eine klare Meinung im ganzen Satz da? WICHTIG: Die Lehrerin erlaubt KEINE Antworten mit 'weil'. Verlange oder lobe nie 'weil'; steht 'weil' in der Antwort, sag freundlich, dass die Lehrerin Antworten ohne 'weil' moechte. Ist etwas gut, sag das zuerst in drei Woertern. " +
   "VERBOTEN: die richtige Antwort nennen, einen Mustersatz vorgeben, Woerter aus der Geschichte " +
   "abschreiben, eine Note oder Punkte vergeben. Sag hoechstens, WO er nachlesen soll. " +
   'Antworte NUR mit JSON: {"hinweise":[{"nr":1,"hinweis":"..."}]}';
 
 const REGELN_JE_KIND = { paul: REGELN };
 
-const WEIL_ERSATZ = "Frau Sy möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
+const WEIL_ERSATZ = "Deine Lehrerin möchte Antworten ohne \u201eweil\u201c. Schreib deine Meinung als ganzen Satz.";
 const WEIL_ERSATZ_JE_KIND = {};
 const ERSATZ = "Lies selbst nach: ganzer Satz? Punkt am Ende? Passt es zur Frage?";
 

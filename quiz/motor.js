@@ -1333,7 +1333,7 @@ function artKurz(art) {
   /* ---------- Ende ---------- */
 
   /* Uebungsnote (15.10.2026; seit 16.10.2026 Dennys Wahl "D · Strenger wie
-     Frau Sy": ihre Lese-Probe gab fuer 23,5/29 = 81 % eine 3, 24/29 = 82,8 % waere
+     die Lehrerin": ihre Lese-Probe gab fuer 23,5/29 = 81 % eine 3, 24/29 = 82,8 % waere
      eine 2 gewesen, deshalb 2 ab 82 %). Paul
      wuenscht sich ab mehr als 10 Fragen eine Note. Bayern schreibt keinen
      Notenschluessel vor, die Lehrerin legt ihn fest (befunde/2026-10-15-

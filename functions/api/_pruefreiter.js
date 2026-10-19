@@ -26,7 +26,7 @@
  * und kann es nicht selbst nachprüfen. Er verbessert im Heft und tippt
  * "Verbessert ✓" (Aktion "verbessert").
  * Tipps sind Regeln, kein Modellaufruf: ohne "weil", ohne Warum-Fragen
- * (Frau Sy erlaubt keine Weil-Antworten), sie zeigen den WEG, nie die Zahl.
+ * (die Lehrerin erlaubt keine Weil-Antworten), sie zeigen den WEG, nie die Zahl.
  *
  * Nachrechnen (14.10.2026, _nachrechnen.js): 🧮 kommt zusätzlich aus der Feld-für-
  * Feld-Abschrift am Blatt (`nachgerechnet`) - nur Fehler, die die zweite Lesung

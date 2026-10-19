@@ -13,7 +13,7 @@
  *   D  4 Textaufgaben: 2 im Wortlaut der Lehrerin (Schemata von Pauls Blättern), 2 Sachaufgaben zum neuen Stoff.
  * Jede Aufgabe ist ein Schlüssel ("mal:7x80", "rest:17:5", "tl:36" …); Text, Lösung, Hilfe und
  * Bestätigung kommen aus demselben Schlüssel. Tageszufall aus dem Datum: dieselbe Runde nach Neuladen.
- * Hinweise ohne Begründungssätze (Frau Sy erlaubt kein "w-e-i-l"), keine Fragen nach dem Grund.
+ * Hinweise ohne Begründungssätze (die Lehrerin erlaubt kein "w-e-i-l"), keine Fragen nach dem Grund.
  */
 (function (wurzel) {
   "use strict";
@@ -636,7 +636,7 @@
    *   Klasse 3 und Blätter 28.–30.09.: addieren, subtrahieren (Zahlenrätsel „Addiere …“, „subtrahierst“),
    *   Summe und Differenz (Schulbuch S. 11: „die Summe von 287 und 365“, „Von der Differenz subtrahiere …“).
    * Nicht dabei: Faktor, Summand, Dividend, Divisor (kommen in Pauls Heft nicht vor, gezählt am 18.10.2026).
-   * Eine Quelle für Liste und Übung: FACHWORT. Merksätze ohne Begründungssätze (Frau Sy), keine Frage nach dem Grund. */
+   * Eine Quelle für Liste und Übung: FACHWORT. Merksätze ohne Begründungssätze (Lehrerin), keine Frage nach dem Grund. */
   var FACHWORT = [
     { id: "addieren", gruppe: "Die vier Rechenarten", wort: "addieren", nomen: "die Addition", zeichen: "+", beispiel: "25 + 17 = 42",
       ergebnis: "Das Ergebnis heißt Summe.", merk: "Addieren heißt plus rechnen. Die Rechenart heißt Addition.", esel: "Es kommt etwas dazu. Es wird mehr." },

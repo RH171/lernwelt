@@ -1122,7 +1122,7 @@ export function nebendetail(f) {
   const frage = String((f && f.frage) || "");
   const richtig = String(((f && f.antworten) || [])[Number(f && f.richtig) || 0] || "");
   const mathe = /^mathe/i.test(String((f && f.fach) || ""));
-  // Keine Weil-Antworten (Beschluss 04.10.2026, Frau Sy).
+  // Keine Weil-Antworten (Beschluss 04.10.2026, Lehrerin).
   if (/^\s*(warum|wieso|weshalb)\b|\bbegründe|\bbegruende/i.test(frage)) return true;
   if (/^\s*weil\b/i.test(richtig)) return true;
   // Hausnummer, Telefonnummer, Oeffnungs- und Sprechzeiten.

@@ -6,7 +6,7 @@
  * Dreieck: oben das Produkt, unten links der kleinere, unten rechts der größere Faktor
  * (Dennys Regel). Eine Ecke fehlt: Spitze = Malaufgabe, untere Ecke = Geteiltaufgabe.
  * Was falsch oder langsam war, kommt im nächsten Durchgang zuerst (wackel).
- * Hinweise ohne Begründungssätze (Frau Sy erlaubt kein "w-e-i-l").
+ * Hinweise ohne Begründungssätze (die Lehrerin erlaubt kein "w-e-i-l").
  */
 (function (wurzel) {
   "use strict";
