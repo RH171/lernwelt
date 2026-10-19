@@ -27,6 +27,11 @@
  *   opt.artikelEgal  (nicht fr) auch ein ANDERER Artikel ist egal - so hielt
  *                 es der Vokabeltrainer schon immer ("the apple" = "an apple"); dort zaehlt
  *                 auch "to" vor Verben als Artikel ("run" = "to run").
+ *   opt.zusatzWorte  die Loesung steht vollstaendig in der Eingabe, drumherum
+ *                 bis zu drei weitere Woerter ("nutzung der reichskirche" fuer
+ *                 "Reichskirche", Helena 18.10.2026) -> "fast". Nur in
+ *                 Sachfaechern einschalten; im Vokabeltrainer waere
+ *                 "I see a sheep" fuer "sheep" zu grosszuegig.
  *
  * Was bleibt falsch (mit Absicht):
  *   - ein falscher Artikel, wenn beide einen haben ("die Hund", "la garçon")
@@ -43,6 +48,13 @@
   var ARTIKEL_FR = ["le", "la", "les", "l", "un", "une", "des", "du", "de la", "de l"];
   var VERNEINUNG = { nicht: 1, kein: 1, keine: 1, keinen: 1, keinem: 1, keiner: 1, keines: 1,
     nie: 1, niemals: 1, not: 1, no: 1, never: 1, ne: 1, pas: 1, jamais: 1, n: 1 };
+  /* Woerter, die neben der Loesung alles umdrehen oder eine zweite Antwort
+     anhaengen. Steht eines davon zusaetzlich da, zaehlt die Antwort nicht:
+     "Hausmacht statt Reichskirche", "geistliche oder weltliche", "Ring und
+     Stab" sind keine Antwort auf EINE Frage (18.10.2026). */
+  var GEGENSATZ = { statt: 1, anstatt: 1, oder: 1, sondern: 1, ausser: 1, entweder: 1,
+    weder: 1, vielleicht: 1, eventuell: 1, evtl: 1, bzw: 1, beziehungsweise: 1, und: 1,
+    or: 1, and: 1, instead: 1, either: 1, maybe: 1, et: 1, ou: 1 };
 
   /* Kurzformen (nur Englisch). "can't", "cannot" und "can not" sind gleich. */
   var KURZ = [
@@ -218,6 +230,60 @@
     return best;
   }
 
+  /* ---------- Ein Wort dazugeschrieben ----------
+     Helena am 18.10.2026: "Dort das rote / das falsche ist doch eigentlich
+     richtig, sowas passiert oefter wenn ich ein Wort dazu schreibe." Sie
+     hatte "nutzung der reichskirche" getippt, gesucht war "Reichskirche".
+     Steht die Loesung vollstaendig als Wortfolge in der Eingabe und stehen
+     hoechstens drei weitere Woerter drumherum, ist das dieselbe Antwort.
+     Es bleibt falsch, wenn eines der zusaetzlichen Woerter den Sinn dreht
+     oder eine zweite Antwort anhaengt (GEGENSATZ, VERNEINUNG), wenn eine
+     Zahl dazukommt, oder wenn eine sicher falsche Antwort (opt.verboten)
+     mit in der Eingabe steht. */
+  function stelleIm(gw, rw) {
+    for (var i = 0; i + rw.length <= gw.length; i++) {
+      var passt = true;
+      for (var j = 0; j < rw.length; j++) if (gw[i + j] !== rw[j]) { passt = false; break; }
+      if (passt) return i;
+    }
+    return -1;
+  }
+  function zusatzTreffer(gegeben, alle, opt) {
+    var sp = opt.sprache || "", k, i;
+    var gf = formen(gegeben, sp);
+    var verboten = (opt.verboten || []).filter(function (v) { return v != null && String(v).trim(); });
+    for (k = 0; k < alle.length; k++) {
+      var rf = formen(alle[k], sp);
+      for (i = 0; i < rf.length; i++) {
+        var rw = ohneAkzent(rf[i]).split(" ").filter(Boolean);
+        if (!rw.length || rw.join("").length < 4) continue;
+        for (var m = 0; m < gf.length; m++) {
+          var gw = ohneAkzent(gf[m]).split(" ").filter(Boolean);
+          var stelle = stelleIm(gw, rw);
+          if (stelle < 0) continue;
+          var extra = gw.slice(0, stelle).concat(gw.slice(stelle + rw.length));
+          if (!extra.length || extra.length > 3) continue;
+          var schlimm = extra.some(function (w) {
+            return VERNEINUNG[w] || GEGENSATZ[w] || /\d/.test(w);
+          });
+          if (schlimm) continue;
+          /* Steht eine sicher falsche Antwort mit in der Eingabe, hat das
+             Kind zwei Moeglichkeiten genannt statt sich zu entscheiden. */
+          var auchFalsch = verboten.some(function (v) {
+            if (alle.some(function (a) { return schlicht(a, sp) === schlicht(v, sp); })) return false;
+            return formen(v, sp).some(function (y) {
+              var vw = ohneAkzent(y).split(" ").filter(Boolean);
+              return vw.length && vw.join("").length >= 3 && stelleIm(gw, vw) >= 0;
+            });
+          });
+          if (auchFalsch) continue;
+          return alle[k];
+        }
+      }
+    }
+    return null;
+  }
+
   function pruefen(gegeben, soll, opt) {
     opt = opt || {};
     if (!schlicht(gegeben, opt.sprache)) return { stufe: "offen", treffer: String(soll == null ? "" : soll), grund: "" };
@@ -235,7 +301,11 @@
       if (e && e.stufe === "gut") return { stufe: "gut", treffer: alle[i], grund: e.grund };
       if (e && (!fast || (e.d || 0) < (fast.d || 0))) { fast = e; fast.treffer = alle[i]; }
     }
-    if (!fast) return { stufe: "schlecht", treffer: String(soll == null ? "" : soll), grund: "" };
+    if (!fast) {
+      var z = opt.zusatzWorte ? zusatzTreffer(gegeben, alle, opt) : null;
+      if (z) return { stufe: "fast", treffer: z, grund: "zusatz" };
+      return { stufe: "schlecht", treffer: String(soll == null ? "" : soll), grund: "" };
+    }
 
     /* Liegt die Eingabe genauso nah oder naeher an einer sicher falschen
        Antwort (anderer Knopf, bekannter Fehler, die Falschform selbst),

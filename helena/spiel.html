@@ -121,15 +121,21 @@
      keinen hat; kleiner Tippfehler = "fast" (zaehlt, Schreibweise steht gross
      da); bei Zahlantworten zaehlt nur die Zahl ("19. Jahrhundert" fuer "19.").
      Die Auswahlknoepfe und bekannte Fehlantworten (diagnosen) bleiben falsch,
-     auch wenn sie nur einen Buchstaben daneben liegen. */
+     auch wenn sie nur einen Buchstaben daneben liegen.
+     Dazu seit 19.10.2026 (Helena, 18.10.2026: "sowas passiert oefter wenn ich
+     ein Wort dazu schreibe"): Steht die Loesung vollstaendig in ihrer Antwort
+     und stehen hoechstens drei weitere Woerter drumherum, zaehlt sie. In
+     Englisch und Franzoesisch nicht - dort ist der genaue Wortlaut der
+     Lernpunkt. */
   function feldStufe(gegeben, soll, a){
     if (gleich(gegeben, soll)) return { stufe: "gut", treffer: soll };
     var T = window.LWToleranz;
     if (!T) return { stufe: "schlecht", treffer: soll };
     var fach = String((spiel && spiel.fach) || "").toLowerCase();
+    var sprache = /^engl/.test(fach) ? "en" : /^fran/.test(fach) ? "fr" : "";
     var verboten = (a.antworten || []).concat((a.diagnosen || []).map(function(d){ return d.antwort; }));
-    return T.pruefen(gegeben, soll, { verboten: verboten,
-      sprache: /^engl/.test(fach) ? "en" : /^fran/.test(fach) ? "fr" : "" });
+    return T.pruefen(gegeben, soll, { verboten: verboten, sprache: sprache,
+      zusatzWorte: !sprache });
   }
 
   /* ---------- Laden ---------- */
@@ -250,8 +256,10 @@
       rueckmeldung(true, a.erklaerung || a.weg || "", false);
       if (erg.stufe === "fast" && window.LWToleranz){
         var e = $("rueckmeldung");
-        e.querySelector("b").textContent = "Fast richtig.";
-        window.LWToleranz.zeigen(e, String(gegeben).trim(), erg.treffer || soll);
+        var zusatz = erg.grund === "zusatz";
+        e.querySelector("b").textContent = zusatz ? "Richtig – kürzer reicht auch." : "Fast richtig.";
+        window.LWToleranz.zeigen(e, String(gegeben).trim(), erg.treffer || soll,
+          zusatz ? { wo: "Das hätte gereicht:" } : null);
       }
       return;
     }
@@ -338,7 +346,7 @@
   $("nochmal").addEventListener("click", function(){ if (spiel) starten(); });
 })();
 </script>
-<script src="/toleranz.js?v=20aedc58"></script>
+<script src="/toleranz.js?v=122870a5"></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=fe69f5e5" defer></script>
 </body>
