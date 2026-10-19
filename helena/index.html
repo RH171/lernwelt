@@ -540,25 +540,12 @@
     $("bet-wann").textContent = n === 0 ? "Heute – viel Erfolg!" : "Donnerstag, 1. Oktober";
   })();
 
-<<<<<<< HEAD
-  /* ---------- Vokabelstand ----------
-     Die Zahl legt der Trainer beim letzten Besuch ab (trainer.js). Steht dort
-     nichts, wird KEINE Zahl erfunden - dann bleibt der allgemeine Satz stehen.
-     Das ist dieselbe Regel wie beim Anwesenheitsband: nichts gefunden heisst
-     nicht null. */
-  /* Seit 19.10.2026 je Sprache ein Schluessel ("helena-vokabelstand-en",
-     "-fr"). Der alte gemeinsame Schluessel "helena-vokabelstand" wird nur
-     noch gelesen und ueber sein Feld "sprache" zugeordnet - vorher galt er
-     immer als Englisch, auch nach einer Franzoesisch-Runde. Gilt der
-     neuere von beiden. */
-=======
   /* ---------- Vokabelstand je Sprache ----------
      Seit 19.10.2026 je Sprache ein Schluessel ("helena-vokabelstand-en", "-fr",
      Zweig bau/vokabelfoto-pruefen). Der alte gemeinsame Schluessel
      "helena-vokabelstand" wird nur noch gelesen und ueber sein Feld "sprache"
      zugeordnet. Gilt der neuere von beiden. Aelter als drei Tage oder nichts
      da: KEINE Zahl - nichts gefunden heisst nicht null. */
->>>>>>> bau/helena-start-d
   function spracheVon(x){ return /^fr|franz/i.test(String(x || "")) ? "fr" : "en"; }
   function lesen(k){
     try {
@@ -571,10 +558,6 @@
     var alt = lesen("helena-vokabelstand");
     if (alt && spracheVon(alt.sprache) === spr && (!d || (alt.stand || 0) > (d.stand || 0))) d = alt;
     if (!d) return null;
-<<<<<<< HEAD
-    // Aelter als drei Tage: dann stimmt die Zahl vermutlich nicht mehr.
-=======
->>>>>>> bau/helena-start-d
     if (Date.now() - (d.stand || 0) > 3 * 86400000) return null;
     return d;
   }
@@ -584,13 +567,7 @@
   };
 
   /* ---------- Die eine Empfehlung ----------
-<<<<<<< HEAD
-     Reihenfolge nach Dringlichkeit, nicht nach Gewohnheit:
-       1. Vokabeln, die faellig sind - das ist der Kern des Trainers.
-          Sind in beiden Sprachen welche dran, die mit mehr faelligen.
-=======
        1. Vokabeln, die faellig sind (die Sprache mit mehr faelligen).
->>>>>>> bau/helena-start-d
        2. Sonst: der BET, solange er naeher als zwei Wochen ist.
        3. Sonst: neue Woerter kennenlernen.
      Keiner davon macht Druck: Es steht nie da, dass etwas "verloren" geht. */
@@ -598,14 +575,6 @@
     var st = { en: stand("en"), fr: stand("fr") };
     var was = $("heute-was"), warum = $("heute-warum"), karte = $("heute");
 
-<<<<<<< HEAD
-    // Die Kacheln zeigen je Sprache ihren eigenen Stand.
-    ["en", "fr"].forEach(function(spr){
-      var s = st[spr], f = $(SPRACHEN[spr].feld);
-      if (!s || !f) return;
-      if (s.faellig > 0) f.textContent = s.faellig + " fällig" + (s.neu ? " · " + s.neu + " neu" : "");
-      else if (s.neu > 0) f.textContent = s.neu + " noch nie geübt";
-=======
     // Die Sprachkarten zeigen je Sprache ihren eigenen Stand, die Zahl gross.
     ["en", "fr"].forEach(function(spr){
       var s = st[spr], f = $(SPRACHEN[spr].feld);
@@ -615,7 +584,6 @@
       f.innerHTML = "";
       var b = document.createElement("b"); b.textContent = String(z); f.appendChild(b);
       f.appendChild(document.createTextNode(s.faellig > 0 ? " fällig" + (s.neu ? " · " + s.neu + " neu" : "") : " noch nie geübt"));
->>>>>>> bau/helena-start-d
     });
     if (!was || !warum || !karte) return;
 
@@ -624,23 +592,12 @@
       if (!a && !b) return null;
       return b > a ? "fr" : "en";
     }
-<<<<<<< HEAD
-
     var betTage = tageBis(new Date(2026, 9, 1));
-
-=======
-    var betTage = tageBis(new Date(2026, 9, 1));
->>>>>>> bau/helena-start-d
     var spr = beste("faellig");
     if (spr){
       var s = st[spr];
       was.textContent = SPRACHEN[spr].name + ": " + s.faellig + (s.faellig === 1 ? " Wort ist dran" : " Wörter sind dran");
-<<<<<<< HEAD
-      warum.textContent = "Wiederholen, solange sie noch sitzen" +
-        (s.neu ? " – dazu " + s.neu + " neue, wenn du magst." : ".");
-=======
       warum.textContent = "Wiederholen, solange sie noch sitzen" + (s.neu ? " – dazu " + s.neu + " neue, wenn du magst." : ".");
->>>>>>> bau/helena-start-d
       karte.href = SPRACHEN[spr].seite;
       return;
     }
