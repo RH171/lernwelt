@@ -124,10 +124,18 @@
        Startseite ist seitdem nicht mehr der Trainer selbst, sondern eine
        Uebersicht - und die soll sagen koennen, wie viel heute ansteht, ohne
        den ganzen Vokabelbestand mitzuladen. Steht nichts da, sagt sie das
-       ehrlich, statt eine Zahl zu erfinden. */
+       ehrlich, statt eine Zahl zu erfinden.
+       Seit 19.10.2026 je Sprache ein eigener Schluessel: Vorher schrieben
+       Englisch und Franzoesisch beide nach "helena-vokabelstand", und die
+       Startseite las den Wert immer als Englisch - nach einer Franzoesisch-
+       Runde zeigte sie franzoesische Zahlen und fuehrte zum Englisch-Trainer.
+       Weiterhin genau EIN Schreibvorgang je Aufruf (paul-sync: jedes
+       setItem wird ein KV-Schreibvorgang). Der alte Schluessel wird nicht
+       mehr geschrieben, die Startseite liest ihn nur noch als Rueckfall. */
     try {
-      localStorage.setItem("helena-vokabelstand", JSON.stringify({
-        faellig: z.faellig, neu: z.neu, sprache: (window.HELENA_KONFIG||{}).sprache || "englisch",
+      var kurz = K.fach==="franzoesisch" ? "fr" : "en";
+      localStorage.setItem("helena-vokabelstand-"+kurz, JSON.stringify({
+        faellig: z.faellig, neu: z.neu, sprache: kurz,
         stand: Date.now()
       }));
     } catch(e){}

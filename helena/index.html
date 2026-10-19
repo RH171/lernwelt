@@ -410,36 +410,68 @@
      nichts, wird KEINE Zahl erfunden - dann bleibt der allgemeine Satz stehen.
      Das ist dieselbe Regel wie beim Anwesenheitsband: nichts gefunden heisst
      nicht null. */
-  function stand(){
+  /* Seit 19.10.2026 je Sprache ein Schluessel ("helena-vokabelstand-en",
+     "-fr"). Der alte gemeinsame Schluessel "helena-vokabelstand" wird nur
+     noch gelesen und ueber sein Feld "sprache" zugeordnet - vorher galt er
+     immer als Englisch, auch nach einer Franzoesisch-Runde. Gilt der
+     neuere von beiden. */
+  function spracheVon(x){ return /^fr|franz/i.test(String(x || "")) ? "fr" : "en"; }
+  function lesen(k){
     try {
-      var d = JSON.parse(localStorage.getItem("helena-vokabelstand") || "null");
-      if (!d || typeof d.faellig !== "number") return null;
-      // Aelter als drei Tage: dann stimmt die Zahl vermutlich nicht mehr.
-      if (Date.now() - (d.stand || 0) > 3 * 86400000) return null;
-      return d;
+      var d = JSON.parse(localStorage.getItem(k) || "null");
+      return (d && typeof d.faellig === "number") ? d : null;
     } catch (e){ return null; }
   }
+  function stand(spr){
+    var d = lesen("helena-vokabelstand-" + spr);
+    var alt = lesen("helena-vokabelstand");
+    if (alt && spracheVon(alt.sprache) === spr && (!d || (alt.stand || 0) > (d.stand || 0))) d = alt;
+    if (!d) return null;
+    // Aelter als drei Tage: dann stimmt die Zahl vermutlich nicht mehr.
+    if (Date.now() - (d.stand || 0) > 3 * 86400000) return null;
+    return d;
+  }
+  var SPRACHEN = {
+    en: { name: "Englisch", seite: "vokabeln.html",     feld: "engl-stand" },
+    fr: { name: "Französisch", seite: "franzoesisch.html", feld: "franz-stand" }
+  };
 
   /* ---------- Die eine Empfehlung ----------
      Reihenfolge nach Dringlichkeit, nicht nach Gewohnheit:
        1. Vokabeln, die faellig sind - das ist der Kern des Trainers.
+          Sind in beiden Sprachen welche dran, die mit mehr faelligen.
        2. Sonst: der BET, solange er naeher als zwei Wochen ist.
        3. Sonst: neue Woerter kennenlernen.
      Mehr Faelle waeren Raten. Und keiner davon macht Druck: Es steht nie da,
      dass etwas "verloren" geht. */
   (function(){
-    var s = stand();
+    var st = { en: stand("en"), fr: stand("fr") };
     var was = $("heute-was"), warum = $("heute-warum"), karte = $("heute");
+
+    // Die Kacheln zeigen je Sprache ihren eigenen Stand.
+    ["en", "fr"].forEach(function(spr){
+      var s = st[spr], f = $(SPRACHEN[spr].feld);
+      if (!s || !f) return;
+      if (s.faellig > 0) f.textContent = s.faellig + " fällig" + (s.neu ? " · " + s.neu + " neu" : "");
+      else if (s.neu > 0) f.textContent = s.neu + " noch nie geübt";
+    });
     if (!was || !warum || !karte) return;
+
+    function beste(feld){
+      var a = st.en && st.en[feld] > 0 ? st.en[feld] : 0, b = st.fr && st.fr[feld] > 0 ? st.fr[feld] : 0;
+      if (!a && !b) return null;
+      return b > a ? "fr" : "en";
+    }
 
     var betTage = tageBis(new Date(2026, 9, 1));
 
-    if (s && s.faellig > 0){
-      was.textContent = s.faellig + (s.faellig === 1 ? " Wort" : " Wörter") + " sind dran";
+    var spr = beste("faellig");
+    if (spr){
+      var s = st[spr];
+      was.textContent = SPRACHEN[spr].name + ": " + s.faellig + (s.faellig === 1 ? " Wort ist dran" : " Wörter sind dran");
       warum.textContent = "Wiederholen, solange sie noch sitzen" +
         (s.neu ? " – dazu " + s.neu + " neue, wenn du magst." : ".");
-      karte.href = "vokabeln.html";
-      $("engl-stand").textContent = s.faellig + " fällig" + (s.neu ? " · " + s.neu + " neu" : "");
+      karte.href = SPRACHEN[spr].seite;
       return;
     }
     if (betTage >= 0 && betTage <= 14){
@@ -449,11 +481,11 @@
       karte.href = "bet.html";
       return;
     }
-    if (s && s.neu > 0){
-      was.textContent = s.neu + " neue Wörter";
+    spr = beste("neu");
+    if (spr){
+      was.textContent = SPRACHEN[spr].name + ": " + st[spr].neu + (st[spr].neu === 1 ? " neues Wort" : " neue Wörter");
       warum.textContent = "Nichts Altes ist fällig – du kannst Neues dazunehmen.";
-      karte.href = "vokabeln.html";
-      $("engl-stand").textContent = s.neu + " noch nie geübt";
+      karte.href = SPRACHEN[spr].seite;
     }
   })();
 
