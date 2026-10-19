@@ -32,7 +32,8 @@
 // (Abrufuebung, verteiltes Ueben) misst den Nutzen von WIEDERHOLUNG.
 //
 // Jetzt schliesst nichts mehr aus. `_wiedervorlage.js` SORTIERT nur: was
-// faellig ist, kommt eher dran. Paul waehlt weiterhin Tag und Bereich selbst
+// faellig ist, kommt eher dran. (Einzige Ausnahme seit 19.10.2026: "Alle
+// Fragen" laesst sicher Gekonntes weg, abschaltbar - siehe gekonntWeg().) Paul waehlt weiterhin Tag und Bereich selbst
 // (Dennys Beschluss vom 24.09.2026) - eine Faelligkeit ist ein Angebot, kein
 // Stapel, der abgearbeitet werden muss.
 
@@ -48,7 +49,7 @@ import { stehtAufBlatt } from "./spiel-bauen.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
-  fundFaelligJeBlatt, fundStandJeKarte, wartendText,
+  fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen,
 } from "./_wiedervorlage.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN } from "./_fragerichtung.js";
 
@@ -129,6 +130,10 @@ export async function onRequestGet(context) {
   // 0 heisst "endlos" - dann wird geliefert, was da ist, und beim naechsten
   // Nachladen weiter.
   const anzahl = Number.isFinite(anzahlRoh) ? Math.min(ALLE_HOECHSTENS, Math.max(0, Math.trunc(anzahlRoh))) : 15;
+  /* Schalter "Auch Gekonntes" (19.10.2026): gekonnt=1 holt bei "Alle Fragen"
+     zurueck, was schon sicher sitzt. Ohne den Parameter (auch jede alte,
+     noch offene Seite) bleibt es weg. */
+  const auchGekonnt = url.searchParams.get("gekonnt") === "1";
 
   /* Nur nachsehen, was wartet - fuer die Blattauswahl, BEVOR das Quiz laeuft.
      Zwei Leseabfragen, kein Schreibvorgang, kein Nachbau und kein Geld.
@@ -162,7 +167,14 @@ export async function onRequestGet(context) {
       }
       kreiseKarten = [...zusammen.values()];
     }
-    const zahl = fragenZaehlen(vorratBereinigen(v.fragen, bn));
+    /* "Alle Fragen (N)" zaehlt ohne Gekonntes (19.10.2026), `gekonntZahl`
+       sagt, wie viele der Schalter "Auch Gekonntes" dazuholt. Eine alte Seite
+       kennt nur `fragenZahl` - sie zeigt damit genau die Zahl, die ihr
+       "Alle Fragen" (ohne gekonnt=1) jetzt auch bekommt. */
+    const bereinigt = vorratBereinigen(v.fragen, bn);
+    const gekonnt = gekonnteTatsachen(bereinigt, pk, Date.now(), tatsacheSchluessel);
+    const zahl = fragenZaehlen(bereinigt.filter((f) => !gekonnt.has(tatsacheSchluessel(f))));
+    const gekonntZahl = fragenZaehlen(bereinigt.filter((f) => gekonnt.has(tatsacheSchluessel(f))));
     /* Je Tatsache zaehlt nur die zuletzt gestellte Form (19.10.2026) - sonst
        "wartet" eine Tatsache doppelt, die Paul eben in anderer Form hatte. */
     const proTatsache = RICHTUNG.an
@@ -170,7 +182,7 @@ export async function onRequestGet(context) {
     const fund = fundFaelligJeBlatt(pk, Date.now());
     const fundText = {};
     for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
-    return json(200, { ok: true, wiedervorlage: fuerDieSeite(), fragenZahl: zahl,
+    return json(200, { ok: true, wiedervorlage: fuerDieSeite(), fragenZahl: zahl, gekonntZahl,
                        wartend: wartendJeBlatt(proTatsache, pk, Date.now()),
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
@@ -288,24 +300,35 @@ export async function onRequestGet(context) {
   const punkte = await punkteLesen(env, kind);
   const jetzt = Date.now();
   const alleDazu = vorrat.fragen.filter(passt);
+  /* "Alle Fragen" ohne Gekonntes (Denny per Klickfrage 19.10.2026 ~17:40 Uhr,
+     "Gekonntes weglassen, abschaltbar"; Ziel "dass Paul alles kann, aber vom
+     Lernen nicht gelangweilt ist"). Lockert die Regel vom 24.09.2026 ("die
+     Faelligkeit SORTIERT nur") bewusst und NUR hier, bei anzahl 0.
+     Ist ALLES gekonnt, wird nicht leer gestartet: Dann kommt das Gekonnte
+     (`nurGekonntes`) - die neue Seite fragt vorher freundlich, eine alte
+     bekommt so wenigstens ein Quiz statt einer Fehlermeldung oder eines
+     bezahlten Nachbaus. */
+  const gw = gekonntWeg(alleDazu, vorrat.fragen, punkte, jetzt, anzahl, auchGekonnt);
+  const auswahl = gw.auswahl;
   /* Drei Fragerichtungen (19.10.2026): "gestellt" heisst ab jetzt "die
      TATSACHE war schon dran", nicht "genau diese Frage". Je Tatsache geht
      EINE Frage in die Auswahl; welche Form, entscheidet richtungAnwenden(). */
   const beg = RICHTUNG.an ? begegnungen(gestelltListe, nachKennung(vorrat.fragen)) : null;
   const schonDran = (f) => (beg ? beg.has(tatsacheVon(f)) : gestellt.has(f.id));
-  /* "Alle Fragen" (anzahl 0) heisst ALLE der Auswahl, nicht NACHFUELLEN_AB.
+  /* "Alle Fragen" (anzahl 0) heisst ALLE der Auswahl, nicht NACHFUELLEN_AB -
+     seit 19.10.2026 ohne das Gekonnte (gekonntWeg() oben).
      Am 29.09.2026 waehlte Paul "Alle Fragen (31)" in HSU und bekam 10: Die
      meisten Fragen hatte er schon gehabt, also zaehlten nur die frischen, 4
      faellige und aufgefuellt bis 10. */
   const gebraucht = anzahl ? Math.max(NACHFUELLEN_AB, anzahl)
                            : Math.min(ALLE_HOECHSTENS, Math.max(NACHFUELLEN_AB,
-                               beg ? new Set(alleDazu.map(tatsacheVon)).size : alleDazu.length));
+                               beg ? new Set(auswahl.map(tatsacheVon)).size : auswahl.length));
   let wiederholt = 0;
   let offen;
 
   if (WV.an) {
-    let frisch = alleDazu.filter((f) => !schonDran(f));
-    let dran = alleDazu.filter(schonDran);
+    let frisch = auswahl.filter((f) => !schonDran(f));
+    let dran = auswahl.filter(schonDran);
     if (beg) {
       /* Je neuer Tatsache eine zufaellige Form, je bekannter der Vertreter
          (zuletzt gestellte Form - dessen Lernpunkt ist der frischeste). */
@@ -333,9 +356,9 @@ export async function onRequestGet(context) {
   } else {
     /* Der alte Weg, Wort fuer Wort - damit `an: false` wirklich zurueckfaellt
        und nicht bloss "ungefaehr wie frueher" ist. */
-    offen = alleDazu.filter((f) => !gestellt.has(f.id));
-    if (offen.length < gebraucht && alleDazu.length >= Math.min(gebraucht, 5)) {
-      const schonMal = alleDazu.filter((f) => gestellt.has(f.id));
+    offen = auswahl.filter((f) => !gestellt.has(f.id));
+    if (offen.length < gebraucht && auswahl.length >= Math.min(gebraucht, 5)) {
+      const schonMal = auswahl.filter((f) => gestellt.has(f.id));
       offen = offen.concat(schonMal.slice(0, gebraucht - offen.length));
       wiederholt = Math.min(schonMal.length, gebraucht - (offen.length - schonMal.length));
     }
@@ -410,7 +433,32 @@ export async function onRequestGet(context) {
   return json(200, { ok: true, fragen: raus, nachgebaut, nachschub, vorrat: offen.length,
                      wiedervorlage: fuerDieSeite(),
                      wartend: wartendJeBlatt(vorrat.fragen, punkte, jetzt),
-                     ...(wiederholt ? { wiederholt } : {}) });
+                     ...(wiederholt ? { wiederholt } : {}),
+                     ...(gw.weg ? { ohneGekonnt: gw.weg } : {}),
+                     ...(gw.nurGekonntes ? { nurGekonntes: true } : {}) });
+}
+
+/* Schluessel, unter dem "gekonnt" gerechnet wird: die Tatsache (Kapitel 132),
+   bei abgeschalteter Fragerichtung die Frage selbst - so zaehlt auch
+   fragenZaehlen(). */
+function tatsacheSchluessel(f) {
+  return RICHTUNG.an ? tatsacheVon(f) : "f:" + String((f && f.id) || "");
+}
+
+/* "Alle Fragen" ohne Gekonntes (19.10.2026). Rein, ohne Speicher - geprueft
+   mit pruefe-ohne-gekonntes.mjs.
+     alleDazu   die Fragen der Auswahl (Fach/Blatt)
+     vorrat     der ganze Vorrat - die Formen einer Tatsache gehoeren zusammen
+   Rueckgabe { auswahl, weg (Tatsachen weggelassen), nurGekonntes }. */
+export function gekonntWeg(alleDazu, vorrat, punkte, jetzt, anzahl, auchGekonnt) {
+  const alle = alleDazu || [];
+  if (anzahl || auchGekonnt || !WV.an || !WV.alleOhneGekonntes) return { auswahl: alle, weg: 0, nurGekonntes: false };
+  const gekonnt = gekonnteTatsachen(vorrat || alle, punkte, jetzt, tatsacheSchluessel);
+  if (!gekonnt.size) return { auswahl: alle, weg: 0, nurGekonntes: false };
+  const ohne = alle.filter((f) => !gekonnt.has(tatsacheSchluessel(f)));
+  const weg = new Set(alle.filter((f) => gekonnt.has(tatsacheSchluessel(f))).map(tatsacheSchluessel)).size;
+  if (!ohne.length) return { auswahl: alle, weg: 0, nurGekonntes: weg > 0 };
+  return { auswahl: ohne, weg, nurGekonntes: false };
 }
 
 /* Den Vorrat gegen den heutigen Riegel halten.

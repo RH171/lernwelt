@@ -113,6 +113,14 @@ html[data-theme="dark"] .qquizleiste{background:#262a3a}
 .qquizleiste .qql-t{font:700 16px var(--rund,inherit);margin-bottom:8px}
 .qquizleiste .qql-zahl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .qquizleiste .qql-los{width:100%}
+/* "Auch Gekonntes" (19.10.2026): ein Schalter, kein Zwang. Gleiche Farben wie
+   .qchip (hell/dunkel kommen aus der Seite), Tippziel mindestens 44 px. */
+.qquizleiste .qql-gek{display:block;width:100%;min-height:46px;margin:0 0 10px;padding:10px 14px;
+  border:2px dashed var(--akzent);border-radius:14px;background:transparent;color:var(--ink);
+  font:700 15px/1.25 var(--rund,inherit);cursor:pointer;text-align:center}
+.qquizleiste .qql-gek.an{border-style:solid;border-color:var(--akzent);background:var(--akzent-hell);color:var(--akzent-text,var(--akzent))}
+.qquizleiste .qql-allesda{margin:0;font:700 16px/1.35 var(--rund,inherit);color:var(--ink)}
+.qquizleiste .qql-allesda + .qql-los{margin-top:10px}
 
 /* ---------- Hilfe in Stufen (23.09.2026) ----------
  * Denny: "Leicht helfen hier Bilder, kleine Eselsbrücken, wie man sich das

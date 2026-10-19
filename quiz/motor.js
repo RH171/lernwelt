@@ -220,13 +220,26 @@
   /* Wie viele Fragen es je Blatt und je Fach gibt (Server: fragenZahl).
      null = unbekannt, dann bietet die Leiste alle Stufen an. */
   var fragenZahl = null;
+  /* "Alle Fragen" ohne Gekonntes (Denny per Klickfrage 19.10.2026,
+     "Gekonntes weglassen, abschaltbar"). `fragenZahl` zaehlt seitdem OHNE das
+     sicher Gekonnte, `gekonntZahl` (je Blatt/Fach) sagt, wie viele der
+     Schalter "Auch Gekonntes" dazuholt. Was "gekonnt" heisst, entscheidet der
+     Server (gekonnteTatsachen() in functions/api/_wiedervorlage.js), nicht
+     der Motor. Der Schalter wird nicht gemerkt: jeder Besuch beginnt ohne
+     Gekonntes, so wie Denny es gewaehlt hat. Ein alter Server ohne
+     `gekonntZahl` zeigt keinen Schalter - alles wie vorher. */
+  var gekonntZahl = null, auchGekonnt = false;
 
   function wartendHolen() {
     fetch("/api/quiz?nurWartend=1&kind=" + encodeURIComponent(K.kind),
           { credentials: "same-origin" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        if (j && j.ok && j.fragenZahl) { fragenZahl = j.fragenZahl; quizLeisteMalen(); }
+        if (j && j.ok && j.fragenZahl) {
+          fragenZahl = j.fragenZahl;
+          gekonntZahl = j.gekonntZahl && typeof j.gekonntZahl === "object" ? j.gekonntZahl : null;
+          quizLeisteMalen();
+        }
         if (!j || !j.ok || !j.wiedervorlage || !j.wiedervorlage.an) return;
         wartend = j.wartend || {};
         wvAnzeige = j.wiedervorlage.anzeige || null;
@@ -673,6 +686,10 @@
        es zu speichern, damit beim naechsten, groesseren Fach wieder die
        gewohnte Zahl dasteht. */
     var moeglich = fragenMoeglich();
+    /* Gekonntes: wie viele der Schalter dazuholt (hoechstens bis 100). */
+    var ohneGek = fragenMoeglich(true);
+    var gekDazu = ohneGek == null ? 0 : Math.min(100, ohneGek + (gekonntSumme() || 0)) - ohneGek;
+    var alleGekonnt = !auchGekonnt && ohneGek === 0 && gekDazu > 0;
     var stufen = LAENGEN.filter(function (x) { return !x[0] || moeglich == null || x[0] < moeglich; });
     if (moeglich != null && stand.laenge && stand.laenge >= moeglich) stand.laenge = 0;
     var eins = stand.faecher.length === 1;
@@ -705,6 +722,35 @@
       l.querySelector(".qql-zahl").appendChild(b);
     });
     var los = l.querySelector(".qql-los");
+    if (gekDazu > 0) {
+      var gk = document.createElement("button");
+      gk.type = "button";
+      gk.className = "qql-gek" + (auchGekonnt ? " an" : "");
+      gk.setAttribute("aria-pressed", auchGekonnt ? "true" : "false");
+      gk.textContent = (auchGekonnt ? "\u2713 Auch Gekonntes \u00b7 " + gekDazu + " dabei"
+                                    : "\uFF0B Auch Gekonntes \u00b7 " + gekDazu + " dazu");
+      gk.addEventListener("click", function () { auchGekonnt = !auchGekonnt; quizLeisteMalen(); });
+      l.insertBefore(gk, los);
+    }
+    if (alleGekonnt) {
+      /* Alles schon gekonnt: nicht leer starten, sondern freundlich anbieten
+         (Denny, 19.10.2026). Statt Fragenzahl und Start ein Satz und EIN Knopf. */
+      l.querySelector(".qql-zahl").remove();
+      var gs = l.querySelector(".qql-gek");
+      if (gs) gs.remove();
+      var satz = document.createElement("p");
+      satz.className = "qql-allesda";
+      /* Kurz mit Absicht: Die Leiste klebt unten, und auf dem Handy mit
+         offener Tastatur (375x360) schob ein Satz ueber drei Zeilen den Knopf
+         unter den Rand (gemessen 19.10.2026). Das Angebot steht im Knopf. */
+      satz.textContent = gekDazu === 1 ? "\uD83C\uDF1F Die Frage kannst du schon!"
+        : "\uD83C\uDF1F Alle " + gekDazu + " Fragen kannst du schon!";
+      l.insertBefore(satz, los);
+      los.textContent = "Gekonntes wiederholen \u00b7 " + (gekDazu === 1 ? "1 Frage" : gekDazu + " Fragen");
+      los.setAttribute("data-gekonnt", "1");
+      los.addEventListener("click", function () { auchGekonnt = true; stand.laenge = 0; quizLeisteMalen(); $("q-start").click(); });
+      return;
+    }
     los.textContent = "Quiz starten \u00b7 " + (stand.laenge ? stand.laenge + " Fragen"
       : moeglich ? (moeglich === 1 ? "1 Frage" : "alle " + moeglich + " Fragen") : "alle Fragen");
     los.addEventListener("click", function () { $("q-start").click(); });
@@ -713,9 +759,17 @@
      die Blaetter unter dem Art-Filter, sonst das ganze Fach bzw. alle Faecher.
      null, solange der Server nichts gesagt hat. Hoechstens 100 - mehr kommen
      in einer Runde nicht (ALLE_HOECHSTENS in functions/api/quiz.js). */
-  function fragenMoeglich() {
+  function fragenMoeglich(ohneSchalter) {
     if (!fragenZahl) return null;
-    var jb = fragenZahl.blatt || {}, jf = fragenZahl.fach || {}, n = 0;
+    var n = zahlFuerAuswahl(fragenZahl);
+    if (!ohneSchalter && auchGekonnt) n += gekonntSumme() || 0;
+    return Math.min(n, 100);
+  }
+  /* Wie viele gekonnte Fragen in der Auswahl liegen (0, wenn der Server es
+     nicht sagt). */
+  function gekonntSumme() { return gekonntZahl ? zahlFuerAuswahl(gekonntZahl) : 0; }
+  function zahlFuerAuswahl(zahl) {
+    var jb = zahl.blatt || {}, jf = zahl.fach || {}, n = 0;
     function blattSumme(ids) { ids.forEach(function (id) { n += jb[id] || 0; }); }
     if (stand.faecher.length === 1) {
       if (stand.blaetter.length) blattSumme(stand.blaetter);
@@ -724,7 +778,7 @@
     } else {
       K.faecher.forEach(function (f) { n += jf[f.k] || 0; });
     }
-    return Math.min(n, 100);
+    return n;
   }
   function nachBlaettern() {
     if (typeof window.QUIZ_NACH_BLAETTERN === "function") {
@@ -934,6 +988,7 @@ function artKurz(art) {
       if (ids.length) p.set("blaetter", ids.join(","));
     }
     p.set("anzahl", String(stand.laenge || 0));
+    if (auchGekonnt) p.set("gekonnt", "1");
     return fetch("/api/quiz?" + p.toString(), { credentials: "same-origin" })
       .then(function (r) { return r.json(); });
   }
@@ -1528,7 +1583,9 @@ function artKurz(art) {
     } catch (e) {}
   }
 
-  $("q-nochmal").addEventListener("click", function () { zeige("start"); });
+  /* Nach einer Runde frisch zaehlen: Was eben zum dritten Mal richtig war,
+     gilt jetzt als gekonnt (eine Leseabfrage, kein Schreibvorgang). */
+  $("q-nochmal").addEventListener("click", function () { zeige("start"); if (einzeln()) wartendHolen(); });
 
   function fachName(k) {
     var f = K.faecher.filter(function (x) { return x.k === k; })[0];

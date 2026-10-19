@@ -28,6 +28,15 @@
  * Daraus folgt, und daran wird nicht gedreht:
  *   - Die Faelligkeit SORTIERT nur. Sie schliesst nie etwas aus, sperrt nie
  *     und verlangt nie etwas.
+ *     ⚠️ EINE Ausnahme seit 19.10.2026, NUR fuer "Alle Fragen (N)" im
+ *     Lernquiz: Was schon sicher sitzt (siehe `gekonnteTatsachen()`), bleibt
+ *     dort weg. Denny per Klickfrage, Montag 19.10.2026 ~17:40 Uhr,
+ *     "Gekonntes weglassen, abschaltbar" - Anlass: Paul beantwortete in HSU
+ *     "Alle Blaetter, alle Fragen" ueber 100 Fragen am Stueck, die meisten
+ *     konnte er schon; Ziel "dass Paul alles kann, aber vom Lernen nicht
+ *     gelangweilt ist". Paul holt es mit dem Schalter "Auch Gekonntes"
+ *     zurueck, nichts ist gesperrt. Feste Fragenzahlen (5/10/20/25), die
+ *     Fach-Tagesrunde und das Such-Spiel sortieren weiter nur.
  *   - Kein Pflichtpensum, keine rote Zahl fuer Uebersprungenes, kein
  *     "du hast X verpasst".
  *   - Kornell & Bjork 2008 ("wer selbst Karten weglegen darf, lernt
@@ -84,6 +93,11 @@ export const EINSTELLUNGEN = {
      zu einem Abarbeitungsstapel.
      null = keine Grenze. */
   hoechstensWiederJeLauf: 4,
+
+  /* "Alle Fragen (N)" laesst Gekonntes weg (Denny, 19.10.2026: "Gekonntes
+     weglassen, abschaltbar"). false = "Alle Fragen" heisst wieder ALLE, wie
+     bis zum 19.10.2026. Was "gekonnt" heisst, steht in gekonnteTatsachen(). */
+  alleOhneGekonntes: true,
 
   /* ---- Was Paul SIEHT. Alles davon ist Anzeige, nichts davon zwingt. ---- */
   anzeige: {
@@ -229,6 +243,52 @@ export function wartendJeBlatt(fragen, punkte, jetzt, e) {
     gezaehlt.add(s);
     const blatt = String(f.blatt || "");
     raus[blatt] = (raus[blatt] || 0) + 1;
+  }
+  return raus;
+}
+
+/* Was "gekonnt" heisst (19.10.2026, fuer "Alle Fragen" ohne Gekonntes).
+ *
+ * Kein neuer Begriff, sondern die vorhandene Stufe `sitzt`: ein Lernpunkt,
+ * der `sitzt`-mal (3) richtig war, bekommt den langen Abstand
+ * `abstandTageWennSitzt` (28 Tage). Gekonnt ist eine TATSACHE (Kapitel 132),
+ * wenn
+ *   1. die Summe von `r` ueber die Lernpunkte ALLER ihrer Formen >= `sitzt`
+ *      ist - dieselbe Zaehlung wie `richtigZahl()` in _fragerichtung.js;
+ *   2. ihr juengster Lernpunkt (groesstes z) NICHT zuletzt falsch war und
+ *   3. NICHT faellig ist. Ist der Erhaltungsabstand um, kommt sie wieder mit
+ *      - "mit Abstand richtig" bleibt so eine Wiedervorlage, kein Verschwinden.
+ * `r` steigt hoechstens einmal je Lernrunde und faellt nach einem Fehler einen
+ * Schritt zurueck - drei Treffer heisst drei Runden.
+ *
+ *   fragen       der Vorrat (alle Formen; die Gruppe muss vollstaendig sein)
+ *   tatsache     Schluessel-Funktion, normalerweise tatsacheVon
+ * Rueckgabe: Set der gekonnten Tatsachen-Schluessel. Leer, wenn abgeschaltet. */
+export function gekonnteTatsachen(fragen, punkte, jetzt, tatsache, e) {
+  const ein = e || EINSTELLUNGEN;
+  const raus = new Set();
+  if (!ein.an || !ein.alleOhneGekonntes || !punkte) return raus;
+  const nun = jetzt || Date.now();
+  const schl = tatsache || ((f) => "f:" + String((f && f.id) || ""));
+  const gruppe = new Map();
+  for (const f of fragen || []) {
+    const t = schl(f);
+    const s = punktSchluessel(f);
+    if (!t || !s) continue;
+    if (!gruppe.has(t)) gruppe.set(t, new Set());
+    gruppe.get(t).add(s);
+  }
+  for (const [t, schluessel] of gruppe) {
+    let summe = 0, juengster = null;
+    for (const s of schluessel) {
+      const p = punkte[s];
+      if (!p || !p.z) continue;
+      summe += Number(p.r) || 0;
+      if (!juengster || (Number(p.z) || 0) > (Number(juengster.z) || 0)) juengster = p;
+    }
+    if (!juengster || summe < ein.sitzt) continue;
+    if (juengster.f || istFaellig(juengster, nun, ein)) continue;
+    raus.add(t);
   }
   return raus;
 }
