@@ -20800,5 +20800,345 @@ window.LEON_GESCHICHTEN = [
     "seite": 13
    }
   ]
+ },
+ {
+  "id": "w43-oma-opa-zurueck",
+  "titel": "Oma und Opa fliegen nach Hause",
+  "bild": "✈️",
+  "lang": true,
+  "ereignis": "2026-10-19",
+  "zeigenAb": "2026-10-20",
+  "zeigenBis": "2026-10-22",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "✈️",
+      "🧳"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "O|ma und O|pa wa|ren ver|reist.",
+     "Le|on hat sie schon ver|misst.",
+     "Am Mon|tag ka|men sie wie|der nach Hau|se.",
+     "Sie ka|men mit dem Flug|zeug.",
+     "Das ist doch span|nend!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🌅",
+      "✈️"
+     ],
+     "leute": [
+      "Oma",
+      "Opa"
+     ]
+    },
+    "zeilen": [
+     "Am Mon|tag ging es schon früh los.",
+     "Zu|erst flo|gen sie nach Frank|furt.",
+     "Frank|furt hat ei|nen rie|si|gen Flug|ha|fen.",
+     "Dort lan|de|ten sie am Mor|gen.",
+     "Al|les klapp|te ge|nau nach Plan."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🔁",
+      "✈️"
+     ],
+     "leute": [
+      "Oma",
+      "Opa"
+     ]
+    },
+    "zeilen": [
+     "In Frank|furt muss|ten sie um|stei|gen.",
+     "Das heißt: Sie neh|men ein an|de|res Flug|zeug.",
+     "Da|zu gin|gen sie durch den gro|ßen Flug|ha|fen.",
+     "Dann war|te|ten sie auf den Wei|ter|flug.",
+     "Der Wei|ter|flug ging nach Nürn|berg."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📱",
+      "💬"
+     ],
+     "leute": [
+      "Opa"
+     ]
+    },
+    "zeilen": [
+     "O|pa schrieb ei|ne Nach|richt an die Fa|mi|lie.",
+     "Wir sind gut in Frank|furt an|ge|kom|men!",
+     "Das Flug|zeug soll|te um fünf nach zehn star|ten.",
+     "So wuss|ten al|le Be|scheid.",
+     "Sie konn|ten sich kei|ne Sor|gen ma|chen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "👫",
+      "✈️"
+     ],
+     "leute": [
+      "Robert",
+      "Marianne"
+     ]
+    },
+    "zeilen": [
+     "O|ma und O|pa wa|ren nicht al|lein.",
+     "Ro|bert und Ma|ri|an|ne ka|men auch mit.",
+     "Ro|bert ist Le|ons Tauf|pa|te.",
+     "Ro|bert und Ma|ri|an|ne ge|hö|ren zu|sam|men.",
+     "Jetzt wa|ren es al|so vier Leu|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "⏰"
+     ],
+     "leute": [
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Wer soll|te die vier in Nürn|berg ab|ho|len?",
+     "Pa|pa!",
+     "Er hat|te in der Grup|pe ge|schrie|ben: Ich kom|me.",
+     "Am Mor|gen war|te|te er schon am Flug|ha|fen.",
+     "Er schrieb: Gu|te Rei|se und bis gleich!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🛫",
+      "💨"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Um zwan|zig nach zehn schrieb O|pa noch mal.",
+     "Wir rol|len ge|ra|de zur Start|bahn.",
+     "Ei|ne Start|bahn ist ei|ne sehr lan|ge Stra|ße.",
+     "Dort wird das Flug|zeug im|mer schnel|ler.",
+     "Dann hebt es ab und fliegt los."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "☁️",
+      "✈️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Flug|zeu|ge flie|gen oft ü|ber den Wol|ken.",
+     "Von o|ben sieht al|les win|zig aus.",
+     "Häu|ser sind so klein wie Spiel|zeug.",
+     "Au|tos se|hen aus wie klei|ne Kä|fer.",
+     "Le|on wür|de gern mal hin|un|ter|schau|en."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🛬",
+      "✈️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Dann kam das Flug|zeug in Nürn|berg an.",
+     "Die Rä|der setz|ten auf der Bahn auf.",
+     "Das ru|ckelt im|mer ein biss|chen.",
+     "Dann roll|te das Flug|zeug lang|sam wei|ter.",
+     "Jetzt wa|ren O|ma und O|pa fast da."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧳",
+      "🔄"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Nun fehl|ten nur noch die Kof|fer.",
+     "O|pa hat|te ge|schrie|ben: Erst die Kof|fer ho|len!",
+     "Am Flug|ha|fen kom|men die Kof|fer auf ein Band.",
+     "Das Band dreht sich im|mer im Kreis.",
+     "Je|der sucht dort sei|nen ei|ge|nen Kof|fer."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "strasse",
+     "dinge": [
+      "🚗",
+      "🧳"
+     ],
+     "leute": [
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Mit den Kof|fern geht es nach drau|ßen.",
+     "Pa|pa woll|te dann mit dem Au|to vor|fah|ren.",
+     "Die Kof|fer kom|men hin|ten in das Au|to.",
+     "Und al|le stei|gen ein.",
+     "So ein Rei|se|tag ist ganz schön lang!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🏠",
+      "😊"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt sind O|ma und O|pa wie|der zu Hau|se.",
+     "Le|on freut sich dar|über.",
+     "Er hat ganz vie|le Fra|gen.",
+     "Wie war es im Flug|zeug?",
+     "Habt ihr aus dem Fens|ter ge|schaut?"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🎂",
+      "🎈"
+     ],
+     "leute": [
+      "Leon",
+      "Robert",
+      "Marianne"
+     ]
+    },
+    "zeilen": [
+     "Und bald ist schon Sams|tag.",
+     "Dann wird Le|on acht Jah|re alt.",
+     "Ro|bert und Ma|ri|an|ne kom|men zum Brunch.",
+     "Ein Brunch ist ein gro|ßes Früh|stück am Vor|mit|tag.",
+     "Le|on kann es kaum er|war|ten."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "🗺️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Viel|leicht er|zäh|len sie dann von der Rei|se.",
+     "Le|on will al|les ganz ge|nau wis|sen.",
+     "Wie groß ist der Flug|ha|fen in Frank|furt?",
+     "Und wie lan|ge dau|ert so ein Flug?",
+     "Das fragt er bei der nächs|ten Ge|le|gen|heit."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "✈️",
+      "❤️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on schaut zum Him|mel hin|auf.",
+     "Da fliegt ge|ra|de ein Flug|zeug vor|bei.",
+     "Viel|leicht fliegt er auch mal mit.",
+     "Dann winkt er aus dem Fens|ter.",
+     "Jetzt ist er froh: O|ma und O|pa sind da!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Womit kamen Oma und Opa nach Hause?",
+    "richtig": "mit dem Flugzeug",
+    "falsch": [
+     "mit dem Zug",
+     "mit dem Schiff"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wo mussten sie umsteigen?",
+    "richtig": "in Frankfurt",
+    "falsch": [
+     "in München",
+     "in Berlin"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wer kam mit Oma und Opa mit?",
+    "richtig": "Robert und Marianne",
+    "falsch": [
+     "Steffi und Paul",
+     "Omi und Opi"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wer wartete am Flughafen in Nürnberg?",
+    "richtig": "Papa",
+    "falsch": [
+     "Mama",
+     "Paul"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Wohin kommen am Flughafen die Koffer?",
+    "richtig": "auf ein Band",
+    "falsch": [
+     "in einen Korb",
+     "auf das Dach"
+    ],
+    "seite": 10
+   }
+  ]
  }
 ];
