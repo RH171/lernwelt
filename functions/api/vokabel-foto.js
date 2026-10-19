@@ -54,6 +54,20 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const BILDARTEN = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_PAARE = 80;
 
+/* Wortart je Paar (19.10.2026, Denny: „Die Wortart bestimmt die KI beim
+   Foto-Import und speichert sie“). Sie kommt im SELBEN Aufruf mit, kein
+   zusaetzlicher Modellaufruf. Das Feld ist freiwillig: fehlt es oder passt
+   es nicht in die Liste, bleibt es weg, und alte Seiten lesen nur fremd und
+   deutsch wie bisher. Die Vokabel-Logik waehlt damit die Ablenker in Stufe 1;
+   ohne Wortart nimmt sie Woerter derselben Lektion mit aehnlicher Laenge. */
+export const WORTARTEN = ["nomen", "verb", "adjektiv", "adverb", "wendung", "sonstiges"];
+const WORTART_FELD = { type: "string", enum: WORTARTEN,
+  description: "Wortart des fremdsprachigen Eintrags: nomen, verb, adjektiv, adverb, wendung (mehrere Wörter, Satz, Redewendung) oder sonstiges. Im Zweifel weglassen." };
+export function wortartSaubern(w) {
+  const x = String(w == null ? "" : w).trim().toLowerCase();
+  return WORTARTEN.includes(x) ? x : "";
+}
+
 const WERKZEUG = {
   name: "vokabeln_zurueckgeben",
   description: "Gibt die vom Foto abgeschriebenen Vokabelpaare zurück.",
@@ -68,6 +82,7 @@ const WERKZEUG = {
           properties: {
             fremd:   { type: "string", description: "Das Wort oder die Wendung in der Fremdsprache, genau wie auf dem Blatt, mit Artikel, Apostroph und allen Akzenten. Ohne Lautschrift." },
             deutsch: { type: "string", description: "Die deutsche Bedeutung, genau wie auf dem Blatt. Mehrere Bedeutungen mit Komma." },
+            wortart: WORTART_FELD,
           },
           required: ["fremd", "deutsch"],
         },
@@ -96,6 +111,7 @@ export function systemtext(sprache) {
     "- Beispielsätze, Merkhinweise und Seitenzahlen weglassen, wenn sie in einer eigenen Spalte oder Zeile stehen.",
     "- Mehrere deutsche Bedeutungen mit Komma in ein Feld.",
     "- Ein Paar besteht aus dem Wort in der Fremdsprache und seiner deutschen Bedeutung vom Blatt.",
+    "- Gib zu jedem Paar die Wortart an (nomen, verb, adjektiv, adverb, wendung, sonstiges). Bist du unsicher, lass sie weg.",
     "",
     "UNSICHER IST BESSER ALS FALSCH",
     "- Kannst du einen Buchstaben, einen Akzent oder ein Wort nicht sicher lesen, kommt die ganze Zeile nach „unsicher“, nicht nach „paare“.",
@@ -237,7 +253,8 @@ export function saubern(roh) {
     const k = (fremd + "\u0000" + deutsch).toLowerCase();
     if (gesehen.has(k)) continue;
     gesehen.add(k);
-    paare.push({ fremd, deutsch });
+    const wortart = wortartSaubern(p && p.wortart);
+    paare.push(wortart ? { fremd, deutsch, wortart } : { fremd, deutsch });
     if (paare.length >= MAX_PAARE) break;
   }
   const unsicher = (Array.isArray(roh && roh.unsicher) ? roh.unsicher : [])
@@ -285,6 +302,7 @@ const WERKZEUG_SEITE = {
             fremd:   { type: "string", description: "Das Wort oder die Wendung in der Fremdsprache, genau wie auf dem Blatt, mit Artikel, Apostroph und allen Akzenten. Ohne Lautschrift." },
             deutsch: { type: "string", description: "Die deutsche Bedeutung, genau wie auf dem Blatt. Mehrere Bedeutungen mit Komma." },
             ort: { type: "array", items: { type: "integer" }, description: "Rechteck der ganzen Zeile auf dem Foto: [links, oben, rechts, unten] in Promille von Bildbreite und Bildhöhe (0 bis 1000)." },
+            wortart: WORTART_FELD,
           },
           required: ["fremd", "deutsch"],
         },
@@ -407,7 +425,8 @@ export function saubernSeite(roh) {
     const k = (fremd + "\u0000" + deutsch).toLowerCase();
     if (gesehen.has(k)) continue;
     gesehen.add(k);
-    paare.push({ fremd, deutsch, ort: ortSaubern(p.ort) });
+    const wortart = wortartSaubern(p && p.wortart);
+    paare.push(wortart ? { fremd, deutsch, ort: ortSaubern(p.ort), wortart } : { fremd, deutsch, ort: ortSaubern(p.ort) });
     if (paare.length >= MAX_PAARE) break;
   }
   const unsicher = [];
@@ -534,7 +553,7 @@ export function zuordnen(liste1, liste2) {
   return { zu1, zu2 };
 }
 
-const pur = (p) => ({ fremd: p.fremd, deutsch: p.deutsch });
+const pur = (p) => (p.wortart ? { fremd: p.fremd, deutsch: p.deutsch, wortart: p.wortart } : { fremd: p.fremd, deutsch: p.deutsch });
 const hatFragezeichen = (p) => /\?/.test(p.fremd + p.deutsch) || !p.fremd || !p.deutsch;
 
 /* Eine Seite: Lesung 1, Lesung 2 und Sinnprüfung zusammenführen.
