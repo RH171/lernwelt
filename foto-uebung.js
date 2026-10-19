@@ -104,7 +104,7 @@
     "  border:1.5px solid var(--line,#e4e7f0);background:var(--feld,#fbfaff);color:var(--ink,#1b1c22);",
     "  min-height:62px;box-sizing:border-box;margin-top:10px}",
     ".lwf .los{width:100%;margin-top:18px;border:none;border-radius:16px;",
-    "  background:var(--akzent,var(--paul,#4f46e5));color:#fff;padding:15px;",
+    "  background:var(--akzent,var(--paul,#4f46e5));color:var(--akzent-auf,#fff);padding:15px;",
     "  font:700 17.5px var(--rund,inherit);cursor:pointer;min-height:52px}",
     ".lwf .los[disabled]{opacity:.5;cursor:default}",
     ".lwf .still{background:transparent;color:var(--ink,#1b1c22);border:2px solid var(--line,#e4e7f0)}",
