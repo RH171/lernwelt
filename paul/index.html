@@ -467,6 +467,145 @@
   .inspo{background:var(--inspobg);border:1px solid var(--inspoline);border-radius:13px;padding:12px 14px;
     font-size:14px;color:var(--inspoink);margin:6px 0 4px;line-height:1.45;}
 
+  /* ================= Startseite „D · Großes Tagesband“ (Dennys Wahl 19.10.2026, Kapitel 134) =================
+     Vorlage: entwuerfe/2026-10-19-paul-startseite-def.html, Reiter D. Farben bleiben die der Seite (thema wie
+     Kapitel 042/059); neu sind nur das warme Band, die Fach-Kacheln und die Listen. Weisse Schrift steht nur auf
+     Verlaeufen, deren dunkelste UND hellste Farbe >= 4,5:1 hat (gemessen in mess-schritte-startseite-d.js). */
+  :root{ --band:#fff3e6; --band-rand:#f1c9a3; --band-lz:#6b3f1d; --zeile:#f3f5fa; --zeile-lz:#4a5168; }
+  html[data-theme="dark"]{ --band:#2a1c12; --band-rand:#5a3a22; --band-lz:#e2c9b4; --zeile:#343437; --zeile-lz:#b3b3bb; }
+  h2.bereich{font-family:var(--round);font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);margin:24px 4px 10px;line-height:1.2}
+  .eins{display:inline-grid;place-items:center;min-width:38px;height:30px;border-radius:9px;background:#fff;color:#1d4ed8;
+    font:800 15px var(--font);padding:0 5px;flex:none}
+
+  /* --- Heute dran: das warme Band --- */
+  .tagesband{background:var(--band);border:1px solid var(--band-rand);border-radius:26px;padding:14px 16px 16px;margin:0 0 6px;
+    display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;align-items:stretch}
+  .tagesband.fokus-1{grid-template-columns:1.5fr 1fr}
+  .tagesband.fokus-0{grid-template-columns:1fr 1fr}
+  .tagesband>*{min-width:0}
+  .bandkopf{grid-column:1/-1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .bandkopf b{font-family:var(--round);font-size:28px;font-weight:800;line-height:1.1}
+  .bandkopf span{font-size:16px;font-weight:600;color:var(--band-lz)}
+  .tagesband #probenkarte{grid-column:1/-1}
+  .tagesband #probenkarte .lwpk{margin:0}
+  /* probeneintrag.js setzt die Klasse pe-knopf selbst und bringt eigene Regeln mit - hier gewinnt das Band. */
+  .tagesband .pe-knopf{grid-column:1/-1;margin:0;background:transparent;border-color:var(--band-lz);color:var(--ink)}
+  .tagesband .createcard{margin:0;border-radius:20px;padding:14px 16px;box-shadow:none}
+  .tagesband .createcard:hover{transform:none}
+  .tagesband .fokus{flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
+  .tagesband .fokus .fk-text{flex:1 1 200px;min-width:0}
+  .fk-kick{font:700 14px/1.3 var(--font);text-transform:uppercase;letter-spacing:.04em}
+  .tagesband .fokus .cc-t{font-size:22px;line-height:1.1;margin-top:2px}
+  .tagesband .fokus .cc-s{font-size:15px;opacity:1;margin-top:4px}
+  .fk-balken{height:8px;border-radius:99px;background:rgba(255,255,255,.3);overflow:hidden;margin-top:8px;max-width:320px}
+  .fk-balken[hidden]{display:none}
+  .fk-balken i{display:block;height:100%;width:0;background:#fff;border-radius:99px}
+  .fk-los{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:12px;
+    background:#fff;color:var(--los,#1b1c22);font:800 16px var(--round);white-space:nowrap;flex:none}
+  .createcard.fokus.deutsch{--los:#9f1239}
+  .createcard.fokus.hsu{--los:#14532d}
+  /* Die erste Fokuskarte steht gross links und geht ueber zwei Zeilen. */
+  .tagesband .fokus.gross{grid-row:span 2;flex-direction:column;align-items:flex-start;justify-content:flex-start;padding:16px 18px}
+  .tagesband .fokus.gross .fk-text{flex:1 1 auto;width:100%}
+  .tagesband .fokus.gross .cc-t{font-size:34px;line-height:1.05}
+  .tagesband .fokus.gross .cc-s{font-size:16px}
+  .tagesband .fokus.gross .fk-los{font-size:18px;min-height:52px;padding:0 22px;margin-top:auto}
+  .tagesband.fokus-2 .fokus.klein{grid-column:span 2}
+  /* Heute lernen und 1×1 als kleine Kacheln im Band. */
+  .tagesband .tag1{flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-height:96px;padding:12px 14px}
+  .tagesband .tag1 .cc-ic{width:auto;height:auto;background:none;font-size:26px;border-radius:0}
+  .tagesband .tag1 .cc-t{font-size:19px;line-height:1.15}
+  .tagesband .tag1 .cc-s{font-size:14px;opacity:1}
+  .createcard.tagesrechnen{background:linear-gradient(125deg,#1e40af 0%,#1d4ed8 55%,#2563eb 100%);box-shadow:0 10px 28px rgba(29,78,216,.3)}
+
+  /* --- Üben: Fach-Kacheln --- */
+  .ueben{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .fk{border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:#fff;min-width:0;box-shadow:var(--shadow);
+    text-decoration:none;font-family:var(--font)}
+  a.fk,a.fk:link,a.fk:visited,a.fk:hover,a.fk:active{color:#fff;text-decoration:none}
+  a.fk:focus-visible,.sub:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  .fk[hidden]{display:none}
+  .fk .kk{display:flex;align-items:center;gap:10px}
+  .fk .kk .e{font-size:30px;line-height:1;flex:none}
+  .fk .kk .t{font-family:var(--round);font-size:20px;font-weight:800;line-height:1.1}
+  .fk .kk small{display:block;font-size:14px;font-weight:600;margin-top:2px}
+  .fk .s{font-size:15px;line-height:1.35}
+  .fk .subs{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+  .fk.mathe{grid-column:span 2;background:linear-gradient(125deg,#1e40af 0%,#1d4ed8 55%,#2563eb 100%)}
+  .fk.mathe .subs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fk .subs .breit{grid-column:1/-1}
+  .fk.deutsch{background:linear-gradient(125deg,#9f1239 0%,#be123c 55%,#b91c5c 100%)}
+  .fk.hsu{background:linear-gradient(125deg,#14532d 0%,#166534 55%,#15803d 100%)}
+  .fk.quiz{background:linear-gradient(125deg,#115e59 0%,#0f766e 55%,#0d8074 100%)}
+  .fk.foto{background:linear-gradient(125deg,#3730a3 0%,#4338ca 55%,#4f46e5 100%)}
+  .fk.neutral{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+  .fk.neutral .kk small{color:var(--muted)}
+  /* Unterpunkt: eine dunkle Schicht auf der Kachelfarbe (als Verlauf, damit sie mit der Kachel mitgeht). */
+  .sub{display:flex;align-items:center;gap:8px;min-height:44px;width:100%;padding:6px 10px;border:0;border-radius:12px;
+    background:linear-gradient(rgba(0,0,0,.22),rgba(0,0,0,.22));color:#fff;font:700 15px/1.2 var(--font);text-align:left;
+    cursor:pointer;text-decoration:none;min-width:0}
+  a.sub,a.sub:link,a.sub:visited,a.sub:hover,a.sub:active{color:#fff;text-decoration:none}
+  .sub[hidden]{display:none}
+  .sub>span:last-child{min-width:0;overflow-wrap:anywhere}
+  .sub small{display:block;font-weight:500;font-size:14px;margin-top:1px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips button{min-height:44px;padding:0 12px;border:0;border-radius:12px;background:var(--zeile);color:var(--ink);
+    font:600 15px var(--font);cursor:pointer}
+
+  /* --- Meine Sachen | Spielen und Bauen --- */
+  .zwei{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-top:24px}
+  .spalte{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;display:flex;flex-direction:column;
+    gap:8px;box-shadow:var(--shadow);min-width:0}
+  .spalte h2.bereich{margin:2px 4px 2px}
+  .liste2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .zl{display:flex;align-items:center;gap:10px;min-height:50px;width:100%;padding:4px 8px;border:0;border-radius:12px;
+    background:var(--zeile);color:var(--ink);font:700 15px/1.2 var(--font);text-align:left;cursor:pointer;text-decoration:none;min-width:0}
+  a.zl,a.zl:link,a.zl:visited,a.zl:hover,a.zl:active{color:var(--ink);text-decoration:none}
+  .zl:focus-visible,.zl-haupt:focus-visible,.zk:focus-visible{outline:3px solid #9db4ff;outline-offset:2px}
+  .zl[hidden]{display:none}
+  .zl .e{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:19px;flex:none;background:var(--e,#334155)}
+  .zl small{display:block;font-weight:500;color:var(--zeile-lz);font-size:14px;margin-top:1px}
+  .zl>span:last-child{min-width:0;overflow-wrap:anywhere}
+  .zl.erf{flex-wrap:wrap;padding:8px;cursor:default}
+  .zl-haupt{display:flex;align-items:center;gap:10px;flex:1 1 100%;min-height:44px;padding:0;border:0;background:transparent;
+    color:var(--ink);font:700 15px/1.2 var(--font);text-align:left;cursor:pointer}
+  .zl.erf .rechts{display:flex;gap:6px;flex:1 1 100%;padding-left:46px}
+  .zk{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 12px;border-radius:12px;
+    background:var(--card);border:1px solid var(--line);font:700 15px var(--font);white-space:nowrap}
+  a.zk,a.zk:link,a.zk:visited{color:var(--ink);text-decoration:none}
+  /* Morgens (Mo-Fr 6-8 Uhr) steht der Stundenplan als eigene Karte ganz oben (Kapitel 094). Weiss auf #64748b = 4,8:1. */
+  .zl.morgens{min-height:64px;margin:0 0 14px;padding:12px 16px;border-radius:20px;font:800 18px var(--round);
+    background:linear-gradient(125deg,#334155 0%,#475569 55%,#64748b 100%);box-shadow:0 10px 28px rgba(51,65,85,.3)}
+  a.zl.morgens,a.zl.morgens:link,a.zl.morgens:visited{color:#fff}
+  .zl.morgens .e{width:44px;height:44px;font-size:24px;background:rgba(255,255,255,.18)}
+
+  /* --- Ferien und Status als ruhige Zeile --- */
+  .fusszeile{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:24px 0 0}
+  .fusszeile #ferienband{flex:1 1 300px;min-width:0}
+  .fusszeile .status{display:flex;flex-wrap:wrap;gap:8px;margin:0;flex:2 1 420px}
+  .fusszeile .stat{flex:1 1 140px;padding:8px 12px;border-radius:16px;gap:10px;box-shadow:none}
+  .fusszeile .stat .big{font-size:18px}
+  .fusszeile .stat .emj{font-size:22px}
+  .allespiele{margin-top:6px}
+
+  @media (max-width:979px){
+    .tagesband,.tagesband.fokus-1{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .tagesband .fokus.gross,.tagesband.fokus-2 .fokus.klein{grid-column:1/-1;grid-row:auto}
+    .tagesband .fokus.gross .fk-los{margin-top:4px}
+    .ueben{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .zwei{grid-template-columns:minmax(0,1fr)}
+  }
+  @media (max-width:599px){
+    .tagesband{padding:12px;gap:10px;border-radius:22px}
+    .bandkopf b{font-size:24px}
+    .tagesband .fokus.gross .cc-t{font-size:28px}
+    .ueben{grid-template-columns:minmax(0,1fr)}
+    .fk.mathe{grid-column:auto}
+    .fk.mathe .subs{grid-template-columns:minmax(0,1fr)}
+    .liste2{grid-template-columns:minmax(0,1fr)}
+  }
+
   @media(max-width:560px){
     .status{grid-template-columns:1fr;}
     .brand h1{font-size:23px;}
@@ -543,24 +682,11 @@
     </div>
   </header>
 
-  <div class="searchbar">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#71768a" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
-    <input id="search" type="text" placeholder="Spiel suchen … (z. B. Strom, Beethoven, Springer)" autocomplete="off" aria-label="Spiel suchen">
-  </div>
+  <!-- Startseite „D · Großes Tagesband“ (Dennys Wahl per Klickfrage, 19.10.2026, Kapitel 134; Vorlage
+       entwuerfe/2026-10-19-paul-startseite-def.html, Reiter D). Grundordnung: Hinweise · „Heute dran“ als warmes
+       Band · „Üben“ als Fach-Kacheln · „Meine Sachen“ und „Spielen und Bauen“ nebeneinander · Ferien und Status ·
+       alle Spiele. Alle Karten, IDs und Skripte von vorher sind geblieben, nur umgestellt. -->
 
-  <!-- Die fünf großen Wege stehen in der Reihenfolge, in der Paul sie zuletzt
-       benutzt hat. Denny am 22.09.2026: "Paul hätte gerne, dass diese fünf
-       Reiter variabel sind und immer so sortiert sind, wie er sie als Letztes
-       verwendet hat."
-       Sortiert wird nur BEIM LADEN, nie während er hinschaut - eine Kachel,
-       die unter dem Finger wegspringt, ist schlimmer als eine feste
-       Reihenfolge. -->
-  <!-- Bitte kurz nachsehen (28.09.2026). Denny: "wenn dir sowas auffällt und
-       Paul betritt seine Lernwelt - kannst du ihm dann deutlich die
-       information zeigen - damit er weiss er muss ggf. was anpassen".
-       Anlass: zwei Mathe-Buchseiten lagen unter Deutsch, die Rueckfrage beim
-       Hochladen blieb unbeantwortet. Gezeigt wird jede OFFENE Rueckfrage
-       (Fach oder Datum) - beantworten kann er sie gleich hier. -->
   <!-- Prüf-Reiter (Dennys Wahl 14.10.2026, Variante C): Stellen aus Pauls
        Blättern, die er beim Hochladen offen gelassen hat. Steht GANZ oben und
        nur, solange etwas offen ist (/pruefreiter.js). Die Lösung kennt die
@@ -573,269 +699,268 @@
     </div>
     <div class="cc-arrow">›</div>
   </a>
+  <!-- Bitte kurz nachsehen (28.09.2026). Denny: "wenn dir sowas auffällt und
+       Paul betritt seine Lernwelt - kannst du ihm dann deutlich die
+       information zeigen - damit er weiss er muss ggf. was anpassen".
+       Anlass: zwei Mathe-Buchseiten lagen unter Deutsch, die Rueckfrage beim
+       Hochladen blieb unbeantwortet. Gezeigt wird jede OFFENE Rueckfrage
+       (Fach oder Datum) - beantworten kann er sie gleich hier. -->
   <section class="nachsehen verborgen" id="nachsehen" aria-live="polite">
     <div class="ns-kopf">📚 Bitte kurz nachsehen</div>
     <div class="ns-satz">Bei deinen Blättern ist mir etwas aufgefallen. Sag mir, was stimmt.</div>
     <div id="nachsehenListe"></div>
   </section>
 
-  <!-- Gelbe Probenkarte (04.10.2026): steht nur da, wenn eine Probe in den
-       naechsten 14 Tagen ansteht UND es eine Uebung dazu gibt (/probenkarte.js). -->
-  <div id="probenkarte" class="verborgen"></div>
-  <!-- Probenfokus Deutsch und HSU (Denny, 19.10.2026: "Nun sollte Deutsch in den Fokus gehen … mindestens am Tag
-       10-30 Minuten ueben und HSU soll er auch jeden Tag 10-30 Minuten mindestens ueben … Daher soll Deutsch und
-       HSU jetzt in den obersten Reitern sein"). Deutsch-Probe Fr 23.10.2026, HSU-Probe in der Woche 26.-30.10.2026
-       (Tag noch offen). Die Karte zeigt die heute aktiv geuebten Minuten (/fachzeit.js), ab 10 Minuten "Fuer heute
-       geschafft". Kein Rueckstand, keine Serie, kein "noch X Tage", kein Verlust (Bauregeln). Die Karte geht nach
-       ihrer Probe still weg: am Probentag ab 13 Uhr (wie probenkarte.js); steht der HSU-Termin fest und ist
-       vorbei, auch frueher. Kapitel 131. Die Mathe-Karten "Probenstoff Mathe" und "1×1-Woche" sind seit
-       19.10.2026 weg (Probe geschrieben, Plan endete 17.10.); ihre Seiten bleiben erreichbar. -->
-  <a class="createcard fokus deutsch" href="klasse4-deutsch-probenstoff.html" id="fokusDeutsch" data-fach="deutsch">
-    <div class="cc-ic">📘</div>
-    <div>
-      <div class="cc-t">Deutsch für die Probe</div>
-      <div class="cc-s" id="fokusDeutschSatz">Jeden Tag neue Aufgaben: Nomen, Verben, richtig schreiben.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-  <a class="createcard fokus hsu" href="quiz.html?heute=1&amp;fach=hsu" id="fokusHsu" data-fach="hsu">
-    <div class="cc-ic">🌍</div>
-    <div>
-      <div class="cc-t">HSU für die Probe</div>
-      <div class="cc-s" id="fokusHsuSatz">Etwa 10 Fragen aus deinen HSU-Blättern.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-  <script src="/fachzeit.js?v=5b66c926"></script>
-  <script>(function(){try{
-    // bis = Probentag (ab 13 Uhr vorbei). ab = fruehester Tag der Probe, falls Paul den Termin noch eintraegt.
-    var FOKUS = [
-      { fach: "deutsch", el: "fokusDeutsch", satz: "fokusDeutschSatz", bis: "2026-10-23",
-        leer: "Jeden Tag neue Aufgaben: Nomen, Verben, richtig schreiben." },
-      { fach: "hsu", el: "fokusHsu", satz: "fokusHsuSatz", bis: "2026-10-30", ab: "2026-10-26",
-        leer: "Etwa 10 Fragen aus deinen HSU-Blättern." }
-    ];
-    var jetzt = window.__fzJetzt ? new Date(window.__fzJetzt) : new Date();
-    var h = window.__fzHeute || jetzt.toLocaleDateString("sv-SE"), std = window.__fzHeute ? (+window.__fzStunde || 0) : jetzt.getHours();
-    function vorbei(tag){ return h > tag || (h === tag && std >= 13); }
-    var sek = window.LWFachzeit ? LWFachzeit.lesen("paul", h) : { s: {} };
-    FOKUS.forEach(function(f){
-      var k = document.getElementById(f.el), el = document.getElementById(f.satz);
-      if (!k) return;
-      if (vorbei(f.bis)) { k.parentNode.removeChild(k); return; }
-      var min = Math.floor((sek.s[f.fach] || 0) / 60);
-      if (min >= 10) { k.classList.add("erledigt"); el.textContent = "Für heute geschafft – " + min + " Min geübt. Mehr geht immer."; }
-      else if (min > 0) el.textContent = "Heute " + min + " Min geübt – 10 Min sind ein gutes Ziel.";
-      else el.textContent = f.leer + " 10 Min sind ein gutes Ziel.";
-    });
-    // Steht der HSU-Termin fest (Paul traegt ihn ueber "Probe angekuendigt?" ein) und ist er vorbei: Karte weg.
-    document.addEventListener("lw-probentermine", function(e){
-      var t = (e.detail && e.detail.termine) || [];
+  <!-- ===== Heute dran: das warme Band (Startseite D) =====
+       Reihenfolge im Quelltext bleibt wie seit 19.10.2026 (Kapitel 131): Probenkarte, Deutsch, HSU, Heute lernen,
+       1×1 und Textaufgaben. Das Raster stellt sie: Probenkarte über die ganze Breite, die erste Probenkarte
+       (Deutsch) groß links, die zweite (HSU) daneben, darunter Heute lernen und 1×1. Fällt eine Fokuskarte nach
+       ihrer Probe weg, wird die übrige groß (Klasse fokus-1/fokus-0 am Band, gesetzt im Skript unten). -->
+  <section class="tagesband fokus-2" id="tagesband" aria-label="Heute dran">
+    <div class="bandkopf"><b>☀️ Heute dran</b><span id="bandDatum"></span></div>
+    <!-- Gelbe Probenkarte (04.10.2026): steht nur da, wenn eine Probe in den
+         naechsten 14 Tagen ansteht (/probenkarte.js). -->
+    <div id="probenkarte" class="verborgen"></div>
+    <!-- Probenfokus Deutsch und HSU (Denny, 19.10.2026: "Nun sollte Deutsch in den Fokus gehen … mindestens am Tag
+         10-30 Minuten ueben und HSU soll er auch jeden Tag 10-30 Minuten mindestens ueben … Daher soll Deutsch und
+         HSU jetzt in den obersten Reitern sein"). Deutsch-Probe Fr 23.10.2026, HSU-Probe in der Woche 26.-30.10.2026
+         (Tag noch offen). Die Karte zeigt die heute aktiv geuebten Minuten (/fachzeit.js), ab 10 Minuten "Fuer heute
+         geschafft". Kein Rueckstand, keine Serie, kein "noch X Tage", kein Verlust (Bauregeln). Die Karte geht nach
+         ihrer Probe still weg: am Probentag ab 13 Uhr (wie probenkarte.js); steht der HSU-Termin fest und ist
+         vorbei, auch frueher. Kapitel 131. Die Zeile oben („Probe am …") nennt nur den Tag, keine Restzeit. -->
+    <a class="createcard fokus deutsch" href="klasse4-deutsch-probenstoff.html" id="fokusDeutsch" data-fach="deutsch">
+      <div class="fk-text">
+        <div class="fk-kick" id="fokusDeutschKick">📘 Probe am Freitag, 23.10.</div>
+        <div class="cc-t">Deutsch</div>
+        <div class="cc-s" id="fokusDeutschSatz">Jeden Tag neue Aufgaben: Nomen, Verben, richtig schreiben.</div>
+        <div class="fk-balken" hidden aria-hidden="true"><i></i></div>
+      </div>
+      <span class="fk-los" aria-hidden="true">Los üben ›</span>
+    </a>
+    <a class="createcard fokus hsu" href="quiz.html?heute=1&amp;fach=hsu" id="fokusHsu" data-fach="hsu">
+      <div class="fk-text">
+        <div class="fk-kick" id="fokusHsuKick">🌍 Probe in der Woche ab Montag, 26.10. · Tag noch offen</div>
+        <div class="cc-t">HSU</div>
+        <div class="cc-s" id="fokusHsuSatz">Etwa 10 Fragen aus deinen HSU-Blättern.</div>
+        <div class="fk-balken" hidden aria-hidden="true"><i></i></div>
+      </div>
+      <span class="fk-los" aria-hidden="true">Los üben ›</span>
+    </a>
+    <script src="/fachzeit.js?v=5b66c926"></script>
+    <script>(function(){try{
+      // bis = Probentag (ab 13 Uhr vorbei). ab = fruehester Tag der Probe, falls Paul den Termin noch eintraegt.
+      var FOKUS = [
+        { fach: "deutsch", el: "fokusDeutsch", satz: "fokusDeutschSatz", kick: "fokusDeutschKick", zeichen: "📘", bis: "2026-10-23",
+          leer: "Jeden Tag neue Aufgaben: Nomen, Verben, richtig schreiben." },
+        { fach: "hsu", el: "fokusHsu", satz: "fokusHsuSatz", kick: "fokusHsuKick", zeichen: "🌍", bis: "2026-10-30", ab: "2026-10-26",
+          leer: "Etwa 10 Fragen aus deinen HSU-Blättern." }
+      ];
+      var jetzt = window.__fzJetzt ? new Date(window.__fzJetzt) : new Date();
+      var h = window.__fzHeute || jetzt.toLocaleDateString("sv-SE"), std = window.__fzHeute ? (+window.__fzStunde || 0) : jetzt.getHours();
+      function vorbei(tag){ return h > tag || (h === tag && std >= 13); }
+      // "Freitag, 23.10." - nur der Tag, nie eine Restzeit (Bauregeln: kein Countdown).
+      function tagName(iso){ return new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit" }); }
+      var dat = document.getElementById("bandDatum");
+      if (dat) dat.textContent = new Date(h + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+      // Das Band ordnet sich nach der Zahl der Fokuskarten: die erste ist gross, die zweite klein daneben.
+      function bandOrdnen(){
+        var band = document.getElementById("tagesband"); if (!band) return;
+        var da = FOKUS.map(function(f){ return document.getElementById(f.el); }).filter(Boolean);
+        band.classList.remove("fokus-0", "fokus-1", "fokus-2"); band.classList.add("fokus-" + da.length);
+        da.forEach(function(k, i){ k.classList.toggle("gross", i === 0); k.classList.toggle("klein", i > 0); });
+      }
+      function kickSetzen(f, text){ var k = document.getElementById(f.kick); if (k) k.textContent = f.zeichen + " " + text; }
+      var sek = window.LWFachzeit ? LWFachzeit.lesen("paul", h) : { s: {} };
       FOKUS.forEach(function(f){
-        if (!f.ab) return;
-        var k = document.getElementById(f.el); if (!k) return;
-        var weg = t.some(function(x){ return x && String(x.fach).toLowerCase() === f.fach && x.datum >= f.ab && x.datum <= f.bis && vorbei(x.datum); });
-        if (weg) k.parentNode.removeChild(k);
+        var k = document.getElementById(f.el), el = document.getElementById(f.satz);
+        if (!k) return;
+        if (vorbei(f.bis)) { k.parentNode.removeChild(k); return; }
+        kickSetzen(f, f.ab ? "Probe in der Woche ab " + tagName(f.ab) + " · Tag noch offen" : "Probe am " + tagName(f.bis));
+        var min = Math.floor((sek.s[f.fach] || 0) / 60);
+        if (min >= 10) { k.classList.add("erledigt"); el.textContent = "Für heute geschafft – " + min + " Min geübt. Mehr geht immer."; }
+        else if (min > 0) el.textContent = "Heute " + min + " Min geübt – 10 Min sind ein gutes Ziel.";
+        else el.textContent = f.leer + " 10 Min sind ein gutes Ziel.";
+        // Balken: wie weit die heutigen Minuten zum guten Ziel reichen. Nur Rueckschau, er laeuft nie rueckwaerts.
+        var b = k.querySelector(".fk-balken");
+        if (b && min > 0) { b.hidden = false; b.firstChild.style.width = Math.min(100, min * 10) + "%"; }
       });
-    });
-  }catch(e){}})();</script>
-  <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
-       (/paul/probeneintrag.js, Server prueft die Grenzen). Steht immer da, auch ohne Probe. -->
-  <button type="button" id="probeEintragen" class="pe-knopf">📝 Probe angekündigt? Hier eintragen</button>
+      bandOrdnen();
+      // Steht der HSU-Termin fest (Paul traegt ihn ueber "Probe angekuendigt?" ein): Tag in die Zeile; ist er vorbei: Karte weg.
+      document.addEventListener("lw-probentermine", function(e){
+        var t = (e.detail && e.detail.termine) || [];
+        FOKUS.forEach(function(f){
+          var k = document.getElementById(f.el); if (!k) return;
+          var passend = t.filter(function(x){ return x && String(x.fach).toLowerCase() === f.fach && typeof x.datum === "string" && x.datum >= (f.ab || h) && x.datum <= f.bis; });
+          if (f.ab && passend.some(function(x){ return vorbei(x.datum); })) { k.parentNode.removeChild(k); return; }
+          var kommt = passend.filter(function(x){ return !vorbei(x.datum); }).sort(function(a, b){ return a.datum < b.datum ? -1 : 1; })[0];
+          if (kommt) kickSetzen(f, "Probe am " + tagName(kommt.datum));
+        });
+        bandOrdnen();
+      });
+    }catch(e){}})();</script>
 
-  <!-- Heute lernen (25.09.2026): der taegliche Einstieg steht FEST oben,
-       ausserhalb der Kacheln, die nach letzter Benutzung sortiert werden.
-       Fuehrt direkt in die Tagesrunde (paul/quiz.html?heute=1). -->
-  <a class="createcard heute" href="quiz.html?heute=1" id="heuteLernen">
-    <div class="cc-ic">☀️</div>
-    <div>
-      <div class="cc-t">Heute lernen</div>
-      <div class="cc-s">Eine kurze Runde aus deinen Blättern – was wieder dran ist und etwas Neues.</div>
+    <!-- Heute lernen (25.09.2026): der taegliche Einstieg steht FEST oben, im Band.
+         Fuehrt direkt in die Tagesrunde (paul/quiz.html?heute=1). -->
+    <a class="createcard heute tag1" href="quiz.html?heute=1" id="heuteLernen">
+      <div class="cc-ic">☀️</div>
+      <div>
+        <div class="cc-t">Heute lernen</div>
+        <div class="cc-s">Eine kurze Runde aus deinen Blättern – was wieder dran ist und etwas Neues.</div>
+      </div>
+    </a>
+
+    <!-- 1×1 und Textaufgaben (Denny, 04.10.2026): jeden Tag, deshalb fest neben "Heute lernen".
+         Der Satz zeigt nur, ob heute schon erledigt ist - nie einen Rueckstand oder eine Serie. -->
+    <a class="createcard tagesrechnen tag1" href="klasse4-mathe-tagesrechnen.html" id="tagesRechnen">
+      <div class="cc-ic"><span class="eins">1×1</span></div>
+      <div>
+        <div class="cc-t">1×1 und Textaufgaben</div>
+        <div class="cc-s" id="tagesRechnenSatz">Jeden Tag neu: Einmaleins und Rätselaufgaben.</div>
+      </div>
+    </a>
+    <script>(function(){try{
+      var d=new Date(), h=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+      var s=JSON.parse(localStorage.getItem("paul-tagesrechnen")||"null"), x=s&&s.heute;
+      if(x&&x.d===h&&x.e&&x.t){ document.getElementById("tagesRechnen").classList.add("erledigt");
+        document.getElementById("tagesRechnenSatz").textContent="Für heute geschafft – morgen gibt es neue."; }
+      else if(x&&x.d===h&&x.e){ document.getElementById("tagesRechnenSatz").textContent="Teil 1 ist geschafft – jetzt noch die Textaufgaben."; }
+    }catch(e){}})();</script>
+
+    <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
+         (/paul/probeneintrag.js, Server prueft die Grenzen). Steht immer da, auch ohne Probe. -->
+    <button type="button" id="probeEintragen" class="pe-knopf">📝 Probe angekündigt? Hier eintragen</button>
+  </section>
+
+  <!-- ===== Üben: Fach-Kacheln (Startseite D) =====
+       Mathe ist EINE Kachel mit Unterpunkten: 1×1 und Textaufgaben, Mathe-Fachwörter (dauerhaft seit 18.10.2026,
+       Kapitel 121) und die Mathe-Spiele. Die Spiele-Unterpunkte füllt render() aus dem Spielekatalog - nichts
+       davon ist hier fest eingetragen. Lernquiz und Übung zum Blatt behalten ihr data-weg. -->
+  <h2 class="bereich">🎯 Üben</h2>
+  <div class="ueben" id="ueben">
+    <div class="fk mathe" id="uebenMathe">
+      <div class="kk"><span class="e" aria-hidden="true">🔢</span><div><div class="t">Mathe</div><small>Alles zu Mathe an einem Platz</small></div></div>
+      <div class="subs">
+        <a class="sub" href="klasse4-mathe-tagesrechnen.html"><span class="eins">1×1</span><span>1×1 und Textaufgaben<small>Jeden Tag neu</small></span></a>
+        <a class="sub" href="klasse4-mathe-fachwoerter.html" id="fachWoerter"><span aria-hidden="true">🔤</span><span>Mathe-Fachwörter<small>Summe, Produkt &amp; Co. – lesen und als Wort-Detektiv üben.</small></span></a>
+        <button class="sub breit" type="button" id="matheSpiele" hidden></button>
+      </div>
     </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <!-- 1×1 und Textaufgaben (Denny, 04.10.2026): jeden Tag, deshalb fest neben "Heute lernen".
-       Der Satz zeigt nur, ob heute schon erledigt ist - nie einen Rueckstand oder eine Serie. -->
-  <a class="createcard tagesrechnen" href="klasse4-mathe-tagesrechnen.html" id="tagesRechnen">
-    <div class="cc-ic">✖️</div>
-    <div>
-      <div class="cc-t">1×1 und Textaufgaben</div>
-      <div class="cc-s" id="tagesRechnenSatz">Jeden Tag neu: Einmaleins und Rätselaufgaben.</div>
+    <div class="fk deutsch" id="uebenDeutsch">
+      <div class="kk"><span class="e" aria-hidden="true">📘</span><div><div class="t">Deutsch</div><small id="uebenDeutschKurz">Aus deinem Heft</small></div></div>
+      <div class="subs" id="uebenDeutschSubs">
+        <a class="sub" href="quiz.html?fach=deutsch"><span aria-hidden="true">📚</span><span>Im Heft wiederholen</span></a>
+      </div>
     </div>
-    <div class="cc-arrow">›</div>
-  </a>
-  <script>(function(){try{
-    var d=new Date(), h=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
-    var s=JSON.parse(localStorage.getItem("paul-tagesrechnen")||"null"), x=s&&s.heute;
-    if(x&&x.d===h&&x.e&&x.t){ document.getElementById("tagesRechnen").classList.add("erledigt");
-      document.getElementById("tagesRechnenSatz").textContent="Für heute geschafft – morgen gibt es neue."; }
-    else if(x&&x.d===h&&x.e){ document.getElementById("tagesRechnenSatz").textContent="Teil 1 ist geschafft – jetzt noch die Textaufgaben."; }
-  }catch(e){}})();</script>
-
-  <!-- Mathe-Fachwoerter (Denny per Klickfrage, 18.10.2026: „Startkarte ab sofort“): dauerhaft, nicht ans Probendatum
-       gebunden. Fuehrt zum Merkplakat der 14 Fachwoerter mit Knopf zum Wort-Detektiv. Kapitel 121. -->
-  <a class="createcard fachwoerter" href="klasse4-mathe-fachwoerter.html" id="fachWoerter">
-    <div class="cc-ic">🔤</div>
-    <div>
-      <div class="cc-t">Mathe-Fachwörter</div>
-      <div class="cc-s">Summe, Produkt &amp; Co. – lesen und als Wort-Detektiv üben.</div>
+    <div class="fk hsu" id="uebenHsu">
+      <div class="kk"><span class="e" aria-hidden="true">🌍</span><div><div class="t">HSU</div><small id="uebenHsuKurz">Aus deinem Heft</small></div></div>
+      <div class="subs" id="uebenHsuSubs">
+        <a class="sub" href="quiz.html?fach=hsu"><span aria-hidden="true">📚</span><span>Im Heft wiederholen</span></a>
+      </div>
     </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-
-  <div id="hauptwege">
-  <button class="createcard" id="createBtn" data-weg="erfinden">
-    <div class="cc-ic">🎮</div>
-    <div>
-      <div class="cc-t">Neues Spiel erfinden</div>
-      <div class="cc-s">Bau dir dein eigenes Lernspiel – ganz nach deiner Idee!</div>
+    <!-- Das taegliche Lernquiz (20.09.2026). Denny: "sodass die Kinder jeden Tag
+         5 bis 10 Minuten lernen oder frueh morgens noch mal schnell mit einer
+         Quizrunde". Fragen aus SEINEM Stoff, Fehler kommen wieder. -->
+    <a class="fk quiz" href="quiz.html" data-weg="quiz">
+      <div class="kk"><span class="e" aria-hidden="true">🎯</span><div><div class="t">Mein Lernquiz</div></div></div>
+      <div class="s">5–10 Minuten. Du wählst die Fächer – was du falsch hattest, kommt wieder.</div>
+    </a>
+    <!-- 05.10.2026: Helena hat sich den Knopf gewuenscht ("dann ein foto
+         machen kann und mir du mir dazu übungen stellst", Meldung uhpehqypar),
+         und Schulrelevantes gilt fuer alle drei. Blatt, Foto, Aufgaben. -->
+    <a class="fk foto" href="uebung-foto.html" data-weg="uebung-foto">
+      <div class="kk"><span class="e" aria-hidden="true">📸</span><div><div class="t">Übung zum Blatt</div></div></div>
+      <div class="s">Foto von deinem Blatt – du bekommst eigene Aufgaben zum gleichen Stoff.</div>
+    </a>
+    <div class="fk neutral" id="uebenWeitere" hidden>
+      <div class="kk"><span class="e" aria-hidden="true">🎵</span><div><div class="t">Weitere Fächer</div><small id="uebenWeitereKlasse"></small></div></div>
+      <div class="chips" id="uebenWeitereChips"></div>
     </div>
-    <div class="cc-arrow">›</div>
-  </button>
+  </div>
 
-  <!-- Denny am 16.09.2026: Paul soll seine Hausaufgabe fotografieren koennen,
-       und die Werkstatt erarbeitet mit ihm, was er braucht. Ueben, nicht loesen. -->
-  <!-- 17.09.2026: Das Hausaufgaben-Heft - fotografieren, pruefen lassen,
-       verbessern, bis es sitzt. -->
-  <!-- Das taegliche Lernquiz (20.09.2026). Denny: "sodass die Kinder jeden Tag
-       5 bis 10 Minuten lernen oder frueh morgens noch mal schnell mit einer
-       Quizrunde". Fragen aus SEINEM Stoff, Fehler kommen wieder. -->
-  <a class="createcard quiz" href="quiz.html" data-weg="quiz">
-    <div class="cc-ic">🎯</div>
-    <div>
-      <div class="cc-t">Mein Lernquiz</div>
-      <div class="cc-s">5–10 Minuten. Du wählst die Fächer – was du falsch hattest, kommt wieder.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <!-- 05.10.2026: Helena hat sich den Knopf gewuenscht ("dann ein foto
-       machen kann und mir du mir dazu übungen stellst", Meldung uhpehqypar),
-       und Schulrelevantes gilt fuer alle drei. Der kurze Weg neben dem
-       Lernquiz: Blatt, Foto, Aufgaben - ohne vorher etwas abzulegen. -->
-  <a class="createcard" href="uebung-foto.html" data-weg="uebung-foto">
-    <div class="cc-ic">📸</div>
-    <div>
-      <div class="cc-t">Übung zum Blatt</div>
-      <div class="cc-s">Foto von deinem Blatt – du bekommst eigene Aufgaben zum gleichen Stoff.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <a class="createcard hausaufgabe" href="hausaufgaben.html" data-weg="hausaufgaben">
-    <div class="cc-ic">📚</div>
-    <div>
-      <div class="cc-t">Meine Hausaufgaben</div>
-      <div class="cc-s">Fotografieren oder scannen – wir schauen zusammen drüber, bis alles sitzt.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <a class="createcard stundenplan" href="stundenplan.html" data-weg="stundenplan">
-    <div class="cc-ic">📅</div>
-    <div>
-      <div class="cc-t">Mein Stundenplan</div>
-      <div class="cc-s">Was habe ich wann? Heute ist farbig markiert.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <!-- 17.10.2026 (Dennys Wahl „C · Beides zusammen“, Kapitel 129): die Videos der
-       Lehrerin von der Klassenpinnwand, zusammen mit Papa ansehen, drei Fragen je
-       Video, Häkchen „zusammen gesehen“. Dezent wie der Stundenplan. -->
-  <a class="createcard videos" href="videos.html" data-weg="videos">
-    <div class="cc-ic">🎬</div>
-    <div>
-      <div class="cc-t">Videos mit Papa</div>
-      <div class="cc-s">Die Videos deiner Lehrerin zusammen anschauen – mit drei Fragen danach.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <!-- "Heft abfotografieren" ist am 23.09.2026 weggefallen. Denny: "Ich
-       glaube nicht, dass dies noch benötigt wird." Das Hochladen wohnt jetzt
-       im Schulheft selbst (Knopf "📸 Neues Blatt") - ein Ort statt zwei. Die
-       Werkstatt ist weiter über "Neues Spiel erfinden" erreichbar. -->
-
-  <!-- Der Schaukasten (Denny, 22.09.2026): "Es wird ein digitaler
-       Schaukasten seiner taeglichen Schularbeiten, selektiert nach Fach.
-       Hier baust du im Hintergrund eine Datenbank auf." -->
-  <!-- Denny am 23.09.2026: "Paul hat derzeit noch nichts zu seinen Noten, und
-       somit hat er auch keine Informationen, wie viele Prüfungen er schreiben
-       muss. Das interessiert ihn natürlich." Zahlen und Termine ja - eine
-       Defizit-Auswertung bleibt draußen (Beschluss vom 20.09.2026).
-       15.10.2026 (Dennys Wahl A): heisst "Proben und Zeugnisse", mit Zeugnisplaner. -->
-  <a class="createcard proben" href="proben.html" data-weg="proben">
-    <div class="cc-ic">📋</div>
-    <div>
-      <div class="cc-t">Proben und Zeugnisse</div>
-      <div class="cc-s">Deine Noten, deine Zeugnisse und der Zeugnisplaner.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <!-- 05.10.2026: ein Platz fuer zurueckgegebene Arbeiten. Angefangen hat es
-       bei Helena ("Wir haben den BET zurueckbekommen. Wo soll ich das
-       hinschicken"), und Schulrelevantes gilt fuer alle drei. -->
-  <a class="createcard" href="zurueck.html" data-weg="zurueck">
-    <div class="cc-ic">📬</div>
-    <div>
-      <div class="cc-t">Zurückbekommen</div>
-      <div class="cc-s">Eine Probe, die du zurückhast – fotografieren und aufheben.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
-
-  <a class="createcard" href="schulstoff.html" data-weg="schulheft">
-    <div class="cc-ic">📚</div>
-    <div>
-      <div class="cc-t">Schulheft und Übungsblätter</div>
-      <div class="cc-s">Alles, was du fotografiert hast – nach Fach und Tag sortiert.</div>
-    </div>
-    <div class="cc-arrow">›</div>
-  </a>
+  <!-- ===== Meine Sachen | Spielen und Bauen (Startseite D) =====
+       "Meine Sachen" sortiert sich nach "zuletzt benutzt" (Paul, 22.09.2026) - jetzt innerhalb dieser Liste.
+       Morgens (Mo-Fr 6-8 Uhr) wandert der Stundenplan ganz nach oben (02./05.10.2026, Kapitel 094). -->
+  <div class="zwei">
+    <section class="spalte" aria-label="Meine Sachen">
+      <h2 class="bereich">🎒 Meine Sachen</h2>
+      <div class="liste2" id="hauptwege">
+        <!-- Der Schaukasten (Denny, 22.09.2026): "Es wird ein digitaler Schaukasten seiner taeglichen
+             Schularbeiten, selektiert nach Fach." -->
+        <a class="zl" href="schulstoff.html" data-weg="schulheft"><span class="e" style="--e:#4338ca">📚</span><span>Schulheft und Übungsblätter</span></a>
+        <!-- 16./17.09.2026: Hausaufgabe fotografieren, pruefen lassen, verbessern, bis es sitzt. Ueben, nicht loesen. -->
+        <a class="zl" href="hausaufgaben.html" data-weg="hausaufgaben"><span class="e" style="--e:#0f766e">📝</span><span>Meine Hausaufgaben</span></a>
+        <!-- 23.09.2026 Zahlen und Termine ja, Defizit-Auswertung nein (Beschluss 20.09.2026).
+             15.10.2026 (Dennys Wahl A): "Proben und Zeugnisse", mit Zeugnisplaner. -->
+        <a class="zl" href="proben.html" data-weg="proben"><span class="e" style="--e:#6d28d9">📋</span><span>Proben und Zeugnisse</span></a>
+        <a class="zl" href="stundenplan.html" data-weg="stundenplan"><span class="e" style="--e:#334155">📅</span><span>Mein Stundenplan</span></a>
+        <!-- 05.10.2026: ein Platz fuer zurueckgegebene Arbeiten (Helena: "Wir haben den BET zurueckbekommen"). -->
+        <a class="zl" href="zurueck.html" data-weg="zurueck"><span class="e" style="--e:#92400e">📬</span><span>Zurückbekommen</span></a>
+        <!-- 17.10.2026 (Dennys Wahl „C · Beides zusammen“, Kapitel 129): Videos der Lehrerin mit Papa. -->
+        <a class="zl" href="videos.html" data-weg="videos"><span class="e" style="--e:#be185d">🎬</span><span>Videos mit Papa</span></a>
+      </div>
+    </section>
+    <section class="spalte" aria-label="Spielen und Bauen">
+      <h2 class="bereich">🎮 Spielen und Bauen</h2>
+      <!-- Paul am 14.09.2026 (Meldung 8fcenvfnsh): ein grosses Spiel selbst bauen. Der Knopf oeffnet das Fenster
+           mit beiden Wegen; Werkstatt und Schmiede stehen zusaetzlich direkt daneben. -->
+      <div class="zl erf">
+        <button class="zl-haupt" type="button" id="createBtn" data-weg="erfinden"><span class="e" style="--e:#c2410c">🎮</span><span>Neues Spiel erfinden<small>Bau dir dein eigenes Lernspiel</small></span></button>
+        <span class="rechts"><a class="zk" href="werkstatt.html">⚡ Werkstatt</a><a class="zk" href="schmiede.html">🛠️ Schmiede</a></span>
+      </div>
+      <!-- Pauls Wunsch vom 06.09.2026: seine Werkstatt-Spiele in der Lernwelt. Die Zeile erscheint erst, wenn
+           /api/spiele welche liefert, und oeffnet den Ordner unten. -->
+      <button class="zl" type="button" id="werkstattZeile" hidden><span class="e" style="--e:#6d28d9">🛠️</span><span>Meine Werkstatt-Spiele <b id="werkstattZeileZahl"></b><small>Selbst gebaut – ein Tipp startet sie</small></span></button>
+      <div class="chips" id="spielChips"></div>
+    </section>
   </div>
 
   <!-- Wann sind die naechsten Ferien? Dasselbe Band haben Leon und Helena
-       (Denny, 21.09.2026: "Die Anzeige mit den Ferien finden Paul und Leon
-       sicher bei sich auch sehr cool"). Daten: /ferien.json, gilt fuer ganz
-       Bayern. Es bleibt unsichtbar, solange nichts geladen ist. -->
-  <div id="ferienband" style="margin:0 0 14px"></div>
-
-  <section class="status">
-    <div class="stat flamewrap">
-      <div class="emj" id="flameEmj">🔥</div>
-      <div><div class="big" id="flameDays">–</div><div class="lbl">Lern-Flamme</div></div>
-    </div>
-    <div class="stat">
-      <div class="emj">🏅</div>
-      <div><div class="big" id="founderTxt">Gründer</div><div class="lbl" id="founderLbl">deiner Lernwelt</div></div>
-    </div>
-    <div class="stat">
-      <div class="emj">🧭</div>
-      <div><div class="big" id="discTxt">0 / 0</div><div class="lbl">Spiele entdeckt</div></div>
-    </div>
-    <div class="stat">
-      <div class="emj">🎯</div>
-      <div><div class="big" id="weekTxt">0 / 3</div><div class="lbl">Wochenziel</div>
-        <div class="dots" id="weekDots"><i></i><i></i><i></i></div></div>
-    </div>
-  </section>
-
-  <main id="grid"></main>
-
-  <div class="soon" id="soon" style="display:none">
-    <div class="e">🌞</div>
-    <h3>Hier ist noch Platz!</h3>
-    <p>In dieser Klasse gibt es noch keine Spiele.<br>Bau dir eins in der Werkstatt – oder stell oben auf eine andere Klasse.</p>
+       (Denny, 21.09.2026). Daten: /ferien.json, gilt fuer ganz Bayern.
+       Es bleibt unsichtbar, solange nichts geladen ist. Daneben der Status wie bisher. -->
+  <div class="fusszeile">
+    <div id="ferienband"></div>
+    <section class="status">
+      <div class="stat flamewrap">
+        <div class="emj" id="flameEmj">🔥</div>
+        <div><div class="big" id="flameDays">–</div><div class="lbl">Lern-Flamme</div></div>
+      </div>
+      <div class="stat">
+        <div class="emj">🏅</div>
+        <div><div class="big" id="founderTxt">Gründer</div><div class="lbl" id="founderLbl">deiner Lernwelt</div></div>
+      </div>
+      <div class="stat">
+        <div class="emj">🧭</div>
+        <div><div class="big" id="discTxt">0 / 0</div><div class="lbl">Spiele entdeckt</div></div>
+      </div>
+      <div class="stat">
+        <div class="emj">🎯</div>
+        <div><div class="big" id="weekTxt">0 / 3</div><div class="lbl">Wochenziel</div>
+          <div class="dots" id="weekDots"><i></i><i></i><i></i></div></div>
+      </div>
+    </section>
   </div>
 
-  <details class="werkstattfach" id="werkstattfach" hidden>
-    <summary><span class="wf-em">🛠️</span> Meine Werkstatt-Spiele <span class="wf-zahl" id="wfZahl"></span></summary>
-    <div class="wf-liste" id="wfListe"></div>
-  </details>
+  <!-- ===== Alle Spiele: das Raster wie bisher, neueste zuerst je Fach (Kapitel 095) ===== -->
+  <section class="allespiele" id="alleSpiele" aria-label="Alle Spiele">
+    <h2 class="bereich">🧩 Alle Spiele</h2>
+    <div class="searchbar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#71768a" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+      <input id="search" type="text" placeholder="Spiel suchen … (z. B. Strom, Beethoven, Springer)" autocomplete="off" aria-label="Spiel suchen">
+    </div>
+
+    <main id="grid"></main>
+
+    <div class="soon" id="soon" style="display:none">
+      <div class="e">🌞</div>
+      <h3>Hier ist noch Platz!</h3>
+      <p>In dieser Klasse gibt es noch keine Spiele.<br>Bau dir eins in der Werkstatt – oder stell oben auf eine andere Klasse.</p>
+    </div>
+
+    <details class="werkstattfach" id="werkstattfach" hidden>
+      <summary><span class="wf-em">🛠️</span> Meine Werkstatt-Spiele <span class="wf-zahl" id="wfZahl"></span></summary>
+      <div class="wf-liste" id="wfListe"></div>
+    </details>
+  </section>
 
   <p class="foot">
     Deine Lernwelt wächst mit jedem Arbeitsblatt. 🌱<br>
@@ -1246,13 +1371,89 @@
       '</div>'+
       (isNewTool(t) ? '<span class="neu">NEU</span>' : '');
 
-    a.addEventListener("click", function(){
-      if(!opened.includes(t.file)){ opened.push(t.file); set("hub-opened", JSON.stringify(opened)); }
-      set("hub-open-"+t.file, iso(today));
-      plays++; set("hub-plays", String(plays));
-      blip();
-    });
+    a.addEventListener("click", function(){ merkeOeffnen(t); });
     return a;
+  }
+  function merkeOeffnen(t){
+    if(!opened.includes(t.file)){ opened.push(t.file); set("hub-opened", JSON.stringify(opened)); }
+    set("hub-open-"+t.file, iso(today));
+    plays++; set("hub-plays", String(plays));
+    blip();
+  }
+
+  /* ---- Startseite D: Fach-Kacheln und Spiel-Chips aus dem Spielekatalog (19.10.2026, Kapitel 134) ----
+     Nichts davon steht fest in der Seite: Zahl und Namen der Spiele kommen aus TOOLS (samt games.json und
+     Probe-Kacheln), sortiert wie im Raster (neueste zuerst, Kapitel 095). Ein Tipp auf "… Spiele" springt
+     zu dem Fach im Raster unten. */
+  function neuesteZuerst(liste){
+    return liste.map((t,i)=>({t:t,i:i,z:window.LWAlter ? LWAlter.zeit(SPIELALTER, t.file) : 0}))
+      .sort((a,b)=> (b.z-a.z) || (a.i-b.i)).map(x=>x.t);
+  }
+  function zuDenSpielen(ziel){
+    if(curQuery){ curQuery = ""; document.getElementById("search").value = ""; render(parseInt(klasseSel.value,10)); }
+    const el = document.getElementById(ziel);
+    if(el) try{ el.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){ el.scrollIntoView(); }
+  }
+  function knopf(cls, html, wohin){
+    const b = document.createElement("button"); b.type = "button"; if(cls) b.className = cls;
+    b.innerHTML = html; b.addEventListener("click", wohin); return b;
+  }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  function uebenFuellen(klasse){
+    const imFach = fk => TOOLS.filter(t=>t.fach===fk && t.klasse===klasse);
+    // Mathe: ein Unterpunkt fuer alle Mathe-Spiele, mit ihren Namen klein darunter.
+    const ms = document.getElementById("matheSpiele"), mathe = neuesteZuerst(imFach("mathe"));
+    if(ms){
+      ms.hidden = !mathe.length;
+      ms.innerHTML = '<span aria-hidden="true">🎲</span><span>Mathe-Spiele ('+mathe.length+')<small>'+
+        esc(mathe.map(t=>t.title).join(" · "))+'</small></span>';
+      ms.onclick = function(){ zuDenSpielen("spiele-mathe"); };
+    }
+    // Deutsch und HSU: "Im Heft wiederholen" steht fest, dazu die zwei neuesten Spiele und der Sprung zu allen.
+    [["deutsch","Deutsch"],["hsu","HSU"]].forEach(function(p){
+      const box = document.getElementById("ueben"+p[1].charAt(0)+p[1].slice(1).toLowerCase()+"Subs");
+      const kurz = document.getElementById("ueben"+p[1].charAt(0)+p[1].slice(1).toLowerCase()+"Kurz");
+      if(!box) return;
+      Array.prototype.slice.call(box.querySelectorAll("[data-spiel]")).forEach(x=>x.remove());
+      const sp = neuesteZuerst(imFach(p[0]));
+      if(kurz) kurz.textContent = sp.length ? "Heft und " + sp.length + (sp.length===1?" Spiel":" Spiele") : "Aus deinem Heft";
+      sp.slice(0,2).forEach(function(t){
+        const a = document.createElement("a"); a.className = "sub"; a.href = t.file; a.setAttribute("data-spiel","");
+        a.innerHTML = '<span aria-hidden="true">'+t.icon+'</span><span>'+esc(t.title)+'</span>';
+        a.addEventListener("click", function(){ merkeOeffnen(t); });
+        box.appendChild(a);
+      });
+      if(sp.length){
+        const b = knopf("sub", '<span aria-hidden="true">🎲</span><span>Alle '+p[1]+'-Spiele ('+sp.length+')</span>', function(){ zuDenSpielen("spiele-"+p[0]); });
+        b.setAttribute("data-spiel",""); box.appendChild(b);
+      }
+    });
+    // Weitere Faecher (Musik, Englisch, Religion, Spass): nur, wenn es in dieser Klasse Spiele dazu gibt.
+    const weitere = document.getElementById("uebenWeitere"), chips = document.getElementById("uebenWeitereChips");
+    if(weitere && chips){
+      chips.innerHTML = "";
+      ["musik","englisch","religion","spass"].forEach(function(fk){
+        const n = imFach(fk).length; if(!n) return;
+        chips.appendChild(knopf("", FACH_ICON[fk]+" "+FACH[fk].name+" "+n, function(){ zuDenSpielen("spiele-"+fk); }));
+      });
+      weitere.hidden = !chips.children.length;
+      document.getElementById("uebenWeitereKlasse").textContent = "Klasse " + klasse;
+    }
+    // Spielen und Bauen: Spruenge ins Raster, dazu die andere Klasse, wenn es dort Spiele gibt.
+    const sc = document.getElementById("spielChips");
+    if(sc){
+      sc.innerHTML = "";
+      const alle = TOOLS.filter(t=>t.klasse===klasse).length;
+      if(alle) sc.appendChild(knopf("", "🧩 Alle Spiele ("+alle+")", function(){ zuDenSpielen("alleSpiele"); }));
+      FACH_ORDER.forEach(function(fk){
+        const n = imFach(fk).length; if(!n) return;
+        sc.appendChild(knopf("", FACH[fk].name+" "+n, function(){ zuDenSpielen("spiele-"+fk); }));
+      });
+      const andere = klasse === 3 ? 4 : 3, nA = TOOLS.filter(t=>t.klasse===andere).length;
+      if(nA) sc.appendChild(knopf("", "Klasse "+andere+": "+nA, function(){
+        klasseSel.value = String(andere); set("hub-klasse", String(andere)); render(andere); blip();
+      }));
+    }
   }
 
   let curQuery = "";
@@ -1266,6 +1467,7 @@
   var SPIELALTER = {};
   function render(klasse){
     grid.innerHTML = "";
+    try{ uebenFuellen(klasse); }catch(e){}
     const soon = document.getElementById("soon");
     const foot = document.querySelector(".foot");
 
@@ -1301,6 +1503,7 @@
       shown += tools.length;
       const sec = document.createElement("section");
       sec.className = "fach";
+      sec.id = "spiele-" + fk;
       sec.innerHTML =
         '<div class="fachhead" style="--c:'+FACH[fk].color+'">'+
           '<span class="dot"></span><h2>'+FACH[fk].name+'</h2>'+
@@ -1615,7 +1818,10 @@
     }
 
     // Beim Antippen merken - vor dem Seitenwechsel, damit es sicher ankommt.
-    Array.prototype.forEach.call(kasten.querySelectorAll("[data-weg]"), function(k){
+    // Startseite D (19.10.2026): Die Wege stehen jetzt in drei Bereichen (Lernquiz und Übung zum Blatt unter
+    // "Üben", "Neues Spiel erfinden" unter "Spielen und Bauen", die übrigen sechs in "Meine Sachen").
+    // Gemerkt wird jeder Tipp wie bisher; sortiert wird die Liste "Meine Sachen" (#hauptwege).
+    Array.prototype.forEach.call(document.querySelectorAll(".wrap [data-weg]"), function(k){
       k.addEventListener("click", function(){
         var d = lesen();
         d[k.getAttribute("data-weg")] = Date.now();
@@ -1648,9 +1854,10 @@
     var tag = jetzt.getDay(), std = jetzt.getHours();
     var morgens = tag >= 1 && tag <= 5 && std >= 6 && std < 8;
     var sp = kasten.querySelector('[data-weg="stundenplan"]');
-    var oben = document.getElementById("nachsehen") || document.getElementById("probenkarte");
+    var oben = document.getElementById("nachsehen") || document.getElementById("tagesband");
     karten.forEach(function(k){
-      if (morgens && k === sp && oben) oben.parentNode.insertBefore(k, oben);
+      // Startseite D: oben steht er als eigene Karte (Klasse "morgens"), nicht als Listenzeile.
+      if (morgens && k === sp && oben) { k.classList.add("morgens"); oben.parentNode.insertBefore(k, oben); }
       else kasten.appendChild(k);
     });
   })();
@@ -1736,6 +1943,13 @@
         liste.appendChild(hinweis);
 
         fach.hidden = false;
+        // Startseite D: die Zeile unter "Spielen und Bauen" oeffnet den Ordner.
+        const zeile = document.getElementById("werkstattZeile");
+        if(zeile){
+          document.getElementById("werkstattZeileZahl").textContent = "(" + a.spiele.length + ")";
+          zeile.hidden = false;
+          zeile.addEventListener("click", function(){ fach.open = true; try{ fach.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){ fach.scrollIntoView(); } });
+        }
       })
       .catch(() => {});
   })();
