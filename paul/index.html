@@ -902,6 +902,21 @@
         <!-- 17.10.2026 (Dennys Wahl „C · Beides zusammen“, Kapitel 129): Videos der Lehrerin mit Papa. -->
         <a class="zl" href="videos.html" data-weg="videos"><span class="e" style="--e:#be185d">🎬</span><span>Videos mit Papa</span></a>
       </div>
+      <!-- Klassenpinnwand (Denny, 20.10.2026, Kapitel 124): oeffnet Pauls Pinnwand auf TaskCards in einem neuen Tab.
+           Der Link traegt den Lese-Token und steht deshalb NICHT hier, sondern als Pages-Secret PINNWAND_LINK_PAUL;
+           /api/pinnwand-link liefert ihn hinter dem Riegel. Ohne Link bleibt die Zeile verborgen.
+           Bewusst ausserhalb von #hauptwege und ohne data-weg: die Liste sortiert nur ihre sechs Wege. -->
+      <a class="zl pinnwand" id="pinnwandKnopf" href="#" target="_blank" rel="noopener noreferrer" data-merke="pinnwand" hidden><span class="e" style="--e:#b45309">📌</span><span>Klassenpinnwand 26/27<small>Infos und Aufgaben deiner Klasse – öffnet sich neu</small></span></a>
+      <script>(function(){try{
+        var k = document.getElementById("pinnwandKnopf"); if (!k || !window.fetch) return;
+        fetch("/api/pinnwand-link?kind=paul", { credentials: "same-origin", cache: "no-store" })
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(d){
+            var l = d && d.link;
+            if (typeof l !== "string" || !/^https:\/\/[a-z0-9-]+\.taskcards\.app\//.test(l)) return;
+            k.href = l; k.hidden = false;
+          }).catch(function(){});
+      }catch(e){}})();</script>
     </section>
     <section class="spalte" aria-label="Spielen und Bauen">
       <h2 class="bereich">🎮 Spielen und Bauen</h2>
