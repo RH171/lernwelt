@@ -66,12 +66,36 @@
   .unter{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px 0 0}
   .hinweis{background:var(--surface2);border-radius:12px;padding:10px 12px;margin-top:10px;
     font-size:14px;line-height:1.5;color:var(--muted)}
+  /* Am Handy passt die ganze Woche Mo-Fr in die Karte (Denny, 20.10.2026, iPhone-Foto:
+     Do und Fr liefen ueber Kartenrand und Bildschirm). Feste Spaltenbreiten, Zeit
+     zweizeilig, lange Woerter trennen an weichen Trennstellen, nichts unter 12 px. */
+  .plan .pz{display:none}
+  @media (max-width:640px){
+    body{padding:8px 8px calc(20px + env(safe-area-inset-bottom))}
+    .karte{padding:10px;border-radius:18px}
+    .plan{table-layout:fixed}
+    .plan th,.plan td{padding:6px 2px;font-size:13px;line-height:1.2;overflow-wrap:anywhere}
+    .plan tr:first-child th:first-child{width:42px}
+    .plan td.zeit{white-space:normal;font-size:13px}
+    .plan td.zeit small{font-size:12px}
+    .plan .von,.plan .bis,.plan .raum{display:block}
+    .plan .strich{display:none}
+    /* Pausenzeile: Name und Zeit stehen in der breiten Zelle, die Zeitspalte bleibt leer */
+    .plan .pause td.zeit small,.plan .pause .pl{display:none}
+    .plan .pz{display:inline}
+  }
+  /* Die schmalsten Handys (360 px, Helenas Android): 12 px, schmalere Zeitspalte */
+  @media (max-width:380px){
+    .plan th,.plan td{font-size:12px;padding:5px 1px}
+    .plan td.zeit{font-size:12px}
+    .plan tr:first-child th:first-child{width:40px}
+  }
 </style>
 <script src="/farbschalter.js?v=383ccf75"></script>
 </head>
 <body>
 <div class="huelle">
-  <header>
+  <header data-farbschalter-platz>
     <a class="zurueck" href="/helena/">‹ Zurück</a>
     <h1>📅 Mein Stundenplan</h1>
   </header>
@@ -133,6 +157,14 @@
       "", "", "", "", ""]
   ];
 
+  var TRENN = { "Mathematik": "Ma&shy;the&shy;ma&shy;tik", "Informatik": "In&shy;for&shy;ma&shy;tik", "Französisch": "Fran&shy;zö&shy;sisch",
+                "Geographie": "Geo&shy;gra&shy;phie", "Geschichte": "Ge&shy;schich&shy;te", "Englisch": "Eng&shy;lisch",
+                "Süßemilch": "Süße&shy;milch" };
+  /* Darstellung am Handy (20.10.2026): Zeit in zwei Zeilen, weiche Trennstellen
+     in langen Woertern - die Daten selbst bleiben, wie sie sind. */
+  function zt(z){ var t = String(z).split(" – ");
+    return '<small class="zt"><span class="von">' + t[0] + '</span><span class="strich"> – </span><span class="bis">' + (t[1] || "") + "</span></small>"; }
+  function zeige(f){ return TRENN[f] || f; }
   var heute = new Date().getDay() - 1;         // 0 = Montag
   var tabelle = document.getElementById("plan");
   var kopf = "<tr><th></th>" + TAGE.map(function(t, i){
@@ -141,16 +173,18 @@
 
   var zeilen = STUNDEN.map(function(s){
     if (s[0] === "Pause"){
-      return '<tr class="pause"><td class="zeit">Pause<small>' + s[1] +
-             '</small></td><td colspan="5">Pause</td></tr>';
+      return '<tr class="pause"><td class="zeit"><span class="pl">Pause</span><small>' + s[1] +
+             '</small></td><td colspan="5">Pause<span class="pz"> · ' + s[1] + '</span></td></tr>';
     }
-    return '<tr><td class="zeit">' + s[0] + '.<small>' + s[1] + "</small></td>" +
+    return '<tr><td class="zeit">' + s[0] + '.' + zt(s[1]) + "</td>" +
       TAGE.map(function(_, i){
         var f = s[i + 2];
         var klasse = (i === heute ? "heute" : "");
         if (!f) return '<td class="' + klasse + '">–</td>';
-        return '<td class="' + klasse + '"><span class="fach">' + f[0] +
-               '</span><span class="wo">' + f[1] + "</span></td>";
+        var wo = f[1].split(" · ");
+        return '<td class="' + klasse + '"><span class="fach">' + zeige(f[0]) +
+               '</span><span class="wo">' + zeige(wo[0]) +
+               (wo[1] ? '<span class="strich"> · </span><span class="raum">' + wo[1] + "</span>" : "") + "</span></td>";
       }).join("") + "</tr>";
   }).join("");
   tabelle.innerHTML = kopf + zeilen;

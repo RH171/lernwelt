@@ -147,7 +147,13 @@
         'transition:opacity .2s ease,transform .2s ease}' +
       'html[data-theme="dark"] #farbschalter-tafel{background:#eef1f8;color:#14151c}' +
       '#farbschalter-tafel.an{opacity:1;transform:none}' +
-      '@media print{#farbschalter,#farbschalter-tafel{display:none}}';
+      '@media print{#farbschalter,#farbschalter-tafel{display:none}}' +
+      /* Platz in der Kopfzeile (20.10.2026): Seiten mit einem Element
+         [data-farbschalter-platz] bekommen den Knopf DORT statt schwebend.
+         Anlass: Pauls Stundenplan am iPhone - der schwebende Knopf lag auf
+         der Zelle Do, 9. Stunde, und auf einer Tabelle, die fast den ganzen
+         Schirm fuellt, gibt es beim Rollen keine freie Ecke. */
+      '#farbschalter.im-kopf{position:static;flex:none;margin-left:auto;box-shadow:none}';
     document.head.appendChild(stil);
 
     knopf = document.createElement("button");
@@ -162,7 +168,9 @@
        derselbe Abstand, den lernstand.js fuer den Melde-Knopf anlegt, und
        unter DERSELBEN id: So entsteht er nur einmal, egal wer zuerst kommt.
        Seiten ohne lernstand.js (Stundenplaene, Pruefungen) hatten keinen. */
-    try {
+    var platz = document.querySelector("[data-farbschalter-platz]");
+    if (platz) knopf.classList.add("im-kopf");
+    if (!platz) try {
       var bs = getComputedStyle(document.body);
       if (!document.getElementById("melde-abstand") && bs.overflow !== "hidden" && bs.overflowY !== "hidden") {
         var ab = document.createElement("div");
@@ -191,8 +199,9 @@
       }
     } catch (e) {}
     document.body.appendChild(tafel);
-    document.body.appendChild(knopf);
+    (platz || document.body).appendChild(knopf);
     zeigen();
+    if (platz) { try { new MutationObserver(zeigen).observe(html, { attributes: true, attributeFilter: ["data-theme"] }); } catch (e) {} return; }
 
     ausweichen();
     window.addEventListener("resize", ausweichen);

@@ -49,6 +49,8 @@
   .plan th.heute{background:var(--leon);color:var(--akzent-auf,#fff)}
   .plan .pause td{background:var(--feld);color:var(--muted);font-weight:700}
   .plan td.x{color:var(--leon-dunkel);font-weight:800}
+  /* --leon-dunkel kennt thema.css im Dunklen nicht: X stand mit 1,6:1 auf der Karte (gemessen 20.10.2026) */
+  html[data-theme="dark"] .plan td.x{color:var(--akzent-text,#a5b4ff)}
   .legende{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:6px}
   .legende div{background:var(--tabelle);border-radius:12px;padding:9px 11px;font-size:14.5px;line-height:1.4}
   .legende b{font-family:var(--rund)}
@@ -57,12 +59,37 @@
     min-height:52px;padding:12px 18px;font:800 17px/1.1 var(--rund);cursor:pointer;background:var(--leon);color:var(--akzent-auf,#fff);
     text-decoration:none;margin-top:12px}
   .bild{width:100%;border-radius:14px;margin-top:12px;border:1px solid var(--line)}
+  /* Am Handy passt die ganze Woche Mo-Fr in die Karte (Denny, 20.10.2026, iPhone-Foto:
+     Do und Fr liefen ueber Kartenrand und Bildschirm). Feste Spaltenbreiten, Zeit
+     zweizeilig, lange Woerter trennen an weichen Trennstellen, nichts unter 12 px. */
+  .plan .pz{display:none}
+  @media (max-width:640px){
+    body{padding:8px 8px calc(20px + env(safe-area-inset-bottom))}
+    .karte{padding:10px;border-radius:18px}
+    .plan{table-layout:fixed}
+    .plan th,.plan td{padding:6px 2px;font-size:13px;line-height:1.2;overflow-wrap:anywhere}
+    .plan tr:first-child th:first-child{width:46px}
+    .plan td.zeit{white-space:normal;font-size:13px}
+    .plan td.zeit small{font-size:12px}
+    .plan .von,.plan .bis,.plan .raum{display:block}
+    .plan .strich{display:none}
+    /* Pausenzeile: Name und Zeit stehen in der breiten Zelle, die Zeitspalte bleibt leer */
+    .plan .pause td.zeit small,.plan .pause .pl{display:none}
+    .plan .pz{display:inline}
+    .plan .neben{display:block;font-size:12px}
+  }
+  /* Die schmalsten Handys (360 px, Helenas Android): 12 px, schmalere Zeitspalte */
+  @media (max-width:380px){
+    .plan th,.plan td{font-size:12px;padding:5px 1px}
+    .plan td.zeit{font-size:12px}
+    .plan tr:first-child th:first-child{width:42px}
+  }
 </style>
 <script src="/farbschalter.js?v=383ccf75"></script>
 </head>
 <body>
 <div class="huelle">
-  <header>
+  <header data-farbschalter-platz>
     <a class="zurueck" href="/paul/">‹ Pauls Lernwelt</a>
     <h1>📅 Mein Stundenplan</h1>
   </header>
@@ -99,6 +126,14 @@
   var TAGE = PAUL_PLAN.TAGE;
   var STUNDEN = PAUL_PLAN.STUNDEN;
 
+  var TRENN = { "Englisch": "Eng&shy;lisch", "Schwimmen": "Schwim&shy;men", "Lernzeitinsel": "Lern&shy;zeit&shy;insel",
+                "Rel./Eth": "Rel./<wbr>Eth", "WÜL digital": "WÜL digi&shy;tal",
+                "Sport (14-tägig)": 'Sport <span class="neben">(14-tägig)</span>', "WG (14-tägig)": 'WG <span class="neben">(14-tägig)</span>' };
+  /* Darstellung am Handy (20.10.2026): Zeit in zwei Zeilen, weiche Trennstellen
+     in langen Woertern - die Daten selbst bleiben, wie sie sind. */
+  function zt(z){ var t = String(z).split(" – ");
+    return '<small class="zt"><span class="von">' + t[0] + '</span><span class="strich"> – </span><span class="bis">' + (t[1] || "") + "</span></small>"; }
+  function zeige(f){ return TRENN[f] || f; }
   var heute = new Date().getDay() - 1;         // 0 = Montag
   var tabelle = document.getElementById("plan");
   var kopf = "<tr><th></th>" + TAGE.map(function(t, i){
@@ -106,12 +141,12 @@
   }).join("") + "</tr>";
   var zeilen = STUNDEN.map(function(s){
     if (s[0] === "Pause" || s[0] === "Mittag"){
-      return '<tr class="pause"><td class="zeit">' + s[0] + '<small>' + s[1] + '</small></td><td colspan="5">' + s[0] + '</td></tr>';
+      return '<tr class="pause"><td class="zeit"><span class="pl">' + s[0] + '</span><small>' + s[1] + '</small></td><td colspan="5">' + s[0] + '<span class="pz"> · ' + s[1] + '</span></td></tr>';
     }
-    return '<tr><td class="zeit">' + s[0] + '.<small>' + s[1] + "</small></td>" +
+    return '<tr><td class="zeit">' + s[0] + '.' + zt(s[1]) + "</td>" +
       TAGE.map(function(_, i){
         var f = s[i + 2] || "";
-        return '<td class="' + (i === heute ? "heute " : "") + (f === "X" ? "x" : "") + '">' + (f || "–") + "</td>";
+        return '<td class="' + (i === heute ? "heute " : "") + (f === "X" ? "x" : "") + '">' + (zeige(f) || "–") + "</td>";
       }).join("") + "</tr>";
   }).join("");
   tabelle.innerHTML = kopf + zeilen;
