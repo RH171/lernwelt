@@ -455,7 +455,9 @@
       }
       zh += '<ul class="termine">';
       p.zeugnisse.forEach(function(z){
-        var t = tageBis(z.datum);
+        /* Beim Uebertrittszeugnis nur das Datum: die Tage zaehlt allein der
+           Zeugnisplaner (Dennys Beschluss 20.10.2026, Kapitel 126). */
+        var t = /Übertritt/.test(z.was) ? null : tageBis(z.datum);
         zh += "<li><b>" + esc(z.was) + "</b><span" + (t !== null && t >= 0 && t < 30 ? ' class="bald"' : "") + ">" +
              lang(z.datum) + (t !== null && t >= 0 ? " · in " + t + (t === 1 ? " Tag" : " Tagen") : "") +
              "</span></li>";
