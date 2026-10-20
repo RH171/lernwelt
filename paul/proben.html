@@ -141,6 +141,12 @@
   .zp-erg.mittel{background:var(--zp-mittel);border-color:var(--zp-mittel-rand)}
   .zp-zahl{font:800 26px/1.2 var(--rund)}
   .zp-fuss{font-size:13px;color:var(--muted);margin:10px 0 0}
+  /* Tage bis zum Uebertrittszeugnis (20.10.2026): ruhig, ohne Signalfarbe,
+     ohne Bewegung - nur eine Zeile in der Farbe der Karte. */
+  .zp-tage{margin:12px 0 0;padding:10px 14px;border-radius:14px;border:1.5px solid var(--line);
+           font-size:15.5px;color:var(--ink)}
+  .zp-tage b{font:800 16px var(--rund)}
+  .zp-tage .zp-mut{display:block;margin-top:2px;color:var(--muted);font-size:14.5px}
   @media (max-width:420px){ .zp-aus{padding-left:0} .zp-zeile .zp-fach{flex-basis:100%} }
 
   html[data-theme="dark"] .balken,html[data-theme="dark"] .fzeile .bar{background:#262a38}
@@ -280,6 +286,71 @@
     return { art: art, schnitt: zpKomma(summe),
              html: 'Schnitt <span class="zp-zahl">' + zpKomma(summe) + "</span><br>" + satz };
   }
+  /* ---------- Tage bis zum Uebertrittszeugnis (20.10.2026, Kapitel 126) ----------
+   * Dennys Beschluss: NUR hier im Zeugnisplaner, ruhig, ganze Tage, kein Ticker.
+   * Ausnahme von der Bauregel "kein Countdown" - deshalb ohne Druck: keine
+   * Signalfarbe, kein Blinken, ab 30 Tagen ein ermutigender Satz.
+   * Das Datum kommt aus der Einstellung UEBERTRITT_DATUM_PAUL (/api/zeugnis-termin).
+   * Fehlt sie, bleibt die Zeile weg.
+   * "Heute" ist der Kalendertag in Europe/Berlin (Tageswechsel um Mitternacht
+   * deutscher Zeit, Kapitel 096). Gerechnet wird mit Kalendertagen ueber
+   * Date.UTC - so verschluckt die Zeitumstellung keinen Tag.
+   * Testhaken: window.__LW_HEUTE (Zeitpunkt, z. B. "2027-03-28T00:30:00+01:00")
+   * setzt nur die Messung; live ist er nie gesetzt. */
+  var zpTermin = null;
+  function zpBerlinTag(jetzt){
+    var t = {};
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" })
+      .formatToParts(jetzt).forEach(function(x){ t[x.type] = x.value; });
+    return t.year + "-" + t.month + "-" + t.day;
+  }
+  function zpTageBis(terminIso, heuteIso){
+    var a = String(heuteIso || "").split("-"), b = String(terminIso || "").split("-");
+    if (a.length !== 3 || b.length !== 3) return null;
+    var n = Math.round((Date.UTC(+b[0], +b[1]-1, +b[2]) - Date.UTC(+a[0], +a[1]-1, +a[2])) / 86400000);
+    return isNaN(n) ? null : n;
+  }
+  /* Reine Funktion: Termin + Zeitpunkt -> {tage, text, mut} oder null (nichts zeigen). */
+  function zpTageText(terminIso, jetzt){
+    if (!terminIso) return null;
+    var n = zpTageBis(terminIso, zpBerlinTag(jetzt));
+    if (n === null || n < 0) return null;
+    if (n === 0) return { tage: 0, text: "Heute gibt’s dein Übertrittszeugnis – viel Glück!", mut: "" };
+    return { tage: n, text: "Noch " + n + (n === 1 ? " Tag" : " Tage") + " bis zum Übertrittszeugnis",
+             mut: n <= 30 ? "Du hast schon viel geübt – weiter so!" : "" };
+  }
+  window.LWZeugnisTage = { text: zpTageText, berlinTag: zpBerlinTag };
+  function zpJetzt(){
+    return (typeof window.__LW_HEUTE !== "undefined" && window.__LW_HEUTE !== null) ? new Date(window.__LW_HEUTE) : new Date();
+  }
+  function zpTageHtml(){
+    var t = zpTageText(zpTermin, zpJetzt());
+    if (!t) return "";
+    var zahl = t.tage > 0 ? t.text.replace(/^Noch (\d+ Tage?)/, "Noch <b>$1</b>") : "<b>" + esc(t.text) + "</b>";
+    return '<p class="zp-tage" id="zpTage">📅 ' + zahl +
+           (t.mut ? '<span class="zp-mut">' + esc(t.mut) + "</span>" : "") + "</p>";
+  }
+  function zpFussText(){
+    return "Gerechnet aus Deutsch, Mathe und HSU im Übertrittszeugnis" +
+           (zpTermin ? " (" + lang(zpTermin) + ")" : "") + ". Die Zeugnisnote gibt deine Lehrerin.";
+  }
+  fetch("/api/zeugnis-termin?kind=paul", { credentials: "same-origin" })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (!j || !j.ok || !/^\d{4}-\d{2}-\d{2}$/.test(String(j.datum || ""))) return;
+      zpTermin = j.datum;
+      var karte = document.getElementById("zeugnisplaner");
+      if (!karte) return;            // malen() kommt noch und nimmt zpTermin mit
+      var alt = document.getElementById("zpTage"), neu = zpTageHtml();
+      if (alt) alt.parentNode.removeChild(alt);
+      var fuss = karte.querySelector(".zp-fuss");
+      if (fuss){
+        fuss.textContent = zpFussText();
+        if (neu) fuss.insertAdjacentHTML("beforebegin", neu);
+      }
+    })
+    .catch(function(){});
+
   function zpHtml(noten){
     var aus = zpAusProben(noten), eigen = zpGemerkt(), h = "";
     h += '<div class="karte zp-karte" id="zeugnisplaner"><h2>🔮 Zeugnisplaner</h2>' +
@@ -300,7 +371,8 @@
     });
     var e = zpErgebnis(wahl);
     h += '<div class="zp-erg' + (e.art ? " " + e.art : "") + '" id="zpErgebnis" aria-live="polite">' + e.html + "</div>";
-    h += '<p class="zp-fuss">Gerechnet aus Deutsch, Mathe und HSU im Übertrittszeugnis (Montag, 3. Mai 2027). Die Zeugnisnote gibt deine Lehrerin.</p>';
+    h += zpTageHtml();
+    h += '<p class="zp-fuss">' + esc(zpFussText()) + '</p>';
     h += "</div>";
     return h;
   }
