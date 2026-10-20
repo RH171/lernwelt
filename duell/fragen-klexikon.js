@@ -632,4 +632,14 @@ export const KLEXIKON = [
   [2, "koerper", "👶", "Von wem bekommt ein Kind seine Gene?", ["Eltern", "Lehrern", "Freunden", "Nachbarn"], "Ein Kind kann die Augenfarbe vom Vater und die Haarfarbe von der Mutter erben.", null, "Gen"],
   [4, "welt", "🌊", "In welchen Fluss mündet die Havel?", ["Elbe", "Rhein", "Oder", "Donau"], "Die Havel fließt durch viele Seen und ist 334 Kilometer lang bis zur Elbe.", null, "Havel"],
   [4, "welt", "⛺", "Wie heißen die großen Zelte der Nomaden in Kirgistan?", ["Jurte", "Iglu", "Tipi", "Baumhaus"], "Nomadenfamilien in Kirgistan ziehen mit ihren Tieren von Weide zu Weide und leben in Jurten.", null, "Kirgistan"],
+
+  // Nachschub vom 20.10.2026
+  [1, "tiere", "🐺", "Wie nennt man eine Gruppe von Wölfen?", ["Rudel", "Herde", "Schwarm", "Kolonie"], "Im Rudel setzen sich Wölfe füreinander ein und schützen sich gegenseitig.", null, "Wolf"],
+  [2, "tiere", "🐺", "Wie heißt ein junger Wolf?", ["Welpe", "Kitz", "Fohlen", "Kalb"], "Welpen lecken am Mund ihrer Eltern, damit diese ihnen vorgekautes Futter geben.", null, "Wolf"],
+  [3, "tiere", "🐺", "Welche Farbe hat das Fell unserer Wölfe meistens?", ["Grau", "Braun", "Schwarz", "Weiß"], "Nur der Eurasische Wolf hat meist graues Fell, andere Unterarten sehen ganz anders aus.", null, "Wolf"],
+  [3, "tiere", "🐦", "Wohin fliegen unsere Wachteln im Winter?", ["Nach Afrika", "Nach Asien", "Nach Amerika", "Sie bleiben hier"], "Wachteln fliegen jeden Winter bis nach Afrika und kommen im Frühling wieder zurück.", null, "Wachtel"],
+  [2, "tiere", "🐦", "Was frisst eine Wachtel gern?", ["Insekten", "Fleisch", "Fisch", "Honig"], "Obwohl Wachteln sich von Pflanzen ernähren, kann ihr Fleisch für Menschen manchmal giftig sein.", null, "Wachtel"],
+  [2, "natur", "🎈", "Woraus macht man heute meistens Gummi?", ["Aus Erdöl", "Aus Holz", "Aus Sand", "Aus Milch"], "Früher kam Gummi nur aus dem Saft des Kautschukbaums, heute meist aus Erdöl.", null, "Gummi"],
+  [5, "sprache", "🔤", "Welches dieser Wörter ist ein Pronomen?", ["er", "Haus", "schnell", "blau"], "Das kleine Wort „er“ kann für einen ganzen Namen wie „Alexander“ stehen.", null, "Pronomen"],
+  [4, "welt", "🌉", "Welcher Fluss fließt durch Budapest?", ["Die Donau", "Der Rhein", "Die Elbe", "Die Oder"], "Durch Budapest mit seinen elf Brücken fließt ein großer europäischer Fluss, die Donau.", null, "Budapest"],
 ];
