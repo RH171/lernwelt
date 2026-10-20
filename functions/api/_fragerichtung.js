@@ -220,3 +220,137 @@ export function eineJeTatsache(fragen) {
     return true;
   });
 }
+
+/* ---------------------------------------------------------------- *
+ *  RIEGEL GEGEN SCHWACHE FORMEN (20.10.2026)                        *
+ * ---------------------------------------------------------------- *
+ * Anlass: Stichproben nach dem Nachbau (befunde/fragerichtungen/
+ * 2026-10-20-ergebnis-stichproben.txt):
+ *   1. Ablenker nur in Gross-/Kleinschreibung verschieden
+ *      ("Nase / nase / NAse") - das Kind sieht die Loesung am Bild.
+ *   2. Der Stamm der Loesung steht in der Frage ("Aus welchem Adjektiv
+ *      bildet man die Heiterkeit?" -> heiter).
+ *   3. Luecke ohne Tipp ("Ils sont ___ 5eB.") - ohne Hinweis nicht eindeutig.
+ *   4. Verschiedene Vokabeln einer Zeile als EINE Tatsache (cat/mouse/rabbit).
+ * Eine Bitte im Auftrag ist keine Pruefung - hier wird es durchgesetzt. */
+
+function richtigeAntwort(f) {
+  const a = Array.isArray(f && f.antworten) ? f.antworten : [];
+  const i = Number(f && f.richtig) || 0;
+  return String(a[i] == null ? "" : a[i]).trim();
+}
+function ablenkerVon(f) {
+  const a = Array.isArray(f && f.antworten) ? f.antworten : [];
+  const i = Number(f && f.richtig) || 0;
+  return a.filter((x, j) => j !== i).map((x) => String(x == null ? "" : x).trim());
+}
+
+/* 1. Ablenker muessen sich nach Kleinschreibung unterscheiden. Ausnahme, wenn
+   Gross/klein der Lernstoff ist: dann muss mindestens EIN Ablenker ein anderes
+   Wort sein ("Sekunde / sekunde / Sekunte / Seckunde" geht, "Nase / nase /
+   NAse" nicht - dort sieht das Kind die Loesung am Schriftbild). */
+export function ablenkerSchwach(f) {
+  const r = richtigeAntwort(f), ab = ablenkerVon(f);
+  if (!r || !ab.length) return "";
+  const alle = [r, ...ab];
+  if (new Set(alle).size !== alle.length) return "doppelte Antwort";
+  const klein = (x) => x.toLocaleLowerCase("de");
+  if (!ab.some((x) => klein(x) !== klein(r))) return "Ablenker nur in Groß-/Kleinschreibung verschieden";
+  return "";
+}
+
+/* 2. Die Loesung oder ihr Stamm (>= 4 gleiche Anfangsbuchstaben) steht in der
+   Frage. Erlaubt bleibt es, wenn auch ein Ablenker so in der Frage steckt -
+   dann zeigt der Fragetext nicht auf die Loesung ("Ist die Möwe konkret oder
+   abstrakt?", "Welches Wort in „der große Löwe“ ist das Adjektiv?",
+   Konjugation "pouvez / pouvons / peuvent"). */
+const STAMM = 4;
+/* Fuellwoerter zaehlen nicht ("Wer gehört alles zur Gemeinde? -> alle
+   Menschen, die dort wohnen" verraet nichts). */
+const FUELL = new Set(("alle alles allen aller eine einer einem einen eines dort sich sind wird werden " +
+  "kann können haben hast beim nicht oder über unter nach durch dass diese dieser dieses diesen " +
+  "auch aber wenn viele vielen wieder immer noch schon sehr mehr ganz dann denn weil wird").split(" "));
+function woerter(s) {
+  return String(s || "").toLocaleLowerCase("de").split(/[^a-zäöüßàâæçéèêëîïôœùûüÿ]+/)
+    .filter((w) => w.length >= STAMM && !FUELL.has(w));
+}
+function gemeinsamerAnfang(a, b) {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
+}
+function stecktIn(antwort, frageWoerter) {
+  for (const a of woerter(antwort))
+    for (const w of frageWoerter)
+      if (gemeinsamerAnfang(a, w) >= STAMM) return true;
+  return false;
+}
+function putzen(s) {
+  return " " + String(s || "").toLocaleLowerCase("de").replace(/[^a-z0-9äöüßàâæçéèêëîïôœùûüÿ']+/g, " ").trim() + " ";
+}
+export function stammVerraten(f) {
+  const r = richtigeAntwort(f);
+  const frage = String((f && f.frage) || "");
+  const fw = woerter(frage);
+  if (!r || !fw.length || !stecktIn(r, fw)) return "";
+  if (ablenkerVon(f).some((x) => stecktIn(x, fw))) return "";
+  /* Lesefrage fuer Leseanfaenger: erst ein Satz, dann die Frage dazu, und die
+     GANZE Antwort steht woertlich im Satz ("Oma kommt am Montag. Wann kommt
+     Oma?"). Dort ist das Wiederfinden die Aufgabe. */
+  const m = frage.match(/^([^?]*[.!])\s+[^.!]*\?\s*$/);
+  if (m && putzen(m[1]).includes(putzen(r))) return "";
+  return "Lösung oder ihr Stamm steht in der Frage";
+}
+
+/* 3. Eine Luecke braucht einen Tipp, der sie eindeutig macht. Ausnahmen: Mathe
+   (die Rechnung macht sie eindeutig) und ein Hinweis in der Frage selbst -
+   die Uebersetzung davor ("Magst du Rugby? – Est-ce que tu aimes le ___?"),
+   eine Klammer ("(machen)") oder "mit avoir:". */
+export function lueckeOhneTipp(f) {
+  if (formVon(f) !== "luecke") return "";
+  if (/^mathe/i.test(String((f && f.fach) || ""))) return "";
+  if (String((f && f.tipp) || "").trim().length >= 8) return "";
+  const frage = String((f && f.frage) || "");
+  if (/\s[–—-]\s/.test(frage) || /\([^)_]{2,}\)/.test(frage) || /\bmit\s+[^\s:]+\s*:/i.test(frage)) return "";
+  return "Lücke ohne Tipp";
+}
+
+/* Alle Riegel zusammen: "" = in Ordnung, sonst der Grund. */
+export function formSchwach(f) {
+  return ablenkerSchwach(f) || stammVerraten(f) || lueckeOhneTipp(f);
+}
+
+/* 4. Je Vokabel eine eigene Tatsache. Fragen gehoeren zusammen, wenn sie
+   dieselbe Loesung haben oder die Loesung der einen in der Frage der anderen
+   steht ("Was heißt Katze auf Englisch? -> cat" und "Zu welcher Gruppe gehört
+   cat?"). Zerfaellt eine Tatsache in mehrere Teile mit je einer eigenen
+   Standard-Frage (cat / mouse / rabbit), ist sie vermischt.
+   Gibt die Teile zurueck (Listen von Fragen), sonst eine Liste mit allen. */
+export function tatsacheTeilen(liste) {
+  const l = (liste || []).filter(Boolean);
+  if (l.length < 2) return [l];
+  const eltern = l.map((x, i) => i);
+  const wurzel = (i) => (eltern[i] === i ? i : (eltern[i] = wurzel(eltern[i])));
+  const verbinden = (i, j) => { eltern[wurzel(i)] = wurzel(j); };
+  const r = l.map((f) => putzen(richtigeAntwort(f)));
+  const fr = l.map((f) => putzen(f.frage));
+  for (let i = 0; i < l.length; i++)
+    for (let j = i + 1; j < l.length; j++) {
+      if (r[i].trim() && r[i] === r[j]) { verbinden(i, j); continue; }
+      if (r[i].trim() && fr[j].includes(r[i])) { verbinden(i, j); continue; }
+      if (r[j].trim() && fr[i].includes(r[j])) { verbinden(i, j); continue; }
+      /* Dieselbe Sache anders gesagt: "Die Gemeinde verschuldet sich" und
+         "Sie verschuldet sich." teilen ein Sachwort. */
+      if (woerter(r[i]).some((a) => a.length >= 5 && woerter(r[j]).some((b) => gemeinsamerAnfang(a, b) >= 5))) verbinden(i, j);
+    }
+  const teile = new Map();
+  l.forEach((f, i) => { const w = wurzel(i); if (!teile.has(w)) teile.set(w, []); teile.get(w).push(f); });
+  const t = [...teile.values()];
+  const mitStandard = t.filter((x) => x.some((f) => formVon(f) === "standard"));
+  if (mitStandard.length < 2) return [l];
+  /* Teile ohne eigene Standard-Frage ("Welche Nomen nennt man abstrakt?")
+     gehoeren zum Begriff, nicht zu einer Vokabel: zum groessten Teil. */
+  mitStandard.sort((a, b) => b.length - a.length);
+  for (const x of t) if (!mitStandard.includes(x)) mitStandard[0].push(...x);
+  return mitStandard;
+}

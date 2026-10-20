@@ -51,7 +51,7 @@ import {
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
   fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen,
 } from "./_wiedervorlage.js";
-import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN } from "./_fragerichtung.js";
+import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach } from "./_fragerichtung.js";
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -800,9 +800,8 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
       /* Eine Luecke braucht genau EINE Luecke, und zwar fuer ein ganzes Wort
          ("Parkhaus___" im Baulauf 19.10.2026 - eine Bitte ist keine Pruefung). */
       if (form === "luecke" && !lueckeOk(fo.frage)) continue;
-      gesehen.add(form);
       const blatt = blattVon(t.blatt_nr, schule.blaetter);
-      raus.push({
+      const q = {
         id: kennung(),
         fach: heftFach(t.fach),
         frage: String(fo.frage).slice(0, 300),
@@ -819,7 +818,14 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
         tatsache: key,
         form,
         ...(fo.frei === false ? { frei: false } : {}),
-      });
+      };
+      /* Riegel gegen schwache Formen (20.10.2026, _fragerichtung.js): Ablenker
+         nur in Gross-/Kleinschreibung verschieden, Loesung oder ihr Stamm in
+         der Frage, Luecke ohne (gueltigen) Tipp. Geprueft am FERTIGEN Eintrag -
+         ein Tipp, den tippOk verworfen hat, fehlt dort schon. */
+      if (formSchwach(q)) continue;
+      gesehen.add(form);
+      raus.push(q);
     }
   }
   return raus;
@@ -859,7 +865,24 @@ Zeile (gehoert die Tatsache zur Abfallgebuehr, fragt die Luecke nicht nach der
 Parkhausgebuehr). Die Luecke ersetzt immer ein GANZES Wort, nie einen Wortteil
 ("Parkhaus___" ist falsch).
 Gibt eine Tatsache eine Form nicht sinnvoll her, lass sie weg - lieber zwei
-gute Formen als eine erzwungene. Keine Form darf eine Warum-Frage sein.`;
+gute Formen als eine erzwungene. Keine Form darf eine Warum-Frage sein.
+JE VOKABEL, JE BEISPIEL EINE EIGENE TATSACHE: Stehen in einer Zeile mehrere
+Wörter (cat, mouse, rabbit) oder mehrere Beispiele (der Donner, der Duft), ist
+jedes eine eigene Tatsache mit eigenen Formen - nie mehrere in einer.
+Was jede Form verwirft (wird geprüft und fällt sonst weg):
+- Ablenker, die sich von der Lösung nur in Groß-/Kleinschreibung unterscheiden
+  ("Nase / nase / NAse"). Ist Groß/klein der Lernstoff, darf EIN Ablenker die
+  Lösung in falscher Schreibung sein, mindestens ein anderer ist ein anderes
+  Wort oder eine andere Falschschreibung ("Sekunde / sekunde / Sekunte").
+- Die Lösung oder ihr Wortstamm (vier gleiche Anfangsbuchstaben) in der Frage:
+  "Aus welchem Adjektiv bildet man die Heiterkeit? -> heiter", "Welche
+  Sportart ist le rugby? -> Rugby", "Für ihren Hund zahlt man die ___. ->
+  Hundesteuer". Frag dann anders (Bedeutung, Beispielsatz: "Wer fröhlich und
+  gut gelaunt ist, ist ___. -> heiter"), wähle Ablenker mit demselben Stamm
+  ("die Heiterkeit / die Heiterung / das Heitern"), oder lass die Form weg.
+- Eine Lücke ohne Tipp, der sie eindeutig macht. Jede Lücke (außer in Mathe)
+  bekommt einen Tipp oder einen Hinweis in der Frage: die Übersetzung davor
+  ("Sie sind in der 5eB. – Ils sont ___ 5eB.") oder das Wort in Klammern.`;
 
 async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   if (!env.ANTHROPIC_API_KEY) return [];
