@@ -186,9 +186,13 @@
        Wochentag, Datum und Jahr unter dem Feld, solange nichts gewaehlt ist. */
     function fensterText(){
       var h = heute();
-      return wahl.modus === "note"
-        ? "Wähl einen Tag zwischen " + lang(plus(h, -120)) + " und heute."
-        : "Wähl einen Tag zwischen heute und " + lang(plus(h, VORAUS)) + ". Weiter geht der Kalender nicht.";
+      if (wahl.modus === "note") return "Wähl einen Tag zwischen " + lang(plus(h, -120)) + " und heute.";
+      /* Der letzte waehlbare Tag kann ein Wochenende sein (bei Paul faellt die
+         Grenze auf einen Sonntag). Dann steht hier der letzte Schultag davor -
+         sonst schickt der Hinweis das Kind in eine Absage. */
+      var letzter = plus(h, VORAUS);
+      for (var i = 0; i < 3 && wochenende(letzter); i++) letzter = plus(letzter, -1);
+      return "Wähl einen Tag zwischen heute und " + lang(letzter) + ". Weiter geht der Kalender nicht.";
     }
 
     function tagPruefen(){
