@@ -37,7 +37,16 @@
     return d.toISOString().slice(0, 10);
   }
   function wochenende(iso){ var w = new Date(iso + "T12:00:00Z").getUTCDay(); return w === 0 || w === 6; }
-  function lang(iso){ return new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }); }
+  /* Das Jahr steht dabei, sobald der Tag NICHT im laufenden Jahr liegt.
+     Helena hielt am 21.10.2026 den 20. Maerz 2027 fuer 2026 ("ich dachte, wir
+     sind noch 2026") und suchte den Fehler bei sich - der Hinweistext hatte
+     nie ein Jahr, nur der native Kalender. */
+  function lang(iso){
+    var d = new Date(iso + "T12:00:00");
+    var f = { weekday: "long", day: "numeric", month: "long" };
+    if (d.getFullYear() !== new Date().getFullYear()) f.year = "numeric";
+    return d.toLocaleDateString("de-DE", f);
+  }
 
   function stil(){
     if (document.getElementById("lwpe-stil")) return;
@@ -170,17 +179,29 @@
         .catch(function(){});
     }
 
+    /* Bis wann der Kalender geht, steht da, BEVOR das Kind an die Wand stoesst.
+       Helena (21.10.2026): Sie tippte am Handy auf den Pfeil nach rechts, nichts
+       passierte - der native Kalender sagt nicht, warum. Sie entschuldigte sich
+       fuer einen Fehler, den sie nie gemacht hatte. Jetzt steht das Fenster mit
+       Wochentag, Datum und Jahr unter dem Feld, solange nichts gewaehlt ist. */
+    function fensterText(){
+      var h = heute();
+      return wahl.modus === "note"
+        ? "Wähl einen Tag zwischen " + lang(plus(h, -120)) + " und heute."
+        : "Wähl einen Tag zwischen heute und " + lang(plus(h, VORAUS)) + ". Weiter geht der Kalender nicht.";
+    }
+
     function tagPruefen(){
       var v = $("peTag").value, h = heute(), txt = $("peTagText");
-      if (!v) { txt.textContent = ""; return ""; }
+      if (!v) { txt.textContent = fensterText(); return ""; }
       if (wahl.modus === "note") {
         if (v > h) { txt.textContent = "Dieser Tag kommt erst noch."; return "fehl"; }
-        if (v < plus(h, -120)) { txt.textContent = "So lange her geht es nicht – frag Mama oder Papa."; return "fehl"; }
+        if (v < plus(h, -120)) { txt.textContent = "So lange her geht es nicht – der früheste Tag ist " + lang(plus(h, -120)) + ". Für alles davor frag Mama oder Papa."; return "fehl"; }
         txt.textContent = lang(v);
         return "ok";
       }
       if (v < h) { txt.textContent = "Dieser Tag ist schon vorbei."; return "fehl"; }
-      if (v > plus(h, VORAUS)) { txt.textContent = "So weit voraus geht es nicht – höchstens zwei Monate."; return "fehl"; }
+      if (v > plus(h, VORAUS)) { txt.textContent = "So weit voraus geht es nicht – der letzte Tag ist " + lang(plus(h, VORAUS)) + "."; return "fehl"; }
       if (wochenende(v)) { txt.textContent = "Das ist ein Wochenende – da ist keine Schule."; return "fehl"; }
       txt.textContent = lang(v);
       return "ok";
@@ -296,7 +317,7 @@
 
     function zuruecksetzen(){
       wahl.fach = ""; wahl.alt = null; wahl.note = 0; wahl.offenId = "";
-      $("peTag").value = ""; $("peThema").value = ""; $("peTagText").textContent = "";
+      $("peTag").value = ""; $("peThema").value = ""; $("peTagText").textContent = fensterText();
       $("peSpeichern").textContent = "Speichern";
       faecherMalen(); themenMalen([]); notenMalen(); offenMalen();
     }
