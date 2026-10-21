@@ -1845,7 +1845,19 @@
       ".vfoffen{margin-top:10px;font-size:13px;font-weight:700;color:var(--ink)}"+
       "#saveUnit:disabled{opacity:.5;cursor:default}"+
       ".pvx{min-width:44px;min-height:44px}"+
-      ".pvrow input{min-height:44px}";
+      ".pvrow input{min-height:44px}"+
+      /* Erst fragen, dann weg (21.10.2026) */
+      ".pvfrage{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px;padding:8px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:12px}"+
+      ".pvfragetext{flex:1 1 100%;font-size:14px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}"+
+      ".pvfrage .mini{min-height:44px;flex:1 1 44%;color:var(--ink)}"+
+      ".pvfrage .pvbleibt{border:2px solid var(--brand);font-weight:800}"+
+      ".pvrow.pvfragend{border:1px dashed var(--line);border-radius:12px;padding:6px}"+
+      ".pvweggelegt{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;background:var(--surface2);border:1px dashed var(--line);border-radius:12px}"+
+      ".pvwegtext{flex:1 1 120px;font-size:13.5px;font-weight:700;color:var(--muted);text-decoration:line-through;overflow-wrap:anywhere}"+
+      ".pvweggelegt .mini{min-height:44px;flex:none;color:var(--ink)}"+
+      ".vlzurueckstreifen{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:12px}"+
+      ".vlzuruecktext{flex:1 1 120px;font-size:13.5px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}"+
+      ".vlzurueckstreifen .mini{min-height:44px;flex:none;color:var(--ink)}";
     var st=document.createElement("style"); st.textContent=css; document.head.appendChild(st);
   })();
 
