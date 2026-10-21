@@ -642,4 +642,13 @@ export const KLEXIKON = [
   [2, "natur", "🎈", "Woraus macht man heute meistens Gummi?", ["Aus Erdöl", "Aus Holz", "Aus Sand", "Aus Milch"], "Früher kam Gummi nur aus dem Saft des Kautschukbaums, heute meist aus Erdöl.", null, "Gummi"],
   [5, "sprache", "🔤", "Welches dieser Wörter ist ein Pronomen?", ["er", "Haus", "schnell", "blau"], "Das kleine Wort „er“ kann für einen ganzen Namen wie „Alexander“ stehen.", null, "Pronomen"],
   [4, "welt", "🌉", "Welcher Fluss fließt durch Budapest?", ["Die Donau", "Der Rhein", "Die Elbe", "Die Oder"], "Durch Budapest mit seinen elf Brücken fließt ein großer europäischer Fluss, die Donau.", null, "Budapest"],
+
+  // Nachschub vom 21.10.2026
+  [1, "sprache", "🔤", "Was ist ein Buchstabe?", ["Ein Zeichen", "Eine Zahl", "Ein Bild", "Ein Ton"], "Ein Buchstabe steht meist für einen bestimmten Laut, den man hören kann.", null, "Buchstabe"],
+  [3, "sprache", "📚", "Wovon kommt das Wort „Buch“?", ["Von Buchstaben", "Von Bücherei", "Von Papier", "Von Drucken"], "Ganz viele Buchstaben zusammen ergeben ein Buch – daher kommt der Name.", null, "Buchstabe"],
+  [1, "sport", "🏃", "Was macht man bei den Bundesjugendspielen?", ["Sport", "Malen", "Singen", "Backen"], "Bei den Bundesjugendspielen rennen, springen und werfen Kinder um die Wette.", null, "Bundesjugendspiele"],
+  [1, "kurios", "🐻", "Welche Farbe hat Käpt'n Blaubär?", ["Blau", "Grün", "Rot", "Gelb"], "Käpt'n Blaubär ist ein blauer Bär, der früher als Kapitän zur See gefahren ist.", null, "Käpt'n Blaubär"],
+  [4, "kurios", "📖", "Wem erzählt Käpt'n Blaubär seine alten Geschichten?", ["Seinen Enkeln", "Seinem Hund", "Der Seeratte", "Den Fischen"], "Käpt'n Blaubärs Enkel glauben seine wilden Geschichten von früher nicht so richtig.", null, "Käpt'n Blaubär"],
+  [2, "natur", "🏔️", "Was ist die Zugspitze?", ["Ein Berg", "Ein Fluss", "Ein See", "Eine Stadt"], "Die Zugspitze ist der höchste Berg in ganz Deutschland.", null, "Zugspitze"],
+  [5, "natur", "🌳", "Was gehört alles zu einem Ökosystem?", ["Tiere und Pflanzen", "Nur die Steine", "Nur das Wasser", "Nur die Wolken"], "Pflanzen, Tiere und ihr Lebensraum bilden zusammen ein Ökosystem.", null, "Ökosystem"],
 ];
