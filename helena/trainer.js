@@ -1321,16 +1321,59 @@
     if(z){ z.textContent = pvOffen ? ("Noch "+pvOffen+" Rückfrage"+(pvOffen>1?"n":"")+" offen – erst dann kannst du speichern.") : ""; z.style.display = pvOffen ? "block" : "none"; }
     if(b){ b.disabled = pvOffen>0; }
   }
-  function zeileEinfuegen(en,de,pos,wortart){
-    var rows=$("#pvrows"); if(!rows) return null;
-    var r=document.createElement("div"); r.className="pvrow";
-    r.setAttribute("data-pos", pos==null ? "1e9" : String(pos));
+  /* ---------- Erst fragen, dann weg (21.10.2026) ----------
+     Helena am 21.10.2026: „Ich habe aus Versehen voc. In englisch
+     gelöscht was mach ich jetzt“ – 1 bis 3 Vokabeln, und auf ihre Wahl
+     hin: „Das sie nach fragt“. Das kleine ✕ lag auf ihrem 360er Handy
+     direkt neben dem deutschen Feld und nahm die Zeile sofort weg, ohne
+     Frage und ohne Rückweg. Jetzt fragt es in der Zeile selbst nach, und
+     nach dem Ja bleibt die Zeile als Streifen mit „Zurückholen“ stehen,
+     solange die Vorschau offen ist. Eine leere Zeile geht ohne Frage –
+     da ist nichts zu verlieren. */
+  function zeileFuellen(r, en, de, wortart){
+    r.className="pvrow";
     r.innerHTML='<input class="pven" placeholder="'+K.spracheKlein+'" value="'+attrEsc(en)+'">'+
       '<span class="pvarr">→</span>'+
       '<input class="pvde" placeholder="deutsch" value="'+attrEsc(de)+'">'+
       '<select class="pvwa" aria-label="Wortart">'+WORTARTEN.map(function(w){ return '<option value="'+w[0]+'"'+(w[0]===(wortart||"")?' selected':'')+'>'+w[1]+'</option>'; }).join("")+'</select>'+
-      '<button class="pvx" type="button" title="Zeile entfernen" aria-label="Zeile entfernen">✕</button>';
-    r.querySelector(".pvx").addEventListener("click",function(){ if(r.parentNode) r.parentNode.removeChild(r); });
+      '<button class="pvx" type="button" title="Zeile weglassen" aria-label="Zeile weglassen">✕</button>';
+    r.querySelector(".pvx").addEventListener("click",function(){ zeileWegFragen(r); });
+    return r;
+  }
+  function zeileWortlaut(r){
+    var a=r.querySelector(".pven"), b=r.querySelector(".pvde");
+    var en=a?a.value.trim():"", de=b?b.value.trim():"";
+    if(en&&de) return en+" → "+de;
+    return en||de||"";
+  }
+  function zeileWegFragen(r){
+    if(r.querySelector(".pvfrage")) return;                  // es wird schon gefragt
+    var txt=zeileWortlaut(r);
+    if(!txt){ if(r.parentNode) r.parentNode.removeChild(r); return; }
+    var f=el("div","pvfrage");
+    f.appendChild(el("span","pvfragetext","„"+txt+"“ wirklich weglassen?"));
+    var nein=el("button","mini pvbleibt","Nein, behalten"); nein.type="button";
+    var ja=el("button","mini pvweg","Ja, weglassen"); ja.type="button";
+    f.appendChild(nein); f.appendChild(ja);
+    r.classList.add("pvfragend"); r.appendChild(f);
+    nein.addEventListener("click",function(){ r.classList.remove("pvfragend"); if(f.parentNode) f.parentNode.removeChild(f); });
+    ja.addEventListener("click",function(){ zeileWeglegen(r, txt); blip(); });
+  }
+  function zeileWeglegen(r, txt){
+    var a=r.querySelector(".pven"), b=r.querySelector(".pvde"), wa=r.querySelector(".pvwa");
+    var en=a?a.value:"", de=b?b.value:"", w=wa?wa.value:"";
+    r.className="pvweggelegt";                                // kein .pvrow mehr: weder Speichern noch Tauschen fassen sie an
+    r.innerHTML="";
+    r.appendChild(el("span","pvwegtext","✕ „"+txt+"“ weggelassen"));
+    var zurueck=el("button","mini pvzurueck","Zurückholen"); zurueck.type="button";
+    zurueck.addEventListener("click",function(){ zeileFuellen(r, en.trim(), de.trim(), w); blip(); });
+    r.appendChild(zurueck);
+  }
+  function zeileEinfuegen(en,de,pos,wortart){
+    var rows=$("#pvrows"); if(!rows) return null;
+    var r=document.createElement("div"); r.className="pvrow";
+    r.setAttribute("data-pos", pos==null ? "1e9" : String(pos));
+    zeileFuellen(r, en, de, wortart);
     // An ihren Platz auf dem Blatt (Seite, Zeile), neue Zeilen ans Ende.
     var p = pos==null ? 1e9 : pos, vor=null;
     [].some.call(rows.children,function(x){ if(parseFloat(x.getAttribute("data-pos"))>p){ vor=x; return true; } return false; });
@@ -1469,7 +1512,9 @@
     $("#addRow").addEventListener("click",function(){ zeileEinfuegen("","",null); });
     $("#swapBtn").addEventListener("click",function(){
       [].forEach.call($("#pvrows").querySelectorAll(".pvrow"),function(r){
-        var a=r.querySelector(".pven"), b=r.querySelector(".pvde"); var t=a.value; a.value=b.value; b.value=t;
+        var a=r.querySelector(".pven"), b=r.querySelector(".pvde");
+        if(!a || !b) return;
+        var t=a.value; a.value=b.value; b.value=t;
       });
     });
     $("#cancelUnit").addEventListener("click",function(){ box.style.display="none"; box.innerHTML=""; pvOffen=0; });
@@ -1483,7 +1528,9 @@
     var name=($("#unitName").value||"").trim() || "Neue Einheit";
     var pairs=[];
     [].forEach.call($("#pvrows").children,function(r){
-      var en=r.querySelector(".pven").value.trim(), de=r.querySelector(".pvde").value.trim();
+      var fa=r.querySelector(".pven"), fb=r.querySelector(".pvde");
+      if(!fa || !fb) return;                 // weggelegte Zeile: steht nur als Streifen da
+      var en=fa.value.trim(), de=fb.value.trim();
       var wa=r.querySelector(".pvwa"), w=wa ? wa.value : "";
       if(en && de) pairs.push(w ? {en:en, de:de, wortart:w} : {en:en, de:de});
     });
@@ -1612,7 +1659,17 @@
         '<span class="vfname">Seite '+(i+1)+'</span>'+
         '<button type="button" class="vfweg" aria-label="Seite '+(i+1)+' entfernen">✕ Entfernen</button>';
       z.querySelector(".vfweg").addEventListener("click",function(){
-        vfSeiten.splice(vfSeiten.indexOf(s),1); seitenMalen();
+        /* Eine Seite wegzunehmen kostet die ganze Wortliste darauf - also
+           erst fragen (21.10.2026, Helenas Wunsch aus dem Faden zum ✕). */
+        var d=dialogOeffnen("vfSeiteWeg","Seite entfernen");
+        d.inhalt.appendChild(el("p","vlhinweistext","Soll Seite "+(i+1)+" wirklich weg? Die Wörter von dieser Seite sind dann nicht dabei."));
+        d.inhalt.appendChild(el("p","tipp","Du kannst sie danach jederzeit neu fotografieren."));
+        d.knopf("Nein, behalten","start",function(){ d.zu(); });
+        d.knopf("Ja, Seite weg","ghost",function(){
+          d.zu();
+          var w=vfSeiten.indexOf(s); if(w>=0) vfSeiten.splice(w,1);
+          seitenMalen(); blip();
+        });
       });
       liste.appendChild(z);
     });
@@ -1793,6 +1850,24 @@
   })();
 
   /* ---------- Eigene Einheiten verwalten (löschen) ---------- */
+  function einheitLoeschen(weg){
+    var left=customUnits().filter(function(u){return u.id!==weg.id;});
+    set(PRE+"-custom-units",JSON.stringify(left));
+    fillUnits(); renderMyUnits(); uebersichtMalen(); blip();
+    var box=$("#myUnits"); if(!box) return;
+    var s=el("div","vlzurueckstreifen");
+    s.appendChild(el("span","vlzuruecktext","„"+weg.name+"“ ist gelöscht."));
+    var b=el("button","mini","Zurückholen"); b.type="button";
+    b.addEventListener("click",function(){
+      var jetzt=customUnits();
+      if(!jetzt.some(function(u){return u.id===weg.id;})) jetzt.push(weg);
+      set(PRE+"-custom-units",JSON.stringify(jetzt));
+      fillUnits(weg.id); renderMyUnits(); uebersichtMalen(); blip();
+    });
+    s.appendChild(b);
+    box.appendChild(s);
+  }
+
   function renderMyUnits(){
     var box=$("#myUnits"); var mine=customUnits();
     if(!mine.length){ box.innerHTML=""; return; }
@@ -1804,10 +1879,17 @@
     box.innerHTML=html;
     [].forEach.call(box.querySelectorAll(".del"),function(btn){
       btn.addEventListener("click",function(){
-        var id=btn.getAttribute("data-id");
-        var left=customUnits().filter(function(u){return u.id!==id;});
-        set(PRE+"-custom-units",JSON.stringify(left));
-        fillUnits(); renderMyUnits(); uebersichtMalen(); blip();
+        var id=btn.getAttribute("data-id"), weg=null;
+        customUnits().forEach(function(u){ if(u.id===id) weg=u; });
+        if(!weg) return;
+        var n=(weg.pairs||[]).length;
+        /* Eine ganze Einheit ist der groesste Verlust im Trainer - erst fragen
+           (21.10.2026, Helenas Wunsch), danach bleibt ein Rueckweg stehen. */
+        var d=dialogOeffnen("vlEinheitWeg","Einheit löschen");
+        d.inhalt.appendChild(el("p","vlhinweistext","Soll „"+weg.name+"“ mit "+n+" Vokabel"+(n===1?"":"n")+" wirklich weg?"));
+        d.inhalt.appendChild(el("p","tipp","Direkt danach kannst du sie noch zurückholen – nach dem Neuladen der Seite nicht mehr."));
+        d.knopf("Nein, behalten","start",function(){ d.zu(); });
+        d.knopf("Ja, löschen","ghost",function(){ d.zu(); einheitLoeschen(weg); });
       });
     });
   }
