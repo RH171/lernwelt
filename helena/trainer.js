@@ -393,8 +393,15 @@
       if (t !== sitzGeschrieben){ set(SCHL.sitzung, t); sitzGeschrieben = t; }
     }
     if (protokoll.length) lernstandSichernFuerSpaeter();
+    entwurfSichern();
   }
   window.addEventListener("pagehide", beimVerlassen);
+  /* Eine durchgeschaute, aber nicht gespeicherte Wortliste ist ein echter
+     Verlust - der Browser fragt nach (21.10.2026). */
+  window.addEventListener("beforeunload", function(e){
+    if(!entwurfSammeln()) return;
+    e.preventDefault(); e.returnValue = ""; return "";
+  });
   document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "hidden") beimVerlassen(); });
 
   function lernenStarten(einheitId){
@@ -1320,7 +1327,144 @@
     var z=$("#vfOffen"), b=$("#saveUnit");
     if(z){ z.textContent = pvOffen ? ("Noch "+pvOffen+" Rückfrage"+(pvOffen>1?"n":"")+" offen – erst dann kannst du speichern.") : ""; z.style.display = pvOffen ? "block" : "none"; }
     if(b){ b.disabled = pvOffen>0; }
+    bandMalen();
   }
+  /* ---------- Noch nicht gespeichert (21.10.2026) ----------
+     Helena am 21.10.2026: sie hatte ihr Buchblatt fotografiert, die Liste
+     durchgeschaut, ein paar Zeilen mit dem ✕ weggenommen - und danach war
+     nichts in ihren Einheiten. Gemessen: die Vorschau lebte nur im Fenster.
+     Wer den Knopf "Einheit speichern" nicht findet oder weggeht, verliert
+     die ganze Seite still. Drei Riegel dagegen:
+       1. ein Band unten am Schirm, solange etwas offen ist ("48 Wörter -
+          noch nicht gespeichert"), mit dem Speicher-Knopf darin,
+       2. eine Frage, bevor die Vorschau weggeworfen wird (Abbrechen, neue
+          Seite dazu, Seite verlassen),
+       3. ein Entwurf im Speicher: beim Verlassen wird die Wortliste gesichert
+          und beim nächsten Besuch oben im Foto-Kasten angeboten.
+     Sparsam geschrieben wird wie bei der Sitzung: nur beim Verlassen, und nur
+     wenn sich etwas geändert hat. */
+  var VF_ENTWURF = PRE + "-vf-entwurf";
+  var ENTWURF_FRIST = 14 * 24 * 3600e3;
+  var entwurfGeschrieben = "";
+  var pvBand = null, pvLuft = null;
+
+  function pvVorschauOffen(){
+    var box = $("#preview");
+    return !!(box && box.style.display !== "none" && $("#pvrows"));
+  }
+  function pvPaare(){
+    var rows = $("#pvrows"); if(!rows) return [];
+    var raus = [];
+    [].forEach.call(rows.children, function(r){
+      var a = r.querySelector(".pven"), b = r.querySelector(".pvde"), wa = r.querySelector(".pvwa");
+      if(!a || !b) return;
+      var en = a.value.trim(), de = b.value.trim();
+      if(en && de) raus.push({ en:en, de:de, wortart: wa ? wa.value : "" });
+    });
+    return raus;
+  }
+  function bandWeg(){
+    if(pvBand && pvBand.parentNode) pvBand.parentNode.removeChild(pvBand);
+    if(pvLuft && pvLuft.parentNode) pvLuft.parentNode.removeChild(pvLuft);
+    pvBand = null; pvLuft = null;
+  }
+  function bandMalen(){
+    if(!pvVorschauOffen()){ bandWeg(); return; }
+    var n = pvPaare().length;
+    if(!n && !pvOffen){ bandWeg(); return; }
+    if(!pvBand){
+      pvBand = el("div", "vfband"); pvBand.id = "vfBand";
+      pvBand.appendChild(el("span", "vfbandtext"));
+      var k = el("button", "vfbandknopf"); k.type = "button";
+      pvBand.appendChild(k);
+      k.addEventListener("click", function(){
+        if(pvOffen > 0){
+          var kasten = $("#vfKasten");
+          if(kasten){ try{ kasten.scrollIntoView({ block:"start", behavior:"smooth" }); }catch(e){} }
+          return;
+        }
+        saveFromPreview();
+      });
+      pvLuft = el("div", "vfbandluft");
+      document.body.appendChild(pvBand);
+      document.body.appendChild(pvLuft);
+    }
+    var t = pvBand.querySelector(".vfbandtext"), k2 = pvBand.querySelector(".vfbandknopf");
+    if(pvOffen > 0){
+      t.textContent = n + (n === 1 ? " Wort" : " Wörter") + " · noch " + pvOffen + " Rückfrage" + (pvOffen > 1 ? "n" : "");
+      k2.textContent = "Hinschauen";
+      pvBand.classList.add("wartet");
+    } else {
+      t.textContent = n + (n === 1 ? " Wort" : " Wörter") + " – noch nicht gespeichert";
+      k2.textContent = "Speichern";
+      pvBand.classList.remove("wartet");
+    }
+  }
+
+  function entwurfSammeln(){
+    if(!pvVorschauOffen()) return null;
+    var paare = pvPaare();
+    if(paare.length < 2) return null;
+    var nf = $("#unitName");
+    return { zeit: Date.now(), name: nf ? (nf.value || "").trim() : "",
+             herkunft: pvHerkunft, offen: pvOffen, paare: paare };
+  }
+  function entwurfSichern(){
+    var e = entwurfSammeln(); if(!e) return;
+    var t = JSON.stringify(e);
+    if(t === entwurfGeschrieben) return;
+    set(VF_ENTWURF, t); entwurfGeschrieben = t;
+  }
+  function entwurfVergessen(){
+    if(get(VF_ENTWURF, null) != null){ try{ localStorage.removeItem(VF_ENTWURF); }catch(e){} }
+    entwurfGeschrieben = "";
+    var k = $("#vfEntwurfKarte"); if(k && k.parentNode) k.parentNode.removeChild(k);
+  }
+  function entwurfAnbieten(){
+    var e = jsonLesen(VF_ENTWURF, null);
+    if(!e || !e.paare || e.paare.length < 2) return;
+    if(Date.now() - (e.zeit || 0) > ENTWURF_FRIST){ entwurfVergessen(); return; }
+    var kasten = document.querySelector(".adderbody"); if(!kasten) return;
+    var alt = $("#vfEntwurfKarte"); if(alt && alt.parentNode) alt.parentNode.removeChild(alt);
+    var k = el("div", "vfentwurf"); k.id = "vfEntwurfKarte";
+    k.appendChild(el("div", "vfentwurfkopf", "📝 " + e.paare.length + " Wörter von vorhin sind noch nicht gespeichert"));
+    k.appendChild(el("p", "vfentwurfunter",
+      "Du hattest sie fotografiert und durchgeschaut, aber noch nicht gespeichert. Die Wörter sind da, die Fotos nicht." +
+      (e.offen ? " Zeilen, bei denen ich dich gefragt hatte, fehlen – schau die Liste bitte noch einmal durch." : "")));
+    var reihe = el("div", "vfentwurfknoepfe");
+    var w = el("button", "photobtn", "Weitermachen und speichern"); w.type = "button";
+    w.addEventListener("click", function(){
+      var nf = $("#unitName"); if(nf && e.name) nf.value = e.name;
+      renderPreview(e.paare.map(function(p){ return { en:p.en, de:p.de, wortart:p.wortart || "" }; }),
+                    { herkunft: e.herkunft === "text" ? "text" : "foto" });
+      if(k.parentNode) k.parentNode.removeChild(k);
+      try{ $("#preview").scrollIntoView({ block:"start", behavior:"smooth" }); }catch(x){}
+    });
+    var n = el("button", "mini", "Wegwerfen"); n.type = "button";
+    n.addEventListener("click", function(){
+      var d = dialogOeffnen("vfEntwurfWeg", "Entwurf wegwerfen");
+      d.inhalt.appendChild(el("p", "vlhinweistext", "Sollen die " + e.paare.length + " Wörter wirklich weg? Dann müsstest du die Seite neu fotografieren."));
+      d.knopf("Nein, behalten", "start", function(){ d.zu(); });
+      d.knopf("Ja, wegwerfen", "ghost", function(){ d.zu(); entwurfVergessen(); blip(); });
+    });
+    reihe.appendChild(w); reihe.appendChild(n); k.appendChild(reihe);
+    kasten.insertBefore(k, kasten.firstChild);
+  }
+  /* Vorschau wegwerfen - immer erst fragen, danach ist sie wirklich weg. */
+  function vorschauWegFragen(titel, satz, danach){
+    var paare = pvPaare();
+    if(!pvVorschauOffen() || paare.length < 2){ danach(); return; }
+    var d = dialogOeffnen("vfVorschauWeg", titel);
+    d.inhalt.appendChild(el("p", "vlhinweistext", paare.length + " Wörter stehen hier und sind noch nicht gespeichert. " + satz));
+    d.knopf("Erst speichern", "start", function(){ d.zu(); saveFromPreview(); });
+    d.knopf("Nein, hierbleiben", "ghost", function(){ d.zu(); });
+    d.knopf("Ja, wegwerfen", "ghost", function(){ d.zu(); danach(); blip(); });
+  }
+  function vorschauSchliessen(){
+    var box = $("#preview"); if(box){ box.style.display = "none"; box.innerHTML = ""; }
+    pvOffen = 0; bandWeg();
+  }
+
   /* ---------- Erst fragen, dann weg (21.10.2026) ----------
      Helena am 21.10.2026: „Ich habe aus Versehen voc. In englisch
      gelöscht was mach ich jetzt“ – 1 bis 3 Vokabeln, und auf ihre Wahl
@@ -1338,6 +1482,7 @@
       '<select class="pvwa" aria-label="Wortart">'+WORTARTEN.map(function(w){ return '<option value="'+w[0]+'"'+(w[0]===(wortart||"")?' selected':'')+'>'+w[1]+'</option>'; }).join("")+'</select>'+
       '<button class="pvx" type="button" title="Zeile weglassen" aria-label="Zeile weglassen">✕</button>';
     r.querySelector(".pvx").addEventListener("click",function(){ zeileWegFragen(r); });
+    bandMalen();
     return r;
   }
   function zeileWortlaut(r){
@@ -1366,8 +1511,9 @@
     r.innerHTML="";
     r.appendChild(el("span","pvwegtext","✕ „"+txt+"“ weggelassen"));
     var zurueck=el("button","mini pvzurueck","Zurückholen"); zurueck.type="button";
-    zurueck.addEventListener("click",function(){ zeileFuellen(r, en.trim(), de.trim(), w); blip(); });
+    zurueck.addEventListener("click",function(){ zeileFuellen(r, en.trim(), de.trim(), w); bandMalen(); blip(); });
     r.appendChild(zurueck);
+    bandMalen();
   }
   function zeileEinfuegen(en,de,pos,wortart){
     var rows=$("#pvrows"); if(!rows) return null;
@@ -1517,8 +1663,11 @@
         var t=a.value; a.value=b.value; b.value=t;
       });
     });
-    $("#cancelUnit").addEventListener("click",function(){ box.style.display="none"; box.innerHTML=""; pvOffen=0; });
+    $("#cancelUnit").addEventListener("click",function(){
+      vorschauWegFragen("Liste wegwerfen", "Beim Wegwerfen ist die Liste weg und du müsstest die Seite neu fotografieren.", vorschauSchliessen);
+    });
     $("#saveUnit").addEventListener("click",saveFromPreview);
+    $("#pvrows").addEventListener("input",bandMalen);
   }
 
   function saveFromPreview(){
@@ -1543,6 +1692,7 @@
     fillUnits(id); renderMyUnits();
     $("#unitName").value=""; $("#pasteBox").value="";
     var box=$("#preview"); box.style.display="none"; box.innerHTML="";
+    pvOffen=0; bandWeg(); entwurfVergessen();
     seitenLeeren();
     msg.textContent="Gespeichert: „"+name+"“ ("+pairs.length+" Vokabeln) ✓"; msg.style.color="var(--ok)";
     var alt=$("#vlNachUpload"); if(alt) alt.parentNode.removeChild(alt);
@@ -1646,7 +1796,8 @@
       });
     });
     // Neue Seiten = neue Lesung: eine alte Vorschau passt nicht mehr dazu.
-    var box=$("#preview"); if(box && box.style.display!=="none" && box.innerHTML){ box.style.display="none"; box.innerHTML=""; pvOffen=0; }
+    // Erst fragen, sonst ist die durchgeschaute Liste still weg (21.10.2026).
+    if(pvVorschauOffen()) vorschauWegFragen("Neue Seite dazu", "Mit einer neuen Seite wird alles noch einmal gelesen, die Liste hier geht dabei weg.", vorschauSchliessen);
   }
   function seitenLeeren(){ vfSeiten=[]; seitenMalen(); }
   function seitenMalen(){
