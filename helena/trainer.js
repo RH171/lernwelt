@@ -158,7 +158,11 @@
         reihe.appendChild(k);
       });
     box.appendChild(reihe);
-    box.appendChild(el("p", "vlinfo", "Zum Wiederholen dran: " + u.faellig + " · In Arbeit: " + u.inArbeit + " · Neu: " + u.neu));
+    /* Helena am 21.10.2026 las "In Arbeit: 52" als die Zahl der Wörter von
+       dem Buchblatt, das sie gerade fotografiert hatte, und suchte dann einen
+       Fehler, den es nicht gab. Jetzt steht davor, worüber gezählt wird. */
+    box.appendChild(el("p", "vlinfo", "Alle deine Wörter in " + K.sprache + " zusammen: " +
+      u.faellig + " zum Wiederholen dran · " + u.inArbeit + " angefangen · " + u.neu + " noch nie geübt"));
     if (u.pruefung){
       var p = u.pruefung;
       var pz = el("p", "vlinfo vlpruefung");
@@ -1449,6 +1453,10 @@
     });
     reihe.appendChild(w); reihe.appendChild(n); k.appendChild(reihe);
     kasten.insertBefore(k, kasten.firstChild);
+    /* Der Foto-Kasten ist zugeklappt - eine Karte darin saehe Helena nie.
+       Also aufklappen und einmal ins Bild ruecken (21.10.2026). */
+    var d = document.querySelector("details.adder");
+    if(d){ d.open = true; try{ d.scrollIntoView({ block:"start" }); }catch(x){} }
   }
   /* Vorschau wegwerfen - immer erst fragen, danach ist sie wirklich weg. */
   function vorschauWegFragen(titel, satz, danach){
@@ -1952,6 +1960,8 @@
     dateienDazu(e.target.files); e.target.value="";
   });
 
+  entwurfAnbieten();
+
   /* Aussehen der neuen Teile - steht hier, damit beide Seiten (Englisch,
      Französisch) es gleich haben. Farben nur aus den Seitenvariablen, damit
      hell und dunkel stimmen. */
@@ -2008,7 +2018,20 @@
       ".pvweggelegt .mini{min-height:44px;flex:none;color:var(--ink)}"+
       ".vlzurueckstreifen{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:12px}"+
       ".vlzuruecktext{flex:1 1 120px;font-size:13.5px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}"+
-      ".vlzurueckstreifen .mini{min-height:44px;flex:none;color:var(--ink)}";
+      ".vlzurueckstreifen .mini{min-height:44px;flex:none;color:var(--ink)}"+
+      /* Noch nicht gespeichert (21.10.2026) */
+      ".vfband{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-top:2px solid var(--ok);box-shadow:0 -6px 18px rgba(0,0,0,.22)}"+
+      ".vfband.wartet{border-top-color:var(--brand)}"+
+      ".vfbandtext{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:var(--ink);line-height:1.35}"+
+      ".vfband .vfbandknopf{flex:none;min-height:48px;border:none;border-radius:12px;padding:12px 18px;font-family:var(--round);font-weight:800;font-size:15px;color:var(--auf-brand,#150f2e);background:var(--ok);cursor:pointer}"+
+      ".vfband.wartet .vfbandknopf{background:var(--brand)}"+
+      ".vfbandluft{height:86px}"+
+      ".vfentwurf{background:color-mix(in srgb,var(--gold) 14%,var(--surface2));border:1.5px solid color-mix(in srgb,var(--gold) 60%,var(--line));border-radius:14px;padding:12px;margin:0 0 14px}"+
+      ".vfentwurfkopf{font-family:var(--round);font-weight:800;font-size:15.5px;color:var(--ink);line-height:1.35}"+
+      ".vfentwurfunter{color:var(--ink);font-size:13.5px;margin:5px 0 10px;line-height:1.5}"+
+      ".vfentwurfknoepfe{display:flex;flex-wrap:wrap;gap:8px;align-items:center}"+
+      ".vfentwurfknoepfe .photobtn{flex:1 1 200px;min-height:48px;margin-top:0}"+
+      ".vfentwurfknoepfe .mini{flex:none;min-height:44px;color:var(--ink)}";
     var st=document.createElement("style"); st.textContent=css; document.head.appendChild(st);
   })();
 
