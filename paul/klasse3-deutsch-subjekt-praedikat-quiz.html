@@ -272,8 +272,6 @@
   body.big .mission .mtxt strong{font-size:1.4rem}
   body.big .fbtext{font-size:1.12rem}
 </style>
-<script src="/spiel-dunkel.js?v=6e28c232" data-flaeche=".app"></script>
-<script src="/farbschalter.js?v=f089ef8a"></script>
 </head>
 <body>
 <a href="index.html" id="hubHomeBtn" onclick="return hubGoHome(event)" aria-label="Zurueck zur Startseite">🏠 Startseite</a>
@@ -833,12 +831,12 @@ function confetti(){
   setTimeout(()=>{ box.innerHTML=""; }, 2700);
 }
 
-function todayStr(){ return new Date().toLocaleDateString("sv-SE"); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 function markPlayedToday(){
   const t=todayStr();
   let d=state.daily||{last:null,streak:0};
   if(d.last===t) return;
-  const y=new Date(Date.now()-86400000).toLocaleDateString("sv-SE");
+  const y=new Date(Date.now()-86400000).toISOString().slice(0,10);
   d.streak=(d.last===y)?(d.streak+1):1;
   d.last=t; state.daily=d; Store.set("sp_daily",d); updateDailyChip();
 }
