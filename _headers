@@ -53,3 +53,5 @@
 # raus. Geloest ist es ueber stempel.mjs: Jede eigene .js/.css-Adresse traegt
 # einen Stempel aus ihrem Inhalt, eine geaenderte Datei hat damit eine neue
 # Adresse - und die liegt in keinem Cache.
+
+# Live geht nur, was die Pruefstufe geprueft hat (seit 22.10.2026, anleitung/140).
