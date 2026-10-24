@@ -11991,5 +11991,342 @@ window.LEON_GESCHICHTEN = [
     "seite": 10
    }
   ]
+ },
+ {
+  "id": "w44-herbst-disco",
+  "titel": "Die Herbst-Disco",
+  "bild": "🪩",
+  "lang": true,
+  "ereignis": "2026-10-30",
+  "zeigenAb": "2026-10-29",
+  "zeigenBis": "2026-10-30",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍂",
+      "🏫"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Es ist Herbst.",
+     "Die Blät|ter sind bunt.",
+     "In der Schu|le gibt es ei|ne Neu|ig|keit.",
+     "Am Frei|tag, dem 30. Ok|to|ber, ist Herbst-Dis|co.",
+     "Al|le Klas|sen ma|chen mit!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🪩",
+      "🎶"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Ei|ne Dis|co ist ein Fest mit Mu|sik.",
+     "Man kann tan|zen und la|chen.",
+     "Die Dis|co ist in der vier|ten Stun|de.",
+     "Das ist mit|ten im Schul|tag!",
+     "Das ist et|was Be|son|de|res."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤔",
+      "🎭"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on denkt nach.",
+     "Man darf sich ver|klei|den.",
+     "A|ber man muss nicht.",
+     "Je|der darf selbst ent|schei|den.",
+     "Das fin|det Le|on gut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🦸",
+      "🐯"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Als was geht Le|on?",
+     "Viel|leicht als Fuß|ball|spie|ler?",
+     "O|der als Su|per|held?",
+     "O|der als Ti|ger?",
+     "Le|on hat vie|le I|de|en."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🚫",
+      "🎃"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Ei|ne Re|gel gibt es.",
+     "Die Ko|stü|me dür|fen nicht gru|se|lig sein.",
+     "Hor|ror|mas|ken blei|ben zu Hau|se.",
+     "So füh|len sich al|le wohl.",
+     "Das ist ei|ne gu|te Re|gel."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on fin|det: Lus|tig ist bes|ser als gru|se|lig.",
+     "Ein Fuß|ball|tri|kot ist gar nicht gru|se|lig.",
+     "Ein Klee|blatt-Tri|kot wä|re ei|ne I|de|e.",
+     "O|der ein Schal in Grün und Weiß.",
+     "Le|on über|legt noch."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🎧",
+      "🔊"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Auch für die Mu|sik ist ge|sorgt.",
+     "Herr Wes|te vom El|tern|bei|rat macht die Mu|sik.",
+     "El|tern hel|fen in der Schu|le mit.",
+     "Sie küm|mern sich um vie|les.",
+     "So gibt es ei|ne ech|te Dis|co!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎶",
+      "🕺"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on mag Mu|sik.",
+     "Er hofft auf Lie|der zum Tan|zen.",
+     "Le|on über|legt, wie er tanzt.",
+     "Er hüpft und dreht sich im Kreis.",
+     "Ein biss|chen wie nach ei|nem Tor!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "👭",
+      "👬"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In der Dis|co sind al|le Klas|sen da.",
+     "Auch die gro|ßen Kin|der.",
+     "Paul geht ja in die vier|te Klas|se.",
+     "Viel|leicht sieht Le|on Paul beim Tan|zen.",
+     "Das wä|re lus|tig!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "📚",
+      "⏰"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Vor der Dis|co ist Un|ter|richt.",
+     "Le|on liest und rech|net wie im|mer.",
+     "Doch er schaut öf|ter auf die Uhr.",
+     "Wann ist die vier|te Stun|de da?",
+     "Das War|ten ist ganz schön lang."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💃",
+      "😄"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt sich die Dis|co vor.",
+     "Die Mu|sik ist laut und fröh|lich.",
+     "Al|le tan|zen durch|ein|an|der.",
+     "Ein Su|per|held tanzt mit ei|nem Ti|ger.",
+     "Das sieht be|stimmt wit|zig aus."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🍂",
+      "🌳"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Nach der Dis|co ist der Tag noch lang.",
+     "Le|on er|zählt gern von schö|nen Sa|chen.",
+     "Er will al|les ge|nau be|rich|ten.",
+     "Wer hat sich et|was Tol|les aus|ge|dacht?",
+     "Dar|auf freut er sich schon."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "kueche",
+     "dinge": [
+      "🍽️",
+      "💬"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on will beim A|bend|es|sen fra|gen.",
+     "Er will wis|sen, als was Paul geht.",
+     "Und er will Pauls Mei|nung hö|ren.",
+     "Zwei Köp|fe den|ken bes|ser als ei|ner.",
+     "So sagt man es."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "✂️",
+      "🧵"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Ko|stüm kann man selbst ba|steln.",
+     "Aus Pa|pier, Stoff und Far|be.",
+     "O|der man nimmt, was man schon hat.",
+     "Ein Tri|kot und ein Schal rei|chen.",
+     "Das geht ganz ein|fach."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "😊",
+      "🪩"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on weiß: Am Frei|tag ist Dis|co.",
+     "Er freut sich da|rauf.",
+     "Tan|zen, la|chen, Mu|sik.",
+     "Und ein lus|ti|ges Ko|stüm.",
+     "Nur gru|se|lig darf es nicht sein!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "In welcher Stunde ist die Herbst-Disco?",
+    "richtig": "in der vierten Stunde",
+    "falsch": [
+     "in der ersten Stunde",
+     "in der letzten Stunde"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Muss man sich verkleiden?",
+    "richtig": "Nein, jeder entscheidet selbst",
+    "falsch": [
+     "Ja, alle müssen",
+     "Nur die Großen müssen"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was bleibt zu Hause?",
+    "richtig": "die Horrormasken",
+    "falsch": [
+     "die Schals",
+     "die Fußbälle"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wer macht die Musik?",
+    "richtig": "Herr Weste",
+    "falsch": [
+     "Leon",
+     "Paul"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wer geht in die vierte Klasse?",
+    "richtig": "Paul",
+    "falsch": [
+     "Leon",
+     "Herr Weste"
+    ],
+    "seite": 9
+   }
+  ]
  }
 ];
