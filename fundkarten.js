@@ -116,6 +116,18 @@
     ".lwf-chip[disabled]{cursor:default}",
     "@keyframes lwfWackeln{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}",
 
+    /* Mathe-Wiederholung (26.10.2026, nur Paul): ein Eingabefeld statt drei Knoepfe. */
+    ".lwf-frage.lwf-mathe{white-space:pre-line}",
+    ".lwf-wie{font-size:14px;color:" + MUT + ";margin:6px 2px 0;line-height:1.4}",
+    ".lwf-eingabe{display:flex;gap:8px;margin-top:11px}",
+    ".lwf-feld{flex:1;min-width:0;min-height:52px;padding:10px 14px;border-radius:14px;border:1.5px solid " + LINE + ";",
+    "  background:" + K + ";color:" + INK + ";font-size:20px;font-family:inherit}",
+    ".lwf-feld.gut{border-color:" + GUT + ";background:rgba(74,222,155,.14)}",
+    ".lwf-pruefen{min-height:52px;min-width:96px;border:none;border-radius:14px;background:" + AKZ + ";",
+    "  color:" + AUF + ";font:700 16px var(--rund,inherit);cursor:pointer}",
+    ".lwf-pruefen[disabled]{opacity:.4;cursor:default}",
+    ".lwf-weg{margin:10px 2px 0;padding:9px 12px;border-radius:12px;font-size:14.5px;line-height:1.5;" +
+      "border:1px solid " + LINE + ";white-space:pre-line}",
     ".lwf-tipp{font-size:14px;color:var(--orange,#b45309);margin:10px 2px 0;line-height:1.45}",
     ".lwf-lob{font-size:14px;color:" + GUT + ";margin:10px 2px 0;line-height:1.45}",
     /* Die Merkhilfe (25.09.2026): getoente Flaeche mit Alpha, die Schrift erbt
@@ -248,6 +260,7 @@
   function lernpunkt(k) {
     var blatt = String(k.blatt || aktuellesBlatt || "");
     if (!blatt) return "";
+    if (k.mathe) return blatt + "#k:" + schluessel({ richtig: k.mathe.art });
     if (k.quiz) return k.quiz.belegNr ? blatt + "#" + Math.floor(Number(k.quiz.belegNr))
                      : k.quiz.frageId ? blatt + "#f:" + String(k.quiz.frageId).slice(0, 24) : "";
     var s = String(k.richtig || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
@@ -337,6 +350,9 @@
        Danebentippen trifft, hat noch nachgeschaut. Dieselbe Regel wie
        stimmtEcht im Lernquiz. Gemeldet wird einmal je Durchgang. */
     var erster = {}, gemeldet = false;
+    /* Mathe zaehlt einmal je Runde: "gleich nochmal" und "noch mal ansehen" melden sie nicht
+       erneut - sonst stiege die Stufe am selben Tag (Kapitel 142: richtig an VERSCHIEDENEN Tagen). */
+    var matheGemeldet = !!opt.nurWackler;
 
     wurzel.innerHTML = "";
     var box = el("div", "lwf");
@@ -399,6 +415,10 @@
       var aussen = el("div");
       /* Quizfrage in der Tagesrunde (28.09.2026): Sie hat keine Stelle im
          Foto. Kein Ausschnitt, aber das ganze Blatt zum Nachsehen. */
+      if (k.mathe) {
+        aussen.appendChild(el("div", "lwf-bu", "Eine Mathe-Aufgabe zum Wiederholen. Rechne gern auf einem Zettel mit."));
+        return aussen;
+      }
       if (k.quiz) {
         aussen.appendChild(el("div", "lwf-bu", "Eine Frage aus deinem Quiz. Wenn du nachsehen willst: dein Blatt."));
         if (blattBild) {
@@ -502,6 +522,88 @@
       zahl.textContent = gefunden + " von " + karten.length;
     }
 
+    /* Mathe-Karte (26.10.2026, Kapitel 142): eintippen und pruefen. Gewertet wird nach Inhalt
+       (LWMathe.pruefen, Zahlen ueber /toleranz.js), gezaehlt der ERSTE Versuch. Nach einem
+       Fehlversuch kommt die Hilfe, nach dem zweiten darf Paul sich den Rechenweg zeigen lassen -
+       steckenbleiben soll niemand. */
+    function matheKarte(k, karte, sagt, merkZeigen) {
+      var m = k.mathe, versuche = 0, fertigM = false;
+      if (m.wie) karte.appendChild(el("div", "lwf-wie", m.wie));
+      var reihe = el("div", "lwf-eingabe");
+      var feld = el("input", "lwf-feld");
+      feld.type = "text"; feld.autocomplete = "off"; feld.spellcheck = false;
+      feld.setAttribute("autocapitalize", "off");
+      feld.setAttribute("inputmode", m.eingabe === "zahl" ? "numeric" : "text");
+      feld.setAttribute("aria-label", "Deine Antwort");
+      var knopf = el("button", "lwf-pruefen", "Prüfen");
+      knopf.type = "button";
+      reihe.appendChild(feld); reihe.appendChild(knopf);
+      karte.appendChild(reihe);
+      karte.appendChild(sagt);
+      var loes = null;
+      function wegZeigen(mitLoesung) {
+        var zeilen = (m.weg || []).filter(Boolean);
+        var text = (mitLoesung ? "Richtig ist: " + k.richtig + "\n" : "") + (zeilen.length ? "So geht der Rechenweg:\n" + zeilen.join("\n") : "");
+        if (!text) return;
+        var w = el("div", "lwf-weg", text);
+        karte.insertBefore(w, sagt.nextSibling);
+      }
+      function abschliessen() {
+        fertigM = true;
+        feld.disabled = true; knopf.disabled = true;
+        if (loes && loes.parentNode) loes.parentNode.removeChild(loes);
+        var w = el("button", "lwf-knopf", "Karte ins Regal legen");
+        w.type = "button";
+        w.addEventListener("click", function () {
+          w.disabled = true;
+          karte.classList.add("ab");
+          gefunden++;
+          insRegal(k);
+          setTimeout(function () { i++; zeichne(); }, 450);
+        });
+        karte.appendChild(w);
+      }
+      function pruefen() {
+        if (fertigM) return;
+        var r = window.LWMathe ? window.LWMathe.pruefen(k, feld.value) : { stimmt: false };
+        if (r.leer) { sagt.className = "lwf-tipp"; sagt.textContent = "Schreib zuerst deine Antwort hinein."; feld.focus(); return; }
+        versuche++;
+        if (erster[i] === undefined) {
+          erster[i] = !!r.stimmt;
+          try {
+            if (window.lernstand && window.lernstand.antwort)
+              window.lernstand.antwort(erster[i], "Mathe-Wiederholung", String(feld.value).slice(0, 40), k.richtig, lernpunkt(k));
+          } catch (e) {}
+        }
+        if (r.stimmt) {
+          feld.className = "lwf-feld gut";
+          sagt.className = "lwf-lob";
+          sagt.textContent = "Richtig gerechnet. Die Karte kommt ins Regal.";
+          wegZeigen(false);
+          abschliessen();
+          return;
+        }
+        sagt.className = "lwf-tipp";
+        sagt.textContent = k.merke ? "Noch nicht. Hier ist eine Hilfe – versuch es gleich nochmal." : "Noch nicht. Rechne noch einmal nach.";
+        merkZeigen();
+        feld.select();
+        if (versuche >= 2 && !loes) {
+          loes = el("button", "lwf-knopf leise", "Rechenweg zeigen");
+          loes.type = "button";
+          loes.addEventListener("click", function () {
+            sagt.className = "lwf-tipp";
+            sagt.textContent = "Schau dir den Rechenweg in Ruhe an. Die Aufgabe kommt wieder dran.";
+            wegZeigen(true);
+            abschliessen();
+          });
+          karte.appendChild(loes);
+        }
+      }
+      knopf.addEventListener("click", pruefen);
+      feld.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); pruefen(); } });
+      halter.appendChild(karte);
+    }
+
     function zeichne() {
       halter.innerHTML = "";
       if (i >= karten.length) {
@@ -509,12 +611,16 @@
         if (!gemeldet && opt.ergebnis) {
           gemeldet = true;
           try {
-            opt.ergebnis(karten.map(function (k, n) {
-              var e1 = { blatt: blattVon(k), karte: schluessel(k), stimmt: erster[n] !== false };
+            var meld = [];
+            karten.forEach(function (k, n) {
+              if (k.mathe && matheGemeldet) return;
+              var e1 = { blatt: blattVon(k), karte: k.mathe ? k.mathe.art : schluessel(k), stimmt: erster[n] !== false };
               if (k.quiz) e1.quiz = k.quiz;
               if (k.kreis) e1.kreis = k.kreis;   // Kreise fuellen: welche Punkte in "Deine Woche"
-              return e1;
-            }));
+              meld.push(e1);
+            });
+            matheGemeldet = true;
+            if (meld.length) opt.ergebnis(meld);
           } catch (e) {}
         }
         var fertig = el("div", "lwf-karte rein");
@@ -527,7 +633,8 @@
              Die Karten kommen ausserdem in zwei Tagen von selbst wieder. */
           var w1 = el("p", "u lwf-wackler", "Beim ersten Tipp noch nachgeschaut: " +
             wackler.map(function (k) { return k.stichwort || k.richtig; }).join(", ") +
-            ". Die kommen in zwei Tagen wieder dran.");
+            (wackler.some(function (k) { return k.mathe; }) ? ". Die kommen in ein paar Tagen wieder dran."
+                                                             : ". Die kommen in zwei Tagen wieder dran."));
           fertig.appendChild(w1);
           var bw = el("button", "lwf-knopf lwf-nochmal",
             wackler.length === 1 ? "Die eine gleich nochmal" : "Die " + wackler.length + " gleich nochmal");
@@ -576,7 +683,7 @@
         ? String(k.blattTitel).slice(0, 28) + " · " : "") + (k.stichwort || "")));
       karte.appendChild(num);
       karte.appendChild(schnipsel(k));
-      karte.appendChild(el("div", "lwf-frage", k.frage));
+      karte.appendChild(el("div", "lwf-frage" + (k.mathe ? " lwf-mathe" : ""), k.frage));
 
       var sagt = el("div", "lwf-tipp", "");
       /* Merkhilfe: nach dem ersten falschen Tipp, dann auch nach der richtigen
@@ -588,6 +695,7 @@
         merk = el("div", "lwf-merke", "\uD83D\uDCA1 " + k.merke);
         karte.insertBefore(merk, sagt.nextSibling);
       }
+      if (k.mathe) { matheKarte(k, karte, sagt, merkZeigen); return; }
       var chips = el("div", "lwf-chips");
       var fertigChip = false;
 
@@ -654,7 +762,7 @@
 
     zeichne();
     var ids = {};
-    karten.forEach(function (k) { if (blattVon(k)) ids[blattVon(k)] = 1; });
+    karten.forEach(function (k) { if (blattVon(k) && !k.mathe) ids[blattVon(k)] = 1; });
     Object.keys(ids).forEach(function (id) {
       blattHolen(kind, id, function (b) {
         bilder[id] = b;
