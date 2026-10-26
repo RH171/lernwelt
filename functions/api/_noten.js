@@ -171,13 +171,116 @@ export function fachSchnitt(kind, notenDesFachs, fach) {
   return { schnitt, gross: sG, klein: sK, verhaeltnis: zwei ? "1:1" : "2:1" };
 }
 
-/* Alles auf einmal, nach Fach sortiert - das ist, was der Elternbereich zeigt. */
+/* ---------- Doppelte Proben (26.10.2026, Kapitel 146) ----------
+ *
+ * Denny am 26.10.2026 zur Zurueckbekommen-Seite: "ob Paul oder ich hochlädt
+ * ist egal - muss ggf. verglichen werden, nicht dass doppelte Proben in die
+ * Berechnung kommen."
+ *
+ * Eine Probe kann auf vier Wegen ins Notenbuch kommen: "Notenstand hochladen"
+ * und "Note von Hand" im Elternbereich, Pauls/Helenas eigener Eintrag
+ * (kindNote) und "Als Note übernehmen" aus der Zurueckbekommen-Liste. Jeder
+ * Weg fuer sich ist sauber - zusammen zaehlt dieselbe Probe zweimal.
+ *
+ * GLEICH heisst: gleiches Fach (nach fachSchluessel) und gleiches Datum, und
+ * nichts widerspricht sich - zwei verschiedene Noten, zwei verschiedene
+ * Punktzahlen oder einmal Schulaufgabe und einmal klein sind ZWEI Proben.
+ * Den freien Anlass vergleichen wir nicht: "Probe", "1. Probe Mathe" und
+ * "Leistungsnachweis" meinen oft dasselbe Blatt.
+ *
+ * Wer bewusst zwei gleiche Proben am selben Tag eintraegt, setzt beim
+ * Speichern "trotzdem" - der Eintrag traegt dann eigeneProbe:true und wird nie
+ * zusammengefasst. Geloescht wird hier nichts: Die Doppelten bleiben im
+ * Speicher und in der Liste, sie zaehlen nur nicht mit.
+ */
+const FACH_GLEICH = {
+  mathematik: "mathe", franzoesisch: "franz", "französisch": "franz", frz: "franz",
+  "heimat- und sachunterricht": "hsu", heimatundsachunterricht: "hsu", sachunterricht: "hsu",
+  religion: "rel", "religion-kath": "rel", "religion-ev": "rel", ethik: "rel",
+  geographie: "geo", erdkunde: "geo", informatik: "info", engl: "englisch", deu: "deutsch",
+};
+export function fachSchluessel(f) {
+  const k = String(f || "").toLowerCase().trim();
+  return FACH_GLEICH[k] || FACH_GLEICH[k.replace(/[^a-zäöüß-]/g, "")] || k;
+}
+
+// "34/60", "34 von 60", 34 -> 34. Ohne Zahl: undefined.
+export function punktZahl(x) {
+  if (typeof x === "number") return Number.isFinite(x) ? x : undefined;
+  const m = String(x === undefined || x === null ? "" : x).match(/\d+(?:[.,]\d+)?/);
+  return m ? Number(m[0].replace(",", ".")) : undefined;
+}
+
+const hatNote = (n) => typeof n.note === "number" && Number.isFinite(n.note);
+
+export function gleicheProbe(a, b) {
+  if (!a || !b || a === b) return false;
+  if (a.eigeneProbe || b.eigeneProbe) return false;
+  if (!a.datum || a.datum !== b.datum) return false;
+  if (fachSchluessel(a.fach) !== fachSchluessel(b.fach)) return false;
+  if (hatNote(a) && hatNote(b) && a.note !== b.note) return false;
+  const pa = punktZahl(a.punkte), pb = punktZahl(b.punkte);
+  if (pa !== undefined && pb !== undefined && pa !== pb) return false;
+  if (a.art && b.art && a.art !== b.art) return false;
+  return true;
+}
+
+/* Welcher von zwei gleichen Eintraegen zaehlt: der mit Note vor dem offenen,
+   der der Eltern vor dem des Kindes, sonst der aeltere. */
+function rang(n) {
+  return (hatNote(n) ? 0 : 10)
+       + ((n.von && n.von !== "eltern") ? 1 : 0);
+}
+
+/* Gibt eine Karte id -> id des Eintrags, der stattdessen zaehlt. */
+export function doppelteFinden(noten) {
+  const liste = (noten || []).slice().sort((a, b) =>
+    rang(a) - rang(b) || String(a.angelegt || "").localeCompare(String(b.angelegt || "")));
+  const behalten = [];
+  const doppelt = {};
+  for (const n of liste) {
+    const vorher = behalten.find((b) => gleicheProbe(b, n));
+    if (vorher) doppelt[n.id] = vorher.id;
+    else behalten.push(n);
+  }
+  return doppelt;
+}
+
+/* Die Noten ohne die Doppelten - fuer jede Rechnung und fuer die Sicht des Kindes. */
+export function ohneDoppelte(noten) {
+  const d = doppelteFinden(noten);
+  return (noten || []).filter((n) => !d[n.id]);
+}
+
+/* Ein NEUER Eintrag: gibt es diese Probe schon? Liefert den vorhandenen oder null. */
+export function schonDa(noten, neu) {
+  if (!neu || neu.eigeneProbe) return null;
+  return (noten || []).find((n) => n.id !== neu.id && gleicheProbe(n, neu)) || null;
+}
+
+/* Wer hat es eingetragen - fuer die Warnung "eingetragen von ... am ...". */
+export function vonWem(n, fuerKind) {
+  if (!n) return "";
+  if (n.von && n.von !== "eltern") return fuerKind ? "dir" : (n.von.charAt(0).toUpperCase() + n.von.slice(1));
+  return fuerKind ? "Mama oder Papa" : "den Eltern";
+}
+
+/* Alles auf einmal, nach Fach sortiert - das ist, was der Elternbereich zeigt.
+   Doppelte stehen mit doppeltVon in der Liste, zaehlen aber nicht im Schnitt. */
 export function auswertung(kind, noten) {
+  const doppelt = doppelteFinden(noten);
   const faecher = {};
-  for (const n of noten) (faecher[n.fach] = faecher[n.fach] || []).push(n);
+  for (const n0 of noten) {
+    const n = doppelt[n0.id] ? { ...n0, doppeltVon: doppelt[n0.id] } : n0;
+    (faecher[n.fach] = faecher[n.fach] || []).push(n);
+  }
   return Object.keys(faecher).sort().map((fach) => {
     const liste = faecher[fach].slice().sort((a, b) => (a.datum < b.datum ? -1 : 1));
-    return { fach, noten: liste, soll: (SCHULAUFGABEN[kind] || {})[fach] || null,
-             ...fachSchnitt(kind, liste, fach) };
+    const zaehlt = liste.filter((n) => !n.doppeltVon);
+    const r = { fach, noten: liste, soll: (SCHULAUFGABEN[kind] || {})[fach] || null,
+                ...fachSchnitt(kind, zaehlt, fach) };
+    const z = liste.length - zaehlt.length;
+    if (z) r.doppelt = z;
+    return r;
   });
 }

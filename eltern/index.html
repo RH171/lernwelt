@@ -1454,7 +1454,11 @@
            (istGross(e.anlass) ? ' · als Schulaufgabe' : '') +
            (e.notiz ? '<br><i>„' + esc(e.notiz) + '“</i>' : '') + '</span>';
       if (e.seiten) h += '<button data-zrk-bild="' + esc(e.id) + '">Ansehen</button>';
-      if (e.uebernommen) h += '<span style="color:#12a35f;font-weight:700">✓ Note</span>';
+      /* Doppelt (26.10.2026, Kapitel 146): "verknuepft" = beim Abgeben schon
+         als vorhandene Note erkannt; "passtZu" = eine Note mit gleichem Fach
+         und Datum steht schon da - der Knopf hakt dann nur ab. */
+      if (e.uebernommen) h += '<span style="color:#12a35f;font-weight:700">' + (e.verknuepft ? '✓ passt zu Note' : '✓ Note') + '</span>';
+      else if (e.passtZu) h += '<button data-zrk-note="' + esc(e.id) + '">Note ist schon da – abhaken</button>';
       else h += '<button data-zrk-note="' + esc(e.id) + '">Als Note übernehmen</button>';
       h += '</div>';
     });
@@ -1524,15 +1528,20 @@
           quelle: "blatt" } }) })
       .then(function(r){ return r.json(); })
       .then(function(j){
-        if (!j || !j.ok) throw new Error((j && j.fehler) || "Die Note ging nicht durch.");
+        /* Schon da (409 mit doppelt): keine zweite Note, nur der Haken an der
+           vorhandenen. So zaehlt dieselbe Probe einmal. */
+        var schon = j && !j.ok && j.doppelt;
+        if (!schon && (!j || !j.ok)) throw new Error((j && j.fehler) || "Die Note ging nicht durch.");
+        var noteId = schon ? j.doppelt.id : (j.note || {}).id;
         return fetch("/api/zurueck", { method: "POST", credentials: "same-origin",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: KIND, uebernommen: { id: id, noteId: (j.note || {}).id } }) });
+          body: JSON.stringify({ kind: KIND, uebernommen: { id: id, noteId: noteId } }) })
+          .then(function(r){ return r.json(); })
+          .then(function(k){ if (k) k.schon = schon ? j.fehler : ""; return k; });
       })
-      .then(function(r){ return r.json(); })
       .then(function(j){
         if (!j || !j.ok) throw new Error((j && j.fehler) || "Der Haken ging nicht. Die Note ist aber da.");
-        zrkMelde('<p class="unter">Übernommen.</p>');
+        zrkMelde('<p class="unter">' + (j.schon ? esc(j.schon) + ' Nur abgehakt – sie zählt einmal.' : 'Übernommen.') + '</p>');
         return Promise.all([notenLaden(), zurueckLaden()]);
       })
       .catch(function(err){ zrkMelde('<p class="unter" style="color:#b91c1c">' + esc(err.message) + '</p>'); });
@@ -1595,9 +1604,12 @@
         /* Ein <span>, kein Knopf: Ein Tippziel muss 44 px hoch sein (WCAG 2.5.8),
            und auf 26 px will niemand eine Note loeschen. Geaendert wird ueber
            "Noten bearbeiten" darunter - dort ist jede Zeile gross genug. */
+        /* Doppelt eingetragen (26.10.2026): bleibt sichtbar, blass, zaehlt nicht. */
         return '<span class="chip' + (n.sicher === false ? ' unsicher' : '') + '"' +
-               ' style="background:' + (typeof n.note === "number" ? notenfarbe(n.note) : "#6b7280") + '"' +
-               ' title="' + esc(n.anlass + " · " + kurzDatum(n.datum) + (n.sicher === false ? " · unsicher gelesen" : "")) + '">' +
+               ' style="background:' + (typeof n.note === "number" ? notenfarbe(n.note) : "#6b7280") +
+               (n.doppeltVon ? ';opacity:.4;text-decoration:line-through' : '') + '"' +
+               ' title="' + esc(n.anlass + " · " + kurzDatum(n.datum) + (n.sicher === false ? " · unsicher gelesen" : "") +
+               (n.doppeltVon ? " · doppelt eingetragen, zählt einmal" : "")) + '">' +
                esc(t) + (n.gewicht === 2 ? '<em>×2</em>' : '') + (n.art === "gross" ? '<em>SA</em>' : '') + '</span>';
       }).join("");
       var toepfe = "";
@@ -1626,6 +1638,9 @@
       '<li><b>Zahl im Kästchen</b> = Note, <b>×2</b> = doppelt gewichtet</li>' +
       regel +
       '<li><b>Roter Rand</b> = unsicher gelesen, bitte nachsehen</li>' +
+      (faecher.some(function(f){ return f.doppelt; })
+        ? '<li><b>Blass und durchgestrichen</b> = dieselbe Probe noch einmal eingetragen (gleiches Fach, gleicher Tag). Sie zählt nur einmal; löschen musst du nichts</li>'
+        : '') +
       '<li><b>BET, BMT und BDT</b> sind kleine Nachweise – der BET zählt doppelt, ' +
       'erhöht aber nicht die Zahl der Schulaufgaben</li>' +
       '<li><b>Ändern</b> geht unten über „Noten bearbeiten"</li>' +
@@ -1686,7 +1701,8 @@
              esc(n.fach.charAt(0).toUpperCase() + n.fach.slice(1)) + ' · ' + esc(n.anlass) +
              ' · ' + esc(kurzDatum(n.datum)) +
              (n.art === "gross" ? ' · Schulaufgabe' : '') + (n.gewicht === 2 ? ' · doppelt' : '') +
-             (n.sicher === false ? ' · unsicher gelesen' : '') + '</span>' +
+             (n.sicher === false ? ' · unsicher gelesen' : '') +
+             (n.doppeltVon ? ' · <b>doppelt eingetragen, zählt einmal</b>' : '') + '</span>' +
              '<button data-weg="' + esc(n.id) + '">Löschen</button></div>';
     }).join("");
     notenMelde('<div class="nvorschlag" style="background:#fff;border-color:var(--line)">' +
@@ -1706,14 +1722,25 @@
                  art: gross ? "gross" : "klein", quelle: "eltern" });
   }
 
-  function noteSenden(note){
+  /* stapel = "Alle übernehmen": Eine Probe, die schon da ist, wird dort
+     still übersprungen und gezählt (ein Notenstand von der Schule enthält jeden
+     Monat auch die alten Noten). Von Hand eingetragen wird nachgefragt. */
+  var NOTEN_SCHON = 0;
+  function noteSenden(note, stapel, trotzdem){
     return fetch("/api/noten", { method: "POST", credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kind: KIND, note: note }) })
+        body: JSON.stringify(trotzdem ? { kind: KIND, note: note, trotzdem: true } : { kind: KIND, note: note }) })
       .then(function(r){ return r.json(); })
       .then(function(j){
+        if (j && !j.ok && j.doppelt){
+          if (stapel){ NOTEN_SCHON++; return; }
+          if (window.confirm(j.fehler + "\n\nIst das eine andere Probe vom selben Tag? Dann OK – sie wird zusätzlich gespeichert."))
+            return noteSenden(note, false, true);
+          notenMelde('<p class="unter">Nicht noch einmal gespeichert – sie zählt einmal.</p>');
+          return;
+        }
         if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging nicht.");
-        return notenLaden();
+        if (!stapel) return notenLaden();
       })
       .catch(function(e){ notenMelde('<p class="unter" style="color:#b91c1c">' + esc(e.message) + '</p>'); });
   }
@@ -1782,12 +1809,17 @@
     if (ev.target.id !== "n-uebernehmen") return;
     ev.target.disabled = true;
     var offen = VORSCHLAEGE.slice();
+    NOTEN_SCHON = 0;
     (function weiter(){
       if (!offen.length){
         VORSCHLAEGE = [];
-        return notenLaden().then(function(){ notenMelde('<p class="unter">Übernommen.</p>'); });
+        var schon = NOTEN_SCHON;
+        return notenLaden().then(function(){
+          notenMelde('<p class="unter">Übernommen.' + (schon ? ' ' + schon + (schon === 1 ? ' Note war' : ' Noten waren') +
+                     ' schon da und ' + (schon === 1 ? 'ist' : 'sind') + ' nicht doppelt gespeichert.' : '') + '</p>');
+        });
       }
-      noteSenden(offen.shift()).then(weiter);
+      noteSenden(offen.shift(), true).then(weiter);
     })();
   });
 

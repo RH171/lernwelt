@@ -12,6 +12,16 @@
  *   <script src="/zurueck.js"></script>
  *   <script>LWZurueck.einbauen(document.getElementById("hier"), {kind:"helena"});</script>
  *
+ * PDF (26.10.2026, Kapitel 146): Denny - "Hier kann man keine PDFs
+ * hochladen". Ein PDF wird HIER im Browser in Seitenbilder umgewandelt
+ * (pdf.js, erst beim ersten PDF geladen), höchstens so viele, wie noch Platz
+ * ist. Danach ist es eine Seite wie ein Foto: gleiche Größe, gleiche Vorschau,
+ * im Elternbereich gleich anzusehen.
+ *
+ * Was Mama oder Papa schon eingetragen haben, steht seit demselben Tag mit in
+ * der Liste ("ausNoten" vom Server). Gibt es dieselbe Arbeit schon, sagt der
+ * Server 409 - dann fragt die Seite nach, statt sie doppelt abzulegen.
+ *
  * Fächer, Anlässe und ob es ein Notenfeld gibt, sagt der Server
  * (/api/zurueck?kind=...). Nichts davon steht hier doppelt.
  */
@@ -19,6 +29,57 @@
   "use strict";
 
   var MAX_SEITEN = 4;
+
+  /* pdf.js in fester Fassung von cdnjs - dieselbe Art wie Tesseract bei Helena.
+     Geladen wird es nur, wenn wirklich ein PDF kommt. */
+  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  var pdfLaden = null;
+  function pdfjs() {
+    if (global.pdfjsLib) return Promise.resolve(global.pdfjsLib);
+    if (pdfLaden) return pdfLaden;
+    pdfLaden = new Promise(function (gut, schlecht) {
+      var s = document.createElement("script");
+      s.src = PDFJS + "pdf.min.js";
+      s.onload = function () {
+        if (!global.pdfjsLib) return schlecht(new Error("pdf"));
+        global.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+        gut(global.pdfjsLib);
+      };
+      s.onerror = function () { pdfLaden = null; schlecht(new Error("pdf")); };
+      document.head.appendChild(s);
+    });
+    return pdfLaden;
+  }
+
+  /* Ein PDF -> bis zu "hoechstens" Seitenbilder (JPEG, lange Kante 1800 px wie
+     strom.js). Gibt {bilder, gesamt} zurück. */
+  function pdfZuBildern(datei, hoechstens) {
+    return datei.arrayBuffer().then(function (puffer) {
+      return pdfjs().then(function (lib) {
+        return lib.getDocument({ data: new Uint8Array(puffer) }).promise;
+      });
+    }).then(function (doc) {
+      var gesamt = doc.numPages, n = Math.min(gesamt, hoechstens), bilder = [];
+      var kette = Promise.resolve();
+      for (var i = 1; i <= n; i++) {
+        (function (nr) {
+          kette = kette.then(function () { return doc.getPage(nr); }).then(function (seite) {
+            var v1 = seite.getViewport({ scale: 1 });
+            var mass = Math.min(3, 1800 / Math.max(v1.width, v1.height));
+            var v = seite.getViewport({ scale: mass });
+            var c = document.createElement("canvas");
+            c.width = Math.round(v.width); c.height = Math.round(v.height);
+            var ctx = c.getContext("2d");
+            ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+            return seite.render({ canvasContext: ctx, viewport: v }).promise.then(function () {
+              bilder.push(c.toDataURL("image/jpeg", 0.82));
+            });
+          });
+        })(i);
+      }
+      return kette.then(function () { return { bilder: bilder, gesamt: gesamt }; });
+    });
+  }
 
   /* Was eine Arbeit sein kann. Die Wörter sind die, die die Kinder benutzen -
      der Server macht daraus keine Note, also darf das hier locker bleiben.
@@ -83,7 +144,13 @@
     ".lwz .eintrag small{display:block;color:var(--muted,#6b7280);font-size:14px;line-height:1.45;margin-top:2px}",
     ".lwz .eintrag .note{flex:0 0 auto;font:800 24px var(--rund,inherit);color:var(--paul,#4f46e5);",
     "  min-width:34px;text-align:right}",
-    ".lwz .leer{color:var(--muted,#6b7280);font-size:15px;margin-top:12px;line-height:1.5}"
+    ".lwz .leer{color:var(--muted,#6b7280);font-size:15px;margin-top:12px;line-height:1.5}",
+    ".lwz .eintrag.eltern{background:var(--karte,#fff);border-style:dashed}",
+    ".lwz .eintrag .von{display:inline-block;margin-top:5px;font-size:13.5px;font-weight:700;",
+    "  color:var(--muted,#6b7280)}",
+    ".lwz .warn{margin-top:12px;border:1.5px solid #e8a13a;background:rgba(232,161,58,.12);",
+    "  border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.5;color:var(--ink,#1b1c22)}",
+    ".lwz .warn .reihe button{flex:1 1 140px}"
   ].join("");
 
   function stilEinmal() {
@@ -116,7 +183,7 @@
     if (!wohin) return;
     stilEinmal();
     var kind = String((opt && opt.kind) || "").toLowerCase();
-    var zustand = { fach: "", anlass: "", seiten: [], faecher: [], mitNote: false, liste: null, laeuft: false };
+    var zustand = { fach: "", anlass: "", seiten: [], faecher: [], mitNote: false, liste: null, ausNoten: [], laeuft: false };
 
     var karte = el("div", "lwz");
     var listKarte = el("div", "lwz");
@@ -184,16 +251,16 @@
     hinweisP.textContent = "Steht keine Punktzahl drauf, lass die Felder einfach leer.";
     karte.appendChild(hinweisP);
 
-    karte.appendChild(el("div", "frage", "Fotos (bis zu " + MAX_SEITEN + ")"));
+    karte.appendChild(el("div", "frage", "Fotos oder PDF (bis zu " + MAX_SEITEN + " Seiten)"));
     var datei = el("input");
     datei.type = "file";
-    datei.accept = "image/*";
+    datei.accept = "image/*,application/pdf";
     datei.multiple = true;
     datei.style.display = "none";
     karte.appendChild(datei);
     var fotoKnopf = el("button", "knopf");
     fotoKnopf.type = "button";
-    fotoKnopf.innerHTML = '<span class="z">📷</span>Foto von der Arbeit';
+    fotoKnopf.innerHTML = '<span class="z">📷</span>Foto oder PDF von der Arbeit';
     fotoKnopf.addEventListener("click", function () { datei.click(); });
     var fotoHuelle = el("div");
     fotoHuelle.style.marginTop = "9px";
@@ -214,6 +281,8 @@
     karte.appendChild(losKnopf);
     var melde = el("p", "melde");
     karte.appendChild(melde);
+    var warnung = el("div");
+    karte.appendChild(warnung);
 
     function sagen(text, art) {
       melde.className = "melde" + (art ? " " + art : "");
@@ -255,9 +324,36 @@
       if (!dateien.length) return;
       var platz = MAX_SEITEN - zustand.seiten.length;
       if (platz <= 0) return;
-      dateien.slice(0, platz).forEach(function (f) {
+      var pdfs = dateien.filter(function (f) { return /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name || ""); });
+      var fotos = dateien.filter(function (f) { return pdfs.indexOf(f) < 0; });
+      if (pdfs.length) {
+        sagen("Ich mache aus dem PDF Seiten …");
+        var kette = Promise.resolve();
+        pdfs.forEach(function (f) {
+          kette = kette.then(function () {
+            var frei = MAX_SEITEN - zustand.seiten.length;
+            if (frei <= 0) return;
+            return pdfZuBildern(f, frei).then(function (r) {
+              r.bilder.forEach(function (b) { if (zustand.seiten.length < MAX_SEITEN) zustand.seiten.push(b); });
+              seitenMalen();
+              if (r.gesamt > r.bilder.length) {
+                sagen("Das PDF hat " + r.gesamt + " Seiten. Ich habe die ersten " + r.bilder.length
+                  + " genommen – mehr als " + MAX_SEITEN + " passen nicht hinein.");
+              } else {
+                sagen("");
+              }
+            });
+          });
+        });
+        kette.catch(function () {
+          sagen("Das PDF konnte ich nicht öffnen. Mach lieber Fotos von den Seiten.", "schlecht");
+        });
+        platz = Math.max(0, platz - pdfs.length);
+      }
+      fotos.slice(0, platz).forEach(function (f) {
         var leser = new FileReader();
         leser.onload = function () {
+          if (zustand.seiten.length >= MAX_SEITEN) return;
           zustand.seiten.push(String(leser.result));
           seitenMalen();
           sagen("");
@@ -268,8 +364,11 @@
     });
 
     /* ---------- Abschicken ---------- */
-    losKnopf.addEventListener("click", function () {
+    losKnopf.addEventListener("click", function () { abschicken(false); });
+
+    function abschicken(trotzdem) {
       if (zustand.laeuft) return;
+      warnung.innerHTML = "";
       zustand.laeuft = true;
       pruefen();
       sagen("Ich speichere das …");
@@ -292,24 +391,63 @@
         return fetch("/api/zurueck", {
           method: "POST", credentials: "same-origin",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: kind, eintrag: eintrag, seiten: seiten })
+          body: JSON.stringify(trotzdem ? { kind: kind, eintrag: eintrag, seiten: seiten, trotzdem: true }
+                                        : { kind: kind, eintrag: eintrag, seiten: seiten })
         });
       }).then(function (r) { return r.json(); }).then(function (j) {
         zustand.laeuft = false;
+        if (j && !j.ok && j.doppelt) {
+          pruefen();
+          sagen("");
+          doppeltZeigen(j);
+          return;
+        }
         if (!j || !j.ok) throw new Error((j && j.fehler) || "Das ging gerade nicht.");
+        if (j.passtZu) {
+          zustand.ausNoten = (zustand.ausNoten || []).filter(function (n) { return n.id !== j.passtZu.id; });
+        }
         zustand.liste = j.liste || [];
         zustand.seiten = [];
         anlassFeld.value = ""; pFeld.value = ""; pMax.value = ""; nFeld.value = ""; notizFeld.value = "";
         seitenMalen();
         pruefen();
-        sagen("Gespeichert. Das ist jetzt aufgehoben.", "gut");
+        sagen(j.passtZu
+          ? (j.passtZu.von === "kind"
+              ? "Gespeichert. Die Note hattest du schon eingetragen – sie zählt nur einmal."
+              : "Gespeichert. Mama oder Papa hatten die Note schon eingetragen – sie zählt nur einmal.")
+          : "Gespeichert. Das ist jetzt aufgehoben.", "gut");
         listeMalen();
       }).catch(function (e) {
         zustand.laeuft = false;
         pruefen();
         sagen(e.message || "Das ging gerade nicht.", "schlecht");
       });
-    });
+    }
+
+    /* Die Arbeit ist schon da. Nicht still doppelt ablegen - fragen. */
+    function doppeltZeigen(j) {
+      warnung.innerHTML = "";
+      var k = el("div", "warn");
+      k.appendChild(el("b", null, j.fehler || "Diese Arbeit ist schon da."));
+      var d = j.doppelt || {};
+      if (d.anlass || d.datum) {
+        k.appendChild(el("div", null, [d.anlass, datumSchoen(d.datum)].filter(Boolean).join(" · ")));
+      }
+      k.appendChild(el("div", null, "Ist das eine andere Arbeit vom selben Tag? Dann speichere sie trotzdem."));
+      var r = el("div", "reihe");
+      var ja = el("button", null, "Trotzdem speichern");
+      ja.type = "button";
+      ja.addEventListener("click", function () { abschicken(true); });
+      var nein = el("button", null, "Nein, ist dieselbe");
+      nein.type = "button";
+      nein.addEventListener("click", function () {
+        warnung.innerHTML = "";
+        sagen("Gut, dann bleibt es bei der einen.", "gut");
+      });
+      r.appendChild(ja); r.appendChild(nein);
+      k.appendChild(r);
+      warnung.appendChild(k);
+    }
 
     /* ---------- Liste ---------- */
     function listeMalen() {
@@ -319,11 +457,15 @@
         listKarte.appendChild(el("p", "leer", "Ich komme gerade nicht an deine Arbeiten. Versuch es später noch einmal."));
         return;
       }
-      if (!zustand.liste.length) {
+      var alle = zustand.liste.slice();
+      (zustand.ausNoten || []).forEach(function (n) { alle.push(n); });
+      alle.sort(function (a, b) { return String(b.datum || "").localeCompare(String(a.datum || "")); });
+      if (!alle.length) {
         listKarte.appendChild(el("p", "leer", "Noch nichts. Sobald du eine Arbeit zurückbekommst, kommt sie hierher."));
         return;
       }
-      zustand.liste.forEach(function (e) {
+      alle.forEach(function (e) {
+        if (e.quelle) return fremdMalen(e);
         var z = el("div", "eintrag");
         var vor = el("div", "vor");
         if (e.seiten > 0) {
@@ -361,6 +503,29 @@
         }
         listKarte.appendChild(z);
       });
+      if (zustand.ausNoten === null) {
+        listKarte.appendChild(el("p", "leer", "Was Mama oder Papa eingetragen haben, kann ich gerade nicht zeigen."));
+      }
+    }
+
+    /* Eine Note oder Probe, die nicht hier abgegeben wurde: ohne Foto, mit
+       dem Hinweis, wer sie eingetragen hat. */
+    function fremdMalen(e) {
+      var z = el("div", "eintrag eltern");
+      z.appendChild(el("div", "vor", "✏️"));
+      var m = el("div", "mitte");
+      m.appendChild(el("b", null, e.anlass || "Probe"));
+      var teile = [];
+      var fach = zustand.faecher.filter(function (f) { return f.schluessel === e.fach; })[0];
+      teile.push(fach ? fach.text : e.fach);
+      if (e.datum) teile.push(datumSchoen(e.datum));
+      if (e.punkte) teile.push(String(e.punkte).replace("/", " von ") + " Punkte");
+      if (e.offen) teile.push("Note kommt noch");
+      m.appendChild(el("small", null, teile.join(" · ")));
+      m.appendChild(el("span", "von", e.von === "kind" ? "von dir eingetragen" : "eingetragen von Mama oder Papa"));
+      z.appendChild(m);
+      if (typeof e.note === "number") z.appendChild(el("div", "note", String(e.note).replace(".", ",")));
+      listKarte.appendChild(z);
     }
 
     /* ---------- Laden ---------- */
@@ -371,6 +536,8 @@
         zustand.faecher = j.faecher || [];
         zustand.mitNote = !!j.mitNote;
         zustand.liste = j.liste || [];
+        // Fehlt das Feld (alter Server), gibt es eben nichts dazu; null heißt "kam nicht an".
+        zustand.ausNoten = j.ausNoten === undefined ? [] : j.ausNoten;
         if (zustand.mitNote) {
           pReihe.appendChild(noteStueck);
           pReihe.appendChild(nFeld);

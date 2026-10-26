@@ -21,7 +21,8 @@
  */
 
 import { ausweisGueltig, geheimFuer, besuchIstEltern } from "./_riegel.js";
-import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId, LN_ARTEN, SCHULAUFGABEN } from "./_noten.js";
+import { notenLesen, notenSchreiben, notePruefen, auswertung, RECHNUNG, neueId, LN_ARTEN, SCHULAUFGABEN,
+         ohneDoppelte, schonDa, vonWem } from "./_noten.js";
 import { termineLesen, terminSetzen, terminWeg, terminPruefen, kuenftige, berlinHeute,
          kindSchreiben, terminAendern } from "./_probentermine.js";
 
@@ -75,7 +76,10 @@ async function kindTermin(request, env, kind, daten) {
  * Pauls Eintrag, um eine offene Probe zu ergaenzen. "was" faellt auf den
  * Anlass zurueck, ausser er ist nur der Platzhalter "Leistungsnachweis". */
 function eigeneNoten(noten) {
-  return noten
+  /* Doppelte (26.10.2026, Kapitel 146): Dieselbe Probe zweimal eingetragen
+     zaehlt einmal - auch im Zeugnisplaner und in Helenas Hochrechnung, die
+     beide genau diese Liste mitteln. */
+  return ohneDoppelte(noten)
     .map((n) => {
       const was = n.was || (n.anlass && n.anlass !== "Leistungsnachweis" ? n.anlass : "");
       const e = { fach: n.fach, note: n.note, datum: n.datum, was };
@@ -142,6 +146,18 @@ async function kindNoteSetzen(request, env, kind, roh) {
     const offen = n.offen && (n.note === undefined || n.note === null);
     if (!offen && n.von !== kind) return json(403, { ok: false, fehler: "Diese Note haben Mama oder Papa eingetragen." });
   }
+  /* Doppelt (26.10.2026): Ohne id, aber dieselbe Probe steht schon da. Ist sie
+     offen ("Note kommt noch"), ergaenzt das Kind sie - wie mit id. Sonst
+     kommt die Warnung, ausser es sagt ausdruecklich "trotzdem". */
+  if (i < 0) {
+    const vorhanden = roh.trotzdem === true ? null
+      : schonDa(noten, { fach, note, datum, art: lnArt ? (lnArt === "schulaufgabe" ? "gross" : "klein") : undefined });
+    if (vorhanden && vorhanden.offen && (vorhanden.note === undefined || vorhanden.note === null)) {
+      i = noten.indexOf(vorhanden);
+    } else if (vorhanden) {
+      return doppeltAntwort(vorhanden, true);
+    }
+  }
   const heuteEigene = noten.filter((n) => n.von === kind && String(n.kindAm || "") === heute).length;
   if (heuteEigene >= (KIND_NOTEN_TAG_JE[kind] || KIND_NOTEN_TAG) && von === kind)
     return json(429, { ok: false, fehler: "Für heute ist genug eingetragen. Mama oder Papa können helfen." });
@@ -159,6 +175,7 @@ async function kindNoteSetzen(request, env, kind, roh) {
       art: lnArt === "schulaufgabe" ? "gross" : "klein" });
     if (p.fehler) return json(400, { ok: false, fehler: p.fehler });
     const neu = { ...p.note, von, kindAm: heute };
+    if (roh.trotzdem === true) neu.eigeneProbe = true;
     // Eine Schulaufgabe ist nie zentral - notePruefen stellt den BET selbst auf klein und doppelt.
     if (lnArt && !p.note.zentral) neu.lnArt = lnArt;
     else if (lnArt) neu.lnArt = lnArt === "schulaufgabe" ? "test" : lnArt;
@@ -167,6 +184,23 @@ async function kindNoteSetzen(request, env, kind, roh) {
   try { await notenSchreiben(env, kind, noten); }
   catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Die Note ist NICHT gespeichert." }); }
   return json(200, { ok: true, noten: eigeneNoten(noten) });
+}
+
+/* "Diese Probe ist schon da" - fuer Eltern und Kind derselbe Kern, nur die
+   Anrede ist anders. Die Antwort ist 409 mit {doppelt:{...}}, damit die Seite
+   "Trotzdem speichern" anbieten kann (dann {trotzdem:true}). Alte Seiten
+   kennen das Feld nicht und zeigen einfach den Text. */
+function doppeltAntwort(vorhanden, fuerKind) {
+  const tag = String(vorhanden.datum || "").split("-").reverse().join(".");
+  const am = String(vorhanden.kindAm || vorhanden.angelegt || "").slice(0, 10).split("-").reverse().join(".");
+  const fehler = fuerKind
+    ? "Diese Probe ist schon da, eingetragen von " + vonWem(vorhanden, true) + (am ? " am " + am : "") + ". "
+      + "War es eine andere Probe am selben Tag? Dann können Mama oder Papa sie eintragen."
+    : "Diese Probe ist schon da (" + vorhanden.fach + ", " + tag + "), eingetragen von " + vonWem(vorhanden, false) + (am ? " am " + am : "") + ".";
+  return json(409, { ok: false, fehler, doppelt: {
+    id: vorhanden.id, fach: vorhanden.fach, datum: vorhanden.datum, note: vorhanden.note,
+    punkte: vorhanden.punkte, anlass: vorhanden.anlass, offen: !!vorhanden.offen,
+    von: vorhanden.von || "eltern", angelegt: vorhanden.angelegt } });
 }
 
 function kindAus(url, daten) {
@@ -394,7 +428,23 @@ export async function onRequestPost(context) {
   const noten = await notenLesen(env, kind);
   if (noten === null) return json(503, { ok: false, fehler: "Der Speicher antwortet gerade nicht. Bitte gleich noch einmal." });
 
-  const i = noten.findIndex((n) => n.id === gepruef.note.id);
+  let i = noten.findIndex((n) => n.id === gepruef.note.id);
+  /* Doppelt (26.10.2026): Eine NEUE Note, die es als Probe schon gibt. Ist die
+     vorhandene offen und die neue hat eine Note, wird die offene ergaenzt
+     (ihre id bleibt, damit Verweise aus der Zurueckbekommen-Liste halten).
+     Sonst 409 - ausser trotzdem:true, dann zaehlt sie als eigene Probe. */
+  if (i < 0) {
+    const vorhanden = daten.trotzdem === true ? null : schonDa(noten, gepruef.note);
+    if (vorhanden && vorhanden.offen && (vorhanden.note === undefined || vorhanden.note === null)
+        && (gepruef.note.note !== undefined || gepruef.note.punkte)) {
+      i = noten.indexOf(vorhanden);
+      gepruef.note.id = vorhanden.id;
+      gepruef.note.angelegt = vorhanden.angelegt || gepruef.note.angelegt;
+    } else if (vorhanden) {
+      return doppeltAntwort(vorhanden, false);
+    }
+    if (daten.trotzdem === true) gepruef.note.eigeneProbe = true;
+  }
   if (i >= 0) noten[i] = { ...noten[i], ...gepruef.note };
   else noten.push(gepruef.note);
   // Kommt zu einer offenen Probe die Note, ist sie nicht mehr offen (15.10.2026).
