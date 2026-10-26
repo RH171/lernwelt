@@ -64,7 +64,7 @@ export const PROBEN = [
         lernwelt: { stand: "teilweise", wo: "Fachwörter im Probenstoff (bis 19.10.2026)", abweichung: "nur einschrittig; die Formen „Bilde die Differenz aus …“ und „Subtrahiere … von der Summe …“ kommen nicht vor" } },
       { nr: 7, auftrag: "Löse die Zahlenmauer!", beispiel: "4 Reihen, unten 187 · 65 · 29 · 141 (mit Lücken)",
         typ: "Zahlenmauer mit Plus und Minus", max: 3, punkte: 3, aufteilung: "Annahme: ½ P. je Lücke (6 Lücken)", rechenweg: "nein",
-        ergebnis: "alles richtig; Spitze richtig 610, geschrieben „670“ oder „610“", unklar: true,
+        ergebnis: "alles richtig, Spitze 610 (auf dem Papier nachgesehen am 26.10.2026)",
         lernwelt: { stand: "nein", wo: "–", abweichung: "keine Zahlenmauer" } },
       { nr: 8, auftrag: "Welche Zahl ist es?", beispiel: "„Ich denke mir eine Zahl. Wenn ich sie um 76 vergrößere erhalte ich das Doppelte von 50. Wie heißt meine Zahl?“",
         typ: "Zahlenrätsel mit Umkehraufgabe", max: 1.5, punkte: 1.5, aufteilung: "nicht angegeben (halbe Punkte)", rechenweg: "nein",
