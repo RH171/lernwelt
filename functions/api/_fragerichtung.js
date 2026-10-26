@@ -316,8 +316,20 @@ export function lueckeOhneTipp(f) {
 }
 
 /* Alle Riegel zusammen: "" = in Ordnung, sonst der Grund. */
+/* 3b. Die Länge verrät die Lösung (26.10.2026, Denny zu #670): "Alle Antworten
+   einer Frage sind ähnlich lang, damit Paul nicht die längste wählt." Schwach
+   ist eine Textantwort, die deutlich länger ist als JEDER Ablenker (mehr als
+   130 %). Zahlen und sehr kurze Antworten zählen nicht mit. */
+export function laengeVerraten(f) {
+  const a = Array.isArray(f && f.antworten) ? f.antworten.map((x) => String(x || "").trim()) : [];
+  if (a.length < 2) return false;
+  const r = a[(f && f.richtig) || 0] || "";
+  if (r.length < 12 || /^[\d\s.,:\/–-]+$/.test(r)) return false;
+  return a.every((x, i) => i === ((f && f.richtig) || 0) || x.length * 1.3 < r.length);
+}
+
 export function formSchwach(f) {
-  return ablenkerSchwach(f) || stammVerraten(f) || lueckeOhneTipp(f);
+  return ablenkerSchwach(f) || stammVerraten(f) || lueckeOhneTipp(f) || laengeVerraten(f);
 }
 
 /* 4. Je Vokabel eine eigene Tatsache. Fragen gehoeren zusammen, wenn sie

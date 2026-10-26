@@ -739,7 +739,7 @@ const FORM_SCHEMA = {
     form: { type: "string", enum: FORMEN, description: "standard = die naheliegende Frage; umgekehrt = Frage und Antwort vertauscht; luecke = Satz mit genau einer Lücke ___; zuordnung = was gehört wozu (Beispiel zu Oberbegriff, Begriff zu Aufgabe)." },
     frage: { type: "string", description: "Eine Frage, höchstens 20 Wörter. Bei luecke ein Satz mit genau einer Lücke ___ (nie am Satzanfang)." },
     antworten: { type: "array", minItems: 3, maxItems: 4, items: { type: "string" },
-                 description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
+                 description: "Drei oder vier Antworten, alle ähnlich lang. Die erste ist die richtige - sie wird später gemischt. Bei Sachfragen enthält sie den wesentlichen Inhalt in Stichpunkten, nicht nur ein Schlagwort." },
     tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Antwort DIESER Form NICHT enthält. Keine Zahl daraus, kein Wort daraus. Schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
     frei: { type: "boolean", description: "true, wenn man die richtige Antwort auch OHNE Auswahl eindeutig eintippen könnte: genau eine richtige Antwort, ein kurzes Wort oder eine Zahl. false bei mehreren möglichen Antworten oder langen Antworten." },
   },
@@ -1017,6 +1017,15 @@ REGELN
    Zwei Namen fuer dieselbe Sache (Fundbüro und Fundamt) nie als richtige
    und falsche Antwort in dieselbe Frage.
 4j. ${REGEL_RICHTUNGEN}
+4k. VOLLSTAENDIG STATT KNAPP (26.10.2026). Die richtige Antwort enthaelt den
+   wesentlichen Inhalt der Zeile in Stichpunkten, mit dem, was dahintersteckt -
+   keine ganzen Saetze noetig. Schlecht: "Was wurde Fuerth 1818? -> Stadt
+   1. Klasse" (sagt allein nichts). Gut: "Stadt 1. Klasse, eigene Verwaltung
+   und eigene Polizei". Die knappe Fassung darf nur Ablenker sein, wenn sie
+   fuer diese Frage eindeutig falsch ist, nie wenn sie nur unvollstaendig ist -
+   es darf nie zwei richtige Antworten geben. Die Ablenker sind ebenso lang
+   und gleich gebaut (Stichpunkte gegen Stichpunkte), sonst waehlt das Kind
+   die laengste. Erklaerung und Merksatz nennen dieselben Stichpunkte.
 5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
