@@ -189,13 +189,22 @@
      Keine Serie, kein Zwang. Nur Paul ruft das auf (Startseite, Deutsch-Probenstoff). Kapitel 131. */
   var FACH_RUNDE = { hoechstens: 10, unsicherHoechstens: 7, vorrangHoechstens: 7, ruhtUnsicher: true };   // 7 Unsichere + 3 Bekannte
   var rundeFach = autostart ? ((/[?&]fach=([a-z-]{2,20})/.exec(location.search) || [])[1] || "") : "";
-  var schonDran = {}, mehrGleich = false;
+  var schonDran = {}, mehrGleich = false, matheGespielt = false;
   function fachWort(f){ return FACH[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : ""); }
   var blattWahl = (/[?&]blatt=([^&#]+)/.exec(location.search) || [])[1];
   blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
   function heuteAnbieten(eintraege, ohneStart){
     var o = null;
     if (rundeFach) { o = { fach: rundeFach, ohne: schonDran }; for (var x in FACH_RUNDE) o[x] = FACH_RUNDE[x]; }
+    /* Mathe-Wiederholung (26.10.2026, Kapitel 142): NUR Paul, nur in der allgemeinen Runde. Hoechstens
+       2 Aufgaben, fruehestens alle 3 Tage - das entscheidet LWMathe aus fundStand. matheGespielt haelt
+       eine zweite Runde auf derselben Seite frei, auch wenn der Server die erste noch nicht gemerkt hat. */
+    if (KIND === "paul" && !rundeFach && !matheGespielt && window.LWMathe && window.LWMatheDaten) {
+      try {
+        var mw = LWMathe.waehlen(window.LWMatheDaten, fundStand);
+        if (mw.karten.length) { o = o || {}; o.mathe = mw.karten; }
+      } catch (e) { /* ohne Mathe laeuft die Runde wie vorher */ }
+    }
     heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }
@@ -209,6 +218,7 @@
     var wieder = z.wieder + z.wackler + z.sicher + z.ruht;
     if (wieder) teile.push(wieder === 1 ? "1 Karte kommt wieder dran" : wieder + " Karten kommen wieder dran");
     if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
+    if (z.mathe) teile.push(z.mathe === 1 ? "1 Mathe-Aufgabe" : z.mathe + " Mathe-Aufgaben");
     $("heute-unter").textContent = rundeFach
       ? heute.karten.length + " Fragen aus deinen " + fachWort(rundeFach) + "-Blättern: " + teile.join(", ") + ". Dauert etwa 5 Minuten."
       : heute.karten.length + " Karten aus deinen Blättern: " + teile.join(", ") + ". Dauert ein paar Minuten.";
@@ -312,7 +322,10 @@
       ueberschrift: heute.karten.length + (f ? " Fragen für heute" : " Karten für heute"),
       unter: "Aus deinen Blättern. Schau auf den Ausschnitt und tipp an, was dort steht.",
       fertigSatz: f ? "Deine " + fachWort(f) + "-Runde für heute ist geschafft. Mehr geht immer – musst du aber nicht." : "Deine Runde für heute ist geschafft.",
-      ergebnis: function(liste){ merken("", liste); },
+      ergebnis: function(liste){
+        if (liste.some(function(e){ return e.blatt === "mathe"; })) matheGespielt = true;
+        merken("", liste);
+      },
       mehrText: f ? "Noch 10 Fragen" : "", mehr: f ? function(){ mehrGleich = true; laden(); } : null,
       fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
     });
