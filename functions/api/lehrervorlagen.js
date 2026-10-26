@@ -5,7 +5,10 @@
  *   Vorlage als JPEG, gleicher Ausweis, "private" (kein geteilter Cache). Ohne
  *   Bild im Speicher: 404 JSON. Die Antwort ohne `bild` ist unverändert.
  *   -> { ok, vergleiche: { <blattId>: { vorlage, geprueft, richtig,
- *          abweichungen, schreibweise, gleichwertig, rot } }, medien: [...] }
+ *          abweichungen, schreibweise, gleichwertig, rot, ungeprueft } }, medien: [...] }
+ *   26.10.2026: `abweichungen` enthält nur noch die am FOTO bestätigten (Gegenprobe, Merkmal `gegenprobe`
+ *   an der Vorlagenzeile). Die übrigen zählt `ungeprueft` (Zahl, kein Inhalt) - sie bleiben still, bis
+ *   die Gegenprobe sie bestätigt. Felder und Form sonst unverändert (abwärtsverträglich).
  *
  * Denny: "die Einträge in seinem Heft mit dem Hochladen der Lehrerin zu
  * verifizieren und gegebenenfalls auf Fehler direkt hinzuweisen. Natürlich
@@ -62,6 +65,11 @@ export async function onRequestGet(context) {
     const v = blattVergleichen(b, vorlageFuerBlatt(daten, b.id));
     if (!v) continue;
     if (!v.vorlage && !v.rot.length) continue;
+    if (Array.isArray(v.abweichungen)) {
+      const alle = v.abweichungen;
+      v.abweichungen = alle.filter((x) => x.bestaetigt);
+      v.ungeprueft = alle.length - v.abweichungen.length;
+    }
     vergleiche[b.id] = { ...v, blatt: { titel: String(b.titel || "").slice(0, 80), datum: b.datum || "", fach: b.fach || "" } };
   }
   const medien = ((daten && daten.medien) || []).map((m) => ({ titel: m.titel, art: m.art, url: m.url, fach: m.fach }));

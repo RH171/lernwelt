@@ -420,6 +420,9 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
     (v && v.abweichungen || []).forEach((x) => {
       const vz = (vorlage.zeilen || []).find((q) => q.nr === x.nr);
       if (!vz || vz.unsicher || vz.frei || vz.liste) return;
+      /* Nur am Foto bestätigt (26.10.2026, Dennys Beschluss): Paul sieht den Hinweis nur, wenn die Gegenprobe
+         beide Fotos angesehen und „fehler“ geurteilt hat - für genau diesen Paul-Text. Sonst still. */
+      if (!x.bestaetigt) return;
       /* Rot ist fertig (16.10.2026): steht an Pauls Zeile Rot, oder hat die
          Lehrerin die Antwort der Vorlage rot hingeschrieben, bleibt es still. */
       if (!mitRot && rotHatAntwort(inhalt, zeileFinden(inhalt, vz), vz)) return;
@@ -428,7 +431,7 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
                  /* Beweis (14.10.2026): WO es bei der Lehrerin steht - Vorlage und Zeile. */
                  beleg: { vorlage: String(vorlage.id || ""), titel: String(vorlage.titel || "").slice(0, 80),
                           nr: vz.nr, aufgabe: String(vz.aufgabe || "").slice(0, 160) },
-                 tipp: "Auf der Vorlage deiner Lehrerin steht hier etwas anderes. Lies die Aufgabe noch einmal genau und schau in deinem Heft nach.",
+                 tipp: "In deinem Heft steht etwas anderes als auf dem Blatt der Lehrerin. Schau es dir mit Papa an.",
                  /* Pauls Zeile im Wortlaut - für die Korrektur (bleibt auf dem Server). */
                  zeile: zeileFinden(inhalt, vz) });
     });
