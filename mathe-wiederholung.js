@@ -161,6 +161,8 @@
     if (!roh) return { stimmt: false, leer: true };
     var z = zahlen(roh), zs = zahlen(soll);
     if (m.eingabe === "zahl") {
+      /* "1.000" und "1 000" sind tausend, nicht eins und null. */
+      roh = roh.replace(/(\d)[.\s](?=\d{3}(?!\d))/g, "$1"); z = zahlen(roh);
       tol = tol || g.LWToleranz;
       if (tol && tol.pruefen) {
         var r = tol.pruefen(roh, soll, { tippfehler: false });

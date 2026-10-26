@@ -324,6 +324,10 @@ export function fundStandJeKarte(punkte, jetzt, e) {
     raus[s] = { r: Number(p.r) || 0, f: p.f ? 1 : 0,
                 faellig: istFaellig(p, nun, ein) ? 1 : 0,
                 tage: p.z ? Math.floor((nun - p.z) / TAG) : null };
+    /* Mathe-Wiederholung (26.10.2026, nur Paul): Die Seite rechnet ihre
+       2/4/7/28 Tage und die 3-Tage-Pause in KALENDERtagen (Ortszeit) - dafuer
+       braucht sie den Zeitpunkt selbst. Nur fuer "mathe#k:", sonst unveraendert. */
+    if (s.indexOf("mathe#k:") === 0 && p.z) raus[s].z = Number(p.z);
   }
   return raus;
 }

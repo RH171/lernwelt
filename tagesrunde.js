@@ -191,7 +191,12 @@
        den faelligen Wacklern, vor dem Neuen. Ohne die Angabe bleibt es Fuellstoff wie bisher. */
     var unsicher = e.ruhtUnsicher ? topf.wackler.concat(topf.ruht, topf.neu) : topf.wackler.concat(topf.neu);
     if (e.ruhtUnsicher) topf.ruht = [];
-    var n = e.hoechstens;
+    /* opt.mathe (26.10.2026, Kapitel 142, nur Paul): fertige Mathe-Karten aus LWMathe.waehlen().
+       Sie bekommen ihre Plaetze VOR allem anderen (hoechstens 2, das zaehlt LWMathe) und werden
+       unten eingestreut, nie als erste Karte. Ohne opt.mathe alles wie vorher. */
+    var mathe = (Array.isArray(e.mathe) ? e.mathe : []).filter(function (k) { return k && k.mathe && k.frage; })
+      .slice(0, e.hoechstens);
+    var n = e.hoechstens - mathe.length;
 
     /* ---- Vorrang (16.10.2026) ---- */
     var fehlerBlatt = {}, fehlerWert = {}, gespielt = {}, frisch = {};
@@ -271,7 +276,14 @@
       delete k._tage; delete k._r; delete k._b;
     });
 
-    var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0, vorrang: 0 };
+    /* Mathe einstreuen: gleichmaessig verteilt, die erste Karte bleibt eine aus dem Heft. */
+    mathe.forEach(function (k, i) {
+      var pos = karten.length ? Math.max(1, Math.round((i + 1) * (karten.length + 1) / (mathe.length + 1))) : 0;
+      k.sorte = "mathe";
+      karten.splice(Math.min(pos + i, karten.length), 0, k);
+    });
+
+    var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0, vorrang: 0, mathe: 0 };
     karten.forEach(function (k) { zaehl[k.sorte]++; if (k.vorrang) zaehl.vorrang++; });
     if (karten.length < e.mindestens) karten = [];
     return { karten: karten, zaehl: zaehl, blaetter: liste.length };
