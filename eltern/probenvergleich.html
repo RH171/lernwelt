@@ -61,7 +61,9 @@
 (function(){
   "use strict";
   var FACH = { mathe: "Mathe", deutsch: "Deutsch", hsu: "HSU", englisch: "Englisch" };
-  var RECHENWEG = { ja: "ja, verlangt", zeile: "Zeile vorgegeben", schriftlich: "schriftlich untereinander", nein: "nein" };
+  var RECHENWEG = { ja: "ja, verlangt", zeile: "Zeile vorgegeben", schriftlich: "schriftlich untereinander", zeilenangabe: "Zeile angeben verlangt", nein: "nein" };
+  // Deutsch: statt Rechenweg zaehlt die verlangte Zeilenangabe (Kapitel 143)
+  var WEGSPALTE = { deutsch: "Zeilenangabe" };
   var STAND = { ja: "ja", teilweise: "teilweise", nein: "nein" };
   function esc(t){ var d=document.createElement("div"); d.textContent=t==null?"":String(t); return d.innerHTML; }
   function zahl(n){ return String(n).replace(".", ","); }
@@ -76,7 +78,7 @@
     .then(function(a){
       if (a.s === 401){ zeige('<div class="karte"><h2>Bitte zuerst anmelden</h2><p class="unter">Melde dich im <a href="/eltern/">Elternbereich</a> mit dem Elterncode an und öffne diese Seite dann noch einmal.</p></div>'); return; }
       if (!a.j || !a.j.ok){ zeige('<div class="karte"><h2>Gerade nicht lesbar</h2><p class="unter">'+esc(a.j&&a.j.fehler)+'</p></div>'); return; }
-      malen(a.j.proben || []);
+      malen(a.j.proben || [], a.j.profil || null);
     })
     .catch(function(){ zeige('<div class="karte"><h2>Keine Verbindung</h2><p class="unter">Bitte später noch einmal versuchen.</p></div>'); });
 
@@ -87,6 +89,7 @@
     var max = A.reduce(function(s,a){ return s + a.max; }, 0);
     var pk  = A.reduce(function(s,a){ return s + a.punkte; }, 0);
     var mitWeg = A.filter(function(a){ return a.rechenweg === "ja" || a.rechenweg === "zeile"; }).length;
+    var mitZeile = A.filter(function(a){ return a.rechenweg === "zeilenangabe"; }).length;
     var schriftl = A.filter(function(a){ return a.rechenweg === "schriftlich"; }).length;
     var lw = { ja:0, teilweise:0, nein:0 };
     A.forEach(function(a){ var s = a.lernwelt && a.lernwelt.stand; if (lw[s] != null) lw[s]++; });
@@ -98,13 +101,15 @@
       '<div class="kachel"><b>'+(p.note != null ? esc(p.note) : '–')+'</b><span>Note</span></div>' +
       '<div class="kachel"><b>'+(p.notenschluessel ? esc(p.notenschluessel) : 'nicht angegeben')+'</b><span>Notenschlüssel</span></div>' +
       '<div class="kachel"><b>'+A.length+'</b><span>Aufgaben'+(p.halbePunkte ? ', halbe Punkte möglich' : '')+'</span></div>' +
-      '<div class="kachel"><b>'+mitWeg+' + '+schriftl+'</b><span>mit Rechenweg + schriftlich untereinander</span></div>' +
+      (p.fach === "deutsch"
+        ? '<div class="kachel"><b>'+mitZeile+'</b><span>mit Zeilenangabe</span></div>'
+        : '<div class="kachel"><b>'+mitWeg+' + '+schriftl+'</b><span>mit Rechenweg + schriftlich untereinander</span></div>') +
       '<div class="kachel"><b>'+lw.ja+' · '+lw.teilweise+' · '+lw.nein+'</b><span>in der Lernwelt: ja · teilweise · nein</span></div>' +
       '</div>';
     if (pk !== p.punkte || max !== p.max) h += '<p class="unter fehlt">Achtung: Die Aufgaben ergeben '+zahl(pk)+' von '+zahl(max)+' Punkten, auf dem Blatt stehen '+zahl(p.punkte)+' von '+zahl(p.max)+'.</p>';
 
     h += '<h3>Aufbau und Punkte je Aufgabe</h3>';
-    h += '<div class="rollen"><table><tr><th>Nr</th><th>Auftrag (Wortlaut) und Beispiel</th><th>Typ</th><th>Punkte</th><th>Aufteilung</th><th>Rechenweg</th><th>In der Lernwelt</th></tr>';
+    h += '<div class="rollen"><table><tr><th>Nr</th><th>Auftrag (Wortlaut) und Beispiel</th><th>Typ</th><th>Punkte</th><th>Aufteilung</th><th>'+esc(WEGSPALTE[p.fach] || "Rechenweg")+'</th><th>In der Lernwelt</th></tr>';
     A.forEach(function(a){
       var voll = a.punkte >= a.max;
       h += '<tr><td class="zahl">'+esc(a.nr)+'</td>' +
@@ -131,9 +136,20 @@
     return h + '</div>';
   }
 
-  function malen(L){
+  function profilHtml(P){
+    if (!P) return '';
+    function liste(R){ return '<ul>' + R.map(function(r){ return '<li>'+esc(r.regel)+' <span class="marke '+(r.art === "belegt" ? 'm-ja' : 'm-teilweise')+'">'+esc(r.art)+'</span><br><span class="klein">Beleg: '+esc(r.beleg)+'</span></li>'; }).join("") + '</ul>'; }
+    var h = '<div class="karte" id="profil"><h2>Lehrerprofil</h2>';
+    h += '<p class="unter">'+esc(P.lehrerin)+' · aus '+esc((P.proben||[]).length)+' Proben · Stand '+esc(dt(P.stand))+'. „belegt“ steht so auf dem Blatt, „Annahme“ ist gedeutet.</p>';
+    if ((P.allgemein||[]).length) h += '<h3>In allen Fächern</h3>' + liste(P.allgemein);
+    var F = P.faecher || {};
+    Object.keys(F).forEach(function(f){ if ((F[f]||[]).length) h += '<h3>'+esc(FACH[f] || f)+'</h3>' + liste(F[f]); });
+    return h + '</div>';
+  }
+
+  function malen(L, P){
     if (!L.length){ zeige('<div class="karte"><h2>Noch keine Probe</h2><p class="unter">Für dieses Kind ist noch keine Probe ausgewertet.</p></div>'); return; }
-    var h = '';
+    var h = profilHtml(P);
     if (L.length > 1) h += '<div class="karte inhalt"><h2>Proben</h2><ul>' + L.map(function(p,i){
       return '<li><a href="#probe-'+i+'">'+esc(FACH[p.fach] || p.fach)+' · '+esc(dt(p.datum))+'</a> <span class="klein">· '+zahl(p.punkte)+' von '+zahl(p.max)+'</span></li>'; }).join("") + '</ul></div>';
     h += L.map(probeHtml).join("");

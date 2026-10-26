@@ -130,7 +130,7 @@ export const PROBEN = [
         typ: "Warum-Frage mit Zeilenangabe", max: 3, punkte: 2.5, aufteilung: "nicht angegeben", rechenweg: "zeilenangabe",
         ergebnis: "Z 10–11 ✓; Antwort sinngemäß richtig, mit „halt“ und „übern“",
         verloren: "Grund nicht vermerkt (Annahme: Umgangssprache)",
-        lernwelt: { stand: "teilweise", wo: "Generalprobe Lesen: „Zeile finden“", abweichung: "die Lernwelt stellt keine Warum-Fragen (Regel „kein weil“), die Lehrerin schon" } },
+        lernwelt: { stand: "teilweise", wo: "Generalprobe Lesen: „Zeile finden“", abweichung: "die Lernwelt stellt keine Warum-Fragen (Regel: keine Begründungsfragen), die Lehrerin schon" } },
       { nr: 3, auftrag: "Wem könnte etwas Ähnliches wie dem Löwen passieren? Wie könnte das geschehen? Schreibe genau aus dem Text heraus!", beispiel: "Feld „→ Z:“",
         typ: "Textstelle finden und wörtlich abschreiben", max: 2, punkte: 2, aufteilung: "nicht angegeben", rechenweg: "zeilenangabe",
         ergebnis: "Z 14–15 ✓, wörtlich abgeschrieben",
@@ -167,8 +167,8 @@ export const PROBEN = [
         lernwelt: { stand: "nein", wo: "–", abweichung: "keine Lückensätze mit Fachwort" } },
       { nr: 11, auftrag: "Woran merkte der Farmer zum Schluss, dass der Löwe sein Freund war? Beantworte möglichst ausführlich!", beispiel: "",
         typ: "ausführliche Antwort mit mehreren Belegen", max: 3, punkte: 1.5, aufteilung: "nicht angegeben", rechenweg: "nein",
-        ergebnis: "Antwort beginnt mit „Weil …“ – rot: „Satz!“; ein Beleg ✓, „Fell glänzender“ ✗",
-        verloren: "kein ganzer Satz („Weil“-Anfang, rot „Satz!“); „Fell glänzender“ rot durchgestrichen; Annahme: das Fell zeigt die Genesung, nicht die Freundschaft – Begleiten, Umkreisen, Bewachen, Wild zutreiben (Zeile 33–34) fehlen",
+        ergebnis: "Antwort ist nur ein Begründungs-Nebensatz – rot: „Satz!“; ein Beleg ✓, „Fell glänzender“ ✗",
+        verloren: "kein ganzer Satz (nur Nebensatz, rot „Satz!“); „Fell glänzender“ rot durchgestrichen; Annahme: das Fell zeigt die Genesung, nicht die Freundschaft – Begleiten, Umkreisen, Bewachen, Wild zutreiben (Zeile 33–34) fehlen",
         lernwelt: { stand: "nein", wo: "–", abweichung: "„möglichst ausführlich“ mit mehreren Belegen wird nicht geübt" } },
       { nr: 12, auftrag: "Suche die Wörter im Text, die eine ähnliche Bedeutung haben wie folgende Wörter.", beispiel: "Unglück · Bauer · Hals · vorsichtig",
         typ: "Wörter mit ähnlicher Bedeutung im Text suchen", max: 2, punkte: 1.5, aufteilung: "½ P. je Wort (4 Wörter, 2 P.)", rechenweg: "nein",
@@ -182,7 +182,7 @@ export const PROBEN = [
         lernwelt: { stand: "teilweise", wo: "Generalprobe Lesen: „Meinung“", abweichung: "dort genügt ein ganzer Satz, hier zählen beide Seiten" } },
     ],
     fehlerthemen: [
-      { titel: "„Möglichst ausführlich“: mehrere passende Belege, beide Seiten, ohne „Weil“-Anfang", aufgaben: [11, 13], verloren: 2.5 },
+      { titel: "„Möglichst ausführlich“: mehrere passende Belege, beide Seiten, als ganze Sätze", aufgaben: [11, 13], verloren: 2.5 },
       { titel: "Genaue Zeile und vollständige Antwort", aufgaben: [6], verloren: 1 },
       { titel: "Wörter genau erklären und Wörter mit ähnlicher Bedeutung finden", aufgaben: [4, 12], verloren: 1 },
       { titel: "Grund nicht vermerkt (Annahme: Umgangssprache, ein Beleg ungenau)", aufgaben: [1, 2], verloren: 1 },
@@ -203,7 +203,7 @@ export const PROBEN = [
  */
 export const LEHRERPROFIL = {
   paul: {
-    lehrerin: "Klassenlehrerin 4bg, Kürzel „Sy“",
+    lehrerin: "Klassenlehrerin der 4bg",
     stand: "2026-10-26",
     proben: ["paul-2026-10-09-deutsch-lesen-1", "paul-2026-10-19-mathe-1"],
     allgemein: [
@@ -214,9 +214,9 @@ export const LEHRERPROFIL = {
     ],
     faecher: {
       deutsch: [
-        { regel: "Antworten in ganzen Sätzen. Eine Antwort, die mit „Weil“ anfängt, bekommt „Satz!“.", beleg: "Deutsch Lesen, Anweisung auf Seite 3; Nr. 11", art: "belegt" },
+        { regel: "Antworten in ganzen Sätzen. Eine Antwort, die nur ein Begründungs-Nebensatz ist, bekommt „Satz!“.", beleg: "Deutsch Lesen, Anweisung auf Seite 3; Nr. 11", art: "belegt" },
         { regel: "Zu jeder Fundfrage gehört die Zeile, in der die Antwort steht. Eine falsche Zeile streicht sie an.", beleg: "Deutsch Lesen, Feld „→ Z:“ bei Nr. 1–6, 8, 9; Nr. 6", art: "belegt" },
-        { regel: "Sie stellt selbst Warum-Fragen. Paul muss sie in einem ganzen Satz ohne „weil“ beantworten können.", beleg: "Deutsch Lesen Nr. 2, 13", art: "belegt" },
+        { regel: "Sie stellt selbst Warum-Fragen. Paul muss sie in einem ganzen Hauptsatz beantworten können, ohne Begründungswort am Anfang.", beleg: "Deutsch Lesen Nr. 2, 13", art: "belegt" },
         { regel: "„Möglichst ausführlich“ heißt mehrere passende Belege aus dem Text, bei Beziehungen beide Seiten.", beleg: "Deutsch Lesen Nr. 11 (1,5 von 3), Nr. 13 (1 von 2, rot ergänzt „dankbarer Löwe“)", art: "Annahme" },
         { regel: "Bei Worterklärungen zählt der genaue Begriff.", beleg: "Deutsch Lesen Nr. 4 („Fell“ → „Haare“, halber Punkt)", art: "belegt" },
         { regel: "Ein sinnrichtiges Wort von außerhalb des Textes lässt sie gelten.", beleg: "Deutsch Lesen Nr. 10 („Tatzen“ statt „Pranken“, voller Punkt)", art: "belegt" },
