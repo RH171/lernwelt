@@ -1372,6 +1372,16 @@
       '<a class="knopf-link" href="/eltern/tagesrechnen.html">Übersicht ansehen</a></div>';
   }
 
+  /* Probenvergleich (26.10.2026, Kapitel 141): Aufbau, Punkte je Aufgabe, Fehlerthemen und was die
+     Lernwelt davon schon uebt. Eigene Seite; die Daten liest sie nur mit dem Elternausweis. */
+  var PROBEN_KINDER = ["paul"];
+  function probenvergleichKarte(){
+    if (PROBEN_KINDER.indexOf(KIND) < 0) return "";
+    return '<div class="karte"><h2>Probenvergleich</h2>' +
+      '<p class="unter">Jede ausgewertete Probe: Aufbau, Punkte je Aufgabe, Rechenweg, Fehlerthemen und was die Lernwelt davon schon übt.</p>' +
+      '<a class="knopf-link" href="/eltern/probenvergleich.html?kind=' + KIND + '">Proben ansehen</a></div>';
+  }
+
   /* Pauls 1×1-Woche (13.10.2026): Reihen mit Trick, Zahlendreiecke, Tempo-Runde. Eigene Seite. */
   function einmaleinswocheKarte(){
     if (KIND !== "paul") return "";
@@ -1796,12 +1806,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
+      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + probenvergleichKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
+    h += notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + probenvergleichKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +
