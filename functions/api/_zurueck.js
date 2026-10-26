@@ -42,7 +42,7 @@ export function neueId() {
 }
 
 export function heuteBerlin() {
-  return new Date(Date.now() + 2 * 3600 * 1000).toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
 }
 
 /* Einen Eintrag aufraeumen, bevor er in den Speicher geht. Was hier nicht
