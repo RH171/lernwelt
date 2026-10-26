@@ -51,7 +51,7 @@ import {
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
   fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen,
 } from "./_wiedervorlage.js";
-import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach } from "./_fragerichtung.js";
+import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten } from "./_fragerichtung.js";
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -739,7 +739,7 @@ const FORM_SCHEMA = {
     form: { type: "string", enum: FORMEN, description: "standard = die naheliegende Frage; umgekehrt = Frage und Antwort vertauscht; luecke = Satz mit genau einer Lücke ___; zuordnung = was gehört wozu (Beispiel zu Oberbegriff, Begriff zu Aufgabe)." },
     frage: { type: "string", description: "Eine Frage, höchstens 20 Wörter. Bei luecke ein Satz mit genau einer Lücke ___ (nie am Satzanfang)." },
     antworten: { type: "array", minItems: 3, maxItems: 4, items: { type: "string" },
-                 description: "Drei oder vier Antworten, alle ähnlich lang. Die erste ist die richtige - sie wird später gemischt. Bei Sachfragen enthält sie den wesentlichen Inhalt in Stichpunkten, nicht nur ein Schlagwort." },
+                 description: "Drei oder vier kurze Antworten. Die erste ist die richtige - sie wird später gemischt." },
     tipp: { type: "string", description: "HILFE NACH DEM ERSTEN FEHLVERSUCH - ein Satz, der zum Nachdenken anstößt und die Antwort DIESER Form NICHT enthält. Keine Zahl daraus, kein Wort daraus. Schlecht: \"Es war das Jahr der Olympischen Spiele in München\" - wer das weiß, hat die Antwort." },
     frei: { type: "boolean", description: "true, wenn man die richtige Antwort auch OHNE Auswahl eindeutig eintippen könnte: genau eine richtige Antwort, ein kurzes Wort oder eine Zahl. false bei mehreren möglichen Antworten oder langen Antworten." },
   },
@@ -782,7 +782,7 @@ const WERKZEUG = {
    die anderen. Exportiert, damit werkzeuge/fragerichtungen-nachbau.mjs genau
    dieselben Riegel benutzt. `schluessel` (optional) setzt den
    Tatsachen-Schluessel, sonst wird er hier vergeben. */
-export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schluessel) {
+export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schluessel, kind) {
   const raus = [];
   for (const t of tatsachen || []) {
     if (!t || !Array.isArray(t.formen)) continue;
@@ -824,6 +824,8 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
          der Frage, Luecke ohne (gueltigen) Tipp. Geprueft am FERTIGEN Eintrag -
          ein Tipp, den tippOk verworfen hat, fehlt dort schon. */
       if (formSchwach(q)) continue;
+      /* Laenge verraet die Loesung (#670): vorerst nur Paul, Leon und Helena erst nach Dennys Ja. */
+      if (kind === "paul" && laengeVerraten(q)) continue;
       gesehen.add(form);
       raus.push(q);
     }
@@ -1017,7 +1019,7 @@ REGELN
    Zwei Namen fuer dieselbe Sache (Fundbüro und Fundamt) nie als richtige
    und falsche Antwort in dieselbe Frage.
 4j. ${REGEL_RICHTUNGEN}
-4k. VOLLSTAENDIG STATT KNAPP (26.10.2026). Die richtige Antwort enthaelt den
+${kind === "paul" ? `4k. VOLLSTAENDIG STATT KNAPP (26.10.2026). Die richtige Antwort enthaelt den
    wesentlichen Inhalt der Zeile in Stichpunkten, mit dem, was dahintersteckt -
    keine ganzen Saetze noetig. Schlecht: "Was wurde Fuerth 1818? -> Stadt
    1. Klasse" (sagt allein nichts). Gut: "Stadt 1. Klasse, eigene Verwaltung
@@ -1026,7 +1028,7 @@ REGELN
    es darf nie zwei richtige Antworten geben. Die Ablenker sind ebenso lang
    und gleich gebaut (Stichpunkte gegen Stichpunkte), sonst waehlt das Kind
    die laengste. Erklaerung und Merksatz nennen dieselben Stichpunkte.
-5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
+` : ""}5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
    nur bekannte Wörter, keine Jahreszahlen, keine Nebensätze.` :
@@ -1084,7 +1086,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
 
   /* Seit 19.10.2026 Tatsachen mit Formen (siehe fragenAusTatsachen). Ein
      falsches Fachkuerzel macht die Faecherauswahl kaputt - lieber weglassen. */
-  if (Array.isArray(tatsachen)) return fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt);
+  if (Array.isArray(tatsachen)) return fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, undefined, kind);
   return fragen
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
     .filter(belegt)

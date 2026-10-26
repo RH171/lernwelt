@@ -329,7 +329,7 @@ export function laengeVerraten(f) {
 }
 
 export function formSchwach(f) {
-  return ablenkerSchwach(f) || stammVerraten(f) || lueckeOhneTipp(f) || laengeVerraten(f);
+  return ablenkerSchwach(f) || stammVerraten(f) || lueckeOhneTipp(f);
 }
 
 /* 4. Je Vokabel eine eigene Tatsache. Fragen gehoeren zusammen, wenn sie
