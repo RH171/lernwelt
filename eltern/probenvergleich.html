@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Probenvergleich</title>
+<!--
+  Probenvergleich fuer die Eltern (26.10.2026, Kapitel 141): Aufbau einer Probe, Punkte je
+  Aufgabe, Rechenweg, Fehlerthemen und was die Lernwelt davon schon uebt.
+  Diese Seite enthaelt KEINE Daten. Sie liest /api/probenvergleich (nur mit Elternausweis);
+  die Proben-Liste liegt serverseitig in functions/api/_proben-daten.js.
+-->
+<link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
+<style>
+  :root{ --bg:#f4f6f9; --karte:#fff; --ink:#161821; --muted:#5f6675; --line:#e5e8ef;
+    --gut:#12804a; --mittel:#b45309; --schlecht:#b42318; --paul:#4f46e5;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;padding:22px 16px 60px}
+  .huelle{max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:24px;margin:0}
+  .zurueck{display:inline-flex;align-items:center;min-height:44px;padding:0 15px;border:1.5px solid var(--line);background:#fff;
+    border-radius:11px;color:var(--ink);text-decoration:none;font-weight:600}
+  .karte{background:var(--karte);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:0 4px 14px rgba(20,30,60,.06)}
+  .karte h2{font-size:20px;margin:0 0 4px}
+  .karte h3{font-size:17px;margin:16px 0 6px}
+  .unter{color:var(--muted);margin:0 0 12px}
+  .zahlen{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0}
+  .kachel{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .kachel b{display:block;font-size:24px}
+  .kachel span{color:var(--muted);font-size:14px}
+  .rollen{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;min-width:760px}
+  td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:14px}
+  td.zahl{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .wort{font-style:italic}
+  .klein{color:var(--muted);font-size:14px}
+  .voll{color:var(--gut);font-weight:700}
+  .fehlt{color:var(--schlecht);font-weight:700}
+  .marke{display:inline-block;border-radius:8px;padding:1px 8px;font-size:13px;font-weight:600;white-space:nowrap}
+  .m-ja{background:#e7f6ee;color:var(--gut)}
+  .m-teilweise{background:#fff4e5;color:var(--mittel)}
+  .m-nein{background:#fdecea;color:var(--schlecht)}
+  ul{margin:4px 0 0;padding-left:20px}
+  li{margin:3px 0}
+  .inhalt a{color:var(--paul)}
+</style>
+</head>
+<body>
+<div class="huelle">
+  <header>
+    <a class="zurueck" href="/eltern/">← Elternbereich</a>
+    <h1>Probenvergleich</h1>
+  </header>
+  <div id="inhalt"><div class="karte"><p class="unter">Lade …</p></div></div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var FACH = { mathe: "Mathe", deutsch: "Deutsch", hsu: "HSU", englisch: "Englisch" };
+  var RECHENWEG = { ja: "ja, verlangt", zeile: "Zeile vorgegeben", schriftlich: "schriftlich untereinander", nein: "nein" };
+  var STAND = { ja: "ja", teilweise: "teilweise", nein: "nein" };
+  function esc(t){ var d=document.createElement("div"); d.textContent=t==null?"":String(t); return d.innerHTML; }
+  function zahl(n){ return String(n).replace(".", ","); }
+  function dt(iso){ var p=String(iso||"").split("-"); if(p.length!==3) return "–";
+    var t=new Date(+p[0],+p[1]-1,+p[2]); return t.toLocaleDateString("de-DE",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"}); }
+  function zeige(h){ document.getElementById("inhalt").innerHTML = h; }
+  var kind = "paul";
+  try { var q = new URLSearchParams(location.search).get("kind"); if (q && /^[a-z]+$/.test(q)) kind = q; } catch (e) {}
+
+  fetch("/api/probenvergleich?kind=" + encodeURIComponent(kind), { credentials: "same-origin", cache: "no-store" })
+    .then(function(r){ return r.json().then(function(j){ return { s: r.status, j: j }; }); })
+    .then(function(a){
+      if (a.s === 401){ zeige('<div class="karte"><h2>Bitte zuerst anmelden</h2><p class="unter">Melde dich im <a href="/eltern/">Elternbereich</a> mit dem Elterncode an und öffne diese Seite dann noch einmal.</p></div>'); return; }
+      if (!a.j || !a.j.ok){ zeige('<div class="karte"><h2>Gerade nicht lesbar</h2><p class="unter">'+esc(a.j&&a.j.fehler)+'</p></div>'); return; }
+      malen(a.j.proben || []);
+    })
+    .catch(function(){ zeige('<div class="karte"><h2>Keine Verbindung</h2><p class="unter">Bitte später noch einmal versuchen.</p></div>'); });
+
+  function marke(stand){ var s = STAND[stand] ? stand : "nein"; return '<span class="marke m-'+s+'">'+STAND[s]+'</span>'; }
+
+  function probeHtml(p, i){
+    var A = p.aufgaben || [];
+    var max = A.reduce(function(s,a){ return s + a.max; }, 0);
+    var pk  = A.reduce(function(s,a){ return s + a.punkte; }, 0);
+    var mitWeg = A.filter(function(a){ return a.rechenweg === "ja" || a.rechenweg === "zeile"; }).length;
+    var schriftl = A.filter(function(a){ return a.rechenweg === "schriftlich"; }).length;
+    var lw = { ja:0, teilweise:0, nein:0 };
+    A.forEach(function(a){ var s = a.lernwelt && a.lernwelt.stand; if (lw[s] != null) lw[s]++; });
+    var h = '<div class="karte" id="probe-'+i+'">';
+    h += '<h2>'+esc(FACH[p.fach] || p.fach)+' · '+esc(dt(p.datum))+'</h2>';
+    h += '<p class="unter wort">„'+esc(p.titel)+'“'+(p.klasse ? ' · '+esc(p.klasse) : '')+'</p>';
+    h += '<div class="zahlen">' +
+      '<div class="kachel"><b>'+zahl(p.punkte)+' von '+zahl(p.max)+'</b><span>Punkte</span></div>' +
+      '<div class="kachel"><b>'+(p.note != null ? esc(p.note) : '–')+'</b><span>Note</span></div>' +
+      '<div class="kachel"><b>'+(p.notenschluessel ? esc(p.notenschluessel) : 'nicht angegeben')+'</b><span>Notenschlüssel</span></div>' +
+      '<div class="kachel"><b>'+A.length+'</b><span>Aufgaben'+(p.halbePunkte ? ', halbe Punkte möglich' : '')+'</span></div>' +
+      '<div class="kachel"><b>'+mitWeg+' + '+schriftl+'</b><span>mit Rechenweg + schriftlich untereinander</span></div>' +
+      '<div class="kachel"><b>'+lw.ja+' · '+lw.teilweise+' · '+lw.nein+'</b><span>in der Lernwelt: ja · teilweise · nein</span></div>' +
+      '</div>';
+    if (pk !== p.punkte || max !== p.max) h += '<p class="unter fehlt">Achtung: Die Aufgaben ergeben '+zahl(pk)+' von '+zahl(max)+' Punkten, auf dem Blatt stehen '+zahl(p.punkte)+' von '+zahl(p.max)+'.</p>';
+
+    h += '<h3>Aufbau und Punkte je Aufgabe</h3>';
+    h += '<div class="rollen"><table><tr><th>Nr</th><th>Auftrag (Wortlaut) und Beispiel</th><th>Typ</th><th>Punkte</th><th>Aufteilung</th><th>Rechenweg</th><th>In der Lernwelt</th></tr>';
+    A.forEach(function(a){
+      var voll = a.punkte >= a.max;
+      h += '<tr><td class="zahl">'+esc(a.nr)+'</td>' +
+        '<td><span class="wort">„'+esc(a.auftrag)+'“</span><br><span class="klein">'+esc(a.beispiel)+'</span>' +
+          '<br><span class="klein">Ergebnis: '+esc(a.ergebnis)+(a.unklar ? ' ❓ nicht sicher lesbar' : '')+'</span>' +
+          (a.verloren ? '<br><span class="klein fehlt">'+esc(a.verloren)+'</span>' : '') + '</td>' +
+        '<td>'+esc(a.typ)+'</td>' +
+        '<td class="zahl"><span class="'+(voll?'voll':'fehlt')+'">'+zahl(a.punkte)+'</span> / '+zahl(a.max)+'</td>' +
+        '<td class="klein">'+esc(a.aufteilung)+'</td>' +
+        '<td>'+esc(RECHENWEG[a.rechenweg] || a.rechenweg)+'</td>' +
+        '<td>'+(a.lernwelt ? marke(a.lernwelt.stand)+'<br><span class="klein">'+esc(a.lernwelt.wo)+'</span>'+
+          (a.lernwelt.abweichung ? '<br><span class="klein">Abweichung: '+esc(a.lernwelt.abweichung)+'</span>' : '') : '–')+'</td></tr>';
+    });
+    h += '</table></div>';
+
+    var F = p.fehlerthemen || [];
+    h += '<h3>Fehlerthemen</h3>';
+    if (!F.length) h += '<p class="unter">Keine.</p>';
+    else h += '<ul>' + F.map(function(f){ return '<li><b>'+esc(f.titel)+'</b> <span class="klein">· Aufgabe '+esc((f.aufgaben||[]).join(", "))+' · '+zahl(f.verloren)+' Punkte</span></li>'; }).join("") + '</ul>';
+    if ((p.sicher||[]).length) h += '<h3>Sicher</h3><p>'+esc(p.sicher.join(" · "))+'</p>';
+    if ((p.hinweise||[]).length) h += '<h3>Gut zu wissen</h3><ul>' + p.hinweise.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join("") + '</ul>';
+    if (p.selbsteinschaetzung) h += '<p class="klein">Selbsteinschätzung auf dem Blatt: '+esc(p.selbsteinschaetzung)+'</p>';
+    if (p.quelle) h += '<p class="klein">Quelle: '+esc(p.quelle)+'</p>';
+    return h + '</div>';
+  }
+
+  function malen(L){
+    if (!L.length){ zeige('<div class="karte"><h2>Noch keine Probe</h2><p class="unter">Für dieses Kind ist noch keine Probe ausgewertet.</p></div>'); return; }
+    var h = '';
+    if (L.length > 1) h += '<div class="karte inhalt"><h2>Proben</h2><ul>' + L.map(function(p,i){
+      return '<li><a href="#probe-'+i+'">'+esc(FACH[p.fach] || p.fach)+' · '+esc(dt(p.datum))+'</a> <span class="klein">· '+zahl(p.punkte)+' von '+zahl(p.max)+'</span></li>'; }).join("") + '</ul></div>';
+    h += L.map(probeHtml).join("");
+    zeige(h);
+  }
+})();
+</script>
+</body>
+</html>
