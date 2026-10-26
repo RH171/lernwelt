@@ -190,7 +190,7 @@ export const PROBEN = [
     sicher: ["Antworten im Text finden", "Zeilen angeben", "Textstelle wörtlich abschreiben", "Ankreuzen mit mehreren Richtigen", "anderen Ausdruck im Text finden"],
     hinweise: [
       "Der Notenschlüssel steht nicht auf dem Blatt (laut Schule wird er am Ausgabetag gezeigt). 23,5 von 29 Punkten (81 %) waren eine 3.",
-      "Antworten in ganzen Sätzen sind verlangt, dazu die Zeilen, in denen die Antwort steht (7 von 13 Fragen).",
+      "Ganze Sätze verlangt diese Probe per Anweisung, dazu die Zeilen, in denen die Antwort steht (7 von 13 Fragen).",
       "Halbe Punkte kommen vor. Die Aufteilung je Aufgabe steht nicht auf dem Blatt.",
       "Rechtschreibung verbessert die Lehrerin rot, meist ohne Punktabzug.",
     ],
@@ -215,13 +215,15 @@ export const LEHRERPROFIL = {
       { regel: "Der Notenschlüssel steht nicht auf dem Blatt. Er wird am Ausgabetag gezeigt und darf abgeschrieben werden. Bekannt sind bisher zwei Punkte: 88 % war eine 2, 81 % eine 3.", beleg: "Elterninformation Punkt 7; Mathe 44/50 Note 2; Deutsch Lesen 23,5/29 Note 3", stuetze: 2, art: "belegt" },
       { regel: "Richtwert 18 Proben im Jahr: Deutsch 8 (Sprechen und Zuhören, Lesen, Schreiben, Sprachgebrauch), Mathe 5, HSU 5; jede zählt einfach. Proben werden eine Woche vorher angekündigt.", beleg: "Elterninformation der Schule zur 4. Klasse (Januar 2026)", stuetze: 0, art: "belegt" },
       { regel: "Rechtschreibung verbessert sie rot, meist ohne Abzug.", beleg: "Deutsch Lesen Nr. 3 („Ähncih“, volle Punkte), Nr. 8 („den“→„dem“, volle Punkte)", stuetze: 1, art: "belegt" },
+      { regel: "Volle Punkte gibt es, wenn der Inhalt vollständig dasteht. Fehlt ein Teil (etwa die zweite Seite einer Begründung), gibt es Teilpunkte, und sie ergänzt den fehlenden Inhalt rot.", beleg: "Deutsch Lesen Nr. 3, 5, 8, 9 (vollständig, volle Punkte); Nr. 13 (1 von 2, rot ergänzt „dankbarer Löwe“)", stuetze: 1, art: "belegt" },
+      { regel: "Zum vollständigen Inhalt gehören bei „möglichst ausführlich“ mehrere Belege oder Beispiele aus dem Text; wenige Belege kosten Punkte.", beleg: "Deutsch Lesen Nr. 11 (1,5 von 3; welche Belege fehlten, ist nicht vermerkt)", stuetze: 1, art: "Annahme" },
       { regel: "Fehler markiert sie mit „f.“ und schreibt das Richtige daneben.", beleg: "Deutsch Lesen Nr. 6 („f. 17–18“), Nr. 12 („Pranken f.“)", stuetze: 1, art: "belegt" },
     ],
     faecher: {
       deutsch: [
-        { regel: "Antworten in ganzen Sätzen. Eine Antwort, die nur ein Begründungs-Nebensatz ist, bekommt „Satz!“.", beleg: "Deutsch Lesen, Anweisung auf Seite 3; Nr. 11", stuetze: 1, art: "belegt" },
+        { regel: "Ganze Sätze nur dort, wo die Aufgabe sie verlangt (in der Leseprobe per Anweisung). Dort bekommt eine Antwort, die nur ein Begründungs-Nebensatz ist, „Satz!“. Keine allgemeine Regel für alle Fächer.", beleg: "Deutsch Lesen, Anweisung auf Seite 3; Nr. 11", stuetze: 1, art: "belegt" },
         { regel: "Zu jeder Fundfrage gehört die Zeile, in der die Antwort steht. Eine falsche Zeile streicht sie an.", beleg: "Deutsch Lesen, Feld „→ Z:“ bei Nr. 1, 2, 3, 5, 6, 8, 9; Nr. 6", stuetze: 1, art: "belegt" },
-        { regel: "Sie stellt selbst Warum-Fragen. Paul muss sie in einem ganzen Hauptsatz beantworten können, ohne Begründungswort am Anfang.", beleg: "Deutsch Lesen Nr. 2, 13", stuetze: 1, art: "belegt" },
+        { regel: "Sie stellt selbst Warum-Fragen; wo ganze Sätze verlangt sind, ohne Begründungswort am Anfang.", beleg: "Deutsch Lesen Nr. 2, 13", stuetze: 1, art: "belegt" },
         { regel: "„Möglichst ausführlich“ heißt mehrere passende Belege aus dem Text, bei Beziehungen beide Seiten.", beleg: "Deutsch Lesen Nr. 11 (1,5 von 3), Nr. 13 (1 von 2, rot ergänzt „dankbarer Löwe“)", stuetze: 1, art: "Annahme" },
         { regel: "Bei Worterklärungen zählt der genaue Begriff.", beleg: "Deutsch Lesen Nr. 4 („Fell“ → „Haare“, halber Punkt)", stuetze: 1, art: "belegt" },
         { regel: "Ein sinnrichtiges Wort von außerhalb des Textes lässt sie gelten.", beleg: "Deutsch Lesen Nr. 10 („Tatzen“ statt „Pranken“, voller Punkt)", stuetze: 1, art: "belegt" },
