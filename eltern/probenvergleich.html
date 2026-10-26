@@ -116,7 +116,7 @@
         '<td><span class="wort">„'+esc(a.auftrag)+'“</span><br><span class="klein">'+esc(a.beispiel)+'</span>' +
           '<br><span class="klein">Ergebnis: '+esc(a.ergebnis)+(a.unklar ? ' ❓ nicht sicher lesbar' : '')+'</span>' +
           (a.verloren ? '<br><span class="klein fehlt">'+esc(a.verloren)+'</span>' : '') + '</td>' +
-        '<td>'+esc(a.typ)+'</td>' +
+        '<td>'+esc(a.typ)+(a.typklasse ? '<br><span class="klein">'+esc(a.typklasse)+'</span>' : '')+'</td>' +
         '<td class="zahl"><span class="'+(voll?'voll':'fehlt')+'">'+zahl(a.punkte)+'</span> / '+zahl(a.max)+'</td>' +
         '<td class="klein">'+esc(a.aufteilung)+'</td>' +
         '<td>'+esc(RECHENWEG[a.rechenweg] || a.rechenweg)+'</td>' +
@@ -136,11 +136,21 @@
     return h + '</div>';
   }
 
+  var LISTE = [];
   function profilHtml(P){
     if (!P) return '';
-    function liste(R){ return '<ul>' + R.map(function(r){ return '<li>'+esc(r.regel)+' <span class="marke '+(r.art === "belegt" ? 'm-ja' : 'm-teilweise')+'">'+esc(r.art)+'</span><br><span class="klein">Beleg: '+esc(r.beleg)+'</span></li>'; }).join("") + '</ul>'; }
+    function liste(R){ return '<ul>' + R.map(function(r){ return '<li>'+esc(r.regel)+' <span class="marke '+(r.art === "belegt" ? 'm-ja' : 'm-teilweise')+'">'+esc(r.art)+'</span> '+stuetze(r)+'<br><span class="klein">Beleg: '+esc(r.beleg)+'</span></li>'; }).join("") + '</ul>'; }
+    function stuetze(r){ if (r.stuetze === 0) return '<span class="klein">· Schulinformation</span>'; var n = r.stuetze || 1; return n <= 2 ? '<span class="marke m-teilweise">vorläufig, '+n+(n === 1 ? ' Probe' : ' Proben')+'</span>' : '<span class="klein">· '+n+' Proben</span>'; }
     var h = '<div class="karte" id="profil"><h2>Lehrerprofil</h2>';
-    h += '<p class="unter">'+esc(P.lehrerin)+' · aus '+esc((P.proben||[]).length)+' Proben · Stand '+esc(dt(P.stand))+'. „belegt“ steht so auf dem Blatt, „Annahme“ ist gedeutet.</p>';
+    h += '<p class="unter">'+esc(P.lehrerin)+' · aus '+esc((P.proben||[]).length)+' Proben · Stand '+esc(dt(P.stand))+'. „belegt“ steht so auf dem Blatt, „Annahme“ ist gedeutet. Bis zu zwei Proben ist jede Regel vorläufig.</p>';
+    var T = {};
+    (LISTE||[]).forEach(function(p){ (p.aufgaben||[]).forEach(function(a){ var k = (FACH[p.fach] || p.fach)+'|'+(a.typklasse || a.typ); var e = T[k] || (T[k] = {n:0, max:0, punkte:0}); e.n++; e.max += a.max; e.punkte += a.punkte; }); });
+    var TK = Object.keys(T);
+    if (TK.length){
+      h += '<h3>Punkte je Aufgabentyp</h3><div class="rollen"><table><tr><th>Fach</th><th>Aufgabentyp</th><th>Aufgaben</th><th>Punkte</th><th>Anteil erreicht</th></tr>';
+      TK.sort().forEach(function(k){ var e = T[k], f = k.split('|'); h += '<tr><td>'+esc(f[0])+'</td><td>'+esc(f[1])+'</td><td class="zahl">'+e.n+'</td><td class="zahl">'+zahl(e.punkte)+' / '+zahl(e.max)+'</td><td class="zahl">'+Math.round(100*e.punkte/e.max)+' %</td></tr>'; });
+      h += '</table></div>';
+    }
     if ((P.allgemein||[]).length) h += '<h3>In allen Fächern</h3>' + liste(P.allgemein);
     var F = P.faecher || {};
     Object.keys(F).forEach(function(f){ if ((F[f]||[]).length) h += '<h3>'+esc(FACH[f] || f)+'</h3>' + liste(F[f]); });
@@ -149,6 +159,7 @@
 
   function malen(L, P){
     if (!L.length){ zeige('<div class="karte"><h2>Noch keine Probe</h2><p class="unter">Für dieses Kind ist noch keine Probe ausgewertet.</p></div>'); return; }
+    LISTE = L;
     var h = profilHtml(P);
     if (L.length > 1) h += '<div class="karte inhalt"><h2>Proben</h2><ul>' + L.map(function(p,i){
       return '<li><a href="#probe-'+i+'">'+esc(FACH[p.fach] || p.fach)+' · '+esc(dt(p.datum))+'</a> <span class="klein">· '+zahl(p.punkte)+' von '+zahl(p.max)+'</span></li>'; }).join("") + '</ul></div>';
