@@ -229,12 +229,29 @@ export function rotVonLehrerin(inhalt) {
   }).map((z) => z.replace(HAND, "").replace(/\bLehrkraft\b/g, "Lehrerin").slice(0, 200));
 }
 
-/* Ein ganzes Blatt gegen seine Vorlage. Liefert nur, was zu zeigen ist. */
+/* Ist diese Abweichung am FOTO der Lehrerin bestätigt? (26.10.2026, Dennys Beschluss)
+ * Die Vorlagen-Automatik setzt an der Vorlagenzeile `gegenprobe: {urteil, am, paul, lehrerin, grund}`, wenn
+ * die Gegenprobe beide Fotos angesehen hat. Bestätigt heißt: urteil „fehler“ UND derselbe Paul-Text wie jetzt –
+ * lädt Paul das Blatt neu hoch und steht dort etwas anderes, gilt das alte Merkmal nicht mehr.
+ * Nur bestätigte Abweichungen sieht Paul als Hinweis; unbestätigte bleiben still. */
+export function bestaetigt(vz, x) {
+  const gp = vz && vz.gegenprobe;
+  if (!gp || gp.urteil !== "fehler" || !x) return false;
+  const p = falten(x.paul || "");
+  return !!p && falten(gp.paul || "") === p;
+}
+
+/* Ein ganzes Blatt gegen seine Vorlage. Liefert nur, was zu zeigen ist.
+ * `abweichungen` bleibt roh (alle gefundenen, die Automatik braucht sie für die Gegenprobe); jede trägt
+ * `bestaetigt` – zeigen dürfen Abnehmer nur die bestätigten. */
 export function blattVergleichen(blatt, vorlage) {
   const inhalt = Array.isArray(blatt && blatt.inhalt) ? blatt.inhalt : [];
   const rot = rotVonLehrerin(inhalt);
   if (!vorlage) return rot.length ? { rot, zeilen: [], vorlage: null } : null;
-  const zeilen = (vorlage.zeilen || []).map((vz) => zeileVergleichen(inhalt, vz));
+  const zeilen = (vorlage.zeilen || []).map((vz) => {
+    const x = zeileVergleichen(inhalt, vz);
+    return x.status === "abweichung" ? { ...x, bestaetigt: bestaetigt(vz, x) } : x;
+  });
   const zaehle = (s) => zeilen.filter((x) => x.status === s).length;
   return {
     vorlage: { id: vorlage.id, titel: vorlage.titel },
