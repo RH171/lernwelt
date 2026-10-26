@@ -189,7 +189,7 @@ export const PROBEN = [
     ],
     sicher: ["Antworten im Text finden", "Zeilen angeben", "Textstelle wörtlich abschreiben", "Ankreuzen mit mehreren Richtigen", "anderen Ausdruck im Text finden"],
     hinweise: [
-      "Der Notenschlüssel steht nicht auf dem Blatt. 23,5 von 29 Punkten (81 %) waren eine 3.",
+      "Der Notenschlüssel steht nicht auf dem Blatt (laut Schule wird er am Ausgabetag gezeigt). 23,5 von 29 Punkten (81 %) waren eine 3.",
       "Antworten in ganzen Sätzen sind verlangt, dazu die Zeilen, in denen die Antwort steht (8 von 13 Fragen).",
       "Halbe Punkte kommen vor. Die Aufteilung je Aufgabe steht nicht auf dem Blatt.",
       "Rechtschreibung verbessert die Lehrerin rot, meist ohne Punktabzug.",
@@ -203,12 +203,14 @@ export const PROBEN = [
  */
 export const LEHRERPROFIL = {
   paul: {
-    lehrerin: "Klassenlehrerin der 4bg",
+    lehrerin: "Klassenlehrerin der 4bg und Jahrgangsteam der 4. Klassen",
     stand: "2026-10-26",
     proben: ["paul-2026-10-09-deutsch-lesen-1", "paul-2026-10-19-mathe-1"],
     allgemein: [
       { regel: "Halbe Punkte sind üblich.", beleg: "Deutsch Lesen Nr. 1, 2, 4, 11, 12; Mathe Nr. 3, 8", art: "belegt" },
-      { regel: "Den Notenschlüssel schreibt sie nicht aufs Blatt. Bekannt sind zwei Punkte: 88 % war eine 2, 81 % eine 3.", beleg: "Mathe 44/50 Note 2; Deutsch Lesen 23,5/29 Note 3", art: "belegt" },
+      { regel: "Alle vierten Klassen schreiben dieselben Proben mit gleichem Notenschlüssel und gleichen Korrekturvorgaben; beides legt das Jahrgangsteam fest. Das Profil beschreibt also den Jahrgang, nicht nur die Klassenlehrerin.", beleg: "Elterninformation der Schule zur 4. Klasse (Januar 2026), Punkte 6 und 7", art: "belegt" },
+      { regel: "Der Notenschlüssel steht nicht auf dem Blatt. Er wird am Ausgabetag gezeigt und darf abgeschrieben werden. Bekannt sind bisher zwei Punkte: 88 % war eine 2, 81 % eine 3.", beleg: "Elterninformation Punkt 7; Mathe 44/50 Note 2; Deutsch Lesen 23,5/29 Note 3", art: "belegt" },
+      { regel: "Richtwert 18 Proben im Jahr: Deutsch 8 (Sprechen und Zuhören, Lesen, Schreiben, Sprachgebrauch), Mathe 5, HSU 5; jede zählt einfach. Proben werden eine Woche vorher angekündigt.", beleg: "Elterninformation der Schule zur 4. Klasse (Januar 2026)", art: "belegt" },
       { regel: "Rechtschreibung verbessert sie rot, meist ohne Abzug.", beleg: "Deutsch Lesen Nr. 3 („Ähncih“, volle Punkte), Nr. 8 („den“→„dem“, volle Punkte)", art: "belegt" },
       { regel: "Fehler markiert sie mit „f.“ und schreibt das Richtige daneben.", beleg: "Deutsch Lesen Nr. 6 („f. 17–18“), Nr. 12 („Pranken f.“)", art: "belegt" },
     ],
