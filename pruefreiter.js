@@ -86,7 +86,7 @@
 
   var SCHILD = {
     rechnen:  '<span class="lwp-schild lwp-s-rechnen">🧮 Bitte nachrechnen</span>',
-    pinnwand: '<span class="lwp-schild lwp-s-pinnwand">📌 Pinnwand deiner Lehrerin</span>',
+    pinnwand: '<span class="lwp-schild lwp-s-pinnwand">📌 Blatt der Lehrerin</span>',
     lehrerin: '<span class="lwp-schild lwp-s-lehrerin">✍️ Rot von deiner Lehrerin</span>',
     schreiben: '<span class="lwp-schild lwp-s-schreiben">🔤 Schau genau hin</span>'
   };
@@ -329,10 +329,13 @@
       }
       d.innerHTML = kopf +
         '<div class="lwp-aufgabe">' + esc(s.aufgabe) + "</div>" +
-        '<div class="lwp-du">Du hast geschrieben: <span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
-        '<div class="lwp-lehrerin">Auf der Pinnwand deiner Lehrerin steht: <b class="lwp-richtig">' + esc(s.lehrerin) + "</b></div>" +
+        /* Heft-Hinweis (26.10.2026, Dennys Beschluss): nur am Foto bestätigte Abweichungen kommen hier an
+           (Server, _pruefreiter.js). Wortlaut fest: Heft, Blatt der Lehrerin, mit Papa ansehen - kein Druck,
+           kein „weil“, kein Name. */
+        '<div class="lwp-du">In deinem Heft steht: <span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
+        '<div class="lwp-lehrerin">Auf dem Blatt der Lehrerin steht: <b class="lwp-richtig">' + esc(s.lehrerin) + "</b></div>" +
         beleg +
-        '<div class="lwp-hinweis">Verbessere es in deinem Heft.</div>' +
+        '<div class="lwp-hinweis">Schau es dir mit Papa an.</div>' +
         '<div class="lwp-knoepfe"><button type="button" class="lwp-ja lwp-verbessert">Verbessert ✓</button>' +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
         '<div class="lwp-meldung" aria-live="polite"></div>';

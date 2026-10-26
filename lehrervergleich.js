@@ -53,9 +53,12 @@
       h += '<div class="lwl-unter">Vorlage: „' + esc(v.vorlage.titel) + '“ · ' + v.richtig + " von " + v.geprueft + " wie bei der Lehrerin</div>";
     }
     ab.forEach(function (x) {
+      /* Heft-Hinweis (26.10.2026): der Server liefert nur am Foto bestätigte Abweichungen. Für Paul
+         derselbe Wortlaut wie im Prüf-Reiter. */
       h += '<div class="lwl-zeile lwl-ab" data-lwl-art="abweichung"><b>' + esc(x.aufgabe) + "</b><br>" +
-        (du ? "Deine Lehrerin hat hier: " : "Lehrerin: ") + "<strong>" + esc(x.lehrerin) + "</strong> · " +
-        (du ? "Du hast: " : "Paul: ") + "<span>" + esc(x.paul || "") + "</span></div>";
+        (du ? "In deinem Heft steht: <span>" + esc(x.paul || "") + "</span> · Auf dem Blatt der Lehrerin steht: <strong>" +
+              esc(x.lehrerin) + "</strong><br>Schau es dir mit Papa an."
+            : "Lehrerin: <strong>" + esc(x.lehrerin) + "</strong> · Paul: <span>" + esc(x.paul || "") + "</span>") + "</div>";
     });
     sw.forEach(function (x) {
       h += '<div class="lwl-zeile lwl-sw" data-lwl-art="schreibweise">✏️ <b>Schreibweise</b> – ' + esc(x.aufgabe) + ": " +
@@ -69,7 +72,12 @@
     rot.forEach(function (z) {
       h += '<div class="lwl-zeile lwl-rot" data-lwl-art="rot">✍️ ' + esc(z) + "</div>";
     });
-    if (v.vorlage && !ab.length && !sw.length) {
+    /* 26.10.2026: noch nicht am Foto bestätigte Abweichungen zeigt der Server nicht - nur ihre Zahl, nur für die Eltern. */
+    if (!du && v.ungeprueft > 0) {
+      h += '<div class="lwl-zeile lwl-offen" data-lwl-art="ungeprueft">⏳ ' + v.ungeprueft +
+        (v.ungeprueft === 1 ? " Stelle wartet" : " Stellen warten") + " noch auf die Gegenprobe am Foto (Paul sieht sie erst danach).</div>";
+    }
+    if (v.vorlage && !ab.length && !sw.length && !(v.ungeprueft > 0)) {
       h += '<div class="lwl-zeile lwl-gut" data-lwl-art="gut">✅ ' + (du ? "Alles wie bei deiner Lehrerin." : "Alles wie bei der Lehrerin.") + "</div>";
     }
     return h + "</div>";
