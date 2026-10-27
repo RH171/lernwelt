@@ -677,6 +677,35 @@ export function frageWoerterGrund(q, ctx) {
   return ablenkerGrund;
 }
 
+/* Der belegte Heftsatz zu einer Frage (27.10.2026, Dennys Auflage 2 zu den
+   406 Fragen mit unbelegter Erklärung): eine Zeile aus Pauls Blatt oder einer
+   Vorlage der Lehrerin, die die richtige Lösung enthält, selbst als belegt
+   durchgeht und eine eigene Aussage trägt (kein Rumpf). Zuerst das eigene
+   Blatt, dann das Fach; bei mehreren die mit den meisten Wörtern der Frage.
+   Mathe: die Zeile muss auch eine Zahl der Aufgabe enthalten. "" = keiner. */
+export function heftsatzFuer(q, c) {
+  const richtig = String(c.richtig || "").trim();
+  if (richtig.length < 2) return "";
+  const norm = (x) => String(x || "").toLowerCase().replace(/\s+/g, " ");
+  const r = norm(richtig);
+  const fw = new Set(woerter(String(q.frage || "")).filter((w) => w.length >= 4));
+  const zahlenFrage = (String(q.frage || "").match(/\d+(?:[.,]\d+)?/g) || []);
+  let best = "", bestPunkte = -1;
+  for (const [liste, bonus] of [[c.quellen.eigen, 100], [c.quellen.alle, 0]]) {
+    for (const z0 of liste || []) {
+      const z = String(z0 || "").trim();
+      if (z.length < 8 || z.length > 220) continue;
+      if (!norm(z).includes(r)) continue;
+      if (c.mathe && zahlenFrage.length && !zahlenFrage.some((n) => z.includes(n))) continue;
+      if (textGrund(z, c) || rumpf(z, c)) continue;
+      const punkte = bonus + woerter(z).filter((w) => fw.has(w)).length;
+      if (punkte > bestPunkte) { best = z; bestPunkte = punkte; }
+    }
+    if (best) break;
+  }
+  return best ? best.charAt(0).toUpperCase() + best.slice(1) : "";
+}
+
 /* ---------- Eine Frage ---------- */
 
 /* Prüft Erklärung, Merksatz und Tipp eines fertigen Quizeintrags q.
@@ -722,8 +751,15 @@ export function frageTexteBelegen(q, ctx) {
 
   if (q.erklaerung) {
     const k = kuerzen(q.erklaerung, c);
-    if (!k) return { q: null, gekuerzt, grund: "Erklärung: " + textGrund(q.erklaerung, c) };
-    if (k !== q.erklaerung) { neu.erklaerung = k; gekuerzt.push("erklaerung"); }
+    if (!k && ctx.ausgabe) {
+      /* Vor der Ausgabe an Paul (27.10.2026, Dennys Auflage 2): Statt die
+         Frage zu verwerfen, tritt der belegte Heftsatz an die Stelle der
+         Erklärung - gibt es keinen, entfällt die Erklärung. */
+      const h = heftsatzFuer(q, c);
+      if (h) { neu.erklaerung = h; gekuerzt.push("erklaerung-heft"); }
+      else { delete neu.erklaerung; gekuerzt.push("erklaerung-weg"); }
+    } else if (!k) return { q: null, gekuerzt, grund: "Erklärung: " + textGrund(q.erklaerung, c) };
+    else if (k !== q.erklaerung) { neu.erklaerung = k; gekuerzt.push("erklaerung"); }
   }
   for (const feld of ["merke", "tipp"]) {
     if (!q[feld]) continue;

@@ -877,7 +877,7 @@ export function weilIrgendwo(q) {
   return teile.some((t) => /\bweil\b/i.test(String(t || "")));
 }
 
-export function belegFuerPaul(q, schule, lehrer) {
+export function belegFuerPaul(q, schule, lehrer, ausgabe) {
   if (weilIrgendwo(q)) return null;
   const vorlageFuer = (id) => (lehrer ? vorlageFuerBlatt(lehrer, id) : null);
   /* Alle Schulquellen (Auflage 1 vom 27.10.2026): alle sichtbaren Blaetter des
@@ -891,7 +891,7 @@ export function belegFuerPaul(q, schule, lehrer) {
     const rechnen = /^mathe/i.test(String(q.fach || "")) && /\d\s*[+\-−–·*×x:÷/]\s*(\d|_{2,})/.test(String(q.frage || ""));
     if (!rechnen && !stehtAufBlatt(quellen.alle, richtig)) return null;
   }
-  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "" };
+  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "", ausgabe: !!ausgabe };
   const r = frageTexteBelegen(q, ctx);
   /* Auch die Frage selbst nur mit Wörtern aus der Schule (27.10.2026). */
   if (r.q && frageWoerterGrund(r.q, ctx)) return null;
