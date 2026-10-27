@@ -677,73 +677,6 @@ export function frageWoerterGrund(q, ctx) {
   return ablenkerGrund;
 }
 
-/* Der belegte Heftsatz zu einer Frage (27.10.2026, Dennys Auflage 2 zu den
-   406 Fragen mit unbelegter Erklärung): eine Zeile aus Pauls Blatt oder einer
-   Vorlage der Lehrerin, die die richtige Lösung enthält, selbst als belegt
-   durchgeht und eine eigene Aussage trägt (kein Rumpf). Zuerst das eigene
-   Blatt, dann das Fach; bei mehreren die mit den meisten Wörtern der Frage.
-   Mathe: die Zeile muss auch eine Zahl der Aufgabe enthalten. "" = keiner. */
-const HEFTSATZ_SPERRE = new Set(["q9cu51auftoyc"]);
-
-export function heftsatzFuer(q, c) {
-  const richtig = String(c.richtig || "").trim();
-  if (richtig.length < 2) return "";
-  /* Beim Durchlesen aller Heftsätze als unpassend gefunden (27.10.2026):
-     Wappenfrage bekam „1818: Fürth wird Stadt 1. Klasse …“. */
-  if (HEFTSATZ_SPERRE.has(String(q.id || ""))) return "";
-  const norm = (x) => String(x || "").toLowerCase().replace(/\s+/g, " ");
-  const r = norm(richtig);
-  const fw = new Set(woerter(String(q.frage || "")).filter((w) => w.length >= 4));
-  const zahlenAlle = [...new Set((String(q.frage || "") + " " + richtig).match(/\d+(?:[.,]\d+)?/g) || [])];
-  const STOPP = new Set("welche welcher welches welchem welchen dieser diese dieses diesen schreibt schreibe schreiben richtig richtige wort wörter wortes gehört gehören heißt heißen heißen steht stehen rechne rechnest rechnen schriftlich kommt heraus ergibt ergebnis aufgabe aufgaben zahl zahlen fehlt passt form findest suchst zuerst immer viel wieviel".split(" "));
-  const rw = new Set(woerter(r));
-  const inhalt = [...new Set(String(q.frage || "").toLowerCase().match(/[\p{L}]{4,}/gu) || [])]
-    .filter((w) => !STOPP.has(w) && !rw.has(w) && !r.includes(w)).map((w) => w.slice(0, 5));
-  const ganz = (text, teil) => {
-    const i = text.indexOf(teil);
-    for (let j = i; j >= 0; j = text.indexOf(teil, j + 1)) {
-      const vor = text.charAt(j - 1), nach = text.charAt(j + teil.length);
-      if (!/[\p{L}\d]/u.test(vor) && !/[\p{L}\d]/u.test(nach)) return true;
-    }
-    return false;
-  };
-  let best = "", bestPunkte = -1;
-  for (const [liste, bonus] of [[c.quellen.eigen, 100], [c.quellen.alle, 0]]) {
-    for (const z0 of liste || []) {
-      /* Nur Zeilen, die etwas erklären (Stichprobe 27.10.2026): keine Aufträge,
-         Überschriften, Spaltenköpfe oder Aufgabenstellungen, nichts, was Paul
-         selbst schrieb (kann Fehler enthalten), keine Buchstabentreppe
-         „M, ma, man …“, keine abgebrochene Klammer aus dem Ablesen. Kurze
-         Nummern vorn („12b:“, „D)“) fallen weg. */
-      if (/^\s*(?:✍\s*)?(?:Kind\b|Auftrag|Arbeitsauftrag|Aufgabe\b|Überschrift|Stempel|Name|Spalten|Titel|Text\s*:)/i.test(String(z0 || ""))) continue;
-      const z = String(z0 || "").trim().replace(/^(?:Lehrkraft\s*:\s*|(?:\d{1,2}[a-z]?|[A-Za-z])\s*[:)]\s+)/, "").trim();
-      if (/^(?:[^\s,]{1,3},\s*){3,}/.test(z)) continue;
-      if ((z.match(/\(/g) || []).length !== (z.match(/\)/g) || []).length) continue;
-      if (z.length < 8 || z.length > 220) continue;
-      /* Lösung und Zahlen als ganzes Wort: „20“ steckt sonst in „120“. Kein
-         Kürzel der Lehrerin („Sy“) in Pauls Erklärung. */
-      if (!ganz(norm(z), r)) continue;
-      /* Mathe: jede Zahl aus Frage und Lösung steht in der Zeile, sonst ist es
-         eine andere Aufgabe vom selben Blatt (Durchsicht aller 227 Heftsätze,
-         27.10.2026: „15 + 20“ bekam „7·5=35“, „720 : 9“ bekam „360 : 9 = 40“). */
-      if (c.mathe && zahlenAlle.length && !zahlenAlle.every((n) => ganz(z, n))) continue;
-      /* Lesevermerke und Verneinungen erklären nichts: „verbessert zu“,
-         „(49 durchgestrichen)“, „(richtig: …)“, „Keine Nomen: …“. */
-      if (/\bverbessert\b|\([^)]*\b(?:gestrichen|durchgestrichen|richtig|Linie|markiert)\b/i.test(z)) continue;
-      if (/\b(?:kein|keine|keinen|nicht)\b/i.test(z) || /^Tabelle\b|\bKürzel\b|\bStempel\b|\bMichaelistag\b/i.test(z)) continue;
-      /* Die Zeile muss die Frage betreffen: hat die Frage eigene Inhaltswörter,
-         steckt mindestens eines davon (erste 5 Buchstaben) in der Zeile. */
-      if (inhalt.length && !inhalt.some((w) => norm(z).includes(w))) continue;
-      if (!c.mathe && !inhalt.length) continue;
-      if (/\bSy\b/.test(z) || /\bweil\b/i.test(z) || textGrund(z, c) || rumpf(z, c)) continue;
-      const punkte = bonus + woerter(z).filter((w) => fw.has(w)).length;
-      if (punkte > bestPunkte) { best = z; bestPunkte = punkte; }
-    }
-    if (best) break;
-  }
-  return best ? best.charAt(0).toUpperCase() + best.slice(1) : "";
-}
-
 /* ---------- Eine Frage ---------- */
 
 /* Prüft Erklärung, Merksatz und Tipp eines fertigen Quizeintrags q.
@@ -789,26 +722,13 @@ export function frageTexteBelegen(q, ctx) {
 
   if (q.erklaerung) {
     const k = kuerzen(q.erklaerung, c);
-    /* Ein „weil“ in der Erklärung (die Lehrerin erlaubt es nicht) ersetzt sie
-       vor der Ausgabe ebenso, statt die ganze Frage auszublenden. */
-    const weil = /\bweil\b/i.test(q.erklaerung);
-    if ((k !== q.erklaerung || weil) && ctx.ausgabe) {
-      /* Vor der Ausgabe an Paul (27.10.2026, Dennys Auflage 2): Statt die
-         Frage zu verwerfen, tritt der belegte Heftsatz an die Stelle der
-         Erklärung - gibt es keinen, entfällt die Erklärung. Auch eine nur
-         gekürzte Erklärung zählt als unbelegt: „„bunt“ ist ein Wiewort.“ ohne
-         den Specht wäre der halbe Inhalt (gemessen 27.10.2026, 92 Fälle). */
-      const h = heftsatzFuer(q, c);
-      if (h) { neu.erklaerung = h; gekuerzt.push("erklaerung-heft"); }
-      else { delete neu.erklaerung; gekuerzt.push("erklaerung-weg"); }
-    } else if (!k) return { q: null, gekuerzt, grund: "Erklärung: " + textGrund(q.erklaerung, c) };
-    else if (k !== q.erklaerung) { neu.erklaerung = k; gekuerzt.push("erklaerung"); }
+    if (!k) return { q: null, gekuerzt, grund: "Erklärung: " + textGrund(q.erklaerung, c) };
+    if (k !== q.erklaerung) { neu.erklaerung = k; gekuerzt.push("erklaerung"); }
   }
   for (const feld of ["merke", "tipp"]) {
     if (!q[feld]) continue;
     const k = kuerzen(q[feld], c);
-    /* Vor der Ausgabe an Paul kein halber Merksatz oder Tipp: ganz oder gar nicht. */
-    if (!k || (ctx.ausgabe && (k !== q[feld] || /\bweil\b/i.test(q[feld])))) { delete neu[feld]; gekuerzt.push(feld); }
+    if (!k) { delete neu[feld]; gekuerzt.push(feld); }
     else if (k !== q[feld]) { neu[feld] = k; gekuerzt.push(feld); }
   }
   return { q: neu, gekuerzt, grund: "" };
