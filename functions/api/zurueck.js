@@ -5,6 +5,10 @@
  *   POST   /api/zurueck   {kind, eintrag:{...}, seiten:[dataurl]}
  *   DELETE /api/zurueck?kind=helena&id=abc      aus der Liste nehmen
  *   POST   /api/zurueck   {kind, uebernommen:{id, noteId}}   nur Eltern
+ *   POST   /api/zurueck   {kind, eintragAendern:{id, fach?, anlass?, datum?, punkte?, maxpunkte?, note?, notiz?}}
+ *          Eigene Angaben nachtraeglich berichtigen (27.10.2026) - lange druecken
+ *          auf der Seite. Nicht mehr moeglich, sobald der Eintrag schon
+ *          "uebernommen" ist (Denny hat daraus eine Note gemacht).
  *
  * Seit 26.10.2026 (Kapitel 146) EINE Sicht fuer Kind und Eltern: Die Antwort
  * auf GET ?kind= traegt zusaetzlich "ausNoten" - die Noten aus dem
@@ -22,7 +26,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { FAECHER, FAECHER_JE_KIND } from "./_schulstoff.js";
 import {
   KINDER, MAX_SEITEN, MIT_NOTE,
-  eintragPruefen, listeLesen, ablegen, bildLesen, wegnehmen, uebernommen,
+  eintragPruefen, listeLesen, ablegen, bildLesen, wegnehmen, uebernommen, eintragAendern,
 } from "./_zurueck.js";
 import { notenLesen, ohneDoppelte, gleicheProbe, schonDa, fachSchluessel } from "./_noten.js";
 import { PROBEN } from "./_proben-daten.js";
@@ -165,6 +169,14 @@ export async function onRequestPost(context) {
   }
 
   if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+
+  if (daten.eintragAendern && daten.eintragAendern.id) {
+    const id = String(daten.eintragAendern.id).replace(/[^a-z0-9]/gi, "").slice(0, 12);
+    const r = await eintragAendern(env, kind, id, daten.eintragAendern);
+    if (!r.ok) return json(r.fehler === "Das gibt es nicht (mehr)." ? 404 : 400, r);
+    const noten = await notenLesen(env, kind);
+    return json(200, { ok: true, eintrag: r.eintrag, liste: passtZu(r.liste, noten) });
+  }
 
   const gepruef = eintragPruefen(daten.eintrag || {}, kind);
   if (gepruef.fehler) return json(400, { ok: false, fehler: gepruef.fehler });

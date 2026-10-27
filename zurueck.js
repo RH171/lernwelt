@@ -150,7 +150,18 @@
     "  color:var(--muted,#6b7280)}",
     ".lwz .warn{margin-top:12px;border:1.5px solid #e8a13a;background:rgba(232,161,58,.12);",
     "  border-radius:14px;padding:12px 14px;font-size:15.5px;line-height:1.5;color:var(--ink,#1b1c22)}",
-    ".lwz .warn .reihe button{flex:1 1 140px}"
+    ".lwz .warn .reihe button{flex:1 1 140px}",
+    /* Lange druecken zum Bearbeiten (27.10.2026, Helenas Wunsch nach bf3ahhujrc). */
+    ".lwz .eintrag.bearbeitbar{cursor:pointer;-webkit-user-select:none;user-select:none}",
+    ".lwz .bearb-hinweis{color:var(--muted,#6b7280);font-size:12.5px;margin-top:3px}",
+    ".lwz .bearb-panel{margin-top:10px;border:1.5px solid var(--paul,#4f46e5);border-radius:16px;",
+    "  padding:13px 14px;background:var(--karte,#fff)}",
+    ".lwz .bearb-panel .frage{margin-top:12px;font-size:15.5px}",
+    ".lwz .bearb-panel .frage:first-child{margin-top:0}",
+    ".lwz .bearb-knoepfe{display:flex;gap:9px;margin-top:14px}",
+    ".lwz .bearb-knoepfe button{flex:1 1 auto}",
+    ".lwz .bearb-knoepfe .speichern{background:var(--paul,#4f46e5);border-color:var(--paul,#4f46e5);",
+    "  color:var(--akzent-auf,#fff)}"
   ].join("");
 
   function stilEinmal() {
