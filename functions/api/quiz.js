@@ -46,6 +46,8 @@ import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, me
 import { frageGegenKorrektur } from "./_korrektur.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
+import { frageTexteBelegen, quellenFuer } from "./_belegpruefung.js";
+import { klaerungSperre } from "./_klaerung.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
@@ -276,6 +278,11 @@ export async function onRequestGet(context) {
   /* Verbessert durch Claude (14.10.2026): Eine Frage, deren "richtig" Pauls
      verbesserter FALSCHER Wert ist, fällt beim Lesen heraus - kein Schreibvorgang. */
   for (const f of vorrat.fragen) if (frageGegenKorrektur(f, blattNach[f.blatt])) gegenLehrerin.add(f.id);
+
+  /* Wartet auf Klaerung (27.10.2026, Kapitel 147): Fragen zu einer offenen
+     📌-Stelle kommen erst nach "Verbessert ✓" oder "Stimmt doch so" wieder.
+     Nur Paul, nur lesend. */
+  for (const id of await klaerungSperre(env, kind, vorrat.fragen, blattNach, lehrer)) gegenLehrerin.add(id);
 
   const passt = (f) => {
     if (gegenLehrerin.has(f.id)) return false;
@@ -782,8 +789,9 @@ const WERKZEUG = {
    die anderen. Exportiert, damit werkzeuge/fragerichtungen-nachbau.mjs genau
    dieselben Riegel benutzt. `schluessel` (optional) setzt den
    Tatsachen-Schluessel, sonst wird er hier vergeben. */
-export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schluessel, kind) {
+export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schluessel, kind, opt) {
   const raus = [];
+  const lehrer = (opt && opt.lehrer) || null;
   for (const t of tatsachen || []) {
     if (!t || !Array.isArray(t.formen)) continue;
     const key = (schluessel && schluessel(t)) || ("t" + Math.random().toString(36).slice(2, 10));
@@ -793,7 +801,7 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
       const form = FORMEN.includes(fo.form) ? fo.form : "standard";
       if (gesehen.has(form)) continue;
       const f = { fach: t.fach, frage: fo.frage, antworten: fo.antworten, blatt_nr: t.blatt_nr, richtig: 0 };
-      if (!frageBelegt(f, schule, nurDaraus)) continue;
+      if (!frageBelegt(f, schule, nurDaraus) && !(kind === "paul" && antwortInVorlage(f, schule, lehrer))) continue;
       if (verneint(f.frage) || blattGedaechtnis(f.frage) || nebendetail(f)) continue;
       if (!fachPasstZumBlatt(f, schule.blaetter)) continue;
       if (erlaubt && !erlaubt.has(heftFach(t.fach))) continue;
@@ -801,7 +809,7 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
          ("Parkhaus___" im Baulauf 19.10.2026 - eine Bitte ist keine Pruefung). */
       if (form === "luecke" && !lueckeOk(fo.frage)) continue;
       const blatt = blattVon(t.blatt_nr, schule.blaetter);
-      const q = {
+      let q = {
         id: kennung(),
         fach: heftFach(t.fach),
         frage: String(fo.frage).slice(0, 300),
@@ -826,11 +834,44 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
       if (formSchwach(q)) continue;
       /* Laenge verraet die Loesung (#670): vorerst nur Paul, Leon und Helena erst nach Dennys Ja. */
       if (kind === "paul" && laengeVerraten(q)) continue;
+      /* Belegpruefung (27.10.2026, Kapitel 147): Loesung, Erklaerung, Merksatz
+         und Tipp muessen aus Pauls Blaettern oder den Vorlagen der Lehrerin
+         stammen - sonst gekuerzt oder verworfen. Nur Paul. */
+      if (kind === "paul") { q = belegFuerPaul(q, schule, lehrer); if (!q) continue; }
       gesehen.add(form);
       raus.push(q);
     }
   }
   return raus;
+}
+
+/* Steht Pauls Loesung in der Vorlage der Lehrerin zu diesem Blatt? Dann ist
+   sie belegt, auch wenn er sie im Heft anders (oder gar nicht) stehen hat. */
+export function antwortInVorlage(f, schule, lehrer) {
+  if (!lehrer) return false;
+  const blattId = blattVon(f.blatt_nr, schule.blaetter);
+  const v = blattId ? vorlageFuerBlatt(lehrer, blattId) : null;
+  if (!v) return false;
+  const zeilen = (v.zeilen || []).filter((vz) => !vz.unsicher)
+    .map((vz) => String(vz.aufgabe || "") + ": " + String(vz.antwort || ""));
+  return zeilen.length > 0 && stehtAufBlatt(zeilen, (f.antworten || [])[0]);
+}
+
+/* Belegpruefung fuer Paul am fertigen Eintrag (Kapitel 147). Liefert den
+   (vielleicht gekuerzten) Eintrag oder null. Ohne Blatt muss die Loesung in
+   den Quellen seines Fachs stehen - eine Mathe-Rechenaufgabe rechnet
+   frageTexteBelegen selbst nach. */
+export function belegFuerPaul(q, schule, lehrer) {
+  const vorlageFuer = (id) => (lehrer ? vorlageFuerBlatt(lehrer, id) : null);
+  const blaetter = (schule && schule.blaetter) || [];
+  if (!q.blatt) {
+    const quellen = quellenFuer("", q.fach, blaetter, vorlageFuer);
+    const richtig = (q.antworten || [])[q.richtig || 0];
+    const rechnen = /^mathe/i.test(String(q.fach || "")) && /\d\s*[+\-−–·*×x:÷/]\s*(\d|_{2,})/.test(String(q.frage || ""));
+    if (!rechnen && !stehtAufBlatt(quellen.alle, richtig)) return null;
+  }
+  const r = frageTexteBelegen(q, { blaetter, vorlageFuer, blattId: q.blatt || "" });
+  return r.q;
 }
 
 export function lueckeOk(frage) {
@@ -914,6 +955,8 @@ async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   const schule = await letzterUnterricht(env, kind, nurBlaetter, nurFaecher);
   const ausDerSchule = schule.text;
   const nurDaraus = !!(nurBlaetter && nurBlaetter.length && schule.blaetter.length);
+  /* Vorlagen der Lehrerin fuer die Belegpruefung (27.10.2026) - nur lesen. */
+  const lehrer = kind === "paul" ? await vorlagenLesen(env, kind) : null;
 
   const auftrag = `Du baust Quizfragen für ein Kind, das jeden Tag fünf bis zehn Minuten üben will.
 
@@ -1028,6 +1071,15 @@ ${kind === "paul" ? `4k. VOLLSTAENDIG STATT KNAPP (26.10.2026). Die richtige Ant
    es darf nie zwei richtige Antworten geben. Die Ablenker sind ebenso lang
    und gleich gebaut (Stichpunkte gegen Stichpunkte), sonst waehlt das Kind
    die laengste. Erklaerung und Merksatz nennen dieselben Stichpunkte.
+4l. NUR AUS DER SCHULE (27.10.2026). Keine Ergaenzung aus eigenem Wissen.
+   Loesung, Erklaerung, Merksatz und Tipp bestehen nur aus dem, was auf den
+   Blaettern oben steht - mit denselben Woertern, als Stichpunkte erlaubt.
+   Keine Regel, die so nicht auf dem Blatt steht (also kein "nach ei nur ein
+   s", wenn dort "Fleiß" und "heiß" stehen). Kein "weil", keine Warum-Frage.
+   Mathe: Die Erklaerung rechnet GENAU diese Aufgabe mit ihren Zahlen und
+   ihrem Rechenzeichen vor (bei 733 + 4 eine Plusrechnung, nie Minus); jede
+   Zahl muss stimmen. Ein Text, der das nicht erfuellt, wird gekuerzt oder
+   die Frage verworfen.
 ` : ""}5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,
@@ -1086,10 +1138,10 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
 
   /* Seit 19.10.2026 Tatsachen mit Formen (siehe fragenAusTatsachen). Ein
      falsches Fachkuerzel macht die Faecherauswahl kaputt - lieber weglassen. */
-  if (Array.isArray(tatsachen)) return fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, undefined, kind);
-  return fragen
+  if (Array.isArray(tatsachen)) return fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, undefined, kind, { lehrer });
+  const alt = fragen
     .filter((f) => f && f.frage && Array.isArray(f.antworten) && f.antworten.length >= 3)
-    .filter(belegt)
+    .filter((f) => belegt(f) || (kind === "paul" && antwortInVorlage(f, schule, lehrer)))
     .filter((f) => !verneint(f.frage))
     .filter((f) => !blattGedaechtnis(f.frage))
     .filter((f) => !nebendetail(f))
@@ -1127,6 +1179,8 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
          das je Lauf neu erfunden wird. */
       ...(Number(f.beleg_nr) >= 1 ? { belegNr: Math.floor(Number(f.beleg_nr)) } : {}),
     }));
+  /* Belegpruefung auch im alten Pfad (27.10.2026). */
+  return kind === "paul" ? alt.map((q) => belegFuerPaul(q, schule, lehrer)).filter(Boolean) : alt;
 }
 
 /* Die Zeile aus dem Heft, auf die sich die Frage stuetzt. Erst die Nummer

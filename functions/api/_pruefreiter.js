@@ -431,7 +431,7 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
                  /* Beweis (14.10.2026): WO es bei der Lehrerin steht - Vorlage und Zeile. */
                  beleg: { vorlage: String(vorlage.id || ""), titel: String(vorlage.titel || "").slice(0, 80),
                           nr: vz.nr, aufgabe: String(vz.aufgabe || "").slice(0, 160) },
-                 tipp: "In deinem Heft steht etwas anderes als auf dem Blatt der Lehrerin. Schau es dir mit Papa an.",
+                 tipp: "In deinem Heft steht etwas anderes als auf dem Blatt deiner Lehrerin. Frag deine Lehrerin, was richtig ist.",
                  /* Pauls Zeile im Wortlaut - für die Korrektur (bleibt auf dem Server). */
                  zeile: zeileFinden(inhalt, vz) });
     });

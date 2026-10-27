@@ -56,8 +56,8 @@
       /* Heft-Hinweis (26.10.2026): der Server liefert nur am Foto bestätigte Abweichungen. Für Paul
          derselbe Wortlaut wie im Prüf-Reiter. */
       h += '<div class="lwl-zeile lwl-ab" data-lwl-art="abweichung"><b>' + esc(x.aufgabe) + "</b><br>" +
-        (du ? "In deinem Heft steht: <span>" + esc(x.paul || "") + "</span> · Auf dem Blatt der Lehrerin steht: <strong>" +
-              esc(x.lehrerin) + "</strong><br>Schau es dir mit Papa an."
+        (du ? "In deinem Heft steht: <span>" + esc(x.paul || "") + "</span> · Auf dem Blatt deiner Lehrerin steht: <strong>" +
+              esc(x.lehrerin) + "</strong><br>Frag deine Lehrerin, was richtig ist."
             : "Lehrerin: <strong>" + esc(x.lehrerin) + "</strong> · Paul: <span>" + esc(x.paul || "") + "</span>") + "</div>";
     });
     sw.forEach(function (x) {
