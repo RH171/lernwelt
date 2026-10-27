@@ -693,7 +693,15 @@ export function heftsatzFuer(q, c) {
   let best = "", bestPunkte = -1;
   for (const [liste, bonus] of [[c.quellen.eigen, 100], [c.quellen.alle, 0]]) {
     for (const z0 of liste || []) {
-      const z = String(z0 || "").trim();
+      /* Nur Zeilen, die etwas erklären (Stichprobe 27.10.2026): keine Aufträge,
+         Überschriften, Spaltenköpfe oder Aufgabenstellungen, nichts, was Paul
+         selbst schrieb (kann Fehler enthalten), keine Buchstabentreppe
+         „M, ma, man …“, keine abgebrochene Klammer aus dem Ablesen. Kurze
+         Nummern vorn („12b:“, „D)“) fallen weg. */
+      if (/^\s*(?:✍\s*)?(?:Kind\b|Auftrag|Arbeitsauftrag|Aufgabe\b|Überschrift|Stempel|Name|Spalten|Titel|Text\s*:)/i.test(String(z0 || ""))) continue;
+      const z = String(z0 || "").trim().replace(/^(?:Lehrkraft\s*:\s*|(?:\d{1,2}[a-z]?|[A-Za-z])\s*[:)]\s+)/, "").trim();
+      if (/^(?:[^\s,]{1,3},\s*){3,}/.test(z)) continue;
+      if ((z.match(/\(/g) || []).length !== (z.match(/\)/g) || []).length) continue;
       if (z.length < 8 || z.length > 220) continue;
       if (!norm(z).includes(r)) continue;
       if (c.mathe && zahlenFrage.length && !zahlenFrage.some((n) => z.includes(n))) continue;
