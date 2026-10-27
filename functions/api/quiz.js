@@ -46,7 +46,7 @@ import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, me
 import { frageGegenKorrektur } from "./_korrektur.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
-import { frageTexteBelegen, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
+import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
@@ -869,7 +869,16 @@ export function antwortInVorlage(f, schule, lehrer) {
    (vielleicht gekuerzten) Eintrag oder null. Ohne Blatt muss die Loesung in
    den Quellen seines Fachs stehen - eine Mathe-Rechenaufgabe rechnet
    frageTexteBelegen selbst nach. */
+/* Kein „weil“ an irgendeiner Stelle (Lehrerin erlaubt es nicht; 27.10.2026:
+   „Welches dieser Nomen ist abstrakt, weil man es nur hören kann?“ kam durch,
+   weil nebendetail() nur „weil“ am Antwortanfang sperrt). Nur Paul. */
+export function weilIrgendwo(q) {
+  const teile = [q.frage, q.erklaerung, q.tipp, q.merke, q.hilfe, ...(q.antworten || [])];
+  return teile.some((t) => /\bweil\b/i.test(String(t || "")));
+}
+
 export function belegFuerPaul(q, schule, lehrer) {
+  if (weilIrgendwo(q)) return null;
   const vorlageFuer = (id) => (lehrer ? vorlageFuerBlatt(lehrer, id) : null);
   /* Alle Schulquellen (Auflage 1 vom 27.10.2026): alle sichtbaren Blaetter des
      Schuljahres (schule.alle) und alle Vorlagen der Lehrerin, auch die ohne
@@ -882,7 +891,10 @@ export function belegFuerPaul(q, schule, lehrer) {
     const rechnen = /^mathe/i.test(String(q.fach || "")) && /\d\s*[+\-−–·*×x:÷/]\s*(\d|_{2,})/.test(String(q.frage || ""));
     if (!rechnen && !stehtAufBlatt(quellen.alle, richtig)) return null;
   }
-  const r = frageTexteBelegen(q, { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "" });
+  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "" };
+  const r = frageTexteBelegen(q, ctx);
+  /* Auch die Frage selbst nur mit Wörtern aus der Schule (27.10.2026). */
+  if (r.q && frageWoerterGrund(r.q, ctx)) return null;
   return r.q;
 }
 
@@ -939,7 +951,29 @@ Was jede Form verwirft (wird geprüft und fällt sonst weg):
   bekommt einen Tipp oder einen Hinweis in der Frage: die Übersetzung davor
   ("Sie sind in der 5eB. – Ils sont ___ 5eB.") oder das Wort in Klammern.`;
 
-async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
+/* Vorlagen der Lehrerin als Teil des Auftrags für Paul (27.10.2026): dieselben
+   Zeilen, die die Belegprüfung als Nachweis nimmt (vorlageZeilen), je Titel
+   einmal, nur Fächer der Auswahl, ohne Zeilen mit quiz:false. */
+export function vorlagenFuerAuftrag(lehrer, faecher) {
+  const liste = lehrer && Array.isArray(lehrer.vorlagen) ? lehrer.vorlagen : [];
+  const jeTitel = new Map();
+  for (const v of liste) {
+    if (!v || (faecher && faecher.size && !faecher.has(heftFach(v.fach)))) continue;
+    jeTitel.set(String(v.fach) + "|" + String(v.titel || v.id), v);
+  }
+  if (!jeTitel.size) return "";
+  const teile = [];
+  for (const v of jeTitel.values()) {
+    const z = vorlageZeilen({ zeilen: (v.zeilen || []).filter((x) => x && x.quiz !== false) });
+    if (z.length) teile.push(`[${heftFach(v.fach)}] ${v.titel || ""}\n` + z.map((x) => "  - " + x).join("\n"));
+  }
+  return teile.length ? `
+
+VORLAGEN DER LEHRERIN (von der Klassenpinnwand, gelten wie die Blätter)
+${teile.join("\n")}` : "";
+}
+
+export async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   if (!env.ANTHROPIC_API_KEY) return [];
   const k = KINDER[kind];
 
@@ -955,7 +989,14 @@ async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
     faecher = faecher.filter((f) => nurFaecher.includes(heftFach(f.kuerzel)));
   if (!faecher.length) faecher = Array.isArray(lehrplan) ? lehrplan : (lehrplan.faecher || []);
 
-  const fachListe = faecher.map((f) =>
+  /* Paul (27.10.2026, Dennys Auflage 1): Die Lernbereich-Titel des Lehrplans
+     kommen NICHT mehr in den Auftrag. Sie brachten Fachwörter wie „Umlaut“ in
+     die Fragen, die auf keinem Blatt und in keiner Vorlage stehen - 508 von
+     2.243 Fragen fielen deshalb in der Belegprüfung weg. Die Lehrerin ist
+     maßgeblich: nur Kürzel und Fachname, der Stoff kommt aus Heft und Vorlagen.
+     Leon und Helena bleiben unverändert (Auflage 2). */
+  const istPaul = kind === "paul";
+  const fachListe = faecher.map((f) => istPaul ? `${f.kuerzel} = ${f.name}` :
     `${f.kuerzel} = ${f.name}: ` +
     (f.lernbereiche || []).slice(0, 8).map((l) => l.titel).join("; ")).join("\n");
 
@@ -966,9 +1007,13 @@ async function nachschubBauen(env, kind, nurFaecher, nurBlaetter) {
   // Und was zuletzt wirklich im Unterricht dran war (Fotos aus dem Heft).
   const schule = await letzterUnterricht(env, kind, nurBlaetter, nurFaecher);
   const ausDerSchule = schule.text;
-  const nurDaraus = !!(nurBlaetter && nurBlaetter.length && schule.blaetter.length);
+  /* Paul fragt immer nur aus Blättern und Vorlagen (27.10.2026): ohne Blätter
+     gibt es keinen Nachschub, und auch ohne Blattwahl gilt der Blatt-Modus. */
+  if (istPaul && !schule.blaetter.length) return [];
+  const nurDaraus = istPaul || !!(nurBlaetter && nurBlaetter.length && schule.blaetter.length);
   /* Vorlagen der Lehrerin fuer die Belegpruefung (27.10.2026) - nur lesen. */
-  const lehrer = kind === "paul" ? await vorlagenLesen(env, kind) : null;
+  const lehrer = istPaul ? await vorlagenLesen(env, kind) : null;
+  const vorlagenText = istPaul ? vorlagenFuerAuftrag(lehrer, new Set(faecher.map((f) => heftFach(f.kuerzel)))) : "";
 
   const auftrag = `Du baust Quizfragen für ein Kind, das jeden Tag fünf bis zehn Minuten üben will.
 
@@ -979,15 +1024,18 @@ FÄCHER UND LERNBEREICHE (Kürzel genau so ins Feld "fach")
 ${fachListe}
 ${ausDerSchule ? (nurDaraus ? `
 NUR AUS DIESEN BLÄTTERN FRAGEN
-Das Kind hat sich genau das ausgesucht:
-${ausDerSchule}
+${istPaul && !(nurBlaetter && nurBlaetter.length) ? "Das sind seine letzten Blätter aus dem Unterricht:" : "Das Kind hat sich genau das ausgesucht:"}
+${ausDerSchule}${vorlagenText}
 Frage AUSSCHLIESSLICH nach dem, was auf diesen Blättern steht. Keine
 Zusatzfragen zum selben Thema, kein Allgemeinwissen, nichts aus dem Lehrplan
 drumherum. Steht auf dem Blatt "Fürth", dann frage nicht nach Nürnberg - das
 Kind war im Unterricht dabei und hat das andere nie gehört. Es hält sich sonst
 für dumm, obwohl es alles gewusst hat, was drankam.
 Trag zu JEDER Tatsache die Nummer des Blattes in das Feld "blatt_nr" ein.
-` : `
+${istPaul ? `Steht bei einem Blatt SCHULHEFT, ist es der Prüfungsstoff: Nimm von dort die
+meisten Fragen. Eine Tatsache aus den VORLAGEN DER LEHRERIN bekommt die Nummer
+des Blattes zum selben Thema; gibt es keins, lass "blatt_nr" leer.
+` : ""}` : `
 DAS WAR ZULETZT WIRKLICH DRAN
 Das Kind hat aus dem Unterricht fotografiert:
 ${ausDerSchule}
@@ -1007,7 +1055,9 @@ Trag zu jeder Tatsache, die daher stammt, die Nummer des Blattes in "blatt_nr" e
 DAS HAT ZULETZT NICHT GESESSEN
 ${schwaechen.map((s) => `- "${s.merkmal}"${s.beispiel ? ` (zuletzt: ${s.beispiel})` : ""}`).join("\n")}
 Zu jedem dieser Punkte mindestens zwei Fragen, mit genau diesem Schlüssel im
-Feld "merkmal". Aber: andere Zahlen, andere Wörter, anderer Zusammenhang.
+Feld "merkmal". Aber: ${istPaul ? `andere Zahlen und ein anderer Zusammenhang - die Wörter
+dafür nur von den Blättern oder aus den Vorlagen oben. Steht dort nichts
+Passendes, lass den Punkt aus.` : "andere Zahlen, andere Wörter, anderer Zusammenhang."}
 Wer die alte Frage wiedererkennt, lernt die Antwort auswendig statt der Regel.
 ` : ""}
 REGELN
@@ -1092,6 +1142,14 @@ ${kind === "paul" ? `4k. VOLLSTAENDIG STATT KNAPP (26.10.2026). Die richtige Ant
    ihrem Rechenzeichen vor (bei 733 + 4 eine Plusrechnung, nie Minus); jede
    Zahl muss stimmen. Ein Text, der das nicht erfuellt, wird gekuerzt oder
    die Frage verworfen.
+4m. KEINE FACHWOERTER VON AUSSEN (27.10.2026). Auch die FRAGE selbst nimmt nur
+   Woerter, die auf den Blaettern oder in den Vorlagen der Lehrerin stehen. Die
+   Lehrerin ist maßgeblich: Sagt sie "Doppellaute", heisst es Doppellaute -
+   nicht "Umlaut", "Vokal", "Selbstlaut", "Konsonant", "Silbe", "Wortfamilie",
+   "Wortstamm", "Adjektiv" oder "Plural", solange das Wort nicht genau so dort
+   steht. Keine Herleitung, die nicht auf EINER Zeile steht ("erklaeren kommt
+   von klar" nur, wenn beides zusammen auf dem Blatt steht). Fehlt das Wort fuer
+   eine Frage, stell eine andere oder lass sie weg.
 ` : ""}5. Nichts Verletzendes, nichts Gruseliges, keine Politik, keine Marken.
 6. Deutsche Rechtschreibung mit Umlauten und ß.
 ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3 Wörter je Antwort,

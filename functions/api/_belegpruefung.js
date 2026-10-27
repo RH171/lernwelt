@@ -387,15 +387,31 @@ export function textGrund(text, ctx) {
      hat („ei“, „s“, „ß“, „ck“) trägt Rechtschreibregeln und muss GEMEINSAM in
      einer Quellzeile stehen (Auflage 2 vom 27.10.2026; vorher galt die
      gemeinsame Zeile für alle unter 4 Buchstaben und strich so echte Wörter). */
-  const kurz = worte.filter((x) => x.length < 4);
-  const regel = kurz.filter((x) => !(x.length === 3 && /[aeiouäöüy]/.test(x)));
-  if (regel.length) {
-    /* Steht eine Regel-Silbe im Text, gilt wie bisher: ALLE kurzen Wörter in
-       einer Zeile („Nach ei nur ein s“ braucht ei, nur, s zusammen). */
-    if (!v.zeilen.some((z) => kurz.every((w) => z.has(w))))
-      return "„" + kurz.join(" ") + "“ steht so in keiner Quellzeile";
-  } else {
-    for (const w of kurz) if (!v.quellGenau.has(w)) return "„" + w + "“ steht in keiner Quelle";
+  /* Die Regel gilt je Satz (27.10.2026, Nachbesserung): „Doppellaute: äu, eu, ei.
+     Buchstabengruppen: ch, sch.“ sind zwei Zeilen desselben Blattes, nicht eine. */
+  for (const s of saetze(t)) {
+    const kurz = sachwoerter(s, ctx.mathe).filter((w) => !istZahl(w) && w.length < 4);
+    const regel = kurz.filter((x) => !(x.length === 3 && /[aeiouäöüy]/.test(x)));
+    if (regel.length) {
+      /* Steht eine Regel-Silbe im Satz, gilt: ALLE kurzen Wörter in einer Zeile
+         („Nach ei nur ein s“ braucht ei, nur, s zusammen). */
+      if (v.zeilen.some((z) => kurz.every((w) => z.has(w)))) continue;
+      /* Oder die Silben stecken in einem Wortpaar, das GENAU SO auf einer Zeile
+         gegenübersteht („groß – größer – am größten: das ß bleibt“, „der Apfel –
+         die Äpfel: mit Ä“): mindestens zwei lange Wörter des Satzes in einer
+         Quellzeile, jede Silbe steckt in einem davon, die übrigen kurzen Wörter
+         stehen in der Zeile selbst. Eine Herleitung über zwei Blätter („erklären
+         kommt von klar – a wird zu ä“) bleibt draußen. */
+      const lang = woerter(s).filter((w) => w.length >= 4);
+      const paar = v.zeilen.some((z) => {
+        const da = lang.filter((w) => z.has(w));
+        if (da.length < 2) return false;
+        return kurz.every((w) => z.has(w) || (regel.includes(w) && da.some((x) => x.includes(w))));
+      });
+      if (!paar) return "„" + kurz.join(" ") + "“ steht so in keiner Quellzeile";
+    } else {
+      for (const w of kurz) if (!v.quellGenau.has(w)) return "„" + w + "“ steht in keiner Quelle";
+    }
   }
 
   /* Zahlen und Rechnungen. */
@@ -578,6 +594,87 @@ export function kuerzen(text, ctx) {
   const aus = behalten.join(" ").trim();
   if (!aus || textGrund(aus, ctx) || rumpf(aus, ctx)) return "";
   return aus.charAt(0).toUpperCase() + aus.slice(1);
+}
+
+/* ---------- Der Fragetext (27.10.2026, Dennys Auflage 1) ----------
+   Bis hierher deckte die Frage ihre eigenen Wörter mit ab (fWoerter) - so kamen
+   Fachwörter aus dem Lehrplan („Umlaut“) unbemerkt durch. Jetzt muss jedes
+   Sachwort der FRAGE ab 4 Buchstaben in einer Schulquelle stehen (Blatt, Heft
+   oder Vorlage der Lehrerin) oder in der richtigen Lösung, die ihrerseits
+   belegt ist. Die Lehrerin ist maßgeblich. Frei sind nur die Wörter, mit denen
+   man überhaupt fragt (FRAGEWORT) - kein Fachwort steht darin. Nur Paul. */
+export const FRAGEWORT = new Set(("heißt heissen heißen nennt nennen nennt schreibt schreiben " +
+  "schreibst richtig richtige richtigen falsch welche welcher welches welchen welchem " +
+  "findest finden passt passen passende passenden gehört gehören fehlt fehlen fehlende " +
+  "ergänze ergänzen lücke satz satzes sätze wort wörter wortes frage fragen antwort " +
+  "beschreibt beschreiben bedeutet bedeuten meint gemeint steht stehen sagt sagen " +
+  "zeigt zeigen macht machen gibt geben kommt kommen bekommt bekommen hast habe " +
+  "nimmt nehmen bildet bilden bildest form richtige stimmt stimmen lautet lauten " +
+  "dieser diese dieses diesem diesen zwei drei vier fünf sechs sieben acht neun zehn " +
+  "erste ersten zweite zweiten dritte dritten nächste nächsten zuerst zuletzt " +
+  "beiden beide mehr weniger " +
+  "gleich gleiche ungefähr zusammen genau immer heute jetzt früher vorher nachher " +
+  "rechne rechnest ergebnis aufgabe zahl zahlen " +
+  /* Fragewörter und Allerweltswörter aus der Messung am 27.10.2026 (2.243 Fragen) */
+  "womit wohin woher wobei wofür worüber wozu worum wessen wodurch woran worauf wovon " +
+  "direkt machst sagst lässt endet folgt gilt erhält passiert sucht kamen taten machte " +
+  "nutzen dürfen statt jeweils ganzen ganze höchstens paar dreimal zweimal gleichen teil " +
+  "sache sachen pauls bevor hoch langer gerade").split(/\s+/).filter(Boolean));
+
+function abstand(a, b) {
+  if (Math.abs(a.length - b.length) > 3) return 99;
+  let v = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const n = [i];
+    for (let j = 1; j <= b.length; j++) n[j] = Math.min(v[j] + 1, n[j - 1] + 1, v[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    v = n;
+  }
+  return v[b.length];
+}
+
+export function frageWoerterGrund(q, ctx) {
+  const richtig = String((q.antworten || [])[q.richtig || 0] || "");
+  const mathe = /^mathe/i.test(String(q.fach || ""));
+  const quellen = ctx.quellen || quellenFuer(ctx.blattId || q.blatt || "", q.fach, ctx.blaetter, ctx.vorlageFuer, ctx.vorlagen);
+  if (!quellen.alle.length) return "keine Schulquelle zu diesem Fach";
+  const qw = woerter(quellen.alle.join("\n"));
+  if (qw.includes("lehrkraft")) qw.push("lehrerin");
+  /* Die Überschrift eines Blattes steht auch auf dem Blatt („So schreibe ich ins
+     Deutschheft“) - für den Fragetext zählt sie mit, gleiches Fach. */
+  const fachVon = (x) => String(x || "").toLowerCase();
+  for (const b of ctx.blaetter || []) if (b && fachVon(b.fach) === fachVon(q.fach) && b.titel) qw.push(...woerter(b.titel));
+  const idx = indexVon([...new Set(qw.concat(woerter(richtig)))]);
+  let ablenkerGrund = "";
+  /* Wörter der Lösung und der Frage: ein Ablenker, der nur eine Verschreibung
+     oder falsche Form davon ist („guter“ zu „gut“), bringt nichts Fremdes. */
+  const rWoerter = woerter(richtig + " " + String(q.frage || "")).filter((w) => w.length >= 3);
+  for (const w of sachwoerter(String(q.frage || ""), mathe)) {
+    if (istZahl(w) || w.length < 4 || FRAGEWORT.has(w)) continue;
+    if (!gedeckt(w, idx, q.fach)) return "„" + w + "“ steht in keiner Schulquelle";
+  }
+  /* Auch die falschen Antworten (27.10.2026, Gegenprüfung: Ablenker „Laternen
+     und Gehweg“ – „Gehweg“ steht auf keinem Blatt). Ein Ablenker darf falsch
+     sein, aber keine fremden Sachwörter einführen. Falsch geschriebene Wörter
+     („die Äpfeln“) deckt gedeckt() über den Abstand eins. */
+  /* Die Frage ist an dieser Stelle schon belegt; ihre Wörter decken die
+     Ablenker mit („gut“ -> Ablenker „guter“). */
+  const idxA = indexVon([...new Set(qw.concat(woerter(richtig), woerter(String(q.frage || ""))))]);
+  (q.antworten || []).forEach((a, i) => {
+    if (i === (q.richtig || 0) || ablenkerGrund) return;
+    for (const w of sachwoerter(String(a || ""), mathe)) {
+      if (istZahl(w) || w.length < 4 || FRAGEWORT.has(w)) continue;
+      /* Rechtschreib-Ablenker („erkleren“ zu „erklären“, „Febuar“) sind
+         Verschreibungen der Lösung, keine fremden Wörter. */
+      if (rWoerter.some((r) => abstand(w, r) <= Math.max(2, Math.floor(r.length / 4)))) continue;
+      /* Falsche Wortbildung aus einem Wort der Frage („süßung“, „dunkligkeit“
+         bei „Welches Nomen bildet man aus dunkel?“). */
+      /* Mit falschem Umlaut („güter“ zu „gut“) zählt es genauso. */
+      const ohneUmlaut = (x) => x.replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u");
+      if (rWoerter.some((r) => r.length >= 3 && ohneUmlaut(w).startsWith(ohneUmlaut(r.slice(0, Math.max(3, r.length - 2)))))) continue;
+      if (!gedeckt(w, idxA, q.fach)) { ablenkerGrund = "Ablenker: „" + w + "“ steht in keiner Schulquelle"; return; }
+    }
+  });
+  return ablenkerGrund;
 }
 
 /* ---------- Eine Frage ---------- */
