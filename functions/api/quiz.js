@@ -46,7 +46,7 @@ import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, me
 import { frageGegenKorrektur } from "./_korrektur.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
-import { frageTexteBelegen, quellenFuer } from "./_belegpruefung.js";
+import { frageTexteBelegen, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
@@ -850,10 +850,18 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
 export function antwortInVorlage(f, schule, lehrer) {
   if (!lehrer) return false;
   const blattId = blattVon(f.blatt_nr, schule.blaetter);
-  const v = blattId ? vorlageFuerBlatt(lehrer, blattId) : null;
-  if (!v) return false;
-  const zeilen = (v.zeilen || []).filter((vz) => !vz.unsicher)
-    .map((vz) => String(vz.aufgabe || "") + ": " + String(vz.antwort || ""));
+  if (!blattId) return false;
+  /* Alle Vorlagen, die diesem Blatt zugeordnet sind (27.10.2026), nicht nur
+     die erste - eine Seite kann zu zwei Vorlagen der Lehrerin gehoeren. */
+  const vs = [vorlageFuerBlatt(lehrer, blattId),
+    ...((lehrer.vorlagen || []).filter((v) => v && (v.blaetter || []).includes(blattId)))];
+  const gesehen = new Set();
+  const zeilen = [];
+  for (const v of vs) {
+    if (!v || gesehen.has(v.id || v)) continue;
+    gesehen.add(v.id || v);
+    zeilen.push(...vorlageZeilen(v));
+  }
   return zeilen.length > 0 && stehtAufBlatt(zeilen, (f.antworten || [])[0]);
 }
 
@@ -863,14 +871,18 @@ export function antwortInVorlage(f, schule, lehrer) {
    frageTexteBelegen selbst nach. */
 export function belegFuerPaul(q, schule, lehrer) {
   const vorlageFuer = (id) => (lehrer ? vorlageFuerBlatt(lehrer, id) : null);
-  const blaetter = (schule && schule.blaetter) || [];
+  /* Alle Schulquellen (Auflage 1 vom 27.10.2026): alle sichtbaren Blaetter des
+     Schuljahres (schule.alle) und alle Vorlagen der Lehrerin, auch die ohne
+     Blatt-Zuordnung. Ohne schule.alle (aeltere Aufrufer) die Auftragsblaetter. */
+  const blaetter = (schule && (schule.alle || schule.blaetter)) || [];
+  const vorlagen = lehrer && Array.isArray(lehrer.vorlagen) ? lehrer.vorlagen : null;
   if (!q.blatt) {
-    const quellen = quellenFuer("", q.fach, blaetter, vorlageFuer);
+    const quellen = quellenFuer("", q.fach, blaetter, vorlageFuer, vorlagen);
     const richtig = (q.antworten || [])[q.richtig || 0];
     const rechnen = /^mathe/i.test(String(q.fach || "")) && /\d\s*[+\-−–·*×x:÷/]\s*(\d|_{2,})/.test(String(q.frage || ""));
     if (!rechnen && !stehtAufBlatt(quellen.alle, richtig)) return null;
   }
-  const r = frageTexteBelegen(q, { blaetter, vorlageFuer, blattId: q.blatt || "" });
+  const r = frageTexteBelegen(q, { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "" });
   return r.q;
 }
 
@@ -1299,6 +1311,11 @@ async function letzterUnterricht(env, kind, nurBlaetter, nurFaecher) {
     const e = await stoffLesen(env, kind, 4);
     if (!e.ok) return { text: "", blaetter: [] };
     const ab = schuljahrStart(e.heute);
+    /* Quellen fuer die Belegpruefung (Auflage 1 vom 27.10.2026): ALLE sichtbaren
+       Eintraege des Schuljahres, ohne Fach- und Blattwahl und ohne die
+       Acht-Blaetter-Grenze. Nachweis ist alles von der Schule - bis dahin pruefte
+       belegFuerPaul nur gegen die (hoechstens acht) Blaetter des Auftrags. */
+    const alle = e.eintraege.filter((x) => x && x.sichtbar !== false && x.datum >= ab);
     let liste = e.eintraege.filter((x) =>
       x.sichtbar !== false && x.probenstoff !== false && x.datum >= ab && x.titel);
     if (nurBlaetter && nurBlaetter.length) {
@@ -1325,8 +1342,9 @@ async function letzterUnterricht(env, kind, nurBlaetter, nurFaecher) {
      * Blaetter aus der Zeit vor der Unterscheidung (art: "") stehen dazwischen:
      * Sie koennen beides sein, also weder bevorzugt noch benachteiligt. */
     liste = nachArt(liste).slice(0, 8);
-    if (!liste.length) return { text: "", blaetter: [] };
+    if (!liste.length) return { text: "", blaetter: [], alle };
     return {
+      alle,
       /* MIT dem Inhalt, nicht nur mit dem Titel. Bis zum 23.09.2026 stand hier
          allein "1. Stadtporträt von Fürth (HSU, 2026-09-22)" - und daneben im
          Auftrag die Anweisung, ausschliesslich nach dem Blatt zu fragen. Das
