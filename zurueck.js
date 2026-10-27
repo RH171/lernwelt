@@ -460,6 +460,145 @@
       warnung.appendChild(k);
     }
 
+    /* ---------- Bearbeiten (lange drücken) ----------
+       Helena am 27.10.2026 (Meldung bf3ahhujrc): ein Datum stand falsch da,
+       dadurch tauchte dieselbe Probe doppelt auf. Ihr Wunsch danach: "dass
+       ich das zukünftig bearbeiten könnte, wenn ich drauf lange drücke."
+       Bearbeitbar ist nur, was sie selbst eingetragen hat und was noch nicht
+       zu einer Note im Elternbereich geworden ist (uebernommen). */
+    var offenerBearb = null;
+
+    function anLangdruck(ziel, dann) {
+      var timer = null;
+      function start() { timer = setTimeout(function () { timer = null; dann(); }, 550); }
+      function abbrechen() { if (timer) { clearTimeout(timer); timer = null; } }
+      ziel.addEventListener("pointerdown", start);
+      ziel.addEventListener("pointermove", abbrechen);
+      ziel.addEventListener("pointerup", abbrechen);
+      ziel.addEventListener("pointercancel", abbrechen);
+      ziel.addEventListener("pointerleave", abbrechen);
+    }
+
+    function panelBauen(daten, mitPunkte, mitNote, speichern) {
+      var p = el("div", "bearb-panel");
+
+      p.appendChild(el("div", "frage", "Fach"));
+      var fachSel = el("select");
+      fachSel.setAttribute("aria-label", "Fach");
+      zustand.faecher.filter(function (f) { return f.schluessel !== "anderes"; }).forEach(function (f) {
+        var o = el("option", null, f.text);
+        o.value = f.schluessel;
+        if (f.schluessel === daten.fach) o.selected = true;
+        fachSel.appendChild(o);
+      });
+      p.appendChild(fachSel);
+
+      p.appendChild(el("div", "frage", "Was war das?"));
+      var anlassI = el("input");
+      anlassI.type = "text"; anlassI.value = daten.anlass || "";
+      anlassI.setAttribute("aria-label", "Was war das?");
+      p.appendChild(anlassI);
+
+      p.appendChild(el("div", "frage", "Wann war die Arbeit?"));
+      var datumI = el("input");
+      datumI.type = "date"; datumI.max = heute(); datumI.value = daten.datum || heute();
+      datumI.setAttribute("aria-label", "Wann war die Arbeit?");
+      p.appendChild(datumI);
+
+      var pFeldB, pMaxB;
+      if (mitPunkte) {
+        p.appendChild(el("div", "frage", "Punkte"));
+        var pr = el("div", "punktreihe");
+        pFeldB = el("input"); pFeldB.type = "number"; pFeldB.inputMode = "decimal"; pFeldB.step = "0.5";
+        pFeldB.value = daten.punkte !== undefined ? daten.punkte : "";
+        pFeldB.setAttribute("aria-label", "Erreichte Punkte");
+        pr.appendChild(pFeldB);
+        pr.appendChild(el("span", null, "von"));
+        pMaxB = el("input"); pMaxB.type = "number"; pMaxB.inputMode = "decimal"; pMaxB.step = "0.5";
+        pMaxB.value = daten.maxpunkte !== undefined ? daten.maxpunkte : "";
+        pMaxB.setAttribute("aria-label", "Mögliche Punkte");
+        pr.appendChild(pMaxB);
+        p.appendChild(pr);
+      }
+
+      var noteB;
+      if (mitNote) {
+        p.appendChild(el("div", "frage", "Note"));
+        noteB = el("input");
+        noteB.type = "number"; noteB.inputMode = "decimal"; noteB.min = "1"; noteB.max = "6";
+        noteB.value = daten.note !== undefined ? daten.note : "";
+        noteB.setAttribute("aria-label", "Note");
+        p.appendChild(noteB);
+      }
+
+      var fehler = el("p", "melde");
+      p.appendChild(fehler);
+
+      var knoepfe = el("div", "bearb-knoepfe");
+      var sp = el("button", "speichern", "Speichern");
+      sp.type = "button";
+      var ab = el("button", null, "Abbrechen");
+      ab.type = "button";
+      knoepfe.appendChild(sp); knoepfe.appendChild(ab);
+      p.appendChild(knoepfe);
+
+      ab.addEventListener("click", function () { offenerBearb = null; listeMalen(); });
+      sp.addEventListener("click", function () {
+        if (!fachSel.value || !anlassI.value.trim()) {
+          fehler.className = "melde schlecht";
+          fehler.textContent = "Fach und Anlass dürfen nicht leer sein.";
+          return;
+        }
+        sp.disabled = true; fehler.textContent = "";
+        speichern({
+          fach: fachSel.value,
+          anlass: anlassI.value.trim(),
+          datum: datumI.value,
+          punkte: pFeldB ? pFeldB.value.trim() : undefined,
+          maxpunkte: pMaxB ? pMaxB.value.trim() : undefined,
+          note: noteB ? noteB.value.trim() : undefined
+        }, function (fehlertext) {
+          sp.disabled = false;
+          fehler.className = "melde schlecht";
+          fehler.textContent = fehlertext;
+        });
+      });
+
+      return p;
+    }
+
+    function zurueckSpeichern(id, werte, fehlerZeigen) {
+      fetch("/api/zurueck", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: kind, eintragAendern: Object.assign({ id: id }, werte) })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.ok) { fehlerZeigen(j && j.fehler || "Das ging gerade nicht."); return; }
+        zustand.liste = j.liste || zustand.liste;
+        offenerBearb = null;
+        listeMalen();
+      }).catch(function () { fehlerZeigen("Das ging gerade nicht. Versuch es noch einmal."); });
+    }
+
+    function notenSpeichern(id, werte, fehlerZeigen) {
+      var note = Number(werte.note);
+      if (!Number.isInteger(note)) { fehlerZeigen("Eine Note geht von 1 bis 6, ohne Komma."); return; }
+      fetch("/api/noten", {
+        method: "POST", credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: kind, kindNote: { id: id, fach: werte.fach, note: note, datum: werte.datum, anlass: werte.anlass } })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.ok) { fehlerZeigen(j && j.fehler || "Das ging gerade nicht."); return; }
+        offenerBearb = null;
+        fetch("/api/zurueck?kind=" + encodeURIComponent(kind), { credentials: "same-origin" })
+          .then(function (r) { return r.json(); })
+          .then(function (jj) {
+            if (jj && jj.ok) { zustand.liste = jj.liste || []; zustand.ausNoten = jj.ausNoten === undefined ? [] : jj.ausNoten; }
+            listeMalen();
+          }).catch(function () { listeMalen(); });
+      }).catch(function () { fehlerZeigen("Das ging gerade nicht. Versuch es noch einmal."); });
+    }
+
     /* ---------- Liste ---------- */
     function listeMalen() {
       listKarte.innerHTML = "";
@@ -477,7 +616,8 @@
       }
       alle.forEach(function (e) {
         if (e.quelle) return fremdMalen(e);
-        var z = el("div", "eintrag");
+        var bearbeitbar = !e.uebernommen;
+        var z = el("div", "eintrag" + (bearbeitbar ? " bearbeitbar" : ""));
         var vor = el("div", "vor");
         if (e.seiten > 0) {
           var b = el("img");
@@ -507,12 +647,26 @@
         }
         m.appendChild(el("small", null, teile.join(" · ")));
         if (e.notiz) m.appendChild(el("small", null, "„" + e.notiz + "“"));
+        if (bearbeitbar) m.appendChild(el("small", "bearb-hinweis", "✏️ Lange drücken zum Bearbeiten"));
         z.appendChild(m);
 
         if (typeof e.note === "number") {
           z.appendChild(el("div", "note", String(e.note).replace(".", ",")));
         }
         listKarte.appendChild(z);
+
+        if (bearbeitbar) {
+          anLangdruck(z, function () {
+            offenerBearb = (offenerBearb === e.id) ? null : e.id;
+            listeMalen();
+          });
+        }
+        if (offenerBearb === e.id) {
+          listKarte.appendChild(panelBauen(
+            e, true, zustand.mitNote || typeof e.note === "number",
+            function (werte, fehlerZeigen) { zurueckSpeichern(e.id, werte, fehlerZeigen); }
+          ));
+        }
       });
       if (zustand.ausNoten === null) {
         listKarte.appendChild(el("p", "leer", "Was Mama oder Papa eingetragen haben, kann ich gerade nicht zeigen."));
@@ -520,9 +674,12 @@
     }
 
     /* Eine Note oder Probe, die nicht hier abgegeben wurde: ohne Foto, mit
-       dem Hinweis, wer sie eingetragen hat. */
+       dem Hinweis, wer sie eingetragen hat. Bearbeitbar ist nur, was aus dem
+       Notenbuch stammt UND das Kind selbst eingetragen hat (quelle "noten",
+       von "kind") - eine Probe aus dem Probenvergleich bleibt fest. */
     function fremdMalen(e) {
-      var z = el("div", "eintrag eltern");
+      var bearbeitbar = e.quelle === "noten" && e.von === "kind";
+      var z = el("div", "eintrag eltern" + (bearbeitbar ? " bearbeitbar" : ""));
       z.appendChild(el("div", "vor", "✏️"));
       var m = el("div", "mitte");
       m.appendChild(el("b", null, e.anlass || "Probe"));
@@ -534,9 +691,23 @@
       if (e.offen) teile.push("Note kommt noch");
       m.appendChild(el("small", null, teile.join(" · ")));
       m.appendChild(el("span", "von", e.von === "kind" ? "von dir eingetragen" : "eingetragen von Mama oder Papa"));
+      if (bearbeitbar) m.appendChild(el("small", "bearb-hinweis", "✏️ Lange drücken zum Bearbeiten"));
       z.appendChild(m);
       if (typeof e.note === "number") z.appendChild(el("div", "note", String(e.note).replace(".", ",")));
       listKarte.appendChild(z);
+
+      if (bearbeitbar) {
+        anLangdruck(z, function () {
+          offenerBearb = (offenerBearb === e.id) ? null : e.id;
+          listeMalen();
+        });
+      }
+      if (offenerBearb === e.id) {
+        listKarte.appendChild(panelBauen(
+          e, false, true,
+          function (werte, fehlerZeigen) { notenSpeichern(e.id, werte, fehlerZeigen); }
+        ));
+      }
     }
 
     /* ---------- Laden ---------- */
