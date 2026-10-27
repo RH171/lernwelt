@@ -690,6 +690,14 @@ export function heftsatzFuer(q, c) {
   const r = norm(richtig);
   const fw = new Set(woerter(String(q.frage || "")).filter((w) => w.length >= 4));
   const zahlenFrage = (String(q.frage || "").match(/\d+(?:[.,]\d+)?/g) || []);
+  const ganz = (text, teil) => {
+    const i = text.indexOf(teil);
+    for (let j = i; j >= 0; j = text.indexOf(teil, j + 1)) {
+      const vor = text.charAt(j - 1), nach = text.charAt(j + teil.length);
+      if (!/[\p{L}\d]/u.test(vor) && !/[\p{L}\d]/u.test(nach)) return true;
+    }
+    return false;
+  };
   let best = "", bestPunkte = -1;
   for (const [liste, bonus] of [[c.quellen.eigen, 100], [c.quellen.alle, 0]]) {
     for (const z0 of liste || []) {
@@ -703,9 +711,11 @@ export function heftsatzFuer(q, c) {
       if (/^(?:[^\s,]{1,3},\s*){3,}/.test(z)) continue;
       if ((z.match(/\(/g) || []).length !== (z.match(/\)/g) || []).length) continue;
       if (z.length < 8 || z.length > 220) continue;
-      if (!norm(z).includes(r)) continue;
-      if (c.mathe && zahlenFrage.length && !zahlenFrage.some((n) => z.includes(n))) continue;
-      if (/\bweil\b/i.test(z) || textGrund(z, c) || rumpf(z, c)) continue;
+      /* Lösung und Zahlen als ganzes Wort: „20“ steckt sonst in „120“. Kein
+         Kürzel der Lehrerin („Sy“) in Pauls Erklärung. */
+      if (!ganz(norm(z), r)) continue;
+      if (c.mathe && zahlenFrage.length && !zahlenFrage.some((n) => ganz(z, n))) continue;
+      if (/\bSy\b/.test(z) || /\bweil\b/i.test(z) || textGrund(z, c) || rumpf(z, c)) continue;
       const punkte = bonus + woerter(z).filter((w) => fw.has(w)).length;
       if (punkte > bestPunkte) { best = z; bestPunkte = punkte; }
     }
