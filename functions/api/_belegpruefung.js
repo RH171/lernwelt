@@ -751,10 +751,12 @@ export function frageTexteBelegen(q, ctx) {
 
   if (q.erklaerung) {
     const k = kuerzen(q.erklaerung, c);
-    if (!k && ctx.ausgabe) {
+    if (k !== q.erklaerung && ctx.ausgabe) {
       /* Vor der Ausgabe an Paul (27.10.2026, Dennys Auflage 2): Statt die
          Frage zu verwerfen, tritt der belegte Heftsatz an die Stelle der
-         Erklärung - gibt es keinen, entfällt die Erklärung. */
+         Erklärung - gibt es keinen, entfällt die Erklärung. Auch eine nur
+         gekürzte Erklärung zählt als unbelegt: „„bunt“ ist ein Wiewort.“ ohne
+         den Specht wäre der halbe Inhalt (gemessen 27.10.2026, 92 Fälle). */
       const h = heftsatzFuer(q, c);
       if (h) { neu.erklaerung = h; gekuerzt.push("erklaerung-heft"); }
       else { delete neu.erklaerung; gekuerzt.push("erklaerung-weg"); }
@@ -764,7 +766,8 @@ export function frageTexteBelegen(q, ctx) {
   for (const feld of ["merke", "tipp"]) {
     if (!q[feld]) continue;
     const k = kuerzen(q[feld], c);
-    if (!k) { delete neu[feld]; gekuerzt.push(feld); }
+    /* Vor der Ausgabe an Paul kein halber Merksatz oder Tipp: ganz oder gar nicht. */
+    if (!k || (ctx.ausgabe && k !== q[feld])) { delete neu[feld]; gekuerzt.push(feld); }
     else if (k !== q[feld]) { neu[feld] = k; gekuerzt.push(feld); }
   }
   return { q: neu, gekuerzt, grund: "" };
