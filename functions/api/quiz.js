@@ -48,6 +48,7 @@ import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
+import { BELEG_FREIGABEN } from "./_beleg-freigaben.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
@@ -173,6 +174,7 @@ export async function onRequestGet(context) {
        sagt, wie viele der Schalter "Auch Gekonntes" dazuholt. Eine alte Seite
        kennt nur `fragenZahl` - sie zeigt damit genau die Zahl, die ihr
        "Alle Fragen" (ohne gekonnt=1) jetzt auch bekommt. */
+    if (kind === "paul") v.fragen = ausgabeFuerPaul(vorratBereinigen(v.fragen, bn), bn, await vorlagenLesen(env, kind));
     const bereinigt = vorratBereinigen(v.fragen, bn);
     const gekonnt = gekonnteTatsachen(bereinigt, pk, Date.now(), tatsacheSchluessel);
     const zahl = fragenZaehlen(bereinigt.filter((f) => !gekonnt.has(tatsacheSchluessel(f))));
@@ -236,7 +238,7 @@ export async function onRequestGet(context) {
       // sich nicht gegenseitig ueberschreiben.
       const v1 = await vorratLesen(env, kind);
       const ids = new Set(v1.fragen.map((f) => f.id));
-      v1.fragen = v1.fragen.concat(neu.filter((f) => !ids.has(f.id))).slice(-VORRAT_MAX);
+      v1.fragen = v1.fragen.concat(neu.filter((f) => kind !== "paul" || !ids.has(f.id))).slice(-VORRAT_MAX);
       v1.gebaut = new Date().toISOString();
       v1.versucht = Object.assign({}, v1.versucht || {});
       for (const id of jetztDran) v1.versucht[id] = v1.gebaut;
@@ -262,13 +264,14 @@ export async function onRequestGet(context) {
     if (e.ok) for (const x of e.eintraege) blattNach[x.id] = x;
   } catch (e) {}
   vorrat.fragen = vorratBereinigen(vorrat.fragen, blattNach);
+  const lehrer = await vorlagenLesen(env, kind);
+  if (kind === "paul") vorrat.fragen = ausgabeFuerPaul(vorrat.fragen, blattNach, lehrer);
 
   /* Vorlagen der Lehrerin (13.10.2026, Dennys Wahl "A · Quiz prüft gegen die
      Lehrerin"): Eine Frage, deren "richtig" ihrer ausgefüllten Vorlage
      widerspricht, wird beim Lesen unterdrückt - im Speicher bleibt sie, es
      gibt keinen Schreibvorgang. Ohne Vorlage (oder ohne Speicherwert) läuft
      alles wie vorher. */
-  const lehrer = await vorlagenLesen(env, kind);
   const gegenLehrerin = new Set();
   if (lehrer) for (const f of vorrat.fragen) {
     const r = frageGegenVorlage(f, vorlageFuerBlatt(lehrer, f.blatt));
@@ -381,9 +384,14 @@ export async function onRequestGet(context) {
     try {
       const neu = await nachschubBauen(env, kind, gewuenschteFaecher, gewuenschteBlaetter);
       if (neu.length) {
-        vorrat.fragen = vorrat.fragen.concat(neu).slice(-VORRAT_MAX);
-        vorrat.gebaut = new Date().toISOString();
-        await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(vorrat));
+        /* Frisch gelesen, nicht der gefilterte Stand: Was die Pruefung vor der
+           Ausgabe ausblendet oder kuerzt, bleibt im Speicher unveraendert
+           (27.10.2026, Dennys Auflage 4: nur ausblenden, nichts loeschen). */
+        const v1 = kind === "paul" ? await vorratLesen(env, kind) : vorrat;
+        const ids = new Set(v1.fragen.map((f) => f.id));
+        v1.fragen = v1.fragen.concat(neu.filter((f) => kind !== "paul" || !ids.has(f.id))).slice(-VORRAT_MAX);
+        v1.gebaut = new Date().toISOString();
+        await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(v1));
         nachgebaut = true;
         /* Frisch Gebautes war noch nie dran - hier genuegt der einfache Filter,
            die Faelligkeit oben hat mit neuen Fragen nichts zu tun. */
@@ -430,6 +438,10 @@ export async function onRequestGet(context) {
       const gv = vl ? frageGegenVorlage(f, vl) : null;
       if (gv && gv.passt) beleg = belegAusVorlage(vl, gv.zeile);
       const medien = lehrer ? medienFuer(f, blattNach[f.blatt], lehrer.medien) : [];
+      /* Ist der Heftsatz als Erklaerung derselbe wie die Belegzeile, steht er
+         nur einmal da - als Beleg (27.10.2026). Nur Paul. */
+      const gleich = (a, b) => String(a || "").replace(/\s+/g, " ").trim().toLowerCase() === String(b || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (kind === "paul" && beleg && f.erklaerung && gleich(f.erklaerung, beleg.zeile)) f = { ...f, erklaerung: "" };
       return { ...f, ...(beleg ? { beleg } : {}), ...(auch.length ? { auchRichtig: auch } : {}),
                ...(medien.length ? { medien } : {}) };
     });
@@ -896,6 +908,26 @@ export function belegFuerPaul(q, schule, lehrer, ausgabe) {
   /* Auch die Frage selbst nur mit Wörtern aus der Schule (27.10.2026). */
   if (r.q && frageWoerterGrund(r.q, ctx)) return null;
   return r.q;
+}
+
+/* Prüfung vor jeder Ausgabe an Paul (27.10.2026, Dennys Wahl „Erklärung weg,
+   Rest prüfen“): Dieselbe Belegprüfung wie beim Erzeugen läuft über den ganzen
+   Vorrat, bevor Paul eine Frage bekommt - Fragen von vor dem 27.10. kamen sonst
+   ungeprüft durch (712 von 2.211, gemessen 27.10.2026, 21:49 Uhr). Unbelegte
+   Erklärungen werden durch den belegten Heftsatz ersetzt oder entfallen; was
+   dann noch unbelegt ist, wird nur ausgeblendet, im Speicher bleibt alles.
+   Freigaben (_beleg-freigaben.js): am Foto bestätigte Fehlalarme, mit
+   Belegzeile. Nur Paul; Leon und Helena unverändert. */
+export function ausgabeFuerPaul(fragen, blattNach, lehrer) {
+  const schule = { alle: Object.values(blattNach || {}).filter((e) => e && e.sichtbar !== false) };
+  const raus = [];
+  for (const f of fragen || []) {
+    const fr = BELEG_FREIGABEN[f.id];
+    if (fr) { raus.push(Number(fr.belegNr) >= 1 ? { ...f, belegNr: Math.floor(Number(fr.belegNr)) } : f); continue; }
+    const q = belegFuerPaul(f, schule, lehrer, true);
+    if (q) raus.push(q);
+  }
+  return raus;
 }
 
 export function lueckeOk(frage) {
