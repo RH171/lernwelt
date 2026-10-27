@@ -890,7 +890,11 @@ export function weilIrgendwo(q) {
 }
 
 export function belegFuerPaul(q, schule, lehrer, ausgabe) {
-  if (weilIrgendwo(q)) return null;
+  /* Vor der Ausgabe entfällt eine Hilfe mit „weil“; Erklärung, Merksatz und
+     Tipp mit „weil“ ersetzt oder streicht frageTexteBelegen. Steht es in Frage
+     oder Antworten, bleibt die Frage weg. */
+  if (ausgabe && q.hilfe && /\bweil\b/i.test(String(q.hilfe))) { q = { ...q }; delete q.hilfe; }
+  if (ausgabe ? [q.frage, ...(q.antworten || [])].some((t) => /\bweil\b/i.test(String(t || ""))) : weilIrgendwo(q)) return null;
   const vorlageFuer = (id) => (lehrer ? vorlageFuerBlatt(lehrer, id) : null);
   /* Alle Schulquellen (Auflage 1 vom 27.10.2026): alle sichtbaren Blaetter des
      Schuljahres (schule.alle) und alle Vorlagen der Lehrerin, auch die ohne
@@ -907,6 +911,7 @@ export function belegFuerPaul(q, schule, lehrer, ausgabe) {
   const r = frageTexteBelegen(q, ctx);
   /* Auch die Frage selbst nur mit Wörtern aus der Schule (27.10.2026). */
   if (r.q && frageWoerterGrund(r.q, ctx)) return null;
+  if (r.q && weilIrgendwo(r.q)) return null;
   return r.q;
 }
 

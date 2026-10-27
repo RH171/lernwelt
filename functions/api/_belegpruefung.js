@@ -697,7 +697,7 @@ export function heftsatzFuer(q, c) {
       if (z.length < 8 || z.length > 220) continue;
       if (!norm(z).includes(r)) continue;
       if (c.mathe && zahlenFrage.length && !zahlenFrage.some((n) => z.includes(n))) continue;
-      if (textGrund(z, c) || rumpf(z, c)) continue;
+      if (/\bweil\b/i.test(z) || textGrund(z, c) || rumpf(z, c)) continue;
       const punkte = bonus + woerter(z).filter((w) => fw.has(w)).length;
       if (punkte > bestPunkte) { best = z; bestPunkte = punkte; }
     }
@@ -751,7 +751,10 @@ export function frageTexteBelegen(q, ctx) {
 
   if (q.erklaerung) {
     const k = kuerzen(q.erklaerung, c);
-    if (k !== q.erklaerung && ctx.ausgabe) {
+    /* Ein „weil“ in der Erklärung (die Lehrerin erlaubt es nicht) ersetzt sie
+       vor der Ausgabe ebenso, statt die ganze Frage auszublenden. */
+    const weil = /\bweil\b/i.test(q.erklaerung);
+    if ((k !== q.erklaerung || weil) && ctx.ausgabe) {
       /* Vor der Ausgabe an Paul (27.10.2026, Dennys Auflage 2): Statt die
          Frage zu verwerfen, tritt der belegte Heftsatz an die Stelle der
          Erklärung - gibt es keinen, entfällt die Erklärung. Auch eine nur
@@ -767,7 +770,7 @@ export function frageTexteBelegen(q, ctx) {
     if (!q[feld]) continue;
     const k = kuerzen(q[feld], c);
     /* Vor der Ausgabe an Paul kein halber Merksatz oder Tipp: ganz oder gar nicht. */
-    if (!k || (ctx.ausgabe && k !== q[feld])) { delete neu[feld]; gekuerzt.push(feld); }
+    if (!k || (ctx.ausgabe && (k !== q[feld] || /\bweil\b/i.test(q[feld])))) { delete neu[feld]; gekuerzt.push(feld); }
     else if (k !== q[feld]) { neu[feld] = k; gekuerzt.push(feld); }
   }
   return { q: neu, gekuerzt, grund: "" };
