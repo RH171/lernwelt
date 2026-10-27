@@ -683,9 +683,14 @@ export function frageWoerterGrund(q, ctx) {
    durchgeht und eine eigene Aussage trägt (kein Rumpf). Zuerst das eigene
    Blatt, dann das Fach; bei mehreren die mit den meisten Wörtern der Frage.
    Mathe: die Zeile muss auch eine Zahl der Aufgabe enthalten. "" = keiner. */
+const HEFTSATZ_SPERRE = new Set(["q9cu51auftoyc"]);
+
 export function heftsatzFuer(q, c) {
   const richtig = String(c.richtig || "").trim();
   if (richtig.length < 2) return "";
+  /* Beim Durchlesen aller Heftsätze als unpassend gefunden (27.10.2026):
+     Wappenfrage bekam „1818: Fürth wird Stadt 1. Klasse …“. */
+  if (HEFTSATZ_SPERRE.has(String(q.id || ""))) return "";
   const norm = (x) => String(x || "").toLowerCase().replace(/\s+/g, " ");
   const r = norm(richtig);
   const fw = new Set(woerter(String(q.frage || "")).filter((w) => w.length >= 4));
@@ -729,6 +734,7 @@ export function heftsatzFuer(q, c) {
       /* Die Zeile muss die Frage betreffen: hat die Frage eigene Inhaltswörter,
          steckt mindestens eines davon (erste 5 Buchstaben) in der Zeile. */
       if (inhalt.length && !inhalt.some((w) => norm(z).includes(w))) continue;
+      if (!c.mathe && !inhalt.length) continue;
       if (/\bSy\b/.test(z) || /\bweil\b/i.test(z) || textGrund(z, c) || rumpf(z, c)) continue;
       const punkte = bonus + woerter(z).filter((w) => fw.has(w)).length;
       if (punkte > bestPunkte) { best = z; bestPunkte = punkte; }
