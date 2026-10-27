@@ -154,3 +154,25 @@ export async function uebernommen(env, kind, id, noteId) {
   catch (e) { return { ok: false, fehler: "Der Speicher nimmt gerade nichts an." }; }
   return { ok: true, liste };
 }
+
+/* Einen eigenen Eintrag nachtraeglich berichtigen (27.10.2026, Helenas Wunsch
+   nach der Meldung bf3ahhujrc: ihre Stegreifaufgabe stand mit dem falschen
+   Datum da). Nur die Angaben aendern sich, nie die Bilder - deshalb nicht
+   ueber ablegen() (das wuerde "seiten" ohne neue Fotos auf 0 setzen). Ist der
+   Eintrag schon "uebernommen" (Denny hat daraus eine Note gemacht), bleibt er
+   gesperrt - sonst liefe die Note im Elternbereich auseinander. */
+export async function eintragAendern(env, kind, id, patch) {
+  const liste = await listeLesen(env, kind);
+  if (liste === null) return { ok: false, fehler: "Der Speicher antwortet gerade nicht." };
+  const i = liste.findIndex((x) => x.id === id);
+  if (i < 0) return { ok: false, fehler: "Das gibt es nicht (mehr)." };
+  const alt = liste[i];
+  if (alt.uebernommen) return { ok: false, fehler: "Das ist schon als Note eingetragen. Frag Mama oder Papa." };
+  const geprueft = eintragPruefen({ ...alt, ...patch }, kind);
+  if (geprueft.fehler) return { ok: false, fehler: geprueft.fehler };
+  const neu = { ...geprueft.eintrag, id: alt.id, angelegt: alt.angelegt, seiten: alt.seiten };
+  liste[i] = neu;
+  try { await listeSchreiben(env, kind, liste); }
+  catch (e) { return { ok: false, fehler: "Der Speicher nimmt gerade nichts an." }; }
+  return { ok: true, eintrag: neu, liste };
+}
