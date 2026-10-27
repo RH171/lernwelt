@@ -102,7 +102,7 @@
     "  background:var(--karte,#fff);color:var(--ink,#1b1c22);border-radius:999px;",
     "  padding:10px 14px;font:600 15.5px inherit;cursor:pointer;min-height:44px}",
     ".lwz .chip.an{background:var(--paul,#4f46e5);border-color:var(--paul,#4f46e5);color:var(--akzent-auf,#fff)}",
-    ".lwz input,.lwz textarea{font:600 16.5px inherit;padding:11px 13px;border-radius:14px;",
+    ".lwz input,.lwz textarea,.lwz select{font:600 16.5px inherit;padding:11px 13px;border-radius:14px;",
     "  border:1.5px solid var(--line,#e4e7f0);background:var(--feld,#fbfaff);",
     "  color:var(--ink,#1b1c22);min-height:46px;width:100%;box-sizing:border-box}",
     ".lwz textarea{min-height:70px;font-weight:500}",
