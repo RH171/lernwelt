@@ -48,7 +48,7 @@ import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
-import { BELEG_FREIGABEN } from "./_beleg-freigaben.js";
+import { tabelleAnwenden, abstempeln } from "./_beleg-ausgabe.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
@@ -174,7 +174,7 @@ export async function onRequestGet(context) {
        sagt, wie viele der Schalter "Auch Gekonntes" dazuholt. Eine alte Seite
        kennt nur `fragenZahl` - sie zeigt damit genau die Zahl, die ihr
        "Alle Fragen" (ohne gekonnt=1) jetzt auch bekommt. */
-    if (kind === "paul") v.fragen = ausgabeFuerPaul(vorratBereinigen(v.fragen, bn), bn, await vorlagenLesen(env, kind));
+    if (kind === "paul") v.fragen = ausgabeFuerPaul(vorratBereinigen(v.fragen, bn), bn);
     const bereinigt = vorratBereinigen(v.fragen, bn);
     const gekonnt = gekonnteTatsachen(bereinigt, pk, Date.now(), tatsacheSchluessel);
     const zahl = fragenZaehlen(bereinigt.filter((f) => !gekonnt.has(tatsacheSchluessel(f))));
@@ -265,7 +265,7 @@ export async function onRequestGet(context) {
   } catch (e) {}
   vorrat.fragen = vorratBereinigen(vorrat.fragen, blattNach);
   const lehrer = await vorlagenLesen(env, kind);
-  if (kind === "paul") vorrat.fragen = ausgabeFuerPaul(vorrat.fragen, blattNach, lehrer);
+  if (kind === "paul") vorrat.fragen = ausgabeFuerPaul(vorrat.fragen, blattNach);
 
   /* Vorlagen der Lehrerin (13.10.2026, Dennys Wahl "A · Quiz prüft gegen die
      Lehrerin"): Eine Frage, deren "richtig" ihrer ausgefüllten Vorlage
@@ -849,7 +849,9 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
       /* Belegpruefung (27.10.2026, Kapitel 147): Loesung, Erklaerung, Merksatz
          und Tipp muessen aus Pauls Blaettern oder den Vorlagen der Lehrerin
          stammen - sonst gekuerzt oder verworfen. Nur Paul. */
-      if (kind === "paul") { q = belegFuerPaul(q, schule, lehrer); if (!q) continue; }
+      /* Seit 27.10.2026 abends mit der Ausgabe-Prüfung und Stempel `bp`: die
+         Frage ist damit vor der Ausgabe geprüft (_beleg-ausgabe.js). */
+      if (kind === "paul") { q = abstempeln(belegFuerPaul(q, schule, lehrer, true)); if (!q) continue; }
       gesehen.add(form);
       raus.push(q);
     }
@@ -921,18 +923,13 @@ export function belegFuerPaul(q, schule, lehrer, ausgabe) {
    ungeprüft durch (712 von 2.211, gemessen 27.10.2026, 21:49 Uhr). Unbelegte
    Erklärungen werden durch den belegten Heftsatz ersetzt oder entfallen; was
    dann noch unbelegt ist, wird nur ausgeblendet, im Speicher bleibt alles.
-   Freigaben (_beleg-freigaben.js): am Foto bestätigte Fehlalarme, mit
-   Belegzeile. Nur Paul; Leon und Helena unverändert. */
-export function ausgabeFuerPaul(fragen, blattNach, lehrer) {
-  const schule = { alle: Object.values(blattNach || {}).filter((e) => e && e.sichtbar !== false) };
-  const raus = [];
-  for (const f of fragen || []) {
-    const fr = BELEG_FREIGABEN[f.id];
-    if (fr) { raus.push(Number(fr.belegNr) >= 1 ? { ...f, belegNr: Math.floor(Number(fr.belegNr)) } : f); continue; }
-    const q = belegFuerPaul(f, schule, lehrer, true);
-    if (q) raus.push(q);
-  }
-  return raus;
+   Freigaben (_beleg-freigaben.js, nur im Werkzeug): am Foto bestätigte
+   Fehlalarme, mit Belegzeile. Nur Paul; Leon und Helena unverändert. */
+export function ausgabeFuerPaul(fragen, blattNach) {
+  /* Live nur noch das vorberechnete Ergebnis anwenden (Rechenzeit, siehe
+     _beleg-ausgabe.js); die Prüfung selbst läuft in werkzeuge/beleg-tabelle.mjs
+     und beim Erzeugen. */
+  return tabelleAnwenden(fragen, blattNach);
 }
 
 export function lueckeOk(frage) {
@@ -1287,7 +1284,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
       ...(Number(f.beleg_nr) >= 1 ? { belegNr: Math.floor(Number(f.beleg_nr)) } : {}),
     }));
   /* Belegpruefung auch im alten Pfad (27.10.2026). */
-  return kind === "paul" ? alt.map((q) => belegFuerPaul(q, schule, lehrer)).filter(Boolean) : alt;
+  return kind === "paul" ? alt.map((q) => abstempeln(belegFuerPaul(q, schule, lehrer, true))).filter(Boolean) : alt;
 }
 
 /* Die Zeile aus dem Heft, auf die sich die Frage stuetzt. Erst die Nummer
