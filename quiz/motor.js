@@ -108,6 +108,21 @@
   /* Staffelung der Fragenzahl (Denny, 29.09.2026): 5, 10, 20, 25, alle - aber
      nur, was es auch gibt. "Gibt es nur 8 Fragen: 5, Alle Fragen (8)". */
   var LAENGEN = [[5, "5"], [10, "10"], [20, "20"], [25, "25"], [0, "Alle"]];
+  /* Pauls Leiter (Denny, 28.10.2026, Auftrag 152): mehr Stufen, nur was es
+     gibt, hoechstens fuenf, dahinter "Alle Fragen (N)". Gibt es mehr als 100,
+     heisst der letzte Knopf "100 Fragen" - mehr bringt eine Runde nicht.
+     Liegt 50 drin, faellt 30 weg; sonst bleiben die fuenf groessten.
+     Leon und Helena behalten LAENGEN, bis Denny Ja sagt. */
+  var LEITER_PAUL = [5, 10, 15, 20, 25, 30, 50];
+  function leiterNeu() { return KIND === "paul"; }
+  function stufenPaul(echt) {
+    var grenze = echt == null ? 100 : Math.min(echt, 100);
+    var s = LEITER_PAUL.filter(function (z) { return z < grenze; });
+    if (s.indexOf(50) >= 0) s = s.filter(function (z) { return z !== 30; });
+    s = s.slice(-5).map(function (z) { return [z, String(z)]; });
+    s.push(echt != null && echt > 100 ? [100, "100"] : [0, "Alle"]);
+    return s;
+  }
 
   /* Vorbauen im Hintergrund (28.09.2026). Denny: "Die Ladezeiten sind
      unterirdisch für ein Kind. Das muss sofort da sein." Der Server startet
@@ -722,7 +737,7 @@
     }
     var kasten = $("q-blaetter");
     if (kasten.nextSibling !== l) kasten.parentNode.insertBefore(l, kasten.nextSibling);
-    if (LAENGEN.every(function (x) { return x[0] !== stand.laenge; })) stand.laenge = 10;
+    if (!leiterNeu() && LAENGEN.every(function (x) { return x[0] !== stand.laenge; })) stand.laenge = 10;
     /* Nur Stufen, die es gibt. Passt die gemerkte nicht, gilt "alle" - ohne
        es zu speichern, damit beim naechsten, groesseren Fach wieder die
        gewohnte Zahl dasteht. */
@@ -731,8 +746,21 @@
     var ohneGek = fragenMoeglich(true);
     var gekDazu = ohneGek == null ? 0 : Math.min(100, ohneGek + (gekonntSumme() || 0)) - ohneGek;
     var alleGekonnt = !auchGekonnt && ohneGek === 0 && gekDazu > 0;
-    var stufen = LAENGEN.filter(function (x) { return !x[0] || moeglich == null || x[0] < moeglich; });
-    if (moeglich != null && stand.laenge && stand.laenge >= moeglich) stand.laenge = 0;
+    var stufen;
+    if (leiterNeu()) {
+      stufen = stufenPaul(fragenEcht());
+      /* Passt die gemerkte Zahl nicht, gilt die naechstkleinere Stufe, und
+         ab der verfuegbaren Zahl der letzte Knopf - ohne es zu speichern. */
+      var werte = stufen.map(function (p) { return p[0]; });
+      if (werte.indexOf(stand.laenge) < 0) {
+        var kleiner = werte.filter(function (w) { return w && w <= stand.laenge; });
+        stand.laenge = !stand.laenge || (moeglich != null && stand.laenge >= moeglich) ? werte[werte.length - 1]
+          : kleiner.length ? kleiner[kleiner.length - 1] : werte[0];
+      }
+    } else {
+      stufen = LAENGEN.filter(function (x) { return !x[0] || moeglich == null || x[0] < moeglich; });
+      if (moeglich != null && stand.laenge && stand.laenge >= moeglich) stand.laenge = 0;
+    }
     var eins = stand.faecher.length === 1;
     var n = stand.blaetter.length;
     var alleN = eins ? sichtbareBlaetter().length : 0;
@@ -805,6 +833,12 @@
     var n = zahlFuerAuswahl(fragenZahl);
     if (!ohneSchalter && auchGekonnt) n += gekonntSumme() || 0;
     return Math.min(n, 100);
+  }
+  /* Dasselbe ohne den Deckel bei 100: nur fuer Pauls Leiter, die wissen muss,
+     ob es mehr gibt, als eine Runde bringt. */
+  function fragenEcht() {
+    if (!fragenZahl) return null;
+    return zahlFuerAuswahl(fragenZahl) + (auchGekonnt ? gekonntSumme() || 0 : 0);
   }
   /* Wie viele gekonnte Fragen in der Auswahl liegen (0, wenn der Server es
      nicht sagt). */
