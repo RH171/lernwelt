@@ -32,12 +32,22 @@ export function leonKorrigieren(fragen, tabelle = BELEG_LEON) {
       sind (gemeldet von werkzeuge/leon-blatt-waechter.mjs).
    2. Die Einzelkorrekturen von oben (leonKorrigieren).
    3. Mathe und Deutsch: Belegprüfung, vorberechnet in _beleg-tabelle-leon.js
-      (werkzeuge/beleg-tabelle-leon.mjs), oder Stempel bp beim Erzeugen.
+      (werkzeuge/beleg-tabelle-leon.mjs).
+   Tabellenpflicht (28.10.2026, Dennys Auflage 09:50 Uhr): Für Leon gilt der Stempel bp
+   NICHT. Eine Mathe- oder Deutsch-Frage kommt nur durch, wenn sie mit gleichem
+   Fingerabdruck in der Tabelle steht. Eine neu erzeugte oder geänderte Frage bleibt
+   ausgeblendet, bis die Tabelle nach Dennys Ja neu gerechnet ist (sonst wäre jede neue
+   Frage sofort sichtbar, ohne Freigabe).
    Andere Fächer gehen unverändert durch. Im Speicher bleibt alles. */
 const istGeprueft = (f) => /^(mathe|deutsch)/i.test(String(f.fach || ""));
+export function inTabelle(f, tabelle) {
+  const t = ((tabelle && tabelle.fragen) || {})[f.id];
+  return !!t && t[0] === belegHash(f);
+}
 export function leonAusgabe(fragen, blattNach, tabelle, foto, korrektur = BELEG_LEON) {
   const mitFoto = (fragen || []).filter((f) => !/^deutsch/i.test(String(f.fach || "")) || (foto[f.id] && foto[f.id][0] === belegHash(f)));
   const k = leonKorrigieren(mitFoto, korrektur);
-  const nach = new Map(tabelleAnwenden(k.filter(istGeprueft), blattNach, tabelle).map((q) => [q.id, q]));
+  const nurTabelle = k.filter((f) => istGeprueft(f) && inTabelle(f, tabelle));
+  const nach = new Map(tabelleAnwenden(nurTabelle, blattNach, tabelle).map((q) => [q.id, q]));
   return k.filter((f) => !istGeprueft(f) || nach.has(f.id)).map((f) => (istGeprueft(f) ? nach.get(f.id) : f));
 }
