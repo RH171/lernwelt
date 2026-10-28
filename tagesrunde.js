@@ -215,8 +215,13 @@
       gespielt[s.slice(0, i)] = 1;
       if (stand[s] && stand[s].f) fehlerBlatt[s.slice(0, i)] = 1;           // eigene Fundkarten-Fehler
     });
+    /* opt.nachBlattdatum (28.10.2026, Schritt 2, nur Paul): frisch zaehlt nach dem Datum des Blattes,
+       nicht nach dem Hochladen - ein altes Blatt, heute fotografiert, ist nicht neu. Ein Blatt ohne
+       Datum ("ohne") oder mit unsicherem Datum gilt im Zweifel als alt. */
     liste.forEach(function (b) {
-      var tag = b.angelegt ? tagVon(b.angelegt) : String(b.datum || "").slice(0, 10);
+      if (e.nachBlattdatum && (b.datumUnsicher || b.datumVon === "ohne")) return;
+      var tag = e.nachBlattdatum ? String(b.datum || "").slice(0, 10)
+        : (b.angelegt ? tagVon(b.angelegt) : String(b.datum || "").slice(0, 10));
       var alter = tageZwischen(tag, heute);
       if (alter >= 0 && alter <= e.frischTage && !gespielt[b.id]) frisch[b.id] = alter;
     });

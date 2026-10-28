@@ -121,6 +121,10 @@
     if (!kasten) return null;
     opt = opt || {};
     var kind = opt.kind || "paul";
+    /* Blattdatum mit Herkunft (28.10.2026, nur Paul): Das Datumsfeld bleibt leer, das Datum auf dem
+       Blatt gilt zuerst. Traegt das Blatt keins, fragt die Seite nach dem Lesen. So geht der
+       Hochladetag nie als Blattdatum durch. Leon und Helena bleiben wie bisher. */
+    var herkunft = kind === "paul";
     var faecher = opt.faecher || FAECHER;
     stilEinmal();
 
@@ -138,7 +142,7 @@
     kasten.innerHTML =
       '<h2>📸 Neues Blatt</h2>' +
       '<p class="u">Heft, Zettel oder Arbeitsblatt – fotografier, was du in der Schule gemacht hast.</p>' +
-      '<div class="frage">Wann war das?</div>' +
+      '<div class="frage">Wann war das?' + (herkunft ? ' <span class="u">Nur, wenn kein Datum auf dem Blatt steht.</span>' : '') + '</div>' +
       '<div class="reihe">' +
         '<input type="date" class="lwb-datum" aria-label="Datum des Blattes">' +
         '<button type="button" class="chip an" data-tag="0">Heute</button>' +
@@ -192,6 +196,10 @@
       '<div class="melden verborgen lwb-datumfrage"><div class="lwb-datumtext"></div>' +
         '<div class="reihe"><button type="button" class="chip lwb-datum-ja"></button>' +
         '<button type="button" class="chip lwb-datum-nein"></button></div></div>' +
+      '<div class="melden verborgen lwb-datumfehlt"><div class="lwb-fehlttext"></div>' +
+        '<div class="reihe"><input type="date" class="lwb-fehltdatum" aria-label="Datum des Blattes">' +
+        '<button type="button" class="chip" data-fehlt="0">Heute</button>' +
+        '<button type="button" class="chip" data-fehlt="1">Gestern</button></div></div>' +
       /* Die Fach-Rueckfrage (Denny, 25.09.2026: "aus Versehen Mathe an und
          dabei war es HSU"). Das Modell liest das Fach mit; weicht es ab,
          entscheidet Paul. Nie still getauscht. */
@@ -202,7 +210,7 @@
 
     var $ = function (k) { return kasten.querySelector(k); };
     var datum = $(".lwb-datum");
-    datum.value = iso(0);
+    datum.value = herkunft ? "" : iso(0);
 
     // ---- Fächer, vom Stundenplan sortiert ------------------------------
     var reihe = $(".lwb-faecher");
@@ -370,7 +378,7 @@
         (f.tage > 400 ? "über ein Jahr" : f.tage + " Tage") + " her. Stimmt das?";
       var ja = $(".lwb-datum-ja"), nein = $(".lwb-datum-nein");
       ja.textContent = "Ja, " + deutsch(f.gelesen);
-      nein.textContent = "Nein, " + deutsch(f.gewaehlt);
+      nein.textContent = f.ohne ? "Nein" : "Nein, " + deutsch(f.gewaehlt);
       box.className = "melden lwb-datumfrage";
       ja.parentNode.style.display = "";
       function antwort(was) {
@@ -384,6 +392,12 @@
         .then(function (k) {
           ja.disabled = false; nein.disabled = false;
           if (!k || !k.ok) { $(".lwb-datumtext").textContent = "Das hat nicht geklappt – probier es nochmal."; return; }
+          /* Kein Datum gewaehlt und das gelesene stimmt nicht: dann fragt die Seite Paul selbst. */
+          if (f.ohne && was === "datum-ablehnen") {
+            box.className = "melden verborgen lwb-datumfrage";
+            datumFehlt({ datumFehlt: true }, id);
+            return;
+          }
           box.className = "melden gut lwb-datumfrage";
           // Nicht innerHTML ersetzen: Der Kasten muss fuer das naechste Blatt heil bleiben.
           $(".lwb-datumtext").textContent = "✅ Alles klar – dein Blatt liegt unter dem " + deutsch(k.datum) + ".";
@@ -397,6 +411,51 @@
       }
       ja.onclick = function () { antwort("datum-bestaetigen"); };
       nein.onclick = function () { antwort("datum-ablehnen"); };
+    }
+
+    /* Auf dem Blatt steht kein Datum und Paul hat keins gewaehlt (nur Paul, 28.10.2026). Er
+       entscheidet; bis dahin steht das Blatt unter dem Hochladetag und gilt im Zweifel als alt. */
+    function datumFehlt(j, id) {
+      var box = $(".lwb-datumfehlt");
+      if (!box) return;
+      if (!j || !j.datumFehlt || !id) { box.className = "melden verborgen lwb-datumfehlt"; return; }
+      var feld = $(".lwb-fehltdatum");
+      var knoepfe = kasten.querySelectorAll("[data-fehlt]");
+      $(".lwb-fehlttext").textContent = "Auf dem Blatt steht kein Datum. Wann war das?";
+      feld.value = ""; feld.max = iso(0);
+      feld.parentNode.style.display = "";
+      box.className = "melden lwb-datumfehlt";
+      function senden(tag) {
+        if (!tag) return;
+        feld.disabled = true;
+        Array.prototype.forEach.call(knoepfe, function (k) { k.disabled = true; });
+        function frei() {
+          feld.disabled = false;
+          Array.prototype.forEach.call(knoepfe, function (k) { k.disabled = false; });
+        }
+        fetch("/api/schulstoff", {
+          method: "PATCH", credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: kind, id: id, was: "datum-angeben", datum: tag })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (k) {
+          frei();
+          if (!k || !k.ok) { $(".lwb-fehlttext").textContent = (k && k.fehler) || "Das hat nicht geklappt – probier es nochmal."; return; }
+          box.className = "melden gut lwb-datumfehlt";
+          $(".lwb-fehlttext").textContent = "✅ Alles klar – dein Blatt liegt unter dem " + deutsch(k.datum) + ".";
+          feld.parentNode.style.display = "none";
+          if (opt.abgelegt) { try { opt.abgelegt(k); } catch (e) {} }
+        })
+        .catch(function () {
+          frei();
+          $(".lwb-fehlttext").textContent = "Ich komme gerade nicht dran – probier es nochmal.";
+        });
+      }
+      Array.prototype.forEach.call(knoepfe, function (k) {
+        k.onclick = function () { senden(iso(k.getAttribute("data-fehlt") === "0" ? 0 : 1)); };
+      });
+      feld.onchange = function () { senden(feld.value); };
     }
 
     /* Das Fach auf dem Blatt passt nicht zu Pauls Wahl: fragen, nie tauschen. */
@@ -450,14 +509,15 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || !j.ok) {
-          melde("✅ Ist in deiner Ablage – " + deutsch(abgelegt.datum) +
+          melde("✅ Ist in deiner Ablage" + (abgelegt.ohneDatum ? "" : " – " + deutsch(abgelegt.datum)) +
                 ". Durchlesen hat gerade nicht geklappt, das hole ich nach.", "gut");
           if (opt.fertig) { try { opt.fertig(abgelegt); } catch (e) {} }
           return;
         }
-        melde("✅ Ist in deiner Ablage – " + deutsch(j.datum) +
+        melde("✅ Ist in deiner Ablage" + (j.datumFehlt ? "" : " – " + deutsch(j.datum)) +
               (j.titel ? ", „" + j.titel + "“" : "") + "." + datumSatz(j), "gut");
         datumFrage(j, abgelegt.id);
+        datumFehlt(j, abgelegt.id);
         fachFrage(j, abgelegt.id);
         /* Alles, was Schritt 2 herausgefunden hat, geht an denselben
            Empfaenger wie beim einstufigen Weg - Fundkarten, Datumsfrage,
@@ -468,7 +528,7 @@
         }
       })
       .catch(function () {
-        melde("✅ Ist in deiner Ablage – " + deutsch(abgelegt.datum) +
+        melde("✅ Ist in deiner Ablage" + (abgelegt.ohneDatum ? "" : " – " + deutsch(abgelegt.datum)) +
               ". Durchlesen hat gerade nicht geklappt, das hole ich nach.", "gut");
         if (opt.fertig) { try { opt.fertig(abgelegt); } catch (e) {} }
       });
@@ -488,6 +548,7 @@
         ? global.LWStrom.kleinerMachen(seiten.map(function (s) { return s.url; }))
         : Promise.resolve(seiten.map(function (s) { return s.url; }));
 
+      var gesendetDatum = datum.value;
       vorbereitet.then(function (bilder) {
         return fetch("/api/schulstoff", {
           method: "POST", credentials: "same-origin",
@@ -512,15 +573,18 @@
            frei werden. Was noch fehlt, ist nur der Inhalt. */
         laeuft = false; l.disabled = false;
         seiten = []; art = "";
+        if (herkunft) { datum.value = ""; tagKnoepfe(); }
         Array.prototype.forEach.call(kasten.querySelectorAll("[data-art]"), function (x) { x.classList.remove("an"); });
         malen(); knopf();
-        melde("✅ Ist in deiner Ablage – " + deutsch(a.j.datum) +
+        if (herkunft && !gesendetDatum && !a.j.datumVonBlatt) a.j.ohneDatum = true;
+        melde("✅ Ist in deiner Ablage" + (a.j.ohneDatum ? "" : " – " + deutsch(a.j.datum)) +
               (a.j.titel ? ", „" + a.j.titel + "“" : "") + ".", "gut");
 
         if (!a.j.lesenOffen) {
           if (a.j.datumGeaendert) melde("✅ Ist in deiner Ablage – " + deutsch(a.j.datum) +
             (a.j.titel ? ", „" + a.j.titel + "“" : "") + "." + datumSatz(a.j), "gut");
           datumFrage(a.j, a.j.id);
+          datumFehlt(a.j, a.j.id);
           fachFrage(a.j, a.j.id);
           if (opt.fertig) { try { opt.fertig(a.j); } catch (e) {} }
           return;

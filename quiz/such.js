@@ -213,6 +213,8 @@
         if (lw.karten.length) { o = o || {}; o.lesen = lw.karten; }
       } catch (e) { /* ohne Lesen laeuft die Runde wie vorher */ }
     }
+    /* Blattdatum mit Herkunft (28.10.2026, Schritt 2): bei Paul zaehlt "neu" nach dem Datum des Blattes. */
+    if (KIND === "paul") { o = o || {}; o.nachBlattdatum = true; }
     heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }

@@ -200,6 +200,46 @@ export function datumPruefen(datum, bezug) {
   return t <= BLATT_OHNE_FRAGE_TAGE ? "nehmen" : "fragen";
 }
 
+/* Blattdatum mit Herkunft (Schritt 2 der Themenfolge, Dennys Freigabe 28.10.2026, nur Paul).
+ *
+ * Rangfolge: das Datum auf dem Blatt, wenn es lesbar und stimmig ist (im Schuljahr, nicht in der
+ * Zukunft). Sonst Pauls Angabe - sie zaehlt immer, die Entscheidung liegt bei Paul. Gibt es beides
+ * nicht, steht das Blatt unter dem Hochladetag nur zum Sortieren, mit datumVon "ohne", und gilt im
+ * Zweifel als alt (nie "neu" in "Heute lernen"). Gespeichert wird die Quelle nur im Hintergrund:
+ * datumVon "blatt" | "kind" | "ohne", dazu datumUnsicher bei Altbestand, dessen Herkunft sich nicht
+ * mehr klaeren laesst. Keine Kontrollliste, keine Pruefaufgabe im Elternbereich (Vorgabe 2). */
+export const DATUM_HERKUNFT_KINDER = ["paul"];
+/* Erster Schultag 2026/27 in Bayern - derselbe Tag wie VON_TEXT in _probenstoff.js. */
+export const SCHULJAHR_BEGINN = "2026-09-15";
+export function blattDatumStimmig(tag, heute) {
+  return !!tag && datumOk(tag, heute) && tag >= SCHULJAHR_BEGINN;
+}
+export const DATUM_VON = ["blatt", "kind", "ohne"];
+
+/* Herkunft am Eintrag vermerken, ohne das Datum anzufassen (z. B. "Datum vom Blatt bestaetigt"). */
+export async function herkunftSetzen(env, kind, id, felder) {
+  if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
+  const heute = heuteBerlin();
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const monat = d.toISOString().slice(0, 7);
+    let roh;
+    try { roh = await env.PAUL_KV.get(LISTE(kind, monat)); } catch (e) { return { ok: false }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false };
+    const treffer = liste.findIndex((e) => e.id === id);
+    if (treffer < 0) continue;
+    const x = liste[treffer];
+    if (felder.datumVon && DATUM_VON.includes(felder.datumVon)) x.datumVon = felder.datumVon;
+    if (felder.datumVon === "blatt" || felder.datumVon === "kind") delete x.datumUnsicher;
+    try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
+    catch (e) { return { ok: false }; }
+    return { ok: true };
+  }
+  return { ok: false };
+}
+
 export function blattDatum(text, heute) {
   const h = heute || heuteBerlin();
   const roh = String(text || "").trim().toLowerCase();
@@ -369,7 +409,7 @@ export async function stoffAblegen(env, kind, eintrag, seiten) {
     // Fingerabdruck der ersten Seite - daran faellt dasselbe Blatt auf.
     ...(eintrag.abdruck ? { abdruck: eintrag.abdruck } : {}),
     // Wo das Datum herkommt - Paul soll sehen koennen, ob es geraten ist.
-    datumVon: eintrag.datumVonBlatt ? "blatt" : "kind",
+    datumVon: DATUM_VON.includes(eintrag.datumVon) ? eintrag.datumVon : (eintrag.datumVonBlatt ? "blatt" : "kind"),
     angelegt: new Date().toISOString(),
     sichtbar: true,
     ...(eintrag.spiel ? { spiel: String(eintrag.spiel).slice(0, 40) } : {}),
@@ -733,7 +773,9 @@ export async function titelSetzen(env, kind, id, titel, warum) {
  * Liste ist nach Monat geschluesselt. Deshalb: aus der alten nehmen, in die
  * neue legen. Was das Kind gewaehlt hatte, bleibt als datumGewaehlt stehen;
  * ein stillschweigend getauschtes Datum waere schlimmer als ein falsches. */
-export async function datumSetzen(env, kind, id, neuesDatum, altesDatum) {
+/* von = "kind" (seit 28.10.2026, nur Paul): Paul gibt das Datum selbst an, weil auf dem Blatt keins
+ * steht. Dann bleibt kein datumGewaehlt stehen - es gab vorher keine Wahl, nur den Hochladetag. */
+export async function datumSetzen(env, kind, id, neuesDatum, altesDatum, von) {
   if (!kindOk(kind) || !env || !env.PAUL_KV) return { ok: false };
   if (!datumOk(neuesDatum)) return { ok: false };
   const altMonat = monatVon(altesDatum || heuteBerlin());
@@ -747,9 +789,15 @@ export async function datumSetzen(env, kind, id, neuesDatum, altesDatum) {
   if (treffer < 0) return { ok: false };
 
   const eintrag = liste[treffer];
-  eintrag.datumGewaehlt = eintrag.datum;     // was das Kind angegeben hatte
-  eintrag.datum = neuesDatum;
-  eintrag.datumVon = "blatt";
+  if (von === "kind") {
+    eintrag.datum = neuesDatum;
+    eintrag.datumVon = "kind";
+  } else {
+    eintrag.datumGewaehlt = eintrag.datum;     // was das Kind angegeben hatte
+    eintrag.datum = neuesDatum;
+    eintrag.datumVon = "blatt";
+  }
+  delete eintrag.datumUnsicher;
 
   if (altMonat === neuMonat) {
     liste.sort((x, y) => (y.datum || "").localeCompare(x.datum || ""));

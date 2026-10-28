@@ -40,6 +40,7 @@ import {
   HAND, KARTEN_MAX,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen, fachAusText, fachPruefen,
   faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen, lesungenZusammen,
+  DATUM_HERKUNFT_KINDER, blattDatumStimmig, herkunftSetzen,
 } from "./_schulstoff.js";
 
 function json(status, daten) {
@@ -130,8 +131,15 @@ export async function onRequestPost(context) {
      Modell, und das läuft erst beim Bauen. Schickt die Seite eines mit
      (blattText), wird es ausgewertet. */
   const heute = heuteBerlin();
-  const vomBlatt = blattDatum(d.blattText || "", heute);
-  const datum = vomBlatt || (datumOk(d.datum, heute) ? d.datum : heute);
+  /* Paul (28.10.2026, Vorgabe 6): Das Datumsfeld ist leer, solange er nichts waehlt. Dann steht das
+     Blatt unter dem Hochladetag nur zum Sortieren, mit datumVon "ohne" - das Hochladedatum geht nie
+     als Blattdatum durch. Ein Blattdatum vor Schulbeginn gilt bei ihm als nicht stimmig. */
+  const herkunft = DATUM_HERKUNFT_KINDER.includes(kind);
+  let vomBlatt = blattDatum(d.blattText || "", heute);
+  if (herkunft && !blattDatumStimmig(vomBlatt, heute)) vomBlatt = "";
+  const angegeben = datumOk(d.datum, heute) ? d.datum : "";
+  const datum = vomBlatt || angegeben || heute;
+  const datumVon = vomBlatt ? "blatt" : (angegeben || !herkunft ? "kind" : "ohne");
 
   const abdruck = await fingerabdruck(seiten[0]);
 
@@ -145,6 +153,7 @@ export async function onRequestPost(context) {
     titel: d.titel,
     notiz: d.notiz,
     datumVonBlatt: !!vomBlatt,
+    datumVon,
   }, seiten);
 
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
@@ -169,7 +178,7 @@ export async function onRequestPost(context) {
   const a = zweistufig
     ? { titel: "", vomBlattGelesen: "", weichtAb: false, nachgefragt: null,
         karten: [], kartenWarum: "", genauer: 0 }
-    : await blattAuswerten(env, kind, e, seiten, heute);
+    : await blattAuswerten(env, kind, { ...e, datumVon }, seiten, heute);
   const titel = a.titel, vomBlattGelesen = a.vomBlattGelesen, weichtAb = a.weichtAb;
   const nachgefragt = a.nachgefragt, karten = a.karten;
   const kartenWarum = a.kartenWarum, genauer = a.genauer;
@@ -208,6 +217,7 @@ export async function onRequestPost(context) {
     /* Mehr als 14 Tage Abstand: Das Kind bestätigt es selbst. */
     ...(nachgefragt ? { datumFrage: nachgefragt } : {}),
     ...(a.fachFrage ? { fachFrage: a.fachFrage } : {}),
+    ...(a.datumFehlt ? { datumFehlt: true } : {}),
     /* Die Fundkarten fuer den Bildschirm direkt danach (Denny, 23.09.2026).
        Sie gehen in DIESER Antwort mit - ein zweiter Aufruf waere eine zweite
        Wartezeit, und genau die soll hier nicht entstehen. */
@@ -320,6 +330,7 @@ async function blattNachlesen(context) {
     ...(a.weichtAb ? { datumGeaendert: { von: x.datum, auf: a.vomBlattGelesen } } : {}),
     ...(a.nachgefragt ? { datumFrage: a.nachgefragt } : {}),
     ...(a.fachFrage ? { fachFrage: a.fachFrage } : {}),
+    ...(a.datumFehlt ? { datumFehlt: true } : {}),
     karten: a.karten,
     ...(a.kartenWarum ? { kartenWarum: a.kartenWarum } : {}),
     ...(a.karten.length ? { genauer: a.genauer } : {}),
@@ -353,7 +364,8 @@ async function vorhandeneThemen(env, kind, fach, mitVokabeln) {
 
 async function blattAuswerten(env, kind, eintrag, seiten, heute) {
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
-  let karten = [], kartenWarum = "", genauer = 0, fachFrage = null;
+  let karten = [], kartenWarum = "", genauer = 0, fachFrage = null, datumFehlt = false;
+  const herkunft = DATUM_HERKUNFT_KINDER.includes(kind);
   if (env.ANTHROPIC_API_KEY) {
     try {
       /* ALLE Seiten auslesen, nicht nur die erste.
@@ -407,7 +419,8 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
          in der Antwort, und die Seite sagt es ihm. Denny: "am Ende hilft es
          natuerlich der Zuordnung" - ein heimlich geaendertes Datum hilft
          niemandem. */
-      const geprueft = blattDatum(gelesen.datum, heute);
+      let geprueft = blattDatum(gelesen.datum, heute);
+      if (herkunft && !blattDatumStimmig(geprueft, heute)) geprueft = "";
       /* Drei Ausgaenge (Denny, 23.09.2026): nah dran -> still nehmen, mehr
          als 14 Tage her -> das Kind fragen, Zukunft -> gar nicht. Das Modell
          hatte sich in einer handgeschriebenen Jahreszahl verlesen (26 -> 25)
@@ -429,6 +442,19 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
                           vomBlattGelesen && !weichtAb ? "Datum vom Blatt bestätigt" : "");
       }
       if (weichtAb) await datumSetzen(env, kind, eintrag.id, vomBlattGelesen, eintrag.datum);
+      /* Herkunft (28.10.2026, nur Paul): Stimmt das Blattdatum mit dem gespeicherten ueberein, kommt
+         es trotzdem vom Blatt - vorher blieb dann "kind" stehen (68 Blaetter am 28.10.2026). Traegt
+         das Blatt kein stimmiges Datum und hat Paul keins angegeben, fragt die Seite ihn. */
+      if (herkunft) {
+        if (geprueft && geprueft === eintrag.datum && eintrag.datumVon !== "blatt" &&
+            (urteil === "nehmen" || urteil === "fragen")) {
+          await herkunftSetzen(env, kind, eintrag.id, { datumVon: "blatt" });
+        }
+        if (eintrag.datumVon === "ohne") {
+          if (nachgefragt) nachgefragt.ohne = true;
+          else if (!vomBlattGelesen && !(geprueft && geprueft === eintrag.datum)) datumFehlt = true;
+        }
+      }
 
       /* Das Fach: NIE still tauschen, immer fragen (Denny, 25.09.2026 -
          "aus Versehen Mathe an und dabei war es HSU"). Anders als beim Datum
@@ -488,7 +514,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       catch (e2) {}
     }
   }
-  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage };
+  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage, datumFehlt };
 }
 /* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
  * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der
@@ -1607,6 +1633,24 @@ export async function onRequestPatch(context) {
     if (!r2.ok) return json(503, { ok: false, fehler: "Das hat nicht geklappt." });
     await vorschlagSetzen(env, kind, x.id, "");
     return json(200, { ok: true, datum: x.datumVorschlag });
+  }
+
+  /* Paul gibt das Datum selbst an (28.10.2026, Vorgabe 1 und 6): nur fuer ein Blatt ohne stimmiges
+     Blattdatum (datumVon "ohne") oder mit unsicherer Herkunft. Ein Datum vom Blatt kann er so nicht
+     ueberschreiben - umdatieren bleibt beim Eltern-Ausweis. */
+  if (String(d.was || "") === "datum-angeben") {
+    if (!DATUM_HERKUNFT_KINDER.includes(kind)) return json(400, { ok: false, fehler: "Das gibt es hier nicht." });
+    const neu = String(d.datum || "");
+    if (!datumOk(neu, heuteBerlin())) return json(400, { ok: false, fehler: "Dieses Datum kann ich nicht nehmen." });
+    const bestand = await stoffLesen(env, kind, 14);
+    if (!bestand.ok) return json(503, { ok: false, fehler: bestand.fehler });
+    const x = bestand.eintraege.filter((y) => y.id === String(d.id || ""))[0];
+    if (!x) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
+    if (x.datumVon !== "ohne" && !x.datumUnsicher) return json(409, { ok: false, fehler: "Dein Blatt hat schon ein Datum." });
+    const r4 = await datumSetzen(env, kind, x.id, neu, x.datum, "kind");
+    if (!r4.ok) return json(503, { ok: false, fehler: "Das hat nicht geklappt." });
+    if (x.datumVorschlag) await vorschlagSetzen(env, kind, x.id, "");
+    return json(200, { ok: true, datum: neu });
   }
 
   /* Das Fach (Denny, 25.09.2026): Rueckfrage beantworten ODER selbst
