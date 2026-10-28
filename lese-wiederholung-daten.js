@@ -1,6 +1,6 @@
 /* Lese-Wiederholung fuer die Tagesrunde - ERZEUGT von werkzeuge/lese-wiederholung-web.py
  * aus dem geprueften Bestand. Nicht von Hand aendern. Nur Frage, Antworten und Auszug.
- * 18 Karten. */
+ * 15 Karten. */
 (function (g) {
   var D = [
  {
@@ -59,33 +59,6 @@
    "die spitzen Krallen an den Pranken"
   ],
   "merke": "Die Mähne besteht aus langen Haaren um Kopf und Hals. Sie ist nicht das Fell."
- },
- {
-  "id": "briefschraube",
-  "format": "zeile",
-  "stichwort": "Zeile finden",
-  "text": "Der Brief",
-  "frage": "In welcher Zeile steht das Wort „Schraubenzieher“?",
-  "richtig": "Zeile 21",
-  "falsch": [
-   "Zeile 22",
-   "Zeile 23"
-  ],
-  "merke": "Such das Wort „Schraubenzieher“ und lies die Nummer dieser Zeile.",
-  "auszug": [
-   {
-    "n": 21,
-    "t": "„Schreib uns bitte, wo der kleine Schraubenzieher ist“, sagt die Mama. „Damit wir die"
-   },
-   {
-    "n": 22,
-    "t": "Nachttischlampe reparieren können“, schreibt Nuschi. „Jetzt essen wir Rühreier.“ „Und am"
-   },
-   {
-    "n": 23,
-    "t": "Sonntag gehen wir ins Kino“, sagt die Mama. „Hurra!“, ruft Nuschi. „Wir denken immer an"
-   }
-  ]
  },
  {
   "id": "juanpruefung",
@@ -200,19 +173,6 @@
     "t": "herbeizuzaubern. Damit dir niemand helfen kann, werde ich dich in ein tiefes Kellerloch"
    }
   ]
- },
- {
-  "id": "briefpapa",
-  "format": "antwort",
-  "stichwort": "Ganze Antwort",
-  "text": "Der Brief",
-  "frage": "Was erfährst du am Anfang von „Der Brief“ über den Papa? Welche Antwort nennt alle drei Dinge?",
-  "richtig": "Er ist ins Ausland gefahren, arbeitet dort auf Montage und kommt in einem halben Jahr wieder.",
-  "falsch": [
-   "Er ist ins Ausland gefahren.",
-   "Er ist ins Ausland gefahren, arbeitet dort in einer Fabrik und kommt in einem ganzen Jahr wieder."
-  ],
-  "merke": "In der Fabrik ist die Mama. Lies die ersten Sätze noch einmal genau."
  },
  {
   "id": "pranken",
@@ -341,19 +301,6 @@
     "t": "Farmer hatte sich den König der Tiere zum Freund gemacht."
    }
   ]
- },
- {
-  "id": "geweint",
-  "format": "wort",
-  "stichwort": "Wortbedeutung",
-  "text": "Der Brief",
-  "frage": "Im Text „Der Brief“ steht ein Wort, das fast dasselbe bedeutet wie „geheult“. Welches?",
-  "richtig": "geweint",
-  "falsch": [
-   "gespielt",
-   "gefahren"
-  ],
-  "merke": "Such die Stelle, an der Nuschi schreibt, wie es der Mama geht."
  }
 ];
   if (typeof module !== "undefined" && module.exports) module.exports = D;
