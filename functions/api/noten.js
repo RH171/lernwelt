@@ -120,11 +120,12 @@ function tageVor(heute, tage) {
 }
 function datumImJahr(datum, heute) {
   const frueh = tageVor(heute, NOTE_ZURUECK_TAGE);
-  if (datum <= heute && datum >= frueh) return { datum };
+  const gueltig = (d) => { const t = Date.parse(d + "T12:00:00Z"); return !isNaN(t) && new Date(t).toISOString().slice(0, 10) === d; };
+  if (datum <= heute && datum >= frueh && gueltig(datum)) return { datum };
   const md = datum.slice(4);
   for (const j of [+heute.slice(0, 4), +heute.slice(0, 4) - 1]) {
     const d = j + md;
-    if (d <= heute && d >= frueh && !isNaN(Date.parse(d + "T12:00:00Z"))) return { datum: d, gelesen: datum };
+    if (d <= heute && d >= frueh && gueltig(d)) return { datum: d, gelesen: datum };
   }
   return null;
 }
