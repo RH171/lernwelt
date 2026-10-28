@@ -1286,14 +1286,58 @@
     if (!PR.daten.ok) return h + '<p class="unter">Gerade nicht erreichbar.</p></div>';
     var l = PR.daten.stimmtDoch;
     h += '<p class="unter">Stellen aus ' + name + 's Blättern, bei denen ' + (kind === "helena" ? "sie" : "er") + ' „Stimmt doch so“ getippt hat. Noch offen: ' + (PR.daten.offen || 0) + '.</p>';
-    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + verbessertKarte() + nachgerechnetKarte() + volllesenKarte() + '</div>';
+    if (!l.length) return h + '<p class="unter">✅ Keine.</p>' + sichtKettenKarte() + verbessertKarte() + nachgerechnetKarte() + volllesenKarte() + '</div>';
     l.forEach(function(x){
       var b = x.blatt || {};
       h += '<div style="margin-top:10px"><b>' + esc(x.aufgabe || "Stelle") + '</b> <span class="unter">· ' + esc(b.titel || "") +
            (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>' + name + ': ' + esc(x.du || "") +
            (x.richtig ? ' · nachgerechnet bzw. Quelle: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
     });
-    return h + verbessertKarte() + nachgerechnetKarte() + volllesenKarte() + '</div>';
+    return h + sichtKettenKarte() + verbessertKarte() + nachgerechnetKarte() + volllesenKarte() + '</div>';
+  }
+  /* Meine Sicht und Zahlenreihen (28.10.2026, nur Paul). Legende: Die Lernwerkstatt rahmt Stellen auf
+     Pauls Fotos violett gestrichelt ein, nie rot - Rot ist der Stift der Lehrerin. „Meine Sicht“: was der
+     Server gegen die Schulquelle nicht entscheiden konnte. Zahlenreihen: jede Reihe mit falschen Gliedern;
+     ist der Abstand nicht aus zwei gedruckten Zahlen belegt, bekommt Paul keine Karte, nur dieser Eintrag
+     steht hier. Alter Server: keine Felder, nur die Legende. */
+  var SICHT_WAHL = { richtig: "„Meine Zahl stimmt, ich habe nachgerechnet.“", anders: "„Auf dem Blatt steht eine andere Zahl.“" };
+  function sichtKettenKarte(){
+    if (KIND !== "paul" || !PR.daten || !PR.daten.ok) return "";
+    var h = '<p class="unter" style="margin-top:12px;display:flex;align-items:center;gap:8px">' +
+      '<span aria-hidden="true" style="display:inline-block;width:26px;height:16px;border:3px dashed #7c3aed;border-radius:6px;box-sizing:border-box;flex:none"></span>' +
+      '<span><b>Markiert von der Lernwerkstatt</b>: So rahmt die Lernwerkstatt Stellen auf Pauls Fotos ein. Rot stammt immer von der Lehrerin.</span></p>';
+    var ms = Array.isArray(PR.daten.meineSicht) ? PR.daten.meineSicht : [];
+    if (ms.length){
+      h += '<div style="margin-top:12px" id="prMeineSicht"><b>„Meine Sicht“ · nicht entscheidbar</b>' +
+        '<p class="unter">Paul hat gesagt, was er gerechnet hat. Das Foto reicht nicht, um es zu entscheiden. Bitte mit ihm ins Heft schauen.</p>';
+      ms.forEach(function(x){
+        var b = x.blatt || {}, w = SICHT_WAHL[x.wahl] || (/^schritt:/.test(x.wahl) ? "„Mein Abstand ist " + esc(x.wahl.slice(8)) + ".“" : esc(x.wahl));
+        h += '<div style="margin-top:8px"><b>' + esc(x.aufgabe || "Stelle") + '</b> <span class="unter">· ' + esc(b.titel || "") +
+             (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span><br>Paul: ' + esc(x.du || "") + ' · seine Sicht: ' + w +
+             (x.richtig ? ' · nachgerechnet: <b>' + esc(x.richtig) + '</b>' : '') + '</div>';
+      });
+      h += '</div>';
+    }
+    var ks = Array.isArray(PR.daten.ketten) ? PR.daten.ketten : [];
+    if (ks.length){
+      h += '<div style="margin-top:12px" id="prKetten"><b>Zahlenreihen</b>' +
+        '<p class="unter">Eine Reihe ist eine Karte. Der Abstand kommt nur aus den gedruckten Zahlen, nie aus Pauls eigener Zahl davor.</p>';
+      ks.forEach(function(x){
+        var b = x.blatt || {};
+        var kopf = 'Aufgabe ' + esc(x.nr || "?") + ' <span class="unter">· ' + esc(b.titel || "") + (b.datum ? ' · ' + esc(kurzDatum(b.datum)) : '') + '</span>';
+        var paul = (x.paul || []).filter(function(v){ return v != null; }).join(", ");
+        var z;
+        if (x.belegt) z = (x.karte ? '🧮 Karte für Paul' : (x.rot ? '✍️ rot von der Lehrerin, keine Karte' : '⚪ zweite Lesung nicht bestätigt, keine Karte')) +
+          ' · gedruckt: ' + esc((x.druck || []).join(", ")) + ' · Abstand ' + esc(String(Math.abs(x.schritt))) +
+          '<br>Paul: ' + esc(paul) + (x.paulSchritt ? ' (Abstand ' + esc(String(Math.abs(x.paulSchritt))) + ')' : '') +
+          '<br>richtig: <b>' + esc((x.soll || []).join(", ")) + '</b> · ' + x.falsch + ' Zahlen anders';
+        else z = '⚪ <b>Abstand nicht belegt</b> (' + esc(x.grund || "gedruckte Zahlen fehlen") + '), Paul bekommt keine Karte. Bitte im Heft nachsehen.' +
+          '<br>Paul: ' + esc(paul) + (x.paulSchritt ? ' (Abstand ' + esc(String(Math.abs(x.paulSchritt))) + ')' : '');
+        h += '<div style="margin-top:8px">' + kopf + '<br>' + z + '</div>';
+      });
+      h += '</div>';
+    }
+    return h;
   }
   /* Volllesen (15.10.2026, Denny: „wirklich jedes Dokument gelesen zu 100 %“): je Blatt,
      ob es Feld für Feld vollständig gelesen ist (Soll gegen Ist), wie viele Einträge eine

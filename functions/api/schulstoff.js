@@ -380,8 +380,8 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       /* Nachrechnen (14.10.2026, Kapitel 123): Feld für Feld - seit dem Volllesen
          (15.10.2026) für die Matheblätter aller drei Kinder. */
       const nrStart = Date.now();
-      const nrLauf = KINDER_MIT_PRUEFREITER.includes(kind) && eintrag.fach === "mathe" && brauchtNachrechnen(eintrag)
-        ? nachrechnen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { grenze: 45000 }).catch(() => null) : null;
+      const nrLauf = KINDER_MIT_PRUEFREITER.includes(kind) && eintrag.fach === "mathe" && brauchtNachrechnen(eintrag, kind)
+        ? nachrechnen(env.ANTHROPIC_API_KEY, seiten.slice(0, 4), { grenze: 45000, kind }).catch(() => null) : null;
       const tv = await vorhandeneThemen(env, kind, eintrag.fach, true);
       const themen = tv.themen;
       /* Volllesen (15.10.2026, anleitung/125): das GANZE Blatt Feld für Feld, jedes Fach,

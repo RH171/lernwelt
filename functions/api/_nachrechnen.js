@@ -41,8 +41,11 @@ export const OP_ZEIGEN = { "*": "·", "/": ":", "+": "+", "-": "−" };
 
 /* ---------- Der Auftrag ans Modell ---------- */
 
-export function abschreibAuftrag(masse) {
+/* opt.kind (28.10.2026, nur Paul, Dennys Wahl 4): Zahlenreihen bekommen eine DRUCK-Zeile mit den
+   gedruckten Gliedern. Leon und Helena bekommen den Auftrag Wort für Wort wie vorher. */
+export function abschreibAuftrag(masse, opt) {
   const m = Array.isArray(masse) ? masse : [masse];
+  const druck = !!(opt && opt.kind === "paul");
   return (m.length > 1 ? "Das sind " + m.length + " Fotos (Seiten) von einem Mathe-Blatt" : "Das ist ein Foto von einem Mathe-Blatt") +
     " eines Kindes der 4. Klasse. Schreibe JEDES Feld ab, in das das Kind eine Zahl eintragen sollte – Feld für Feld, " +
     "nichts zusammenfassen, nichts auslassen.\n\n" +
@@ -58,6 +61,12 @@ export function abschreibAuftrag(masse) {
     "- Tabelle: Zeilenkopf, das Rechenzeichen aus der Ecke, Spaltenkopf = Feld. Tabelle mit „:“ in der Ecke, Zeile 180, " +
     "Spalte 60: 180 : 60 = [Feld]. Jedes Feld eine eigene Zeile. Prüfe bei jedem Feld genau, in welcher Zeile und Spalte es steht.\n" +
     "- Rechenketten, Zahlenmauern, Umkehraufgaben: jeden Schritt als eigene Rechnung.\n" +
+    (druck ? "- Zahlenreihen („Zähle weiter“, „Setze die Reihe fort“, Zahlenstrahl): ZUERST eine eigene Zeile mit den GEDRUCKTEN " +
+      "Zahlen der Reihe, genau so, wie sie vorgedruckt dastehen, in ihrer Reihenfolge: <Nr> | DRUCK | 450, 460. Nur Gedrucktes, " +
+      "nichts vom Kind, nichts ausgerechnet. Die DRUCK-Zeile zählt NICHT im SOLL. Der Abstand der Reihe ist meist nicht gedruckt: " +
+      "Du leitest ihn aus den gedruckten Zahlen ab, er steht deshalb nur in den Rechnungen. Danach jedes Glied als eigene " +
+      "Rechnung, z. B. 460 + 10 = [470], [470] + 10 = [480] – die Zahlen des Kindes genau so, wie sie dastehen, auch wenn " +
+      "das Kind mit einem anderen Abstand gezählt hat.\n" : "") +
     "- Halbschriftliche Zwischenschritte als eigene Zeilen mit ~ hinter der Nr (4a~). Sie zählen NICHT im SOLL.\n" +
     "- Schriftliche Rechnungen: nur Aufgabe und Ergebnis, ohne Überträge.\n" +
     "- Schreib die Ziffern des Kindes GENAU so ab, wie sie dastehen, auch wenn sie falsch sind. Rechne NICHT selbst nach " +
@@ -154,6 +163,9 @@ export function feldLesen(zeile) {
   if (teile.length < 2 || !teile[1]) return null;
   const nrRoh = teile[0].replace(/^Aufgabe\s*/i, "").replace(/\s+/g, "");
   if (/^SOLL$/i.test(nrRoh) || !nrRoh || nrRoh.length > 12) return null;
+  /* DRUCK-Zeile (28.10.2026, nur Pauls Auftrag): gedruckte Glieder einer Reihe - kein Feld,
+     zählt nicht im SOLL, bleibt aber in den Zeilen (kettenFinden liest sie). */
+  if (/^DRUCK$/i.test(teile[1])) return null;
   const zwischen = /~$/.test(nrRoh);
   const nr = nrRoh.replace(/~$/, "") || "-";
   const rech = teile[1].replace(/\s+/g, " ").trim();
@@ -436,7 +448,7 @@ function mehrdeutigeFelder(ab) {
   for (const f of ab.felder) if (teile(f)) (je[sig(f)] = je[sig(f)] || new Set()).add(pos(f));
   return new Set(ab.felder.filter((f) => teile(f) && je[sig(f)].size > 1));
 }
-export function auswerten(n) {
+export function auswerten(n, opt) {
   if (!n || !Array.isArray(n.z)) return null;
   const ab = abschriftLesen(n.z.join("\n"));
   const si = sollIst(ab);
@@ -455,6 +467,8 @@ export function auswerten(n) {
     const zweite = g[id];
     fehler.push({ f, u, id, bestaetigt: zweite == null ? null : zweite === u.final });
   }
+  /* opt.ketten (28.10.2026, nur Paul): die Zahlenreihen mit denselben Feld-Objekten wie `fehler`. */
+  if (opt && opt.ketten) return { ...si, felder: ab.felder.length, zaehl, fehler, abgebrochen: !!n.f, ketten: kettenFinden(n, ab) };
   return { ...si, felder: ab.felder.length, zaehl, fehler, abgebrochen: !!n.f };
 }
 
@@ -482,8 +496,98 @@ export function aktuell(blatt) {
   if (typeof blatt.seiteNeu === "string") foto.push(blatt.seiteNeu);
   return !foto.some((t) => typeof t === "string" && t > n.am);
 }
-export function brauchtNachrechnen(blatt) {
-  return !!blatt && blatt.fach === "mathe" && blatt.sichtbar !== false && !aktuell(blatt);
+export function brauchtNachrechnen(blatt, kind) {
+  if (!blatt || blatt.fach !== "mathe" || blatt.sichtbar === false) return false;
+  if (!aktuell(blatt)) return true;
+  /* Gezieltes Nachlesen (28.10.2026, nur Paul): eine Reihe mit Fehlern, deren Abstand kein gedrucktes
+     Glied belegt, wird EINMAL mit der DRUCK-Regel neu abgeschrieben (Marker d). Keine VERSION-Erhöhung -
+     die hätte alle Matheblätter neu lesen lassen. */
+  if (kind === "paul" && !blatt.nachgerechnet.d) {
+    const k = kettenFinden(blatt.nachgerechnet);
+    return k.some((x) => !x.belegt && !x.druck && x.feldFalsch > 0);
+  }
+  return false;
+}
+
+/* ---------- Zahlenreihen (28.10.2026, nur Paul) ----------
+   Anlass: Blatt g503ypea2c, Aufgabe 2d „Zähle richtig weiter“. Gedruckt stehen 1977 und 1990, Paul zählte
+   mit +23 weiter. Die Abschrift trug den Abstand 13, den das Modell selbst abgeleitet hatte, und feldUrteil
+   rechnete jedes Folgeglied aus Pauls eigenem Vorwert: 6 Karten, und Karte 2 hätte 2026 als richtig
+   angenommen (Befund befunde/2026-10-28-paul-folgefehler-2d.md). Dennys Wahl 1 und 2 vom 28.10.2026:
+   - Das Soll kommt NIE aus Pauls Vorwert, sondern aus der gedruckten Reihe: mindestens zwei gedruckte
+     Glieder (DRUCK-Zeile), gleicher Abstand, nachgerechnet; das letzte gedruckte Glied ist die Startzahl.
+   - Eine Kette = eine Karte; Folgefehler werden nicht einzeln gemeldet.
+   Eine Kette: gleiche Nr, Rechenzeichen + oder −, dieselbe Zahl b in jedem Glied, Ergebnis vom Kind, und ab
+   dem zweiten Glied ist die vordere Zahl Pauls Ergebnis davor. Mindestens zwei Glieder.
+   Gibt je Kette { nr, glieder, op, b, start, druck, belegt, grund, schritt, soll, paul, falsch, feldFalsch,
+   rot, bestaetigt, paulSchritt }. */
+export function druckLesen(zeilen) {
+  const aus = {};
+  for (const z of zeilen || []) {
+    const t = String(z || "").split("|").map((x) => x.trim());
+    if (t.length < 3 || !/^DRUCK$/i.test(t[1])) continue;
+    const nr = t[0].replace(/^Aufgabe\s*/i, "").replace(/\s+/g, "");
+    const zahlen = t.slice(2).join(",").split(/[,;\s]+/).filter(Boolean);
+    if (!nr || !zahlen.length || zahlen.some((x) => !/^\d{1,7}$/.test(x))) { aus[nr] = { unlesbar: true }; continue; }
+    aus[nr] = { zahlen: zahlen.map(Number) };
+  }
+  return aus;
+}
+export function kettenFinden(n, ab0) {
+  if (!n || !Array.isArray(n.z)) return [];
+  const ab = ab0 || abschriftLesen(n.z.join("\n"));
+  const druck = druckLesen(n.z);
+  const g = n.g || {};
+  const istGlied = (f) => f.typ === "gleichung" && !f.zwischen && (f.op === "+" || f.op === "-") &&
+    !f.teil.b.kind && f.teil.b.wert != null && f.teil.c.kind;
+  const ketten = [];
+  let lauf = null;
+  const ab_ = () => { if (lauf && lauf.glieder.length >= 2) ketten.push(lauf); lauf = null; };
+  for (const f of ab.felder) {
+    if (!istGlied(f)) { ab_(); continue; }
+    const vorne = lauf && lauf.glieder[lauf.glieder.length - 1];
+    const haengt = vorne && vorne.nr === f.nr && f.op === lauf.op && f.teil.b.wert === lauf.b && f.teil.a.kind &&
+      f.teil.a.wert != null && vorne.teil.c.wert != null && f.teil.a.wert === vorne.teil.c.wert;
+    if (haengt) { lauf.glieder.push(f); continue; }
+    ab_();
+    /* Erstes Glied: die vordere Zahl ist gedruckt (sonst wäre es kein Anfang, sondern ein loses Feld). */
+    if (!f.teil.a.kind && f.teil.a.wert != null) lauf = { nr: f.nr, op: f.op, b: f.teil.b.wert, glieder: [f] };
+  }
+  ab_();
+  return ketten.map((k) => {
+    const start = k.glieder[0].teil.a.wert;
+    const paul = k.glieder.map((f) => (f.teil.c.leer || f.teil.c.unsicher || f.teil.c.wert == null ? null : f.teil.c.wert));
+    const rot = k.glieder.some((f) => Array.isArray(f.rot) && f.rot.length);
+    const urteile = k.glieder.map((f) => feldUrteil(f));
+    const feldFalsch = urteile.filter((u) => u.urteil === "falsch").length;
+    /* Pauls eigener Abstand: nur wenn er überall gleich ist (Startzahl, dann seine Glieder). */
+    let paulSchritt = null;
+    const ende = paul.indexOf(null);
+    const r = [start].concat(ende < 0 ? paul : paul.slice(0, ende));
+    const dd = r.slice(1).map((x, i) => x - r[i]);
+    if (dd.length >= 2 && dd.every((x) => x === dd[0]) && dd[0]) paulSchritt = dd[0];
+    const o = { nr: k.nr, glieder: k.glieder, op: k.op, b: k.b, start, paul, rot, feldFalsch, paulSchritt,
+                druck: null, belegt: false, grund: "", schritt: null, soll: null, falsch: [], bestaetigt: null };
+    const dz = druck[k.nr];
+    if (!dz) { o.grund = "keine gedruckten Glieder abgeschrieben"; return o; }
+    if (dz.unlesbar) { o.grund = "gedruckte Glieder unlesbar"; return o; }
+    o.druck = dz.zahlen;
+    if (dz.zahlen.length < 2) { o.grund = "nur ein gedrucktes Glied"; return o; }
+    const d = dz.zahlen.slice(1).map((x, i) => x - dz.zahlen[i]);
+    if (!d.every((x) => x === d[0]) || !d[0]) { o.grund = "gedruckte Glieder haben keinen gleichen Abstand"; return o; }
+    if ((k.op === "+" ? d[0] : -d[0]) !== k.b) { o.grund = "Abstand der gedruckten Glieder (" + Math.abs(d[0]) + ") passt nicht zur Abschrift (" + k.b + ")"; return o; }
+    if (dz.zahlen[dz.zahlen.length - 1] !== start) { o.grund = "letztes gedrucktes Glied ist nicht die Startzahl"; return o; }
+    o.belegt = true; o.schritt = d[0];
+    o.soll = k.glieder.map((f, i) => start + (i + 1) * d[0]);
+    o.falsch = paul.map((x, i) => (x != null && x !== o.soll[i] ? i : -1)).filter((i) => i >= 0);
+    if (o.falsch.length) {
+      /* Zweite Lesung des ersten falschen Glieds: dessen vordere Zahl stimmt (gedruckt oder richtig gezählt),
+         also hat feldUrteil es als falsch gefragt. */
+      const i = o.falsch[0], u = urteile[i];
+      if (u.urteil === "falsch") { const z = g[feldId(k.glieder[i], u)]; o.bestaetigt = z == null ? null : z === u.final; }
+    }
+    return o;
+  });
 }
 
 /* ---------- Modellaufrufe ---------- */
@@ -536,7 +640,7 @@ export async function nachrechnen(key, bilder, opt, vorher) {
   const g = { ...((vorher && vorher.g) || {}) };
   let versuche = (vorher && vorher.w) || 0;
   if (!zeilen) {
-    const r1 = await frage(key, liste, abschreibAuftrag(liste.map(() => null)), o);
+    const r1 = await frage(key, liste, abschreibAuftrag(liste.map(() => null), { kind: o.kind }), o);
     aufrufe++; plus(r1.usage);
     if (r1.fehler) return { ok: false, fehler: r1.fehler, usage, aufrufe };
     roh = r1.text; zeilen = abschriftLesen(r1.text).zeilen; versuche = 1;
@@ -545,7 +649,7 @@ export async function nachrechnen(key, bilder, opt, vorher) {
   if (!si.voll && versuche < 2 && o.zweiterAnlauf !== false) {
     const hinweis = "\n\nACHTUNG: Ein erster Durchgang hat sich verzählt (" + si.fehlt.slice(0, 8).join("; ") +
       "). Zähle die Felder jeder Aufgabe noch einmal genau und schreibe JEDES Feld ab – SOLL und Feldzeilen müssen übereinstimmen.";
-    const r1b = await frage(key, liste, abschreibAuftrag(liste.map(() => null)) + hinweis, { ...o, effort: "medium", max: 16000 });
+    const r1b = await frage(key, liste, abschreibAuftrag(liste.map(() => null), { kind: o.kind }) + hinweis, { ...o, effort: "medium", max: 16000 });
     aufrufe++; plus(r1b.usage); versuche = 2;
     if (!r1b.fehler) {
       const z2 = abschriftLesen(r1b.text).zeilen, si2 = sollIst(abschriftLesen(z2.join("\n")));
@@ -564,7 +668,9 @@ export async function nachrechnen(key, bilder, opt, vorher) {
   const alt = (vorher && vorher.u) || [0, 0];
   return { ok: true, aufrufe, usage, roh,
            nachgerechnet: { v: VERSION, am: vorher && vorher.am && !roh ? vorher.am : am, z: zeilen.slice(0, 400), g, w: versuche,
-                            u: [alt[0] + usage.ein, alt[1] + usage.aus] } };
+                            u: [alt[0] + usage.ein, alt[1] + usage.aus],
+                            /* d (28.10.2026): mit DRUCK-Regel abgeschrieben (nur Paul) - kein zweites gezieltes Nachlesen. */
+                            ...(o.kind === "paul" && (roh || (vorher && vorher.d)) ? { d: 1 } : {}) } };
 }
 
 /* Opus 5.5: 4 $ je Mio. Eingabe, 20 $ je Mio. Ausgabe (Anthropic-Preisliste 09/2026). */

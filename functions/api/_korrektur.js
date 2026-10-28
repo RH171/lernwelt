@@ -67,6 +67,9 @@ export function korrekturFuer(s, jetzt) {
     const g = { ...s.g, [s.luecke]: s.soll };
     const k = kindSchrieb(zeile);
     if (k) neu = ganzErsetzen(zeile, k.ganz, g.a + " " + OP_ZEIGEN[g.op] + " " + g.b + " = " + g.c);
+  } else if (s.art === "rechnen" && s.typ === "kette") {
+    /* Zahlenreihe (28.10.2026, nur Paul): die ganze Reihe aus den gedruckten Zahlen. */
+    korrigiert = (s.soll || []).join(", ");
   } else if (s.art === "rechnen" && s.typ === "ausdruck") {
     korrigiert = String(s.soll);
   } else if (s.art === "rechnen" && s.typ === "rest") {
@@ -82,7 +85,8 @@ export function korrekturFuer(s, jetzt) {
   } else return null;
   if (!korrigiert) return null;
   const quelle = s.art === "pinnwand" ? "pinnwand" : s.art === "schreiben" ? "nachgesehen" : "nachgerechnet";
-  const out = { ...grund, quelle, war: String(s.du || "").slice(0, 120), korrigiert: korrigiert.slice(0, 120) };
+  const war = s.typ === "kette" && Array.isArray(s.paul) ? s.paul.filter((v) => v != null).join(", ") : String(s.du || "");
+  const out = { ...grund, quelle, war: war.slice(0, 120), korrigiert: korrigiert.slice(0, 120) };
   /* Nachrechnen (14.10.2026): Die Stelle steht nicht als Zeile im Inhalt, nur in
      der Abschrift - also nur Verlauf und grüner Kreis, keine Karten, keine Quizfragen. */
   if (s.nachgerechnet || s.volllesen) { out.eng = true; return out; }

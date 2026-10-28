@@ -55,7 +55,7 @@ import { stoffBild } from "./_schulstoff.js";
 import { vorlagenLesen, vorlagenBilderLesen, vorlageFuerBlatt, BILD_SCHLUESSEL } from "./_lehrervorlagen.js";
 import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
          zustandLesen, zustandSchreiben, fortschritt, imBestand, brauchtNachrechnen, nachrechenStand,
-         brauchtVolllesen, volllesStand, optFuer } from "./_pruefreiter.js";
+         brauchtVolllesen, volllesStand, optFuer, kettenStand, sichtPruefen } from "./_pruefreiter.js";
 import { nachrechnen } from "./_nachrechnen.js";
 import { volllesen, fortsetzbar, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { nachgerechnetSetzen, abschriftenSetzen } from "./_schulstoff.js";
@@ -100,14 +100,27 @@ export async function onRequestGet(context) {
   if (p.get("eltern") === "1") {
     if (!(await istEltern(request, env))) return json(401, { ok: false, fehler: "Nur für Eltern." });
     const alle = {};
-    for (const b of e.eintraege || []) for (const s of stellenFuerBlatt(b, vorlagen, optFuer(e.eintraege, b))) alle[s.id] = s;
+    for (const b of e.eintraege || []) for (const s of stellenFuerBlatt(b, vorlagen, optFuer(e.eintraege, b, kind))) alle[s.id] = s;
     const liste = Object.keys(zustand.s).filter((id) => zustand.s[id].z === "stimmt").map((id) => {
       const s = alle[id], z = zustand.s[id];
       return { id, wann: z.t || "", blatt: s ? s.blatt : { id: id.split(":")[0] }, aufgabe: s ? s.aufgabe : "",
                du: s ? s.du : (z.du || ""), richtig: s && s.soll != null ? (Array.isArray(s.soll) ? s.soll.join(", ") : String(s.soll)) : "",
                art: s ? s.art : "" };
     });
-    const offen = offeneStellen(e.eintraege, vorlagen, zustand);
+    const offen = offeneStellen(e.eintraege, vorlagen, zustand, null, kind);
+    /* „Meine Sicht“ (28.10.2026, nur Paul): was der Server nicht entscheiden konnte. */
+    const meineSicht = Object.keys(zustand.s).filter((id) => zustand.s[id].z === "sicht").map((id) => {
+      const s = alle[id], z = zustand.s[id];
+      return { id, wann: z.t || "", blatt: s ? s.blatt : { id: id.split(":")[0] }, aufgabe: s ? s.aufgabe : "",
+               du: s ? s.du : (z.du || ""), wahl: String(z.w || ""), urteil: String(z.urteil || "offen"),
+               richtig: s && s.soll != null ? (Array.isArray(s.soll) ? s.soll.join(", ") : String(s.soll)) : "" };
+    });
+    /* Zahlenreihen (28.10.2026, nur Paul): auch die, für die Paul keine Karte bekommt (Abstand nicht belegt). */
+    const ketten = [];
+    if (kind === "paul") for (const b of e.eintraege || []) {
+      if (!imBestand(b)) continue;
+      for (const k of kettenStand(b)) ketten.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "" }, ...k });
+    }
     /* Verbessert durch Claude (14.10.2026): was im Blatt berichtigt wurde, mit dem alten Wert. */
     const verbessert = [];
     for (const b of e.eintraege || []) for (const k of (Array.isArray(b.korrekturen) ? b.korrekturen : [])) {
@@ -130,11 +143,12 @@ export async function onRequestGet(context) {
       const st = volllesStand(b, optFuer(e.eintraege, b).vokabeln);
       gelesen.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "", fach: b.fach || "" }, ...st });
     }
-    return json(200, { ok: true, stimmtDoch: liste, offen: offen.length, verbessertClaude: verbessert.slice(0, 40),
+    return json(200, { ok: true, stimmtDoch: liste, offen: offen.length,
+                       ...(kind === "paul" ? { meineSicht, ketten: ketten.slice(0, 40) } : {}), verbessertClaude: verbessert.slice(0, 40),
                        nachgerechnet: nachgerechnet.slice(0, 60), volllesen: gelesen.slice(0, 160) });
   }
 
-  const offen = offeneStellen(e.eintraege, vorlagen, zustand, blatt || null);
+  const offen = offeneStellen(e.eintraege, vorlagen, zustand, blatt || null, kind);
   /* Bilder nur, wenn es überhaupt eine 📌-Stelle gibt - sonst ein Lesevorgang umsonst. */
   const bilder = offen.some((s) => s.art === "pinnwand") ? await vorlagenBilderLesen(env, kind) : {};
   /* Fehlerkreis: ein Lesevorgang, nur wenn es Stellen gibt. */
@@ -142,7 +156,7 @@ export async function onRequestGet(context) {
   const orten_ = kreise && env.ANTHROPIC_API_KEY
     ? [...new Set(offen.filter((s) => fehltOrt(kreise, s) || belegFehlt(kreise, s, bilder)).map((s) => s.blatt.id))] : [];
   const nachr = env.ANTHROPIC_API_KEY ? (e.eintraege || []).filter((b) =>
-    (blatt ? b.id === blatt : imBestand(b)) && Array.isArray(b.inhalt) && b.inhalt.length && brauchtNachrechnen(b)).map((b) => b.id) : [];
+    (blatt ? b.id === blatt : imBestand(b)) && Array.isArray(b.inhalt) && b.inhalt.length && brauchtNachrechnen(b, kind)).map((b) => b.id) : [];
   /* Volllesen (15.10.2026): gelesene Blätter ohne ganze Abschrift. */
   const voll = env.ANTHROPIC_API_KEY ? (e.eintraege || []).filter((b) =>
     (blatt ? b.id === blatt : imBestand(b)) && Array.isArray(b.inhalt) && b.inhalt.length && brauchtVolllesen(b)).map((b) => b.id) : [];
@@ -150,7 +164,7 @@ export async function onRequestGet(context) {
                      ...(nachr.length ? { nachrechnen: nachr.slice(0, 4) } : {}),
                      ...(voll.length ? { volllesen: voll.slice(0, 4) } : {}),
                      blaetter: new Set(offen.map((s) => s.blatt.id)).size,
-                     fortschritt: fortschritt(e.eintraege, vorlagen, zustand, blatt || null),
+                     fortschritt: fortschritt(e.eintraege, vorlagen, zustand, blatt || null, undefined, kind),
                      ...(orten_.length ? { orten: orten_.slice(0, 6) } : {}) });
 }
 
@@ -178,7 +192,7 @@ async function ortenAktion(env, kind, blattId) {
   if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
   const vorlagen = await vorlagenLesen(env, kind);
   const zustand = await zustandLesen(env, kind);
-  const stellen = stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt)).filter((s) => !zustand.s[s.id]);
+  const stellen = stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt, kind)).filter((s) => !zustand.s[s.id]);
   const kreise = await kreiseLesen(env, kind);
   /* Neues Foto (14.10.2026): Orte vom alten Foto dieses Blattes verwerfen.
      Gespeichert wird das nur mit dem Schreibvorgang der neuen Ortung - bis
@@ -242,7 +256,7 @@ async function nachrechnenAktion(env, kind, blattId) {
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
   const blatt = (e.eintraege || []).find((b) => b.id === blattId);
   if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
-  if (!brauchtNachrechnen(blatt)) return json(200, { ok: true, schon: true });
+  if (!brauchtNachrechnen(blatt, kind)) return json(200, { ok: true, schon: true });
   const seiten = [];
   for (let i = 0; i < Math.min(4, Number(blatt.seiten) || 1); i++) {
     const b = await stoffBild(env, blattId, i);
@@ -250,11 +264,11 @@ async function nachrechnenAktion(env, kind, blattId) {
     seiten.push(b);
   }
   if (!seiten.length) return json(404, { ok: false, fehler: "Zu dem Blatt liegt kein Bild da." });
-  const r = await nachrechnen(env.ANTHROPIC_API_KEY, seiten, { grenze: 45000 });
+  const r = await nachrechnen(env.ANTHROPIC_API_KEY, seiten, { grenze: 45000, kind });
   if (!r.ok) return json(503, { ok: false, fehler: "Nachrechnen ging gerade nicht (" + r.fehler + ")." });
   const w = await nachgerechnetSetzen(env, kind, blattId, r.nachgerechnet);
   if (!w.ok) return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken." });
-  const neu = stellenFuerBlatt({ ...blatt, nachgerechnet: r.nachgerechnet }, await vorlagenLesen(env, kind), optFuer(e.eintraege, blatt)).filter((s) => s.id.includes(":n:"));
+  const neu = stellenFuerBlatt({ ...blatt, nachgerechnet: r.nachgerechnet }, await vorlagenLesen(env, kind), optFuer(e.eintraege, blatt, kind)).filter((s) => /:[nk]:/.test(s.id));
   return json(200, { ok: true, nachgerechnet: true, stellen: neu.length });
 }
 
@@ -268,7 +282,7 @@ async function volllesenAktion(env, kind, blattId) {
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
   const blatt = (e.eintraege || []).find((b) => b.id === blattId);
   if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
-  const vl = brauchtVolllesen(blatt), nr = blatt.fach === "mathe" && brauchtNachrechnen(blatt);
+  const vl = brauchtVolllesen(blatt), nr = blatt.fach === "mathe" && brauchtNachrechnen(blatt, kind);
   if (!vl && !nr) return json(200, { ok: true, schon: true });
   const seiten = [];
   for (let i = 0; i < Math.min(4, Number(blatt.seiten) || 1); i++) {
@@ -282,7 +296,7 @@ async function volllesenAktion(env, kind, blattId) {
     vl ? volllesen(env.ANTHROPIC_API_KEY, seiten, { fach: blatt.fach, kind, faecher: FAECHER_JE_KIND[kind], ohneRechnen: blatt.fach === "mathe",
                                                      vokabeln: vokabelnImFach(e.eintraege, blatt.fach, blatt.id),
                                                      grenze: 80000, frist: start + 85000 }, fortsetzbar(blatt) || undefined) : null,
-    nr ? nachrechnen(env.ANTHROPIC_API_KEY, seiten, { grenze: 80000 }) : null,
+    nr ? nachrechnen(env.ANTHROPIC_API_KEY, seiten, { grenze: 80000, kind }) : null,
   ]);
   const felder = {};
   if (rv && rv.ok) felder.volllesen = rv.volllesen;
@@ -298,7 +312,7 @@ async function volllesenAktion(env, kind, blattId) {
      offen ist oder das Kind das Fach selbst gewaehlt oder bestaetigt hat. */
   let fachFrage = null;
   if (felder.volllesen) { try { fachFrage = await fachPruefen(env, kind, blatt, vlFach(felder.volllesen), { spaet: true }); } catch (x) {} }
-  const neu = stellenFuerBlatt(mit, await vorlagenLesen(env, kind), optFuer(e.eintraege, mit)).filter((s) => /:[nv]:/.test(s.id));
+  const neu = stellenFuerBlatt(mit, await vorlagenLesen(env, kind), optFuer(e.eintraege, mit, kind)).filter((s) => /:[nvk]:/.test(s.id));
   return json(200, { ok: true, volllesen: !!felder.volllesen, nachgerechnet: !!felder.nachgerechnet, stellen: neu.length,
                      ...(fachFrage ? { fachFrage } : {}),
                      ...(felder.volllesen && felder.volllesen.offen ? { offen: true } : {}) });
@@ -343,20 +357,20 @@ export async function onRequestPost(context) {
   }
   const id = String(d.stelle || "").slice(0, 80);
   const aktion = String(d.aktion || "");
-  if (!/^[a-z0-9]+:[rplnv]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });
-  if (!["pruefen", "stimmt", "gesehen", "verbessert"].includes(aktion)) return json(400, { ok: false, fehler: "Unbekannte Aktion." });
+  if (!/^[a-z0-9]+:[rplnvk]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });
+  if (!["pruefen", "stimmt", "gesehen", "verbessert", "sicht"].includes(aktion)) return json(400, { ok: false, fehler: "Unbekannte Aktion." });
 
   const e = await stoffLesen(env, kind, MONATE_BLATT);
   if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
   const blattId = id.split(":")[0];
   const blatt = (e.eintraege || []).find((b) => b.id === blattId);
   const vorlagen = await vorlagenLesen(env, kind);
-  const s = blatt ? stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt)).find((x) => x.id === id) : null;
+  const s = blatt ? stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt, kind)).find((x) => x.id === id) : null;
   if (!s) {
     /* Rot ist fertig (16.10.2026): eine alte offene Seite zeigt vielleicht noch eine
        ✍️-Karte oder eine Stelle, an der die Lehrerin rot verbessert hat. Tippt Paul
        dort, verschwindet die Karte still - kein Schreibvorgang, keine Korrektur. */
-    const alt = blatt ? stellenFuerBlatt(blatt, vorlagen, { ...optFuer(e.eintraege, blatt), mitRot: true }).find((x) => x.id === id) : null;
+    const alt = blatt ? stellenFuerBlatt(blatt, vorlagen, { ...optFuer(e.eintraege, blatt, kind), mitRot: true }).find((x) => x.id === id) : null;
     if (alt) return json(200, { ok: true, schon: true, rot: true });
     return json(404, { ok: false, fehler: "Diese Stelle gibt es nicht mehr." });
   }
@@ -371,6 +385,15 @@ export async function onRequestPost(context) {
   } else if (aktion === "gesehen") {
     if (s.art !== "lehrerin") return json(400, { ok: false, fehler: "Diese Stelle wird verbessert, nicht nur angesehen." });
     zustand.s[id] = { z: "gesehen", t: jetzt };
+  } else if (aktion === "sicht") {
+    /* „Meine Sicht“ (28.10.2026, nur Paul): nur „nicht entscheidbar“ wird gespeichert. */
+    if (kind !== "paul" || s.art !== "rechnen") return json(400, { ok: false, fehler: "Das geht hier nicht." });
+    const r = sichtPruefen(s, d.w);
+    if (r.urteil !== "offen") return json(200, { ok: true, ...r });
+    zustand.s[id] = { z: "sicht", t: jetzt, du: s.du, w: String(d.w || "").slice(0, 40), urteil: "offen" };
+    try { await zustandSchreiben(env, kind, zustand); }
+    catch (x) { return json(503, { ok: false, fehler: "Ich konnte es mir gerade nicht merken. Probier es später nochmal." }); }
+    return json(200, { ok: true, ...r });
   } else if (aktion === "stimmt") {
     if (s.art === "lehrerin") return json(400, { ok: false, fehler: "Das hat deine Lehrerin verbessert." });
     zustand.s[id] = { z: "stimmt", t: jetzt, du: s.du };

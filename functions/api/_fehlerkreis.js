@@ -102,6 +102,13 @@ export function zieleFuerStelle(s) {
       " (vielleicht in einer Tabelle: Zeile und Spalte ergeben die Rechnung). Das Kind hat dort " + JSON.stringify(s.du) +
       " eingetragen" + rot + ". Das Rechteck umfasst genau diese eingetragene Zahl " + JSON.stringify(s.du) + "." }];
   }
+  /* Zahlenreihe (28.10.2026, nur Paul): ein Rahmen um die ganze Reihe des Kindes, nicht je Zahl. */
+  if (s.art === "rechnen" && s.typ === "kette") {
+    const z = (s.paul || []).filter((v) => v != null);
+    return [{ id: s.id, text: wo + "die Zahlenreihe: gedruckt " + (s.druck || []).join(", ") + ", danach hat das Kind " +
+      JSON.stringify(z.join(", ")) + " weitergeschrieben. Das Rechteck umfasst die ganze Reihe des Kindes, von " +
+      JSON.stringify(String(z[0])) + " bis " + JSON.stringify(String(z[z.length - 1])) + "." }];
+  }
   if (s.art === "rechnen" && s.typ === "ausdruck")
     return [{ id: s.id, text: wo + "die Rechnung " + String(s.aufgabe || "").replace(/^Aufgabe [^:]+: /, "").replace("?", JSON.stringify(s.du)) +
       ". Das Kind hat dort " + JSON.stringify(s.du) + " eingetragen" + rot + ". Das Rechteck umfasst genau diese eingetragene Zahl." }];

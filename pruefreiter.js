@@ -54,6 +54,9 @@
     var m = /^\/(paul|helena|leon)\//.exec(location.pathname || "");
     return m ? m[1] : "paul";
   })();
+  /* 28.10.2026, nur Paul: Rahmen der Lernwerkstatt violett gestrichelt mit Legende, „Meine Sicht“ auf Rechenkarten. */
+  var PAUL = KIND === "paul";
+  function legendeHtml() { return PAUL && window.LWKreis && LWKreis.legende ? '<div class="lwp-legende">' + LWKreis.legende() + "</div>" : ""; }
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -106,11 +109,13 @@
       })
       .catch(function () { return { stellen: [], blaetter: 0, fortschritt: { erledigt: 0, gesamt: 0 } }; });
   }
-  function senden(stelle, aktion, antwort) {
+  function senden(stelle, aktion, antwort, w) {
+    var daten = { kind: KIND, stelle: stelle, aktion: aktion, antwort: antwort };
+    if (w != null) daten.w = w;
     return fetch("/api/pruefreiter", {
       method: "POST", credentials: "same-origin",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ kind: KIND, stelle: stelle, aktion: aktion, antwort: antwort })
+      body: JSON.stringify(daten)
     }).then(function (r) { return r.json(); });
   }
 
@@ -212,14 +217,14 @@
     g.innerHTML = '<div class="lwp-gross-oben"><div class="lwp-gross-titel">' + esc(o.titel || "") + '</div>' +
       '<button type="button" class="lwp-gross-zu">✕ Schließen</button></div>' +
       '<div class="lwp-gross-bild"><img alt="' + esc(o.titel || "Bild") + '"><div class="lwp-gross-laedt">Einen Moment …</div></div>' +
-      '<div class="lwp-gross-leiste"></div>';
+      '<div class="lwp-gross-leiste"></div>' + (o.kreise && o.kreise.length ? legendeHtml() : "");
     document.body.appendChild(g);
     document.documentElement.classList.add("lwp-gross-offen");
     var img = g.querySelector("img"), laedt = g.querySelector(".lwp-gross-laedt");
     img.setAttribute("data-seite", String(Math.max(0, Number(o.start) || 0)));
     /* Fehlerkreis in der Großansicht; von einer Karte aus ist ihr Kreis hervorgehoben
        und das Bild startet vergrößert an dieser Stelle ("🔍 Ganzes Blatt" zeigt alles). */
-    var kreis = window.LWKreis && o.kreise && o.kreise.length ? LWKreis.legen(img, o.kreise, {}) : null;
+    var kreis = window.LWKreis && o.kreise && o.kreise.length ? LWKreis.legen(img, o.kreise, { werkstatt: PAUL }) : null;
     if (kreis && o.aktiv) kreis.aktiv(o.aktiv);
     var zoomKnopf = null;
     if (kreis && o.zoom) {
@@ -353,7 +358,7 @@
           if (!url) { vb.remove(); return; }
           vimg.onload = function () {
             vimg.hidden = false; var l = vb.querySelector(".lwp-vorschau-leer"); if (l) l.remove();
-            if (window.LWKreis && !vKreis) vKreis = LWKreis.legen(vimg, belegKreise(), { klein: true, fokus: true });
+            if (window.LWKreis && !vKreis) vKreis = LWKreis.legen(vimg, belegKreise(), { klein: true, fokus: true, werkstatt: PAUL });
           };
           vimg.onerror = function () { vb.remove(); };
           vimg.src = url;
@@ -366,17 +371,29 @@
         });
       }
     } else {
+      var sicht = PAUL && s.art === "rechnen";
+      var kette = s.typ === "kette";
+      var zeichen = kette && s.druck && s.druck.length > 1 && s.druck[1] < s.druck[0] ? "−" : "+";
+      var sichtWahl = !sicht ? "" : kette
+        ? (s.paulSchritt ? '<button type="button" class="lwp-leise lwp-wahl" data-w="schritt:' + Math.abs(s.paulSchritt) + '">Ich habe ' + zeichen + Math.abs(s.paulSchritt) + " gerechnet.</button>" : "") +
+          '<span class="lwp-wahl-feld">Ich habe ' + zeichen + ' <input type="text" inputmode="numeric" autocomplete="off" class="lwp-wahl-zahl" aria-label="Dein Abstand" placeholder="?"> gerechnet. ' +
+          '<button type="button" class="lwp-leise lwp-wahl lwp-wahl-eigen">Das meine ich</button></span>' +
+          '<button type="button" class="lwp-leise lwp-wahl" data-w="anders">Auf dem Blatt steht eine andere Zahl.</button>'
+        : '<button type="button" class="lwp-leise lwp-wahl" data-w="richtig">Meine Zahl stimmt, ich habe nachgerechnet.</button>' +
+          '<button type="button" class="lwp-leise lwp-wahl" data-w="anders">Auf dem Blatt steht eine andere Zahl.</button>';
       d.innerHTML = kopf +
         '<div class="lwp-aufgabe">' + esc(s.aufgabe) + "</div>" +
         '<div class="lwp-du">' + (s.steht ? "Bei dir steht: " : "Du hast geschrieben: ") + '<span class="lwp-falsch">' + esc(s.du) + "</span></div>" +
         '<div class="lwp-tipp">💡 <span class="lwp-tipptext">' + esc(s.tipp) + "</span></div>" +
         '<div class="lwp-feld"><input type="text" autocomplete="off" aria-label="Deine Verbesserung" ' +
-          (s.eingabe === "zahl" ? 'inputmode="numeric" placeholder="neue Zahl"' :
+          (kette ? 'inputmode="numeric" placeholder="Abstand"' : s.eingabe === "zahl" ? 'inputmode="numeric" placeholder="neue Zahl"' :
            s.eingabe === "liste" ? 'inputmode="numeric" placeholder="z. B. 1, 2, …"' :
            s.eingabe === "rest" ? 'placeholder="z. B. 9 R 2"' : 'placeholder="dein Wort"') + ">" +
           '<button type="button" class="lwp-ja lwp-pruefen">Prüfen</button></div>' +
-        '<div class="lwp-knoepfe"><button type="button" class="lwp-leise lwp-stimmt">Stimmt doch so</button>' +
+        '<div class="lwp-knoepfe">' + (sicht ? '<button type="button" class="lwp-leise lwp-sicht" aria-expanded="false">Meine Sicht</button>'
+                                             : '<button type="button" class="lwp-leise lwp-stimmt">Stimmt doch so</button>') +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
+        (sicht ? '<div class="lwp-sichtwahl" hidden><div class="lwp-sichtfrage">Was hast du gerechnet?</div>' + sichtWahl + "</div>" : "") +
         '<div class="lwp-meldung" aria-live="polite"></div>';
     }
     /* Fehlerkreis: "📍 Zeig mir die Stelle" - nur, wenn die Stelle geortet ist. */
@@ -406,7 +423,7 @@
       weg(s.id, true, "sofort");
       setTimeout(function () { d.remove(); weg(s.id, true); }, 1600);
     }
-    function knoepfe(an) { Array.prototype.forEach.call(d.querySelectorAll(".lwp-knoepfe button,.lwp-feld button,input"), function (x) { x.disabled = !an; }); }
+    function knoepfe(an) { Array.prototype.forEach.call(d.querySelectorAll(".lwp-knoepfe button,.lwp-feld button,.lwp-sichtwahl button,input"), function (x) { x.disabled = !an; }); }
 
     var spaeter = d.querySelector(".lwp-spaeter");
     spaeter.addEventListener("click", function () { d.remove(); weg(s.id, false); });
@@ -422,7 +439,7 @@
 
     var pruefen = d.querySelector(".lwp-pruefen");
     if (pruefen) {
-      var feld = d.querySelector("input");
+      var feld = d.querySelector(".lwp-feld input");
       var los = function () {
         var a = feld.value.trim();
         if (!a) { sag("Schreib deine Verbesserung in das Feld.", ""); feld.focus(); return; }
@@ -449,6 +466,42 @@
         fertig("Okay! Ich zeige es deinen Eltern zum Nachsehen.");
       }).catch(function () { knoepfe(true); sag("Das hat gerade nicht geklappt. Probier es gleich nochmal.", "fehler"); });
     });
+    /* „Meine Sicht“ (28.10.2026, nur Paul, Rechenkarten): Paul wählt, was er gerechnet hat; der Server
+       prüft gegen die gedruckten Zahlen bzw. die nachgerechnete Abschrift. Gibt die Quelle Paul recht,
+       steht es klar da; sonst bleibt die Karte offen und die Stelle leuchtet auf; nicht entscheidbar
+       geht an die Eltern. */
+    var sichtKnopf = d.querySelector(".lwp-sicht"), wahlKasten = d.querySelector(".lwp-sichtwahl");
+    if (sichtKnopf && wahlKasten) {
+      sichtKnopf.addEventListener("click", function () {
+        wahlKasten.hidden = !wahlKasten.hidden;
+        sichtKnopf.setAttribute("aria-expanded", wahlKasten.hidden ? "false" : "true");
+      });
+      var stelleZeigen = function () {
+        var id = s.blatt && s.blatt.id; if (!id) return;
+        krBlatt(id).apis.forEach(function (a) { if (a.aktiv) a.aktiv(s.id); });
+        if (!zeig.hidden) zeig.classList.add("lwp-zeig-hin");
+      };
+      var schick = function (w) {
+        knoepfe(false);
+        senden(s.id, "sicht", null, w).then(function (j) {
+          if (!j || !j.ok) throw 0;
+          if (j.urteil === "offen") { fertig(j.satz || "Ich zeige es deinen Eltern zum Nachsehen."); return; }
+          knoepfe(true);
+          if (j.urteil === "recht") { wahlKasten.hidden = true; sag(j.satz, "gut"); return; }
+          if (j.urteil === "nicht") { wahlKasten.hidden = true; sag(j.satz, "noch"); stelleZeigen(); return; }
+          sag(j.tipp || "Wähl aus, was du gerechnet hast.", "");
+        }).catch(function () { knoepfe(true); sag("Das hat gerade nicht geklappt. Probier es gleich nochmal.", "fehler"); });
+      };
+      Array.prototype.forEach.call(wahlKasten.querySelectorAll(".lwp-wahl[data-w]"), function (x) {
+        x.addEventListener("click", function () { schick(x.getAttribute("data-w")); });
+      });
+      var eigen = wahlKasten.querySelector(".lwp-wahl-eigen");
+      if (eigen) eigen.addEventListener("click", function () {
+        var z = String(wahlKasten.querySelector(".lwp-wahl-zahl").value || "").replace(/[^0-9]/g, "");
+        if (!z) { sag("Schreib deinen Abstand in das kleine Feld.", ""); wahlKasten.querySelector(".lwp-wahl-zahl").focus(); return; }
+        schick("schritt:" + z);
+      });
+    }
     return d;
   }
 
@@ -481,7 +534,7 @@
         f.z + " " + esc(f.n) + "</span>" +
         '<div class="lwp-blatt">' + esc(titel) + "</div>" +
         (b.seiten > 1 ? '<div class="lwp-seiten">' + b.seiten + " Seiten · antippen zum Ansehen</div>" : '<div class="lwp-seiten">Antippen zum Ansehen</div>') +
-        '<div class="lwp-claude" hidden></div>' +
+        '<div class="lwp-claude" hidden></div>' + legendeHtml() +
       "</div></div>";
     var knopf = k.querySelector(".lwp-blattbild"), img = knopf.querySelector("img");
     /* Fehlerkreis: Stellen und Verbesserungen dieses Blattes merken. */
@@ -492,7 +545,7 @@
       if (!url) return;
       img.onload = function () {
         img.hidden = false; var l = knopf.querySelector(".lwp-vorschau-leer"); if (l) l.remove();
-        if (window.LWKreis && !img._kreis) { img._kreis = LWKreis.legen(img, krKreise(b.id), { klein: true, fokus: true }); kr.apis.push(img._kreis); }
+        if (window.LWKreis && !img._kreis) { img._kreis = LWKreis.legen(img, krKreise(b.id), { klein: true, fokus: true, werkstatt: PAUL }); kr.apis.push(img._kreis); }
       };
       img.src = url;
     });
@@ -729,6 +782,15 @@
       ".lwp-meldung{font-size:16px;margin-top:8px;min-height:0}",
       ".lwp-meldung.lwp-gut{background:var(--lwp-gruenbg);color:var(--lwp-gruen);border-radius:12px;padding:10px 12px;font-weight:700}",
       ".lwp-meldung.lwp-noch{color:var(--lwp-ink);font-weight:600}",
+      ".lwp-sichtwahl{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:10px;border-radius:14px;background:var(--lwp-leise)}",
+      ".lwp-sichtwahl[hidden]{display:none}",
+      ".lwp-sichtfrage{font-weight:700;font-size:16px}",
+      ".lwp-sichtwahl .lwp-wahl{min-height:44px;text-align:left;background:var(--lwp-karte,#fff);border:1px solid var(--lwp-linie,#cbd5e1)}",
+      ".lwp-wahl-feld{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:16px}",
+      ".lwp-wahl-zahl{width:5.5em;min-height:44px;font-size:18px;padding:4px 8px;border-radius:10px;border:2px solid var(--lwp-linie,#94a3b8);background:var(--lwp-karte);color:var(--lwp-ink)}",
+      ".lwp-zeig-hin{outline:3px dashed #7c3aed;outline-offset:2px}",
+      ".lwp-legende{margin-top:4px}",
+      ".lwp-gross .lwp-legende{color:#fff;padding:4px 12px}",
       ".lwp-meldung.lwp-fehler{color:var(--lwp-rot)}",
       ".lwp-ueber{position:fixed;inset:0;z-index:9000;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(10,12,24,.55);padding:16px 12px 40px;box-sizing:border-box}",
       ".lwp-innen{max-width:640px;margin:0 auto;background:var(--lwp-blaubg);border-radius:24px;padding:16px;box-sizing:border-box}",

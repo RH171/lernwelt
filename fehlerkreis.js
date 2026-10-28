@@ -13,6 +13,10 @@
  *            durch Claude" steht dann neben der Vorschau)
  *   fokus    Vorschau mit object-fit: cover - die Bildlage rückt so, dass der
  *            (aktive) Kreis zu sehen ist
+ *   werkstatt (28.10.2026, nur Paul) offene Stellen als violetter, gestrichelter
+ *            Rahmen mit runden Ecken statt rotem Kreis - nie mit dem Rotstift der
+ *            Lehrerin zu verwechseln. Dazu LWKreis.legende(): „Markiert von der
+ *            Lernwerkstatt“. Ohne die Option bleibt alles wie vorher.
  *
  * Das Foto wird nie verändert: eine Ebene (div.lwk-lage) liegt genau über dem
  * sichtbaren Bildinhalt - object-fit contain/cover wird nachgerechnet. Die
@@ -22,7 +26,7 @@
  */
 (function () {
   "use strict";
-  var ROT = "#dc2626", GRUEN = "#15803d";
+  var ROT = "#dc2626", GRUEN = "#15803d", WERKSTATT = "#7c3aed";
 
   function stilEinmal() {
     if (document.getElementById("lwk-stil")) return;
@@ -33,6 +37,9 @@
       ".lwk-ring{position:absolute;box-sizing:border-box;border-radius:50%;border:4px solid " + ROT + ";",
       "box-shadow:0 0 0 2px rgba(255,255,255,.85),inset 0 0 0 1px rgba(255,255,255,.6)}",
       ".lwk-ring.lwk-gut{border-color:" + GRUEN + "}",
+      ".lwk-werkstatt .lwk-ring:not(.lwk-gut){border-color:" + WERKSTATT + ";border-style:dashed;border-radius:12px}",
+      ".lwk-legende{display:inline-flex;align-items:center;gap:8px;font:700 14px/1.3 ui-rounded,-apple-system,system-ui,sans-serif;margin:6px 0}",
+      ".lwk-legende i{display:inline-block;width:26px;height:16px;border:3px dashed " + WERKSTATT + ";border-radius:6px;box-sizing:border-box;flex:none}",
       ".lwk-klein .lwk-ring{border-width:2px;box-shadow:0 0 0 1px rgba(255,255,255,.9)}",
       ".lwk-ring.lwk-aktiv{border-width:6px}",
       ".lwk-klein .lwk-ring.lwk-aktiv{border-width:3px}",
@@ -72,7 +79,7 @@
     var eltern = img.parentNode;
     if (eltern && window.getComputedStyle && getComputedStyle(eltern).position === "static") eltern.style.position = "relative";
     var ebene = document.createElement("div");
-    ebene.className = "lwk-lage" + (o.klein ? " lwk-klein" : "");
+    ebene.className = "lwk-lage" + (o.klein ? " lwk-klein" : "") + (o.werkstatt ? " lwk-werkstatt" : "");
     ebene.setAttribute("aria-hidden", "true");
     if (eltern) eltern.insertBefore(ebene, img.nextSibling);
 
@@ -174,5 +181,11 @@
     return aus;
   }
 
-  window.LWKreis = { legen: legen, ausStellen: ausStellen };
+  /* Legende zu den Werkstatt-Rahmen (28.10.2026): als HTML-Text, die Seite setzt ihn neben das Foto. */
+  function legende() {
+    stilEinmal();
+    return '<span class="lwk-legende"><i aria-hidden="true"></i>Markiert von der Lernwerkstatt</span>';
+  }
+
+  window.LWKreis = { legen: legen, ausStellen: ausStellen, legende: legende, WERKSTATT: WERKSTATT };
 })();

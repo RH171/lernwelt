@@ -210,12 +210,21 @@ function verbesserteSchluessel(inhalt) {
 
 /* Stellen aus der Abschrift (`nachgerechnet`) - nur von der zweiten Lesung
    bestätigte Fehler. `schon` = Schlüssel, die es schon gibt. */
-export function nachrechenStellen(blatt, bk, schon, mitRot) {
+export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
   if (!blatt || blatt.fach !== "mathe" || !nrAktuell(blatt)) return [];
-  const w = nrAuswerten(blatt.nachgerechnet);
+  /* Zahlenreihen (28.10.2026, nur Paul): eine Kette = höchstens eine Karte, Soll nur aus der gedruckten Reihe. */
+  const mitKetten = kind === "paul";
+  const w = nrAuswerten(blatt.nachgerechnet, mitKetten ? { ketten: true } : undefined);
   if (!w) return [];
   const aus = [];
+  const inKette = new Set();
+  if (mitKetten) for (const k of w.ketten) {
+    k.glieder.forEach((f) => inKette.add(f));
+    const karte = kettenKarte(k, bk, mitRot);
+    if (karte) aus.push(karte);
+  }
   for (const x of w.fehler) {
+    if (inKette.has(x.f)) continue;   // Folgefehler einer Reihe: nie einzeln (Dennys Wahl 2, 28.10.2026)
     if (x.bestaetigt !== true || schon.has(x.u.key)) continue;
     /* Rot ist fertig (16.10.2026): hat die Lehrerin in diesem Feld rot etwas
        hingeschrieben, ändert Paul es nicht - auch wenn ihr Rot nicht stimmt. Die
@@ -249,6 +258,40 @@ export function nachrechenStellen(blatt, bk, schon, mitRot) {
     }
   }
   return aus;
+}
+
+/* Eine Reihe -> eine Karte (28.10.2026, nur Paul) oder null. Nur, wenn der Abstand aus zwei gedruckten
+   Gliedern belegt ist, die Reihe falsche Glieder hat, die zweite Lesung das erste bestätigt und kein Rot
+   der Lehrerin in der Reihe steht (Rot ist fertig). Die Lösung (soll, schritt) bleibt auf dem Server. */
+export function kettenKarte(k, bk, mitRot) {
+  if (!k || !k.belegt || !k.falsch.length || k.bestaetigt !== true) return null;
+  if (k.rot && !mitRot) return null;
+  const nr = k.nr && k.nr !== "-" ? k.nr : "";
+  const x = k.druck[k.druck.length - 2], y = k.druck[k.druck.length - 1];
+  const rechne = k.op === "+" ? y + " − " + x : x + " − " + y;
+  const vorhanden = k.paul.filter((v) => v != null);
+  const du = vorhanden.length > 4 ? vorhanden.slice(0, 3).join(", ") + " … " + vorhanden[vorhanden.length - 1] : vorhanden.join(", ");
+  const erster = k.glieder[k.falsch[0]];
+  return { id: bk.id + ":k:" + kurz(k.nr + "|" + k.paul.join(",")), art: "rechnen", typ: "kette", blatt: bk, nachgerechnet: true,
+           wo: nr, zeile: erster.roh, rotDa: !!k.rot, paulGut: null,
+           druck: k.druck.slice(), schritt: k.schritt, op: k.op, start: k.start, soll: k.soll.slice(), paul: k.paul.slice(),
+           paulSchritt: k.paulSchritt, falsch: k.falsch.length,
+           aufgabe: (nr ? "Aufgabe " + nr + ": " : "") + "Auf dem Blatt stehen " + x + " und " + y + ". Rechne " + rechne + ".",
+           du, eingabe: "zahl",
+           tipp: "Schau, wie weit die gedruckten Zahlen auseinander sind. Mit genau diesem Abstand geht die Reihe ab " + y + " weiter." };
+}
+
+/* Für den Elternbereich (28.10.2026, nur Paul): jede Reihe mit falschen Gliedern - belegt oder nicht. */
+export function kettenStand(blatt) {
+  if (!blatt || blatt.fach !== "mathe" || blatt.sichtbar === false || !nrAktuell(blatt)) return [];
+  const w = nrAuswerten(blatt.nachgerechnet, { ketten: true });
+  if (!w) return [];
+  return w.ketten.filter((k) => k.falsch.length || (!k.belegt && k.feldFalsch)).map((k) => ({
+    nr: k.nr, druck: k.druck, belegt: k.belegt, grund: k.grund, schritt: k.schritt, paulSchritt: k.paulSchritt,
+    paul: k.paul, soll: k.soll, falsch: k.belegt ? k.falsch.length : k.feldFalsch, rot: k.rot,
+    karte: !!kettenKarte(k, blattKurz(blatt), false),
+    bestaetigt: k.bestaetigt,
+  }));
 }
 
 /* Für den Elternbereich: wie vollständig ein Blatt nachgerechnet ist. */
@@ -308,8 +351,10 @@ export function volllesStand(blatt, vokabeln) {
            ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true).map((x) => x.ist + " → " + x.soll + " (" + x.quelle + ")").slice(0, 10) };
 }
 /* Die Vokabeln der anderen Blätter desselben Fachs - je Aufruf einmal gerechnet. */
-export function optFuer(blaetter, blatt) {
-  return { vokabeln: blatt && blatt.volllesen ? vokabelnImFach(blaetter || [], blatt.fach, blatt.id) : [] };
+export function optFuer(blaetter, blatt, kind) {
+  const o = { vokabeln: blatt && blatt.volllesen ? vokabelnImFach(blaetter || [], blatt.fach, blatt.id) : [] };
+  if (kind) o.kind = kind;   // 28.10.2026: Zahlenreihen nur für Paul
+  return o;
 }
 
 /* Eine Mathe-Zeile mit "Kind schrieb X, richtig: Y" -> nachgerechnete Stelle
@@ -410,7 +455,7 @@ export function stellenFuerBlatt(blatt, vorlagenDaten, opt) {
   });
   const mitRot = !ROT_STILL || !!(opt && opt.mitRot);
   /* Nachrechnen (14.10.2026): Feld für Feld, nur bestätigte Fehler, keine Doppel. */
-  try { aus.push(...nachrechenStellen(blatt, bk, schon, mitRot)); } catch (e) {}
+  try { aus.push(...nachrechenStellen(blatt, bk, schon, mitRot, opt && opt.kind)); } catch (e) {}
   /* Volllesen (15.10.2026): Text-Stellen mit eindeutiger Quelle, alle Fächer. */
   try { aus.push(...volllesStellen(blatt, bk, (opt && opt.vokabeln) || [])); } catch (e) {}
 
@@ -475,6 +520,9 @@ export function oeffentlich(s, bilder, kreise) {
   }
   o.tipp = s.tipp; o.eingabe = s.eingabe;
   if (s.steht) o.steht = true;
+  /* Zahlenreihe (28.10.2026, nur Paul): die gedruckten Zahlen stehen auf dem Blatt, Pauls Abstand ist
+     seiner - beides darf zum Browser. soll und schritt bleiben hier. */
+  if (s.typ === "kette") { o.typ = "kette"; o.druck = s.druck.slice(-2); if (s.paulSchritt) o.paulSchritt = s.paulSchritt; }
   return o;
 }
 
@@ -493,7 +541,7 @@ export function berlinTag(iso) {
   const t = Date.parse(String(iso || ""));
   return isNaN(t) ? "" : TAG_BERLIN.format(new Date(t));
 }
-export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt) {
+export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt, kind) {
   const erl = (zustand && zustand.s) || {};
   const heute = TAG_BERLIN.format(jetzt ? new Date(jetzt) : new Date());
   let offen = 0, erledigt = 0;
@@ -501,7 +549,7 @@ export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt) {
   for (const b of blaetter || []) {
     if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
     bereich.add(b.id);
-    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b))) {
+    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b, kind))) {
       gezaehlt.add(s.id);
       const z = erl[s.id];
       if (!z) offen++;
@@ -518,14 +566,47 @@ export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt) {
   return { erledigt, gesamt: offen + erledigt };
 }
 
-export function offeneStellen(blaetter, vorlagenDaten, zustand, nurBlatt) {
+export function offeneStellen(blaetter, vorlagenDaten, zustand, nurBlatt, kind) {
   const erledigt = (zustand && zustand.s) || {};
   const aus = [];
   for (const b of blaetter || []) {
     if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
-    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b))) if (!erledigt[s.id]) aus.push(s);
+    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b, kind))) if (!erledigt[s.id]) aus.push(s);
   }
   return aus;
+}
+
+/* ---------- „Meine Sicht“ (28.10.2026, nur Paul, nur Rechenstellen) ----------
+   Paul sagt, was er gerechnet hat; der Server prüft gegen die Schulquelle (gedruckte Zahlen,
+   nachgerechnete Abschrift). urteil: "recht" (die Quelle belegt Paul), "nicht" (die Quelle belegt
+   ihn nicht - die Stelle bleibt offen), "offen" (nicht entscheidbar - an die Eltern), "frage"
+   (nichts ausgewählt). Nur "offen" wird gespeichert (ein Schreibvorgang). */
+export function sichtPruefen(s, w) {
+  const wahl = String(w == null ? "" : w).trim();
+  if (!wahl) return { urteil: "frage", tipp: "Wähl aus, was du gerechnet hast." };
+  if (wahl === "anders")
+    return { urteil: "offen", satz: "Das kann ich auf dem Foto nicht sicher entscheiden. Ich zeige es deinen Eltern, sie schauen mit dir ins Heft." };
+  if (s.typ === "kette") {
+    const m = /^schritt:\s*[+−-]?\s*(\d{1,7})$/.exec(wahl);
+    if (!m) return { urteil: "frage", tipp: "Wähl aus, was du gerechnet hast." };
+    const x = s.druck[s.druck.length - 2], y = s.druck[s.druck.length - 1], dein = +m[1], ab = Math.abs(s.schritt);
+    const zeichen = s.op === "+" ? "+" : "−";
+    if (dein === ab) {
+      const f = s.paul.findIndex((v, i) => v !== s.soll[i]);
+      const vor = f <= 0 ? y : s.soll[f - 1];
+      return { urteil: "recht", satz: "Du hast recht: Von " + Math.min(x, y) + " bis " + Math.max(x, y) + " sind es genau " + ab +
+               ". Schau jetzt auf die Zahl nach " + vor + ": Dort muss " + vor + " " + zeichen + " " + ab + " stehen." };
+    }
+    return { urteil: "nicht", satz: "Danke, dass du es sagst! " + zeichen + dein + " passt nicht zu den gedruckten Zahlen. Auf dem Blatt stehen " +
+             x + " und " + y + ". Rechne " + Math.max(x, y) + " − " + Math.min(x, y) + ", dann siehst du den Abstand." };
+  }
+  if (wahl === "richtig") {
+    /* Die Abschrift ist nachgerechnet und von einer zweiten Lesung bestätigt - Pauls Zahl geht nicht auf. */
+    const r = s.typ === "gleichung" && s.g ? s.g.a + " " + ({ "*": "·", "/": ":", "+": "+", "-": "−" }[s.g.op] || s.g.op) + " " + s.g.b : "";
+    return { urteil: "nicht", satz: "Ich habe nachgerechnet" + (r ? ": Bei " + r + " kommt nicht " + s.du + " heraus." : ", deine Zahl geht nicht auf.") +
+             " Rechne noch einmal Schritt für Schritt. Steht auf dem Blatt eine andere Zahl, wähl „Auf dem Blatt steht eine andere Zahl“." };
+  }
+  return { urteil: "frage", tipp: "Wähl aus, was du gerechnet hast." };
 }
 
 /* ---------- Eine Verbesserung prüfen ---------- */
@@ -566,6 +647,15 @@ export function verbesserungPruefen(s, antwort) {
     if (!ist.length) return { richtig: false, tipp: "Schreib die Zahlen mit Komma dazwischen." };
     if (listeGut(ist, s.n, s.liste) && ist.length >= new Set(s.ist).size) return { richtig: true, satz: GUT.gleichung() };
     return { richtig: false, tipp: "Noch nicht ganz. " + listeTipp(ist, s.n, s.liste) };
+  }
+  if (s.art === "rechnen" && s.typ === "kette") {
+    /* Paul rechnet den Abstand der gedruckten Zahlen aus (28.10.2026). */
+    const m = /^\s*[+−-]?\s*(\d{1,7})\s*$/.exec(a);
+    if (!m) return { richtig: false, tipp: "Schreib nur die Zahl in das Feld." };
+    const x = s.druck[s.druck.length - 2], y = s.druck[s.druck.length - 1];
+    if (+m[1] === Math.abs(s.schritt))
+      return { richtig: true, satz: "Super! Mit diesem Abstand zählst du ab " + y + " weiter. Verbessere die Reihe in deinem Heft." };
+    return { richtig: false, tipp: "Noch nicht. Mach die Probe: Rechne " + Math.min(x, y) + " + " + m[1] + ". Kommt " + Math.max(x, y) + " heraus?" };
   }
   if (s.art === "rechnen" && s.typ === "gleichung") {
     const m = /^\s*(\d{1,7})\s*$/.exec(a);
