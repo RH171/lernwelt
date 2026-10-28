@@ -61,6 +61,10 @@
            gleich los"). Gewaehlt: Startschirm mit Wahl statt Sofortstart. -->
       <button class="knopf still verborgen" id="heute-selbst" type="button">Lieber selbst aussuchen</button>
     </div>
+    <!-- Feste Uebungseinheiten (28.10.2026, nur Helena): "Deine Ex nochmal".
+         Fragen: /helena/quiz-einheiten.js, gezeichnet vom Motor. Erscheint
+         ohne Fachwahl oder beim passenden Fach. -->
+    <div class="karte verborgen" id="einheit-wahl"></div>
     <div class="karte">
       <h2>Was möchtest du üben?</h2>
       <p class="unter">Tipp ein Fach an – danach kannst du einzelne Blätter auswählen.</p>
@@ -178,7 +182,8 @@ window.QUIZ = {
 <script src="/quiz/rechenkaestchen.js?v=d5a8bfa9" defer></script>
 <script src="/rechenweg/meinweg.js?v=fd30c367" defer></script>
 <script src="/toleranz.js?v=122870a5" defer></script>
-<script src="/quiz/motor.js?v=7abd4fc0" defer></script>
+<script src="/helena/quiz-einheiten.js?v=9651cac1" defer></script>
+<script src="/quiz/motor.js?v=9c6063e0" defer></script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
 <script src="/lernstand.js?v=fe69f5e5" defer></script>
 </body>

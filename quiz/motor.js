@@ -48,6 +48,43 @@
 
   var fragen = [], nr = 0, richtigGesamt = 0, antwortenLog = [], laufend = false;
 
+  /* Feste Uebungseinheiten (28.10.2026, zuerst Helenas "Deine Ex nochmal").
+     Eine Seite, die window.QUIZ_EINHEITEN laedt, bekommt dafuer eine Karte in
+     #einheit-wahl. Die Fragen kommen aus der Datei, nicht vom Server: kein
+     Abruf, kein Schreibvorgang im Speicher (der Lernstand zaehlt wie immer).
+     Ohne window.QUIZ_EINHEITEN (Paul, Leon) aendert sich nichts. */
+  var EINHEITEN = window.QUIZ_EINHEITEN || null, einheit = null, laengeVorher = null;
+  function einheitenMalen() {
+    var box = $("einheit-wahl");
+    if (!box || !EINHEITEN) return;
+    box.innerHTML = "";
+    var da = 0;
+    Object.keys(EINHEITEN).forEach(function (key) {
+      var u = EINHEITEN[key];
+      if (!u || !Array.isArray(u.fragen) || !u.fragen.length) return;
+      if (stand.faecher.length && u.fach && stand.faecher.indexOf(u.fach) < 0) return;
+      da++;
+      var d = document.createElement("div");
+      d.setAttribute("data-einheit", key);
+      d.innerHTML = "<h2>\uD83C\uDFAF " + esc(u.titel) + "</h2>" +
+        '<p class="unter">' + esc(u.unter || (u.fragen.length + " Fragen")) + "</p>" +
+        '<button class="knopf einheit-los" type="button">Los geht\u2019s</button>';
+      d.querySelector(".einheit-los").addEventListener("click", function () {
+        if (laufend) return;
+        einheit = u;
+        if (laengeVorher === null) laengeVorher = stand.laenge;
+        stand.laenge = u.fragen.length;
+        $("q-start").click();
+      });
+      box.appendChild(d);
+    });
+    box.classList.toggle("verborgen", !da);
+  }
+  function einheitBeenden() {
+    if (laengeVorher !== null) { stand.laenge = laengeVorher; laengeVorher = null; }
+    einheit = null;
+  }
+
   /* ---------- Start ---------- */
 
   /* Welche Faecher angeboten werden, entscheidet das SCHULHEFT - nicht eine
@@ -149,6 +186,7 @@
       });
       box.appendChild(b);
     });
+    einheitenMalen();
     $("q-alle").classList.toggle("an", einzeln() ? alleGewaehlt && !stand.faecher.length : stand.faecher.length === 0);
     // Ohne Auswahl heißt "alle" - so muss niemand erst etwas anklicken.
     $("q-start").textContent = stand.faecher.length
@@ -660,6 +698,9 @@
      mit 5/10/15 Fragen und Start (Entwurf A, 28.09.2026). Nur, wo die Seite
      QUIZ_BLATT_EXTRA setzt - also erst bei Paul. */
   function quizLeisteMalen() {
+    /* Waehrend einer festen Einheit nicht neu zeichnen: die Leiste setzt
+       stand.laenge auf ihre Stufen zurueck, und die Runde endete zu frueh. */
+    if (einheit) return;
     var l = $("q-quizleiste");
     if (!einzeln()) { if (l) l.remove(); return; }
     /* Sauber starten (29.09.2026): ohne gewähltes Fach keine Leiste. */
@@ -971,6 +1012,9 @@ function artKurz(art) {
   /* ---------- Fragen holen ---------- */
 
   function holen() {
+    /* Feste Einheit: die Fragen liegen schon in der Seite (Kopie, damit der
+       Motor die Vorlage nicht veraendert). */
+    if (einheit) return Promise.resolve({ ok: true, fragen: JSON.parse(JSON.stringify(einheit.fragen)) });
     var p = new URLSearchParams();
     p.set("kind", KIND);
     if (stand.faecher.length) p.set("faecher", stand.faecher.join(","));
@@ -1004,6 +1048,7 @@ function artKurz(art) {
       $("q-start").disabled = false;
       $("q-laedt").classList.add("verborgen");
       if (!j || !j.ok || !j.fragen || !j.fragen.length) {
+        einheitBeenden();
         $("q-fehler").textContent = (j && j.fehler) || "Ich konnte gerade keine Fragen holen. Versuch es gleich noch einmal.";
         return;
       }
@@ -1015,6 +1060,7 @@ function artKurz(art) {
       frageMalen();
     }).catch(function () {
       laufend = false;
+      einheitBeenden();
       $("q-start").disabled = false;
       $("q-laedt").classList.add("verborgen");
       $("q-fehler").textContent = "Keine Verbindung. Bist du online?";
@@ -1509,7 +1555,10 @@ function artKurz(art) {
   window.QUIZ_UEBUNGSNOTE = uebungsnote;   // fuer die Messung
 
   function endeMalen() {
-    melden();
+    /* Eine feste Einheit meldet nichts an den Server: ihre Fragen kennt er
+       nicht, und "gestellt" braucht es fuer sie nicht. */
+    if (!einheit) melden();
+    einheitBeenden();
     var gesamt = antwortenLog.length;
     var quote = gesamt ? Math.round((richtigGesamt / gesamt) * 100) : 0;
     $("q-ende-zahl").textContent = richtigGesamt + " von " + gesamt;
