@@ -380,6 +380,7 @@ export function textGrund(text, ctx) {
   const worte = sw.filter((w) => !istZahl(w));
 
   for (const w of worte.filter((x) => x.length >= 4)) {
+    if (ctx.rahmen && ctx.rahmen(w)) continue;
     if (!gedeckt(w, v.idxMitFrage, ctx.fach)) return "„" + w + "“ steht in keiner Quelle";
   }
   /* Kurze Wörter: mit drei Buchstaben und Selbstlaut („Hof“, „tun“, „Ort“) muss
@@ -621,6 +622,44 @@ export const FRAGEWORT = new Set(("heißt heissen heißen nennt nennen nennt sch
   "nutzen dürfen statt jeweils ganzen ganze höchstens paar dreimal zweimal gleichen teil " +
   "sache sachen pauls bevor hoch langer gerade").split(/\s+/).filter(Boolean));
 
+/* Regel A für Helena (28.10.2026, Dennys Ja, Fotoprüfung
+   unterlagen/quellenpruefung-helena-2026-10-28): In Fremdsprachen und Mathe
+   fielen 37 von 130 ausgeblendeten Fragen nur über ein Rahmenwort der
+   Fragestellung („Person“, „auf Deutsch“, „Wert“). Mit ctx.regelA gilt:
+   1. Diese Rahmenwörter (auch gebeugt, bis zwei Buchstaben länger) brauchen
+      keinen Beleg.
+   2. Deutsche Ablenker zu einer Französisch- oder Englischfrage brauchen keinen
+      Beleg (gezählt: genau so werden die 31 Fehlalarme frei, 0 echte).
+   3. Jedes französische oder englische Wort bleibt streng geprüft.
+   Ohne ctx.regelA (Paul) ändert sich nichts. */
+const RAHMEN_FREMD = ["deutsch", "französisch", "franzoesisch", "englisch", "person", "personalpronomen",
+  "präsensform", "praesensform", "form", "verb", "bedeutet", "arbeitsauftrag"];
+const RAHMEN_MATHE = ["wert", "term", "ausführlich", "ausfuehrlich", "wovor"];
+const fremdFach = (fach) => /^(franz|engl)/i.test(String(fach || ""));
+export function rahmenFuer(fach) {
+  const liste = fremdFach(fach) ? RAHMEN_FREMD : /^mathe/i.test(String(fach || "")) ? RAHMEN_MATHE : null;
+  if (!liste) return null;
+  return (w) => liste.some((r) => w === r || (w.startsWith(r) && w.length - r.length <= 2));
+}
+/* Ist ein Ablenker deutsch? Nur bei klarem Zeichen: ein deutsches Bindewort
+   oder ein Umlaut, und kein französisches oder englisches Kennwort, kein
+   französischer Akzent. Im Zweifel nicht deutsch, also weiter geprüft. */
+const KENN_DE = new Set(("der die das den dem des ein eine einen einem einer und ist sind du ich wir ihr sie es " +
+  "nicht mit zu von auf für hat haben mag magst was wer wann wie wo etwas").split(" "));
+const KENN_FREMD = new Set(("le la les un une des de du au aux et est je tu il elle nous vous ils elles on ne pas que qui " +
+  "c est qu ce sont avec pour the a an is are to of and you he she we they it not do does don t at for with my your " +
+  "this that his her our their").split(" "));
+export function deutscherAblenker(a) {
+  const roh = String(a || "");
+  if (/[éèêëàâçîïôûùœæ']/i.test(roh)) return false;
+  const ws = roh.toLowerCase().replace(/[^a-zäöüß]+/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (!ws.length || ws.some((w) => w !== "du" && KENN_FREMD.has(w))) return false;
+  /* „du“ ist auch französisch (du pain); zusammen mit einer Verbform auf -st
+     („Spielst du“, „Magst du“) ist es deutsch. */
+  const duDeutsch = ws.includes("du") && ws.some((w) => w.length >= 4 && w.endsWith("st"));
+  return /[äöüß]/i.test(roh) || ws.some((w) => w !== "du" && KENN_DE.has(w)) || duDeutsch;
+}
+
 function abstand(a, b) {
   if (Math.abs(a.length - b.length) > 3) return 99;
   let v = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -648,8 +687,10 @@ export function frageWoerterGrund(q, ctx) {
   /* Wörter der Lösung und der Frage: ein Ablenker, der nur eine Verschreibung
      oder falsche Form davon ist („guter“ zu „gut“), bringt nichts Fremdes. */
   const rWoerter = woerter(richtig + " " + String(q.frage || "")).filter((w) => w.length >= 3);
+  const rahmen = ctx.regelA ? rahmenFuer(q.fach) : null;
   for (const w of sachwoerter(String(q.frage || ""), mathe)) {
     if (istZahl(w) || w.length < 4 || FRAGEWORT.has(w)) continue;
+    if (rahmen && rahmen(w)) continue;
     if (!gedeckt(w, idx, q.fach)) return "„" + w + "“ steht in keiner Schulquelle";
   }
   /* Auch die falschen Antworten (27.10.2026, Gegenprüfung: Ablenker „Laternen
@@ -661,6 +702,7 @@ export function frageWoerterGrund(q, ctx) {
   const idxA = indexVon([...new Set(qw.concat(woerter(richtig), woerter(String(q.frage || ""))))]);
   (q.antworten || []).forEach((a, i) => {
     if (i === (q.richtig || 0) || ablenkerGrund) return;
+    if (ctx.regelA && fremdFach(q.fach) && deutscherAblenker(a)) return;
     for (const w of sachwoerter(String(a || ""), mathe)) {
       if (istZahl(w) || w.length < 4 || FRAGEWORT.has(w)) continue;
       /* Rechtschreib-Ablenker („erkleren“ zu „erklären“, „Febuar“) sind
@@ -783,7 +825,8 @@ export function frageTexteBelegen(q, ctx) {
   /* Das Ergebnis hinter dem "=" der Frage ("4 · 40 + ___ = 175") ebenso. */
   const nachGleich = /=\s*(\d+(?:[.,]\d+)?)/.exec(String(q.frage || ""));
   if (nachGleich) loesungen.push(num(nachGleich[1]));
-  const c = { quellen, fach: q.fach, frage: q.frage, richtig, mathe, aufgabe, ergebnis, umkehr, loesungen };
+  const c = { quellen, fach: q.fach, frage: q.frage, richtig, mathe, aufgabe, ergebnis, umkehr, loesungen,
+    ...(ctx.regelA && rahmenFuer(q.fach) ? { rahmen: rahmenFuer(q.fach) } : {}) };
   const neu = { ...q };
   const gekuerzt = [];
 

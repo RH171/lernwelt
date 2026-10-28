@@ -49,6 +49,9 @@ import { stehtAufBlatt } from "./spiel-bauen.js";
 import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
 import { tabelleAnwenden, abstempeln } from "./_beleg-ausgabe.js";
+import { BELEG_TABELLE_HELENA } from "./_beleg-tabelle-helena.js";
+import { BELEG_SPERRE_HELENA } from "./_beleg-sperre-helena.js";
+import { leonKorrigieren } from "./_beleg-leon.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
@@ -174,7 +177,7 @@ export async function onRequestGet(context) {
        sagt, wie viele der Schalter "Auch Gekonntes" dazuholt. Eine alte Seite
        kennt nur `fragenZahl` - sie zeigt damit genau die Zahl, die ihr
        "Alle Fragen" (ohne gekonnt=1) jetzt auch bekommt. */
-    if (kind === "paul") v.fragen = ausgabeFuerPaul(vorratBereinigen(v.fragen, bn), bn);
+    if (MIT_AUSGABE.has(kind)) v.fragen = ausgabeFuer(kind, vorratBereinigen(v.fragen, bn), bn);
     const bereinigt = vorratBereinigen(v.fragen, bn);
     const gekonnt = gekonnteTatsachen(bereinigt, pk, Date.now(), tatsacheSchluessel);
     const zahl = fragenZaehlen(bereinigt.filter((f) => !gekonnt.has(tatsacheSchluessel(f))));
@@ -238,7 +241,7 @@ export async function onRequestGet(context) {
       // sich nicht gegenseitig ueberschreiben.
       const v1 = await vorratLesen(env, kind);
       const ids = new Set(v1.fragen.map((f) => f.id));
-      v1.fragen = v1.fragen.concat(neu.filter((f) => kind !== "paul" || !ids.has(f.id))).slice(-VORRAT_MAX);
+      v1.fragen = v1.fragen.concat(neu.filter((f) => !MIT_AUSGABE.has(kind) || !ids.has(f.id))).slice(-VORRAT_MAX);
       v1.gebaut = new Date().toISOString();
       v1.versucht = Object.assign({}, v1.versucht || {});
       for (const id of jetztDran) v1.versucht[id] = v1.gebaut;
@@ -265,7 +268,7 @@ export async function onRequestGet(context) {
   } catch (e) {}
   vorrat.fragen = vorratBereinigen(vorrat.fragen, blattNach);
   const lehrer = await vorlagenLesen(env, kind);
-  if (kind === "paul") vorrat.fragen = ausgabeFuerPaul(vorrat.fragen, blattNach);
+  if (MIT_AUSGABE.has(kind)) vorrat.fragen = ausgabeFuer(kind, vorrat.fragen, blattNach);
 
   /* Vorlagen der Lehrerin (13.10.2026, Dennys Wahl "A · Quiz prüft gegen die
      Lehrerin"): Eine Frage, deren "richtig" ihrer ausgefüllten Vorlage
@@ -387,9 +390,11 @@ export async function onRequestGet(context) {
         /* Frisch gelesen, nicht der gefilterte Stand: Was die Pruefung vor der
            Ausgabe ausblendet oder kuerzt, bleibt im Speicher unveraendert
            (27.10.2026, Dennys Auflage 4: nur ausblenden, nichts loeschen). */
-        const v1 = kind === "paul" ? await vorratLesen(env, kind) : vorrat;
+        /* Seit 28.10.2026 auch Leon und Helena frisch lesen: der gefilterte Stand darf
+           nie zurückgeschrieben werden, sonst wären Ausblendungen gelöscht. */
+        const v1 = MIT_AUSGABE.has(kind) ? await vorratLesen(env, kind) : vorrat;
         const ids = new Set(v1.fragen.map((f) => f.id));
-        v1.fragen = v1.fragen.concat(neu.filter((f) => kind !== "paul" || !ids.has(f.id))).slice(-VORRAT_MAX);
+        v1.fragen = v1.fragen.concat(neu.filter((f) => !MIT_AUSGABE.has(kind) || !ids.has(f.id))).slice(-VORRAT_MAX);
         v1.gebaut = new Date().toISOString();
         await env.PAUL_KV.put(VORRAT(kind), JSON.stringify(v1));
         nachgebaut = true;
@@ -852,6 +857,8 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
       /* Seit 27.10.2026 abends mit der Ausgabe-Prüfung und Stempel `bp`: die
          Frage ist damit vor der Ausgabe geprüft (_beleg-ausgabe.js). */
       if (kind === "paul") { q = abstempeln(belegFuerPaul(q, schule, lehrer, true)); if (!q) continue; }
+      /* Helena seit 28.10.2026: dieselbe Prüfung mit Regel A (_belegpruefung.js). */
+      else if (kind === "helena") { q = abstempeln(belegFuerPaul(q, schule, lehrer, true, { regelA: true })); if (!q) continue; }
       gesehen.add(form);
       raus.push(q);
     }
@@ -891,7 +898,8 @@ export function weilIrgendwo(q) {
   return teile.some((t) => /\bweil\b/i.test(String(t || "")));
 }
 
-export function belegFuerPaul(q, schule, lehrer, ausgabe) {
+/* opts.regelA: Helenas Regel A (28.10.2026), siehe _belegpruefung.js. Paul ruft ohne opts. */
+export function belegFuerPaul(q, schule, lehrer, ausgabe, opts) {
   /* Vor der Ausgabe entfällt eine Hilfe mit „weil“; Erklärung, Merksatz und
      Tipp mit „weil“ ersetzt oder streicht frageTexteBelegen. Steht es in Frage
      oder Antworten, bleibt die Frage weg. */
@@ -909,7 +917,7 @@ export function belegFuerPaul(q, schule, lehrer, ausgabe) {
     const rechnen = /^mathe/i.test(String(q.fach || "")) && /\d\s*[+\-−–·*×x:÷/]\s*(\d|_{2,})/.test(String(q.frage || ""));
     if (!rechnen && !stehtAufBlatt(quellen.alle, richtig)) return null;
   }
-  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "", ausgabe: !!ausgabe };
+  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "", ausgabe: !!ausgabe, ...(opts && opts.regelA ? { regelA: true } : {}) };
   const r = frageTexteBelegen(q, ctx);
   /* Auch die Frage selbst nur mit Wörtern aus der Schule (27.10.2026). */
   if (r.q && frageWoerterGrund(r.q, ctx)) return null;
@@ -930,6 +938,21 @@ export function ausgabeFuerPaul(fragen, blattNach) {
      _beleg-ausgabe.js); die Prüfung selbst läuft in werkzeuge/beleg-tabelle.mjs
      und beim Erzeugen. */
   return tabelleAnwenden(fragen, blattNach);
+}
+
+/* Ausgabe-Filter je Kind (28.10.2026, Dennys Ja 07:34 Uhr). Paul genau wie
+   bisher. Helena: Belegprüfung mit Regel A, vorberechnet in
+   _beleg-tabelle-helena.js (werkzeuge/beleg-tabelle-helena.mjs), dazu die am
+   Foto als echt oder unklar beurteilten Fragen fest aus (_beleg-sperre-helena.js).
+   Leon: keine Belegprüfung, nur einzelne Korrekturen und Ausblendungen nach
+   Kennung (_beleg-leon.js); alles andere bleibt unverändert. Im Speicher
+   bleibt bei allen dreien alles. */
+export const MIT_AUSGABE = new Set(["paul", "helena", "leon"]);
+export function ausgabeFuer(kind, fragen, blattNach) {
+  if (kind === "paul") return ausgabeFuerPaul(fragen, blattNach);
+  if (kind === "helena") return tabelleAnwenden(fragen, blattNach, BELEG_TABELLE_HELENA).filter((f) => !BELEG_SPERRE_HELENA[f.id]);
+  if (kind === "leon") return leonKorrigieren(fragen);
+  return fragen;
 }
 
 export function lueckeOk(frage) {
@@ -1284,6 +1307,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
       ...(Number(f.beleg_nr) >= 1 ? { belegNr: Math.floor(Number(f.beleg_nr)) } : {}),
     }));
   /* Belegpruefung auch im alten Pfad (27.10.2026). */
+  if (kind === "helena") return alt.map((q) => abstempeln(belegFuerPaul(q, schule, lehrer, true, { regelA: true }))).filter(Boolean);
   return kind === "paul" ? alt.map((q) => abstempeln(belegFuerPaul(q, schule, lehrer, true))).filter(Boolean) : alt;
 }
 

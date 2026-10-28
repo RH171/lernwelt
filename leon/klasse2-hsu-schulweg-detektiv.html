@@ -377,6 +377,9 @@
     var o = ORTE[ort], d = o.dinge[i];
     g.classList.remove("wackelt"); void g.getBBox(); g.classList.add("wackelt");
     var schonDa = g.classList.contains("gefunden") || g.classList.contains("sicher");
+    /* Sind alle Gefahren des Orts gefunden, ist das Antippen einer sicheren
+       Figur nur noch Anschauen, kein Fehler (28.10.2026, Dennys Ja). */
+    var ortFertig = gefunden === anzahlGefahren();
     if (d.gefahr){
       if (!schonDa){
         g.classList.add("gefunden"); gefunden++; gesamtGefunden++;
@@ -385,10 +388,12 @@
       }
     } else if (!schonDa){
       g.classList.add("sicher");
-      fehltipps++;
-      // Kein Fehler im Spiel - aber fuer die Eltern ehrlich: hier wurde
-      // richtiges Verhalten fuer gefaehrlich gehalten.
-      try { window.lernstand && window.lernstand.antwort(false, "sicheres verhalten erkennen", d.titel, "sicher"); } catch(e){}
+      if (!ortFertig){
+        fehltipps++;
+        // Kein Fehler im Spiel - aber fuer die Eltern ehrlich: hier wurde
+        // richtiges Verhalten fuer gefaehrlich gehalten.
+        try { window.lernstand && window.lernstand.antwort(false, "sicheres verhalten erkennen", d.titel, "sicher"); } catch(e){}
+      }
     }
     zeigErklaerung(d);
   }
@@ -457,7 +462,7 @@
     if (stuecke.length) requestAnimationFrame(male); else { laeuft = false; st.clearRect(0, 0, fl.width, fl.height); }
   }
 
-  window.__schulweg = { ORTE: ORTE, starten: starten, tippe: function(i){ var g = document.querySelector('.ding[data-i="' + i + '"]'); if (g) tippen(i, g); }, weiter: function(){ if ($("weiter")) $("weiter").click(); }, zustand: function(){ return { ort: ort, gefunden: gefunden, gesamt: gesamtGefunden }; } };
+  window.__schulweg = { ORTE: ORTE, starten: starten, tippe: function(i){ var g = document.querySelector('.ding[data-i="' + i + '"]'); if (g) tippen(i, g); }, weiter: function(){ if ($("weiter")) $("weiter").click(); }, zustand: function(){ return { ort: ort, gefunden: gefunden, gesamt: gesamtGefunden, fehltipps: fehltipps }; } };
 })();
 </script>
 <script src="/spiel-navi.js?v=815914e4" defer></script>
