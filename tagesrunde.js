@@ -196,7 +196,11 @@
        unten eingestreut, nie als erste Karte. Ohne opt.mathe alles wie vorher. */
     var mathe = (Array.isArray(e.mathe) ? e.mathe : []).filter(function (k) { return k && k.mathe && k.frage; })
       .slice(0, e.hoechstens);
-    var n = e.hoechstens - mathe.length;
+    /* opt.lesen (28.10.2026, Kapitel 149, ein Kind): fertige Lese-Karten aus LWLesen.waehlen()
+       (hoechstens 1, das zaehlt LWLesen). Wie Mathe: Platz vorab, eingestreut, nie als erste Karte. */
+    var lesen = (Array.isArray(e.lesen) ? e.lesen : []).filter(function (k) { return k && k.lesen && k.frage; })
+      .slice(0, Math.max(0, e.hoechstens - mathe.length));
+    var n = e.hoechstens - mathe.length - lesen.length;
 
     /* ---- Vorrang (16.10.2026) ---- */
     var fehlerBlatt = {}, fehlerWert = {}, gespielt = {}, frisch = {};
@@ -276,16 +280,30 @@
       delete k._tage; delete k._r; delete k._b;
     });
 
+    /* Ohne eine einzige Karte aus dem Heft gibt es keine Runde - auch nicht aus Mathe und Lesen
+       allein (2 Mathe + 1 Lesen wuerden sonst die 3 Mindestkarten fuellen, 28.10.2026). */
+    var heftKarten = karten.length;
     /* Mathe einstreuen: gleichmaessig verteilt, die erste Karte bleibt eine aus dem Heft. */
     mathe.forEach(function (k, i) {
       var pos = karten.length ? Math.max(1, Math.round((i + 1) * (karten.length + 1) / (mathe.length + 1))) : 0;
       k.sorte = "mathe";
       karten.splice(Math.min(pos + i, karten.length), 0, k);
     });
+    /* Lesen einstreuen: in die Mitte, nie an Platz 1 und nicht direkt neben eine Mathe-Karte, wenn es anders geht. */
+    lesen.forEach(function (k, i) {
+      k.sorte = "lesen";
+      var pos = karten.length ? Math.max(1, Math.round(karten.length / 2) + i) : 0;
+      var frei = function (p) { return !(karten[p - 1] && karten[p - 1].mathe) && !(karten[p] && karten[p].mathe); };
+      if (!frei(pos)) for (var d = 1; d < karten.length; d++) {
+        if (pos + d <= karten.length && frei(pos + d)) { pos = pos + d; break; }
+        if (pos - d >= 1 && frei(pos - d)) { pos = pos - d; break; }
+      }
+      karten.splice(Math.min(pos, karten.length), 0, k);
+    });
 
-    var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0, vorrang: 0, mathe: 0 };
+    var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0, vorrang: 0, mathe: 0, lesen: 0 };
     karten.forEach(function (k) { zaehl[k.sorte]++; if (k.vorrang) zaehl.vorrang++; });
-    if (karten.length < e.mindestens) karten = [];
+    if (karten.length < e.mindestens || !heftKarten) karten = [];
     return { karten: karten, zaehl: zaehl, blaetter: liste.length };
   }
 

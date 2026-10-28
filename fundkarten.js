@@ -118,6 +118,11 @@
 
     /* Mathe-Wiederholung (26.10.2026, nur Paul): ein Eingabefeld statt drei Knoepfe. */
     ".lwf-frage.lwf-mathe{white-space:pre-line}",
+    /* Lese-Wiederholung (28.10.2026, ein Kind): Textauszug mit gedruckten Zeilennummern. */
+    ".lwf-auszug{border-radius:12px;border:1px solid " + LINE + ";padding:10px 12px;font-size:16px;line-height:1.55;color:" + INK + "}",
+    ".lwf-zeile{display:flex;gap:10px}",
+    ".lwf-znr{flex:none;min-width:2.2em;text-align:right;font-weight:700;color:" + MUT + ";font-variant-numeric:tabular-nums}",
+    ".lwf-zt{flex:1;min-width:0}",
     ".lwf-wie{font-size:14px;color:" + MUT + ";margin:6px 2px 0;line-height:1.4}",
     ".lwf-eingabe{display:flex;gap:8px;margin-top:11px}",
     ".lwf-feld{flex:1;min-width:0;min-height:52px;padding:10px 14px;border-radius:14px;border:1.5px solid " + LINE + ";",
@@ -261,6 +266,7 @@
     var blatt = String(k.blatt || aktuellesBlatt || "");
     if (!blatt) return "";
     if (k.mathe) return blatt + "#k:" + schluessel({ richtig: k.mathe.art });
+    if (k.lesen) return blatt + "#k:" + schluessel({ richtig: k.lesen.id });
     if (k.quiz) return k.quiz.belegNr ? blatt + "#" + Math.floor(Number(k.quiz.belegNr))
                      : k.quiz.frageId ? blatt + "#f:" + String(k.quiz.frageId).slice(0, 24) : "";
     var s = String(k.richtig || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "").slice(0, 40);
@@ -280,6 +286,9 @@
    * neue Anordnung verunsichert werden. */
   function antworten(k, i) {
     var a = [String(k.falsch[0]), String(k.falsch[1])];
+    /* Lese-Karte (28.10.2026): Die Lage der richtigen Antwort haengt am Tag (k.lesen.pos), sonst stuende
+       sie bei nur 1 Karte je Runde immer an derselben Stelle. */
+    if (k.lesen && k.lesen.pos != null) i = Number(k.lesen.pos) || 0;
     a.splice(i % 3, 0, String(k.richtig));
     return a;
   }
@@ -417,6 +426,26 @@
          Foto. Kein Ausschnitt, aber das ganze Blatt zum Nachsehen. */
       if (k.mathe) {
         aussen.appendChild(el("div", "lwf-bu", "Eine Mathe-Aufgabe zum Wiederholen. Rechne gern auf einem Zettel mit."));
+        return aussen;
+      }
+      /* Lese-Wiederholung (28.10.2026, Kapitel 149): kein Foto, sondern der Text selbst -
+         bei "Zeile finden" der Auszug mit den gedruckten Zeilennummern. */
+      if (k.lesen) {
+        var titel = k.lesen.text ? "„" + k.lesen.text + "“" : "deinem Lesetext";
+        if (k.lesen.zeilen && k.lesen.zeilen.length) {
+          var aus = el("div", "lwf-auszug");
+          aus.setAttribute("aria-label", "Auszug aus " + titel);
+          k.lesen.zeilen.forEach(function (z) {
+            var zl = el("div", "lwf-zeile");
+            zl.appendChild(el("span", "lwf-znr", String(z.n)));
+            zl.appendChild(el("span", "lwf-zt", String(z.t)));
+            aus.appendChild(zl);
+          });
+          aussen.appendChild(aus);
+          aussen.appendChild(el("div", "lwf-bu", "Aus " + titel + ". Die Zahl vorn ist die Zeile."));
+        } else {
+          aussen.appendChild(el("div", "lwf-bu", "Eine Frage zu " + titel + ". Lies alle drei Antworten genau."));
+        }
         return aussen;
       }
       if (k.quiz) {
@@ -613,8 +642,9 @@
           try {
             var meld = [];
             karten.forEach(function (k, n) {
-              if (k.mathe && matheGemeldet) return;
-              var e1 = { blatt: blattVon(k), karte: k.mathe ? k.mathe.art : schluessel(k), stimmt: erster[n] !== false };
+              /* Mathe und Lesen zaehlen einmal je Runde (matheGemeldet gilt fuer beide). */
+              if ((k.mathe || k.lesen) && matheGemeldet) return;
+              var e1 = { blatt: blattVon(k), karte: k.mathe ? k.mathe.art : (k.lesen ? k.lesen.id : schluessel(k)), stimmt: erster[n] !== false };
               if (k.quiz) e1.quiz = k.quiz;
               if (k.kreis) e1.kreis = k.kreis;   // Kreise fuellen: welche Punkte in "Deine Woche"
               meld.push(e1);
@@ -633,7 +663,7 @@
              Die Karten kommen ausserdem in zwei Tagen von selbst wieder. */
           var w1 = el("p", "u lwf-wackler", "Beim ersten Tipp noch nachgeschaut: " +
             wackler.map(function (k) { return k.stichwort || k.richtig; }).join(", ") +
-            (wackler.some(function (k) { return k.mathe; }) ? ". Die kommen in ein paar Tagen wieder dran."
+            (wackler.some(function (k) { return k.mathe || k.lesen; }) ? ". Die kommen in ein paar Tagen wieder dran."
                                                              : ". Die kommen in zwei Tagen wieder dran."));
           fertig.appendChild(w1);
           var bw = el("button", "lwf-knopf lwf-nochmal",
@@ -762,7 +792,7 @@
 
     zeichne();
     var ids = {};
-    karten.forEach(function (k) { if (blattVon(k) && !k.mathe) ids[blattVon(k)] = 1; });
+    karten.forEach(function (k) { if (blattVon(k) && !k.mathe && !k.lesen) ids[blattVon(k)] = 1; });
     Object.keys(ids).forEach(function (id) {
       blattHolen(kind, id, function (b) {
         bilder[id] = b;

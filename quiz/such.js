@@ -189,7 +189,7 @@
      Keine Serie, kein Zwang. Nur Paul ruft das auf (Startseite, Deutsch-Probenstoff). Kapitel 131. */
   var FACH_RUNDE = { hoechstens: 10, unsicherHoechstens: 7, vorrangHoechstens: 7, ruhtUnsicher: true };   // 7 Unsichere + 3 Bekannte
   var rundeFach = autostart ? ((/[?&]fach=([a-z-]{2,20})/.exec(location.search) || [])[1] || "") : "";
-  var schonDran = {}, mehrGleich = false, matheGespielt = false;
+  var schonDran = {}, mehrGleich = false, matheGespielt = false, lesenGespielt = false;
   function fachWort(f){ return FACH[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : ""); }
   var blattWahl = (/[?&]blatt=([^&#]+)/.exec(location.search) || [])[1];
   blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
@@ -205,6 +205,14 @@
         if (mw.karten.length) { o = o || {}; o.mathe = mw.karten; }
       } catch (e) { /* ohne Mathe laeuft die Runde wie vorher */ }
     }
+    /* Lese-Wiederholung (28.10.2026, Kapitel 149): genauso, nur ein Kind, nur in der allgemeinen Runde,
+       hoechstens 1 Karte, fruehestens alle 3 Tage (LWLesen aus fundStand), lesenGespielt wie oben. */
+    if (KIND === "paul" && !rundeFach && !lesenGespielt && window.LWLesen && window.LWLeseDaten) {
+      try {
+        var lw = LWLesen.waehlen(window.LWLeseDaten, fundStand);
+        if (lw.karten.length) { o = o || {}; o.lesen = lw.karten; }
+      } catch (e) { /* ohne Lesen laeuft die Runde wie vorher */ }
+    }
     heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }
@@ -219,6 +227,7 @@
     if (wieder) teile.push(wieder === 1 ? "1 Karte kommt wieder dran" : wieder + " Karten kommen wieder dran");
     if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
     if (z.mathe) teile.push(z.mathe === 1 ? "1 Mathe-Aufgabe" : z.mathe + " Mathe-Aufgaben");
+    if (z.lesen) teile.push(z.lesen === 1 ? "1 Lese-Aufgabe" : z.lesen + " Lese-Aufgaben");
     $("heute-unter").textContent = rundeFach
       ? heute.karten.length + " Fragen aus deinen " + fachWort(rundeFach) + "-Blättern: " + teile.join(", ") + ". Dauert etwa 5 Minuten."
       : heute.karten.length + " Karten aus deinen Blättern: " + teile.join(", ") + ". Dauert ein paar Minuten.";
@@ -324,6 +333,7 @@
       fertigSatz: f ? "Deine " + fachWort(f) + "-Runde für heute ist geschafft. Mehr geht immer – musst du aber nicht." : "Deine Runde für heute ist geschafft.",
       ergebnis: function(liste){
         if (liste.some(function(e){ return e.blatt === "mathe"; })) matheGespielt = true;
+        if (liste.some(function(e){ return e.blatt === "lesen"; })) lesenGespielt = true;
         merken("", liste);
       },
       mehrText: f ? "Noch 10 Fragen" : "", mehr: f ? function(){ mehrGleich = true; laden(); } : null,
