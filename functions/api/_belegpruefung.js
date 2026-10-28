@@ -636,6 +636,24 @@ const RAHMEN_FREMD = ["deutsch", "französisch", "franzoesisch", "englisch", "pe
   "präsensform", "praesensform", "form", "verb", "bedeutet", "arbeitsauftrag"];
 const RAHMEN_MATHE = ["wert", "term", "ausführlich", "ausfuehrlich", "wovor"];
 const fremdFach = (fach) => /^(franz|engl)/i.test(String(fach || ""));
+/* Leon-Zusätze (28.10.2026, Dennys Wahl 08:44 Uhr, Plan
+   befunde/2026-10-28-plan-leon-belegpruefung.md, Fotostichprobe 12 von 21
+   Fehlalarmen). Nur mit ctx.regelLeon, Paul und Helena rufen ohne:
+   1. „wann“, „Nachbarzahl(en)“ und „dasselbe“ brauchen im Fragetext keinen Beleg.
+   2. Lesernotizen („Kind schrieb“, „ergänzt“, „Spalte“, „Lehrkraft“) werden
+      nie als Heftsatz an die Stelle einer Erklärung gesetzt.
+   3. Eine Mathe-Erklärung zu einer Zahlenlösung muss die Lösungszahl
+      enthalten, sonst erklärt sie eine andere Rechnung und gilt als unbelegt.
+   4. „Kind schrieb X, richtig: Y“ belegt nur Y (quellZeile, gilt schon für alle). */
+export const LEON_FREI = new Set(["wann", "nachbarzahl", "nachbarzahlen", "dasselbe"]);
+const LESERNOTIZ = /\bKind\s+(?:schrieb|hat|trug|schreibt)\b|ergänzt|\bSpalte|\bLehrkraft\b/i;
+export function leonErklaerungOhneZahl(q, richtig) {
+  if (!/^mathe/i.test(String(q.fach || "")) || !q.erklaerung) return false;
+  const m = /^\s*(\d+(?:[.,]\d+)?)\b/.exec(String(richtig || ""));
+  if (!m) return false;
+  return !new RegExp("(^|[^\\d.,])" + m[1].replace(/[.,]/g, "[.,]") + "(?![\\d]|[.,]\\d)").test(String(q.erklaerung));
+}
+
 export function rahmenFuer(fach) {
   const liste = fremdFach(fach) ? RAHMEN_FREMD : /^mathe/i.test(String(fach || "")) ? RAHMEN_MATHE : null;
   if (!liste) return null;
@@ -691,6 +709,7 @@ export function frageWoerterGrund(q, ctx) {
   for (const w of sachwoerter(String(q.frage || ""), mathe)) {
     if (istZahl(w) || w.length < 4 || FRAGEWORT.has(w)) continue;
     if (rahmen && rahmen(w)) continue;
+    if (ctx.regelLeon && LEON_FREI.has(w)) continue;
     if (!gedeckt(w, idx, q.fach)) return "„" + w + "“ steht in keiner Schulquelle";
   }
   /* Auch die falschen Antworten (27.10.2026, Gegenprüfung: Ablenker „Laternen
@@ -757,6 +776,7 @@ export function heftsatzFuer(q, c) {
          selbst schrieb (kann Fehler enthalten), keine Buchstabentreppe
          „M, ma, man …“, keine abgebrochene Klammer aus dem Ablesen. Kurze
          Nummern vorn („12b:“, „D)“) fallen weg. */
+      if (c.regelLeon && LESERNOTIZ.test(String(z0 || ""))) continue;
       if (/^\s*(?:✍\s*)?(?:Kind\b|Auftrag|Arbeitsauftrag|Aufgabe\b|Überschrift|Stempel|Name|Spalten|Titel|Text\s*:)/i.test(String(z0 || ""))) continue;
       const z = String(z0 || "").trim().replace(/^(?:Lehrkraft\s*:\s*|(?:\d{1,2}[a-z]?|[A-Za-z])\s*[:)]\s+)/, "").trim();
       if (/^(?:[^\s,]{1,3},\s*){3,}/.test(z)) continue;
@@ -826,7 +846,8 @@ export function frageTexteBelegen(q, ctx) {
   const nachGleich = /=\s*(\d+(?:[.,]\d+)?)/.exec(String(q.frage || ""));
   if (nachGleich) loesungen.push(num(nachGleich[1]));
   const c = { quellen, fach: q.fach, frage: q.frage, richtig, mathe, aufgabe, ergebnis, umkehr, loesungen,
-    ...(ctx.regelA && rahmenFuer(q.fach) ? { rahmen: rahmenFuer(q.fach) } : {}) };
+    ...(ctx.regelA && rahmenFuer(q.fach) ? { rahmen: rahmenFuer(q.fach) } : {}),
+    ...(ctx.regelLeon ? { regelLeon: true } : {}) };
   const neu = { ...q };
   const gekuerzt = [];
 
@@ -835,7 +856,9 @@ export function frageTexteBelegen(q, ctx) {
     /* Ein „weil“ in der Erklärung (die Lehrerin erlaubt es nicht) ersetzt sie
        vor der Ausgabe ebenso, statt die ganze Frage auszublenden. */
     const weil = /\bweil\b/i.test(q.erklaerung);
-    if ((k !== q.erklaerung || weil) && ctx.ausgabe) {
+    const ohneZahl = !!ctx.regelLeon && leonErklaerungOhneZahl(q, richtig);
+    if (ohneZahl && !ctx.ausgabe) { delete neu.erklaerung; gekuerzt.push("erklaerung-weg"); }
+    else if ((k !== q.erklaerung || weil || ohneZahl) && ctx.ausgabe) {
       /* Vor der Ausgabe an Paul (27.10.2026, Dennys Auflage 2): Statt die
          Frage zu verwerfen, tritt der belegte Heftsatz an die Stelle der
          Erklärung - gibt es keinen, entfällt die Erklärung. Auch eine nur
