@@ -108,6 +108,27 @@ const KIND_NOTEN_TAG = 3;     // hoechstens drei eigene Eintraege am Tag
 const KIND_NOTEN_TAG_JE = { helena: 6 };  // Helena: Noten vom Halbjahresanfang nachtragen
 const KIND_NOTEN_ZURUECK = 120;
 
+/* Datum einer Note muss im letzten Jahr liegen (28.10.2026). Anlass: Die
+ * Mathe-Probe vom 19.10.2026 kam vom Foto als 2016-10-19 herein; die Pruefung
+ * sah nur die Form, und die Vorschlagsliste im Elternbereich zeigte nur Tag
+ * und Monat. Liegt ein Datum in der Zukunft oder mehr als 365 Tage zurueck,
+ * wird derselbe Tag im passenden Jahr gesucht; gibt es keinen, null. */
+const NOTE_ZURUECK_TAGE = 365;
+function tageVor(heute, tage) {
+  return new Date(Date.UTC(+heute.slice(0, 4), +heute.slice(5, 7) - 1, +heute.slice(8, 10) - tage, 12))
+    .toISOString().slice(0, 10);
+}
+function datumImJahr(datum, heute) {
+  const frueh = tageVor(heute, NOTE_ZURUECK_TAGE);
+  if (datum <= heute && datum >= frueh) return { datum };
+  const md = datum.slice(4);
+  for (const j of [+heute.slice(0, 4), +heute.slice(0, 4) - 1]) {
+    const d = j + md;
+    if (d <= heute && d >= frueh && !isNaN(Date.parse(d + "T12:00:00Z"))) return { datum: d, gelesen: datum };
+  }
+  return null;
+}
+
 /* Paul traegt eine zurueckbekommene Note selbst ein (15.10.2026). Grenzen:
  * nur fuer sich selbst, ganze Noten 1-6, Datum heute oder bis 120 Tage
  * zurueck, hoechstens drei Eintraege am Tag. Er darf eine offene Probe
@@ -434,6 +455,14 @@ export async function onRequestPost(context) {
      (ihre id bleibt, damit Verweise aus der Zurueckbekommen-Liste halten).
      Sonst 409 - ausser trotzdem:true, dann zaehlt sie als eigene Probe. */
   if (i < 0) {
+    // Neue Note nur mit Datum im letzten Jahr (28.10.2026); bestehende bleiben unberuehrt.
+    if (!gepruef.note.offen || gepruef.note.datum) {
+      const imJahr = datumImJahr(gepruef.note.datum, berlinHeute());
+      if (!imJahr || imJahr.gelesen) {
+        const t = gepruef.note.datum.split("-").reverse().join(".");
+        return json(400, { ok: false, fehler: "Das Datum " + t + " liegt nicht im letzten Jahr. Bitte prüfen." });
+      }
+    }
     const vorhanden = daten.trotzdem === true ? null : schonDa(noten, gepruef.note);
     if (vorhanden && vorhanden.offen && (vorhanden.note === undefined || vorhanden.note === null)
         && (gepruef.note.note !== undefined || gepruef.note.punkte)) {
@@ -535,7 +564,13 @@ Regeln:
     const vorschlaege = [];
     for (const n of (gelesen.noten || []).slice(0, 60)) {
       const p = notePruefen({ ...n, quelle: "blatt", id: neueId() });
-      if (!p.fehler) vorschlaege.push(p.note);
+      if (p.fehler) continue;
+      // Gelesenes Datum ausserhalb des letzten Jahres: auf das passende Jahr
+      // setzen, als unsicher markieren und das Gelesene mitgeben (28.10.2026).
+      const imJahr = datumImJahr(p.note.datum, berlinHeute());
+      if (!imJahr) { p.note.sicher = false; p.note.datumFraglich = true; }
+      else if (imJahr.gelesen) { p.note.datum = imJahr.datum; p.note.datumGelesen = imJahr.gelesen; p.note.sicher = false; }
+      vorschlaege.push(p.note);
     }
     return json(200, { ok: true, vorschlaege, faecherDurchschnitt: gelesen.faecher || [], gespeichert: false });
   } catch (e) {

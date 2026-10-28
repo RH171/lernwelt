@@ -1835,6 +1835,8 @@
     var zeilen = liste.map(function(n){
       return '<li>' + esc(n.fach) + ': <b>' + esc(n.note !== undefined ? String(n.note).replace(".", ",") : (n.punkte || (n.offen ? "kommt noch" : "?"))) + '</b>' +
              ' · ' + esc(n.anlass) + ' · ' + esc(kurzDatum(n.datum)) +
+             (n.datumGelesen ? ' <b style="color:#b91c1c">(auf dem Blatt gelesen: ' + esc(n.datumGelesen.split("-").reverse().join(".")) + ', bitte prüfen)</b>' : '') +
+             (n.datumFraglich ? ' <b style="color:#b91c1c">(Datum ' + esc(String(n.datum).split("-").reverse().join(".")) + ' liegt nicht im letzten Jahr)</b>' : '') +
              (n.art === "gross" ? ' · Schulaufgabe' : '') +
              (n.gewicht === 2 ? ' · doppelt' : '') +
              (n.sicher === false ? ' · <b style="color:#b91c1c">unsicher gelesen</b>' : '') + '</li>';
