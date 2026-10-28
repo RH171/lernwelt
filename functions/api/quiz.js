@@ -51,7 +51,9 @@ import { klaerungSperre } from "./_klaerung.js";
 import { tabelleAnwenden, abstempeln } from "./_beleg-ausgabe.js";
 import { BELEG_TABELLE_HELENA } from "./_beleg-tabelle-helena.js";
 import { BELEG_SPERRE_HELENA } from "./_beleg-sperre-helena.js";
-import { leonKorrigieren } from "./_beleg-leon.js";
+import { leonAusgabe } from "./_beleg-leon.js";
+import { BELEG_TABELLE_LEON } from "./_beleg-tabelle-leon.js";
+import { FOTO_LEON } from "./_beleg-foto-leon.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
@@ -215,12 +217,16 @@ export async function onRequestGet(context) {
       jeBlatt[f.blatt] = (jeBlatt[f.blatt] || 0) + 1;
     }
     let kandidaten = gewuenschteBlaetter;
+    /* Leon (28.10.2026): Vorbau für alle sichtbaren Blätter, nicht nur das erste
+       Fach der Seite. motor.js schickt nur stand.faecher[0] (Mathe), deshalb
+       bekamen seine Deutsch-Blätter nie Fragen. Die Seite bleibt unverändert. */
+    const vorbauFaecher = kind === "leon" ? [] : gewuenschteFaecher;
     if (!kandidaten.length) {
       const e = await stoffLesen(env, kind, 4).catch(() => ({ ok: false }));
       const ab = e.ok ? schuljahrStart(e.heute) : "";
       kandidaten = (e.ok ? e.eintraege : []).filter((x) => x && x.sichtbar !== false && x.probenstoff !== false && x.titel &&
           x.datum >= ab &&
-          (!gewuenschteFaecher.length || gewuenschteFaecher.includes(String(x.fach || "").toLowerCase())))
+          (!vorbauFaecher.length || vorbauFaecher.includes(String(x.fach || "").toLowerCase())))
         .sort((a, b) => String(b.datum).localeCompare(String(a.datum)))   // das Neueste zuerst
         .map((x) => x.id);
     }
@@ -235,7 +241,7 @@ export async function onRequestGet(context) {
     if (!fehlen.length) return json(200, { ok: true, gebaut: 0, fehlen: 0 });
     const jetztDran = fehlen.slice(0, VORBAU_JE_LAUF);
     let neu = [];
-    try { neu = await nachschubBauen(env, kind, gewuenschteFaecher, jetztDran); } catch (e) {}
+    try { neu = await nachschubBauen(env, kind, vorbauFaecher, jetztDran); } catch (e) {}
     {
       // Frisch lesen und zusammenfuehren: Zwei Vorbauten gleichzeitig duerfen
       // sich nicht gegenseitig ueberschreiben.
@@ -859,6 +865,9 @@ export function fragenAusTatsachen(tatsachen, schule, nurDaraus, erlaubt, schlue
       if (kind === "paul") { q = abstempeln(belegFuerPaul(q, schule, lehrer, true)); if (!q) continue; }
       /* Helena seit 28.10.2026: dieselbe Prüfung mit Regel A (_belegpruefung.js). */
       else if (kind === "helena") { q = abstempeln(belegFuerPaul(q, schule, lehrer, true, { regelA: true })); if (!q) continue; }
+      /* Leon seit 28.10.2026 (Dennys Wahl 08:44 Uhr): dieselbe Prüfung mit regelLeon.
+         Deutsch kommt trotzdem erst nach der Fotoprüfung zu Leon (_beleg-foto-leon.js). */
+      else if (kind === "leon") { q = abstempeln(belegFuerPaul(q, schule, lehrer, true, { regelLeon: true })); if (!q) continue; }
       gesehen.add(form);
       raus.push(q);
     }
@@ -917,7 +926,8 @@ export function belegFuerPaul(q, schule, lehrer, ausgabe, opts) {
     const rechnen = /^mathe/i.test(String(q.fach || "")) && /\d\s*[+\-−–·*×x:÷/]\s*(\d|_{2,})/.test(String(q.frage || ""));
     if (!rechnen && !stehtAufBlatt(quellen.alle, richtig)) return null;
   }
-  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "", ausgabe: !!ausgabe, ...(opts && opts.regelA ? { regelA: true } : {}) };
+  const ctx = { blaetter, vorlageFuer, vorlagen, blattId: q.blatt || "", ausgabe: !!ausgabe, ...(opts && opts.regelA ? { regelA: true } : {}),
+    ...(opts && opts.regelLeon ? { regelLeon: true } : {}) };
   const r = frageTexteBelegen(q, ctx);
   /* Auch die Frage selbst nur mit Wörtern aus der Schule (27.10.2026). */
   if (r.q && frageWoerterGrund(r.q, ctx)) return null;
@@ -944,14 +954,15 @@ export function ausgabeFuerPaul(fragen, blattNach) {
    bisher. Helena: Belegprüfung mit Regel A, vorberechnet in
    _beleg-tabelle-helena.js (werkzeuge/beleg-tabelle-helena.mjs), dazu die am
    Foto als echt oder unklar beurteilten Fragen fest aus (_beleg-sperre-helena.js).
-   Leon: keine Belegprüfung, nur einzelne Korrekturen und Ausblendungen nach
-   Kennung (_beleg-leon.js); alles andere bleibt unverändert. Im Speicher
+   Leon (seit 28.10.2026, Dennys Wahl 08:44 Uhr): Einzelkorrekturen nach Kennung,
+   dann Belegprüfung mit regelLeon für Mathe und Deutsch (_beleg-tabelle-leon.js),
+   Deutsch nur mit Fotofreigabe (_beleg-foto-leon.js); siehe _beleg-leon.js leonAusgabe. Im Speicher
    bleibt bei allen dreien alles. */
 export const MIT_AUSGABE = new Set(["paul", "helena", "leon"]);
 export function ausgabeFuer(kind, fragen, blattNach) {
   if (kind === "paul") return ausgabeFuerPaul(fragen, blattNach);
   if (kind === "helena") return tabelleAnwenden(fragen, blattNach, BELEG_TABELLE_HELENA).filter((f) => !BELEG_SPERRE_HELENA[f.id]);
-  if (kind === "leon") return leonKorrigieren(fragen);
+  if (kind === "leon") return leonAusgabe(fragen, blattNach, BELEG_TABELLE_LEON, FOTO_LEON);
   return fragen;
 }
 
@@ -1089,7 +1100,12 @@ drumherum. Steht auf dem Blatt "Fürth", dann frage nicht nach Nürnberg - das
 Kind war im Unterricht dabei und hat das andere nie gehört. Es hält sich sonst
 für dumm, obwohl es alles gewusst hat, was drankam.
 Trag zu JEDER Tatsache die Nummer des Blattes in das Feld "blatt_nr" ein.
-${istPaul ? `Steht bei einem Blatt SCHULHEFT, ist es der Prüfungsstoff: Nimm von dort die
+${kind === "leon" ? `Als Quelle zählt NUR gedruckter Text und was die Lehrerin ROT verbessert hat.
+Was Leon selbst geschrieben hat, zählt nur, wenn es abgehakt und eindeutig ist;
+bei einem Laufdiktat nie. Lösung, Erklärung, Tipp und falsche Antworten nur mit
+Wörtern von seinen Blättern - falsche Antworten dürfen falsch geschriebene
+Varianten dieser Wörter sein.
+` : ""}${istPaul ? `Steht bei einem Blatt SCHULHEFT, ist es der Prüfungsstoff: Nimm von dort die
 meisten Fragen. Eine Tatsache aus den VORLAGEN DER LEHRERIN bekommt die Nummer
 des Blattes zum selben Thema; gibt es keins, lass "blatt_nr" leer.
 ` : ""}` : `
@@ -1308,6 +1324,7 @@ ${k.alter <= 8 ? `7. LESEANFÄNGER: höchstens 12 Wörter je Frage, höchstens 3
     }));
   /* Belegpruefung auch im alten Pfad (27.10.2026). */
   if (kind === "helena") return alt.map((q) => abstempeln(belegFuerPaul(q, schule, lehrer, true, { regelA: true }))).filter(Boolean);
+  if (kind === "leon") return alt.map((q) => abstempeln(belegFuerPaul(q, schule, lehrer, true, { regelLeon: true }))).filter(Boolean);
   return kind === "paul" ? alt.map((q) => abstempeln(belegFuerPaul(q, schule, lehrer, true))).filter(Boolean) : alt;
 }
 
