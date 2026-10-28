@@ -25,6 +25,7 @@
  * zwei Seiten sind neun Schreibvorgaenge - das traegt.
  */
 import { korrekturenErneuern } from "./_korrekturhalt.js";
+import { kartenAusblenden } from "./_karten-ausblenden.js";
 
 export const KINDER = ["paul", "leon", "helena"];
 
@@ -408,7 +409,7 @@ export async function stoffLesen(env, kind, monate) {
   }
   alle.sort((a, b) => (b.datum || "").localeCompare(a.datum || "") ||
                       (b.angelegt || "").localeCompare(a.angelegt || ""));
-  return { ok: true, heute, eintraege: alle };
+  return { ok: true, heute, eintraege: kartenAusblenden(kind, alle) };
 }
 
 /* Welche Faecher hat das Kind IN DIESEM SCHULJAHR im Heft?
