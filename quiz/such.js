@@ -30,7 +30,7 @@
   }
   /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
-  var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], heute = null;
+  var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], fundFormen = {}, heute = null;
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
@@ -136,7 +136,8 @@
     fetch("/api/quiz?kind=" + encodeURIComponent(KIND) + "&nurWartend=1", { credentials: "same-origin" })
       .then(function(r){ return r.json(); })
       .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {};
-                         fundStand = (j && j.fundStand) || {}; quizWackler = (j && j.quizWackler) || []; })
+                         fundStand = (j && j.fundStand) || {}; quizWackler = (j && j.quizWackler) || [];
+                         fundFormen = (j && j.fundFormen) || {}; })
       .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; })
       .then(function(){ return fetch("/api/schulstoff?kind=" + encodeURIComponent(KIND) + "&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
@@ -214,7 +215,7 @@
       } catch (e) { /* ohne Lesen laeuft die Runde wie vorher */ }
     }
     /* Blattdatum mit Herkunft (28.10.2026, Schritt 2): bei Paul zaehlt "neu" nach dem Datum des Blattes. */
-    if (KIND === "paul") { o = o || {}; o.nachBlattdatum = true; }
+    if (KIND === "paul") { o = o || {}; o.nachBlattdatum = true; o.formen = fundFormen; }
     heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }

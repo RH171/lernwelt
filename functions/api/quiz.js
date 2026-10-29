@@ -57,8 +57,9 @@ import { FOTO_LEON } from "./_beleg-foto-leon.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
-  fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen,
+  fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen, berlinTagNr,
 } from "./_wiedervorlage.js";
+import { fundFormenFuer } from "./_fundformen.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten } from "./_fragerichtung.js";
 
 const KINDER = {
