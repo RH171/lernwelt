@@ -276,6 +276,10 @@
   .nzeile button{min-height:44px;padding:0 14px;border:1.5px solid var(--line);background:#fff;
                  border-radius:10px;font:600 14px/1 var(--rund);color:#b91c1c;cursor:pointer}
   .nvorschlag li{margin-bottom:3px}
+  /* Knöpfe „Ist ein Fehler“ / „Ist richtig“ / „Zurücknehmen“ (29.10.2026): auch am Desktop 44 px wie alle
+     anderen Knöpfe im Elternbereich; ohne Stil waren sie dort 21 px hoch (Browser-Durchlauf). */
+  [data-nach-feld] button{min-height:44px;padding:0 14px;margin:4px 6px 0 0;border:1.5px solid var(--line);background:#fff;
+                          border-radius:10px;font:600 14px/1 var(--rund);color:var(--ink);cursor:pointer}
 </style>
 </head>
 <body>
