@@ -49,7 +49,7 @@ export async function onRequestPost(context) {
       return json(200, { ok: true, alsEltern: true, gespeichert: false });
   } catch (e) {}
 
-  const runde = saeubern(daten.runde);
+  const runde = saeubern(daten.runde, kind === "paul" ? 120 : 40);
   if (!runde) return json(400, { ok: false, fehler: "Die Runde war unvollständig." });
 
   let liste = [];
@@ -64,7 +64,10 @@ export async function onRequestPost(context) {
 
 // Nur mitschreiben, was gebraucht wird - keine ganzen Aufgabentexte,
 // keine Fotos. Was hier nicht steht, kann später auch nicht auslaufen.
-function saeubern(r) {
+/* Schritt 4 (29.10.2026, nur Paul): 120 statt 40 Aufgaben je Abschnitt. Mit der
+   Leiter bis 100 Fragen schnitt die 40 Antworten ab, die dann in KEINEM Speicher
+   mehr standen (gemessen: fuenf Quizlaeufe mit genau 40 Aufgaben seit 01.10.2026). */
+function saeubern(r, maxAufgaben) {
   if (!r || !Array.isArray(r.aufgaben) || !r.aufgaben.length) return null;
   const zahl = (x, max) => Math.max(0, Math.min(max, Math.round(Number(x) || 0)));
   const text = (x, n) => String(x == null ? "" : x).slice(0, n);
@@ -84,7 +87,7 @@ function saeubern(r) {
     vorrat: zahl(r.vorrat, 100000),
     nurBesuch: !!r.nurBesuch,
     geraet: text(r.geraet, 80),
-    aufgaben: r.aufgaben.slice(0, 40).map((a) => ({
+    aufgaben: r.aufgaben.slice(0, maxAufgaben || 40).map((a) => ({
       merkmal: text(a.merkmal, 40).toLowerCase(),
       art: text(a.art, 14),
       stimmt: !!a.stimmt,
