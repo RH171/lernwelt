@@ -54,6 +54,7 @@
  * braucht, geht ueber `fuerDieSeite()` mit; `quiz/motor.js` liest es dort
  * und hat KEINE eigene Kopie.
  */
+import { tatsacheVon } from "./_fragerichtung.js";
 
 /* ---------------------------------------------------------------- *
  *  DIE SCHALTER. Hier und nur hier wird gedreht.                    *
@@ -150,6 +151,362 @@ export const EINSTELLUNGEN = {
     textWiederholt: "Die hattest du vor {tage} Tagen schon einmal.",
   },
 };
+
+/* ---- Schritt 4 (Denny, 29.10.2026): Gewichtung und Tagesmenge, NUR Paul ----
+   Alle Werte sind vorlaeufig und stehen nur hier. Die Seite (tagesrunde.js) bekommt sie
+   ueber /api/quiz?nurWartend=1 (Feld schritt4.k) - es gibt keine zweite Kopie.
+   Kapitel anleitung/152-schritt4-gewichtung.md. */
+export const SCHRITT4 = {
+  an: true,
+  /* Gewicht je Stufe. Grenze alt/neu = Probendatum des Fachs (Blattdatum gegen Probendatum).
+     neu          Blatt ab dem Probendatum, ohne Fehler
+     frischFehler Fehler auf einem neuen Blatt
+     altFehler    Fehler auf einem alten Blatt, bis er nach Schritt 3 sicher ist
+     altRichtig   altes Blatt, (noch) ohne Fehler, nicht sicher - auch nie gefragt (Annahme)
+     sicher       sicher nach Schritt 3 (3c) */
+  gewicht: { neu: 10, frischFehler: 4, altFehler: 4, altRichtig: 2, sicher: 0.5 },
+  /* Denny, 29.10.2026, 21:00 Uhr: bis 2 alte richtige Karten je Runde (vorher 1). */
+  altRichtigJeRunde: 2,
+  neuJeRunde: 9,
+  /* Feste Plaetze fuer Neues (Beschluss 29.10.2026, 15:50 Uhr): jede Runde zuerst Neues bis
+     zur Haelfte der Tagesmenge je Fach (zusammen hoechstens neuJeRunde), der Rest Faellige. */
+  neuAnteil: 0.5,
+  /* Deckel je Blatt (Denny, 29.10.2026, 21:00 Uhr): hoechstens 3 Karten je Blatt in der
+     Wiederholung (wiederholung4). Fehlerkarten zaehlen mit, werden aber nie verdraengt
+     (fehlerVorrang; aus nur fuer Tests). Karten ausserhalb laufen nur im freien Ueben mit,
+     Gewicht x ausserhalbFaktor - "selten, nie ganz weg" (0,1 ist eine Annahme). */
+  deckelJeBlatt: 3,
+  fehlerVorrang: true,
+  ausserhalbFaktor: 0.1,
+  /* Angekuendigte Probe (Pauls eingetragene Proben): in den letzten probeTage Tagen davor
+     zaehlen Karten dieses Fachs probeFaktor-fach. */
+  probeFaktor: 2,
+  probeTage: 7,
+  /* Probenausnahme (Denny, 29.10.2026): In den letzten probenAusnahmeTage Tagen vor einer
+     angekuendigten Probe (proben-termine, nicht die Noten) zaehlen ALLE Karten des Probenstoffs,
+     der Deckel je Blatt ist fuer sie aufgehoben. Probenstoff = gleiches Fach, Blatt seit der
+     vorigen Probe dieses Fachs bis zum Probentag (wie die Zeitraum-Reihe der Blattwahl, Kapitel 081:
+     vorige Probe ausschliesslich, Probentag einschliesslich). Am Probentag ab probenAusnahmeAb Uhr
+     (Berlin) ist die Probe geschrieben (wie probenkarte.js, Kapitel 131). 0 = Ausnahme aus.
+     Tagesmenge, hoechstens 9 neue und 2 alt-richtige je Runde bleiben. */
+  probenAusnahmeTage: 0,
+  probenAusnahmeAb: 13,
+  /* Wiederholung je Fach: Normaltag, nach 1 Tag Pause, nach 2 und mehr Tagen Pause. */
+  tagesmenge: [8, 12, 15],
+};
+
+/* Heft-Schluessel eines Fachs: "mathematik" (Noten) = "mathe", "deutsch-lesen" = "deutsch". */
+export function fachNorm(f) {
+  let x = String(f || "").toLowerCase().trim();
+  const i = x.indexOf("-");
+  if (i > 0) x = x.slice(0, i);
+  return x === "mathematik" ? "mathe" : x;
+}
+
+/* Sicher im Sinn von Schritt 3: v:3 mit s; alte Punkte ohne v:3 nach dem alten Deckel. */
+export function istSicher4(p, e) {
+  const ein = e || EINSTELLUNGEN;
+  if (!p || !p.z) return false;
+  if (p.v === 3) return !!p.s;
+  return (Number(p.r) || 0) >= ein.sitzt && !p.f;
+}
+
+/* Die Stufe eines Lernpunkts. f = zuletzt falsch, fz = frueher falsch und seitdem richtig:
+   Beides bleibt "Fehler", bis der Punkt sicher ist (Dennys "bis Paul sie nach der
+   Schritt-3-Regel kann"). */
+export function stufe4(p, blattNeu, e) {
+  if (istSicher4(p, e)) return "sicher";
+  if (p && p.z && (p.f || p.fz)) return blattNeu ? "frischFehler" : "altFehler";
+  return blattNeu ? "neu" : "altRichtig";
+}
+
+export function gewicht4(stufe, probeNah, k) {
+  const K = k || SCHRITT4;
+  return (Number(K.gewicht[stufe]) || 0) * (probeNah ? K.probeFaktor : 1);
+}
+
+/* Pause = volle Kalendertage (Berlin) ohne Antwort zwischen dem letzten Antworttag VOR heute
+   und heute. Gestern geuebt = 0, vorgestern = 1. Nie geuebt = 0 (Normaltag, Annahme). */
+export function pauseTage(letzterTagNr, heuteNr) {
+  if (!letzterTagNr || !heuteNr || letzterTagNr >= heuteNr) return 0;
+  return Math.max(0, heuteNr - letzterTagNr - 1);
+}
+
+export function tagesmenge4(pause, k) {
+  const t = (k || SCHRITT4).tagesmenge;
+  return pause >= 2 ? t[2] : pause === 1 ? t[1] : t[0];
+}
+
+/* Probenlage aus Pauls eingetragenen Proben (proben-termine) und den Noten:
+     grenze  { fach: Datum der juengsten Probe bis heute }   - die Grenze alt/neu
+     nah     { fach: Datum der naechsten Probe in 0..probeTage Tagen }
+   heute = "JJJJ-MM-TT" (Berlin). Reine Funktion. */
+export function probenLage(termine, noten, heute, k) {
+  const K = k || SCHRITT4;
+  const grenze = {}, nah = {};
+  const tag = (d) => Date.parse(String(d).slice(0, 10) + "T12:00:00Z");
+  const h = tag(heute);
+  const alle = [].concat(termine || [], (noten || []).map((n) => ({ datum: n && n.datum, fach: n && n.fach })));
+  for (const t of alle) {
+    if (!t || !/^\d{4}-\d{2}-\d{2}/.test(String(t.datum || ""))) continue;
+    const f = fachNorm(t.fach), d = String(t.datum).slice(0, 10);
+    if (!f) continue;
+    const abstand = Math.round((tag(d) - h) / TAG);
+    if (abstand <= 0) { if (!grenze[f] || d > grenze[f]) grenze[f] = d; }
+    if (abstand >= 0 && abstand <= K.probeTage) { if (!nah[f] || d < nah[f]) nah[f] = d; }
+  }
+  return { grenze, nah };
+}
+
+/* Stunde in Berlin (0-23) - fuer "am Probentag ab 13 Uhr vorbei". */
+const STUNDENFORMAT = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", hour: "2-digit", hourCycle: "h23" });
+export function berlinStunde(ms) {
+  return Number(STUNDENFORMAT.format(new Date(ms || Date.now()))) % 24;
+}
+
+/* Probenausnahme (29.10.2026, nur Paul): welche Proben sind gerade "nah"?
+     termine  Pauls eingetragene Proben (proben-termine) - nur sie zaehlen als angekuendigt
+     noten    die Noten - nur fuer die Grenze "vorige Probe"
+     heute    "JJJJ-MM-TT" (Berlin), stunde 0-23 (Berlin)
+     norm     Fach-Angleichung (quiz.js gibt heftFach(fachNorm(x)) mit), sonst fachNorm
+   Rueckgabe { fach: { datum, von } } - je Fach die naechste Probe in 0..probenAusnahmeTage Tagen,
+   am Probentag nur vor probenAusnahmeAb Uhr; von = Datum der vorigen Probe dieses Fachs ("" = keine,
+   dann zaehlt alles bis zum Probentag). Reine Funktion. */
+export function probenAusnahme4(termine, noten, heute, stunde, k, norm) {
+  const K = k || SCHRITT4;
+  const n = norm || fachNorm;
+  const raus = {};
+  const tage = Number(K.probenAusnahmeTage) || 0;
+  if (tage <= 0 || !heute) return raus;
+  const tag = (d) => Date.parse(String(d).slice(0, 10) + "T12:00:00Z");
+  const h = tag(heute);
+  const gueltig = (t) => t && /^\d{4}-\d{2}-\d{2}/.test(String(t.datum || "")) && n(t.fach);
+  const alle = [].concat(termine || [], (noten || []).map((x) => ({ datum: x && x.datum, fach: x && x.fach }))).filter(gueltig);
+  for (const t of (termine || []).filter(gueltig)) {
+    const f = n(t.fach), d = String(t.datum).slice(0, 10);
+    const abstand = Math.round((tag(d) - h) / TAG);
+    if (abstand < 0 || abstand > tage) continue;
+    if (abstand === 0 && Number(stunde) >= (K.probenAusnahmeAb != null ? K.probenAusnahmeAb : 13)) continue;
+    if (raus[f] && raus[f].datum <= d) continue;
+    let von = "";
+    for (const v of alle) {
+      const vd = String(v.datum).slice(0, 10);
+      if (n(v.fach) === f && vd < d && vd > von) von = vd;
+    }
+    raus[f] = { datum: d, von };
+  }
+  return raus;
+}
+
+/* Die Blaetter, fuer die der Deckel gerade aufgehoben ist: Fach mit naher Probe, Blattdatum im
+   Zeitraum (von, datum]. Blatt ohne Datum oder mit unsicherem Datum gehoert nicht dazu (wie
+   blattNeu4: kein Datum, keine Zuordnung), Handwerk (probenstoff:false) und Verborgenes auch nicht.
+   Rueckgabe Set der Blatt-ids. */
+export function ausnahmeBlaetter4(blaetter, ausnahme, norm) {
+  const n = norm || fachNorm;
+  const raus = new Set();
+  if (!ausnahme || !Object.keys(ausnahme).length) return raus;
+  for (const id of Object.keys(blaetter || {})) {
+    const b = blaetter[id];
+    if (!b || b.sichtbar === false || b.probenstoff === false) continue;
+    if (b.datumUnsicher || b.datumVon === "ohne") continue;
+    const a = ausnahme[n(b.fach)];
+    const d = String(b.datum || "").slice(0, 10);
+    if (!a || !/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    if ((!a.von || d > a.von) && d <= a.datum) raus.add(id);
+  }
+  return raus;
+}
+
+/* Ist das Blatt neu (ab dem Probendatum seines Fachs)? Ohne Probe im Fach ist alles neu.
+   Blatt ohne Datum ("ohne") oder mit unsicherem Datum gilt als alt - wie Schritt 2. */
+export function blattNeu4(blatt, grenze) {
+  if (!blatt) return false;
+  const g = grenze && grenze[fachNorm(blatt.fach)];
+  if (!g) return true;
+  if (blatt.datumUnsicher || blatt.datumVon === "ohne") return false;
+  const d = String(blatt.datum || "").slice(0, 10);
+  return !!d && d >= g;
+}
+
+/* Pause je Fach aus den Lernpunkten: letzter Antworttag vor heute je Fach.
+   fachVon(schluessel) -> Fach oder "". Rueckgabe { fach: pauseTage }. */
+export function pauseJeFach(punkte, fachVon, jetzt) {
+  const heute = berlinTagNr(jetzt || Date.now());
+  const letzter = {};
+  for (const s of Object.keys(punkte || {})) {
+    const p = punkte[s];
+    const f = fachVon(s);
+    if (!f || !p || !p.z) continue;
+    const t = berlinTagNr(p.z);
+    if (t < heute && (!letzter[f] || t > letzter[f])) letzter[f] = t;
+  }
+  const raus = {};
+  for (const f of Object.keys(letzter)) raus[f] = pauseTage(letzter[f], heute);
+  return raus;
+}
+
+/* Gewichtetes Ziehen ohne Zuruecklegen (Efraimidis-Spirakis): Schluessel u^(1/w), groesster
+   zuerst. Gewicht 0 kommt nie vor Gewicht > 0. Rueckgabe: die ganze Liste in Ziehreihenfolge. */
+export function gewichtetZiehen(liste, gewichtFn, zufall) {
+  const z = zufall || Math.random;
+  return (liste || []).map((x, i) => {
+    const w = Number(gewichtFn(x)) || 0;
+    const u = Math.min(Math.max(z(), 1e-12), 1);
+    return { x, i, k: w > 0 ? Math.log(u) / w : -Infinity };
+  }).sort((a, b) => (b.k - a.k) || (a.i - b.i)).map((y) => y.x);
+}
+
+/* Kernaussage auf dem Blatt: eine Heftzeile, die mit Merke, Merksatz, Regel oder Merkhefteintrag
+   beginnt. Rein mechanisch - die Vorlagen der Lehrerin sind (noch) nicht eingebunden. */
+export const KERNZEILE4 = /^(merke|merksatz|regel|merkhefteintrag)\b/i;
+
+/* Deckel je Blatt (Denny, 29.10.2026, 21:00 Uhr, nur Paul): Welche Karten eines Blattes sind
+   "in der Wiederholung" (W)? Rein, ohne Speicher, ohne Zufall - dieselben Daten geben jeden Tag
+   dieselbe Auswahl.
+     Karten je Blatt = Quiz-Tatsachen (tatsacheVon, eine je Tatsache, Lernpunkt der zuletzt
+     beantworteten Form) UND Fundkarten (blatt#k:<antwort>), zusammen gezaehlt.
+     1. Geschuetzt: Fehlerkarten (f oder fz, nicht sicher - "Fehler bis sicher" wie stufe4).
+        Immer in W, auch ueber dem Deckel (Dennys Punkt 2: vom Deckel nie verdraengt).
+     2. Aufgefuellt bis deckelJeBlatt in dieser Reihenfolge: Kernaussage (Quizfrage mit belegNr
+        auf einer KERNZEILE4), schon gespielt (erstes Richtig t1, sonst z, aelteste zuerst),
+        nie gespielt (Fundkarten in Blattreihenfolge, dann Quiz-Tatsachen nach belegNr).
+   fragen:   Quizfragen nach Bereinigung und Ausgabe-Filter (wie das Quiz sie ausgibt)
+   blaetter: { id: Blatt } mit inhalt und karten
+   ausnahme: (optional) Set der Blatt-ids im Probenstoff einer nahen Probe (ausnahmeBlaetter4) -
+             dort sind ALLE Karten in W, der Deckel gilt nicht (Probenausnahme, 29.10.2026)
+   Rueckgabe { inW: Set (Tatsachen-Schluessel und Fundkarten-Schluessel),
+               schluessel: { blatt: [Lernpunkt-Schluessel der W-Karten] }  - fuer die Seite,
+               zahl: { blatt: { karten, w, geschuetzt, gekappt } } } */
+export function wiederholung4(fragen, blaetter, punkte, k, ausnahme) {
+  const K = k || SCHRITT4;
+  const pk = punkte || {};
+  const bl = blaetter || {};
+  const fehler = (p) => !!(p && p.z && (p.f || p.fz) && !istSicher4(p));
+  const je = {};
+  const liste = (b) => (je[b] = je[b] || []);
+  const tats = new Map();
+  (fragen || []).forEach((f, i) => {
+    if (!f || !f.blatt) return;
+    const t = tatsacheVon(f), s = punktSchluessel(f);
+    let c = tats.get(t);
+    if (!c) { c = { id: t, blatt: String(f.blatt), keys: [], p: null, nr: Infinity, i, quiz: true, kern: false }; tats.set(t, c); liste(c.blatt).push(c); }
+    if (s && c.keys.indexOf(s) < 0) c.keys.push(s);
+    const p = s ? pk[s] : null;
+    if (p && p.z && (!c.p || p.z > c.p.z)) c.p = p;
+    const n = Number(f.belegNr);
+    if (Number.isFinite(n) && n >= 1) {
+      if (n < c.nr) c.nr = n;
+      const b = bl[c.blatt], z = b && Array.isArray(b.inhalt) ? b.inhalt[Math.floor(n) - 1] : null;
+      if (z && KERNZEILE4.test(String(z).replace(/^✍\s*/, "").trim())) c.kern = true;
+    }
+  });
+  for (const id of Object.keys(bl)) {
+    const b = bl[id];
+    if (!b || b.sichtbar === false || !Array.isArray(b.karten)) continue;
+    const da = new Set();
+    b.karten.forEach((x, j) => {
+      if (!x || !x.frage || !x.richtig || !Array.isArray(x.falsch) || x.falsch.length !== 2) return;
+      const s = punktSchluessel({ blatt: id, fund: x.richtig });
+      if (!s || da.has(s)) return;
+      da.add(s);
+      liste(id).push({ id: s, blatt: id, keys: [s], p: pk[s] || null, nr: j, i: j, quiz: false, kern: false });
+    });
+  }
+  const vorrang = K.fehlerVorrang !== false;
+  const gespielt = (c) => !!(c.p && c.p.z);
+  const rang = (c) => (c.kern ? 0 : gespielt(c) ? 1 : 2);
+  const zeit = (c) => (gespielt(c) ? Number(c.p.t1) || Number(c.p.z) || 0 : 0);
+  const ordnung = (a, b) => (rang(a) - rang(b)) || (zeit(a) - zeit(b)) ||
+    ((a.quiz ? 1 : 0) - (b.quiz ? 1 : 0)) || (a.nr - b.nr) || (a.i - b.i) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const inW = new Set(), schluessel = {}, zahl = {};
+  for (const id of Object.keys(je)) {
+    const alle = je[id];
+    const geschuetzt = vorrang ? alle.filter((c) => fehler(c.p)) : [];
+    const rest = alle.filter((c) => geschuetzt.indexOf(c) < 0).sort(ordnung);
+    /* Probenausnahme: Blatt im Probenstoff einer nahen Probe - alle Karten, kein Deckel. */
+    const probe = !!(ausnahme && ausnahme.has && ausnahme.has(id));
+    const w = probe ? geschuetzt.concat(rest)
+      : geschuetzt.concat(rest.slice(0, Math.max(0, K.deckelJeBlatt - geschuetzt.length)));
+    schluessel[id] = [];
+    for (const c of w) { inW.add(c.id); for (const s of c.keys) schluessel[id].push(s); }
+    zahl[id] = { karten: alle.length, w: w.length, geschuetzt: geschuetzt.length, gekappt: alle.length - w.length,
+                 ...(probe ? { probe: 1 } : {}) };
+  }
+  return { inW, schluessel, zahl };
+}
+
+/* Die Reihenfolge einer Quizrunde fuer Paul (Schritt 4). Rein, ohne Speicher.
+   kand: [{ f, stufe, faellig, fach, probeNah, imW, nie }] - eine je Tatsache.
+     imW  false = ausserhalb der Wiederholung (Deckel je Blatt): gilt nicht als faellig und nicht
+          als Neues, laeuft nur im freien Ueben mit Gewicht x ausserhalbFaktor. Fehlt = in W.
+     nie  true = noch nie gefragt. Fehlt = "nicht faellig".
+   menge: { fach: Tagesmenge } (fehlt ein Fach: tagesmenge[0]).
+   Rueckgabe { fragen (geordnet), einstieg (Frage oder null), wieder, zaehl }.
+     1. Einstieg: EINE sichere, noch nicht faellige Karte, zufaellig (wechselt je Runde).
+     2. Neues (in W, nie gefragt) zuerst, gewichtet: je Fach bis floor(Tagesmenge x neuAnteil),
+        zusammen hoechstens neuJeRunde (Beschluss 29.10.2026, 15:50 Uhr).
+     3. Wiederholung: faellige Karten in W, gewichtet, je Fach bis zur Tagesmenge abzueglich
+        des Neuen aus Schritt 2.
+     4. Freies Ueben: der Rest gewichtet (ausserhalb W x ausserhalbFaktor), hoechstens
+        neuJeRunde neue und altRichtigJeRunde alt-richtige in der ganzen Runde.
+     5. Auffuellen: was die Deckel zurueckhielten, gewichtet - Paul hat die Fragenzahl gewaehlt,
+        lieber Altes als ein leeres Quiz (Regel vom 24.09.2026). Ueberzaehlige Faellige zuletzt. */
+export function quizReihe4(kand, menge, zufall, k) {
+  const K = k || SCHRITT4;
+  const z = zufall || Math.random;
+  const aus = K.ausserhalbFaktor != null ? K.ausserhalbFaktor : 1;
+  const imW = (c) => c.imW !== false;
+  const w = (c) => gewicht4(c.stufe, c.probeNah, K) * (imW(c) ? 1 : aus);
+  const mengeVon = (f) => (menge && menge[f] != null ? menge[f] : K.tagesmenge[0]);
+  const zaehl = { einstieg: 0, neuVorn: 0, wieder: 0, frei: 0, auffuellen: 0, neu: 0, altRichtig: 0, ausserhalb: 0 };
+  const rest = (kand || []).slice();
+  let einstieg = null;
+  const sichere = rest.filter((c) => c.stufe === "sicher" && !c.faellig);
+  if (sichere.length) {
+    einstieg = sichere[Math.floor(z() * sichere.length) % sichere.length];
+    rest.splice(rest.indexOf(einstieg), 1);
+    zaehl.einstieg = 1;
+  }
+  const reihe = [];
+  const jeFach = {}, neuJeFach = {};
+  const ueber = [], zurueck = [];
+  let neu = 0, altR = 0;
+  const darf = (c) => (c.stufe === "neu" ? neu < K.neuJeRunde : c.stufe === "altRichtig" ? altR < K.altRichtigJeRunde : true);
+  const nimm = (c) => {
+    reihe.push(c);
+    if (c.stufe === "neu") neu++;
+    if (c.stufe === "altRichtig") altR++;
+    if (!imW(c)) zaehl.ausserhalb++;
+  };
+  const anteil = Number(K.neuAnteil) || 0;
+  const istNeu = (c) => c.stufe === "neu" && imW(c) && !c.faellig && c.nie !== false;
+  for (const c of gewichtetZiehen(rest.filter(istNeu), w, z)) {
+    if (neu >= K.neuJeRunde) break;
+    if ((neuJeFach[c.fach] || 0) >= Math.floor(mengeVon(c.fach) * anteil)) continue;
+    neuJeFach[c.fach] = (neuJeFach[c.fach] || 0) + 1;
+    nimm(c); zaehl.neuVorn++;
+  }
+  const schon = new Set(reihe);
+  const faellige = gewichtetZiehen(rest.filter((c) => !schon.has(c) && c.faellig && imW(c)), w, z);
+  const sonst = rest.filter((c) => !schon.has(c) && !(c.faellig && imW(c)));
+  for (const c of faellige) {
+    if ((jeFach[c.fach] || 0) >= mengeVon(c.fach) - (neuJeFach[c.fach] || 0)) { ueber.push(c); continue; }
+    if (!darf(c)) { zurueck.push(c); continue; }
+    jeFach[c.fach] = (jeFach[c.fach] || 0) + 1;
+    nimm(c); zaehl.wieder++;
+  }
+  for (const c of gewichtetZiehen(sonst, w, z)) {
+    if (!darf(c)) { zurueck.push(c); continue; }
+    nimm(c); zaehl.frei++;
+  }
+  for (const c of gewichtetZiehen(zurueck, w, z).concat(gewichtetZiehen(ueber, w, z))) {
+    reihe.push(c); zaehl.auffuellen++;
+  }
+  zaehl.neu = neu; zaehl.altRichtig = altR;
+  const fragen = (einstieg ? [einstieg] : []).concat(reihe).map((c) => c.f);
+  return { fragen, einstieg: einstieg ? einstieg.f : null, wieder: zaehl.wieder, zaehl };
+}
 
 /* Schluessel im KV. Ein Eintrag je Kind - nicht je Punkt, sonst waeren es
    tausende Leseabfragen. */
@@ -398,6 +755,8 @@ export function fundStandJeKarte(punkte, jetzt, e) {
     if ((s.indexOf("mathe#k:") === 0 || s.indexOf("lesen#k:") === 0) && p.z) raus[s].z = Number(p.z);
     /* Schritt 3 (nur Paul): "sicher" nach 3c - die Tagesrunde nimmt es statt r. */
     if (p.v === 3) raus[s].s = p.s ? 1 : 0;
+    /* Schritt 4 (nur Paul, v:3): frueher falsch und seitdem richtig - bleibt "Fehler" bis sicher. */
+    if (p.v === 3 && p.fz) raus[s].fz = 1;
   }
   return raus;
 }
@@ -420,6 +779,14 @@ export function punktVerbuchen(punkte, frage, richtig, jetzt, e, opt) {
   /* Schritt 3 (29.10.2026), NUR mit opt.paul: fn = Fehler in Folge (3b),
      t1 = erstes Richtig der laufenden Folge, s = sicher (3c), v:3 = nach Schritt 3 gefuehrt.
      Ohne opt.paul (Leon, Helena) entsteht keines dieser Felder. */
+  /* Schritt 4 (nur Paul): Eine sichere Karte, die vor ihrer Faelligkeit richtig beantwortet
+     wird (Einstiegskarte, oder im freien Ueben gezogen), aendert nichts - der 28-Tage-Takt
+     bleibt. Falsch laeuft weiter unten wie Schritt 3: nicht mehr sicher, wieder nach 1 Tag. */
+  if (opt && opt.paul && SCHRITT4.an && richtig && schritt3Punkt(s) && p.v === 3 && p.s && vorher &&
+      !istFaellig({ ...p, z: vorher }, jetzt || Date.now(), ein)) {
+    p.z = vorher;
+    return punkte;
+  }
   if (opt && opt.paul && schritt3Punkt(s)) {
     p.v = 3;
     if (richtig) {

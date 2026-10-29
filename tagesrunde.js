@@ -265,6 +265,13 @@
     unsicher.filter(function (c) { return istText(c, c._b) && fehlerBlatt[c.blatt]; }).forEach(nimm);
     unsicher.filter(function (c) { return istText(c, c._b); }).forEach(nimm);
 
+    /* opt.schritt4 (29.10.2026, nur Paul, Kapitel 152): gewichtete Runde statt der festen
+       Mischung. Ohne opt.schritt4 (Leon, Helena, alte Seite) laeuft alles wie vorher. */
+    var s4 = e.schritt4 && e.schritt4.k ? e.schritt4 : null;
+    var karten = [];
+    if (s4) {
+      karten = runde4(s4, e, topf, liste, stand, mathe, lesen, vorrang, istFehlerKarte, frisch);
+    } else {
     var platzVorrang = Math.min(e.vorrangHoechstens, n);
     var v = vorrang.slice(0, platzVorrang);
     var platzUnsicher = Math.min(Math.max(e.unsicherHoechstens, v.length), n);
@@ -298,6 +305,7 @@
       if (v.indexOf(k) >= 0) k.vorrang = istFehlerKarte(k) ? "fehler" : (k.blatt in frisch ? "frisch" : "text");
       delete k._tage; delete k._r; delete k._b;
     });
+    }
 
     /* Ohne eine einzige Karte aus dem Heft gibt es keine Runde - auch nicht aus Mathe und Lesen
        allein (2 Mathe + 1 Lesen wuerden sonst die 3 Mindestkarten fuellen, 28.10.2026). */
@@ -321,9 +329,129 @@
     });
 
     var zaehl = { wackler: 0, neu: 0, wieder: 0, sicher: 0, ruht: 0, vorrang: 0, mathe: 0, lesen: 0 };
-    karten.forEach(function (k) { zaehl[k.sorte]++; if (k.vorrang) zaehl.vorrang++; });
+    if (s4) zaehl.stufe = { einstieg: 0, neu: 0, frischFehler: 0, altFehler: 0, altRichtig: 0, sicher: 0 };
+    karten.forEach(function (k) {
+      zaehl[k.sorte]++; if (k.vorrang) zaehl.vorrang++;
+      if (s4 && k.stufe) zaehl.stufe[k.stufe]++;
+      if (s4 && k.einstieg) zaehl.stufe.einstieg++;
+    });
     if (karten.length < e.mindestens || !heftKarten) karten = [];
     return { karten: karten, zaehl: zaehl, blaetter: liste.length };
+  }
+
+
+  /* ---- Schritt 4 (29.10.2026, nur Paul, Kapitel 152) ----
+     Konstanten und Probenlage kommen vom Server (opt.schritt4 = /api/quiz?nurWartend=1 -> schritt4):
+       k      SCHRITT4 aus functions/api/_wiedervorlage.js (Gewichte, Deckel, Tagesmengen)
+       grenze { fach: Probendatum }  - Blatt ab diesem Datum = neu
+       nah    { fach: Datum }        - angekuendigte Probe in den naechsten k.probeTage Tagen
+       menge  { fach: Tagesmenge }   - Wiederholung je Fach nach der Pause
+       mengeRunde                    - Rundengroesse der gemischten Runde nach Pauls Pause
+       w      { blatt: [Lernpunkt-Schluessel] } - Karten in der Wiederholung (Deckel je Blatt,
+              wiederholung4() auf dem Server). Nur sie kommen in die Runde; fehlt w (alter
+              Server), gilt alles als in der Wiederholung.
+     Dieselben Regeln wie quizReihe4()/stufe4() auf dem Server (gegeneinander geprueft in
+     pruefe-schritt4.mjs). */
+  function fachNorm(f) {
+    var x = String(f || "").toLowerCase().trim();
+    var i = x.indexOf("-");
+    if (i > 0) x = x.slice(0, i);
+    return x === "mathematik" ? "mathe" : x;
+  }
+  function blattNeu4(b, grenze) {
+    if (!b) return false;
+    var g = grenze && grenze[fachNorm(b.fach)];
+    if (!g) return true;
+    if (b.datumUnsicher || b.datumVon === "ohne") return false;
+    var d = String(b.datum || "").slice(0, 10);
+    return !!d && d >= g;
+  }
+  function stufe4(st, neuBlatt, istQuizFehler) {
+    if (st && (st.s === 1 || (st.s == null && (st.r || 0) >= 3 && !st.f))) return "sicher";
+    if (istQuizFehler || (st && (st.f || st.fz))) return neuBlatt ? "frischFehler" : "altFehler";
+    return neuBlatt ? "neu" : "altRichtig";
+  }
+  function gewichtetZiehen(liste, w, zufall) {
+    return liste.map(function (x, i) {
+      var g = Number(w(x)) || 0, u = Math.min(Math.max(zufall(), 1e-12), 1);
+      return { x: x, i: i, k: g > 0 ? Math.log(u) / g : -Infinity };
+    }).sort(function (a, b) { return (b.k - a.k) || (a.i - b.i); }).map(function (y) { return y.x; });
+  }
+  function runde4(s4, e, topf, liste, stand, mathe, lesen, vorrang, istFehlerKarte, frisch) {
+    var K = s4.k, zufall = e.zufall || Math.random;
+    var blattVon = {};
+    liste.forEach(function (b) { blattVon[b.id] = b; });
+    /* Rundengroesse = Tagesmenge nach der Pause: gemischt nach Pauls Pause ueber alle Faecher,
+       in der Fach-Runde (Kapitel 131) die Menge dieses Fachs. */
+    var mFach = e.fach && s4.menge ? s4.menge[fachNorm(e.fach)] : null;
+    var groesse = e.fach ? (Number(mFach) || K.tagesmenge[0]) : (Number(s4.mengeRunde) || K.tagesmenge[0]);
+    var n = Math.max(0, groesse - mathe.length - lesen.length);
+    var bewerte = function (c, faellig) {
+      var b = c._b || blattVon[c.blatt] || {};
+      var st = c.quiz ? null : stand[c.blatt + "#k:" + schluessel(c)];
+      c._fach = fachNorm(b.fach);
+      c.stufe = stufe4(st, blattNeu4(b, s4.grenze), !!c.quiz);
+      c._faellig = faellig;
+      c._w = (Number(K.gewicht[c.stufe]) || 0) * ((s4.nah || {})[c._fach] ? K.probeFaktor : 1);
+      return c;
+    };
+    /* Deckel je Blatt (29.10.2026, 21:00 Uhr): nur Karten in der Wiederholung (s4.w vom Server).
+       Quizfehler und eigene Fehler sind dort immer drin (vom Deckel nie verdraengt). */
+    var imW = null;
+    if (s4.w) { imW = {}; Object.keys(s4.w).forEach(function (b) { (s4.w[b] || []).forEach(function (x) { imW[x] = 1; }); }); }
+    var inW = function (c) {
+      if (!imW || c.quiz) return true;
+      if (imW[c.blatt + "#k:" + schluessel(c)]) return true;
+      return c.stufe === "frischFehler" || c.stufe === "altFehler";
+    };
+    var faellige = topf.wackler.concat(topf.wieder).map(function (c) { return bewerte(c, true); }).filter(inW);
+    var neue = topf.neu.map(function (c) { return bewerte(c, false); }).filter(inW);
+    var ruhend = topf.sicher.concat(topf.ruht).map(function (c) { return bewerte(c, false); });
+    /* 1. Einstieg: eine sichere, nicht faellige Karte, wechselnd (zufaellig je Runde). */
+    var sichere = ruhend.filter(function (c) { return c.stufe === "sicher"; });
+    var einstieg = sichere.length ? sichere[Math.floor(zufall() * sichere.length) % sichere.length] : null;
+    if (einstieg) { einstieg.einstieg = true; n = Math.max(0, n - 1); }
+    /* 2. Wiederholung (faellig) und Neues gewichtet; Deckel: neu, alt-richtig, Tagesmenge je Fach.
+          Mathe-Wiederholungskarten zaehlen in die Mathe-Menge. Vorrang-Karten (16.10.2026) zuerst. */
+    var jeFach = { mathe: mathe.length }, neuJeFach = {}, zahlNeu = 0, zahlAlt = 0, gewaehlt = [], zurueck = [];
+    var darf = function (c) {
+      if (c.stufe === "neu" && zahlNeu >= K.neuJeRunde) return false;
+      if (c.stufe === "altRichtig" && zahlAlt >= K.altRichtigJeRunde) return false;
+      if (c._faellig) {
+        var m = s4.menge && s4.menge[c._fach] != null ? s4.menge[c._fach] : K.tagesmenge[0];
+        if ((jeFach[c._fach] || 0) >= m - (neuJeFach[c._fach] || 0)) return false;
+      }
+      return true;
+    };
+    var nimm = function (c) {
+      if (gewaehlt.length >= n || gewaehlt.indexOf(c) >= 0) return;
+      if (!darf(c)) { if (zurueck.indexOf(c) < 0) zurueck.push(c); return; }
+      gewaehlt.push(c);
+      if (c.stufe === "neu") { zahlNeu++; neuJeFach[c._fach] = (neuJeFach[c._fach] || 0) + 1; }
+      if (c.stufe === "altRichtig") zahlAlt++;
+      if (c._faellig) jeFach[c._fach] = (jeFach[c._fach] || 0) + 1;
+    };
+    var pool = faellige.concat(neue);
+    vorrang.slice(0, e.vorrangHoechstens).forEach(function (c) { if (pool.indexOf(c) >= 0) nimm(c); });
+    /* Neues zuerst (Beschluss 29.10.2026, 15:50 Uhr): bis zur Haelfte der Rundengroesse,
+       hoechstens neuJeRunde - Neues aus dem Vorrang zaehlt mit. */
+    var neuPlaetze = Math.min(K.neuJeRunde, Math.floor(groesse * (Number(K.neuAnteil) || 0)));
+    gewichtetZiehen(neue.filter(function (c) { return c.stufe === "neu"; }), function (c) { return c._w; }, zufall)
+      .forEach(function (c) { if (zahlNeu < neuPlaetze) nimm(c); });
+    /* Rest: Faellige nach Gewicht; weitere Neue nur, wenn die Faelligen die Runde nicht fuellen. */
+    gewichtetZiehen(faellige, function (c) { return c._w; }, zufall).forEach(nimm);
+    gewichtetZiehen(neue, function (c) { return c._w; }, zufall).forEach(nimm);
+    /* 3. Zu wenig fuer eine Runde (unter mindestens)? Dann das Zurueckgehaltene, gewichtet. */
+    var mind = Math.max(0, e.mindestens - (einstieg ? 1 : 0));
+    if (gewaehlt.length < mind)
+      gewichtetZiehen(zurueck, function (c) { return c._w; }, zufall).slice(0, mind - gewaehlt.length)
+        .forEach(function (c) { gewaehlt.push(c); });
+    var karten = (einstieg ? [einstieg] : []).concat(gewaehlt);
+    karten.forEach(function (k) {
+      if (vorrang.indexOf(k) >= 0) k.vorrang = istFehlerKarte(k) ? "fehler" : (k.blatt in frisch ? "frisch" : "text");
+      delete k._tage; delete k._r; delete k._b; delete k._fach; delete k._faellig; delete k._w;
+    });
+    return karten;
   }
 
   /* Kreise fuellen (Variante B, Denny 29.09.2026): Paul tippt in "Deine
