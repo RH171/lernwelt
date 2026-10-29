@@ -168,6 +168,19 @@ export function teilerTipp(ist, n) {
 export function restVertauscht(g) {
   return !!g && g.a > 0 && g.a < g.b && Math.floor(g.b / g.a) === g.q && g.b % g.a === (g.r || 0);
 }
+/* Pauls Zeile auf der Tauschkarte (30.10.2026, Dennys Vorgabe b): so, wie er sie geschrieben hat, aus der
+   Abschrift (f.roh, z. B. "3c | 5 : 10 = [2] R [0]" -> "5 : 10 = 2 R 0"), nicht nachgebaut. Nur wenn die Zahlen
+   der Abschrift nicht zu g passen, wird die Zeile gebaut - dann immer mit Rest, auch "R 0". */
+export function tauschDu(roh, g) {
+  const z = String(roh || "").replace(/^[^|]*\|\s*/, "").replace(/[\[\]]/g, "").replace(/\s+/g, " ").trim();
+  const m = /^(\d{1,6}) : (\d{1,6}) = (\d{1,6})(?: R (\d{1,6}))?$/.exec(z);
+  if (m && +m[1] === g.a && +m[2] === g.b && +m[3] === g.q && (m[4] == null ? 0 : +m[4]) === (g.r || 0)) return z;
+  return g.a + " : " + g.b + " = " + g.q + " R " + (g.r || 0);
+}
+/* Zusätzlicher Satz, wenn Paul seine Reihenfolge noch einmal schreibt (Wortlaut in TAUSCH_GLEICH_TEXT): AUS bis Dennys Ja (Vorgabe c, 29.10.2026, 23:58 Uhr). Aus = die Eingabe gilt als falsch, der
+   💡-Kasten behält den Probe-Tipp. Wieder an: true setzen, über die Prüfstufe. */
+export const TAUSCH_GLEICH_SATZ = false;
+export const TAUSCH_GLEICH_TEXT = "Das ist noch dieselbe Reihenfolge wie auf deinem Blatt. Tausch die zwei Zahlen.";
 export function tauschTipp(g) {
   return "Beim Teilen steht die Zahl vorn, die aufgeteilt wird. Mach die Probe mit deinem Ergebnis: " +
     g.q + " · " + g.a + (g.r ? " + " + g.r : "") + " = ? Die Zahl, die herauskommt, gehört nach vorn.";
@@ -265,11 +278,11 @@ export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
       /* Vertauschte Teilaufgabe (29.10.2026, Dennys Entscheidung B, nur Paul): „5 : 18 = 3 R 3“ ist richtig
          gerechnet, nur falsch herum geschrieben (Blatt vom 16.10.2026, grün „überall“). Die Karte fragt
          nicht „5 : 18 = ? R ?“ (0 R 5, das hat Paul nie gerechnet), sondern die Aufgabe richtig herum. */
-      const g = u.g, erg = g.q + (g.r ? " R " + g.r : "");
+      const g = u.g;
       /* Kennung bleibt dieselbe: der Kreis auf dem Foto (Fehlerkreis) gilt weiter. */
       aus.push({ ...grund, typ: "tausch", g, soll: { a: g.b, b: g.a, q: g.q, r: g.r },
                  aufgabe: vorn + "Gerechnet hast du richtig, nur die zwei Zahlen stehen falsch herum. Schreib die Aufgabe richtig herum.",
-                 du: g.a + " : " + g.b + " = " + erg, tipp: tauschTipp(g), eingabe: "aufgabe" });
+                 du: tauschDu(f.roh, g), tipp: tauschTipp(g), eingabe: "aufgabe" });
     } else if (f.typ === "rest") {
       aus.push({ ...grund, typ: "rest", g: u.g, soll: u.soll, aufgabe: vorn + u.g.a + " : " + u.g.b + " = ? R ?",
                  du: u.g.q + " R " + u.g.r, tipp: restTipp(u.g), eingabe: "rest" });
@@ -685,7 +698,7 @@ export function verbesserungPruefen(s, antwort) {
     const m = /^\s*(\d{1,6})\s*[:÷\/]\s*(\d{1,6})\s*(?:=\s*(\d{1,6})\s*(?:(?:R|Rest|r)\s*(\d{1,6}))?)?\s*$/.exec(a);
     if (!m) return { richtig: false, tipp: "Schreib die Aufgabe mit dem Geteilt-Zeichen, zum Beispiel 12 : 4." };
     const x = +m[1], y = +m[2];
-    if (x === s.g.a && y === s.g.b) return { richtig: false, tipp: "Das ist noch dieselbe Reihenfolge wie auf deinem Blatt. Tausch die zwei Zahlen." };
+    if (x === s.g.a && y === s.g.b) return { richtig: false, tipp: TAUSCH_GLEICH_SATZ ? TAUSCH_GLEICH_TEXT : tauschTipp(s.g) };
     if (x !== s.soll.a || y !== s.soll.b) return { richtig: false, tipp: "Nimm dieselben zwei Zahlen wie auf deinem Blatt, nur in der anderen Reihenfolge." };
     if (m[3] != null) {
       const q = +m[3], r = m[4] == null ? 0 : +m[4];
