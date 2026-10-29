@@ -347,6 +347,9 @@
        nah    { fach: Datum }        - angekuendigte Probe in den naechsten k.probeTage Tagen
        menge  { fach: Tagesmenge }   - Wiederholung je Fach nach der Pause
        mengeRunde                    - Rundengroesse der gemischten Runde nach Pauls Pause
+       w      { blatt: [Lernpunkt-Schluessel] } - Karten in der Wiederholung (Deckel je Blatt,
+              wiederholung4() auf dem Server). Nur sie kommen in die Runde; fehlt w (alter
+              Server), gilt alles als in der Wiederholung.
      Dieselben Regeln wie quizReihe4()/stufe4() auf dem Server (gegeneinander geprueft in
      pruefe-schritt4.mjs). */
   function fachNorm(f) {
@@ -392,8 +395,17 @@
       c._w = (Number(K.gewicht[c.stufe]) || 0) * ((s4.nah || {})[c._fach] ? K.probeFaktor : 1);
       return c;
     };
-    var faellige = topf.wackler.concat(topf.wieder).map(function (c) { return bewerte(c, true); });
-    var neue = topf.neu.map(function (c) { return bewerte(c, false); });
+    /* Deckel je Blatt (29.10.2026, 21:00 Uhr): nur Karten in der Wiederholung (s4.w vom Server).
+       Quizfehler und eigene Fehler sind dort immer drin (vom Deckel nie verdraengt). */
+    var imW = null;
+    if (s4.w) { imW = {}; Object.keys(s4.w).forEach(function (b) { (s4.w[b] || []).forEach(function (x) { imW[x] = 1; }); }); }
+    var inW = function (c) {
+      if (!imW || c.quiz) return true;
+      if (imW[c.blatt + "#k:" + schluessel(c)]) return true;
+      return c.stufe === "frischFehler" || c.stufe === "altFehler";
+    };
+    var faellige = topf.wackler.concat(topf.wieder).map(function (c) { return bewerte(c, true); }).filter(inW);
+    var neue = topf.neu.map(function (c) { return bewerte(c, false); }).filter(inW);
     var ruhend = topf.sicher.concat(topf.ruht).map(function (c) { return bewerte(c, false); });
     /* 1. Einstieg: eine sichere, nicht faellige Karte, wechselnd (zufaellig je Runde). */
     var sichere = ruhend.filter(function (c) { return c.stufe === "sicher"; });
@@ -401,13 +413,13 @@
     if (einstieg) { einstieg.einstieg = true; n = Math.max(0, n - 1); }
     /* 2. Wiederholung (faellig) und Neues gewichtet; Deckel: neu, alt-richtig, Tagesmenge je Fach.
           Mathe-Wiederholungskarten zaehlen in die Mathe-Menge. Vorrang-Karten (16.10.2026) zuerst. */
-    var jeFach = { mathe: mathe.length }, zahlNeu = 0, zahlAlt = 0, gewaehlt = [], zurueck = [];
+    var jeFach = { mathe: mathe.length }, neuJeFach = {}, zahlNeu = 0, zahlAlt = 0, gewaehlt = [], zurueck = [];
     var darf = function (c) {
       if (c.stufe === "neu" && zahlNeu >= K.neuJeRunde) return false;
       if (c.stufe === "altRichtig" && zahlAlt >= K.altRichtigJeRunde) return false;
       if (c._faellig) {
         var m = s4.menge && s4.menge[c._fach] != null ? s4.menge[c._fach] : K.tagesmenge[0];
-        if ((jeFach[c._fach] || 0) >= m) return false;
+        if ((jeFach[c._fach] || 0) >= m - (neuJeFach[c._fach] || 0)) return false;
       }
       return true;
     };
@@ -415,13 +427,20 @@
       if (gewaehlt.length >= n || gewaehlt.indexOf(c) >= 0) return;
       if (!darf(c)) { if (zurueck.indexOf(c) < 0) zurueck.push(c); return; }
       gewaehlt.push(c);
-      if (c.stufe === "neu") zahlNeu++;
+      if (c.stufe === "neu") { zahlNeu++; neuJeFach[c._fach] = (neuJeFach[c._fach] || 0) + 1; }
       if (c.stufe === "altRichtig") zahlAlt++;
       if (c._faellig) jeFach[c._fach] = (jeFach[c._fach] || 0) + 1;
     };
     var pool = faellige.concat(neue);
     vorrang.slice(0, e.vorrangHoechstens).forEach(function (c) { if (pool.indexOf(c) >= 0) nimm(c); });
-    gewichtetZiehen(pool, function (c) { return c._w; }, zufall).forEach(nimm);
+    /* Neues zuerst (Beschluss 29.10.2026, 15:50 Uhr): bis zur Haelfte der Rundengroesse,
+       hoechstens neuJeRunde - Neues aus dem Vorrang zaehlt mit. */
+    var neuPlaetze = Math.min(K.neuJeRunde, Math.floor(groesse * (Number(K.neuAnteil) || 0)));
+    gewichtetZiehen(neue.filter(function (c) { return c.stufe === "neu"; }), function (c) { return c._w; }, zufall)
+      .forEach(function (c) { if (zahlNeu < neuPlaetze) nimm(c); });
+    /* Rest: Faellige nach Gewicht; weitere Neue nur, wenn die Faelligen die Runde nicht fuellen. */
+    gewichtetZiehen(faellige, function (c) { return c._w; }, zufall).forEach(nimm);
+    gewichtetZiehen(neue, function (c) { return c._w; }, zufall).forEach(nimm);
     /* 3. Zu wenig fuer eine Runde (unter mindestens)? Dann das Zurueckgehaltene, gewichtet. */
     var mind = Math.max(0, e.mindestens - (einstieg ? 1 : 0));
     if (gewaehlt.length < mind)

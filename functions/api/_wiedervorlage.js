@@ -54,6 +54,7 @@
  * braucht, geht ueber `fuerDieSeite()` mit; `quiz/motor.js` liest es dort
  * und hat KEINE eigene Kopie.
  */
+import { tatsacheVon } from "./_fragerichtung.js";
 
 /* ---------------------------------------------------------------- *
  *  DIE SCHALTER. Hier und nur hier wird gedreht.                    *
@@ -164,8 +165,19 @@ export const SCHRITT4 = {
      altRichtig   altes Blatt, (noch) ohne Fehler, nicht sicher - auch nie gefragt (Annahme)
      sicher       sicher nach Schritt 3 (3c) */
   gewicht: { neu: 10, frischFehler: 4, altFehler: 4, altRichtig: 2, sicher: 0.5 },
-  altRichtigJeRunde: 1,
+  /* Denny, 29.10.2026, 21:00 Uhr: bis 2 alte richtige Karten je Runde (vorher 1). */
+  altRichtigJeRunde: 2,
   neuJeRunde: 9,
+  /* Feste Plaetze fuer Neues (Beschluss 29.10.2026, 15:50 Uhr): jede Runde zuerst Neues bis
+     zur Haelfte der Tagesmenge je Fach (zusammen hoechstens neuJeRunde), der Rest Faellige. */
+  neuAnteil: 0.5,
+  /* Deckel je Blatt (Denny, 29.10.2026, 21:00 Uhr): hoechstens 3 Karten je Blatt in der
+     Wiederholung (wiederholung4). Fehlerkarten zaehlen mit, werden aber nie verdraengt
+     (fehlerVorrang; aus nur fuer Tests). Karten ausserhalb laufen nur im freien Ueben mit,
+     Gewicht x ausserhalbFaktor - "selten, nie ganz weg" (0,1 ist eine Annahme). */
+  deckelJeBlatt: 3,
+  fehlerVorrang: true,
+  ausserhalbFaktor: 0.1,
   /* Angekuendigte Probe (Pauls eingetragene Proben): in den letzten probeTage Tagen davor
      zaehlen Karten dieses Fachs probeFaktor-fach. */
   probeFaktor: 2,
@@ -276,21 +288,103 @@ export function gewichtetZiehen(liste, gewichtFn, zufall) {
   }).sort((a, b) => (b.k - a.k) || (a.i - b.i)).map((y) => y.x);
 }
 
+/* Kernaussage auf dem Blatt: eine Heftzeile, die mit Merke, Merksatz, Regel oder Merkhefteintrag
+   beginnt. Rein mechanisch - die Vorlagen der Lehrerin sind (noch) nicht eingebunden. */
+export const KERNZEILE4 = /^(merke|merksatz|regel|merkhefteintrag)\b/i;
+
+/* Deckel je Blatt (Denny, 29.10.2026, 21:00 Uhr, nur Paul): Welche Karten eines Blattes sind
+   "in der Wiederholung" (W)? Rein, ohne Speicher, ohne Zufall - dieselben Daten geben jeden Tag
+   dieselbe Auswahl.
+     Karten je Blatt = Quiz-Tatsachen (tatsacheVon, eine je Tatsache, Lernpunkt der zuletzt
+     beantworteten Form) UND Fundkarten (blatt#k:<antwort>), zusammen gezaehlt.
+     1. Geschuetzt: Fehlerkarten (f oder fz, nicht sicher - "Fehler bis sicher" wie stufe4).
+        Immer in W, auch ueber dem Deckel (Dennys Punkt 2: vom Deckel nie verdraengt).
+     2. Aufgefuellt bis deckelJeBlatt in dieser Reihenfolge: Kernaussage (Quizfrage mit belegNr
+        auf einer KERNZEILE4), schon gespielt (erstes Richtig t1, sonst z, aelteste zuerst),
+        nie gespielt (Fundkarten in Blattreihenfolge, dann Quiz-Tatsachen nach belegNr).
+   fragen:   Quizfragen nach Bereinigung und Ausgabe-Filter (wie das Quiz sie ausgibt)
+   blaetter: { id: Blatt } mit inhalt und karten
+   Rueckgabe { inW: Set (Tatsachen-Schluessel und Fundkarten-Schluessel),
+               schluessel: { blatt: [Lernpunkt-Schluessel der W-Karten] }  - fuer die Seite,
+               zahl: { blatt: { karten, w, geschuetzt, gekappt } } } */
+export function wiederholung4(fragen, blaetter, punkte, k) {
+  const K = k || SCHRITT4;
+  const pk = punkte || {};
+  const bl = blaetter || {};
+  const fehler = (p) => !!(p && p.z && (p.f || p.fz) && !istSicher4(p));
+  const je = {};
+  const liste = (b) => (je[b] = je[b] || []);
+  const tats = new Map();
+  (fragen || []).forEach((f, i) => {
+    if (!f || !f.blatt) return;
+    const t = tatsacheVon(f), s = punktSchluessel(f);
+    let c = tats.get(t);
+    if (!c) { c = { id: t, blatt: String(f.blatt), keys: [], p: null, nr: Infinity, i, quiz: true, kern: false }; tats.set(t, c); liste(c.blatt).push(c); }
+    if (s && c.keys.indexOf(s) < 0) c.keys.push(s);
+    const p = s ? pk[s] : null;
+    if (p && p.z && (!c.p || p.z > c.p.z)) c.p = p;
+    const n = Number(f.belegNr);
+    if (Number.isFinite(n) && n >= 1) {
+      if (n < c.nr) c.nr = n;
+      const b = bl[c.blatt], z = b && Array.isArray(b.inhalt) ? b.inhalt[Math.floor(n) - 1] : null;
+      if (z && KERNZEILE4.test(String(z).replace(/^✍\s*/, "").trim())) c.kern = true;
+    }
+  });
+  for (const id of Object.keys(bl)) {
+    const b = bl[id];
+    if (!b || b.sichtbar === false || !Array.isArray(b.karten)) continue;
+    const da = new Set();
+    b.karten.forEach((x, j) => {
+      if (!x || !x.frage || !x.richtig || !Array.isArray(x.falsch) || x.falsch.length !== 2) return;
+      const s = punktSchluessel({ blatt: id, fund: x.richtig });
+      if (!s || da.has(s)) return;
+      da.add(s);
+      liste(id).push({ id: s, blatt: id, keys: [s], p: pk[s] || null, nr: j, i: j, quiz: false, kern: false });
+    });
+  }
+  const vorrang = K.fehlerVorrang !== false;
+  const gespielt = (c) => !!(c.p && c.p.z);
+  const rang = (c) => (c.kern ? 0 : gespielt(c) ? 1 : 2);
+  const zeit = (c) => (gespielt(c) ? Number(c.p.t1) || Number(c.p.z) || 0 : 0);
+  const ordnung = (a, b) => (rang(a) - rang(b)) || (zeit(a) - zeit(b)) ||
+    ((a.quiz ? 1 : 0) - (b.quiz ? 1 : 0)) || (a.nr - b.nr) || (a.i - b.i) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const inW = new Set(), schluessel = {}, zahl = {};
+  for (const id of Object.keys(je)) {
+    const alle = je[id];
+    const geschuetzt = vorrang ? alle.filter((c) => fehler(c.p)) : [];
+    const rest = alle.filter((c) => geschuetzt.indexOf(c) < 0).sort(ordnung);
+    const w = geschuetzt.concat(rest.slice(0, Math.max(0, K.deckelJeBlatt - geschuetzt.length)));
+    schluessel[id] = [];
+    for (const c of w) { inW.add(c.id); for (const s of c.keys) schluessel[id].push(s); }
+    zahl[id] = { karten: alle.length, w: w.length, geschuetzt: geschuetzt.length, gekappt: alle.length - w.length };
+  }
+  return { inW, schluessel, zahl };
+}
+
 /* Die Reihenfolge einer Quizrunde fuer Paul (Schritt 4). Rein, ohne Speicher.
-   kand: [{ f, stufe, faellig, fach, probeNah }] - eine je Tatsache.
+   kand: [{ f, stufe, faellig, fach, probeNah, imW, nie }] - eine je Tatsache.
+     imW  false = ausserhalb der Wiederholung (Deckel je Blatt): gilt nicht als faellig und nicht
+          als Neues, laeuft nur im freien Ueben mit Gewicht x ausserhalbFaktor. Fehlt = in W.
+     nie  true = noch nie gefragt. Fehlt = "nicht faellig".
    menge: { fach: Tagesmenge } (fehlt ein Fach: tagesmenge[0]).
    Rueckgabe { fragen (geordnet), einstieg (Frage oder null), wieder, zaehl }.
      1. Einstieg: EINE sichere, noch nicht faellige Karte, zufaellig (wechselt je Runde).
-     2. Wiederholung: faellige Karten, gewichtet gezogen, je Fach hoechstens die Tagesmenge.
-     3. Freies Ueben: der Rest gewichtet, hoechstens neuJeRunde neue und altRichtigJeRunde
-        alt-richtige in der ganzen Runde (inkl. Wiederholung).
-     4. Auffuellen: was die Deckel zurueckhielten, gewichtet - Paul hat die Fragenzahl gewaehlt,
+     2. Neues (in W, nie gefragt) zuerst, gewichtet: je Fach bis floor(Tagesmenge x neuAnteil),
+        zusammen hoechstens neuJeRunde (Beschluss 29.10.2026, 15:50 Uhr).
+     3. Wiederholung: faellige Karten in W, gewichtet, je Fach bis zur Tagesmenge abzueglich
+        des Neuen aus Schritt 2.
+     4. Freies Ueben: der Rest gewichtet (ausserhalb W x ausserhalbFaktor), hoechstens
+        neuJeRunde neue und altRichtigJeRunde alt-richtige in der ganzen Runde.
+     5. Auffuellen: was die Deckel zurueckhielten, gewichtet - Paul hat die Fragenzahl gewaehlt,
         lieber Altes als ein leeres Quiz (Regel vom 24.09.2026). Ueberzaehlige Faellige zuletzt. */
 export function quizReihe4(kand, menge, zufall, k) {
   const K = k || SCHRITT4;
   const z = zufall || Math.random;
-  const w = (c) => gewicht4(c.stufe, c.probeNah, K);
-  const zaehl = { einstieg: 0, wieder: 0, frei: 0, auffuellen: 0, neu: 0, altRichtig: 0 };
+  const aus = K.ausserhalbFaktor != null ? K.ausserhalbFaktor : 1;
+  const imW = (c) => c.imW !== false;
+  const w = (c) => gewicht4(c.stufe, c.probeNah, K) * (imW(c) ? 1 : aus);
+  const mengeVon = (f) => (menge && menge[f] != null ? menge[f] : K.tagesmenge[0]);
+  const zaehl = { einstieg: 0, neuVorn: 0, wieder: 0, frei: 0, auffuellen: 0, neu: 0, altRichtig: 0, ausserhalb: 0 };
   const rest = (kand || []).slice();
   let einstieg = null;
   const sichere = rest.filter((c) => c.stufe === "sicher" && !c.faellig);
@@ -300,17 +394,29 @@ export function quizReihe4(kand, menge, zufall, k) {
     zaehl.einstieg = 1;
   }
   const reihe = [];
-  const jeFach = {};
-  const ueber = [];
+  const jeFach = {}, neuJeFach = {};
+  const ueber = [], zurueck = [];
   let neu = 0, altR = 0;
   const darf = (c) => (c.stufe === "neu" ? neu < K.neuJeRunde : c.stufe === "altRichtig" ? altR < K.altRichtigJeRunde : true);
-  const nimm = (c) => { reihe.push(c); if (c.stufe === "neu") neu++; if (c.stufe === "altRichtig") altR++; };
-  const faellige = gewichtetZiehen(rest.filter((c) => c.faellig), w, z);
-  const sonst = rest.filter((c) => !c.faellig);
-  const zurueck = [];
+  const nimm = (c) => {
+    reihe.push(c);
+    if (c.stufe === "neu") neu++;
+    if (c.stufe === "altRichtig") altR++;
+    if (!imW(c)) zaehl.ausserhalb++;
+  };
+  const anteil = Number(K.neuAnteil) || 0;
+  const istNeu = (c) => c.stufe === "neu" && imW(c) && !c.faellig && c.nie !== false;
+  for (const c of gewichtetZiehen(rest.filter(istNeu), w, z)) {
+    if (neu >= K.neuJeRunde) break;
+    if ((neuJeFach[c.fach] || 0) >= Math.floor(mengeVon(c.fach) * anteil)) continue;
+    neuJeFach[c.fach] = (neuJeFach[c.fach] || 0) + 1;
+    nimm(c); zaehl.neuVorn++;
+  }
+  const schon = new Set(reihe);
+  const faellige = gewichtetZiehen(rest.filter((c) => !schon.has(c) && c.faellig && imW(c)), w, z);
+  const sonst = rest.filter((c) => !schon.has(c) && !(c.faellig && imW(c)));
   for (const c of faellige) {
-    const m = menge && menge[c.fach] != null ? menge[c.fach] : K.tagesmenge[0];
-    if ((jeFach[c.fach] || 0) >= m) { ueber.push(c); continue; }
+    if ((jeFach[c.fach] || 0) >= mengeVon(c.fach) - (neuJeFach[c.fach] || 0)) { ueber.push(c); continue; }
     if (!darf(c)) { zurueck.push(c); continue; }
     jeFach[c.fach] = (jeFach[c.fach] || 0) + 1;
     nimm(c); zaehl.wieder++;
