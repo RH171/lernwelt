@@ -59,6 +59,7 @@ import {
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
   fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen, berlinTagNr,
   SCHRITT4, fachNorm, stufe4, probenLage, blattNeu4, pauseJeFach, tagesmenge4, quizReihe4, wiederholung4,
+  probenAusnahme4, ausnahmeBlaetter4, berlinStunde,
 } from "./_wiedervorlage.js";
 import { termineLesen, berlinHeute } from "./_probentermine.js";
 import { notenLesen } from "./_noten.js";
@@ -209,7 +210,7 @@ export async function onRequestGet(context) {
                        /* Schritt 4 (29.10.2026, nur Paul): Grenze alt/neu, nahe Proben, Pause und
                           Tagesmenge je Fach, dazu die Konstanten - die Tagesrunde rechnet damit. */
                        ...(kind === "paul" && SCHRITT4.an ? { schritt4: await schritt4Lage(env, kind, pk, bn, Date.now(),
-                         wiederholung4(bereinigt, bn, pk)) } : {}),
+                         bereinigt) } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
@@ -388,7 +389,8 @@ export async function onRequestGet(context) {
          Rest freies Ueben nach Gewicht (quizReihe4 in _wiedervorlage.js). */
       const lage = await schritt4Lage(env, kind, punkte, blattNach, jetzt);
       /* Deckel je Blatt (29.10.2026, 21:00 Uhr): W aus demselben Vorrat wie nurWartend. */
-      const wh = wiederholung4(vorratBereinigen(vorrat.fragen, blattNach), blattNach, punkte);
+      /* Probenausnahme (29.10.2026): Blaetter im Stoff einer nahen Probe ohne Deckel (lage.ausnahmeIds). */
+      const wh = wiederholung4(vorratBereinigen(vorrat.fragen, blattNach), blattNach, punkte, undefined, lage.ausnahmeIds);
       const faelligSet = new Set(faellig), frischSet = new Set(frisch);
       const kand = frisch.concat(schonMal).map((f) => {
         const p = punkte[punktSchluessel(f)];
@@ -517,13 +519,20 @@ export async function onRequestGet(context) {
 /* Schritt 4 (29.10.2026, nur Paul): Probenlage, Pause und Tagesmenge je Fach.
    Liest proben-termine und noten (zwei Leseabfragen, kein Schreiben). Ein Speicherfehler
    liefert keine Grenze - dann gilt alles als neu (Annahme, Kapitel 152). */
-/* wh (optional): wiederholung4() - die Seite bekommt je Blatt die Lernpunkt-Schluessel der Karten in
-   der Wiederholung (w), "Heute lernen" nimmt nur diese (Deckel je Blatt, 29.10.2026). */
-async function schritt4Lage(env, kind, punkte, blattNach, jetzt, wh) {
+/* fragenW (optional): der bereinigte Vorrat - dann rechnet die Lage wiederholung4() selbst (mit der
+   Probenausnahme), und die Seite bekommt je Blatt die Lernpunkt-Schluessel der Karten in der
+   Wiederholung (w); "Heute lernen" nimmt nur diese (Deckel je Blatt, 29.10.2026).
+   Probenausnahme (29.10.2026): ausnahme { fach: {datum, von} } und ausnahmeIds (Set, nicht fuer die
+   Seite) - die Blaetter im Stoff einer Probe in den naechsten 7 Tagen, dort gilt der Deckel nicht. */
+async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW) {
   const heute = berlinHeute(new Date(jetzt));
   const termine = (await termineLesen(env, kind)) || [];
   const noten = (await notenLesen(env, kind)) || [];
   const { grenze, nah } = probenLage(termine, noten, heute);
+  const norm4 = (f) => heftFach(fachNorm(f));
+  const ausnahme = probenAusnahme4(termine, noten, heute, berlinStunde(jetzt), SCHRITT4, norm4);
+  const ausnahmeIds = ausnahmeBlaetter4(blattNach, ausnahme, norm4);
+  const wh = fragenW ? wiederholung4(fragenW, blattNach, punkte, undefined, ausnahmeIds) : null;
   const fachVon = (s) => {
     if (s.indexOf("mathe#") === 0) return "mathe";
     if (s.indexOf("lesen#") === 0) return "deutsch";
@@ -536,8 +545,12 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, wh) {
     if (f && menge[f] == null) menge[f] = tagesmenge4(pause[f] || 0);
   /* Rundengroesse der gemischten "Heute lernen"-Runde: Pause ueber alle Faecher (Annahme). */
   const pauseAlle = pauseJeFach(punkte, () => "alle", jetzt).alle || 0;
-  return { k: SCHRITT4, heute, grenze, nah, pause, menge, mengeRunde: tagesmenge4(pauseAlle),
-           ...(wh ? { w: wh.schluessel, wZahl: wh.zahl } : {}) };
+  const raus = { k: SCHRITT4, heute, grenze, nah, pause, menge, mengeRunde: tagesmenge4(pauseAlle),
+                 ...(Object.keys(ausnahme).length ? { ausnahme } : {}),
+                 ...(wh ? { w: wh.schluessel, wZahl: wh.zahl } : {}) };
+  /* ausnahmeIds nur fuer den Server - nicht aufzaehlbar, geht nicht ins JSON. */
+  Object.defineProperty(raus, "ausnahmeIds", { value: ausnahmeIds, enumerable: false });
+  return raus;
 }
 
 /* Schluessel, unter dem "gekonnt" gerechnet wird: die Tatsache (Kapitel 132),

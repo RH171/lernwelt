@@ -182,6 +182,15 @@ export const SCHRITT4 = {
      zaehlen Karten dieses Fachs probeFaktor-fach. */
   probeFaktor: 2,
   probeTage: 7,
+  /* Probenausnahme (Denny, 29.10.2026): In den letzten probenAusnahmeTage Tagen vor einer
+     angekuendigten Probe (proben-termine, nicht die Noten) zaehlen ALLE Karten des Probenstoffs,
+     der Deckel je Blatt ist fuer sie aufgehoben. Probenstoff = gleiches Fach, Blatt seit der
+     vorigen Probe dieses Fachs bis zum Probentag (wie die Zeitraum-Reihe der Blattwahl, Kapitel 081:
+     vorige Probe ausschliesslich, Probentag einschliesslich). Am Probentag ab probenAusnahmeAb Uhr
+     (Berlin) ist die Probe geschrieben (wie probenkarte.js, Kapitel 131). 0 = Ausnahme aus.
+     Tagesmenge, hoechstens 9 neue und 2 alt-richtige je Runde bleiben. */
+  probenAusnahmeTage: 7,
+  probenAusnahmeAb: 13,
   /* Wiederholung je Fach: Normaltag, nach 1 Tag Pause, nach 2 und mehr Tagen Pause. */
   tagesmenge: [8, 12, 15],
 };
@@ -249,6 +258,66 @@ export function probenLage(termine, noten, heute, k) {
   return { grenze, nah };
 }
 
+/* Stunde in Berlin (0-23) - fuer "am Probentag ab 13 Uhr vorbei". */
+const STUNDENFORMAT = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Berlin", hour: "2-digit", hourCycle: "h23" });
+export function berlinStunde(ms) {
+  return Number(STUNDENFORMAT.format(new Date(ms || Date.now()))) % 24;
+}
+
+/* Probenausnahme (29.10.2026, nur Paul): welche Proben sind gerade "nah"?
+     termine  Pauls eingetragene Proben (proben-termine) - nur sie zaehlen als angekuendigt
+     noten    die Noten - nur fuer die Grenze "vorige Probe"
+     heute    "JJJJ-MM-TT" (Berlin), stunde 0-23 (Berlin)
+     norm     Fach-Angleichung (quiz.js gibt heftFach(fachNorm(x)) mit), sonst fachNorm
+   Rueckgabe { fach: { datum, von } } - je Fach die naechste Probe in 0..probenAusnahmeTage Tagen,
+   am Probentag nur vor probenAusnahmeAb Uhr; von = Datum der vorigen Probe dieses Fachs ("" = keine,
+   dann zaehlt alles bis zum Probentag). Reine Funktion. */
+export function probenAusnahme4(termine, noten, heute, stunde, k, norm) {
+  const K = k || SCHRITT4;
+  const n = norm || fachNorm;
+  const raus = {};
+  const tage = Number(K.probenAusnahmeTage) || 0;
+  if (tage <= 0 || !heute) return raus;
+  const tag = (d) => Date.parse(String(d).slice(0, 10) + "T12:00:00Z");
+  const h = tag(heute);
+  const gueltig = (t) => t && /^\d{4}-\d{2}-\d{2}/.test(String(t.datum || "")) && n(t.fach);
+  const alle = [].concat(termine || [], (noten || []).map((x) => ({ datum: x && x.datum, fach: x && x.fach }))).filter(gueltig);
+  for (const t of (termine || []).filter(gueltig)) {
+    const f = n(t.fach), d = String(t.datum).slice(0, 10);
+    const abstand = Math.round((tag(d) - h) / TAG);
+    if (abstand < 0 || abstand > tage) continue;
+    if (abstand === 0 && Number(stunde) >= (K.probenAusnahmeAb != null ? K.probenAusnahmeAb : 13)) continue;
+    if (raus[f] && raus[f].datum <= d) continue;
+    let von = "";
+    for (const v of alle) {
+      const vd = String(v.datum).slice(0, 10);
+      if (n(v.fach) === f && vd < d && vd > von) von = vd;
+    }
+    raus[f] = { datum: d, von };
+  }
+  return raus;
+}
+
+/* Die Blaetter, fuer die der Deckel gerade aufgehoben ist: Fach mit naher Probe, Blattdatum im
+   Zeitraum (von, datum]. Blatt ohne Datum oder mit unsicherem Datum gehoert nicht dazu (wie
+   blattNeu4: kein Datum, keine Zuordnung), Handwerk (probenstoff:false) und Verborgenes auch nicht.
+   Rueckgabe Set der Blatt-ids. */
+export function ausnahmeBlaetter4(blaetter, ausnahme, norm) {
+  const n = norm || fachNorm;
+  const raus = new Set();
+  if (!ausnahme || !Object.keys(ausnahme).length) return raus;
+  for (const id of Object.keys(blaetter || {})) {
+    const b = blaetter[id];
+    if (!b || b.sichtbar === false || b.probenstoff === false) continue;
+    if (b.datumUnsicher || b.datumVon === "ohne") continue;
+    const a = ausnahme[n(b.fach)];
+    const d = String(b.datum || "").slice(0, 10);
+    if (!a || !/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    if ((!a.von || d > a.von) && d <= a.datum) raus.add(id);
+  }
+  return raus;
+}
+
 /* Ist das Blatt neu (ab dem Probendatum seines Fachs)? Ohne Probe im Fach ist alles neu.
    Blatt ohne Datum ("ohne") oder mit unsicherem Datum gilt als alt - wie Schritt 2. */
 export function blattNeu4(blatt, grenze) {
@@ -304,10 +373,12 @@ export const KERNZEILE4 = /^(merke|merksatz|regel|merkhefteintrag)\b/i;
         nie gespielt (Fundkarten in Blattreihenfolge, dann Quiz-Tatsachen nach belegNr).
    fragen:   Quizfragen nach Bereinigung und Ausgabe-Filter (wie das Quiz sie ausgibt)
    blaetter: { id: Blatt } mit inhalt und karten
+   ausnahme: (optional) Set der Blatt-ids im Probenstoff einer nahen Probe (ausnahmeBlaetter4) -
+             dort sind ALLE Karten in W, der Deckel gilt nicht (Probenausnahme, 29.10.2026)
    Rueckgabe { inW: Set (Tatsachen-Schluessel und Fundkarten-Schluessel),
                schluessel: { blatt: [Lernpunkt-Schluessel der W-Karten] }  - fuer die Seite,
                zahl: { blatt: { karten, w, geschuetzt, gekappt } } } */
-export function wiederholung4(fragen, blaetter, punkte, k) {
+export function wiederholung4(fragen, blaetter, punkte, k, ausnahme) {
   const K = k || SCHRITT4;
   const pk = punkte || {};
   const bl = blaetter || {};
@@ -353,10 +424,14 @@ export function wiederholung4(fragen, blaetter, punkte, k) {
     const alle = je[id];
     const geschuetzt = vorrang ? alle.filter((c) => fehler(c.p)) : [];
     const rest = alle.filter((c) => geschuetzt.indexOf(c) < 0).sort(ordnung);
-    const w = geschuetzt.concat(rest.slice(0, Math.max(0, K.deckelJeBlatt - geschuetzt.length)));
+    /* Probenausnahme: Blatt im Probenstoff einer nahen Probe - alle Karten, kein Deckel. */
+    const probe = !!(ausnahme && ausnahme.has && ausnahme.has(id));
+    const w = probe ? geschuetzt.concat(rest)
+      : geschuetzt.concat(rest.slice(0, Math.max(0, K.deckelJeBlatt - geschuetzt.length)));
     schluessel[id] = [];
     for (const c of w) { inW.add(c.id); for (const s of c.keys) schluessel[id].push(s); }
-    zahl[id] = { karten: alle.length, w: w.length, geschuetzt: geschuetzt.length, gekappt: alle.length - w.length };
+    zahl[id] = { karten: alle.length, w: w.length, geschuetzt: geschuetzt.length, gekappt: alle.length - w.length,
+                 ...(probe ? { probe: 1 } : {}) };
   }
   return { inW, schluessel, zahl };
 }
