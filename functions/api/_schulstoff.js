@@ -26,6 +26,7 @@
  */
 import { korrekturenErneuern } from "./_korrekturhalt.js";
 import { kartenAusblenden } from "./_karten-ausblenden.js";
+import { belegeLesen, belegeAnhaengen } from "./_belege.js";
 
 export const KINDER = ["paul", "leon", "helena"];
 
@@ -449,7 +450,10 @@ export async function stoffLesen(env, kind, monate) {
   }
   alle.sort((a, b) => (b.datum || "").localeCompare(a.datum || "") ||
                       (b.angelegt || "").localeCompare(a.angelegt || ""));
-  return { ok: true, heute, eintraege: kartenAusblenden(kind, alle) };
+  /* Zweiter Beleg (29.10.2026, nur Paul, _belege.js): Dennys Klicks „Ist ein Fehler“ / „Ist richtig“
+     hängen am Blatt, nur im Speicher dieses Aufrufs - zurückgeschrieben wird die Liste nie von hier. */
+  const belege = await belegeLesen(env, kind);
+  return { ok: true, heute, eintraege: belegeAnhaengen(kartenAusblenden(kind, alle), belege) };
 }
 
 /* Welche Faecher hat das Kind IN DIESEM SCHULJAHR im Heft?

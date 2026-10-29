@@ -43,6 +43,7 @@ import { ortFuer, vorlageOrt } from "./_fehlerkreis.js";
 import { gruenFuer } from "./_korrektur.js";
 import { zeileKindgerecht } from "./_herkunft.js";
 import { auswerten as nrAuswerten, inhaltNenntZahl, aktuell as nrAktuell, aufgabeSchluessel, ausdruckZeigen, rechnen as nrRechnen } from "./_nachrechnen.js";
+import { belegeFuerBlatt } from "./_belege.js";
 export { brauchtNachrechnen } from "./_nachrechnen.js";
 import { auswerten as vlAuswerten, aktuell as vlAktuell, vokabelnImFach, sauber as vlSauber } from "./_volllesen.js";
 export { brauchtVolllesen } from "./_volllesen.js";
@@ -162,6 +163,15 @@ export function teilerTipp(ist, n) {
 }
 
 /* Rest (Nachrechnen 14.10.2026): der Weg, nie die Zahl. */
+/* „5 : 18 = 3 R 3“: kleinere Zahl vorn, aber Ergebnis und Rest passen genau zu 18 : 5
+   (dieselbe Bedingung wie im Probenstoff, _probenstoff.js feldStoff). */
+export function restVertauscht(g) {
+  return !!g && g.a > 0 && g.a < g.b && Math.floor(g.b / g.a) === g.q && g.b % g.a === (g.r || 0);
+}
+export function tauschTipp(g) {
+  return "Beim Teilen steht die Zahl vorn, die aufgeteilt wird. Mach die Probe mit deinem Ergebnis: " +
+    g.q + " · " + g.a + (g.r ? " + " + g.r : "") + " = ? Die Zahl, die herauskommt, gehört nach vorn.";
+}
 export function restTipp(g) {
   if (g.r >= g.b) return "Schau auf deinen Rest: " + g.r + " ist nicht kleiner als " + g.b + ". Da passt die " + g.b + " noch einmal hinein.";
   return "Mach die Probe: Rechne " + g.q + " · " + g.b + " + " + g.r + ". Kommt " + g.a + " heraus?";
@@ -239,7 +249,8 @@ export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
     const nr = f.nr && f.nr !== "-" ? f.nr : "";
     const vorn = nr ? "Aufgabe " + nr + ": " : "";
     const grund = { id: bk.id + ":n:" + kurz(x.id + "|" + u.final), art: "rechnen", blatt: bk, nachgerechnet: true,
-                    ...(x.inhalt === "ja" ? { lesungen: 2 } : {}),
+                    ...(x.inhalt === "ja" || x.beleg ? { lesungen: 2 } : {}),
+                    ...(x.beleg ? { beleg2: x.beleg.quelle } : {}),
                     wo: nr, zeile: f.roh, rotDa: !!u.rotDa, paulGut: u.paulGut };
     if (u.rotDa) grund.steht = true;   // "Bei dir steht" - die Lehrerin hat dort schon etwas geändert
     if (f.typ === "gleichung") {
@@ -250,6 +261,15 @@ export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
       aus.push({ ...grund, typ: "ausdruck", aus: u.aus, luecke: u.luecke, soll: u.soll,
                  aufgabe: vorn + ausdruckZeigen(u.aus.terme, u.aus.ops, u.aus.erg, u.luecke), du: u.final,
                  tipp: ausdruckTipp(u.aus, u.luecke, +u.final), eingabe: "zahl", paulWert: u.paulWert });
+    } else if (f.typ === "rest" && mitKetten && restVertauscht(u.g)) {
+      /* Vertauschte Teilaufgabe (29.10.2026, Dennys Entscheidung B, nur Paul): „5 : 18 = 3 R 3“ ist richtig
+         gerechnet, nur falsch herum geschrieben (Blatt vom 16.10.2026, grün „überall“). Die Karte fragt
+         nicht „5 : 18 = ? R ?“ (0 R 5, das hat Paul nie gerechnet), sondern die Aufgabe richtig herum. */
+      const g = u.g, erg = g.q + (g.r ? " R " + g.r : "");
+      /* Kennung bleibt dieselbe: der Kreis auf dem Foto (Fehlerkreis) gilt weiter. */
+      aus.push({ ...grund, typ: "tausch", g, soll: { a: g.b, b: g.a, q: g.q, r: g.r },
+                 aufgabe: vorn + "Gerechnet hast du richtig, nur die zwei Zahlen stehen falsch herum. Schreib die Aufgabe richtig herum.",
+                 du: g.a + " : " + g.b + " = " + erg, tipp: tauschTipp(g), eingabe: "aufgabe" });
     } else if (f.typ === "rest") {
       aus.push({ ...grund, typ: "rest", g: u.g, soll: u.soll, aufgabe: vorn + u.g.a + " : " + u.g.b + " = ? R ?",
                  du: u.g.q + " R " + u.g.r, tipp: restTipp(u.g), eingabe: "rest" });
@@ -302,7 +322,8 @@ export function kettenStand(blatt) {
 /* Optionen fürs Nachrechnen je Kind: Paul mit Zahlenreihen, Spaltenregel und zwei Lesungen (29.10.2026). */
 export function nrOpt(blatt, kind) {
   if (kind !== "paul") return undefined;
-  return { ketten: true, spalten: true, inhalt: Array.isArray(blatt && blatt.inhalt) ? blatt.inhalt : [] };
+  return { ketten: true, spalten: true, inhalt: Array.isArray(blatt && blatt.inhalt) ? blatt.inhalt : [],
+           belege: belegeFuerBlatt(blatt, kind) };
 }
 
 /* Für den Elternbereich: wie vollständig ein Blatt nachgerechnet ist.
@@ -319,8 +340,13 @@ export function nachrechenStand(blatt, kind) {
   for (const k of w.ketten || []) k.glieder.forEach((f) => inKette.add(f));
   return { voll: w.voll, soll: w.soll, ist: w.ist, fehlt: w.fehlt.slice(0, 8), felder: w.felder,
            fehler: w.fehler.filter((x) => x.bestaetigt === true).length,
-           ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true && !x.nachsehen).map((x) => x.f.roh).slice(0, 10),
-           ...(o ? { nachsehen: w.fehler.filter((x) => x.nachsehen && !inKette.has(x.f)).map((x) => ({ zeile: x.f.roh, durchlesen: x.inhalt })).slice(0, 20),
+           ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true && !x.nachsehen && !x.richtigBeleg).map((x) => x.f.roh).slice(0, 10),
+           ...(o ? { nachsehen: w.fehler.filter((x) => x.nachsehen && !inKette.has(x.f)).map((x) => ({ zeile: x.f.roh, durchlesen: x.inhalt, feld: x.id, du: String(x.u.final) })).slice(0, 20),
+                     /* Zweiter Beleg (29.10.2026, Entscheidung A): was am Foto oder per Klick entschieden ist. */
+                     belegt: w.fehler.filter((x) => (x.beleg || x.richtigBeleg) && !inKette.has(x.f)).map((x) => {
+                       const b = x.beleg || x.richtigBeleg;
+                       return { zeile: x.f.roh, feld: x.id, du: String(x.u.final), urteil: b.urteil, quelle: b.quelle, wer: String(b.wer || ""), am: String(b.am || b.datum || "") };
+                     }).slice(0, 40),
                      spalte: w.zaehl.spalte || 0 } : {}),
            rotFalsch: w.fehler.filter((x) => x.bestaetigt === true && x.u.rotDa).map((x) => ({ zeile: x.f.roh, paulGut: !!x.u.paulGut })).slice(0, 10) };
 }
@@ -622,6 +648,9 @@ export function sichtPruefen(s, w) {
   /* „Meine Sicht“ (29.10.2026, Dennys Entscheidung 7): Sagt Paul „Ich habe richtig gerechnet“ und haben
      Abschrift und Durchlesen NICHT dieselbe Zahl gelesen, widerspricht ihm der Server nicht - die Eltern
      sehen nach (Anlass 8tv8tshw4c: Paul hatte 4200 richtig, gelesen war 4100). */
+  /* Vertauschte Teilaufgabe (29.10.2026, Entscheidung B): gerechnet hat Paul richtig, es geht um die Reihenfolge. */
+  if (wahl === "richtig" && s.typ === "tausch")
+    return { urteil: "recht", satz: "Stimmt, gerechnet hast du richtig! Es geht nur darum, wie die Aufgabe dasteht: Die Zahl, die aufgeteilt wird, steht vorn." };
   if (wahl === "richtig" && s.nachgerechnet && s.lesungen !== 2)
     return { urteil: "offen", satz: "Danke! Das schauen sich deine Eltern mit dir im Heft an." };
   if (wahl === "richtig") {
@@ -650,6 +679,19 @@ export function verbesserungPruefen(s, antwort) {
     if (!ist.length) return { richtig: false, tipp: "Schreib die Teiler mit Komma dazwischen, zum Beispiel 1, 2, …" };
     if (mengeGleich(ist, s.soll) && ist.length === s.soll.length) return { richtig: true, satz: GUT.teiler(s.n, s.soll.length) };
     return { richtig: false, tipp: (mengeGleich(ist, s.soll) ? "Fast! " : "Noch nicht ganz. ") + teilerTipp(ist, s.n) };
+  }
+  if (s.art === "rechnen" && s.typ === "tausch") {
+    /* "18 : 5" reicht; schreibt Paul "= 3 R 3" dazu, muss auch das stimmen. */
+    const m = /^\s*(\d{1,6})\s*[:÷\/]\s*(\d{1,6})\s*(?:=\s*(\d{1,6})\s*(?:(?:R|Rest|r)\s*(\d{1,6}))?)?\s*$/.exec(a);
+    if (!m) return { richtig: false, tipp: "Schreib die Aufgabe mit dem Geteilt-Zeichen, zum Beispiel 12 : 4." };
+    const x = +m[1], y = +m[2];
+    if (x === s.g.a && y === s.g.b) return { richtig: false, tipp: "Das ist noch dieselbe Reihenfolge wie auf deinem Blatt. Tausch die zwei Zahlen." };
+    if (x !== s.soll.a || y !== s.soll.b) return { richtig: false, tipp: "Nimm dieselben zwei Zahlen wie auf deinem Blatt, nur in der anderen Reihenfolge." };
+    if (m[3] != null) {
+      const q = +m[3], r = m[4] == null ? 0 : +m[4];
+      if (q !== s.soll.q || r !== s.soll.r) return { richtig: false, tipp: "Die Aufgabe steht jetzt richtig herum. Schau noch einmal auf dein Ergebnis: " + tauschTipp(s.g) };
+    }
+    return { richtig: true, satz: "Super, jetzt steht die Aufgabe richtig herum!" };
   }
   if (s.art === "rechnen" && s.typ === "rest") {
     const m = /^\s*(\d{1,6})\s*(?:(?:R|Rest|r)\s*(\d{1,6}))?\s*$/.exec(a);

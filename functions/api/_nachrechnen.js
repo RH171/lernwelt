@@ -33,6 +33,7 @@
  * auf alte Blätter, ohne neuen Modellaufruf.
  */
 
+import { belegGilt } from "./_belege.js";
 export const MODELL = "claude-opus-5-5";
 export const VERSION = 1;
 
@@ -582,6 +583,11 @@ export function auswerten(n, opt) {
       /* Rot der Lehrerin ist ein eigener Beleg (und „Rot ist fertig“): dort bleibt es wie bisher. */
       if (x.bestaetigt === true && !u.rotDa && x.inhalt !== "ja" && x.inhalt !== "liste") { x.bestaetigt = false; x.nachsehen = true; }
     }
+    /* Zweiter Beleg (29.10.2026, Dennys Entscheidung A, nur Paul, _belege.js): am Foto einzeln bestätigt
+       oder Dennys Klick im Elternbereich. Gilt nur für genau dieses Feld und genau Pauls Zahl. */
+    const beleg = opt && opt.belege ? belegGilt(opt.belege, id, u.final) : null;
+    if (beleg && beleg.urteil === "fehler") { x.bestaetigt = true; x.nachsehen = false; x.beleg = beleg; }
+    else if (beleg && beleg.urteil === "richtig") { x.bestaetigt = false; x.nachsehen = false; x.richtigBeleg = beleg; }
     fehler.push(x);
   }
   if (spalte.size) zaehl.spalte = spalte.size;
