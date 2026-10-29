@@ -59,7 +59,7 @@ import {
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
   fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen, berlinTagNr,
   SCHRITT4, fachNorm, stufe4, probenLage, blattNeu4, pauseJeFach, tagesmenge4, quizReihe4, wiederholung4,
-  probenAusnahme4, ausnahmeBlaetter4, berlinStunde,
+  probenAusnahme4, ausnahmeBlaetter4, berlinStunde, wiederAb,
 } from "./_wiedervorlage.js";
 import { termineLesen, berlinHeute } from "./_probentermine.js";
 import { notenLesen } from "./_noten.js";
@@ -396,7 +396,7 @@ export async function onRequestGet(context) {
         const p = punkte[punktSchluessel(f)];
         const fach = fachNorm(f.fach || (blattNach[f.blatt] && blattNach[f.blatt].fach));
         return { f, fach, faellig: faelligSet.has(f), probeNah: !!lage.nah[fach],
-                 imW: wh.inW.has(tatsacheVon(f)), nie: frischSet.has(f),
+                 imW: wh.inW.has(tatsacheVon(f)), nie: frischSet.has(f), ab: p ? wiederAb(p) : 0,
                  stufe: stufe4(p, blattNeu4(blattNach[f.blatt] || { fach }, lage.grenze)) };
       });
       const r4 = quizReihe4(kand, lage.menge);

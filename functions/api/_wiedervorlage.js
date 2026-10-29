@@ -191,6 +191,13 @@ export const SCHRITT4 = {
      Tagesmenge, hoechstens 9 neue und 2 alt-richtige je Runde bleiben. */
   probenAusnahmeTage: 0,
   probenAusnahmeAb: 13,
+  /* Kontrollplaetze (Denny, 29.10.2026, 22:25 Uhr, Option 2): je Runde bis zu kontrollPlaetze
+     faellige sichere Karten (28-Tage-Kontrolle), die aelteste Faelligkeit zuerst. Sie nehmen nichts
+     von Fehlerkarten und nichts aus der Neu-Phase: Ist kein Platz frei, ersetzt eine Kontrolle die
+     zuletzt gezogene uebrige faellige Karte (alt-richtig oder schon gespielte neue). Die Tagesmenge
+     bleibt die Obergrenze. Runde = je Fach im Quiz, die ganze Runde in "Heute lernen".
+     0 = aus (Stand vor dem 29.10.2026, 22:25 Uhr). Kein Fenster: Karten bleiben in der Pflicht. */
+  kontrollPlaetze: 3,
   /* Wiederholung je Fach: Normaltag, nach 1 Tag Pause, nach 2 und mehr Tagen Pause. */
   tagesmenge: [8, 12, 15],
 };
@@ -451,7 +458,8 @@ export function wiederholung4(fragen, blaetter, punkte, k, ausnahme) {
      4. Freies Ueben: der Rest gewichtet (ausserhalb W x ausserhalbFaktor), hoechstens
         neuJeRunde neue und altRichtigJeRunde alt-richtige in der ganzen Runde.
      5. Auffuellen: was die Deckel zurueckhielten, gewichtet - Paul hat die Fragenzahl gewaehlt,
-        lieber Altes als ein leeres Quiz (Regel vom 24.09.2026). Ueberzaehlige Faellige zuletzt. */
+        lieber Altes als ein leeres Quiz (Regel vom 24.09.2026). Ueberzaehlige Faellige zuletzt.
+     Zwischen 3 und 4 die Kontrollplaetze (K.kontrollPlaetze, siehe 3b; kand.ab = faellig seit, ms). */
 export function quizReihe4(kand, menge, zufall, k) {
   const K = k || SCHRITT4;
   const z = zufall || Math.random;
@@ -495,6 +503,48 @@ export function quizReihe4(kand, menge, zufall, k) {
     if (!darf(c)) { zurueck.push(c); continue; }
     jeFach[c.fach] = (jeFach[c.fach] || 0) + 1;
     nimm(c); zaehl.wieder++;
+  }
+  /* 3b. Kontrollplaetze (29.10.2026, 22:25 Uhr): je Fach die kontrollPlaetze am laengsten faelligen
+     sicheren Karten (c.ab = faellig seit). Fehlt eine davon im Pflichtblock, ersetzt sie - solange
+     weniger als kontrollPlaetze Kontrollen drin sind - die zuletzt gezogene uebrige Faellige desselben
+     Fachs (alt-richtig oder gespielte neue), sonst die juengste schon gezogene Kontrolle. Nie ein
+     Fehler, nie Neues aus Schritt 2, die Laenge bleibt. Kein Zufall: bei 0 Plaetzen alles wie vorher. */
+  const kp = Number(K.kontrollPlaetze) || 0;
+  if (kp > 0) {
+    const istKontrolle = (c) => c.stufe === "sicher" && c.faellig && imW(c);
+    const ersetzbar = (c) => c.faellig && imW(c) && (c.stufe === "altRichtig" || c.stufe === "neu");
+    const abVon = (c) => Number(c.ab) || 0;
+    const block = () => reihe.slice(zaehl.neuVorn);
+    const faecher = [...new Set(block().concat(ueber).filter(istKontrolle).map((c) => c.fach))];
+    for (const fach of faecher) {
+      const ziel = block().concat(ueber).filter((c) => istKontrolle(c) && c.fach === fach)
+        .sort((a, b) => abVon(a) - abVon(b)).slice(0, kp);
+      const zielSet = new Set(ziel);
+      for (const c of ziel) {
+        if (reihe.indexOf(c) >= 0) continue;
+        const drin = block().filter((r) => istKontrolle(r) && r.fach === fach).length;
+        let platz = -1;
+        if (drin < kp) {
+          for (let i = reihe.length - 1; i >= zaehl.neuVorn; i--) {
+            if (reihe[i].fach === fach && ersetzbar(reihe[i])) { platz = i; break; }
+          }
+        }
+        if (platz < 0) {
+          let ab = -Infinity;
+          for (let i = zaehl.neuVorn; i < reihe.length; i++) {
+            const r = reihe[i];
+            if (r.fach === fach && istKontrolle(r) && !zielSet.has(r) && abVon(r) >= ab) { platz = i; ab = abVon(r); }
+          }
+        }
+        if (platz < 0) continue;
+        const r = reihe[platz];
+        reihe[platz] = c;
+        if (r.stufe === "neu") neu--;
+        if (r.stufe === "altRichtig") altR--;
+        ueber.splice(ueber.indexOf(c), 1); ueber.push(r);
+      }
+    }
+    zaehl.kontrolle = block().filter(istKontrolle).length;
   }
   for (const c of gewichtetZiehen(sonst, w, z)) {
     if (!darf(c)) { zurueck.push(c); continue; }

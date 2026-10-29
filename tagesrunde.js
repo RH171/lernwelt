@@ -440,6 +440,41 @@
       .forEach(function (c) { if (zahlNeu < neuPlaetze) nimm(c); });
     /* Rest: Faellige nach Gewicht; weitere Neue nur, wenn die Faelligen die Runde nicht fuellen. */
     gewichtetZiehen(faellige, function (c) { return c._w; }, zufall).forEach(nimm);
+    /* Kontrollplaetze (29.10.2026, 22:25 Uhr, wie quizReihe4 3b): die k.kontrollPlaetze am laengsten
+       faelligen sicheren Karten (groesstes _tage) kommen in die Runde - auf einen freien Platz, sonst
+       (solange weniger Kontrollen drin sind) statt der zuletzt gezogenen uebrigen Faelligen (alt-richtig
+       oder gespielte neue, kein Vorrang), sonst statt der juengsten schon gezogenen Kontrolle. Nie statt
+       eines Fehlers, nie statt Neuem. Kein Zufall: bei 0 laeuft alles wie vorher. */
+    var kp = Number(K.kontrollPlaetze) || 0;
+    if (kp > 0) {
+      var mengeVon = function (f) { return s4.menge && s4.menge[f] != null ? s4.menge[f] : K.tagesmenge[0]; };
+      var istK = function (c) { return c._faellig && c.stufe === "sicher"; };
+      var ziel = faellige.filter(istK).slice().sort(function (a, b) { return (b._tage || 0) - (a._tage || 0); }).slice(0, kp);
+      ziel.forEach(function (c) {
+        if (gewaehlt.indexOf(c) >= 0) return;
+        if (gewaehlt.length < n && darf(c)) { nimm(c); return; }
+        var drin = gewaehlt.filter(istK).length, platz = -1, i, r;
+        var passt = function (r) { return r._fach === c._fach || (jeFach[c._fach] || 0) < mengeVon(c._fach) - (neuJeFach[c._fach] || 0); };
+        if (drin < kp) for (i = gewaehlt.length - 1; i >= 0; i--) {
+          r = gewaehlt[i];
+          if (r._faellig && (r.stufe === "altRichtig" || r.stufe === "neu") && vorrang.indexOf(r) < 0 && passt(r)) { platz = i; break; }
+        }
+        if (platz < 0) {
+          var t = Infinity;
+          for (i = 0; i < gewaehlt.length; i++) {
+            r = gewaehlt[i];
+            if (istK(r) && ziel.indexOf(r) < 0 && vorrang.indexOf(r) < 0 && passt(r) && (r._tage || 0) <= t) { platz = i; t = r._tage || 0; }
+          }
+        }
+        if (platz < 0) return;
+        r = gewaehlt[platz];
+        gewaehlt[platz] = c;
+        jeFach[r._fach]--; jeFach[c._fach] = (jeFach[c._fach] || 0) + 1;
+        if (r.stufe === "neu") { zahlNeu--; neuJeFach[r._fach]--; }
+        if (r.stufe === "altRichtig") zahlAlt--;
+        if (zurueck.indexOf(r) < 0) zurueck.push(r);
+      });
+    }
     gewichtetZiehen(neue, function (c) { return c._w; }, zufall).forEach(nimm);
     /* 3. Zu wenig fuer eine Runde (unter mindestens)? Dann das Zurueckgehaltene, gewichtet. */
     var mind = Math.max(0, e.mindestens - (einstieg ? 1 : 0));
