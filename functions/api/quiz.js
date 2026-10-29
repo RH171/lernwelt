@@ -110,6 +110,7 @@ const VORRAT_MAX = 3000;
 /* 1000 seit 19.10.2026 (vorher 400): Die Fragerichtungen lesen hieraus, welche
    Tatsache in welcher Form zuletzt dran war. ~12 Zeichen je Kennung = 12 KB. */
 const GESTELLT_MAX = 1000;
+const ANTWORTEN_MAX_PAUL = 200;   // Schritt 4 (29.10.2026): Pauls Runden gehen bis 100 Fragen und "Alle"
 /* Hoechstens so viele Fragen je Runde, auch bei "Alle Fragen" (29.09.2026,
    vorher 40). Die Seite zeigt "Alle Fragen (N)" - das muss dann auch kommen. */
 const ALLE_HOECHSTENS = 100;
@@ -596,7 +597,12 @@ export async function onRequestPost(context) {
   /* Das Such-Spiel (Fundkarten, 25.09.2026) schickt nur `fund` - EIN
      Schreibvorgang je Runde, keine gestellten Fragen, keine Lernzeit. */
   const fund = Array.isArray(daten.fund) ? daten.fund.slice(0, 40) : [];
-  if (fund.length) {
+  /* Schritt 4 (29.10.2026, nur Paul): Kommen fund und antworten im selben POST
+     (Such-Spiel), werden beide mit EINEM Lesen und EINEM Schreiben verbucht.
+     Vorher schickte such.js drei POSTs gleichzeitig, und fund und antworten
+     schrieben denselben Schluessel quiz-punkte:paul fast in derselben Sekunde. */
+  const zusammen = kind === "paul" && fund.length && Array.isArray(daten.antworten) && daten.antworten.length;
+  if (fund.length && !zusammen) {
     if (!WV.an) return json(200, { ok: true });
     const vorher = await punkteLesen(env, kind);
     const punkte = JSON.parse(JSON.stringify(vorher));
@@ -610,7 +616,10 @@ export async function onRequestPost(context) {
     return json(200, { ok: true, gemerkt: geschrieben });
   }
 
-  const antworten = Array.isArray(daten.antworten) ? daten.antworten.slice(0, 60) : [];
+  /* Schritt 4 (29.10.2026): Die Grenze von 60 Antworten schnitt Pauls lange Runden ab
+     (Leiter bis 100 und "Alle Fragen" seit 28.10.2026). Gemessen: 19.10. 9, 25.10. 6,
+     28.10. rund 40 Antworten nach der 60. nie verbucht. Fuer Paul 200, Leon und Helena 60. */
+  const antworten = Array.isArray(daten.antworten) ? daten.antworten.slice(0, kind === "paul" ? ANTWORTEN_MAX_PAUL : 60) : [];
   if (!antworten.length) return json(200, { ok: true });
 
   /* Gestellte Fragen merken - eine Frage kommt nie zweimal.
@@ -637,7 +646,13 @@ export async function onRequestPost(context) {
       punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr, id: a.frageId }, !!a.stimmt, nun,
         undefined, kind === "paul" ? { paul: true } : undefined);
     }
-    await punkteSchreiben(env, kind, punkte, vorher);
+    if (zusammen) for (const a of fund) {
+      if (!a || !a.blatt || !a.karte) continue;
+      punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun,
+        undefined, { paul: true });
+    }
+    const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
+    if (zusammen) return json(200, { ok: true, gemerkt: geschrieben });
   }
 
   return json(200, { ok: true });

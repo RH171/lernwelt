@@ -1086,7 +1086,10 @@ function artKurz(art) {
         $("q-fehler").textContent = (j && j.fehler) || "Ich konnte gerade keine Fragen holen. Versuch es gleich noch einmal.";
         return;
       }
-      fragen = j.fragen; nr = 0; richtigGesamt = 0; antwortenLog = [];
+      /* Schritt 4 (29.10.2026, nur Paul): Was die abgebrochene Runde davor schon
+         beantwortet hat, geht vor dem Leeren noch an den Server. */
+      if (KIND === "paul") melden();
+      fragen = j.fragen; nr = 0; richtigGesamt = 0; antwortenLog = []; gemeldetBis = 0; rundeEinheit = !!einheit;
       if (j.nachschub) vorbauen();      // fuer die naechste Runde, im Hintergrund
       /* Erst anschauen, dann abfragen - wenn es etwas anzuschauen gibt. */
       if (merkkartenZeigen()) return;
@@ -1657,7 +1660,38 @@ function artKurz(art) {
     return n;
   }
 
+  /* Schritt 4 (29.10.2026, nur Paul): Bisher meldete nur "Fertig" die Runde. Wer
+     wegschaltete, die Seite schloss oder eine neue Runde anfing, verlor alle
+     Antworten fuer den Lernpunkt (gemessen: 18.10.2026 43 Antworten, 0 angekommen).
+     Fuer Paul meldet der Motor jetzt nur, was noch nicht gemeldet ist (gemeldetBis),
+     beim Wegschalten per sendBeacon, sonst bei "Fertig" und vor einer neuen Runde.
+     Leon und Helena: unveraendert die ganze Runde bei "Fertig". */
+  var gemeldetBis = 0, rundeEinheit = false;
+  function meldenPaul(perBeacon) {
+    if (rundeEinheit) return;   // feste Einheit: der Server kennt ihre Fragen nicht
+    var neu = antwortenLog.slice(gemeldetBis);
+    if (!neu.length) return;
+    gemeldetBis = antwortenLog.length;
+    var text = JSON.stringify({ kind: KIND, antworten: neu });
+    try {
+      if (perBeacon && navigator.sendBeacon) {
+        navigator.sendBeacon("/api/quiz", new Blob([text], { type: "application/json" }));
+      } else {
+        fetch("/api/quiz", { method: "POST", credentials: "same-origin",
+          headers: { "content-type": "application/json" }, body: text, keepalive: true }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  if (KIND === "paul") {
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") meldenPaul(true);
+    });
+    window.addEventListener("pagehide", function () { meldenPaul(true); });
+  }
+  window.QUIZ_MELDEN_STAND = function () { return { gemeldetBis: gemeldetBis, antworten: antwortenLog.length }; };   // fuer die Messung
+
   function melden() {
+    if (KIND === "paul") return meldenPaul(false);
     if (!antwortenLog.length) return;
     try {
       fetch("/api/quiz", { method: "POST", credentials: "same-origin",

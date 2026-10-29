@@ -94,6 +94,19 @@
     /* Kreise fuellen: beim ersten Tipp richtig = Kreis gefuellt. */
     var kreise = [];
     liste.forEach(function(e){ if (e.kreis && e.stimmt) kreise = kreise.concat(e.kreis); });
+    /* Schritt 4 (29.10.2026, nur Paul): EIN POST statt drei gleichzeitiger. fund und
+       antworten schrieben sonst beide quiz-punkte:paul in derselben Sekunde. Der
+       Server verbucht beides mit einem Lesen und einem Schreiben. */
+    if (KIND === "paul") {
+      var alles = { kind: KIND };
+      if (kreise.length) alles.kreise = kreise;
+      if (fund.length) alles.fund = fund.map(function(e){
+        return { blatt: e.blatt || blattId, karte: e.karte, stimmt: e.stimmt }; });
+      if (quiz.length) alles.antworten = quiz.map(function(e){
+        return { frageId: e.quiz.frageId, blatt: e.blatt, belegNr: e.quiz.belegNr, stimmt: e.stimmt }; });
+      if (alles.kreise || alles.fund || alles.antworten) schicken(alles);
+      return;
+    }
     if (kreise.length) schicken({ kind: KIND, kreise: kreise });
     if (fund.length) schicken({ kind: KIND, fund: fund.map(function(e){
       return { blatt: e.blatt || blattId, karte: e.karte, stimmt: e.stimmt }; }) });
