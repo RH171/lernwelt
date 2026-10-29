@@ -4560,7 +4560,7 @@ window.LEON_GESCHICHTEN = [
     },
     "zeilen": [
      "Le|on schaut sich die Ta|bel|le an.",
-     "Fürth steht ge|ra|de auf Platz fünf|zehn.",
+     "Am Sonn|tag stand Fürth auf Platz fünf|zehn.",
      "„Das ist ziem|lich weit un|ten“, denkt Le|on.",
      "Aber das kann sich schnell än|dern.",
      "Je|des Spiel ist ei|ne neu|e Chan|ce."
@@ -4582,7 +4582,7 @@ window.LEON_GESCHICHTEN = [
      "Sie spiel|ten ge|gen Wolfs|burg.",
      "Am En|de stand es vier zu vier.",
      "„Acht To|re!“, staunt Le|on.",
-     "Nürn|berg ist jetzt auf Platz zwei."
+     "Nürn|berg war auf Platz zwei."
     ]
    },
    {
@@ -6645,8 +6645,8 @@ window.LEON_GESCHICHTEN = [
      "leute": []
     },
     "zeilen": [
-     "In der Ta|bel|le steht Fürth auf Platz 15.",
-     "Fürth hat bis jetzt 6 Punk|te.",
+     "Vor dem Spiel stand Fürth auf Platz 15.",
+     "Vor dem Spiel hat|te Fürth 6 Punk|te.",
      "Für ei|nen Sieg gibt es 3 Punk|te.",
      "Dann hät|te Fürth schon 9 Punk|te.",
      "Ein Sieg wä|re al|so sehr wich|tig."
@@ -6742,7 +6742,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 2
    },
    {
-    "frage": "Auf welchem Platz steht Fürth in der Tabelle?",
+    "frage": "Auf welchem Platz stand Fürth vor dem Spiel?",
     "richtig": "Platz 15",
     "falsch": [
      "Platz 2",
@@ -7319,7 +7319,7 @@ window.LEON_GESCHICHTEN = [
     "zeilen": [
      "Am En|de ge|wann Fürth 2:0.",
      "Vor|her war Fürth auf Platz 15.",
-     "Jetzt steht Fürth auf Platz 9.",
+     "Am Sams|tag stand Fürth da|nach auf Platz 9.",
      "Das ist ein gro|ßer Sprung nach o|ben.",
      "Le|on freu|te sich sehr."
     ]
@@ -7382,7 +7382,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 6
    },
    {
-    "frage": "Auf welchem Platz steht Fürth jetzt?",
+    "frage": "Auf welchem Platz stand Fürth am Samstag?",
     "richtig": "Platz 9",
     "falsch": [
      "Platz 4",
@@ -8966,9 +8966,9 @@ window.LEON_GESCHICHTEN = [
     },
     "zeilen": [
      "Le|on schaut noch ein|mal auf die Ta|bel|le.",
-     "Fürth steht auf Platz zehn.",
-     "Fürth hat neun Punk|te.",
-     "Os|na|brück hat acht Punk|te.",
+     "Vor dem Spiel stand Fürth auf Platz zehn.",
+     "Fürth hat|te neun Punk|te.",
+     "Os|na|brück hat|te acht Punk|te.",
      "Das ist nur ei|ner we|ni|ger."
     ]
    },
@@ -9142,7 +9142,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 4
    },
    {
-    "frage": "Wie viele Punkte hat Osnabrück?",
+    "frage": "Wie viele Punkte hatte Osnabrück vor dem Spiel?",
     "richtig": "acht",
     "falsch": [
      "zwei",
@@ -9249,9 +9249,9 @@ window.LEON_GESCHICHTEN = [
     },
     "zeilen": [
      "Le|on schaut auf die Ta|bel|le.",
-     "Der Club steht auf Platz zwei.",
-     "Er hat schon acht|zehn Punk|te.",
-     "Fürth hat neun Punk|te.",
+     "Am Frei|tag stand der Club auf Platz zwei.",
+     "Er hat|te schon acht|zehn Punk|te.",
+     "Fürth hat|te neun Punk|te.",
      "Der Club hat dop|pelt so vie|le."
     ]
    },
@@ -9269,9 +9269,9 @@ window.LEON_GESCHICHTEN = [
     "zeilen": [
      "Wer ist ei|gent|lich Ers|ter?",
      "Das ist Her|tha BSC aus Ber|lin.",
-     "Her|tha hat zwei|und|zwan|zig Punk|te.",
+     "Her|tha hat|te zwei|und|zwan|zig Punk|te.",
      "Der Club ist al|so knapp da|hin|ter.",
-     "Vier Punk|te Ab|stand sind nicht viel."
+     "Vier Punk|te Ab|stand wa|ren nicht viel."
     ]
    },
    {
@@ -9338,8 +9338,8 @@ window.LEON_GESCHICHTEN = [
     },
     "zeilen": [
      "Kai|sers|lau|tern ist auch ziem|lich gut.",
-     "Die Mann|schaft steht auf Platz vier.",
-     "Sie hat fünf|zehn Punk|te.",
+     "Am Frei|tag stand sie auf Platz vier.",
+     "Sie hat|te fünf|zehn Punk|te.",
      "Das sind drei we|ni|ger als beim Club.",
      "Am letz|ten Spiel|tag hat Kai|sers|lau|tern ge|won|nen."
     ]
@@ -9510,7 +9510,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 8
    },
    {
-    "frage": "Auf welchem Platz steht Kaiserslautern?",
+    "frage": "Auf welchem Platz stand Kaiserslautern am Freitag?",
     "richtig": "Platz vier",
     "falsch": [
      "Platz zehn",
@@ -9652,7 +9652,7 @@ window.LEON_GESCHICHTEN = [
      "Für ei|nen Sieg gibt es drei Punk|te.",
      "Vor|her hat|te Fürth sechs Punk|te.",
      "Sechs und drei sind neun.",
-     "Jetzt hat Fürth al|so neun Punk|te.",
+     "Da|nach hat|te Fürth al|so neun Punk|te.",
      "Le|on rech|net das ganz schnell im Kopf."
     ]
    },
@@ -9669,7 +9669,7 @@ window.LEON_GESCHICHTEN = [
     },
     "zeilen": [
      "Le|on schaut auf die Ta|bel|le.",
-     "Fürth steht dort auf Platz zehn.",
+     "Am Mon|tag stand Fürth auf Platz zehn.",
      "Am Sams|tag war es noch Platz neun.",
      "Am Sonn|tag ha|ben an|de|re Mann|schaf|ten ge|won|nen.",
      "Da|rum ist Fürth ei|nen Platz ge|rutscht."
@@ -9687,11 +9687,11 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Di|rekt vor Fürth steht Ener|gie Cott|bus.",
-     "Cott|bus hat auch neun Punk|te.",
+     "Di|rekt vor Fürth stand Ener|gie Cott|bus.",
+     "Cott|bus hat|te auch neun Punk|te.",
      "A|ber Cott|bus hat mehr To|re ge|schos|sen.",
-     "Di|rekt hin|ter Fürth steht Dy|na|mo Dres|den.",
-     "Dres|den hat acht Punk|te."
+     "Di|rekt hin|ter Fürth stand Dy|na|mo Dres|den.",
+     "Dres|den hat|te acht Punk|te."
     ]
    },
    {
@@ -9757,11 +9757,11 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Der Club steht auf Platz zwei.",
-     "Er hat schon acht|zehn Punk|te.",
+     "Der Club stand auf Platz zwei.",
+     "Er hat|te schon acht|zehn Punk|te.",
      "Das sind dop|pelt so vie|le wie bei Fürth.",
      "Nur Her|tha BSC aus Ber|lin ist noch bes|ser.",
-     "Her|tha hat zwei|und|zwan|zig Punk|te."
+     "Her|tha hat|te zwei|und|zwan|zig Punk|te."
     ]
    },
    {
@@ -9777,7 +9777,7 @@ window.LEON_GESCHICHTEN = [
      "Und wann spielt der Club wie|der?",
      "Am Sams|tag, um halb neun am A|bend.",
      "Dann kommt Kai|sers|lau|tern nach Nürn|berg.",
-     "Kai|sers|lau|tern steht auf Platz vier.",
+     "Kai|sers|lau|tern stand auf Platz vier.",
      "Das wird ein star|ker Geg|ner."
     ]
    },
@@ -9796,7 +9796,7 @@ window.LEON_GESCHICHTEN = [
      "Und wann spielt Fürth?",
      "Fürth spielt am Sonn|tag um halb zwei.",
      "Dann fährt die Mann|schaft nach Os|na|brück.",
-     "Os|na|brück hat acht Punk|te.",
+     "Os|na|brück hat|te acht Punk|te.",
      "Das ist ei|ner we|ni|ger als Fürth."
     ]
    },
@@ -9840,7 +9840,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 5
    },
    {
-    "frage": "Wie viele Punkte hat Fürth jetzt?",
+    "frage": "Wie viele Punkte hatte Fürth am Montag?",
     "richtig": "neun",
     "falsch": [
      "zwei",
@@ -12297,9 +12297,9 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Fürth steht jetzt auf Platz zwölf.",
-     "Fürth hat neun Punk|te.",
-     "Das ist in der Mit|te der Ta|bel|le."
+     "Am Mon|tag stand Fürth auf Platz zwölf.",
+     "Fürth hat|te neun Punk|te.",
+     "Das war in der Mit|te der Ta|bel|le."
     ]
    },
    {
@@ -12331,10 +12331,10 @@ window.LEON_GESCHICHTEN = [
      ]
     },
     "zeilen": [
-     "Der Club steht noch im|mer auf Platz zwei.",
-     "Er hat acht|zehn Punk|te.",
-     "Ganz o|ben steht Her|tha BSC.",
-     "Her|tha hat fünf|und|zwan|zig Punk|te."
+     "Der Club stand noch im|mer auf Platz zwei.",
+     "Er hat|te acht|zehn Punk|te.",
+     "Ganz o|ben stand Her|tha BSC.",
+     "Her|tha hat|te fünf|und|zwan|zig Punk|te."
     ]
    },
    {
@@ -12367,7 +12367,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 4
    },
    {
-    "frage": "Auf welchem Platz steht Fürth jetzt?",
+    "frage": "Auf welchem Platz stand Fürth am Montag?",
     "richtig": "auf Platz zwölf",
     "falsch": [
      "auf Platz zehn",
@@ -12385,7 +12385,7 @@ window.LEON_GESCHICHTEN = [
     "seite": 6
    },
    {
-    "frage": "Wie viele Punkte hat der Club?",
+    "frage": "Wie viele Punkte hatte der Club am Montag?",
     "richtig": "achtzehn",
     "falsch": [
      "neun",
