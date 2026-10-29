@@ -57,8 +57,10 @@ import { FOTO_LEON } from "./_beleg-foto-leon.js";
 import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
-  fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen,
+  fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen, berlinTagNr,
 } from "./_wiedervorlage.js";
+import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen.js";
+import { OPUS_FORMEN } from "./_formen-opus.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten } from "./_fragerichtung.js";
 
 const KINDER = {
@@ -195,7 +197,11 @@ export async function onRequestGet(context) {
                        wartend: wartendJeBlatt(proTatsache, pk, Date.now()),
                        fundFaellig: fund, fundText,
                        fundStand: fundStandJeKarte(pk, Date.now()),
-                       quizWackler: quizWacklerListe(proTatsache, pk, Date.now()),
+                       /* Schritt 3a (nur Paul): ein Quizfehler kommt in einer ANDEREN Form
+                          derselben Tatsache wieder; dazu die belegten Zweitformen der Fundkarten. */
+                       quizWackler: quizWacklerListe(proTatsache, pk, Date.now(), 0, null,
+                         kind === "paul" ? v.fragen.concat(karteAlsQuizForm(v.fragen, bn), opusAlsQuizForm(v.fragen, OPUS_FORMEN)) : null),
+                       ...(kind === "paul" ? { fundFormen: fundFormenFuer(v.fragen, bn, pk, OPUS_FORMEN) } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
@@ -597,7 +603,8 @@ export async function onRequestPost(context) {
     const nun = Date.now();
     for (const a of fund) {
       if (!a || !a.blatt || !a.karte) continue;
-      punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun);
+      punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun,
+        undefined, kind === "paul" ? { paul: true } : undefined);
     }
     const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
     return json(200, { ok: true, gemerkt: geschrieben });
@@ -627,7 +634,8 @@ export async function onRequestPost(context) {
     const nun = Date.now();
     for (const a of antworten) {
       if (!a || !a.blatt || (!a.belegNr && !a.frageId)) continue;
-      punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr, id: a.frageId }, !!a.stimmt, nun);
+      punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr, id: a.frageId }, !!a.stimmt, nun,
+        undefined, kind === "paul" ? { paul: true } : undefined);
     }
     await punkteSchreiben(env, kind, punkte, vorher);
   }
@@ -639,26 +647,47 @@ export async function onRequestPost(context) {
    (Dennys Beschluss 28.09.2026: sie kommen mit in "Heute lernen").
    Je Lernpunkt eine Frage, als Karte fuer /fundkarten.js: eine richtige und
    ZWEI falsche Antworten, wie jede Fundkarte. Am laengsten her zuerst. */
-export function quizWacklerListe(fragen, punkte, jetzt, max, nur) {
+export function quizWacklerListe(fragen, punkte, jetzt, max, nur, alleFormen) {
   if (!WV.an) return [];
   const nun = jetzt || Date.now();
   const raus = [], gesehen = new Set();
+  /* Schritt 3a (Denny, 29.10.2026, nur Paul - nur er gibt alleFormen mit): "Fehler aus
+     dem Quiz kommen nicht gleich in derselben Form wieder." Gibt es zur Tatsache eine
+     andere belegte Form (andere Kennung, anderer Wortlaut, drei Antworten), kommt die;
+     Blatt, belegNr und frageId bleiben die der falsch beantworteten Form, damit derselbe
+     Lernpunkt fortgeschrieben wird. Ohne andere Form bleibt es die alte (gezaehlt: gleicheForm). */
+  const jeTatsache = new Map();
+  if (alleFormen) for (const g of alleFormen) {
+    const t = tatsacheVon(g);
+    if (!jeTatsache.has(t)) jeTatsache.set(t, []);
+    jeTatsache.get(t).push(g);
+  }
+  const textNorm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9äöüß]+/g, "");
+  const andereForm = (f) => {
+    const liste = (jeTatsache.get(tatsacheVon(f)) || []).filter((g) => String(g.id) !== String(f.id)
+      && textNorm(g.frage) !== textNorm(f.frage) && Array.isArray(g.antworten) && g.antworten.length >= 3
+      && g.antworten[Number(g.richtig) || 0]);
+    if (!liste.length) return null;
+    return liste[berlinTagNr(nun) % liste.length];
+  };
   for (const f of fragen || []) {
     const s = punktSchluessel(f);
     if (!s || gesehen.has(s)) continue;
     const p = punkte ? punkte[s] : null;
     if (nur && !nur.has(s)) continue;
     if (!p || !p.f || (!nur && !istFaellig(p, nun))) continue;
-    const a = Array.isArray(f.antworten) ? f.antworten.map(String) : [];
-    const ri = Number(f.richtig) || 0;
+    const g = alleFormen ? andereForm(f) || f : f;
+    const a = Array.isArray(g.antworten) ? g.antworten.map(String) : [];
+    const ri = Number(g.richtig) || 0;
     if (a.length < 3 || !a[ri]) continue;
     gesehen.add(s);
     raus.push({
       blatt: String(f.blatt), belegNr: f.belegNr, frageId: String(f.id || ""),
-      frage: String(f.frage || ""), richtig: a[ri],
+      frage: String(g.frage || ""), richtig: a[ri],
       falsch: a.filter((x, i) => i !== ri).slice(0, 2),
-      ...(f.merke ? { merke: String(f.merke) } : f.tipp ? { merke: String(f.tipp) } : {}),
+      ...(g.merke ? { merke: String(g.merke) } : g.tipp ? { merke: String(g.tipp) } : {}),
       tage: p.z ? Math.floor((nun - p.z) / 86400000) : 0,
+      ...(alleFormen ? { form: g === f ? "gleich" : "andere" } : {}),
     });
   }
   raus.sort((x, y) => y.tage - x.tage);
