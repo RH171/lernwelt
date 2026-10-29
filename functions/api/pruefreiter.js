@@ -132,7 +132,7 @@ export async function onRequestGet(context) {
     verbessert.sort((a, b) => (a.am < b.am ? 1 : -1));
     const nachgerechnet = [];
     for (const b of e.eintraege || []) {
-      const st = b.sichtbar !== false ? nachrechenStand(b) : null;
+      const st = b.sichtbar !== false ? nachrechenStand(b, kind) : null;
       if (!st) continue;
       nachgerechnet.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "" }, ...st });
     }
@@ -322,6 +322,10 @@ async function volllesenAktion(env, kind, blattId) {
    (für die grüne Überlagerung). Gibt die Felder für die Antwort. Wirft nie. */
 async function berichtigen(env, kind, blatt, s) {
   try {
+    /* Keine grüne Korrektur ohne Doppelbeleg (29.10.2026, nur Paul): Anlass 8tv8tshw4c, „4100 → 4200“ -
+       Paul hatte 4200 geschrieben, gelesen war 4100. Nachgerechnete Stellen berichtigen das Blatt nur,
+       wenn Abschrift und Durchlesen dieselbe Zahl hatten. */
+    if (kind === "paul" && s.nachgerechnet && s.lesungen !== 2) return { korrigiert: false };
     const k = korrekturFuer(s);
     if (!k) return { korrigiert: false };
     const kreise = await kreiseLesen(env, kind);

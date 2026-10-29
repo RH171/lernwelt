@@ -1381,6 +1381,12 @@
         zeilen.push('⚠️ Auch nach der roten Korrektur stimmt das Ergebnis nicht: ' + esc(r.zeile) + (r.paulGut ? ' (' + (PR_NAME[KIND] || '') + 's eigene Zahl stimmte)' : ''));
       });
       (x.ungeprueft || []).forEach(function(r){ zeilen.push('⚪ ungeprüft (zweite Lesung anders): ' + esc(r)); });
+      /* Zwei Lesungen (29.10.2026, nur Paul): die Abschrift sieht einen Fehler, das Durchlesen nicht dieselbe Zahl.
+         Paul bekommt keine Karte - bitte im Heft nachsehen. */
+      (x.nachsehen || []).forEach(function(r){
+        zeilen.push('🔍 <b>bitte nachsehen</b>: ' + esc(r.zeile) + ' <span class="unter">(' +
+          (r.durchlesen === 'anders' ? 'das Durchlesen las eine andere Zahl' : 'das Durchlesen nennt diese Aufgabe nicht') + ')</span>');
+      });
       if (!zeilen.length) return;
       h += '<div style="margin-top:8px">' + esc(b.titel || "") + (b.datum ? ' <span class="unter">· ' + esc(kurzDatum(b.datum)) + '</span>' : '') +
            '<br>' + zeilen.join('<br>') + '</div>';

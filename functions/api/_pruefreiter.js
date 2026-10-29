@@ -42,7 +42,7 @@ import { kindSchrieb, blattVergleichen, vorlageFuerBlatt, falten, levenshtein, G
 import { ortFuer, vorlageOrt } from "./_fehlerkreis.js";
 import { gruenFuer } from "./_korrektur.js";
 import { zeileKindgerecht } from "./_herkunft.js";
-import { auswerten as nrAuswerten, aktuell as nrAktuell, aufgabeSchluessel, ausdruckZeigen, rechnen as nrRechnen } from "./_nachrechnen.js";
+import { auswerten as nrAuswerten, inhaltNenntZahl, aktuell as nrAktuell, aufgabeSchluessel, ausdruckZeigen, rechnen as nrRechnen } from "./_nachrechnen.js";
 export { brauchtNachrechnen } from "./_nachrechnen.js";
 import { auswerten as vlAuswerten, aktuell as vlAktuell, vokabelnImFach, sauber as vlSauber } from "./_volllesen.js";
 export { brauchtVolllesen } from "./_volllesen.js";
@@ -214,12 +214,16 @@ export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
   if (!blatt || blatt.fach !== "mathe" || !nrAktuell(blatt)) return [];
   /* Zahlenreihen (28.10.2026, nur Paul): eine Kette = höchstens eine Karte, Soll nur aus der gedruckten Reihe. */
   const mitKetten = kind === "paul";
-  const w = nrAuswerten(blatt.nachgerechnet, mitKetten ? { ketten: true } : undefined);
+  /* Spaltenregel und zwei Lesungen (29.10.2026, Dennys Entscheidung 4 und 5, nur Paul):
+     ein Fehler nur, wenn auch das Durchlesen (`inhalt`) dieselbe Zahl nennt. */
+  const w = nrAuswerten(blatt.nachgerechnet, mitKetten ? nrOpt(blatt, kind) : undefined);
   if (!w) return [];
   const aus = [];
   const inKette = new Set();
   if (mitKetten) for (const k of w.ketten) {
     k.glieder.forEach((f) => inKette.add(f));
+    /* Zwei Lesungen auch für Reihen (29.10.2026): das erste falsche Glied muss das Durchlesen nennen. */
+    if (k.falsch.length && !inhaltNenntZahl(blatt.inhalt, k.paul[k.falsch[0]])) continue;
     const karte = kettenKarte(k, bk, mitRot);
     if (karte) aus.push(karte);
   }
@@ -235,6 +239,7 @@ export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
     const nr = f.nr && f.nr !== "-" ? f.nr : "";
     const vorn = nr ? "Aufgabe " + nr + ": " : "";
     const grund = { id: bk.id + ":n:" + kurz(x.id + "|" + u.final), art: "rechnen", blatt: bk, nachgerechnet: true,
+                    ...(x.inhalt === "ja" ? { lesungen: 2 } : {}),
                     wo: nr, zeile: f.roh, rotDa: !!u.rotDa, paulGut: u.paulGut };
     if (u.rotDa) grund.steht = true;   // "Bei dir steht" - die Lehrerin hat dort schon etwas geändert
     if (f.typ === "gleichung") {
@@ -289,20 +294,34 @@ export function kettenStand(blatt) {
   return w.ketten.filter((k) => k.falsch.length || (!k.belegt && k.feldFalsch)).map((k) => ({
     nr: k.nr, druck: k.druck, belegt: k.belegt, grund: k.grund, schritt: k.schritt, paulSchritt: k.paulSchritt,
     paul: k.paul, soll: k.soll, falsch: k.belegt ? k.falsch.length : k.feldFalsch, rot: k.rot,
-    karte: !!kettenKarte(k, blattKurz(blatt), false),
+    karte: !!kettenKarte(k, blattKurz(blatt), false) && inhaltNenntZahl(blatt.inhalt, k.paul[k.falsch[0]]),
     bestaetigt: k.bestaetigt,
   }));
 }
 
-/* Für den Elternbereich: wie vollständig ein Blatt nachgerechnet ist. */
-export function nachrechenStand(blatt) {
+/* Optionen fürs Nachrechnen je Kind: Paul mit Zahlenreihen, Spaltenregel und zwei Lesungen (29.10.2026). */
+export function nrOpt(blatt, kind) {
+  if (kind !== "paul") return undefined;
+  return { ketten: true, spalten: true, inhalt: Array.isArray(blatt && blatt.inhalt) ? blatt.inhalt : [] };
+}
+
+/* Für den Elternbereich: wie vollständig ein Blatt nachgerechnet ist.
+   `nachsehen` (29.10.2026, nur Paul): Fehler der Abschrift, die das Durchlesen nicht mit derselben Zahl
+   nennt - Paul bekommt dafür keine Karte, die Eltern schauen ins Heft. */
+export function nachrechenStand(blatt, kind) {
   if (!blatt || blatt.fach !== "mathe") return null;
   if (!nrAktuell(blatt)) return { offen: true };
-  const w = nrAuswerten(blatt.nachgerechnet);
+  const o = nrOpt(blatt, kind);
+  const w = nrAuswerten(blatt.nachgerechnet, o);
   if (!w) return { offen: true };
+  /* Glieder einer Reihe stehen unter „Zahlenreihen“, nicht noch einmal einzeln. */
+  const inKette = new Set();
+  for (const k of w.ketten || []) k.glieder.forEach((f) => inKette.add(f));
   return { voll: w.voll, soll: w.soll, ist: w.ist, fehlt: w.fehlt.slice(0, 8), felder: w.felder,
            fehler: w.fehler.filter((x) => x.bestaetigt === true).length,
-           ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true).map((x) => x.f.roh).slice(0, 10),
+           ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true && !x.nachsehen).map((x) => x.f.roh).slice(0, 10),
+           ...(o ? { nachsehen: w.fehler.filter((x) => x.nachsehen && !inKette.has(x.f)).map((x) => ({ zeile: x.f.roh, durchlesen: x.inhalt })).slice(0, 20),
+                     spalte: w.zaehl.spalte || 0 } : {}),
            rotFalsch: w.fehler.filter((x) => x.bestaetigt === true && x.u.rotDa).map((x) => ({ zeile: x.f.roh, paulGut: !!x.u.paulGut })).slice(0, 10) };
 }
 
@@ -600,6 +619,11 @@ export function sichtPruefen(s, w) {
     return { urteil: "nicht", satz: "Danke, dass du es sagst! " + zeichen + dein + " passt nicht zu den gedruckten Zahlen. Auf dem Blatt stehen " +
              x + " und " + y + ". Rechne " + Math.max(x, y) + " − " + Math.min(x, y) + ", dann siehst du den Abstand." };
   }
+  /* „Meine Sicht“ (29.10.2026, Dennys Entscheidung 7): Sagt Paul „Ich habe richtig gerechnet“ und haben
+     Abschrift und Durchlesen NICHT dieselbe Zahl gelesen, widerspricht ihm der Server nicht - die Eltern
+     sehen nach (Anlass 8tv8tshw4c: Paul hatte 4200 richtig, gelesen war 4100). */
+  if (wahl === "richtig" && s.nachgerechnet && s.lesungen !== 2)
+    return { urteil: "offen", satz: "Danke! Das schauen sich deine Eltern mit dir im Heft an." };
   if (wahl === "richtig") {
     /* Die Abschrift ist nachgerechnet und von einer zweiten Lesung bestätigt - Pauls Zahl geht nicht auf. */
     const r = s.typ === "gleichung" && s.g ? s.g.a + " " + ({ "*": "·", "/": ":", "+": "+", "-": "−" }[s.g.op] || s.g.op) + " " + s.g.b : "";
