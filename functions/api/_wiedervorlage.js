@@ -191,12 +191,13 @@ export const SCHRITT4 = {
      Tagesmenge, hoechstens 9 neue und 2 alt-richtige je Runde bleiben. */
   probenAusnahmeTage: 0,
   probenAusnahmeAb: 13,
-  /* Kontrollplaetze (Denny, 29.10.2026, 22:25 Uhr, Option 2): je Runde bis zu kontrollPlaetze
-     faellige sichere Karten (28-Tage-Kontrolle), die aelteste Faelligkeit zuerst. Sie nehmen nichts
-     von Fehlerkarten und nichts aus der Neu-Phase: Ist kein Platz frei, ersetzt eine Kontrolle die
-     zuletzt gezogene uebrige faellige Karte (alt-richtig oder schon gespielte neue). Die Tagesmenge
-     bleibt die Obergrenze. Runde = je Fach im Quiz, die ganze Runde in "Heute lernen".
-     0 = aus (Stand vor dem 29.10.2026, 22:25 Uhr). Kein Fenster: Karten bleiben in der Pflicht. */
+  /* Kontrollplaetze (Denny, 29.10.2026, 22:25 Uhr; neu gefasst 23:07 Uhr, korrigiert 23:58 Uhr): je Fach
+     und Runde nach dem Neuen (bis zur Haelfte, wie bisher) zuerst die faelligen Fehler, danach bis zu kontrollPlaetze faellige sichere Karten
+     (28-Tage-Kontrolle), die aelteste Faelligkeit zuerst - auch AM DECKEL VORBEI (ausserhalb W). Nur wenn
+     wegen der Fehler sonst KEINE Kontrolle in die Runde kaeme, bleibt 1 Kontrollplatz garantiert
+     (Mindestplatz). Ueberzaehlige Fehler warten und stehen am naechsten Tag vorn. Danach die uebrigen
+     Faelligen. Die Tagesmenge 8/12/15 bleibt Obergrenze.
+     Runde = je Fach im Quiz, die ganze Runde in "Heute lernen". 0 = aus (Stand vor dem 29.10.2026, 22:25 Uhr). */
   kontrollPlaetze: 3,
   /* Wiederholung je Fach: Normaltag, nach 1 Tag Pause, nach 2 und mehr Tagen Pause. */
   tagesmenge: [8, 12, 15],
@@ -459,7 +460,7 @@ export function wiederholung4(fragen, blaetter, punkte, k, ausnahme) {
         neuJeRunde neue und altRichtigJeRunde alt-richtige in der ganzen Runde.
      5. Auffuellen: was die Deckel zurueckhielten, gewichtet - Paul hat die Fragenzahl gewaehlt,
         lieber Altes als ein leeres Quiz (Regel vom 24.09.2026). Ueberzaehlige Faellige zuletzt.
-     Zwischen 3 und 4 die Kontrollplaetze (K.kontrollPlaetze, siehe 3b; kand.ab = faellig seit, ms). */
+     Mit K.kontrollPlaetze > 0 rechnet reihe4Plaetze() die Schritte 2 und 3 (kand.ab = faellig seit, ms). */
 export function quizReihe4(kand, menge, zufall, k) {
   const K = k || SCHRITT4;
   const z = zufall || Math.random;
@@ -476,6 +477,8 @@ export function quizReihe4(kand, menge, zufall, k) {
     rest.splice(rest.indexOf(einstieg), 1);
     zaehl.einstieg = 1;
   }
+  const kp = Number(K.kontrollPlaetze) || 0;
+  if (kp > 0) return reihe4Plaetze(rest, einstieg, zaehl, mengeVon, w, z, K, kp);
   const reihe = [];
   const jeFach = {}, neuJeFach = {};
   const ueber = [], zurueck = [];
@@ -504,53 +507,103 @@ export function quizReihe4(kand, menge, zufall, k) {
     jeFach[c.fach] = (jeFach[c.fach] || 0) + 1;
     nimm(c); zaehl.wieder++;
   }
-  /* 3b. Kontrollplaetze (29.10.2026, 22:25 Uhr): je Fach die kontrollPlaetze am laengsten faelligen
-     sicheren Karten (c.ab = faellig seit). Fehlt eine davon im Pflichtblock, ersetzt sie - solange
-     weniger als kontrollPlaetze Kontrollen drin sind - die zuletzt gezogene uebrige Faellige desselben
-     Fachs (alt-richtig oder gespielte neue), sonst die juengste schon gezogene Kontrolle. Nie ein
-     Fehler, nie Neues aus Schritt 2, die Laenge bleibt. Kein Zufall: bei 0 Plaetzen alles wie vorher. */
-  const kp = Number(K.kontrollPlaetze) || 0;
-  if (kp > 0) {
-    const istKontrolle = (c) => c.stufe === "sicher" && c.faellig && imW(c);
-    const ersetzbar = (c) => c.faellig && imW(c) && (c.stufe === "altRichtig" || c.stufe === "neu");
-    const abVon = (c) => Number(c.ab) || 0;
-    const block = () => reihe.slice(zaehl.neuVorn);
-    const faecher = [...new Set(block().concat(ueber).filter(istKontrolle).map((c) => c.fach))];
-    for (const fach of faecher) {
-      const ziel = block().concat(ueber).filter((c) => istKontrolle(c) && c.fach === fach)
-        .sort((a, b) => abVon(a) - abVon(b)).slice(0, kp);
-      const zielSet = new Set(ziel);
-      for (const c of ziel) {
-        if (reihe.indexOf(c) >= 0) continue;
-        const drin = block().filter((r) => istKontrolle(r) && r.fach === fach).length;
-        let platz = -1;
-        if (drin < kp) {
-          for (let i = reihe.length - 1; i >= zaehl.neuVorn; i--) {
-            if (reihe[i].fach === fach && ersetzbar(reihe[i])) { platz = i; break; }
-          }
-        }
-        if (platz < 0) {
-          let ab = -Infinity;
-          for (let i = zaehl.neuVorn; i < reihe.length; i++) {
-            const r = reihe[i];
-            if (r.fach === fach && istKontrolle(r) && !zielSet.has(r) && abVon(r) >= ab) { platz = i; ab = abVon(r); }
-          }
-        }
-        if (platz < 0) continue;
-        const r = reihe[platz];
-        reihe[platz] = c;
-        if (r.stufe === "neu") neu--;
-        if (r.stufe === "altRichtig") altR--;
-        ueber.splice(ueber.indexOf(c), 1); ueber.push(r);
-      }
-    }
-    zaehl.kontrolle = block().filter(istKontrolle).length;
-  }
   for (const c of gewichtetZiehen(sonst, w, z)) {
     if (!darf(c)) { zurueck.push(c); continue; }
     nimm(c); zaehl.frei++;
   }
   for (const c of gewichtetZiehen(zurueck, w, z).concat(gewichtetZiehen(ueber, w, z))) {
+    reihe.push(c); zaehl.auffuellen++;
+  }
+  zaehl.neu = neu; zaehl.altRichtig = altR;
+  const fragen = (einstieg ? [einstieg] : []).concat(reihe).map((c) => c.f);
+  return { fragen, einstieg: einstieg ? einstieg.f : null, wieder: zaehl.wieder, zaehl };
+}
+
+/* Schritte 2-5 mit Kontrollplaetzen (Denny, 29.10.2026, 23:07 Uhr, korrigiert 23:58 Uhr). Je Fach, B = Tagesmenge,
+   kk = faellige sichere Karten (auch ausserhalb W, am Deckel vorbei):
+     Neues (in W, nie gefragt) gewichtet bis floor(B x neuAnteil), zusammen hoechstens neuJeRunde - wie
+       bisher (Beschluss 15:50 Uhr); R = B - Neues;
+     Fehler (faellig, in W), aelteste Faelligkeit zuerst, bis R - m, m = 1 wenn kk da ist (Mindestplatz),
+       sonst 0; der Rest wartet (ueber, im Auffuellen die aeltesten zuerst);
+     Kontrollen: r = min(kp, kk, R - Fehler), die am laengsten faelligen sicheren Karten;
+     uebrige Faellige in W gewichtet, bis der Block des Fachs B erreicht.
+   Ausgabe: Neues, Fehler, Kontrollen, uebrige Faellige, freies Ueben, Auffuellen.
+   zaehl.wieder = Fehler + Kontrollen + uebrige Faellige (quiz.js schuetzt neuVorn + wieder vorn). */
+function reihe4Plaetze(rest, einstieg, zaehl, mengeVon, w, z, K, kp) {
+  const imW = (c) => c.imW !== false;
+  const abVon = (c) => Number(c.ab) || 0;
+  const nachAb = (l) => l.map((c, i) => ({ c, i })).sort((a, b) => (abVon(a.c) - abVon(b.c)) || (a.i - b.i)).map((y) => y.c);
+  const istFehler = (c) => (c.stufe === "frischFehler" || c.stufe === "altFehler") && c.faellig && imW(c);
+  const istKontrolle = (c) => c.stufe === "sicher" && c.faellig;
+  const istNeu = (c) => c.stufe === "neu" && imW(c) && !c.faellig && c.nie !== false;
+  const faecher = [...new Set(rest.map((c) => c.fach))];
+  const genommen = new Set();
+  const plaetze = {}, fehlerF = {}, neuF = {}, blockF = {};
+  const fehlerReihe = [], kontrollReihe = [], ueber = [], zurueck = [];
+  let neu = 0, altR = 0;
+  zaehl.kontrolle = 0; zaehl.kontrolleFaellig = 0; zaehl.fehler = 0; zaehl.fehlerWartet = 0; zaehl.fehlerWegenPlaetzen = 0;
+  /* je Fach: faellige sichere (auch ausserhalb W), reservierte Plaetze, Fehler im Block, wartende Fehler */
+  zaehl.plaetze = {};
+  /* Neues zuerst wie bisher: bis zur Haelfte der Tagesmenge, zusammen hoechstens neuJeRunde
+     (Beschluss 29.10.2026, 15:50 Uhr; "nichts aus der neuen Phase weg", 22:25 Uhr). */
+  const anteil = Number(K.neuAnteil) || 0;
+  const neuReihe = [];
+  for (const c of gewichtetZiehen(rest.filter(istNeu), w, z)) {
+    if (neuReihe.length >= K.neuJeRunde) break;
+    if ((neuF[c.fach] || 0) >= Math.floor(mengeVon(c.fach) * anteil)) continue;
+    neuF[c.fach] = (neuF[c.fach] || 0) + 1;
+    neuReihe.push(c);
+  }
+  for (const fach of faecher) {
+    const B = mengeVon(fach) - (neuF[fach] || 0);
+    const kk = nachAb(rest.filter((c) => c.fach === fach && istKontrolle(c)));
+    const fe = nachAb(gewichtetZiehen(rest.filter((c) => c.fach === fach && istFehler(c)), w, z));   // gleich alt: gewichtet
+    const mindest = kk.length && B > 0 ? 1 : 0;
+    const fNimm = Math.max(0, Math.min(fe.length, B - mindest));
+    const r = Math.max(0, Math.min(kp, kk.length, B - fNimm));
+    plaetze[fach] = kk.slice(0, r);
+    zaehl.mindestplatz = (zaehl.mindestplatz || 0) + (mindest && fe.length >= B ? 1 : 0);
+    for (const c of fe.slice(0, fNimm)) { fehlerReihe.push(c); genommen.add(c); }
+    for (const c of fe.slice(fNimm)) ueber.push(c);
+    fehlerF[fach] = fNimm;
+    zaehl.fehler += fNimm;
+    zaehl.fehlerWartet += fe.length - fNimm;
+    zaehl.fehlerWegenPlaetzen += Math.max(0, Math.min(fe.length, B) - fNimm);
+    zaehl.kontrolleFaellig += kk.length;
+    zaehl.plaetze[fach] = { faellig: kk.length, frei: r, fehler: fNimm, wartet: fe.length - fNimm, menge: mengeVon(fach), neu: neuF[fach] || 0, mindest: mindest && fe.length >= B ? 1 : 0 };
+  }
+  const reihe = [];
+  const nimm = (c) => {
+    reihe.push(c); genommen.add(c);
+    if (c.stufe === "neu") neu++;
+    if (c.stufe === "altRichtig") altR++;
+    if (!imW(c)) zaehl.ausserhalb++;
+  };
+  for (const c of neuReihe) { nimm(c); zaehl.neuVorn++; }
+  for (const c of fehlerReihe) { nimm(c); zaehl.wieder++; }
+  for (const fach of faecher) for (const c of plaetze[fach]) { nimm(c); kontrollReihe.push(c); zaehl.wieder++; }
+  for (const fach of faecher) blockF[fach] = (neuF[fach] || 0) + fehlerF[fach] + plaetze[fach].length;
+  const darf = (c) => (c.stufe === "neu" ? neu < K.neuJeRunde : c.stufe === "altRichtig" ? altR < K.altRichtigJeRunde : true);
+  const ueberSet = new Set(ueber);
+  const faellige = gewichtetZiehen(rest.filter((c) => !genommen.has(c) && !ueberSet.has(c) && c.faellig && imW(c)), w, z);
+  for (const c of faellige) {
+    if (blockF[c.fach] >= mengeVon(c.fach)) { ueber.push(c); continue; }
+    if (!darf(c)) { zurueck.push(c); continue; }
+    blockF[c.fach]++;
+    nimm(c); zaehl.wieder++;
+  }
+  zaehl.kontrolle = reihe.slice(zaehl.neuVorn).filter(istKontrolle).length;
+  for (const c of reihe.slice(zaehl.neuVorn)) if (istKontrolle(c) && zaehl.plaetze[c.fach]) zaehl.plaetze[c.fach].kontrolle = (zaehl.plaetze[c.fach].kontrolle || 0) + 1;
+  const ueberAlle = new Set(ueber);
+  const sonst = rest.filter((c) => !genommen.has(c) && !ueberAlle.has(c) && !zurueck.includes(c) && !(c.faellig && imW(c)));
+  for (const c of gewichtetZiehen(sonst, w, z)) {
+    if (!darf(c)) { zurueck.push(c); continue; }
+    nimm(c); zaehl.frei++;
+  }
+  /* Wartende Fehler zuerst ins Auffuellen (aelteste vorn), dann wie bisher. */
+  const fehlerWarten = nachAb(ueber.filter(istFehler));
+  const ueberRest = ueber.filter((c) => !istFehler(c));
+  for (const c of fehlerWarten.concat(gewichtetZiehen(zurueck, w, z), gewichtetZiehen(ueberRest, w, z))) {
     reihe.push(c); zaehl.auffuellen++;
   }
   zaehl.neu = neu; zaehl.altRichtig = altR;
