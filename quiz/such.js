@@ -30,7 +30,7 @@
   }
   /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
-  var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], fundFormen = {}, heute = null;
+  var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], fundFormen = {}, schritt4 = null, heute = null;
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
@@ -150,8 +150,8 @@
       .then(function(r){ return r.json(); })
       .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {};
                          fundStand = (j && j.fundStand) || {}; quizWackler = (j && j.quizWackler) || [];
-                         fundFormen = (j && j.fundFormen) || {}; })
-      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; })
+                         fundFormen = (j && j.fundFormen) || {}; schritt4 = (j && j.schritt4) || null; })
+      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; schritt4 = null; })
       .then(function(){ return fetch("/api/schulstoff?kind=" + encodeURIComponent(KIND) + "&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -228,7 +228,7 @@
       } catch (e) { /* ohne Lesen laeuft die Runde wie vorher */ }
     }
     /* Blattdatum mit Herkunft (28.10.2026, Schritt 2): bei Paul zaehlt "neu" nach dem Datum des Blattes. */
-    if (KIND === "paul") { o = o || {}; o.nachBlattdatum = true; o.formen = fundFormen; }
+    if (KIND === "paul") { o = o || {}; o.nachBlattdatum = true; o.formen = fundFormen; if (schritt4) o.schritt4 = schritt4; }
     heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
     var da = !!(heute && heute.karten.length);
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }

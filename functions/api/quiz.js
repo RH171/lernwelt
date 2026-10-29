@@ -58,7 +58,10 @@ import {
   EINSTELLUNGEN as WV, punkteLesen, punkteSchreiben, punktVerbuchen,
   punktSchluessel, istFaellig, nachFaelligkeit, wartendJeBlatt, fuerDieSeite,
   fundFaelligJeBlatt, fundStandJeKarte, wartendText, gekonnteTatsachen, berlinTagNr,
+  SCHRITT4, fachNorm, stufe4, probenLage, blattNeu4, pauseJeFach, tagesmenge4, quizReihe4,
 } from "./_wiedervorlage.js";
+import { termineLesen, berlinHeute } from "./_probentermine.js";
+import { notenLesen } from "./_noten.js";
 import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen.js";
 import { OPUS_FORMEN } from "./_formen-opus.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten } from "./_fragerichtung.js";
@@ -203,6 +206,9 @@ export async function onRequestGet(context) {
                        quizWackler: quizWacklerListe(proTatsache, pk, Date.now(), 0, null,
                          kind === "paul" ? v.fragen.concat(karteAlsQuizForm(v.fragen, bn), opusAlsQuizForm(v.fragen, OPUS_FORMEN)) : null),
                        ...(kind === "paul" ? { fundFormen: fundFormenFuer(v.fragen, bn, pk, OPUS_FORMEN) } : {}),
+                       /* Schritt 4 (29.10.2026, nur Paul): Grenze alt/neu, nahe Proben, Pause und
+                          Tagesmenge je Fach, dazu die Konstanten - die Tagesrunde rechnet damit. */
+                       ...(kind === "paul" && SCHRITT4.an ? { schritt4: await schritt4Lage(env, kind, pk, bn, Date.now()) } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
@@ -351,6 +357,10 @@ export async function onRequestGet(context) {
                                beg ? new Set(auswahl.map(tatsacheVon)).size : auswahl.length));
   let wiederholt = 0;
   let offen;
+  /* Schritt 4 nur fuer Paul und nur mit den Fragerichtungen (eine Frage je Tatsache). */
+  const schritt4Paul = kind === "paul" && SCHRITT4.an && !!beg;
+  let einstiegT = null;
+  let reihe4 = null;
 
   if (WV.an) {
     let frisch = auswahl.filter((f) => !schonDran(f));
@@ -371,9 +381,24 @@ export async function onRequestGet(context) {
     const wieder = grenze == null ? faellig : faellig.slice(0, grenze);
     offen = frisch.concat(wieder);
     wiederholt = wieder.length;
-    /* Immer noch zu wenig? Dann auch, was noch nicht faellig ist - lieber
-       eine Frage zweimal als ein leeres Quiz oder ein Bau fuer Geld. */
-    if (offen.length < gebraucht) {
+    if (schritt4Paul) {
+      /* Schritt 4 (Denny, 29.10.2026, nur Paul): Statt "neu + 4 faellige, dann mischen"
+         eine gewichtete Reihe - Einstiegskarte, Faelliges bis zur Tagesmenge je Fach,
+         Rest freies Ueben nach Gewicht (quizReihe4 in _wiedervorlage.js). */
+      const lage = await schritt4Lage(env, kind, punkte, blattNach, jetzt);
+      const faelligSet = new Set(faellig);
+      const kand = frisch.concat(schonMal).map((f) => {
+        const p = punkte[punktSchluessel(f)];
+        const fach = fachNorm(f.fach || (blattNach[f.blatt] && blattNach[f.blatt].fach));
+        return { f, fach, faellig: faelligSet.has(f), probeNah: !!lage.nah[fach],
+                 stufe: stufe4(p, blattNeu4(blattNach[f.blatt] || { fach }, lage.grenze)) };
+      });
+      const r4 = quizReihe4(kand, lage.menge);
+      offen = r4.fragen;
+      wiederholt = r4.wieder;
+      einstiegT = r4.einstieg ? tatsacheVon(r4.einstieg) : null;
+      reihe4 = r4.zaehl;
+    } else if (offen.length < gebraucht) {
       const drin = new Set(wieder.map((f) => f.id));
       const rest = schonMal.filter((f) => !drin.has(f.id));
       offen = offen.concat(rest.slice(0, gebraucht - offen.length));
@@ -428,15 +453,23 @@ export async function onRequestGet(context) {
      Mal, und hoechstens 2 je Runde zum Tippen (Dennys Entscheidung
      19.10.2026). Eine Tatsache je Runde. */
   if (beg) offen = richtungAnwenden(offen, alleDazu, beg, { kind, punkte, schluessel: punktSchluessel });
-  mischen(offen);
+  /* Paul (Schritt 4): die Reihe ist schon gewichtet gezogen - nicht mischen. Die
+     Einstiegskarte steht vorn und bleibt dort (der Tipp-Tausch laesst Platz 1 aus). */
+  const ab4 = schritt4Paul && einstiegT && offen.length && tatsacheVon(offen[0]) === einstiegT ? 1 : 0;
+  if (ab4) offen[0] = { ...offen[0], einstieg: true };
+  if (!schritt4Paul) mischen(offen);
   /* Die Tipp-Fragen nicht wegschneiden lassen: Bei "10 aus 40" saehe Paul
      sonst meist keine. Liegt eine hinter dem Schnitt, tauscht sie mit einer
      zufaelligen Ankreuz-Frage davor. */
+  /* Paul (Schritt 4): getauscht wird nur im freien Ueben - die Einstiegskarte und die faelligen
+     Karten vorn bleiben, und nichts aus dem Auffuellen (Deckel neu/alt-richtig) rutscht nach vorn. */
+  const bisI = schritt4Paul && reihe4 ? Math.max(anzahl, offen.length - reihe4.auffuellen) : offen.length;
+  const abJ = schritt4Paul && reihe4 ? ab4 + reihe4.wieder : ab4;
   if (anzahl && offen.length > anzahl) {
-    for (let i = anzahl; i < offen.length; i++) {
+    for (let i = anzahl; i < bisI; i++) {
       if (offen[i].eingabe !== "frei") continue;
       const vorn = [];
-      for (let j = 0; j < anzahl; j++) if (offen[j].eingabe !== "frei") vorn.push(j);
+      for (let j = abJ; j < anzahl; j++) if (offen[j].eingabe !== "frei") vorn.push(j);
       if (!vorn.length) break;
       const j = vorn[Math.floor(Math.random() * vorn.length)];
       [offen[i], offen[j]] = [offen[j], offen[i]];
@@ -472,7 +505,32 @@ export async function onRequestGet(context) {
                      wartend: wartendJeBlatt(vorrat.fragen, punkte, jetzt),
                      ...(wiederholt ? { wiederholt } : {}),
                      ...(gw.weg ? { ohneGekonnt: gw.weg } : {}),
-                     ...(gw.nurGekonntes ? { nurGekonntes: true } : {}) });
+                     ...(gw.nurGekonntes ? { nurGekonntes: true } : {}),
+                     /* Schritt 4 (nur Paul): wie die Reihe entstand - fuer Pruefung und Protokoll, die Seite liest es nicht. */
+                     ...(reihe4 ? { reihe4 } : {}) });
+}
+
+/* Schritt 4 (29.10.2026, nur Paul): Probenlage, Pause und Tagesmenge je Fach.
+   Liest proben-termine und noten (zwei Leseabfragen, kein Schreiben). Ein Speicherfehler
+   liefert keine Grenze - dann gilt alles als neu (Annahme, Kapitel 152). */
+async function schritt4Lage(env, kind, punkte, blattNach, jetzt) {
+  const heute = berlinHeute(new Date(jetzt));
+  const termine = (await termineLesen(env, kind)) || [];
+  const noten = (await notenLesen(env, kind)) || [];
+  const { grenze, nah } = probenLage(termine, noten, heute);
+  const fachVon = (s) => {
+    if (s.indexOf("mathe#") === 0) return "mathe";
+    if (s.indexOf("lesen#") === 0) return "deutsch";
+    const b = blattNach[s.slice(0, s.indexOf("#"))];
+    return b ? fachNorm(b.fach) : "";
+  };
+  const pause = pauseJeFach(punkte, fachVon, jetzt);
+  const menge = {};
+  for (const f of Object.keys(blattNach).map((id) => fachNorm(blattNach[id].fach)).concat(Object.keys(pause)))
+    if (f && menge[f] == null) menge[f] = tagesmenge4(pause[f] || 0);
+  /* Rundengroesse der gemischten "Heute lernen"-Runde: Pause ueber alle Faecher (Annahme). */
+  const pauseAlle = pauseJeFach(punkte, () => "alle", jetzt).alle || 0;
+  return { k: SCHRITT4, heute, grenze, nah, pause, menge, mengeRunde: tagesmenge4(pauseAlle) };
 }
 
 /* Schluessel, unter dem "gekonnt" gerechnet wird: die Tatsache (Kapitel 132),
