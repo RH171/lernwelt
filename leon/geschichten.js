@@ -12280,7 +12280,7 @@ window.LEON_GESCHICHTEN = [
     "zeilen": [
      "Zur Pau|se stand es zwei zu null.",
      "In der 75. Mi|nu|te kam noch ein Tor.",
-     "Bad|jie traf zum drit|ten Mal für Os|na|brück.",
+     "Bad|jie schoss das drit|te Tor für Os|na|brück.",
      "Das Spiel en|de|te drei zu null.",
      "Fürth hat lei|der ver|lo|ren."
     ]
@@ -12314,7 +12314,7 @@ window.LEON_GESCHICHTEN = [
     "zeilen": [
      "Der Club hat am Sams|tag ge|spielt.",
      "Der Geg|ner war Kai|sers|lau|tern.",
-     "Yar|di|mi traf in der 58. Mi|nu|te.",
+     "Yar|dim|ci traf in der 58. Mi|nu|te.",
      "Das Spiel en|de|te null zu eins.",
      "Der Club hat al|so ver|lo|ren."
     ]
