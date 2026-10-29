@@ -664,8 +664,6 @@
           var w1 = el("p", "u lwf-wackler", "Beim ersten Tipp noch nachgeschaut: " +
             wackler.map(function (k) { return k.stichwort || k.richtig; }).join(", ") +
             (wackler.some(function (k) { return k.mathe || k.lesen; }) ? ". Die kommen in ein paar Tagen wieder dran."
-                                                             /* Paul: Schritt 3b (29.10.2026) - 1, 2 oder 3 Tage je nach Fehlern in Folge. */
-                                                             : opt.kind === "paul" ? ". Die kommen bald wieder dran."
                                                              : ". Die kommen in zwei Tagen wieder dran."));
           fertig.appendChild(w1);
           var bw = el("button", "lwf-knopf lwf-nochmal",

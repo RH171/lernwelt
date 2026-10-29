@@ -162,20 +162,6 @@
         for (var z in k) c[z] = k[z];
         c.blatt = b.id; c.blattTitel = b.titel || ""; c.sorte = sorteVon(st);
         c._tage = st && st.tage != null ? st.tage : 0; c._r = st ? st.r : 0;
-        /* opt.formen (29.10.2026, Schritt 3a, nur Paul): belegte Zweitformen aus /api/quiz (fundFormen).
-           Ein Wackler kommt nie in der Form, in der er falsch war; was wieder dran ist, wechselt
-           zwischen erster Form und Zweitformen nach dem Tag. Die Antwort bleibt dieselbe
-           (gleicher Schluessel), also wird derselbe Lernpunkt fortgeschrieben. */
-        var fm = e.formen && e.formen[key];
-        if (fm && fm.length && (c.sorte === "wackler" || c.sorte === "wieder" || c.sorte === "sicher")) {
-          var tagNr = Number(String(heute).replace(/-/g, "")) || 0;
-          var wahl = c.sorte === "wackler" ? fm[tagNr % fm.length] : [null].concat(fm)[tagNr % (fm.length + 1)];
-          if (wahl && wahl.frage && wahl.falsch && wahl.falsch.length === 2 && schluessel(wahl) === schluessel(k)) {
-            c.frage = wahl.frage; c.richtig = wahl.richtig; c.falsch = wahl.falsch.slice();
-            if (wahl.merke) c.merke = wahl.merke;
-            c.form = "andere";
-          }
-        }
         c._b = b;
         if (c.sorte === "neu") neuHier.push(c); else topf[c.sorte].push(c);
       });

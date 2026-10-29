@@ -99,20 +99,6 @@ export const EINSTELLUNGEN = {
      bis zum 19.10.2026. Was "gekonnt" heisst, steht in gekonnteTatsachen(). */
   alleOhneGekonntes: true,
 
-  /* Schritt 3 (Denny, 29.10.2026, NUR Paul - erkennbar am Feld v:3 im Punkt, das nur
-     punktVerbuchen(..., { paul: true }) setzt; Leon und Helena bekommen es nie):
-     3b - "Eine falsch beantwortete Karte kommt nach etwa einem Tag wieder, bei erneutem
-     Fehler nach zwei bis drei Tagen." Index = Fehler in Folge (fn) - 1, ab dem dritten
-     bleibt es beim letzten Wert. Grund: Proben nach vier Wochen und unangekuendigte Exen. */
-  paulFehlerTage: [1, 2, 3],
-
-  /* 3c - "sicher" = an zwei verschiedenen Tagen richtig, mindestens so viele Kalendertage
-     (Berlin) auseinander. Vorlaeufig; gemessen an den echten Daten am 29.10.2026
-     (3 Tage: Rueckfall 12 %, 6 Tage: 10 %, aber 12 statt 6 Tage bis sicher), neu gezaehlt
-     am 18.11.2026 (offener Punkt 823). Ersetzt bei Paul `sitzt` (3x richtig, auch an EINEM
-     Tag moeglich: 26 von 57, gemessen 28.10.2026). */
-  sicherAbstandTage: 3,
-
   /* ---- Was Paul SIEHT. Alles davon ist Anzeige, nichts davon zwingt. ---- */
   anzeige: {
     /* Steht die Zahl der wartenden Punkte an einem Blatt?
@@ -189,35 +175,11 @@ export function punktSchluessel(frage) {
   return blatt && id ? blatt + "#f:" + id : "";
 }
 
-/* Kalendertag in Berlin als fortlaufende Zahl - fuer "an zwei verschiedenen Tagen,
-   mindestens 3 Tage auseinander" (3c). Montag 18 Uhr und Donnerstag 8 Uhr sind 3 Tage. */
-const TAGFORMAT = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" });
-export function berlinTagNr(ms) {
-  if (!ms) return 0;
-  return Math.round(Date.parse(TAGFORMAT.format(new Date(ms)) + "T00:00:00Z") / TAG);
-}
-
-/* Punkte, die nach Schritt 3 gefuehrt werden (nur Paul, Feld v:3). Mathe- und
-   Lese-Wiederholung haben ihre eigene Leiter 2/4/7/28 (Kapitel 142, 149) und bleiben aussen vor. */
-export function schritt3Punkt(s) {
-  return !!s && s.indexOf("mathe#") !== 0 && s.indexOf("lesen#") !== 0;
-}
-
 /* Wann ein Punkt wieder faellig ist. Gibt einen Zeitstempel zurueck. */
 export function wiederAb(p, e) {
   const ein = e || EINSTELLUNGEN;
   const zuletzt = Number(p && p.z) || 0;
   if (!zuletzt) return 0;
-  /* Schritt 3, nur Paul (v:3): sicher -> 28 Tage, falsch -> 1/2/3 Tage nach Fehlern in
-     Folge, sonst 7 Tage wie bisher. */
-  if (p.v === 3) {
-    const ft = ein.paulFehlerTage || [ein.abstandTageNachFehler];
-    const fn = Math.max(1, Number(p.fn) || 1);
-    const t = p.s ? ein.abstandTageWennSitzt
-      : p.f ? ft[Math.min(fn, ft.length) - 1]
-      : ein.abstandTage;
-    return zuletzt + t * TAG;
-  }
   let tage = ein.abstandTage;
   if ((Number(p.r) || 0) >= ein.sitzt) tage = ein.abstandTageWennSitzt;
   else if (p.f && ein.abstandTageNachFehler != null) tage = ein.abstandTageNachFehler;
@@ -317,12 +279,6 @@ export function gekonnteTatsachen(fragen, punkte, jetzt, tatsache, e) {
     gruppe.get(t).add(s);
   }
   for (const [t, schluessel] of gruppe) {
-    /* Schritt 3, nur Paul: gekonnt = sicher nach 3c ueber ALLE Formen der Tatsache
-       (die Formen wechseln, also traegt kaum ein einzelner Punkt zwei Tage). */
-    if ([...schluessel].some((s) => punkte[s] && punkte[s].v === 3)) {
-      if (tatsacheSicher([...schluessel].map((s) => punkte[s]), nun, ein)) raus.add(t);
-      continue;
-    }
     let summe = 0, juengster = null;
     for (const s of schluessel) {
       const p = punkte[s];
@@ -335,29 +291,6 @@ export function gekonnteTatsachen(fragen, punkte, jetzt, tatsache, e) {
     raus.add(t);
   }
   return raus;
-}
-
-/* 3c ueber mehrere Formen einer Tatsache (nur Paul): die Folge beginnt nach dem
-   juengsten Fehler irgendeiner Form; sicher, wenn darin zwei richtige Tage mindestens
-   `sicherAbstandTage` auseinanderliegen - oder eine Form selbst schon sicher ist.
-   Zuletzt falsch oder faellig heisst nie gekonnt. */
-export function tatsacheSicher(liste, jetzt, e) {
-  const ein = e || EINSTELLUNGEN;
-  const ps = (liste || []).filter((p) => p && p.z);
-  if (!ps.length) return false;
-  const juengster = ps.reduce((a, b) => ((Number(b.z) || 0) > (Number(a.z) || 0) ? b : a));
-  if (juengster.f || istFaellig(juengster, jetzt || Date.now(), ein)) return false;
-  const fehler = Math.max(0, ...ps.filter((p) => p.f).map((p) => Number(p.z) || 0));
-  let anfang = Infinity, ende = 0;
-  for (const p of ps) {
-    if (p.f) continue;
-    if (p.s && (Number(p.z) || 0) > fehler) return true;
-    const z = Number(p.z) || 0, t1 = Number(p.t1) || 0;
-    if (z <= fehler) continue;
-    anfang = Math.min(anfang, t1 > fehler ? t1 : z);
-    ende = Math.max(ende, z);
-  }
-  return anfang < Infinity && berlinTagNr(ende) - berlinTagNr(anfang) >= ein.sicherAbstandTage;
 }
 
 /* Faellige Fundkarten je Blatt: { blatt: ["blatt#k:...", ...] }.
@@ -396,8 +329,6 @@ export function fundStandJeKarte(punkte, jetzt, e) {
        braucht sie den Zeitpunkt selbst. Nur fuer "mathe#k:" und (28.10.2026, Kapitel 149)
        "lesen#k:", sonst unveraendert. */
     if ((s.indexOf("mathe#k:") === 0 || s.indexOf("lesen#k:") === 0) && p.z) raus[s].z = Number(p.z);
-    /* Schritt 3 (nur Paul): "sicher" nach 3c - die Tagesrunde nimmt es statt r. */
-    if (p.v === 3) raus[s].s = p.s ? 1 : 0;
   }
   return raus;
 }
@@ -410,27 +341,13 @@ export function fundStandJeKarte(punkte, jetzt, e) {
  * Gespeichert wird so kurz wie moeglich, weil der ganze Bestand in EINEN
  * KV-Wert geht:  z = zuletzt (ms) · r = richtig in Folge · f = zuletzt falsch
  */
-export function punktVerbuchen(punkte, frage, richtig, jetzt, e, opt) {
+export function punktVerbuchen(punkte, frage, richtig, jetzt, e) {
   const ein = e || EINSTELLUNGEN;
   const s = punktSchluessel(frage);
   if (!s) return punkte;
   const p = punkte[s] || { z: 0, r: 0 };
   const vorher = Number(p.z) || 0;
   p.z = jetzt || Date.now();
-  /* Schritt 3 (29.10.2026), NUR mit opt.paul: fn = Fehler in Folge (3b),
-     t1 = erstes Richtig der laufenden Folge, s = sicher (3c), v:3 = nach Schritt 3 gefuehrt.
-     Ohne opt.paul (Leon, Helena) entsteht keines dieser Felder. */
-  if (opt && opt.paul && schritt3Punkt(s)) {
-    p.v = 3;
-    if (richtig) {
-      delete p.fn;
-      if (!p.t1 || p.f) p.t1 = p.z;
-      if (berlinTagNr(p.z) - berlinTagNr(p.t1) >= ein.sicherAbstandTage) p.s = 1;
-    } else {
-      p.fn = Math.min((Number(p.fn) || 0) + 1, 9);
-      delete p.t1; delete p.s;
-    }
-  }
   if (richtig) {
     p.r = Math.min((Number(p.r) || 0) + 1, ein.sitzt);
     /* fz = wann er zuletzt danebenlag (29.09.2026, Kreise fuellen). Damit
