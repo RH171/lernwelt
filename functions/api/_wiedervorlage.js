@@ -189,7 +189,7 @@ export const SCHRITT4 = {
      vorige Probe ausschliesslich, Probentag einschliesslich). Am Probentag ab probenAusnahmeAb Uhr
      (Berlin) ist die Probe geschrieben (wie probenkarte.js, Kapitel 131). 0 = Ausnahme aus.
      Tagesmenge, hoechstens 9 neue und 2 alt-richtige je Runde bleiben. */
-  probenAusnahmeTage: 7,
+  probenAusnahmeTage: 0,
   probenAusnahmeAb: 13,
   /* Wiederholung je Fach: Normaltag, nach 1 Tag Pause, nach 2 und mehr Tagen Pause. */
   tagesmenge: [8, 12, 15],
