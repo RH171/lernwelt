@@ -388,7 +388,8 @@
         '<div class="lwp-feld"><input type="text" autocomplete="off" aria-label="Deine Verbesserung" ' +
           (kette ? 'inputmode="numeric" placeholder="Abstand"' : s.eingabe === "zahl" ? 'inputmode="numeric" placeholder="neue Zahl"' :
            s.eingabe === "liste" ? 'inputmode="numeric" placeholder="z. B. 1, 2, …"' :
-           s.eingabe === "rest" ? 'placeholder="z. B. 9 R 2"' : 'placeholder="dein Wort"') + ">" +
+           s.eingabe === "rest" ? 'placeholder="z. B. 9 R 2"' :
+           s.eingabe === "aufgabe" ? 'placeholder="z. B. 12 : 4"' : 'placeholder="dein Wort"') + ">" +
           '<button type="button" class="lwp-ja lwp-pruefen">Prüfen</button></div>' +
         '<div class="lwp-knoepfe">' + (sicht ? '<button type="button" class="lwp-leise lwp-sicht" aria-expanded="false">Meine Sicht</button>'
                                              : '<button type="button" class="lwp-leise lwp-stimmt">Stimmt doch so</button>') +

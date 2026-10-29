@@ -74,6 +74,9 @@ export function korrekturFuer(s, jetzt) {
     korrigiert = String(s.soll);
   } else if (s.art === "rechnen" && s.typ === "rest") {
     korrigiert = s.soll.q + " R " + s.soll.r;
+  } else if (s.art === "rechnen" && s.typ === "tausch") {
+    /* Vertauschte Teilaufgabe (29.10.2026, nur Paul): richtig herum geschrieben. */
+    korrigiert = s.soll.a + " : " + s.soll.b + " = " + s.soll.q + (s.soll.r ? " R " + s.soll.r : "");
   } else if (s.art === "schreiben") {
     /* Volllesen (15.10.2026): die Stelle steht nur in der Abschrift - Verlauf und Grün. */
     korrigiert = String(s.soll || "");

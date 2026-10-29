@@ -25,7 +25,8 @@
  *   damit ein rot verbesserter Fehler als Textaufgabe in die Kiste kommt, nicht als nackte Rechnung.
  * Rein lesend, kein Schreibvorgang, kein Modellaufruf. Der Motor prüft jeden Schlüssel noch einmal.
  */
-import { abschriftLesen, feldUrteil, feldId, rechnen, sollIst } from "./_nachrechnen.js";
+import { abschriftLesen, feldUrteil, feldId, rechnen, sollIst, spaltenFolge, inhaltRechnungen, inhaltUrteil } from "./_nachrechnen.js";
+import { belegeFuerBlatt, belegGilt } from "./_belege.js";
 
 export const VON = "2026-10-05";
 export const VON_TEXT = "2026-09-15";
@@ -150,8 +151,10 @@ function werte(f) {
 }
 
 /* Ein Feld -> { k, fehler: bool, vertauscht?: bool } oder null. */
-export function feldStoff(f, g) {
+export function feldStoff(f, g, ctx) {
   if (!f || f.zwischen || f.typ === "text") return null;
+  /* Spaltenregel (29.10.2026): „· 10“ auf das Feld links gerechnet - richtig, aber keine eigene Aufgabe. */
+  if (ctx && ctx.spalte && ctx.spalte.has(f)) return null;
   /* Teiler: Pauls Liste ist oft mit „1?“ gelesen (unsicher). Mit roter Liste der Lehrerin zählt:
      fehlt in Pauls Liste (ohne Fragezeichen) ein echter Teiler, ist es eine Fehlerstelle. */
   if (f.typ === "teiler" || f.typ === "teilerTeil") {
@@ -213,7 +216,14 @@ export function feldStoff(f, g) {
   /* Beleg: rot verbessert UND danach stimmt es – oder die zweite Lesung bestätigt Pauls Zahl. */
   const rotDa = Array.isArray(f.rot) && f.rot.length > 0;
   if (rotDa && uEnd.urteil === "richtig") return { k, fehler: true, beleg: "rot" };
-  if (!rotDa && g[feldId(f, uPaul)] === uPaul.final) return { k, fehler: true, beleg: "zweitlesung" };
+  /* Zwei Lesungen (29.10.2026, Dennys Entscheidung 5): ohne Rot zählt ein Fehler nur, wenn auch das
+     Durchlesen (`inhalt`) dieselbe Zahl des Kindes nennt. */
+  /* Zweiter Beleg (29.10.2026, Entscheidung A, _belege.js): am Foto bestätigt oder Dennys Klick. */
+  const bel = !rotDa && ctx && ctx.belege ? belegGilt(ctx.belege, feldId(f, uPaul), uPaul.final) : null;
+  if (bel && bel.urteil === "fehler") return { k, fehler: true, beleg: bel.quelle };
+  if (bel && bel.urteil === "richtig") return { k, fehler: false };
+  if (!rotDa && g[feldId(f, uPaul)] === uPaul.final && (!ctx || !ctx.inh || inhaltUrteil(f, ctx.inh) === "ja"))
+    return { k, fehler: true, beleg: "zweitlesung" };
   return { k, fehler: false, ungeprueft: true };
 }
 
@@ -257,11 +267,12 @@ export function blattStoff(eintraege, opt) {
     if (!n || !Array.isArray(n.z)) { blaetter.push({ ...info, drin: false, warum: "noch nicht nachgerechnet" }); continue; }
     const ab = abschriftLesen(n.z.join("\n")), si = sollIst(ab);
     const d = blattDrin(b, ab.felder);
+    const ctx = { spalte: spaltenFolge(ab), inh: inhaltRechnungen(b.inhalt), belege: belegeFuerBlatt(b, "paul") };
     const zahl = { felder: ab.felder.filter((f) => !f.zwischen).length, stoff: 0, fehler: 0, vertauscht: 0, ungeprueft: 0, nichtUebernommen: 0 };
     if (d.drin) {
       for (const f of ab.felder) {
         if (f.zwischen) continue;
-        const s = feldStoff(f, n.g || {});
+        const s = feldStoff(f, n.g || {}, ctx);
         if (s) s.k = zuSchema(s.k, schemaJe[b.id] || []);
         if (!s) { if (f.typ !== "text") zahl.nichtUebernommen++; continue; }
         /* Auf Mal/Geteilt-Blättern nur Mal/Geteilt-Stoff; Plus/Minus nur von Übungsblättern der Lehrerin. */

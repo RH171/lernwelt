@@ -276,6 +276,10 @@
   .nzeile button{min-height:44px;padding:0 14px;border:1.5px solid var(--line);background:#fff;
                  border-radius:10px;font:600 14px/1 var(--rund);color:#b91c1c;cursor:pointer}
   .nvorschlag li{margin-bottom:3px}
+  /* Knöpfe „Ist ein Fehler“ / „Ist richtig“ / „Zurücknehmen“ (29.10.2026): auch am Desktop 44 px wie alle
+     anderen Knöpfe im Elternbereich; ohne Stil waren sie dort 21 px hoch (Browser-Durchlauf). */
+  [data-nach-feld] button{min-height:44px;padding:0 14px;margin:4px 6px 0 0;border:1.5px solid var(--line);background:#fff;
+                          border-radius:10px;font:600 14px/1 var(--rund);color:var(--ink);cursor:pointer}
 </style>
 </head>
 <body>
@@ -1381,12 +1385,47 @@
         zeilen.push('⚠️ Auch nach der roten Korrektur stimmt das Ergebnis nicht: ' + esc(r.zeile) + (r.paulGut ? ' (' + (PR_NAME[KIND] || '') + 's eigene Zahl stimmte)' : ''));
       });
       (x.ungeprueft || []).forEach(function(r){ zeilen.push('⚪ ungeprüft (zweite Lesung anders): ' + esc(r)); });
+      /* Zwei Lesungen (29.10.2026, nur Paul): die Abschrift sieht einen Fehler, das Durchlesen nicht dieselbe Zahl.
+         Paul bekommt keine Karte - bitte im Heft nachsehen. */
+      /* Entscheidung A (29.10.2026, nur Paul): Denny schaut ins Heft und klickt. Sein Klick ist der zweite Beleg:
+         „Ist ein Fehler“ gibt Paul die Karte, „Ist richtig“ nimmt die Stelle als Fehler heraus. */
+      (x.nachsehen || []).forEach(function(r){
+        zeilen.push('🔍 <b>bitte nachsehen</b>: ' + esc(r.zeile) + ' <span class="unter">(' +
+          (r.durchlesen === 'anders' ? 'das Durchlesen las eine andere Zahl' : 'das Durchlesen nennt diese Aufgabe nicht') + ')</span>' +
+          (r.feld && KIND === "paul" ? ' <span data-nach-blatt="' + esc(b.id || "") + '" data-nach-feld="' + esc(r.feld) + '">' +
+            '<button type="button" data-nach="fehler">Ist ein Fehler</button> <button type="button" data-nach="richtig">Ist richtig</button></span>' : ''));
+      });
+      (x.belegt || []).forEach(function(r){
+        var wer = r.quelle === 'foto' ? 'am Foto geprüft' : 'von dir entschieden' + (r.am ? ' am ' + esc(kurzDatum(String(r.am).slice(0, 10))) : '');
+        zeilen.push((r.urteil === 'fehler' ? '✅ <b>Fehler belegt</b>: ' : '✅ <b>richtig</b> (Abschrift verlesen): ') + esc(r.zeile) +
+          ' <span class="unter">(' + wer + ')</span>' +
+          (r.quelle === 'eltern' ? ' <span data-nach-blatt="' + esc(b.id || "") + '" data-nach-feld="' + esc(r.feld) + '">' +
+            '<button type="button" data-nach="weg">Zurücknehmen</button></span>' : ''));
+      });
       if (!zeilen.length) return;
       h += '<div style="margin-top:8px">' + esc(b.titel || "") + (b.datum ? ' <span class="unter">· ' + esc(kurzDatum(b.datum)) + '</span>' : '') +
            '<br>' + zeilen.join('<br>') + '</div>';
     });
     return h + '</div>';
   }
+  document.addEventListener("click", function(ev){
+    var t = ev.target, k = t && t.closest ? t.closest("[data-nach]") : null;
+    if (!k) return;
+    var w = k.closest("[data-nach-feld]"); if (!w) return;
+    var kind = KIND;
+    w.textContent = "Wird gespeichert …";
+    fetch("/api/pruefreiter", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: kind, aktion: "nachsehen", blatt: w.getAttribute("data-nach-blatt"), feld: w.getAttribute("data-nach-feld"),
+                             urteil: k.getAttribute("data-nach") }) })
+      .then(function(r){ return r.json(); })
+      .catch(function(){ return { ok: false, fehler: "Gerade nicht erreichbar." }; })
+      .then(function(j){
+        if (!j || !j.ok) { w.textContent = "Nicht gespeichert: " + ((j && j.fehler) || "Das ging nicht."); return; }
+        PR_JE[kind] = { daten: null, laedt: false };
+        if (KIND !== kind) return;
+        var el = document.getElementById("prKarte"); if (el) el.outerHTML = pruefKarte();
+      });
+  });
   /* Verbessert durch Claude (14.10.2026, Dennys Zusatz): Hat Paul eine Stelle
      verbessert, berichtigt Claude die Zeile im gespeicherten Blatt (das Foto
      bleibt). Hier steht nachvollziehbar, was vorher dastand. Ein alter Server

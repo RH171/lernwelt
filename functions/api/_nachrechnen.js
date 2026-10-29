@@ -33,6 +33,7 @@
  * auf alte Blätter, ohne neuen Modellaufruf.
  */
 
+import { belegGilt } from "./_belege.js";
 export const MODELL = "claude-opus-5-5";
 export const VERSION = 1;
 
@@ -60,6 +61,10 @@ export function abschreibAuftrag(masse, opt) {
     "Klammern: 180 : 60 = [3] oder [490] : 10 = 49. Mit Rest: 47 : 5 = [9] R [2].\n" +
     "- Tabelle: Zeilenkopf, das Rechenzeichen aus der Ecke, Spaltenkopf = Feld. Tabelle mit „:“ in der Ecke, Zeile 180, " +
     "Spalte 60: 180 : 60 = [Feld]. Jedes Feld eine eigene Zeile. Prüfe bei jedem Feld genau, in welcher Zeile und Spalte es steht.\n" +
+    (druck ? "- Tabelle mit Rechenzeichen im SPALTENKOPF (z. B. Köpfe „· 7 | · 10 | · 70“): Eine Spalte wie „· 10“ wird auf " +
+      "das Feld LINKS daneben gerechnet, nicht auf den Zeilenkopf. Zeile 3, Feld links [21], Spalte „· 10“: 21 · 10 = [210] – " +
+      "nicht 3 · 10 = [210]. Nur die erste Spalte rechnet mit dem Zeilenkopf (3 · 7 = [21]). Steht über der Spalte die " +
+      "Gesamtrechnung (z. B. „· 70“), rechnest du sie mit dem Zeilenkopf: 3 · 70 = [210].\n" : "") +
     "- Rechenketten, Zahlenmauern, Umkehraufgaben: jeden Schritt als eigene Rechnung.\n" +
     (druck ? "- Zahlenreihen („Zähle weiter“, „Setze die Reihe fort“, Zahlenstrahl): ZUERST eine eigene Zeile mit den GEDRUCKTEN " +
       "Zahlen der Reihe, genau so, wie sie vorgedruckt dastehen, in ihrer Reihenfolge: <Nr> | DRUCK | 450, 460. Nur Gedrucktes, " +
@@ -448,6 +453,109 @@ function mehrdeutigeFelder(ab) {
   for (const f of ab.felder) if (teile(f)) (je[sig(f)] = je[sig(f)] || new Set()).add(pos(f));
   return new Set(ab.felder.filter((f) => teile(f) && je[sig(f)].size > 1));
 }
+/* ---------- Spaltenregel (29.10.2026, Dennys Entscheidung 4, nur Paul) ----------
+   Anlass: Blatt 8tv8tshw4c „Malnehmen mit Zehnerzahlen“, Tabelle 2a/2b. Spaltenköpfe „· 7 | · 10 | · 70“:
+   „· 10“ wird auf das Feld LINKS gerechnet (21 · 10 = 210), nicht auf den Zeilenkopf. Die Abschrift trug
+   „3 · 10 = [210]“, das Nachrechnen fand 8 Fehler, die keine waren (die Lehrerin hakte alle ab).
+   Erkannt wird: gleiche Aufgabe, direkt davor ein Feld mit demselben Zeilenkopf, Spalte · 10/100/1000,
+   und Pauls Zahl = Feld links · Spalte. Dann ist das Feld richtig gerechnet (ein Fehler im Feld links
+   wird dort gemeldet, nicht noch einmal hier). */
+const SPALTE = [10, 100, 1000];
+export function spaltenFolge(ab) {
+  const aus = new Set();
+  let vor = null;
+  for (const f of ab.felder) {
+    if (f.zwischen) continue;
+    const gl = (x) => x && x.typ === "gleichung" && x.op === "*" && !x.umgedreht && x.teil.c.kind && !x.teil.a.kind &&
+      !x.teil.c.unsicher && !x.teil.c.leer && x.teil.c.wert != null;
+    if (vor && vor.nr === f.nr && gl(f) && gl(vor) && !f.teil.b.kind && !f.rot && SPALTE.includes(f.teil.b.wert) &&
+        vor.teil.a.wert === f.teil.a.wert && f.teil.a.wert * f.teil.b.wert !== f.teil.c.wert &&
+        vor.teil.c.wert * f.teil.b.wert === f.teil.c.wert) aus.add(f);
+    vor = f;
+  }
+  return aus;
+}
+
+/* ---------- Zwei Lesungen (29.10.2026, Dennys Entscheidung 5, nur Paul) ----------
+   Ein Fehler zählt nur, wenn das unabhängige Durchlesen (`inhalt`, eigener Modellaufruf ohne Abschrift)
+   dieselbe Aufgabe mit DERSELBEN Zahl des Kindes nennt. Anlass: 6 · 700 – Paul schrieb 4200, die Abschrift
+   las 4100, die zweite Lesung (gleiches Bild, gleiche Frage) bestätigte 4100; `inhalt` hatte 4200.
+   Ergebnis je Fehler: "ja" (gleiche Zahl), "anders" (gleiche Aufgabe, andere Zahl), "fehlt" (nicht genannt).
+   Gelesen werden nur Zeilen des Kindes: Beispiel- und Lehrkraft-Zeilen nicht, bei „Kind schrieb X, richtig: Y“
+   nur X. */
+const IN_OP = { "·": "*", "x": "*", "×": "*", "*": "*", ":": "/", "÷": "/", "+": "+", "-": "-", "−": "-", "–": "-" };
+const IN_RE = /(\d{1,7}(?:\s*[·x×*:÷+\-−–]\s*\d{1,7})+)\s*=\s*(\d{1,7})(?:\s*(?:R|Rest)\s*(\d{1,6}))?/g;
+export function inhaltRechnungen(inhalt) {
+  const aus = [];
+  for (const z0 of Array.isArray(inhalt) ? inhalt : []) {
+    let z = String(z0 || "");
+    if (/^\s*(✍|Beispiel|Lehrkraft|Lehrerin|Stempel|Überschrift)/i.test(z)) continue;
+    z = z.replace(/,?\s*richtig\s*:.*$/i, "");
+    for (const m of z.matchAll(IN_RE)) {
+      const teile = m[1].split(/\s*([·x×*:÷+\-−–])\s*/);
+      const terme = [], ops = [];
+      teile.forEach((t, i) => { if (i % 2) ops.push(IN_OP[t]); else terme.push(+t); });
+      aus.push({ terme, ops, erg: +m[2], r: m[3] == null ? null : +m[3] });
+    }
+  }
+  return aus;
+}
+/* Pauls eigene Werte des Feldes (ohne Rot) als { terme, ops, erg, r } mit der Stelle des Kindes. */
+function paulRechnung(f) {
+  if (f.typ === "gleichung" || f.typ === "rest") {
+    const t = f.teil;
+    if (["a", "b", "c"].some((p) => t[p].wert == null)) return null;
+    return { terme: [t.a.wert, t.b.wert], ops: [f.op], erg: t.c.wert, r: f.typ === "rest" ? (t.r && t.r.wert != null ? t.r.wert : null) : null,
+             kind: ["a", "b", "c", "r"].filter((p) => t[p] && t[p].kind) };
+  }
+  if (f.typ === "ausdruck") {
+    if (f.terme.some((x) => x.wert == null) || f.erg.wert == null) return null;
+    const kind = f.terme.map((x, i) => (x.kind ? i : -1)).filter((i) => i >= 0);
+    if (f.erg.kind) kind.push("e");
+    return { terme: f.terme.map((x) => x.wert), ops: f.ops.slice(), erg: f.erg.wert, r: null, kind };
+  }
+  return null;
+}
+function gleicheFolge(a, b) { return a.length === b.length && a.every((x, i) => x === b[i]); }
+export function inhaltUrteil(f, rechnungen) {
+  const p = paulRechnung(f);
+  if (!p) return "fehlt";
+  const tausch = p.terme.length === 2 && (p.ops[0] === "*" || p.ops[0] === "+");
+  let anders = false;
+  for (const q of rechnungen) {
+    if (!gleicheFolge(q.ops, p.ops) || q.terme.length !== p.terme.length) continue;
+    const varianten = [q.terme];
+    if (tausch) varianten.push([q.terme[1], q.terme[0]]);
+    for (const qt of varianten) {
+      /* Gedruckte Teile müssen gleich sein, sonst ist es eine andere Aufgabe. */
+      let gedrucktGleich = true, kindGleich = true;
+      p.terme.forEach((x, i) => {
+        const vomKind = p.kind.includes(i) || (p.terme.length === 2 && p.kind.includes(["a", "b"][i]));
+        if (x === qt[i]) return;
+        if (vomKind) kindGleich = false; else gedrucktGleich = false;
+      });
+      const ergKind = p.kind.includes("c") || p.kind.includes("e");
+      if (ergKind) { if (q.erg !== p.erg) kindGleich = false; } else if (q.erg !== p.erg) gedrucktGleich = false;
+      if (p.r != null || q.r != null) { if ((q.r == null ? 0 : q.r) !== (p.r == null ? 0 : p.r)) kindGleich = false; }
+      if (!gedrucktGleich) continue;
+      if (kindGleich) return "ja";
+      anders = true;
+    }
+  }
+  return anders ? "anders" : "fehlt";
+}
+
+/* Reihe: nennt das Durchlesen Pauls erstes falsches Glied als Zahl in einer Zeile des Kindes? */
+export function inhaltNenntZahl(inhalt, zahl) {
+  if (zahl == null) return false;
+  const re = new RegExp("(^|[^\\d])" + zahl + "(?!\\d)");
+  return (Array.isArray(inhalt) ? inhalt : []).some((z0) => {
+    const z = String(z0 || "");
+    if (/^\s*(✍|Beispiel|Lehrkraft|Lehrerin|Stempel|Überschrift)/i.test(z)) return false;
+    return re.test(z.replace(/,?\s*richtig\s*:.*$/i, ""));
+  });
+}
+
 export function auswerten(n, opt) {
   if (!n || !Array.isArray(n.z)) return null;
   const ab = abschriftLesen(n.z.join("\n"));
@@ -457,16 +565,32 @@ export function auswerten(n, opt) {
   const zaehl = { richtig: 0, falsch: 0, leer: 0, unsicher: 0, ohneKind: 0, unklar: 0, nichtRechenbar: 0 };
   const gesehen = new Set();
   const mehr = mehrdeutigeFelder(ab);
+  const spalte = opt && opt.spalten ? spaltenFolge(ab) : new Set();
+  const inh = opt && opt.inhalt ? inhaltRechnungen(opt.inhalt) : null;
   for (const f of ab.felder) {
-    const u = mehr.has(f) ? { urteil: "unklar" } : feldUrteil(f);
+    const u = mehr.has(f) ? { urteil: "unklar" } : spalte.has(f) ? { urteil: "richtig", spalte: true } : feldUrteil(f);
     zaehl[u.urteil] = (zaehl[u.urteil] || 0) + 1;
     if (u.urteil !== "falsch") continue;
     const id = feldId(f, u);
     if (gesehen.has(id)) continue;
     gesehen.add(id);
     const zweite = g[id];
-    fehler.push({ f, u, id, bestaetigt: zweite == null ? null : zweite === u.final });
+    const x = { f, u, id, bestaetigt: zweite == null ? null : zweite === u.final };
+    if (inh) {
+      /* Listen (Teiler, Vielfache) nennt das Durchlesen nicht als Rechnung: die bleiben wie bisher. */
+      x.inhalt = f.typ === "gleichung" || f.typ === "rest" || f.typ === "ausdruck" ? inhaltUrteil(f, inh) : "liste";
+      x.lesung1 = x.bestaetigt;
+      /* Rot der Lehrerin ist ein eigener Beleg (und „Rot ist fertig“): dort bleibt es wie bisher. */
+      if (x.bestaetigt === true && !u.rotDa && x.inhalt !== "ja" && x.inhalt !== "liste") { x.bestaetigt = false; x.nachsehen = true; }
+    }
+    /* Zweiter Beleg (29.10.2026, Dennys Entscheidung A, nur Paul, _belege.js): am Foto einzeln bestätigt
+       oder Dennys Klick im Elternbereich. Gilt nur für genau dieses Feld und genau Pauls Zahl. */
+    const beleg = opt && opt.belege ? belegGilt(opt.belege, id, u.final) : null;
+    if (beleg && beleg.urteil === "fehler") { x.bestaetigt = true; x.nachsehen = false; x.beleg = beleg; }
+    else if (beleg && beleg.urteil === "richtig") { x.bestaetigt = false; x.nachsehen = false; x.richtigBeleg = beleg; }
+    fehler.push(x);
   }
+  if (spalte.size) zaehl.spalte = spalte.size;
   /* opt.ketten (28.10.2026, nur Paul): die Zahlenreihen mit denselben Feld-Objekten wie `fehler`. */
   if (opt && opt.ketten) return { ...si, felder: ab.felder.length, zaehl, fehler, abgebrochen: !!n.f, ketten: kettenFinden(n, ab) };
   return { ...si, felder: ab.felder.length, zaehl, fehler, abgebrochen: !!n.f };

@@ -62,11 +62,24 @@ import { nachgerechnetSetzen, abschriftenSetzen } from "./_schulstoff.js";
 import { kreiseLesen, kreiseSchreiben, fehltOrt, ortFuer, vorlageOrt, zieleFuerStelle, zielFuerVorlage,
          orten, orteVerwerfen } from "./_fehlerkreis.js";
 import { korrekturFuer, korrekturSetzen, gruenFuer } from "./_korrektur.js";
+import { belegSetzen } from "./_belege.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
 });
 
+/* Die richtige Lösung als Text für den Elternbereich. Rest und vertauschte Teilaufgabe haben ein Objekt
+   als soll - vorher stand dort „[object Object]“ (gesehen 29.10.2026 beim Bau der Tausch-Karte). */
+function sollText(s) {
+  const o = s.soll;
+  if (Array.isArray(o)) return o.join(", ");
+  if (o && typeof o === "object") {
+    if (s.typ === "tausch") return o.a + " : " + o.b + " = " + o.q + (o.r ? " R " + o.r : "");
+    if (o.q != null) return o.q + " R " + (o.r || 0);
+    return "";
+  }
+  return String(o);
+}
 async function istEltern(request, env) {
   const g = geheimFuer(env, "eltern");
   return !!g && (await ausweisGueltig(request, g, env));
@@ -104,7 +117,7 @@ export async function onRequestGet(context) {
     const liste = Object.keys(zustand.s).filter((id) => zustand.s[id].z === "stimmt").map((id) => {
       const s = alle[id], z = zustand.s[id];
       return { id, wann: z.t || "", blatt: s ? s.blatt : { id: id.split(":")[0] }, aufgabe: s ? s.aufgabe : "",
-               du: s ? s.du : (z.du || ""), richtig: s && s.soll != null ? (Array.isArray(s.soll) ? s.soll.join(", ") : String(s.soll)) : "",
+               du: s ? s.du : (z.du || ""), richtig: s && s.soll != null ? sollText(s) : "",
                art: s ? s.art : "" };
     });
     const offen = offeneStellen(e.eintraege, vorlagen, zustand, null, kind);
@@ -113,7 +126,7 @@ export async function onRequestGet(context) {
       const s = alle[id], z = zustand.s[id];
       return { id, wann: z.t || "", blatt: s ? s.blatt : { id: id.split(":")[0] }, aufgabe: s ? s.aufgabe : "",
                du: s ? s.du : (z.du || ""), wahl: String(z.w || ""), urteil: String(z.urteil || "offen"),
-               richtig: s && s.soll != null ? (Array.isArray(s.soll) ? s.soll.join(", ") : String(s.soll)) : "" };
+               richtig: s && s.soll != null ? sollText(s) : "" };
     });
     /* Zahlenreihen (28.10.2026, nur Paul): auch die, für die Paul keine Karte bekommt (Abstand nicht belegt). */
     const ketten = [];
@@ -132,7 +145,7 @@ export async function onRequestGet(context) {
     verbessert.sort((a, b) => (a.am < b.am ? 1 : -1));
     const nachgerechnet = [];
     for (const b of e.eintraege || []) {
-      const st = b.sichtbar !== false ? nachrechenStand(b) : null;
+      const st = b.sichtbar !== false ? nachrechenStand(b, kind) : null;
       if (!st) continue;
       nachgerechnet.push({ blatt: { id: b.id, titel: String(b.titel || "").slice(0, 80), datum: b.datum || "" }, ...st });
     }
@@ -322,6 +335,10 @@ async function volllesenAktion(env, kind, blattId) {
    (für die grüne Überlagerung). Gibt die Felder für die Antwort. Wirft nie. */
 async function berichtigen(env, kind, blatt, s) {
   try {
+    /* Keine grüne Korrektur ohne Doppelbeleg (29.10.2026, nur Paul): Anlass 8tv8tshw4c, „4100 → 4200“ -
+       Paul hatte 4200 geschrieben, gelesen war 4100. Nachgerechnete Stellen berichtigen das Blatt nur,
+       wenn Abschrift und Durchlesen dieselbe Zahl hatten. */
+    if (kind === "paul" && s.nachgerechnet && s.lesungen !== 2) return { korrigiert: false };
     const k = korrekturFuer(s);
     if (!k) return { korrigiert: false };
     const kreise = await kreiseLesen(env, kind);
@@ -331,6 +348,30 @@ async function berichtigen(env, kind, blatt, s) {
     if (!r.ok) return { korrigiert: false };
     return { korrigiert: true, gruen: gruenFuer({ korrekturen: [k] }) };
   } catch (x) { return { korrigiert: false }; }
+}
+
+/* „bitte nachsehen“ entscheiden (29.10.2026, Dennys Entscheidung A, nur Paul, nur Elternausweis):
+   { kind:"paul", aktion:"nachsehen", blatt, feld, urteil:"fehler"|"richtig"|"weg" }.
+   Dennys Klick ist der zweite Beleg (_belege.js). Nur für Stellen, die gerade unter „bitte nachsehen“
+   stehen oder schon per Klick entschieden sind - nichts anderes lässt sich so setzen. */
+async function nachsehenAktion(request, env, kind, d) {
+  if (kind !== "paul") return json(400, { ok: false, fehler: "Nur für Paul." });
+  if (!(await istEltern(request, env))) return json(401, { ok: false, fehler: "Nur für Eltern." });
+  const b = String(d.blatt || "").slice(0, 40), feld = String(d.feld || "").slice(0, 80), urteil = String(d.urteil || "");
+  if (!/^[a-z0-9]+$/.test(b) || !feld) return json(400, { ok: false, fehler: "Welche Stelle denn?" });
+  if (!["fehler", "richtig", "weg"].includes(urteil)) return json(400, { ok: false, fehler: "Unbekannte Entscheidung." });
+  const e = await stoffLesen(env, kind, MONATE_BLATT);
+  if (!e.ok) return json(503, { ok: false, fehler: e.fehler });
+  const blatt = (e.eintraege || []).find((x) => x.id === b);
+  const st = blatt ? nachrechenStand(blatt, kind) : null;
+  const offen = st && Array.isArray(st.nachsehen) ? st.nachsehen.find((x) => x.feld === feld) : null;
+  const klick = st && Array.isArray(st.belegt) ? st.belegt.find((x) => x.feld === feld && x.quelle === "eltern") : null;
+  const stelle = offen || klick;
+  if (!stelle) return json(404, { ok: false, fehler: "Diese Stelle steht nicht mehr unter „bitte nachsehen“." });
+  const eintrag = urteil === "weg" ? null : { urteil, du: stelle.du, zeile: String(stelle.zeile || "").slice(0, 120), wer: "eltern", am: new Date().toISOString() };
+  const r = await belegSetzen(env, kind, b, feld, eintrag);
+  if (!r.ok) return json(503, r);
+  return json(200, { ok: true, urteil });
 }
 
 export async function onRequestPost(context) {
@@ -355,6 +396,7 @@ export async function onRequestPost(context) {
     if (!/^[a-z0-9]+$/.test(b)) return json(400, { ok: false, fehler: "Welches Blatt denn?" });
     return nachrechnenAktion(env, kind, b);
   }
+  if (String(d.aktion || "") === "nachsehen") return nachsehenAktion(request, env, kind, d);
   const id = String(d.stelle || "").slice(0, 80);
   const aktion = String(d.aktion || "");
   if (!/^[a-z0-9]+:[rplnvk]:[a-z0-9]+$/.test(id)) return json(400, { ok: false, fehler: "Unbekannte Stelle." });

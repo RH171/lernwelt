@@ -112,6 +112,9 @@ export function zieleFuerStelle(s) {
   if (s.art === "rechnen" && s.typ === "ausdruck")
     return [{ id: s.id, text: wo + "die Rechnung " + String(s.aufgabe || "").replace(/^Aufgabe [^:]+: /, "").replace("?", JSON.stringify(s.du)) +
       ". Das Kind hat dort " + JSON.stringify(s.du) + " eingetragen" + rot + ". Das Rechteck umfasst genau diese eingetragene Zahl." }];
+  if (s.art === "rechnen" && s.typ === "tausch")
+    return [{ id: s.id, text: wo + "die Rechnung " + s.g.a + " : " + s.g.b + " mit Rest, die das Kind andersherum gerechnet hat. Das Kind hat dort " +
+      JSON.stringify(s.g.q + (s.g.r ? " R " + s.g.r : "")) + " eingetragen. Das Rechteck umfasst Ergebnis und Rest des Kindes." }];
   if (s.art === "rechnen" && s.typ === "rest")
     return [{ id: s.id, text: wo + "die Rechnung " + s.g.a + " : " + s.g.b + " mit Rest. Das Kind hat dort " + JSON.stringify(s.du) +
       " eingetragen. Das Rechteck umfasst Ergebnis und Rest des Kindes." }];
