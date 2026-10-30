@@ -183,7 +183,20 @@
     var alle = heuteErledigt(daten, "");
     if (!alle.zahl) return aus;
     aus.zahl = alle.zahl; aus.keys = alle.keys;
-    berechnen(daten).forEach(function (x) { if (x.erledigt) aus.geschafft[x.fach] = x.erledigt; });
+    var offen = [];
+    berechnen(daten).forEach(function (x) {
+      if (x.erledigt) aus.geschafft[x.fach] = x.erledigt;
+      else if (x.runde && x.runde.karten && x.runde.karten.length) offen.push(x.runde);
+    });
+    /* Genau die offenen Fachrunden der Startseite, zusammengelegt: das Quiz zeigt dieselben Karten und Zahlen. */
+    if (offen.length) {
+      aus.runde = { karten: [], zaehl: {}, blaetter: 0 };
+      offen.forEach(function (r) {
+        aus.runde.karten = aus.runde.karten.concat(r.karten);
+        aus.runde.blaetter += r.blaetter || 0;
+        for (var z in (r.zaehl || {})) if (typeof r.zaehl[z] === "number") aus.runde.zaehl[z] = (aus.runde.zaehl[z] || 0) + r.zaehl[z];
+      });
+    }
     aus.eintraege = aus.eintraege.filter(function (b) {
       var f = String((b && b.fach) || "").toLowerCase();
       for (var g in aus.geschafft) if (f === g || f.indexOf(g + "-") === 0) return false;

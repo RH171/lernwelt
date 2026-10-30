@@ -258,9 +258,9 @@
       /* Allgemeine Runde (ohne fach=, Auftrag 182, 30.10.2026, nur Paul, nur die erste Runde der Seite): rechnet wie
          die Startseite. Geschaffte Faecher fallen heraus (auch Mathe- bzw. Lese-Wiederholung bei Mathe bzw. Deutsch),
          heute Beantwortetes kommt nicht noch einmal. Bleibt nichts, steht "Für heute geschafft" da. */
-      var ein = eintraege, schonHeute = 0;
+      var ein = eintraege, schonHeute = 0, hs = null;
       if (!gezeigt && KIND === "paul" && !rundeFach && !matheGespielt && !lesenGespielt && window.LWHeuteDran && LWHeuteDran.heuteStand) {
-        var hs = LWHeuteDran.heuteStand({ eintraege: eintraege, fundStand: fundStand, quizWackler: quizWackler,
+        hs = LWHeuteDran.heuteStand({ eintraege: eintraege, fundStand: fundStand, quizWackler: quizWackler,
           fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: heuteBeantwortet });
         if (hs.zahl) {
           ein = hs.eintraege; schonHeute = hs.zahl;
@@ -272,7 +272,7 @@
           if (hs.geschafft.deutsch) delete o.lesen;
         }
       }
-      heute = gezeigt || (window.LWTag ? LWTag.waehlen(ein, fundStand, o, quizWackler) : null);
+      heute = gezeigt || (hs && hs.zahl && hs.runde ? hs.runde : null) || (schonHeute ? null : (window.LWTag ? LWTag.waehlen(ein, fundStand, o, quizWackler) : null));
       if (!(heute && heute.karten.length) && schonHeute) heuteGeschafft = schonHeute;
     }
     var da = !!(heute && heute.karten.length);
