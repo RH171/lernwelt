@@ -163,6 +163,7 @@
     ".lwf-gross{position:fixed;inset:0;background:rgba(8,9,14,.9);z-index:9999;display:grid;",
     "  place-items:center;padding:14px}",
     ".lwf-gross img{max-width:100%;max-height:82vh;border-radius:12px;background:#fff}",
+    ".lwf-drehen{position:absolute;top:10px;left:10px;min-height:56px;padding:0 18px;border-radius:16px;border:0;font:inherit;font-weight:700;font-size:18px;background:#fff;color:#111;cursor:pointer}",
     ".lwf-zu{position:absolute;top:10px;right:10px;min-width:56px;min-height:56px;border-radius:16px;",
     "  border:none;background:rgba(255,255,255,.14);color:#fff;font-size:22px;cursor:pointer}",
 
@@ -354,6 +355,17 @@
       return (bid === opt.blattId && Array.isArray(opt.gruen)) ? opt.gruen : null;
     }
     function bildVon(k) { return bilder[blattVon(k)] || ""; }
+    /* Nach dem Knopf "Drehen": neues Bild für alle Karten dieses Blattes. Die Stelle auf dem
+       gedrehten Blatt kennt erst der Server - bis zum nächsten Laden zeigt die Karte das ganze
+       Blatt statt einer falschen Stelle (Auftrag 178). */
+    function gedreht(bid, neu) {
+      bilder[bid] = neu;
+      delete zeilenJe[bid];
+      karten.forEach(function (k) { if (blattVon(k) === bid && typeof k.von === "number") { k.von = 0; k.bis = 100; k.genau = false; } });
+      Array.prototype.forEach.call(document.querySelectorAll("img[data-lwf-blatt]"), function (im) {
+        if (im.getAttribute("data-lwf-blatt") === bid) im.src = neu;
+      });
+    }
     var i = 0, gefunden = 0;
     /* Gezaehlt wird der ERSTE Tipp je Karte - wer erst nach einem
        Danebentippen trifft, hat noch nachgeschaut. Dieselbe Regel wie
@@ -408,6 +420,12 @@
       zu.type = "button";
       zu.setAttribute("aria-label", "Schließen");
       lage.appendChild(zu);
+      /* Knopf "Drehen" (Auftrag 178, 30.10.2026) - nur wo /blatt-drehen.js geladen ist (Paul). */
+      if (global.LWDrehen && blattVon(k)) {
+        global.LWDrehen.knopf(lage, { kind: kind, klasse: "lwf-drehen",
+          wer: function () { return { id: blattVon(k), nr: 0, img: im }; },
+          fertig: function (neu, g, z) { gedreht(z.id, neu); } });
+      }
       function weg() { if (lage.parentNode) lage.parentNode.removeChild(lage); }
       zu.addEventListener("click", weg);
       lage.addEventListener("click", function (ev) { if (ev.target === lage) weg(); });
@@ -466,6 +484,7 @@
       }
       var im = el("img");
       im.alt = "Ausschnitt aus deinem Blatt";
+      im.setAttribute("data-lwf-blatt", bid);
       rahmen.appendChild(im);
 
       function setzen() {
@@ -491,8 +510,12 @@
            bleibt das Band so schmal, wie er es angegeben hat - dann ist es
            ein Ausschnitt und kein Bereich. Nur die Schaetzung aus dem
            ersten Aufruf wird aufgezogen. */
+        /* Quer liegendes Blatt bei Paul (Auftrag 178, 30.10.2026): Die Zeile geht über die
+           ganze Bildbreite. Kein Vergrößern (sonst ist sie seitlich abgeschnitten) und ein
+           großzügigeres Band - Denny: „der Ausschnitt ist so eng, dass der Text abgeschnitten ist“. */
+        var quer = kind === "paul" && nw > nh;
         var mitte = (k.von + k.bis) / 2;
-        var weit = k.genau ? (k.bis - k.von) : Math.max(k.bis - k.von, 17);
+        var weit = k.genau ? (k.bis - k.von) : Math.max(k.bis - k.von, quer ? 24 : 17);
         var von = Math.max(0, Math.min(100 - weit, mitte - weit / 2));
         // Auf ganze Textzeilen aufziehen, damit der Schnitt nicht mitten
         // durch einen Buchstaben laeuft.
@@ -502,7 +525,7 @@
         /* Ein schmales Band ueber die volle Breite ist winzig. Also so weit
          * vergroessern, dass es etwa 120 px hoch wird - hoechstens aber
          * 2,4-fach, sonst sieht man von der Zeile nur noch ein Stueck. */
-        var zoom = Math.max(1, Math.min(1.8, 170 / Math.max(band, 1)));
+        var zoom = quer ? 1 : Math.max(1, Math.min(1.8, 170 / Math.max(band, 1)));
         im.style.width = (breite * zoom) + "px";
         im.style.marginTop = (-hoch * zoom * von / 100) + "px";
         rahmen.style.height = Math.round(band * zoom) + "px";
@@ -521,7 +544,8 @@
         }
       }
       if (im.complete && im.naturalWidth) { im.src = blattBild; setzen(); }
-      else { im.addEventListener("load", setzen); im.src = blattBild; }
+      else { im.src = blattBild; }
+      im.addEventListener("load", setzen);
       window.addEventListener("resize", setzen);
 
       /* NICHT "So steht es in deinem Heft" - der Ausschnitt trifft die Zeile

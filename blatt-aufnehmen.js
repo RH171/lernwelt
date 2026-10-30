@@ -547,6 +547,8 @@
       var vorbereitet = (global.LWStrom && global.LWStrom.kleinerMachen)
         ? global.LWStrom.kleinerMachen(seiten.map(function (s) { return s.url; }))
         : Promise.resolve(seiten.map(function (s) { return s.url; }));
+      // Blatt aufrecht (Auftrag 178): nur wo /blatt-drehen.js geladen ist, also bei Paul.
+      if (global.LWDrehen) vorbereitet = vorbereitet.then(function (b) { return global.LWDrehen.aufrichten(kind, b); });
 
       var gesendetDatum = datum.value;
       vorbereitet.then(function (bilder) {

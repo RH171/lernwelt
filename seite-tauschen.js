@@ -82,6 +82,8 @@
         var url = String(leser.result);
         var klein = (global.LWStrom && global.LWStrom.kleinerMachen)
           ? global.LWStrom.kleinerMachen([url]) : Promise.resolve([url]);
+        // Blatt aufrecht (Auftrag 178): nur wo /blatt-drehen.js geladen ist, also bei Paul.
+        if (global.LWDrehen) klein = klein.then(function (b) { return global.LWDrehen.aufrichten(kind, b); });
         klein.then(function (b) {
           return fetch("/api/schulstoff?seite=1", {
             method: "POST", credentials: "same-origin",

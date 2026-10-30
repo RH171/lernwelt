@@ -26,8 +26,9 @@
 <script src="stundenplan.js?v=1b197a6e"></script>
 <script src="/nachlesen.js?v=20efd8d6"></script>
 <script src="/blatt-seiten.js?v=a370cd04"></script>
-<script src="/seite-tauschen.js?v=3d5c47be"></script>
-<script src="/blatt-aufnehmen.js?v=0183ce0c"></script>
+<script src="/seite-tauschen.js?v=0c465227"></script>
+<script src="/blatt-drehen.js?v=b923e3e7"></script>
+<script src="/blatt-aufnehmen.js?v=b6880968"></script>
 <script src="/lehrervergleich.js?v=ba21c47d"></script>
 <script src="/fehlerkreis.js?v=1da815e6"></script>
 <script src="/pruefreiter.js?v=942d549d"></script>
@@ -379,6 +380,12 @@
     },
     fertig: function(){ laden(); }
   }) : null;
+  /* Knopf "Drehen" am großen Bild (Auftrag 178, 30.10.2026, /blatt-drehen.js). */
+  if (window.LWDrehen) LWDrehen.knopf(document.querySelector("#schau .knoepfe"), {
+    kind: "paul", klasse: "fach",
+    wer: function(){ return offen ? {id: offen.id, nr: offenSeite, img: $("schau-bild")} : null; },
+    fertig: function(neu, g, z){ bilder[z.id + ":" + z.nr] = neu; laden(); }
+  });
   function aufmachen(id){
     offen = alles.filter(function(e){ return e.id === id; })[0];
     if (!offen) return;
