@@ -118,7 +118,7 @@
     (daten.eintraege || []).forEach(function (b) {
       if (!b || !b.id) return;
       var f = String(b.fach || "").toLowerCase();
-      if (f === fach || f.indexOf(fach + "-") === 0) imFach[b.id] = 1;
+      if (!fach || f === fach || f.indexOf(fach + "-") === 0) imFach[b.id] = 1;   // ohne fach: alle Faecher (Auftrag 182)
     });
     var heute = {};
     liste.forEach(function (s) {
@@ -170,6 +170,24 @@
       var x = { fach: f.k, name: f.n, ic: f.ic, runde: r, ids: ids(r), teile: teile(r), menge: fr.menge || menge(daten, f.k) };
       if (fr.erledigt) x.erledigt = fr.erledigt;
       aus.push(x);
+    });
+    return aus;
+  }
+
+  /* Allgemeine Runde im Lernquiz (quiz.html ohne fach=, Auftrag 182, 30.10.2026): dieselbe Rechnung wie die
+     Startseite. Faecher, die die Startseite "Fuer heute geschafft" nennt, fallen ganz heraus (geschafft je Fach);
+     aus den uebrigen kommt nichts, was Paul heute schon beantwortet hat (keys). Ohne heutige Antworten bleibt
+     alles wie vorher (zahl 0, eintraege unveraendert). */
+  function heuteStand(daten) {
+    var aus = { zahl: 0, keys: {}, geschafft: {}, eintraege: daten.eintraege || [] };
+    var alle = heuteErledigt(daten, "");
+    if (!alle.zahl) return aus;
+    aus.zahl = alle.zahl; aus.keys = alle.keys;
+    berechnen(daten).forEach(function (x) { if (x.erledigt) aus.geschafft[x.fach] = x.erledigt; });
+    aus.eintraege = aus.eintraege.filter(function (b) {
+      var f = String((b && b.fach) || "").toLowerCase();
+      for (var g in aus.geschafft) if (f === g || f.indexOf(g + "-") === 0) return false;
+      return true;
     });
     return aus;
   }
@@ -301,7 +319,7 @@
 
   global.LWHeuteDran = {
     FACH_RUNDE: FACH_RUNDE, FAECHER: FAECHER, SCHLUESSEL: SCHLUESSEL, GUELTIG_MS: GUELTIG_MS,
-    zufall: zufall, optionen: optionen, runde: runde, berechnen: berechnen, heuteErledigt: heuteErledigt, fachRunde: fachRunde, teile: teile, ids: ids, id: id,
+    zufall: zufall, optionen: optionen, runde: runde, berechnen: berechnen, heuteErledigt: heuteErledigt, fachRunde: fachRunde, heuteStand: heuteStand, teile: teile, ids: ids, id: id,
     hatMaterial: hatMaterial, speichern: speichern, uebernehmen: uebernehmen, holen: holen, zeigen: zeigen, start: start,
     heute: heute
   };

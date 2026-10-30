@@ -204,7 +204,10 @@
      sortiert nach wenig Treffern zuerst, tagesrunde.js). Danach freiwillig "Noch 10 Fragen".
      Keine Serie, kein Zwang. Nur Paul ruft das auf (Startseite, Deutsch-Probenstoff). Kapitel 131. */
   var FACH_RUNDE = { hoechstens: 10, unsicherHoechstens: 7, vorrangHoechstens: 7, ruhtUnsicher: true };   // 7 Unsichere + 3 Bekannte
-  var rundeFach = autostart ? ((/[?&]fach=([a-z-]{2,20})/.exec(location.search) || [])[1] || "") : "";
+  /* Bei Paul gilt ?fach=<f> auch ohne heute=1 als Fach-Runde (Auftrag 182, 30.10.2026): Der Knopf "Üben ›" einer
+     geschafften Karte auf der Startseite und "Im Heft wiederholen" fuehren auf ?fach=<f>. Vorher zeigte der Kasten
+     dort die allgemeine Runde ueber alle Faecher, waehrend die Startseite "Für heute geschafft" sagte. */
+  var rundeFach = (autostart || KIND === "paul") ? ((/[?&]fach=([a-z-]{2,20})/.exec(location.search) || [])[1] || "") : "";
   var schonDran = {}, mehrGleich = false, matheGespielt = false, lesenGespielt = false;
   /* Startseite "Heute dran" (Schritt 5, 30.10.2026, nur Paul, /paul/heute-dran.js): Nummer der Fach-Runde
      auf dieser Seite. Runde 0 ist die, die die Startseite gezeigt hat. */
@@ -252,7 +255,25 @@
         fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: heuteBeantwortet }, schonDran, rundeNr);
       heute = fr.runde; heuteGeschafft = fr.erledigt || 0;
     } else {
-      heute = gezeigt || (window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null);
+      /* Allgemeine Runde (ohne fach=, Auftrag 182, 30.10.2026, nur Paul, nur die erste Runde der Seite): rechnet wie
+         die Startseite. Geschaffte Faecher fallen heraus (auch Mathe- bzw. Lese-Wiederholung bei Mathe bzw. Deutsch),
+         heute Beantwortetes kommt nicht noch einmal. Bleibt nichts, steht "Für heute geschafft" da. */
+      var ein = eintraege, schonHeute = 0;
+      if (!gezeigt && KIND === "paul" && !rundeFach && !matheGespielt && !lesenGespielt && window.LWHeuteDran && LWHeuteDran.heuteStand) {
+        var hs = LWHeuteDran.heuteStand({ eintraege: eintraege, fundStand: fundStand, quizWackler: quizWackler,
+          fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: heuteBeantwortet });
+        if (hs.zahl) {
+          ein = hs.eintraege; schonHeute = hs.zahl;
+          var oh = {}, y;
+          for (y in (o.ohne || {})) oh[y] = 1;
+          for (y in hs.keys) oh[y] = 1;
+          o.ohne = oh;
+          if (hs.geschafft.mathe) delete o.mathe;
+          if (hs.geschafft.deutsch) delete o.lesen;
+        }
+      }
+      heute = gezeigt || (window.LWTag ? LWTag.waehlen(ein, fundStand, o, quizWackler) : null);
+      if (!(heute && heute.karten.length) && schonHeute) heuteGeschafft = schonHeute;
     }
     var da = !!(heute && heute.karten.length);
     $("heute-los").classList.toggle("verborgen", !da);
@@ -260,7 +281,7 @@
       $("heute-wahl").classList.remove("verborgen");
       $("heute-wahl").setAttribute("data-geschafft", String(heuteGeschafft));
       var hg = $("heute-wahl").querySelector("h2");
-      if (hg) hg.textContent = "✅ " + fachWort(rundeFach) + " für heute geschafft";
+      if (hg) hg.textContent = rundeFach ? "✅ " + fachWort(rundeFach) + " für heute geschafft" : "✅ Für heute geschafft";
       $("heute-unter").textContent = "Du kannst trotzdem üben, wenn du magst – unten bei „Was möchtest du üben?“.";
       return;
     }
