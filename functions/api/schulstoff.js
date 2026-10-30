@@ -426,6 +426,16 @@ async function blattNachlesen(context) {
   const heute = heuteBerlin();
   const a = await blattAuswerten(env, kind, x, seiten, heute);
 
+  /* Paul (30.10.2026, Auftrag 178): Kam keine einzige Seite vom Modell zurueck
+     (Aussetzer, 503), stand vorher trotzdem ok:true da - die Seite sagte "Ist in
+     deiner Ablage." und fragte "Auf dem Blatt steht kein Datum", obwohl niemand
+     das Blatt gelesen hatte. Jetzt ehrlich: ok:false, die Seite sagt "Durchlesen
+     hat gerade nicht geklappt, das hole ich nach", und nachlesen.js holt es nach
+     (der Inhalt bleibt leer, der Kostenriegel greift also nicht). */
+  if (kind === "paul" && a.nichtsGelesen) {
+    return json(200, { ok: false, id, nichtGelesen: true, fehler: "Durchlesen hat gerade nicht geklappt." });
+  }
+
   /* Die Zwillingspruefung braucht den Titel und lief deshalb beim Ablegen
      nur ueber den Fingerabdruck. Jetzt, mit Titel, kann sie auch zwei
      getrennte Fotos desselben Blattes finden - warnen, nicht sperren. */
@@ -482,6 +492,7 @@ async function vorhandeneThemen(env, kind, fach, mitVokabeln) {
 async function blattAuswerten(env, kind, eintrag, seiten, heute) {
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
   let karten = [], kartenWarum = "", genauer = 0, fachFrage = null, datumFehlt = false;
+  let nichtsGelesen = false; // keine einzige Seite kam vom Modell zurueck (30.10.2026)
   const herkunft = DATUM_HERKUNFT_KINDER.includes(kind);
   if (env.ANTHROPIC_API_KEY) {
     try {
@@ -524,6 +535,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       const alle = await Promise.all(
         seiten.map((s) => blattLesen(env, s, kind, themen).catch(() => null))
       );
+      nichtsGelesen = alle.every((x) => !x);
       const gelesen = alle[0] || { titel: "", datum: "", inhalt: [], karten: [] };
       /* Zeilen der Folgeseiten anhaengen, doppelte weglassen: Ein Merkkasten,
          den das Kind auf zwei Seiten fotografiert hat, soll nicht zweimal
@@ -631,7 +643,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       catch (e2) {}
     }
   }
-  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage, datumFehlt };
+  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage, datumFehlt, nichtsGelesen };
 }
 /* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
  * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der

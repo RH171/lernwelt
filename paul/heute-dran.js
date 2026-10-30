@@ -106,13 +106,70 @@
     return Number(m) || (s4.k.tagesmenge && s4.k.tagesmenge[0]) || null;
   }
 
+  /* Heute schon erledigt (30.10.2026, Auftrag 178): Lernpunkte, die Paul heute beantwortet hat
+     (daten.heuteBeantwortet vom Server, Berliner Tag), soweit sie zu Blaettern dieses Fachs gehoeren.
+     keys sind die ohne-Schluessel der Runde ("<blatt>#k:<antwort>", "q:<frageId>"), zahl die Anzahl
+     der heutigen Lernpunkte im Fach. Ohne Liste (alter Server) bleibt alles wie vorher. */
+  function heuteErledigt(daten, fach) {
+    var aus = { keys: {}, zahl: 0 };
+    var liste = daten && daten.heuteBeantwortet;
+    if (!Array.isArray(liste) || !liste.length) return aus;
+    var imFach = {};
+    (daten.eintraege || []).forEach(function (b) {
+      if (!b || !b.id) return;
+      var f = String(b.fach || "").toLowerCase();
+      if (f === fach || f.indexOf(fach + "-") === 0) imFach[b.id] = 1;
+    });
+    var heute = {};
+    liste.forEach(function (s) {
+      s = String(s || "");
+      var i = s.indexOf("#");
+      if (i <= 0 || !imFach[s.slice(0, i)] || heute[s]) return;
+      heute[s] = 1; aus.zahl++;
+      if (s.indexOf("#k:", i) === i) aus.keys[s] = 1;
+    });
+    /* Quizfragen: Lernpunkt "<blatt>#<nr>" oder "<blatt>#f:<id>", in der Runde "q:<frageId>". */
+    (daten.quizWackler || []).forEach(function (q) {
+      if (!q || q.frageId == null) return;
+      var p = Number(q.belegNr) >= 1 ? q.blatt + "#" + Math.floor(Number(q.belegNr))
+                                     : q.blatt + "#f:" + String(q.frageId || "").slice(0, 24);
+      if (heute[p]) aus.keys["q:" + q.frageId] = 1;
+    });
+    return aus;
+  }
+
+  /* Runde fuer ein Fach mit dem, was heute schon erledigt ist: Heutiges kommt nicht noch einmal,
+     und es zaehlt gegen die Tagesmenge. Ist die Menge erreicht (oder bleibt nach dem Abzug keine
+     Runde), ist das Fach fuer heute geschafft - keine neue volle Runde. */
+  function fachRunde(fach, daten, ohne, nr) {
+    var m = menge(daten, fach), h = heuteErledigt(daten, fach);
+    if (!h.zahl || !m || !daten.schritt4) return { runde: runde(fach, daten, ohne || {}, nr), erledigt: 0, menge: m };
+    if (h.zahl >= m) return { runde: null, erledigt: h.zahl, menge: m };
+    var o = {}, x;
+    for (x in (ohne || {})) o[x] = ohne[x];
+    for (x in h.keys) o[x] = 1;
+    var s4 = {};
+    for (x in daten.schritt4) s4[x] = daten.schritt4[x];
+    s4.menge = {};
+    for (x in (daten.schritt4.menge || {})) s4.menge[x] = daten.schritt4.menge[x];
+    s4.menge[fach] = m - h.zahl;   // nie 0: runde4 faellt bei 0 auf die volle Tagesmenge zurueck
+    var d = {};
+    for (x in daten) d[x] = daten[x];
+    d.schritt4 = s4;
+    var r = runde(fach, d, o, nr);
+    if (!r || !r.karten || !r.karten.length) return { runde: null, erledigt: h.zahl, menge: m };
+    return { runde: r, erledigt: 0, rest: m - h.zahl, menge: m };
+  }
+
   /* Alles fuer die Startseite: je Fach mit Material die Runde. */
   function berechnen(daten) {
     var aus = [];
     FAECHER.forEach(function (f) {
       if (!hatMaterial(daten.eintraege, f.k)) return;
-      var r = runde(f.k, daten, {}, 0);
-      aus.push({ fach: f.k, name: f.n, ic: f.ic, runde: r, ids: ids(r), teile: teile(r), menge: menge(daten, f.k) });
+      var fr = fachRunde(f.k, daten, {}, 0), r = fr.runde;
+      var x = { fach: f.k, name: f.n, ic: f.ic, runde: r, ids: ids(r), teile: teile(r), menge: fr.menge || menge(daten, f.k) };
+      if (fr.erledigt) x.erledigt = fr.erledigt;
+      aus.push(x);
     });
     return aus;
   }
@@ -145,6 +202,7 @@
       .then(function (j) {
         d.fundStand = (j && j.fundStand) || {}; d.quizWackler = (j && j.quizWackler) || [];
         d.fundFormen = (j && j.fundFormen) || {}; d.schritt4 = (j && j.schritt4) || null;
+        d.heuteBeantwortet = (j && Array.isArray(j.heuteBeantwortet)) ? j.heuteBeantwortet : [];
         if (!j || !j.ok) ok = false;
       })
       .catch(function () { ok = false; })
@@ -172,6 +230,17 @@
     kopf.appendChild(el("span", "hd-ic", x.ic));
     kopf.appendChild(el("span", "hd-name", x.name));
     a.appendChild(kopf);
+    if (!n && x.erledigt) {
+      /* Heute schon geschafft (30.10.2026): keine neue Runde, freies Ueben bleibt. */
+      a.href = "quiz.html?fach=" + encodeURIComponent(x.fach);
+      a.classList.add("leer", "erledigt");
+      a.setAttribute("data-erledigt", String(x.erledigt));
+      a.appendChild(el("div", "hd-zahl klein", "Für heute geschafft ✅"));
+      a.appendChild(el("div", "hd-satz", "Du kannst trotzdem üben, wenn du magst."));
+      a.appendChild(el("span", "hd-los", "Üben ›"));
+      a.setAttribute("aria-label", x.name + ": für heute geschafft");
+      return a;
+    }
     if (!n) {
       /* Material da, aber heute keine Runde (zu wenig faellig): ehrlich sagen, freies Ueben bleibt. */
       a.href = "quiz.html?fach=" + encodeURIComponent(x.fach);
@@ -232,7 +301,7 @@
 
   global.LWHeuteDran = {
     FACH_RUNDE: FACH_RUNDE, FAECHER: FAECHER, SCHLUESSEL: SCHLUESSEL, GUELTIG_MS: GUELTIG_MS,
-    zufall: zufall, optionen: optionen, runde: runde, berechnen: berechnen, teile: teile, ids: ids, id: id,
+    zufall: zufall, optionen: optionen, runde: runde, berechnen: berechnen, heuteErledigt: heuteErledigt, fachRunde: fachRunde, teile: teile, ids: ids, id: id,
     hatMaterial: hatMaterial, speichern: speichern, uebernehmen: uebernehmen, holen: holen, zeigen: zeigen, start: start,
     heute: heute
   };

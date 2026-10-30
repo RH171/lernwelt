@@ -922,7 +922,7 @@
       } catch (e) {}
     })();</script>
     <script src="/tagesrunde.js?v=4cfd2f17"></script>
-    <script src="/paul/heute-dran.js?v=4d202b43"></script>
+    <script src="/paul/heute-dran.js?v=60fd7684"></script>
     <script>(function(){try{ LWHeuteDran.start(document.getElementById("heuteDranFaecher")); }catch(e){}})();</script>
 
     <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
@@ -1353,7 +1353,9 @@
   // taeglichen Schreibvorgaenge kosten.
   const abmeldenBtn = document.getElementById("abmeldenBtn");
   abmeldenBtn.addEventListener("click", function(){
-    if(!confirm("Abschliessen? Dann musst du deinen Code wieder eingeben.")) return;
+    /* Ohne Rueckfrage (30.10.2026, Auftrag 178 Punkt 5): Der Knopf heisst schon
+       "Abschliessen", und Abschliessen nimmt nur das Cookie dieses Geraets weg -
+       keine Daten. Schlimmstenfalls tippt Paul seinen Code noch einmal. */
     abmeldenBtn.disabled = true;
     fetch("/api/abmelden", {method:"POST", credentials:"same-origin"})
       .then(function(){ location.reload(); })
