@@ -119,6 +119,12 @@ const ANTWORTEN_MAX_PAUL = 200;   // Schritt 4 (29.10.2026): Pauls Runden gehen 
    vorher 40). Die Seite zeigt "Alle Fragen (N)" - das muss dann auch kommen. */
 const ALLE_HOECHSTENS = 100;
 
+/* Lernpunkte mit Antwort am heutigen Berliner Tag (nur Paul, "Heute dran", 30.10.2026). */
+function heuteBeantwortet(pk, jetzt) {
+  const heute = berlinTagNr(jetzt);
+  return Object.keys(pk || {}).filter((s) => pk[s] && pk[s].z && berlinTagNr(Number(pk[s].z)) === heute);
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   if (!env.PAUL_KV) return json(500, { ok: false, fehler: "Der Speicher ist nicht eingerichtet." });
@@ -207,6 +213,10 @@ export async function onRequestGet(context) {
                        quizWackler: quizWacklerListe(proTatsache, pk, Date.now(), 0, null,
                          kind === "paul" ? v.fragen.concat(karteAlsQuizForm(v.fragen, bn), opusAlsQuizForm(v.fragen, OPUS_FORMEN)) : null),
                        ...(kind === "paul" ? { fundFormen: fundFormenFuer(v.fragen, bn, pk, OPUS_FORMEN) } : {}),
+                       /* "Heute dran" (30.10.2026, Auftrag 178, nur Paul): Lernpunkte, die Paul HEUTE (Berliner Tag)
+                          beantwortet hat. Die Startseite und die Fach-Runde ziehen sie von der Tagesmenge des Fachs ab
+                          und nehmen sie nicht noch einmal - sonst stand nach einer fertigen Runde sofort eine neue da. */
+                       ...(kind === "paul" ? { heuteBeantwortet: heuteBeantwortet(pk, Date.now()) } : {}),
                        /* Schritt 4 (29.10.2026, nur Paul): Grenze alt/neu, nahe Proben, Pause und
                           Tagesmenge je Fach, dazu die Konstanten - die Tagesrunde rechnet damit. */
                        ...(kind === "paul" && SCHRITT4.an ? { schritt4: await schritt4Lage(env, kind, pk, bn, Date.now(),
