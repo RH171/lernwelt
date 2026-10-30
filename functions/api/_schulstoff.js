@@ -630,6 +630,74 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
   return { ok: false, fehler: "Das finde ich nicht mehr." };
 }
 
+/* Blatt aufrecht drehen (Auftrag 178, 30.10.2026). Denny: „Pauls Seite bekommt einen kleinen
+   Knopf "Drehen" am Bild, falls die Erkennung einmal danebenliegt.“
+   grad = Drehung im Uhrzeigersinn (90/180/270), das Bild kommt schon gedreht aus dem Browser.
+   Ein Rechteck {x,y,b,h} in Prozent dreht mit; dieselbe Formel steht in werkzeuge/blatt-drehen.py. */
+export function ortDrehen(o, grad) {
+  if (!o || typeof o !== "object" || o.nicht) return o;
+  const x = Number(o.x) || 0, y = Number(o.y) || 0, b = Number(o.b) || 0, h = Number(o.h) || 0;
+  const r = (v) => Math.round(v * 10) / 10;
+  if (grad === 90) return { ...o, x: r(100 - y - h), y: r(x), b: h, h: b };
+  if (grad === 180) return { ...o, x: r(100 - x - b), y: r(100 - y - h) };
+  if (grad === 270) return { ...o, x: r(y), y: r(100 - x - b), b: h, h: b };
+  return o;
+}
+
+/* Bild ersetzen und alles, was auf dem Bild verortet ist, mitnehmen - Inhalt, Karten, Lernpunkte
+   bleiben (anders als seiteSetzen, das neu lesen lässt). orteNeu = {stichwort: [von, bis]} für
+   Seite 0 bei 90/270 Grad; ohne Treffer zeigt die Karte das ganze Blatt statt einer falschen Stelle. */
+export async function seiteDrehen(env, kind, id, nr, bild, grad, orteNeu) {
+  if (!kindOk(kind)) return { ok: false, fehler: "Unbekanntes Kind." };
+  if (!env || !env.PAUL_KV) return { ok: false, fehler: "Der Speicher ist gerade nicht da." };
+  if (!/^[a-z0-9]{6,20}$/.test(String(id || ""))) return { ok: false, fehler: "Welches Blatt denn?" };
+  const n = Number(nr);
+  if (!Number.isInteger(n) || n < 0) return { ok: false, fehler: "Welche Seite denn?" };
+  if (![90, 180, 270].includes(grad)) return { ok: false, fehler: "So kann ich nicht drehen." };
+  const heute = heuteBerlin();
+  for (let i = 0; i < MONATE_ZURUECK; i++) {
+    const d = new Date(heute + "T12:00:00Z");
+    d.setUTCMonth(d.getUTCMonth() - i);
+    const schluessel = LISTE(kind, d.toISOString().slice(0, 7));
+    let roh;
+    try { roh = await env.PAUL_KV.get(schluessel); }
+    catch (e) { return { ok: false, fehler: "Ich komme gerade nicht an dein Heft. Bitte später nochmal." }; }
+    const liste = listeLesen(roh);
+    if (liste === KAPUTT) return { ok: false, fehler: "Dein Heft ist gerade nicht lesbar." };
+    const e = liste.find((x) => x.id === id);
+    if (!e) continue;
+    if (n >= Math.max(1, Number(e.seiten) || 1)) return { ok: false, fehler: "Diese Seite gibt es nicht." };
+    try {
+      const alt = await env.PAUL_KV.get(BILD(id, n));
+      if (alt) await env.PAUL_KV.put("stoffbild-alt:" + id + ":" + n + ":" + Date.now(), alt);
+      await env.PAUL_KV.put(BILD(id, n), bild);
+    } catch (err) {
+      return { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." };
+    }
+    const g = { ...(e.gedreht && typeof e.gedreht === "object" ? e.gedreht : {}) };
+    g[String(n)] = ((Number(g[String(n)]) || 0) + grad) % 360;
+    e.gedreht = g;
+    for (const k of Array.isArray(e.korrekturen) ? e.korrekturen : []) {
+      if (k && Array.isArray(k.ort)) k.ort = k.ort.map((o) => ((Number(o && o.s) || 0) === n ? ortDrehen(o, grad) : o));
+    }
+    if (n === 0) {
+      for (const feld of ["karten", "kartenAlt"]) {
+        for (const k of Array.isArray(e[feld]) ? e[feld] : []) {
+          if (!k || typeof k.von !== "number" || typeof k.bis !== "number") continue;
+          if (grad === 180) { const v = k.von; k.von = 100 - k.bis; k.bis = 100 - v; continue; }
+          const vb = orteNeu && orteNeu[k.stichwort];
+          if (vb) { k.von = vb[0]; k.bis = vb[1]; } else { k.von = 0; k.bis = 100; }
+          delete k.genau;
+        }
+      }
+    }
+    try { await env.PAUL_KV.put(schluessel, JSON.stringify(liste)); }
+    catch (err) { return { ok: false, fehler: "Das Bild liegt gedreht, aber das Heft hat es noch nicht vermerkt. Bitte nochmal." }; }
+    return { ok: true, id, nr: n, gedreht: g[String(n)] };
+  }
+  return { ok: false, fehler: "Das finde ich nicht mehr." };
+}
+
 /* Den Titel nachtragen, den das Modell vom Bild gelesen hat.
  *
  * Laeuft NACH der Antwort (waitUntil), damit das Ablegen bei 1,4 Sekunden

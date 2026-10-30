@@ -750,5 +750,5 @@
     pruefen();
   }
 
-  global.LWZurueck = { einbauen: einbauen };
+  global.LWZurueck = { einbauen: einbauen, pdfZuBildern: pdfZuBildern };
 })(window);

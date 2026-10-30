@@ -27,6 +27,7 @@ import { korrekturenFuerBrowser } from "./_korrektur.js";
 import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
 import { volllesen, brauchtVolllesen, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
+import { kreiseLesen, kreiseSchreiben } from "./_fehlerkreis.js";
 
 /* Nachrechnen beim Durchlesen (14.10.2026): läuft NEBEN dem Lesen, gewartet wird
    höchstens bis NACHRECHNEN_GRENZE nach dem Start - sonst holt es die Seite nach
@@ -39,7 +40,7 @@ import {
   inhaltSetzen,
   HAND, KARTEN_MAX,
   fingerabdruck, schonDa, datumPruefen, tageDavor, BLATT_OHNE_FRAGE_TAGE, vorschlagSetzen, fachSetzen, fachAusText, fachPruefen,
-  faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen, lesungenZusammen,
+  faecherImHeft, blaetterImFach, schuljahrStart, seiteSetzen, lesungenZusammen, seiteDrehen, ortDrehen,
   DATUM_HERKUNFT_KINDER, blattDatumStimmig, herkunftSetzen,
 } from "./_schulstoff.js";
 
@@ -97,6 +98,13 @@ export async function onRequestPost(context) {
        darf es selbst, es ist sein Blatt. Danach liest ?lesen=1 neu. */
     if (such.get("seite") === "1") {
       return await seiteTauschen(context);
+    }
+    /* Blatt aufrecht (Auftrag 178, 30.10.2026): erkennen vor dem Hochladen, drehen per Knopf. */
+    if (such.get("drehung") === "1") {
+      return await drehungErkennen(context);
+    }
+    if (such.get("drehen") === "1") {
+      return await seiteGedreht(context);
     }
   } catch (e) {}
 
@@ -253,6 +261,115 @@ async function seiteTauschen(context) {
   return json(200, r);
 }
 
+/* Wie liegt das Blatt? (Auftrag 178, 30.10.2026)
+ *
+ *   POST /api/schulstoff?drehung=1   {kind, bild}   bild = kleine Fassung (etwa 640 px)
+ *   -> {ok, grad}   grad = Drehung im Uhrzeigersinn, damit die Schrift aufrecht steht
+ *
+ * Denny: „Beim Aufnehmen eines Blatts: Schriftrichtung erkennen, drehen und aufrecht speichern.“
+ * ⚠️ Gefragt wird nach der LAUFRICHTUNG der Zeilen, nicht danach, "wo oben ist": Auf die Frage
+ * nach dem Kopf der Schrift sagte Sonnet beim quer fotografierten HSU-Blatt "oben" (gemessen
+ * 30.10.2026) - Modelle lesen gedrehte Schrift, als stünde sie aufrecht. Die Antwort wurde am
+ * Bestand gegen Apples Texterkennung geprüft (befunde/2026-10-30-drehen-pruefprotokoll.md).
+ * Fehler, Zeitüberschreitung, unklare Antwort: grad 0 - dann bleibt das Foto, wie es ist, und
+ * Paul hat den Knopf "Drehen". */
+const DREH_MODELL = "claude-opus-5-5";   // wie TITEL_MODELL (Sonnet lag beim Prüfanker falsch)
+const DREH_GRENZE = 15000;
+export const DREH_AUFTRAG =
+  "Beschreibe nur die Geometrie dieses Fotos. In welche Richtung laufen die gedruckten Textzeilen " +
+  "im Bild, so wie die Pixel liegen (nicht so, wie man das Blatt halten würde)? " +
+  "Antworte mit genau einem Wort: waagrecht (von links nach rechts, normal lesbar), " +
+  "hochlaufend (senkrecht, von unten nach oben), runterlaufend (senkrecht, von oben nach unten) " +
+  "oder kopf (waagrecht, aber auf dem Kopf). Ist keine Schrift zu sehen: unklar.";
+export function drehungAusAntwort(t) {
+  const w = String(t || "").toLowerCase();
+  if (/runterlaufend/.test(w)) return 270;
+  if (/hochlaufend/.test(w)) return 90;
+  if (/\bkopf\b/.test(w)) return 180;
+  return 0;
+}
+async function drehungErkennen(context) {
+  const { request, env } = context;
+  let d;
+  try { d = await request.json(); } catch (e) { return json(400, { ok: false, fehler: "Die Anfrage war kein gültiges JSON." }); }
+  const kind = String(d.kind || "").toLowerCase();
+  if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+  if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+  const bild = String(d.bild || "");
+  const komma = bild.indexOf(",");
+  const typ = bild.slice(5, bild.indexOf(";"));
+  if (!bild.startsWith("data:image/") || komma < 0) return json(400, { ok: false, fehler: "Da war kein Bild dabei." });
+  if (bild.length > 400000) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
+  if (!env.ANTHROPIC_API_KEY) return json(200, { ok: true, grad: 0, warum: "kein Schlüssel" });
+  const abbruch = new AbortController();
+  const uhr = setTimeout(() => abbruch.abort(), DREH_GRENZE);
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", signal: abbruch.signal,
+      headers: { "content-type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: DREH_MODELL, max_tokens: 1024,  // 400 reichte am 30.10.2026 in 1 von 16 Fällen nicht (Denken frisst mit)
+        messages: [{ role: "user", content: [
+          { type: "image", source: { type: "base64", media_type: typ, data: bild.slice(komma + 1) } },
+          { type: "text", text: DREH_AUFTRAG },
+        ] }],
+      }),
+    });
+    if (!r.ok) return json(200, { ok: true, grad: 0, warum: "Modell " + r.status });
+    const j = await r.json();
+    const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join(" ");
+    return json(200, { ok: true, grad: drehungAusAntwort(text) });
+  } catch (e) {
+    return json(200, { ok: true, grad: 0, warum: "Zeit" });
+  } finally { clearTimeout(uhr); }
+}
+
+/* Der Knopf "Drehen" (Auftrag 178): das Bild kommt schon gedreht.
+ *
+ *   POST /api/schulstoff?drehen=1   {kind, id, nr, grad, bild}
+ *
+ * Inhalt, Karten und Lernpunkte bleiben. Was auf dem Bild verortet ist, dreht mit: grüne
+ * Korrektur-Orte und Fehlerkreise rechnerisch; die Ausschnitte der Karten bei 180 Grad
+ * rechnerisch, bei 90/270 Grad neu verortet (positionenHolen, ein Sonnet-Aufruf). */
+async function seiteGedreht(context) {
+  const { request, env } = context;
+  let d;
+  try { d = await request.json(); } catch (e) { return json(400, { ok: false, fehler: "Die Anfrage war kein gültiges JSON." }); }
+  const kind = String(d.kind || "").toLowerCase();
+  if (!kindOk(kind)) return json(400, { ok: false, fehler: "Unbekanntes Kind." });
+  if (!(await darfRein(request, env, kind))) return json(401, { ok: false, fehler: "Bitte melde dich an." });
+  const bild = d.bild;
+  if (typeof bild !== "string" || !bild.startsWith("data:image/")) return json(400, { ok: false, fehler: "Da war kein Bild dabei." });
+  if (bild.length > MAX_BILD * 1.37) return json(400, { ok: false, fehler: "Das Bild ist zu groß." });
+  const grad = ((Math.round(Number(d.grad) / 90) * 90) % 360 + 360) % 360;
+  if (!grad) return json(200, { ok: true, gedreht: 0 });
+  const id = String(d.id || "").trim(), nr = Number(d.nr) || 0;
+  let orteNeu = null;
+  if (nr === 0 && grad !== 180 && env.ANTHROPIC_API_KEY) {
+    const b = await stoffLesen(env, kind, MONATE_DREHEN);
+    const x = b.ok ? b.eintraege.find((y) => y.id === id) : null;
+    const stich = x ? [...(x.karten || []), ...(x.kartenAlt || [])].map((k) => k && k.stichwort).filter(Boolean) : [];
+    if (stich.length) { try { orteNeu = await positionenHolen(env, bild, [...new Set(stich)]); } catch (e) { orteNeu = null; } }
+  }
+  const r = await seiteDrehen(env, kind, id, nr, bild, grad, orteNeu);
+  if (!r.ok) return json(r.fehler === "Das finde ich nicht mehr." ? 404 : 400, r);
+  /* Fehlerkreise liegen in einem eigenen Schlüssel (fehlerkreis:<kind>). */
+  try {
+    const kr = await kreiseLesen(env, kind);
+    const jb = kr && kr.b && kr.b[id];
+    if (jb) {
+      let n = 0;
+      for (const z of Object.keys(jb)) {
+        const o = jb[z];
+        if (o && !o.nicht && (Number(o.s) || 0) === nr) { jb[z] = ortDrehen(o, grad); n++; }
+      }
+      if (n) await kreiseSchreiben(env, kind, kr);
+    }
+  } catch (e) {}
+  return json(200, r);
+}
+const MONATE_DREHEN = 14;
+
 /* Schritt 2 des zweistufigen Ablegens: das schon abgelegte Blatt lesen.
  *
  *   POST /api/schulstoff?lesen=1   {kind, id}
@@ -308,6 +425,16 @@ async function blattNachlesen(context) {
 
   const heute = heuteBerlin();
   const a = await blattAuswerten(env, kind, x, seiten, heute);
+
+  /* Paul (30.10.2026, Auftrag 178): Kam keine einzige Seite vom Modell zurueck
+     (Aussetzer, 503), stand vorher trotzdem ok:true da - die Seite sagte "Ist in
+     deiner Ablage." und fragte "Auf dem Blatt steht kein Datum", obwohl niemand
+     das Blatt gelesen hatte. Jetzt ehrlich: ok:false, die Seite sagt "Durchlesen
+     hat gerade nicht geklappt, das hole ich nach", und nachlesen.js holt es nach
+     (der Inhalt bleibt leer, der Kostenriegel greift also nicht). */
+  if (kind === "paul" && a.nichtsGelesen) {
+    return json(200, { ok: false, id, nichtGelesen: true, fehler: "Durchlesen hat gerade nicht geklappt." });
+  }
 
   /* Die Zwillingspruefung braucht den Titel und lief deshalb beim Ablegen
      nur ueber den Fingerabdruck. Jetzt, mit Titel, kann sie auch zwei
@@ -365,6 +492,7 @@ async function vorhandeneThemen(env, kind, fach, mitVokabeln) {
 async function blattAuswerten(env, kind, eintrag, seiten, heute) {
   let titel = "", vomBlattGelesen = "", weichtAb = false, nachgefragt = null;
   let karten = [], kartenWarum = "", genauer = 0, fachFrage = null, datumFehlt = false;
+  let nichtsGelesen = false; // keine einzige Seite kam vom Modell zurueck (30.10.2026)
   const herkunft = DATUM_HERKUNFT_KINDER.includes(kind);
   if (env.ANTHROPIC_API_KEY) {
     try {
@@ -407,6 +535,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       const alle = await Promise.all(
         seiten.map((s) => blattLesen(env, s, kind, themen).catch(() => null))
       );
+      nichtsGelesen = alle.every((x) => !x);
       const gelesen = alle[0] || { titel: "", datum: "", inhalt: [], karten: [] };
       /* Zeilen der Folgeseiten anhaengen, doppelte weglassen: Ein Merkkasten,
          den das Kind auf zwei Seiten fotografiert hat, soll nicht zweimal
@@ -514,7 +643,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       catch (e2) {}
     }
   }
-  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage, datumFehlt };
+  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage, datumFehlt, nichtsGelesen };
 }
 /* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
  * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der

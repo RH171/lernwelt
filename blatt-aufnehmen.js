@@ -125,6 +125,7 @@
        Blatt gilt zuerst. Traegt das Blatt keins, fragt die Seite nach dem Lesen. So geht der
        Hochladetag nie als Blattdatum durch. Leon und Helena bleiben wie bisher. */
     var herkunft = kind === "paul";
+    var unterwegs = 0; // Seiten, die gerade noch geladen werden (nur Paul)
     var faecher = opt.faecher || FAECHER;
     stilEinmal();
 
@@ -303,15 +304,44 @@
          der Server deckelt seit demselben Tag ebenfalls bei 2 (MAX_SEITEN). */
       /* Seit 28.09.2026 bis zu 4 Seiten: Lesetext und zwei Arbeitsblaetter
          sind EINE Aufgabe (Denny, per Klickfrage). */
-      if (seiten.length >= 4) {
+      /* Paul (30.10.2026, Auftrag 178): Der FileReader arbeitet asynchron - die
+         Pruefung oben sah bei sechs Bildern auf einmal sechsmal "0 Seiten" und
+         nahm alle an; der Server legte still nur 4 ab, und die Fotos waren weg.
+         Darum zaehlen die noch ladenden Seiten mit (unterwegs). */
+      if (seiten.length + (herkunft ? unterwegs : 0) >= 4) {
         melde("Höchstens 4 Seiten, die zu einer Aufgabe gehören. Das nächste Blatt legst du gleich danach in die Ablage.", "fehler");
         return;
       }
+      /* Ein PDF liest das Modell nicht (blattLesen nimmt nur Bilder): kein
+         Inhalt, keine Karten, kaputte Vorschau. Bei Paul wird es hier in
+         Seitenbilder umgewandelt - derselbe Weg wie beim Zurueckbekommen
+         (zurueck.js, Kapitel 146), hoechstens so viele, wie noch Platz ist. */
+      if (herkunft && /pdf/i.test(datei.type || datei.name || "") && global.LWZurueck && global.LWZurueck.pdfZuBildern) {
+        var platz = 4 - seiten.length - unterwegs;
+        unterwegs += platz;
+        melde("Ich mache aus deinem PDF Seiten …", "");
+        global.LWZurueck.pdfZuBildern(datei, platz).then(function (e) {
+          unterwegs -= platz;
+          e.bilder.forEach(function (b, i) { seiten.push({ url: b, name: (datei.name || "PDF") + " – Seite " + (i + 1) }); });
+          melde(e.gesamt > e.bilder.length
+            ? "Von deinem PDF passen " + e.bilder.length + " von " + e.gesamt + " Seiten hinein. Höchstens 4 Seiten gehören zu einer Aufgabe."
+            : "", e.gesamt > e.bilder.length ? "fehler" : "");
+          malen(); knopf();
+        }, function () {
+          unterwegs -= platz;
+          melde("Das PDF kann ich gerade nicht öffnen. Mach lieber ein Foto davon.", "fehler");
+          knopf();
+        });
+        return;
+      }
+      if (herkunft) unterwegs++;
       var leser = new FileReader();
       leser.onload = function () {
+        if (herkunft) unterwegs--;
         seiten.push({ url: String(leser.result), name: datei.name || "" });
         malen(); knopf();
       };
+      leser.onerror = function () { if (herkunft) unterwegs--; };
       leser.readAsDataURL(datei);
     }
 
@@ -541,12 +571,19 @@
       var l = $(".lwb-los");
       l.disabled = true; l.textContent = "Ich lege es ab …";
       melde("", "");
+      /* Paul (30.10.2026): Rueckfragen zum VORIGEN Blatt standen sonst unter dem
+         neuen weiter da - eine Antwort darauf ging an das alte Blatt. */
+      if (herkunft) ["lwb-datumfrage", "lwb-datumfehlt", "lwb-fachfrage"].forEach(function (k) {
+        var x = $("." + k); if (x) x.className = "melden verborgen " + k;
+      });
 
       // Verkleinern über dieselbe Stelle wie beim Spielbau: 1,4 MB über ein
       // Handynetz sind am 22.09.2026 abgerissen.
       var vorbereitet = (global.LWStrom && global.LWStrom.kleinerMachen)
         ? global.LWStrom.kleinerMachen(seiten.map(function (s) { return s.url; }))
         : Promise.resolve(seiten.map(function (s) { return s.url; }));
+      // Blatt aufrecht (Auftrag 178): nur wo /blatt-drehen.js geladen ist, also bei Paul.
+      if (global.LWDrehen) vorbereitet = vorbereitet.then(function (b) { return global.LWDrehen.aufrichten(kind, b); });
 
       var gesendetDatum = datum.value;
       vorbereitet.then(function (bilder) {
@@ -592,7 +629,8 @@
         /* Schritt 2. Er darf scheitern, ohne dass etwas verloren geht -
            das Blatt ist abgelegt, und ?nachtragen=1 holt den Inhalt
            spaeter nach. Deshalb kein "Fehler", nur ein ehrlicher Satz. */
-        melde("✅ Ist in deiner Ablage. Ich lese es gerade durch …", "gut");
+        melde("✅ Ist in deiner Ablage" + (herkunft && a.j.seitenAbgeschnitten ? " – aber nur die ersten " + (a.j.seitenMax || 4) + " Seiten" : "") +
+              ". Ich lese es gerade durch …", "gut");
         /* Die Liste darunter sofort neu laden: Sonst stand dort "Alle 0",
            waehrend oben "Ist in deiner Ablage" stand (Denny, 25.09.2026). */
         if (opt.abgelegt) { try { opt.abgelegt(a.j); } catch (e) {} }
