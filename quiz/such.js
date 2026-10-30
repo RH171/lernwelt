@@ -31,6 +31,7 @@
   /* Wiedervorlage (Denny, 25.09.2026): Was faellig ist, steht vorn; nach
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
   var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], fundFormen = {}, schritt4 = null, heute = null;
+  var heuteBeantwortet = [], heuteGeschafft = 0;   // "Heute dran", nur Paul (30.10.2026)
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
@@ -150,8 +151,9 @@
       .then(function(r){ return r.json(); })
       .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {};
                          fundStand = (j && j.fundStand) || {}; quizWackler = (j && j.quizWackler) || [];
-                         fundFormen = (j && j.fundFormen) || {}; schritt4 = (j && j.schritt4) || null; })
-      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; schritt4 = null; })
+                         fundFormen = (j && j.fundFormen) || {}; schritt4 = (j && j.schritt4) || null;
+                         heuteBeantwortet = (j && Array.isArray(j.heuteBeantwortet)) ? j.heuteBeantwortet : []; })
+      .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; schritt4 = null; heuteBeantwortet = []; })
       .then(function(){ return fetch("/api/schulstoff?kind=" + encodeURIComponent(KIND) + "&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -240,8 +242,29 @@
       o.zufall = LWHeuteDran.zufall(rundeFach, rundeNr);
       if (!rundeNr) gezeigt = LWHeuteDran.uebernehmen(rundeFach, false);
     }
-    heute = gezeigt || (window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null);
+    /* Heute schon erledigt (30.10.2026, Auftrag 178, nur Paul, nur die erste Fach-Runde der Seite): was Paul
+       heute beantwortet hat, kommt nicht noch einmal und zaehlt gegen die Tagesmenge - wie auf der Startseite
+       (LWHeuteDran.fachRunde). Ist die Menge erreicht, steht "geschafft" da statt einer neuen vollen Runde.
+       "Noch 10 Fragen" (rundeNr > 0) bleibt wie vorher. */
+    heuteGeschafft = 0;
+    if (!gezeigt && KIND === "paul" && rundeFach && !rundeNr && window.LWHeuteDran && LWHeuteDran.fachRunde) {
+      var fr = LWHeuteDran.fachRunde(rundeFach, { eintraege: eintraege, fundStand: fundStand, quizWackler: quizWackler,
+        fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: heuteBeantwortet }, schonDran, rundeNr);
+      heute = fr.runde; heuteGeschafft = fr.erledigt || 0;
+    } else {
+      heute = gezeigt || (window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null);
+    }
     var da = !!(heute && heute.karten.length);
+    $("heute-los").classList.toggle("verborgen", !da);
+    if (!da && heuteGeschafft && !mehrGleich) {
+      $("heute-wahl").classList.remove("verborgen");
+      $("heute-wahl").setAttribute("data-geschafft", String(heuteGeschafft));
+      var hg = $("heute-wahl").querySelector("h2");
+      if (hg) hg.textContent = "✅ " + fachWort(rundeFach) + " für heute geschafft";
+      $("heute-unter").textContent = "Du kannst trotzdem üben, wenn du magst – unten bei „Was möchtest du üben?“.";
+      return;
+    }
+    $("heute-wahl").removeAttribute("data-geschafft");
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }
     $("heute-wahl").classList.toggle("verborgen", !da);
     if (rundeFach) {
