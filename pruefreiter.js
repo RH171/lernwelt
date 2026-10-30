@@ -663,7 +663,7 @@
       if (!stellen.length) { knopf.classList.add("verborgen"); knopf.hidden = true; return; }
       knopf.hidden = false;
       knopf.classList.remove("verborgen");
-      var z = knopf.querySelector(".lwp-zahl"); if (z) z.textContent = String(stellen.length);
+      var z = knopf.querySelector(".lwp-zahl"); if (z) z.textContent = String(stellen.length) + (PAUL ? " offen" : "");   // Paul: "N offen", passend zur Einblendung "x von y verbessert" (30.10.2026)
       var t = knopf.querySelector(".cc-s"); if (t) t.textContent = saetze(stellen, zaehlen());
     }
     /* Sonnenknopf in der Kopfzeile (Dennys Wahl D): drückt den schwebenden

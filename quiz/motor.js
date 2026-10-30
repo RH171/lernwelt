@@ -162,7 +162,11 @@
         K.faecher.forEach(function (f) { bekannt[f.k] = f; });
         var neu = [];
         ausHeft.forEach(function (x) {
-          if (bekannt[x.fach]) neu.push(Object.assign({}, bekannt[x.fach], { blaetter: x.blaetter }));
+          /* Zahlen gleich (30.10.2026, nur Paul): die Kachel zaehlt wie die Blattliste darunter, also ohne
+             Handwerk (probenstoff:false). Vorher Deutsch 53 an der Kachel, 48 in der Liste. */
+          var zahlB = x.blaetter;
+          if (KIND === "paul" && blattVorrat && Array.isArray(blattVorrat[x.fach])) zahlB = blattVorrat[x.fach].filter(function (b) { return b && b.probenstoff !== false; }).length;
+          if (bekannt[x.fach]) neu.push(Object.assign({}, bekannt[x.fach], { blaetter: zahlB }));
         });
         if (neu.length) K.faecher = neu;
         // Was nicht mehr angeboten wird, darf auch nicht mehr gewaehlt sein.
@@ -422,8 +426,11 @@
    *              /api/noten?eigene=1). Ohne Probe im Fach keine Reihe.
    *   Thema    - vergibt das Lesemodell (Feld thema am Blatt). Ab 2 Themen.
    * Handwerk (probenstoff:false - Lineatur, Heftregeln) steht gar nicht da. */
+  var handwerkWeg = 0;   // wie viele Handwerksblaetter die Blattliste gerade weglaesst (30.10.2026)
   function ohneHandwerk(liste) {
-    return (liste || []).filter(function (b) { return b && b.probenstoff !== false; });
+    var r = (liste || []).filter(function (b) { return b && b.probenstoff !== false; });
+    handwerkWeg = (liste || []).filter(function (b) { return b; }).length - r.length;
+    return r;
   }
   var probenJeFach = null;          // {fach: ["2026-10-14", ...]} aufsteigend, nur vergangene
   var FACH_ALIAS = { mathematik: "mathe", "französisch": "franz", franzoesisch: "franz",
@@ -612,6 +619,8 @@
     $("q-blaetter-kopf").textContent = stand.blaetter.length
       ? "Daraus frage ich dich ab (" + stand.blaetter.length + " von " + sicht.length + ")"
       : "Woraus soll ich fragen? Ohne Auswahl nehme ich alle " + sicht.length + ".";
+    /* Paul: sagen, warum die Liste weniger Blaetter hat als die Ablage (30.10.2026). */
+    if (KIND === "paul" && handwerkWeg) $("q-blaetter-kopf").textContent += " Schreibübungen frage ich nicht ab.";
 
     var liste = $("q-blaetter-liste");
     liste.innerHTML = "";

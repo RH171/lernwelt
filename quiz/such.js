@@ -294,11 +294,22 @@
     }
     if (!da) return;
     var z = heute.zaehl, teile = [];
+    if (z.stufe && window.LWHeuteDran && LWHeuteDran.teile) {
+      /* Zahlen gleich (30.10.2026, nur Paul - zaehl.stufe gibt es nur mit schritt4): dieselben Teile und
+         Woerter wie die Karte auf der Startseite (LWHeuteDran.teile), sonst stand hier "3 kommen wieder
+         dran" und dort "3 neu". */
+      var tz = LWHeuteDran.teile(heute);
+      [["einstieg", "zum Einstieg", "zum Einstieg"], ["neu", "neu", "neu"], ["fehler", "nochmal üben", "nochmal üben"],
+       ["kontrolle", "Kontrolle", "Kontrollen"], ["wiederholen", "wiederholen", "wiederholen"]].forEach(function (w) {
+        if (tz[w[0]]) teile.push(tz[w[0]] + " " + (tz[w[0]] === 1 ? w[1] : w[2]));
+      });
+    } else {
     var wieder = z.wieder + z.wackler + z.sicher + z.ruht;
     if (wieder) teile.push(wieder === 1 ? "1 Karte kommt wieder dran" : wieder + " Karten kommen wieder dran");
     if (z.neu) teile.push(z.neu === 1 ? "1 ist neu" : z.neu + " sind neu");
     if (z.mathe) teile.push(z.mathe === 1 ? "1 Mathe-Aufgabe" : z.mathe + " Mathe-Aufgaben");
     if (z.lesen) teile.push(z.lesen === 1 ? "1 Lese-Aufgabe" : z.lesen + " Lese-Aufgaben");
+    }
     $("heute-unter").textContent = rundeFach
       ? heute.karten.length + " Fragen aus deinen " + fachWort(rundeFach) + "-Blättern: " + teile.join(", ") + ". Dauert etwa 5 Minuten."
       : heute.karten.length + " Karten aus deinen Blättern: " + teile.join(", ") + ". Dauert ein paar Minuten.";
