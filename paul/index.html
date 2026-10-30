@@ -519,6 +519,41 @@
   .tagesband .tag1 .cc-s{font-size:14px;opacity:1}
   .createcard.tagesrechnen{background:linear-gradient(125deg,#1e40af 0%,#1d4ed8 55%,#2563eb 100%);box-shadow:0 10px 28px rgba(29,78,216,.3)}
 
+  /* --- Heute dran (Schritt 5, 30.10.2026): links die Fächer (~70 %), rechts die Dauerübungen (~30 %) --- */
+  .tagesband .heutedran{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr);gap:12px;align-items:start}
+  .hd-links,.hd-rechts{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .hd-titel{font:800 17px/1.2 var(--round);color:var(--ink)}
+  .hd-titel small{display:block;font:600 15px/1.3 var(--font);color:var(--band-lz);margin-top:2px}
+  .hd-faecher{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+  .hd-hinweis{font:600 16px/1.4 var(--font);color:var(--band-lz);padding:6px 2px}
+  .hd-fach{display:flex;flex-direction:column;gap:8px;border-radius:20px;padding:14px 16px;min-height:44px;color:#fff;
+    text-decoration:none;font-family:var(--font);background:linear-gradient(125deg,#334155 0%,#475569 100%)}
+  a.hd-fach,a.hd-fach:link,a.hd-fach:visited,a.hd-fach:hover,a.hd-fach:active{color:#fff;text-decoration:none}
+  a.hd-fach:focus-visible,a.hd-immer:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .hd-fach.deutsch{background:linear-gradient(125deg,#9f1239 0%,#be123c 55%,#b91c5c 100%)}
+  .hd-fach.mathe{background:linear-gradient(125deg,#1e40af 0%,#1d4ed8 55%,#2563eb 100%)}
+  .hd-fach.hsu{background:linear-gradient(125deg,#14532d 0%,#166534 55%,#15803d 100%)}
+  .hd-fach.englisch{background:linear-gradient(125deg,#7f1d1d 0%,#991b1b 55%,#b91c1c 100%)}
+  .hd-fach.musik{background:linear-gradient(125deg,#4c1d95 0%,#5b21b6 55%,#6d28d9 100%)}
+  .hd-fach.leer,a.hd-fach.leer,a.hd-fach.leer:link,a.hd-fach.leer:visited{background:var(--card);color:var(--ink);border:1px solid var(--band-rand)}
+  .hd-kopf{display:flex;align-items:center;gap:8px}
+  .hd-ic{font-size:26px;line-height:1}
+  .hd-name{font:800 22px/1.1 var(--round)}
+  .hd-zahl{font:800 28px/1.05 var(--round)}
+  .hd-zahl.klein{font-size:19px}
+  .hd-satz{font:500 15px/1.35 var(--font)}
+  .hd-teile{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+  .hd-teile li{background:linear-gradient(rgba(0,0,0,.24),rgba(0,0,0,.24));border-radius:10px;padding:4px 9px;font:700 15px/1.3 var(--font)}
+  .hd-menge{font:600 14px/1.3 var(--font)}
+  .hd-los{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;min-height:44px;padding:0 18px;
+    border-radius:12px;background:#fff;color:#1b1c22;font:800 16px var(--round);margin-top:auto}
+  .hd-fach.leer .hd-los{background:var(--zeile);color:var(--ink)}
+  .hd-rechts .tag1{min-height:88px}
+  .hd-immer{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 14px;border-radius:14px;background:var(--card);
+    border:1px solid var(--band-rand);color:var(--ink);font:700 16px/1.25 var(--font);text-decoration:none}
+  a.hd-immer:link,a.hd-immer:visited,a.hd-immer:hover,a.hd-immer:active{color:var(--ink);text-decoration:none}
+  @media (max-width:720px){ .tagesband .heutedran{grid-template-columns:minmax(0,1fr)} }
+
   /* --- Üben: Fach-Kacheln --- */
   .ueben{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   .fk{border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;color:#fff;min-width:0;box-shadow:var(--shadow);
@@ -716,8 +751,8 @@
   </section>
 
   <!-- ===== Heute dran: das warme Band (Startseite D) =====
-       Reihenfolge im Quelltext bleibt wie seit 19.10.2026 (Kapitel 131): Probenkarte, Deutsch, HSU, Heute lernen,
-       1×1 und Textaufgaben. Das Raster stellt sie: Probenkarte über die ganze Breite, die erste Probenkarte
+       Reihenfolge im Quelltext bleibt wie seit 19.10.2026 (Kapitel 131): Probenkarte, Deutsch, HSU, Heute dran
+       (seit 30.10.2026 statt "Heute lernen", mit 1×1 und Textaufgaben rechts). Das Raster stellt sie: Probenkarte über die ganze Breite, die erste Probenkarte
        (Deutsch) groß links, die zweite (HSU) daneben, darunter Heute lernen und 1×1. Fällt eine Fokuskarte nach
        ihrer Probe weg, wird die übrige groß (Klasse fokus-1/fokus-0 am Band, gesetzt im Skript unten). -->
   <section class="tagesband fokus-2" id="tagesband" aria-label="Heute dran">
@@ -803,32 +838,44 @@
       });
     }catch(e){}})();</script>
 
-    <!-- Heute lernen (25.09.2026): der taegliche Einstieg steht FEST oben, im Band.
-         Fuehrt direkt in die Tagesrunde (paul/quiz.html?heute=1). -->
-    <a class="createcard heute tag1" href="quiz.html?heute=1" id="heuteLernen">
-      <div class="cc-ic">☀️</div>
-      <div>
-        <div class="cc-t">Heute lernen</div>
-        <div class="cc-s">Eine kurze Runde aus deinen Blättern – was wieder dran ist und etwas Neues.</div>
+    <!-- Heute dran (Schritt 5, Denny 30.10.2026, 07:10 Uhr, nur Paul; Beschluss 28.10.2026, 17:24 Uhr):
+         Der Knopf "Heute lernen" ist weg. Links je Fach mit Material die Runde von heute, genau die Karten, die
+         quiz.html?heute=1&fach=<f> abfragt (/paul/heute-dran.js rechnet mit LWTag.waehlen, feste Saat und
+         Uebergabe, geprueft in pruefe-heute-dran.mjs). Rechts (etwa 30 %) die Dauerübungen. Paul waehlt jedes
+         Fach weiter frei (Lernquiz, Üben). Keine Rest- oder Rueckstandszahl (Beschluss 24.09.2026). -->
+    <div class="heutedran" id="heuteDran">
+      <div class="hd-links">
+        <div class="hd-titel">Deine Fächer heute <small>Du suchst aus, womit du anfängst.</small></div>
+        <div class="hd-faecher" id="heuteDranFaecher" aria-live="polite">
+          <div class="hd-hinweis">Ich schaue nach, was heute dran ist …</div>
+        </div>
       </div>
-    </a>
+      <div class="hd-rechts" id="heuteDranImmer">
+        <div class="hd-titel">Immer da</div>
+        <!-- 1×1 und Textaufgaben (Denny, 04.10.2026): jeden Tag, seit 30.10.2026 rechts unter "Immer da".
+             Der Satz zeigt nur, ob heute schon erledigt ist - nie einen Rueckstand oder eine Serie. -->
+        <a class="createcard tagesrechnen tag1" href="klasse4-mathe-tagesrechnen.html" id="tagesRechnen">
+          <div class="cc-ic"><span class="eins">1×1</span></div>
+          <div>
+            <div class="cc-t">1×1 und Textaufgaben</div>
+            <div class="cc-s" id="tagesRechnenSatz">Jeden Tag neu: Einmaleins und Rätselaufgaben.</div>
+          </div>
+        </a>
+        <script>(function(){try{
+          var d=new Date(), h=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+          var s=JSON.parse(localStorage.getItem("paul-tagesrechnen")||"null"), x=s&&s.heute;
+          if(x&&x.d===h&&x.e&&x.t){ document.getElementById("tagesRechnen").classList.add("erledigt");
+            document.getElementById("tagesRechnenSatz").textContent="Für heute geschafft – morgen gibt es neue."; }
+          else if(x&&x.d===h&&x.e){ document.getElementById("tagesRechnenSatz").textContent="Teil 1 ist geschafft – jetzt noch die Textaufgaben."; }
+        }catch(e){}})();</script>
 
-    <!-- 1×1 und Textaufgaben (Denny, 04.10.2026): jeden Tag, deshalb fest neben "Heute lernen".
-         Der Satz zeigt nur, ob heute schon erledigt ist - nie einen Rueckstand oder eine Serie. -->
-    <a class="createcard tagesrechnen tag1" href="klasse4-mathe-tagesrechnen.html" id="tagesRechnen">
-      <div class="cc-ic"><span class="eins">1×1</span></div>
-      <div>
-        <div class="cc-t">1×1 und Textaufgaben</div>
-        <div class="cc-s" id="tagesRechnenSatz">Jeden Tag neu: Einmaleins und Rätselaufgaben.</div>
+        <a class="hd-immer" href="klasse4-mathe-fachwoerter.html"><span aria-hidden="true">🔤</span><span>Mathe-Fachwörter</span></a>
+        <a class="hd-immer" href="#uebenMathe"><span aria-hidden="true">🎮</span><span>Rechenspiele und mehr</span></a>
       </div>
-    </a>
-    <script>(function(){try{
-      var d=new Date(), h=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
-      var s=JSON.parse(localStorage.getItem("paul-tagesrechnen")||"null"), x=s&&s.heute;
-      if(x&&x.d===h&&x.e&&x.t){ document.getElementById("tagesRechnen").classList.add("erledigt");
-        document.getElementById("tagesRechnenSatz").textContent="Für heute geschafft – morgen gibt es neue."; }
-      else if(x&&x.d===h&&x.e){ document.getElementById("tagesRechnenSatz").textContent="Teil 1 ist geschafft – jetzt noch die Textaufgaben."; }
-    }catch(e){}})();</script>
+    </div>
+    <script src="/tagesrunde.js?v=4cfd2f17"></script>
+    <script src="/paul/heute-dran.js?v=4d202b43"></script>
+    <script>(function(){try{ LWHeuteDran.start(document.getElementById("heuteDranFaecher")); }catch(e){}})();</script>
 
     <!-- "Probe angekündigt" (Denny, 13.10.2026): Paul traegt angekuendigte Proben selbst ein
          (/paul/probeneintrag.js, Server prueft die Grenzen). Steht immer da, auch ohne Probe. -->

@@ -204,6 +204,9 @@
   var FACH_RUNDE = { hoechstens: 10, unsicherHoechstens: 7, vorrangHoechstens: 7, ruhtUnsicher: true };   // 7 Unsichere + 3 Bekannte
   var rundeFach = autostart ? ((/[?&]fach=([a-z-]{2,20})/.exec(location.search) || [])[1] || "") : "";
   var schonDran = {}, mehrGleich = false, matheGespielt = false, lesenGespielt = false;
+  /* Startseite "Heute dran" (Schritt 5, 30.10.2026, nur Paul, /paul/heute-dran.js): Nummer der Fach-Runde
+     auf dieser Seite. Runde 0 ist die, die die Startseite gezeigt hat. */
+  var rundeNr = 0;
   function fachWort(f){ return FACH[f] || (f ? f.charAt(0).toUpperCase() + f.slice(1) : ""); }
   var blattWahl = (/[?&]blatt=([^&#]+)/.exec(location.search) || [])[1];
   blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
@@ -229,7 +232,15 @@
     }
     /* Blattdatum mit Herkunft (28.10.2026, Schritt 2): bei Paul zaehlt "neu" nach dem Datum des Blattes. */
     if (KIND === "paul") { o = o || {}; o.nachBlattdatum = true; o.formen = fundFormen; if (schritt4) o.schritt4 = schritt4; }
-    heute = window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null;
+    /* Startseite "Heute dran" (Schritt 5, 30.10.2026, nur Paul): dieselbe feste Saat wie die Startseite, und fuer
+       die erste Runde genau die Karten, die die Startseite gezeigt hat (Uebergabe, hoechstens 30 Minuten alt).
+       Leon und Helena laden /paul/heute-dran.js nicht - bei ihnen bleibt alles wie vorher. */
+    var gezeigt = null;
+    if (KIND === "paul" && rundeFach && window.LWHeuteDran) {
+      o.zufall = LWHeuteDran.zufall(rundeFach, rundeNr);
+      if (!rundeNr) gezeigt = LWHeuteDran.uebernehmen(rundeFach, false);
+    }
+    heute = gezeigt || (window.LWTag ? LWTag.waehlen(eintraege, fundStand, o, quizWackler) : null);
     var da = !!(heute && heute.karten.length);
     if (rundeFach && mehrGleich) { mehrGleich = false; if (da) { heuteStarten(); return; } allesDurch(); return; }
     $("heute-wahl").classList.toggle("verborgen", !da);
@@ -340,6 +351,7 @@
     if (!heute || !heute.karten.length || !window.LWFund) return;
     var f = rundeFach;
     if (f) merkeDran(heute.karten);
+    if (f && KIND === "paul" && window.LWHeuteDran) { LWHeuteDran.uebernehmen(f, true); rundeNr++; }
     if (f && window.LWFachzeit) LWFachzeit.fach(f);     // Minuten fuer die Karte auf der Startseite
     var ok = LWFund.zeigen($("fundkarten"), {
       karten: heute.karten, kind: KIND, mindestens: 1,
