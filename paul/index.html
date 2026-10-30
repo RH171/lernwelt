@@ -1353,7 +1353,9 @@
   // taeglichen Schreibvorgaenge kosten.
   const abmeldenBtn = document.getElementById("abmeldenBtn");
   abmeldenBtn.addEventListener("click", function(){
-    if(!confirm("Abschliessen? Dann musst du deinen Code wieder eingeben.")) return;
+    /* Ohne Rueckfrage (30.10.2026, Auftrag 178 Punkt 5): Der Knopf heisst schon
+       "Abschliessen", und Abschliessen nimmt nur das Cookie dieses Geraets weg -
+       keine Daten. Schlimmstenfalls tippt Paul seinen Code noch einmal. */
     abmeldenBtn.disabled = true;
     fetch("/api/abmelden", {method:"POST", credentials:"same-origin"})
       .then(function(){ location.reload(); })

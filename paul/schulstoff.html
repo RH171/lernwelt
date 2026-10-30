@@ -27,7 +27,8 @@
 <script src="/nachlesen.js?v=20efd8d6"></script>
 <script src="/blatt-seiten.js?v=a370cd04"></script>
 <script src="/seite-tauschen.js?v=3d5c47be"></script>
-<script src="/blatt-aufnehmen.js?v=0183ce0c"></script>
+<script src="/zurueck.js?v=f499e6d3"></script>
+<script src="/blatt-aufnehmen.js?v=24f08c1c"></script>
 <script src="/lehrervergleich.js?v=ba21c47d"></script>
 <script src="/fehlerkreis.js?v=1da815e6"></script>
 <script src="/pruefreiter.js?v=942d549d"></script>
@@ -300,7 +301,7 @@
     }
     if (!zeigen.length){
       $("inhalt").innerHTML = '<div class="karte leer"><div class="zeichen">📸</div>' +
-        '<b>Hier ist noch nichts</b><p class="unter">Fotografier in der Werkstatt, ' +
+        '<b>Hier ist noch nichts</b><p class="unter">Tipp oben auf „📸 Neues Blatt“ und fotografier, ' +
         'was du heute in der Schule gemacht hast – dann steht es hier.</p></div>';
       return;
     }
@@ -669,7 +670,7 @@
         $("stand").textContent = alles.length
           ? alles.length + (alles.length===1?" Blatt":" Blätter") + " aus " +
             Object.keys(tage).length + (Object.keys(tage).length===1?" Schultag":" Schultagen") + "."
-          : "Noch nichts drin – fotografier dein erstes Blatt in der Werkstatt.";
+          : "Noch nichts drin – tipp auf „📸 Neues Blatt“ und fotografier dein erstes Blatt.";
         filterMalen();
         listeMalen();
       })
