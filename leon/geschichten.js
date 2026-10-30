@@ -14144,5 +14144,429 @@ window.LEON_GESCHICHTEN = [
     "seite": 7
    }
   ]
+ },
+ {
+  "id": "v-reporter",
+  "titel": "Leon wird Reporter",
+  "bild": "🎤",
+  "lang": true,
+  "zeigenAb": "2026-11-01",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎤",
+      "📝"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat ein Mi|kro|fon aus Pap|pe ge|bas|telt.",
+     "O|ben|drauf klebt ei|ne Ku|gel aus Pa|pier.",
+     "„Ich bin jetzt Re|por|ter“, sagt Le|on.",
+     "„Ich fra|ge Paul ganz vie|le Sa|chen.“",
+     "Er nimmt Block und Stift mit."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎤",
+      "🚀"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul sitzt am Tisch und baut.",
+     "Le|on hält ihm das Mi|kro|fon hin.",
+     "„Hal|lo, hier ist Re|por|ter Le|on. Was baust du da?“",
+     "„Ein Raum|schiff“, sagt Paul.",
+     "Es ist aus vie|len bun|ten Bau|stei|nen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🚀",
+      "🍫"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Wo|hin fliegt dein Raum|schiff?“, fragt Le|on.",
+     "Paul ü|ber|legt kurz.",
+     "„Zu ei|nem Pla|ne|ten aus Scho|ko|la|de.“",
+     "Le|on lacht und schreibt al|les auf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎤",
+      "📝"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Wer fliegt mit?“, fragt Le|on wei|ter.",
+     "„Ein Hund mit ei|ner Bril|le“, sagt Paul.",
+     "„Er ist der Ka|pi|tän.“",
+     "Le|on lacht so sehr, dass sein Stift wa|ckelt."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🍕",
+      "📝"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Was isst der Hund im Raum|schiff?“, fragt Le|on.",
+     "Paul grinst.",
+     "„Piz|za mit Scho|ko|la|de o|ben|drauf.“",
+     "„I|gitt!“, ruft Le|on.",
+     "Er schreibt das Wort Piz|za auf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎤",
+      "🔄"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Dan|ke für das Ge|spräch!“, sagt Le|on.",
+     "Da nimmt Paul das Mi|kro|fon.",
+     "„Jetzt bin ich der Re|por|ter“, sagt er.",
+     "„Und du bist dran, Le|on.“"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎤",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Was ist dein größ|ter Wunsch?“, fragt Paul.",
+     "Le|on muss nicht lan|ge über|le|gen.",
+     "„Ich will auch mit dem Raum|schiff flie|gen.“",
+     "„Zum Pla|ne|ten aus Scho|ko|la|de?“, fragt Paul.",
+     "„Na klar!“, ruft Le|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📝",
+      "😊"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Und was wünschst du dir jetzt so|fort?“",
+     "Le|on reibt sich den Bauch.",
+     "„Ei|nen Nach|tisch!“, ruft er.",
+     "Paul lacht und schreibt es in Le|ons Block.",
+     "Das war ein gu|tes Ge|spräch."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Woraus ist Leons Mikrofon?",
+    "richtig": "aus Pappe",
+    "falsch": [
+     "aus Holz",
+     "aus Metall"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was baut Paul?",
+    "richtig": "ein Raumschiff",
+    "falsch": [
+     "ein Auto",
+     "eine Burg"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wer ist der Kapitän im Raumschiff?",
+    "richtig": "ein Hund mit einer Brille",
+    "falsch": [
+     "ein Bär mit einem Hut",
+     "Leon"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was isst der Hund im Raumschiff?",
+    "richtig": "Pizza mit Schokolade",
+    "falsch": [
+     "Nudeln mit Käse",
+     "Suppe mit Brot"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Was wünscht sich Leon jetzt sofort?",
+    "richtig": "einen Nachtisch",
+    "falsch": [
+     "ein neues Buch",
+     "einen Ball"
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "v-sockenball",
+  "titel": "Der Ball aus Socken",
+  "bild": "🧦",
+  "lang": true,
+  "zeigenAb": "2026-11-03",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Le|on will Fuß|ball spie|len.",
+     "A|ber ein ech|ter Ball ist für drin|nen zu hart.",
+     "Paul hat ei|ne I|dee.",
+     "Er rollt drei So|cken zu ei|ner Ku|gel."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "🙂"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Das ist un|ser So|cken|ball“, sagt Paul.",
+     "Le|on nimmt den Ball in die Hand.",
+     "Er ist ganz weich und leicht.",
+     "„Der macht nichts ka|putt“, sagt Le|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🪑",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Jetzt brau|chen sie noch ein Tor.",
+     "Paul stellt zwei Stüh|le auf.",
+     "Zwi|schen den Stüh|len ist das Tor.",
+     "Le|on stellt sich mit|ten ins Tor.",
+     "Er brei|tet die Ar|me weit aus."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul legt den So|cken|ball auf den Tep|pich.",
+     "Er nimmt zwei Schrit|te An|lauf.",
+     "Dann schießt er nach links.",
+     "Le|on springt und fängt den Ball.",
+     "„Ge|hal|ten!“, ruft Le|on."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Paul schießt noch ein|mal.",
+     "Dies|mal schießt er ganz hoch.",
+     "Der Ball fliegt an Le|ons Hän|den vor|bei.",
+     "„Tor!“, ju|belt Paul und hüpft."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔄",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Dann tau|schen die bei|den.",
+     "Paul stellt sich ins Tor.",
+     "Le|on klatscht in die Hän|de und lacht.",
+     "„Jetzt bin ich der Schüt|ze!“"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "😂"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Le|on schießt ganz flach.",
+     "Der So|cken|ball rollt zwi|schen den Stüh|len durch.",
+     "Paul wirft sich auf den Bo|den.",
+     "Doch der Ball ist schon hin|ter ihm.",
+     "Bei|de la|chen laut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "🧺"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Wer hat ge|won|nen?“, fragt Le|on.",
+     "„Wir ha|ben gar nicht ge|zählt“, sagt Paul.",
+     "„Das ist auch e|gal“, sagt Le|on.",
+     "Dann rol|len sie den Ball wie|der aus|ei|nan|der.",
+     "Die So|cken kom|men zu|rück in den Korb."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Woraus ist der Ball?",
+    "richtig": "aus Socken",
+    "falsch": [
+     "aus Papier",
+     "aus Plastik"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Woraus baut Paul das Tor?",
+    "richtig": "aus zwei Stühlen",
+    "falsch": [
+     "aus zwei Kissen",
+     "aus zwei Schuhen"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wohin schießt Paul beim ersten Mal?",
+    "richtig": "nach links",
+    "falsch": [
+     "nach rechts",
+     "in die Mitte"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie schießt Leon?",
+    "richtig": "ganz flach",
+    "falsch": [
+     "ganz hoch",
+     "mit dem Kopf"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wohin kommen die Socken am Ende?",
+    "richtig": "in den Korb",
+    "falsch": [
+     "in den Schrank",
+     "in die Tasche"
+    ],
+    "seite": 8
+   }
+  ]
  }
 ];
