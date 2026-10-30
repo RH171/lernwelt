@@ -336,14 +336,149 @@
       k.addEventListener("click", function(){ aufmachen(k.getAttribute("data-id")); });
     });
     // Vorschaubilder erst danach holen - so steht die Seite sofort.
-    Array.prototype.forEach.call($("inhalt").querySelectorAll("[data-bild]"), function(p){
-      bildHolen(p.getAttribute("data-bild"), 0).then(function(url){
-        if (!url) return;
-        var b = document.createElement("img");
-        b.src = url; b.alt = "Dein Blatt";
-        p.parentNode.replaceChild(b, p);
-      });
+    vorschauenBeobachten();
+  }
+
+  /* Vorschaubilder klein, der Reihe nach und nur, was Paul sieht (30.10.2026).
+   *
+   * Denny: Pauls Seite mit seinen Blaettern laedt auf dem iPad langsam. Gemessen
+   * am 30.10.2026, 15:36 Uhr (live, Pauls Anmeldung, iPad-Fenster 1180x688): Die
+   * Seite holte JEDES Originalfoto auf einmal (120 Blaetter, Mittel 680 KB, max
+   * 1,1 MB), und weil die Liste zweimal neu gemalt wird, sogar zweimal - 240
+   * Anfragen, 162 MB. Am schnellen Mac stand das erste Bild nach 17,6 s, bei
+   * 1,6 Mbit/s nach 150 s noch keins.
+   *
+   * Jetzt: Ein Bild wird erst geholt, wenn sein Kaertchen in die Naehe des
+   * Bildschirms kommt (IntersectionObserver), hoechstens VORSCHAU_ZUGLEICH auf
+   * einmal, jedes nur einmal. Danach wird es im Browser auf VORSCHAU_BREITE px
+   * verkleinert, das grosse Foto faellt aus dem Speicher, und die kleine Fassung
+   * liegt im Browser-Cache (Cache API, NICHT localStorage - den verteilt der Sync
+   * an alle Geraete). Beim naechsten Besuch kommt sie ohne Anfrage. Der Schluessel
+   * traegt Abdruck, Foto-Tausch und Drehung von Seite 1: ein neues oder gedrehtes
+   * Foto bekommt eine neue Vorschau. Die Originale und die Ablage bleiben, wie sie
+   * sind; die Grossansicht holt wie bisher das Original. Nur Paul. */
+  var VORSCHAU_BREITE = 400, VORSCHAU_ZUGLEICH = 2, VORSCHAU_CACHE = "lw-vorschau-paul-1";
+  var vorschauFertig = {}, vorschauLaeuft = {}, vorschauWarte = [], vorschauAktiv = 0, vorschauSeher = null;
+  function vorschauStand(e){
+    return [e.abdruck || "", (e.fotoNeu && e.fotoNeu["0"]) || "", (e.gedreht && e.gedreht["0"]) || 0].join("|");
+  }
+  function vorschauSchluessel(e){ return e.id + "@" + vorschauStand(e); }
+  function vorschauAdresse(k){ return location.origin + "/__vorschau/paul/" + encodeURIComponent(k); }
+  function vorschauKiste(){
+    try { return window.caches ? caches.open(VORSCHAU_CACHE).catch(function(){ return null; }) : Promise.resolve(null); }
+    catch (e) { return Promise.resolve(null); }
+  }
+  function verkleinern(url){
+    return new Promise(function(ok){
+      var img = new Image();
+      img.onload = function(){
+        try {
+          var f = Math.min(1, VORSCHAU_BREITE / (img.naturalWidth || 1));
+          var c = document.createElement("canvas");
+          c.width = Math.max(1, Math.round(img.naturalWidth * f));
+          c.height = Math.max(1, Math.round(img.naturalHeight * f));
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          if (!c.toBlob) return ok(null);
+          c.toBlob(function(b){ c.width = c.height = 0; img.src = ""; ok(b || null); }, "image/jpeg", 0.8);
+        } catch (e) { ok(null); }
+      };
+      img.onerror = function(){ ok(null); };
+      img.src = url;
     });
+  }
+  // Holt EINE Vorschau: erst aus dem Browser-Cache, sonst das Original vom Server.
+  function vorschauHolen(e){
+    var k = vorschauSchluessel(e);
+    if (vorschauFertig[k]) return Promise.resolve(vorschauFertig[k]);
+    if (vorschauLaeuft[k]) return vorschauLaeuft[k];
+    vorschauLaeuft[k] = vorschauKiste().then(function(kiste){
+      var aus = kiste ? kiste.match(vorschauAdresse(k)).catch(function(){ return null; }) : Promise.resolve(null);
+      return aus.then(function(r){ return r ? r.blob() : null; }).catch(function(){ return null; }).then(function(blob){
+        if (blob && blob.size) return URL.createObjectURL(blob);
+        return fetch("/api/schulstoff?kind=paul&bild=" + encodeURIComponent(e.id + ":0"), {credentials:"same-origin"})
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            if (!j || !j.ok || !j.bild) return null;
+            return verkleinern(j.bild).then(function(klein){
+              if (!klein) return j.bild;                // ohne Verkleinern: wie bisher das Original
+              if (kiste) { try { kiste.put(vorschauAdresse(k), new Response(klein, {headers:{"content-type":"image/jpeg"}})).catch(function(){}); } catch (x) {} }
+              return URL.createObjectURL(klein);
+            });
+          });
+      });
+    }).catch(function(){ return null; }).then(function(url){
+      delete vorschauLaeuft[k];
+      if (url) vorschauFertig[k] = url;
+      return url;
+    });
+    return vorschauLaeuft[k];
+  }
+  function vorschauEinsetzen(p, url){
+    if (!url || !p.parentNode) return;
+    var b = document.createElement("img");
+    b.src = url; b.alt = "Dein Blatt"; b.decoding = "async";
+    p.parentNode.replaceChild(b, p);
+  }
+  function vorschauPumpe(){
+    // Ist die Grossansicht offen, hat ihr Original Vorrang - die Vorschauen warten.
+    if ($("schau").classList.contains("auf")) { setTimeout(vorschauPumpe, 400); return; }
+    while (vorschauAktiv < VORSCHAU_ZUGLEICH && vorschauWarte.length){
+      var p = vorschauWarte.shift();
+      if (!p.isConnected || !p.getAttribute("data-bild")) continue;   // Liste inzwischen neu gemalt
+      var e = alles.filter(function(x){ return x.id === p.getAttribute("data-bild"); })[0];
+      if (!e) continue;
+      vorschauAktiv++;
+      (function(p){
+        vorschauHolen(e).then(function(url){
+          vorschauAktiv--;
+          vorschauEinsetzen(p, url);
+          vorschauPumpe();
+        });
+      })(p);
+    }
+  }
+  function vorschauAnstellen(p){
+    var e = alles.filter(function(x){ return x.id === p.getAttribute("data-bild"); })[0];
+    if (!e) return;
+    var k = vorschauSchluessel(e);
+    if (vorschauFertig[k]) { vorschauEinsetzen(p, vorschauFertig[k]); return; }
+    if (vorschauWarte.indexOf(p) < 0) vorschauWarte.push(p);
+    vorschauPumpe();
+  }
+  function vorschauenBeobachten(){
+    var platz = $("inhalt").querySelectorAll("[data-bild]");
+    vorschauWarte = [];
+    if (vorschauSeher) vorschauSeher.disconnect();
+    if (!window.IntersectionObserver){
+      // Altes Geraet: der Reihe nach, neueste zuerst, trotzdem nur zwei zugleich.
+      Array.prototype.forEach.call(platz, vorschauAnstellen);
+      return;
+    }
+    vorschauSeher = new IntersectionObserver(function(eintraege){
+      eintraege.forEach(function(x){
+        if (!x.isIntersecting) return;
+        vorschauSeher.unobserve(x.target);
+        vorschauAnstellen(x.target);
+      });
+    }, {rootMargin: "300px 0px"});
+    Array.prototype.forEach.call(platz, function(p){
+      var e = alles.filter(function(x){ return x.id === p.getAttribute("data-bild"); })[0];
+      // Schon geholt (etwa nach einem Fachwechsel): sofort, ohne zu warten.
+      if (e && vorschauFertig[vorschauSchluessel(e)]) vorschauEinsetzen(p, vorschauFertig[vorschauSchluessel(e)]);
+      else vorschauSeher.observe(p);
+    });
+  }
+  /* Alte Vorschauen raeumen: was zu keinem Blatt (oder nur zu einem alten Foto)
+     mehr passt, kommt aus dem Browser-Cache. Nur nach vollstaendig geladener Liste. */
+  function vorschauAufraeumen(){
+    var gilt = {};
+    alles.forEach(function(e){ gilt[vorschauAdresse(vorschauSchluessel(e))] = 1; });
+    vorschauKiste().then(function(kiste){
+      if (!kiste) return;
+      return kiste.keys().then(function(ks){
+        ks.forEach(function(r){ if (!gilt[r.url]) kiste["delete"](r).catch(function(){}); });
+      });
+    }).catch(function(){});
   }
 
   /* Heft gegen die Lehrerin (13.10.2026). Ohne Vorlage und ohne Rot bleibt
@@ -680,6 +815,7 @@
           : "Noch nichts drin – tipp auf „📸 Neues Blatt“ und fotografier dein erstes Blatt.";
         filterMalen();
         listeMalen();
+        vorschauAufraeumen();
       })
       .catch(function(){
         $("stand").textContent = "Ich komme gerade nicht an dein Heft. Probier es gleich nochmal.";
