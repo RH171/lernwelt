@@ -14568,5 +14568,647 @@ window.LEON_GESCHICHTEN = [
     "seite": 8
    }
   ]
+ },
+ {
+  "id": "b5-drachen-steigen",
+  "titel": "Drachen steigen",
+  "bild": "🪁",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💨",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Heu|te weht drau|ßen ein star|ker Herbst|wind.",
+     "Die bun|ten Blät|ter flie|gen am Fens|ter vor|bei.",
+     "„Heu|te ist Dra|chen|wet|ter!“, ruft Pa|pa.",
+     "Paul holt den gro|ßen ro|ten Dra|chen.",
+     "Er hat ei|nen lan|gen Schwanz aus Pa|pier."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🍂",
+      "🌳"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Sie ge|hen zu|sam|men auf die gro|ße Wie|se im Park.",
+     "Dort ist viel Platz und kein Baum im Weg.",
+     "Der Wind zerrt an Le|ons Ja|cke.",
+     "Pa|pa gibt Paul zu|erst die Schnur.",
+     "„Du fängst an, Paul“, sagt er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🪁",
+      "💨"
+     ],
+     "leute": [
+      "Paul",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Pa|pa hält den Dra|chen hoch.",
+     "Paul rennt ganz schnell ü|ber die Wie|se.",
+     "Der Dra|chen steigt ein klei|nes Stück.",
+     "Plötz|lich dreht er sich im Kreis.",
+     "Dann fällt er plumps ins wei|che Gras."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🪁",
+      "🌾"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Paul ist ein biss|chen trau|rig.",
+     "„Das pas|siert beim ers|ten Mal oft“, sagt Pa|pa.",
+     "„Du bist rich|tig toll ge|rannt!“",
+     "Paul ver|sucht es noch zwei|mal ganz tap|fer.",
+     "Beim drit|ten Mal fliegt der Dra|chen schon viel hö|her."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🙋",
+      "🧵"
+     ],
+     "leute": [
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "„Darf ich auch mal?“, fragt Le|on.",
+     "Paul gibt ihm so|fort die Schnur.",
+     "Le|on hält sie mit bei|den Hän|den ganz fest.",
+     "Er hat ein biss|chen Angst vor dem star|ken Wind.",
+     "A|ber er will es un|be|dingt ver|su|chen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🪁",
+      "💨"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Nun hält Paul den Dra|chen für Le|on hoch.",
+     "„Eins, zwei, drei, los!“, ruft Pa|pa.",
+     "Le|on rennt ganz schnell ge|gen den Wind.",
+     "Er spürt ei|nen star|ken Ruck an der Schnur.",
+     "Der Dra|chen steigt hö|her und hö|her!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🪁",
+      "☁️"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Bald ist der Dra|chen hoch o|ben am Him|mel.",
+     "Er tanzt ne|ben den wei|ßen Wol|ken.",
+     "Sein lan|ger Schwanz flat|tert hin und her.",
+     "Le|on zieht ganz vor|sich|tig an der Schnur.",
+     "„Das hast du mu|tig ge|macht!“, lobt Pa|pa."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🪁",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Paul",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Nun hal|ten Paul und Le|on die Schnur zu|sam|men.",
+     "Sie las|sen den Dra|chen noch lan|ge flie|gen.",
+     "Pa|pa holt den Dra|chen vor|sich|tig he|run|ter.",
+     "„Ge|hen wir mor|gen wie|der?“, fragt Le|on.",
+     "Paul und Pa|pa ni|cken und la|chen."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Welche Farbe hat der Drachen?",
+    "richtig": "rot",
+    "falsch": [
+     "grün",
+     "gelb"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wer rennt zuerst mit dem Drachen los?",
+    "richtig": "Paul",
+    "falsch": [
+     "Leon",
+     "Papa"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wie oft versucht Paul es noch?",
+    "richtig": "noch zweimal",
+    "falsch": [
+     "noch einmal",
+     "noch fünfmal"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wovor hat Leon ein bisschen Angst?",
+    "richtig": "vor dem starken Wind",
+    "falsch": [
+     "vor dem großen Drachen",
+     "vor der großen Wiese"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wer holt den Drachen am Ende herunter?",
+    "richtig": "Papa",
+    "falsch": [
+     "Paul",
+     "Leon"
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "c5-der-traum-vom-grossen-tor",
+  "titel": "Der Traum vom großen Tor",
+  "bild": "🌙",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "nacht",
+     "dinge": [
+      "⭐",
+      "🧣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Es ist ein küh|ler A|bend im Ok|to|ber.",
+     "Le|on schaut aus dem Fens|ter in den Him|mel.",
+     "Der Mond ist rund und hell.",
+     "Ne|ben dem Bett liegt sein grü|ner Schal.",
+     "Dann schläft Le|on ganz schnell ein."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🏟️",
+      "🎶"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on träumt in der Nacht ei|nen tol|len Traum.",
+     "Er steht in ei|nem rie|si|gen Sta|di|on.",
+     "Vie|le Leu|te sin|gen und klat|schen laut.",
+     "Ü|ber|all sind grü|ne und wei|ße Fah|nen.",
+     "Le|on trägt ein grü|nes Tri|kot."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🧤",
+      "🥅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Er steht im Tor der Klee|blät|ter!",
+     "Sei|ne Hand|schu|he sind groß und weich.",
+     "Da kommt ein Spie|ler mit dem Ball ge|lau|fen.",
+     "Er schießt ganz hoch in die E|cke.",
+     "Le|on fliegt durch die Luft wie ein Vo|gel."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🎉"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Er hält den Ball fest in den Hän|den.",
+     "Das gan|ze gro|ße Sta|di|on ju|belt laut.",
+     "„Le|on, Le|on!“, ru|fen die Leu|te.",
+     "Le|on winkt al|len zu und lacht.",
+     "Da klin|gelt plötz|lich ein We|cker."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🛏️",
+      "☀️"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on macht die Au|gen auf.",
+     "Er liegt in sei|nem Bett.",
+     "Das Sta|di|on ist weg.",
+     "„Das war nur ein Traum“, sagt er lei|se.",
+     "Doch der Traum macht ihm gro|ße Lust auf Fuß|ball."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "⚽",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Heu|te ist Sams|tag und schul|frei.",
+     "Le|on zieht schnell sei|ne Hand|schu|he an.",
+     "Im Gar|ten war|tet schon Xa|ver mit dem Ball.",
+     "Xa|ver geht in die fünf|te Klas|se am Gym|na|si|um.",
+     "„Komm, wir trai|nie|ren wie die Klee|blät|ter!“, ruft Xa|ver."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Xa|ver schießt flach und dann hoch.",
+     "Le|on hält fast je|den Ball mit bei|den Hän|den.",
+     "Ein|mal rollt der Ball an ihm vor|bei.",
+     "„Nicht schlimm, gleich noch mal!“, sagt Xa|ver.",
+     "Le|on macht wei|ter und gibt nicht auf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "⚽",
+      "💪"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Beim nächs|ten Schuss fliegt Le|on wie im Traum.",
+     "Er fängt den Ball ganz hoch o|ben.",
+     "„Das war ein Su|per|sprung!“, ruft Xa|ver.",
+     "Le|on er|zählt Xa|ver ganz stolz von sei|nem Traum.",
+     "„Du hast heu|te toll ge|übt“, sagt Xa|ver."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wie sieht der Mond aus?",
+    "richtig": "rund und hell",
+    "falsch": [
+     "klein und rot",
+     "halb und dunkel"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Welche Farbe hat Leons Trikot im Traum?",
+    "richtig": "grün",
+    "falsch": [
+     "weiß",
+     "blau"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was klingelt plötzlich?",
+    "richtig": "ein Wecker",
+    "falsch": [
+     "das Telefon",
+     "die Schulglocke"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "In welche Klasse geht Xaver?",
+    "richtig": "in die fünfte Klasse",
+    "falsch": [
+     "in die zweite Klasse",
+     "in die siebte Klasse"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Was sagt Xaver ganz am Ende?",
+    "richtig": "Du hast heute toll geübt.",
+    "falsch": [
+     "Das war nur ein Traum.",
+     "Komm, wir gehen nach Hause."
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "a6-der-regentag",
+  "titel": "Der Regentag",
+  "bild": "🌧️",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌧️",
+      "☔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Heu|te reg|net es schon den gan|zen Tag.",
+     "Die Trop|fen klop|fen laut an das Fens|ter.",
+     "Le|on sitzt auf dem So|fa und seufzt.",
+     "Drau|ßen im Gar|ten ist al|les nass und grau.",
+     "So kann er nicht drau|ßen Fuß|ball spie|len."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌧️",
+      "😞"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Da kommt Pa|pa ins Wohn|zim|mer her|ein.",
+     "„Was ist denn los, Le|on?“, fragt er freund|lich.",
+     "„Mir ist so lang|wei|lig“, sagt Le|on.",
+     "„Ich will ins Tor, a|ber es reg|net.“",
+     "Pa|pa schaut aus dem Fens|ter und denkt nach."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💡",
+      "🙂"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Da hat Pa|pa auf ein|mal ei|ne gu|te I|dee.",
+     "Er holt ein Paar al|te So|cken aus dem Schrank.",
+     "Er rollt sie ganz fest zu|sam|men.",
+     "Jetzt sieht es aus wie ein klei|ner Ball.",
+     "„Das ist un|ser So|cken|ball!“, sagt Pa|pa."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "„Und wo ist hier das Tor?“, fragt Le|on.",
+     "Pa|pa legt zwei Kis|sen auf den Tep|pich.",
+     "Da|zwi|schen ist jetzt ein wei|ches Tor.",
+     "Le|on kniet sich so|fort in das Tor.",
+     "Er zieht so|gar sei|ne Hand|schu|he an."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧦",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Pa|pa wirft den So|cken|ball in die E|cke.",
+     "Le|on springt zur Sei|te und fängt ihn.",
+     "Der So|cken|ball ist ganz weich und leicht.",
+     "Da|rum macht das Hin|fal|len gar nichts.",
+     "Le|on hält fünf Wür|fe hin|ter|ein|an|der."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧺",
+      "🧦"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Dann tau|schen sie die Rol|len.",
+     "Jetzt ist der Wä|sche|korb das Tor.",
+     "Pa|pa hält die Hän|de vor den Korb.",
+     "Le|on zielt lan|ge und ganz ge|nau.",
+     "Der So|cken|ball fliegt mit|ten in den Korb!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎉",
+      "🧦"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "„Tor!“, ruft Le|on und hüpft her|um.",
+     "Pa|pa lacht und klatscht in die Hän|de.",
+     "„Das war ein su|per Wurf!“, sagt er.",
+     "Sie spie|len im|mer wei|ter und la|chen viel.",
+     "Bald lie|gen ü|ber|all Kis|sen auf dem Bo|den."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌈",
+      "🧦"
+     ],
+     "leute": [
+      "Leon",
+      "Papa",
+      "Mama"
+     ]
+    },
+    "zeilen": [
+     "Plötz|lich hört der Re|gen auf.",
+     "Le|on läuft schnell zum Fens|ter und schaut hi|naus.",
+     "Auf der an|de|ren Stra|ßen|sei|te winkt Ma|ma.",
+     "Le|on winkt mit bei|den Ar|men zu|rück.",
+     "„Pa|pa, der Re|gen|tag war rich|tig toll!“, ruft Le|on."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wo sitzt Leon am Anfang?",
+    "richtig": "auf dem Sofa",
+    "falsch": [
+     "am Fenster",
+     "auf dem Teppich"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Woher holt Papa die alten Socken?",
+    "richtig": "aus dem Schrank",
+    "falsch": [
+     "aus dem Wäschekorb",
+     "aus der Küche"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was ist das erste Tor?",
+    "richtig": "zwei Kissen",
+    "falsch": [
+     "der Wäschekorb",
+     "zwei Stühle"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie viele Würfe hält Leon?",
+    "richtig": "fünf",
+    "falsch": [
+     "drei",
+     "sieben"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Was macht Mama am Ende?",
+    "richtig": "sie winkt",
+    "falsch": [
+     "sie ruft",
+     "sie klatscht"
+    ],
+    "seite": 8
+   }
+  ]
  }
 ];
