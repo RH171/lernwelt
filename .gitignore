@@ -1,5 +1,8 @@
 .DS_Store
-.mac-upload-aktiv.txt
+
+# Zwischenspeicher von wrangler (Konto-ID, Projektname) - wird bei Bedarf neu
+# angelegt, gehoert nie ins Netz (30.10.2026, anleitung/153-webordner.md).
+/.wrangler/
 
 # Lokale Testdaten des Duell-Dienstes (wrangler dev)
 duell-worker/.wrangler/

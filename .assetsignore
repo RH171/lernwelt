@@ -1,0 +1,6 @@
+# Nie ausliefern (30.10.2026). Pages wertet diese Datei nicht sicher aus -
+# die eigentliche Sperre sind die 404-Funktionen in functions/.
+.wrangler
+duell-worker
+.gitignore
+.assetsignore
