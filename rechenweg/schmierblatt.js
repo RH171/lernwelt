@@ -6,29 +6,75 @@
  * speichert nichts (kein Schreibvorgang, kein localStorage) und ist beim nächsten Teil wieder leer.
  *
  *   window.Schmierblatt.malen(huelle)  -> legt Knopf und Fläche in die Hülle
+ *
+ * Rechnen-Knopf im Lernquiz (30.10.2026, Auftrag 179, nur Paul): dieselbe Fläche, mit opts:
+ *   window.Schmierblatt.malen(huelle, { knopf: "✏️ Rechnen", werkzeug: true, auf: fn })
+ *   werkzeug: Stiftfarben, Radierer, "Alles löschen" (statt "Leeren"); ein Stift (Apple Pencil)
+ *   hat Vorrang vor der Hand: Hat die Fläche einmal einen Stift gesehen, zeichnet ein Finger
+ *   nicht mehr mit (Handballen). Ohne opts ist alles wie vorher (Generalprobe Mathe).
  */
 (function () {
   "use strict";
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
-  function malen(huelle) {
+  var FARBEN = [["Schwarz", "#1f2937"], ["Blau", "#1d4ed8"], ["Grün", "#047857"]];
+
+  function malen(huelle, opts) {
     if (!huelle) return;
+    opts = opts || {};
+    var wz = !!opts.werkzeug;
     huelle.innerHTML = "";
     huelle.classList.add("sb", "sb-zu");
-    var knopf = el("button", "sb-auf", "✏️ Schmierblatt für Nebenrechnungen");
+    var knopf = el("button", "sb-auf", opts.knopf || "✏️ Schmierblatt für Nebenrechnungen");
     knopf.type = "button";
     knopf.setAttribute("aria-expanded", "false");
     var koerper = el("div", "sb-koerper");
     var flaeche = el("canvas", "sb-flaeche");
-    flaeche.setAttribute("aria-label", "Schmierblatt: hier mit dem Finger rechnen");
-    var leeren = el("button", "sb-leeren", "Leeren");
+    flaeche.setAttribute("aria-label", wz ? "Rechenfläche: hier mit Stift oder Finger rechnen" : "Schmierblatt: hier mit dem Finger rechnen");
+    var leeren = el("button", "sb-leeren", wz ? "Alles löschen" : "Leeren");
     leeren.type = "button";
-    koerper.appendChild(flaeche);
-    koerper.appendChild(leeren);
+    var farbe = null, radiert = false, leiste = null;
+    if (wz) {
+      leiste = el("div", "sb-leiste");
+      FARBEN.forEach(function (f, n) {
+        var b = el("button", "sb-farbe" + (n === 0 ? " an" : ""));
+        b.type = "button";
+        b.setAttribute("aria-label", "Stift " + f[0]);
+        b.setAttribute("aria-pressed", n === 0 ? "true" : "false");
+        b.dataset.farbe = f[1];
+        b.appendChild(el("i")).style.background = f[1];
+        leiste.appendChild(b);
+      });
+      var rad = el("button", "sb-radierer", "Radierer");
+      rad.type = "button"; rad.setAttribute("aria-pressed", "false");
+      leiste.appendChild(rad);
+      leiste.appendChild(leeren);
+      farbe = FARBEN[0][1];
+      leiste.addEventListener("click", function (ev) {
+        var b = ev.target.closest ? ev.target.closest("button") : null;
+        if (!b || b === leeren) return;
+        radiert = b === rad;
+        if (!radiert) farbe = b.dataset.farbe;
+        [].forEach.call(leiste.querySelectorAll(".sb-farbe,.sb-radierer"), function (x) {
+          var an = x === b; x.classList.toggle("an", an); x.setAttribute("aria-pressed", an ? "true" : "false");
+        });
+      });
+      koerper.appendChild(leiste);
+      koerper.appendChild(flaeche);
+    } else {
+      koerper.appendChild(flaeche);
+      koerper.appendChild(leeren);
+    }
     huelle.appendChild(knopf);
     huelle.appendChild(koerper);
 
-    var ctx = null, zieht = false, letzter = null;
+    var ctx = null, zieht = false, letzter = null, stiftDa = false, aktiv = null;
+    function stil() {
+      if (!ctx || !wz) return;
+      ctx.globalCompositeOperation = radiert ? "destination-out" : "source-over";
+      ctx.lineWidth = radiert ? 22 : 3;
+      ctx.strokeStyle = farbe; ctx.fillStyle = farbe;
+    }
     function groesse() {
       var r = flaeche.getBoundingClientRect(), d = window.devicePixelRatio || 1;
       if (!r.width) return;
@@ -44,24 +90,34 @@
     function punkt(e) { var r = flaeche.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     flaeche.addEventListener("pointerdown", function (e) {
       if (!ctx) groesse(); if (!ctx) return;
+      if (wz) {
+        if (e.pointerType === "pen") stiftDa = true;
+        else if (stiftDa && e.pointerType === "touch") { e.preventDefault(); return; }   // Handballen
+        if (zieht && aktiv !== e.pointerId) return;                                      // zweiter Finger
+        aktiv = e.pointerId; stil();
+      }
       zieht = true; letzter = punkt(e);
       try { flaeche.setPointerCapture(e.pointerId); } catch (x) {}
-      ctx.beginPath(); ctx.arc(letzter.x, letzter.y, 1.5, 0, 6.3); ctx.fillStyle = ctx.strokeStyle; ctx.fill();
+      ctx.beginPath(); ctx.arc(letzter.x, letzter.y, wz && radiert ? 11 : 1.5, 0, 6.3); if (!wz) ctx.fillStyle = ctx.strokeStyle; ctx.fill();
       e.preventDefault();
     });
     flaeche.addEventListener("pointermove", function (e) {
       if (!zieht || !ctx) return;
+      if (wz && aktiv !== e.pointerId) return;
       var p = punkt(e);
       ctx.beginPath(); ctx.moveTo(letzter.x, letzter.y); ctx.lineTo(p.x, p.y); ctx.stroke();
       letzter = p; e.preventDefault();
     });
-    ["pointerup", "pointercancel", "pointerleave"].forEach(function (n) { flaeche.addEventListener(n, function () { zieht = false; }); });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (n) { flaeche.addEventListener(n, function (e) {
+      if (wz && aktiv !== null && e.pointerId !== aktiv) return;
+      zieht = false; aktiv = null;
+    }); });
     leeren.addEventListener("click", function () { if (ctx) ctx.clearRect(0, 0, flaeche.width, flaeche.height); });
     knopf.addEventListener("click", function () {
       var zu = !huelle.classList.contains("sb-zu");
       huelle.classList.toggle("sb-zu", zu);
       knopf.setAttribute("aria-expanded", zu ? "false" : "true");
-      if (!zu) { groesse(); }
+      if (!zu) { groesse(); stil(); if (opts.auf) opts.auf(huelle); }
     });
   }
   window.Schmierblatt = { malen: malen };
