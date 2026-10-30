@@ -447,7 +447,12 @@
         knoepfe(false);
         senden(s.id, "pruefen", a).then(function (j) {
           if (!j || !j.ok) throw 0;
-          if (j.richtig) { fertig("✓ " + (j.satz || "Super, das stimmt jetzt!"), j); return; }
+          if (j.richtig) {
+            /* Nur Paul (Dennys Vorgabe 30.10.2026, 00:03 Uhr): bei richtiger Eingabe verschwindet der Tipp-Kasten sofort,
+               statt bis zum Entfernen der Karte nach 1600 ms neben dem Lob zu stehen. Leon und Helena: unverändert. */
+            if (PAUL) { var tk = d.querySelector(".lwp-tipp"); if (tk) tk.hidden = true; }
+            fertig("✓ " + (j.satz || "Super, das stimmt jetzt!"), j); return;
+          }
           knoepfe(true);
           if (j.tipp) d.querySelector(".lwp-tipptext").textContent = j.tipp;
           sag("Noch nicht ganz. Lies den Tipp und probier es nochmal.", "noch");
