@@ -553,6 +553,14 @@
     border:1px solid var(--band-rand);color:var(--ink);font:700 16px/1.25 var(--font);text-decoration:none}
   a.hd-immer:link,a.hd-immer:visited,a.hd-immer:hover,a.hd-immer:active{color:var(--ink);text-decoration:none}
   @media (max-width:720px){ .tagesband .heutedran{grid-template-columns:minmax(0,1fr)} }
+  /* Gemischte Runde (Denny 30.10.2026, 09:0x Uhr): unter den Fach-Karten, startet genau die Runde von "Heute lernen". */
+  .hd-gemischt{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 16px;border-radius:16px;background:var(--card);
+    border:2px solid var(--band-lz);color:var(--ink);text-decoration:none;font-family:var(--font)}
+  a.hd-gemischt:link,a.hd-gemischt:visited,a.hd-gemischt:hover,a.hd-gemischt:active{color:var(--ink);text-decoration:none}
+  a.hd-gemischt:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+  .hd-gemischt .hd-ic{font-size:24px}
+  .hd-gemischt b{display:block;font:800 18px/1.2 var(--round)}
+  .hd-gemischt small{display:block;font:500 15px/1.3 var(--font);color:var(--band-lz)}
 
   /* --- Üben: Fach-Kacheln --- */
   .ueben{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -849,6 +857,13 @@
         <div class="hd-faecher" id="heuteDranFaecher" aria-live="polite">
           <div class="hd-hinweis">Ich schaue nach, was heute dran ist …</div>
         </div>
+        <!-- Gemischte Runde (Denny 30.10.2026, 09:0x Uhr, nur Paul): GENAU die Runde, die bis 30.10.2026 hinter
+             "Heute lernen" lag - gleiche Adresse quiz.html?heute=1, also alle Faecher gemischt, mit Mathe-Wiederholung
+             (Kapitel 142) und Lese-Wiederholung (Kapitel 149). Geprueft in pruefe-gemischte-runde.mjs. -->
+        <a class="hd-gemischt" href="quiz.html?heute=1" id="gemischteRunde">
+          <span class="hd-ic" aria-hidden="true">🔀</span>
+          <span><b>Gemischte Runde</b><small>Ein bisschen von allem – aus allen Fächern gemischt.</small></span>
+        </a>
       </div>
       <div class="hd-rechts" id="heuteDranImmer">
         <div class="hd-titel">Immer da</div>
@@ -873,6 +888,39 @@
         <a class="hd-immer" href="#uebenMathe"><span aria-hidden="true">🎮</span><span>Rechenspiele und mehr</span></a>
       </div>
     </div>
+    <!-- Rueckweg-Schalter (Denny 30.10.2026, 09:0x Uhr): die alte Startseite mit "Heute lernen" kommt ohne neuen Bau
+         zurueck, sobald im Speicher schalter:heute-dran = "alt" steht (GET /api/schalter?name=heute-dran, no-store).
+         Fehlt der Wert, ist er unbekannt oder antwortet der Server nicht: neue Startseite. Bei "alt" baut das Skript
+         genau den alten Aufbau wieder auf: #heuteLernen aus dem <template>, danach #tagesRechnen, #heuteDran faellt
+         ganz weg. Der Knopf steht im <template>, damit er im Normalfall gar nicht im Dokument ist.
+         Umschalten und Messung: befunde/2026-10-30-heute-dran-pruefprotokoll.md, Abschnitt "Nacharbeit". -->
+    <template id="startAlt"><a class="createcard heute tag1" href="quiz.html?heute=1" id="heuteLernen">
+      <div class="cc-ic">☀️</div>
+      <div>
+        <div class="cc-t">Heute lernen</div>
+        <div class="cc-s">Eine kurze Runde aus deinen Blättern – was wieder dran ist und etwas Neues.</div>
+      </div>
+    </a></template>
+    <script>(function(){
+      function alteSeite(){
+        var hd = document.getElementById("heuteDran"), t = document.getElementById("startAlt");
+        if (!hd || !t || !t.content || document.getElementById("heuteLernen")) return false;
+        var knopf = t.content.firstElementChild.cloneNode(true), rechnen = document.getElementById("tagesRechnen");
+        hd.parentNode.insertBefore(knopf, hd);
+        if (rechnen) hd.parentNode.insertBefore(rechnen, hd);
+        hd.parentNode.removeChild(hd);
+        document.documentElement.setAttribute("data-startseite", "alt");
+        return true;
+      }
+      window.LWStartSchalter = { alteSeite: alteSeite };
+      document.documentElement.setAttribute("data-startseite", "neu");
+      try {
+        fetch("/api/schalter?name=heute-dran", { credentials: "same-origin", cache: "no-store" })
+          .then(function(r){ return r.json(); })
+          .then(function(j){ if (j && j.ok && j.wert === "alt") alteSeite(); })
+          .catch(function(){ /* kein Schalter = neue Startseite */ });
+      } catch (e) {}
+    })();</script>
     <script src="/tagesrunde.js?v=4cfd2f17"></script>
     <script src="/paul/heute-dran.js?v=4d202b43"></script>
     <script>(function(){try{ LWHeuteDran.start(document.getElementById("heuteDranFaecher")); }catch(e){}})();</script>
