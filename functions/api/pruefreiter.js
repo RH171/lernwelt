@@ -53,7 +53,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen, kindOk, FAECHER_JE_KIND, fachPruefen } from "./_schulstoff.js";
 import { stoffBild } from "./_schulstoff.js";
 import { vorlagenLesen, vorlagenBilderLesen, vorlageFuerBlatt, BILD_SCHLUESSEL } from "./_lehrervorlagen.js";
-import { KINDER_MIT_PRUEFREITER, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
+import { KINDER_MIT_PRUEFREITER, erledigtVon, offeneStellen, oeffentlich, stellenFuerBlatt, verbesserungPruefen,
          zustandLesen, zustandSchreiben, fortschritt, imBestand, brauchtNachrechnen, nachrechenStand,
          brauchtVolllesen, volllesStand, optFuer, kettenStand, sichtPruefen } from "./_pruefreiter.js";
 import { nachrechnen } from "./_nachrechnen.js";
@@ -72,6 +72,8 @@ const json = (status, d) => new Response(JSON.stringify(d), {
    als soll - vorher stand dort „[object Object]“ (gesehen 29.10.2026 beim Bau der Tausch-Karte). */
 function sollText(s) {
   const o = s.soll;
+  /* Sammelkarte (30.10.2026): alle Teilaufgaben richtig herum. */
+  if (s.typ === "sammel" && Array.isArray(s.glieder)) return s.glieder.map(sollText).join("; ");
   if (Array.isArray(o)) return o.join(", ");
   if (o && typeof o === "object") {
     if (s.typ === "tausch") return o.a + " : " + o.b + " = " + o.q + (o.r ? " R " + o.r : "");
@@ -205,7 +207,7 @@ async function ortenAktion(env, kind, blattId) {
   if (!blatt) return json(404, { ok: false, fehler: "Das finde ich nicht mehr." });
   const vorlagen = await vorlagenLesen(env, kind);
   const zustand = await zustandLesen(env, kind);
-  const stellen = stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt, kind)).filter((s) => !zustand.s[s.id]);
+  const stellen = stellenFuerBlatt(blatt, vorlagen, optFuer(e.eintraege, blatt, kind)).filter((s) => !erledigtVon(zustand.s, s));
   const kreise = await kreiseLesen(env, kind);
   /* Neues Foto (14.10.2026): Orte vom alten Foto dieses Blattes verwerfen.
      Gespeichert wird das nur mit dem Schreibvorgang der neuen Ortung - bis
@@ -418,11 +420,13 @@ export async function onRequestPost(context) {
   }
 
   const zustand = await zustandLesen(env, kind);
-  if (zustand.s[id]) return json(200, { ok: true, schon: true, richtig: zustand.s[id].z === "richtig" });
+  const schonZ = erledigtVon(zustand.s, s);
+  if (schonZ) return json(200, { ok: true, schon: true, richtig: schonZ.z === "richtig" });
 
   const jetzt = new Date().toISOString();
   if (aktion === "verbessert") {
-    if (s.art === "rechnen") return json(400, { ok: false, fehler: "Diese Stelle prüfst du mit „Prüfen“." });
+    /* Sammelkarte (30.10.2026, nur Paul): „Habe ich im Heft überall verbessert“ erledigt alle Glieder. */
+    if (s.art === "rechnen" && s.typ !== "sammel") return json(400, { ok: false, fehler: "Diese Stelle prüfst du mit „Prüfen“." });
     zustand.s[id] = { z: "verbessert", t: jetzt };
   } else if (aktion === "gesehen") {
     if (s.art !== "lehrerin") return json(400, { ok: false, fehler: "Diese Stelle wird verbessert, nicht nur angesehen." });

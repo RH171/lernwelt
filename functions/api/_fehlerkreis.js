@@ -88,6 +88,8 @@ export function dataUrlBytes(url) {
    ✍️ hat EINE Karte, aber je rote Zeile einen Kreis. */
 export function zieleFuerStelle(s) {
   if (!s) return [];
+  /* Sammelkarte (30.10.2026, nur Paul): alle Markierungen der Glieder, mit ihren eigenen Kennungen. */
+  if (s.art === "rechnen" && s.typ === "sammel") return (s.glieder || []).flatMap(zieleFuerStelle);
   if (s.art === "rechnen" && s.typ === "teiler")
     return [{ id: s.id, text: "die Aufgabe \"Teiler von " + s.n + "\": dort steht die Zahl " + s.n +
       " und dahinter hat das Kind " + JSON.stringify(s.du) + " geschrieben. Das Rechteck umfasst die Zahl " + s.n + " und die Teiler des Kindes." }];

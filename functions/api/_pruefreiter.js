@@ -295,7 +295,58 @@ export function nachrechenStellen(blatt, bk, schon, mitRot, kind) {
                  du: u.ist.join(", "), tipp: listeTipp(u.ist, f.n, f.typ), eingabe: "liste" });
     }
   }
+  return mitKetten ? sammelfehler(aus, bk) : aus;
+}
+
+/* ---------- Sammelfehler (30.10.2026, Dennys Auftrag, nur Paul) ----------
+   Ein Schreibfehler, der sich durch eine ganze Aufgabe zieht, ist EINE Karte: Anlass Blatt
+   „Teilen durch 5 mit Rest“ (5tkzva9rss), Aufgabe 3c - zehn Teilaufgaben, alle als „5 : 10 = 2 R 0“
+   statt „10 : 5 = 2 R 0“ geschrieben und alle richtig gerechnet. Bisher zehn Karten.
+   Regel: mindestens SAMMEL_AB Tauschkarten (typ "tausch" = vertauscht UND richtig gerechnet, wenn man
+   sie andersherum liest) mit derselben Aufgabennummer auf einem Blatt -> eine Karte typ "sammel".
+   Jede andere Karte derselben Nummer (auch ein echter Rechenfehler) bleibt eine eigene Karte.
+   Die Glieder behalten ihre Kennungen: Kreise auf dem Foto (Fehlerkreis) gelten weiter, und sind alle
+   Glieder schon erledigt, ist es auch die Sammelkarte (erledigtVon). */
+export const SAMMEL_AB = 3;
+export function sammelSatz(wo, n) {
+  return "Aufgabe " + wo + ": Gerechnet hast du bei allen " + n + " Aufgaben richtig. Nur die Zahlen stehen bei allen falsch herum.";
+}
+export function sammelfehler(stellen, bk) {
+  const gruppen = new Map();
+  for (const s of stellen) {
+    if (s.typ !== "tausch" || !s.wo) continue;
+    if (!gruppen.has(s.wo)) gruppen.set(s.wo, []);
+    gruppen.get(s.wo).push(s);
+  }
+  const ersatz = new Map();
+  for (const [wo, gl] of gruppen) {
+    if (gl.length < SAMMEL_AB) continue;
+    const ids = gl.map((s) => s.id).sort();
+    const karte = { id: bk.id + ":n:" + kurz("sammel|" + wo + "|" + ids.join(",")), art: "rechnen", typ: "sammel", blatt: bk,
+                    nachgerechnet: true, ...(gl.every((s) => s.lesungen === 2) ? { lesungen: 2 } : {}),
+                    wo, n: gl.length, glieder: gl, gliedIds: ids, zeile: gl.map((s) => s.zeile).join("\n"),
+                    rotDa: gl.some((s) => s.rotDa), soll: gl.map((s) => s.soll),
+                    aufgabe: sammelSatz(wo, gl.length),
+                    du: gl.slice(0, 2).map((s) => s.du).join(", ") + (gl.length > 2 ? ", …" : ""),
+                    tipp: tauschTipp(gl[0].g), eingabe: "aufgabe" };
+    gl.forEach((s, i) => ersatz.set(s, i === 0 ? karte : null));
+  }
+  if (!ersatz.size) return stellen;
+  const aus = [];
+  for (const s of stellen) {
+    if (!ersatz.has(s)) aus.push(s);
+    else if (ersatz.get(s)) aus.push(ersatz.get(s));
+  }
   return aus;
+}
+/* Ist eine Stelle erledigt? Die Sammelkarte auch dann, wenn alle ihre Glieder schon einzeln erledigt sind. */
+export function erledigtVon(erl, s) {
+  if (!erl || !s) return null;
+  if (erl[s.id]) return erl[s.id];
+  if (s.typ === "sammel" && Array.isArray(s.gliedIds) && s.gliedIds.length && s.gliedIds.every((id) => erl[id])) {
+    return s.gliedIds.map((id) => erl[id]).sort((a, b) => (String(a.t || "") < String(b.t || "") ? 1 : -1))[0];
+  }
+  return null;
 }
 
 /* Eine Reihe -> eine Karte (28.10.2026, nur Paul) oder null. Nur, wenn der Abstand aus zwei gedruckten
@@ -351,8 +402,20 @@ export function nachrechenStand(blatt, kind) {
   /* Glieder einer Reihe stehen unter „Zahlenreihen“, nicht noch einmal einzeln. */
   const inKette = new Set();
   for (const k of w.ketten || []) k.glieder.forEach((f) => inKette.add(f));
+  /* Sammelfehler (30.10.2026, nur Paul): N gleich vertauschte Teilaufgaben einer Nummer zählen als EIN
+     Schreibfehler, nicht als N Rechenfehler. */
+  let fehler = w.fehler.filter((x) => x.bestaetigt === true).length, schreibfehler = 0;
+  if (o) {
+    const gr = {};
+    for (const x of w.fehler) {
+      if (x.bestaetigt !== true || inKette.has(x.f) || x.f.typ !== "rest" || !restVertauscht(x.u && x.u.g)) continue;
+      const nr = x.f.nr && x.f.nr !== "-" ? x.f.nr : "";
+      if (nr) gr[nr] = (gr[nr] || 0) + 1;
+    }
+    for (const n of Object.values(gr)) if (n >= SAMMEL_AB) { fehler -= n; schreibfehler++; }
+  }
   return { voll: w.voll, soll: w.soll, ist: w.ist, fehlt: w.fehlt.slice(0, 8), felder: w.felder,
-           fehler: w.fehler.filter((x) => x.bestaetigt === true).length,
+           fehler, ...(o ? { schreibfehler } : {}),
            ungeprueft: w.fehler.filter((x) => x.bestaetigt !== true && !x.nachsehen && !x.richtigBeleg).map((x) => x.f.roh).slice(0, 10),
            ...(o ? { nachsehen: w.fehler.filter((x) => x.nachsehen && !inKette.has(x.f)).map((x) => ({ zeile: x.f.roh, durchlesen: x.inhalt, feld: x.id, du: String(x.u.final) })).slice(0, 20),
                      /* Zweiter Beleg (29.10.2026, Entscheidung A): was am Foto oder per Klick entschieden ist. */
@@ -580,6 +643,8 @@ export function oeffentlich(s, bilder, kreise) {
   if (s.steht) o.steht = true;
   /* Zahlenreihe (28.10.2026, nur Paul): die gedruckten Zahlen stehen auf dem Blatt, Pauls Abstand ist
      seiner - beides darf zum Browser. soll und schritt bleiben hier. */
+  /* Sammelkarte (30.10.2026, nur Paul): der Browser zeigt dazu „Habe ich im Heft überall verbessert“. */
+  if (s.typ === "sammel") { o.typ = "sammel"; o.n = s.n; }
   if (s.typ === "kette") { o.typ = "kette"; o.druck = s.druck.slice(-2); if (s.paulSchritt) o.paulSchritt = s.paulSchritt; }
   return o;
 }
@@ -609,7 +674,8 @@ export function fortschritt(blaetter, vorlagenDaten, zustand, nurBlatt, jetzt, k
     bereich.add(b.id);
     for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b, kind))) {
       gezaehlt.add(s.id);
-      const z = erl[s.id];
+      if (s.gliedIds) s.gliedIds.forEach((id) => gezaehlt.add(id));
+      const z = erledigtVon(erl, s);
       if (!z) offen++;
       else if (berlinTag(z.t) === heute) erledigt++;
     }
@@ -629,7 +695,7 @@ export function offeneStellen(blaetter, vorlagenDaten, zustand, nurBlatt, kind) 
   const aus = [];
   for (const b of blaetter || []) {
     if (nurBlatt ? b.id !== nurBlatt : !imBestand(b)) continue;
-    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b, kind))) if (!erledigt[s.id]) aus.push(s);
+    for (const s of stellenFuerBlatt(b, vorlagenDaten, optFuer(blaetter, b, kind))) if (!erledigtVon(erledigt, s)) aus.push(s);
   }
   return aus;
 }
@@ -662,7 +728,7 @@ export function sichtPruefen(s, w) {
      Abschrift und Durchlesen NICHT dieselbe Zahl gelesen, widerspricht ihm der Server nicht - die Eltern
      sehen nach (Anlass 8tv8tshw4c: Paul hatte 4200 richtig, gelesen war 4100). */
   /* Vertauschte Teilaufgabe (29.10.2026, Entscheidung B): gerechnet hat Paul richtig, es geht um die Reihenfolge. */
-  if (wahl === "richtig" && s.typ === "tausch")
+  if (wahl === "richtig" && (s.typ === "tausch" || s.typ === "sammel"))
     return { urteil: "recht", satz: "Stimmt, gerechnet hast du richtig! Es geht nur darum, wie die Aufgabe dasteht: Die Zahl, die aufgeteilt wird, steht vorn." };
   if (wahl === "richtig" && s.nachgerechnet && s.lesungen !== 2)
     return { urteil: "offen", satz: "Danke! Das schauen sich deine Eltern mit dir im Heft an." };
@@ -692,6 +758,16 @@ export function verbesserungPruefen(s, antwort) {
     if (!ist.length) return { richtig: false, tipp: "Schreib die Teiler mit Komma dazwischen, zum Beispiel 1, 2, …" };
     if (mengeGleich(ist, s.soll) && ist.length === s.soll.length) return { richtig: true, satz: GUT.teiler(s.n, s.soll.length) };
     return { richtig: false, tipp: (mengeGleich(ist, s.soll) ? "Fast! " : "Noch nicht ganz. ") + teilerTipp(ist, s.n) };
+  }
+  /* Sammelkarte (30.10.2026, nur Paul): eine der Aufgaben richtig herum genügt - geprüft wie die Tauschkarte
+     des Gliedes, dessen Zahlen Paul nimmt. */
+  if (s.art === "rechnen" && s.typ === "sammel" && Array.isArray(s.glieder) && s.glieder.length) {
+    const m = /^\s*(\d{1,6})\s*[:÷\/]\s*(\d{1,6})/.exec(a);
+    if (!m) return verbesserungPruefen(s.glieder[0], a);
+    const x = +m[1], y = +m[2];
+    const gl = s.glieder.find((g) => x === g.soll.a && y === g.soll.b) || s.glieder.find((g) => x === g.g.a && y === g.g.b);
+    if (gl) return verbesserungPruefen(gl, a);
+    return { richtig: false, tipp: "Nimm zwei Zahlen aus Aufgabe " + s.wo + " auf deinem Blatt, nur in der anderen Reihenfolge." };
   }
   if (s.art === "rechnen" && s.typ === "tausch") {
     /* "18 : 5" reicht; schreibt Paul "= 3 R 3" dazu, muss auch das stimmen. */

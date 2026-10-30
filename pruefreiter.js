@@ -393,6 +393,8 @@
           '<button type="button" class="lwp-ja lwp-pruefen">Prüfen</button></div>' +
         '<div class="lwp-knoepfe">' + (sicht ? '<button type="button" class="lwp-leise lwp-sicht" aria-expanded="false">Meine Sicht</button>'
                                              : '<button type="button" class="lwp-leise lwp-stimmt">Stimmt doch so</button>') +
+        /* Sammelkarte (30.10.2026, nur Paul): eine Aufgabe richtig herum prüfen ODER alle im Heft verbessert. */
+        (s.typ === "sammel" ? '<button type="button" class="lwp-leise lwp-verbessert">Habe ich im Heft überall verbessert</button>' : "") +
         '<button type="button" class="lwp-leise lwp-spaeter">Später</button></div>' +
         (sicht ? '<div class="lwp-sichtwahl" hidden><div class="lwp-sichtfrage">Was hast du gerechnet?</div>' + sichtWahl + "</div>" : "") +
         '<div class="lwp-meldung" aria-live="polite"></div>';
