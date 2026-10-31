@@ -189,6 +189,7 @@ export async function korrekturSetzen(env, kind, blatt, k) {
   const heute = heuteBerlin();
   for (let i = 0; i < 14; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const m = d.toISOString().slice(0, 7);
     if (!monate.includes(m)) monate.push(m);

@@ -223,6 +223,7 @@ export async function herkunftSetzen(env, kind, id, felder) {
   const heute = heuteBerlin();
   for (let i = 0; i < 3; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -434,9 +435,14 @@ export async function stoffLesen(env, kind, monate) {
 
   const heute = heuteBerlin();
   const wieViele = Math.min(MONATE_ZURUECK, Math.max(1, Number(monate) || 3));
+  /* Monatswechsel (31.10.2026, Auftrag 185, nur Paul): Am 31. rechnete setUTCMonth vom 31.10. auf den
+     "31.09." = 01.10. - der September fehlte, der Oktober kam doppelt (Pauls Englisch-Karte zeigte
+     0 Karten, die faelligen Lernpunkte lagen auf September-Blaettern). Fuer Paul wird erst auf den
+     Monatsersten gestellt; Leon und Helena rechnen wie bisher. */
   const alle = [];
   for (let i = 0; i < wieViele; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     let rohMonat;
     try {
@@ -573,6 +579,7 @@ export async function seiteSetzen(env, kind, id, nr, bild, maxSeiten, abdruck) {
   const heute = heuteBerlin();
   for (let i = 0; i < MONATE_ZURUECK; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const schluessel = LISTE(kind, d.toISOString().slice(0, 7));
     let roh;
@@ -657,6 +664,7 @@ export async function seiteDrehen(env, kind, id, nr, bild, grad, orteNeu) {
   const heute = heuteBerlin();
   for (let i = 0; i < MONATE_ZURUECK; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const schluessel = LISTE(kind, d.toISOString().slice(0, 7));
     let roh;
@@ -748,6 +756,7 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
   const heute = heuteBerlin();
   for (let i = 0; i < 4; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -790,6 +799,7 @@ export async function abschriftenSetzen(env, kind, id, felder) {
   const heute = heuteBerlin();
   for (let i = 0; i < 14; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -811,6 +821,7 @@ export async function titelSetzen(env, kind, id, titel, warum) {
   const heute = heuteBerlin();
   for (let i = 0; i < 2; i++) {          // dieser und der Vormonat reichen
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -904,6 +915,7 @@ export async function vorschlagSetzen(env, kind, id, datum) {
   const heute = heuteBerlin();
   for (let i = 0; i < 3; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -940,6 +952,7 @@ export async function artSetzen(env, kind, id, art) {
   const heute = heuteBerlin();
   for (let i = 0; i < MONATE_ZURUECK; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -1015,6 +1028,7 @@ export async function themenSetzen(env, kind, zuordnung) {
   let gesetzt = 0, schreibvorgaenge = 0;
   for (let i = 0; i < MONATE_ZURUECK && Object.keys(offen).length; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -1066,6 +1080,7 @@ export async function fachSetzen(env, kind, id, { fach, vorschlag, bestaetigt } 
   const heute = heuteBerlin();
   for (let i = 0; i < MONATE_ZURUECK; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
@@ -1110,6 +1125,7 @@ export async function stoffAendern(env, kind, id, was) {
   const heute = heuteBerlin();
   for (let i = 0; i < MONATE_ZURUECK; i++) {
     const d = new Date(heute + "T12:00:00Z");
+    if (kind === "paul") d.setUTCDate(1);   // Monatswechsel am 31. (Auftrag 185), nur Paul
     d.setUTCMonth(d.getUTCMonth() - i);
     const monat = d.toISOString().slice(0, 7);
     let roh;
