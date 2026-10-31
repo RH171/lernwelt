@@ -15210,5 +15210,243 @@ window.LEON_GESCHICHTEN = [
     "seite": 8
    }
   ]
+ },
+ {
+  "id": "w45-torwart-freitag",
+  "titel": "Torwarttraining mit Papa",
+  "bild": "🧤",
+  "lang": true,
+  "ereignis": "2026-11-06",
+  "zeigenAb": "2026-11-05",
+  "zeigenBis": "2026-11-06",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Frei|tag, der 6. No|vem|ber.",
+     "An die|sem Tag ist Tor|wart|trai|ning.",
+     "Pa|pa ist da|bei!",
+     "Le|on freut sich schon."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎒",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on packt sei|ne Ta|sche.",
+     "Die Hand|schu|he kom|men hin|ein.",
+     "Dann die Fuß|ball|schu|he.",
+     "Und die Fla|sche mit Was|ser."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⏰",
+      "🏟️"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Um vier Uhr be|ginnt das Trai|ning.",
+     "Es ist beim ASC Box|dorf.",
+     "Da|nach ist noch Fuß|ball|trai|ning.",
+     "Das be|ginnt um fünf Uhr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🧤",
+      "🤔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Tor|wart steht im Tor.",
+     "Er darf den Ball mit den Hän|den fan|gen.",
+     "Da|für trägt er Hand|schu|he.",
+     "Sie hal|ten den Ball fest."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💭",
+      "🤲"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt sich vor: Ein Ball fliegt.",
+     "Er hält die Hän|de wie ei|ne Scha|le.",
+     "Fest zu|pa|cken, nicht fal|len las|sen!",
+     "Viel|leicht übt Pa|pa das mit ihm."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💭",
+      "🦘"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann denkt Le|on an den Hecht|sprung.",
+     "Der Ball fliegt zur Sei|te.",
+     "Und der Tor|wart springt hin|ter|her.",
+     "Das sieht rich|tig toll aus."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👀",
+      "🧠"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Tor|wart muss gut schau|en.",
+     "Er sieht, wo der Ball hin|fliegt.",
+     "Dann ent|schei|det er schnell."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat ei|ne Fra|ge an Pa|pa.",
+     "Was ü|ben wir wohl am Frei|tag?",
+     "Pa|pa weiß es viel|leicht schon.",
+     "A|ber Le|on lässt sich ü|ber|ra|schen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👥",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Um fünf Uhr kom|men die an|de|ren Kin|der.",
+     "Viel|leicht er|zählt Le|on ih|nen da|von.",
+     "Dann kann er zei|gen, was er kann."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Hand|schu|he lie|gen schon be|reit.",
+     "Le|on freut sich auf Frei|tag.",
+     "Das wird ein gu|ter Tag!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wann beginnt das Torwarttraining?",
+    "richtig": "um vier Uhr",
+    "falsch": [
+     "um zehn Uhr",
+     "um acht Uhr"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wer ist beim Torwarttraining dabei?",
+    "richtig": "Papa",
+    "falsch": [
+     "Opa",
+     "Paul"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was tragen Torwarte an den Händen?",
+    "richtig": "Handschuhe",
+    "falsch": [
+     "Mützen",
+     "Schals"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was packt Leon in die Tasche?",
+    "richtig": "Handschuhe",
+    "falsch": [
+     "Schlittschuhe",
+     "Badehose"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wann beginnt das Fußballtraining?",
+    "richtig": "um fünf Uhr",
+    "falsch": [
+     "um drei Uhr",
+     "um sieben Uhr"
+    ],
+    "seite": 9
+   }
+  ]
  }
 ];
