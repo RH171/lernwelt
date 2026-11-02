@@ -181,15 +181,15 @@
       });
       if (neuHier.length) neuJeBlatt.push(neuHier);
     });
-    var titel = {};
-    liste.forEach(function (b) { titel[b.id] = b.titel || ""; });
+    var titel = {}, fachVon = {};   // fachVon: Sprache fuers Selbst-Schreiben in den Fundkarten (02.11.2026)
+    liste.forEach(function (b) { titel[b.id] = b.titel || ""; fachVon[b.id] = b.fach || ""; });
     (quiz || []).forEach(function (q) {
       if (!q || !q.frage || !q.richtig || !q.falsch || q.falsch.length !== 2) return;
       if (!(q.blatt in titel)) return;          // ausgeblendetes Blatt (oder anderes Fach): nicht abfragen
       if (q.frageId != null && ohne["q:" + q.frageId]) return;
       topf.wackler.push({ frage: q.frage, richtig: q.richtig, falsch: q.falsch,
         merke: q.merke || "", stichwort: "Aus dem Quiz", blatt: q.blatt,
-        blattTitel: titel[q.blatt], sorte: "wackler",
+        blattTitel: titel[q.blatt], fach: fachVon[q.blatt], sorte: "wackler",
         quiz: { belegNr: q.belegNr, frageId: q.frageId }, _tage: q.tage || 0, _r: 0 });
     });
     // Am laengsten her zuerst; bei "sicher" das Unsicherste (wenig r) zuerst.
@@ -501,10 +501,10 @@
     var e = { hoechstens: 10, jeSicher: 2 };
     for (var y in (opt || {})) e[y] = opt[y];
     stand = stand || {};
-    var titel = {}, karteVon = {}, sicher = [];
+    var titel = {}, fachVon = {}, karteVon = {}, sicher = [];
     (blaetter || []).forEach(function (b) {
       if (!b || !b.id || b.sichtbar === false || !Array.isArray(b.karten)) return;
-      titel[b.id] = b.titel || "";
+      titel[b.id] = b.titel || ""; fachVon[b.id] = b.fach || "";
       b.karten.forEach(function (k) {
         if (!k || !k.frage || !k.richtig || !k.falsch || k.falsch.length !== 2) return;
         var key = b.id + "#k:" + schluessel(k);
@@ -523,7 +523,7 @@
       quizVon[Number(q.belegNr) >= 1 ? q.blatt + "#" + Math.floor(Number(q.belegNr))
                                      : q.blatt + "#f:" + String(q.frageId || "").slice(0, 24)] = {
         frage: q.frage, richtig: q.richtig, falsch: q.falsch, merke: q.merke || "",
-        stichwort: "Aus dem Quiz", blatt: q.blatt, blattTitel: titel[q.blatt],
+        stichwort: "Aus dem Quiz", blatt: q.blatt, blattTitel: titel[q.blatt], fach: fachVon[q.blatt],
         quiz: { belegNr: q.belegNr, frageId: q.frageId } };
     });
     var offen = [], gesehen = {};

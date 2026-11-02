@@ -131,6 +131,11 @@
     ".lwf-pruefen{min-height:52px;min-width:96px;border:none;border-radius:14px;background:" + AKZ + ";",
     "  color:" + AUF + ";font:700 16px var(--rund,inherit);cursor:pointer}",
     ".lwf-pruefen[disabled]{opacity:.4;cursor:default}",
+    /* Selbst schreiben (02.11.2026, nur Paul): derselbe Schalter wie im Lernquiz. */
+    ".lwf-selbst{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;margin:10px 0 0;" +
+      "padding:6px 14px;border:2px solid " + LINE + ";border-radius:14px;background:" + K + ";color:" + INK + ";font:700 16px/1.2 var(--rund,inherit);cursor:pointer}",
+    ".lwf-selbst b{min-width:52px;padding:6px 10px;border-radius:999px;background:" + LINE + ";text-align:center}",
+    ".lwf-selbst[aria-pressed=true]{border-color:" + AKZ + "}.lwf-selbst[aria-pressed=true] b{background:" + AKZ + ";color:" + AUF + "}",
     ".lwf-weg{margin:10px 2px 0;padding:9px 12px;border-radius:12px;font-size:14.5px;line-height:1.5;" +
       "border:1px solid " + LINE + ";white-space:pre-line}",
     ".lwf-tipp{font-size:14px;color:var(--orange,#b45309);margin:10px 2px 0;line-height:1.45}",
@@ -317,6 +322,54 @@
       .catch(function () { dann(""); });
   }
 
+  /* Rueckweg-Schalter (02.11.2026, Auftrag 193, nur Paul): "bildlast" und "fundtippen", einmal je Seite
+     gefragt, schon beim Laden der Datei. "alt" oder kein Netz = genau wie vorher. */
+  var schalter = {};
+  function schalterFragen(name) {
+    if (schalter[name]) return schalter[name];
+    var w = schalter[name] = { wert: null, warte: [] };
+    function fertig(x) { w.wert = x; w.warte.splice(0).forEach(function (f) { try { f(x); } catch (e) {} }); }
+    try {
+      fetch("/api/schalter?name=" + name, { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { fertig(d && d.wert === "neu" ? "neu" : "alt"); })
+        .catch(function () { fertig("alt"); });
+    } catch (e) { fertig("alt"); }
+    return w;
+  }
+  function schalterDann(name, f) { var w = schalterFragen(name); if (w.wert) f(w.wert); else w.warte.push(f); }
+  try { if (/^\/paul\//.test(global.location.pathname)) { schalterFragen("bildlast"); schalterFragen("fundtippen"); } } catch (e) {}
+
+  /* Bildlast "neu" (Paul: „Ein Bild hat gerade 30 Sekunden lang geladen.“): das Foto als echtes Bild mit
+     Abdruck in der Adresse (functions/api/_bildantwort.js) - der Browser haelt es 30 Tage, ein neues oder
+     gedrehtes Foto hat eine neue Adresse. Geladen wird nur, was die offene und die naechste Karte zeigen. */
+  function bildAdresse(kind, id) {
+    return "/api/schulstoff?kind=" + encodeURIComponent(kind) + "&bild=" + encodeURIComponent(id + ":0") + "&format=jpeg";
+  }
+
+  /* Selbst schreiben in den Fundkarten (02.11.2026, nur Paul): derselbe Schalter und Speicher wie im
+     Lernquiz (quiz/motor.js), dieselbe Wertung (QUIZ_FREI_PRUEFEN), Zahlen wie LWMathe. Freiwillig -
+     die Stufen des Lernquiz aendert das nicht. Taugt nur fuer kurze Antworten (1-3 Woerter, wie selbstOk). */
+  var SELBST = "paul-quiz-selbst";
+  function selbstLesen() { try { return JSON.parse(global.localStorage.getItem(SELBST)) === true; } catch (e) { return false; } }
+  function selbstSchreiben(an) { try { global.localStorage.setItem(SELBST, JSON.stringify(!!an)); } catch (e) {} }
+  function istZahl(t) { return /^[-\u2212]?\d+([.,]\d+)*$/.test(String(t).trim()); }
+  function tippTauglich(k) {
+    var r = String((k && k.richtig) || "").trim();
+    return !!r && r.length <= 40 && r.split(/\s+/).length <= 3 && !/[.!?;:]$/.test(r);
+  }
+  function tippWerten(k, text) {
+    var T = global.LWToleranz, r = String(k.richtig);
+    if (istZahl(r)) {
+      if (global.LWMathe) return { stimmt: !!global.LWMathe.pruefen({ richtig: r, mathe: { eingabe: "zahl" } }, text, T).stimmt };
+      return { stimmt: T.pruefen(text.replace(/(\d)[.\s](?=\d{3}(?!\d))/g, "$1"), r, { tippfehler: false }).stufe === "gut" };
+    }
+    var f = String(k.fach || ""), sp = /^englisch/.test(f) ? "en" : /^franz/.test(f) ? "fr" : "de";
+    var e = T.pruefen(text, r, { sprache: sp, verboten: (k.falsch || []).slice(), trennen: "keine",
+      artikelEgal: sp !== "fr", zusatzWorte: sp === "de" && !/^deutsch/.test(f) });
+    return { stimmt: e.stufe === "gut" || e.stufe === "fast", fast: e.stufe === "fast" };
+  }
+
   /* Der Lernpunkt einer Karte: die Antwort, vereinfacht. Dieselbe Regel
      wie punktSchluessel() in functions/api/_wiedervorlage.js - der Server
      vereinfacht noch einmal, eine Abweichung hier kostet also nichts. */
@@ -349,6 +402,30 @@
        Karte ihr eigenes .blatt, kommt ihr Ausschnitt aus DIESEM Foto. Ohne
        gilt opt.blattId wie bisher. Je Blatt ein Bild und eine Zeilensuche. */
     var bilder = {}, zeilenJe = {};
+    /* Schalter (nur Paul): meist schon beantwortet, sonst nach der Antwort nachgeholt (Ende von zeigen). */
+    var bildNeu = kind === "paul" && schalterFragen("bildlast").wert === "neu";
+    var tippNeu = kind === "paul" && schalterFragen("fundtippen").wert === "neu";
+    var rueck = {};
+    function rueckfall(bid) {     // JPEG-Weg scheitert: der alte JSON-Weg, wie bisher
+      if (rueck[bid]) return;
+      rueck[bid] = 1;
+      blattHolen(kind, bid, function (b) {
+        bilder[bid] = b;
+        Array.prototype.forEach.call(document.querySelectorAll("img[data-lwf-blatt]"), function (im) {
+          if (im.getAttribute("data-lwf-blatt") === bid) im.src = b;
+        });
+      });
+    }
+    function vorladen() {         // nur die offene und die naechste Karte
+      [i, i + 1].forEach(function (n) {
+        var k = karten[n], bid = blattVon(k);
+        if (!k || k.mathe || k.lesen || k.quiz || !bid || bilder[bid]) return;
+        bilder[bid] = bildAdresse(kind, bid);
+        var vor = new Image();
+        vor.onerror = function () { rueckfall(bid); };
+        vor.src = bilder[bid];
+      });
+    }
     function blattVon(k) { return (k && k.blatt) || opt.blattId || ""; }
     function gruenFuer(bid) {
       if (opt.gruenJe && Array.isArray(opt.gruenJe[bid])) return opt.gruenJe[bid];
@@ -412,9 +489,11 @@
 
     function grossZeigen(k) {
       var blattBild = bildVon(k);
+      if (!blattBild && bildNeu && blattVon(k)) blattBild = bilder[blattVon(k)] = bildAdresse(kind, blattVon(k));
       if (!blattBild) return;
       var lage = el("div", "lwf-gross");
       var im = el("img"); im.src = blattBild; im.alt = "Dein ganzes Blatt";
+      if (bildNeu) { im.setAttribute("data-lwf-blatt", blattVon(k)); im.addEventListener("error", function () { rueckfall(blattVon(k)); }); }
       lage.appendChild(im);
       var zu = el("button", "lwf-zu", "×");
       zu.type = "button";
@@ -468,7 +547,7 @@
       }
       if (k.quiz) {
         aussen.appendChild(el("div", "lwf-bu", "Eine Frage aus deinem Quiz. Wenn du nachsehen willst: dein Blatt."));
-        if (blattBild) {
+        if (blattBild || (bildNeu && bid)) {   // bildlast neu: das Foto laedt erst beim Antippen
           var gq = el("button", "lwf-ganz", "Das ganze Blatt ansehen");
           gq.type = "button";
           gq.addEventListener("click", function () { grossZeigen(k); });
@@ -485,6 +564,7 @@
       var im = el("img");
       im.alt = "Ausschnitt aus deinem Blatt";
       im.setAttribute("data-lwf-blatt", bid);
+      if (bildNeu) im.addEventListener("error", function () { rueckfall(bid); });
       rahmen.appendChild(im);
 
       function setzen() {
@@ -734,6 +814,7 @@
         return;
       }
 
+      if (bildNeu) vorladen();
       var k = karten[i];
       var karte = el("div", "lwf-karte rein");
       var num = el("div", "lwf-num");
@@ -759,6 +840,43 @@
       var chips = el("div", "lwf-chips");
       var fertigChip = false;
 
+      function zaehlen(text, stimmt) {
+        if (erster[i] !== undefined) return;
+        erster[i] = stimmt;
+        /* An die Statistik der Eltern (Denny, 25.09.2026, "gruppiert nach
+           Blatt"): eine Aufgabe je Karte, gezaehlt der ERSTE Tipp, sofort -
+           auch wenn Paul die Runde danach abbricht. Merkmal ist der
+           Blatttitel, nicht die Karte: 16 Karten je Blatt wuerden "Woran es
+           hakt" fluten. Ohne lernstand.js (Messung) passiert nichts. */
+        try {
+          if (window.lernstand && window.lernstand.antwort)
+            window.lernstand.antwort(erster[i],
+              String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig,
+              lernpunkt(k));
+        } catch (e) {}
+      }
+      function richtigFertig(b, lob) {
+        fertigChip = true;
+        if (b) b.className = "lwf-chip gut";
+        [].forEach.call(chips.children, function (c) {
+          c.disabled = true;
+          if (c !== b) c.style.opacity = .32;
+        });
+        sagt.className = "lwf-lob";
+        sagt.textContent = lob || "Richtig gelesen. Die Karte kommt ins Regal.";
+        merkZeigen();
+        var w = el("button", "lwf-knopf", "Karte ins Regal legen");
+        w.type = "button";
+        w.addEventListener("click", function () {
+          w.disabled = true;
+          karte.classList.add("ab");
+          gefunden++;
+          insRegal(k);
+          setTimeout(function () { i++; zeichne(); }, 450);
+        });
+        karte.appendChild(w);
+      }
+
       antworten(k, i).forEach(function (text) {
         var b = el("button", "lwf-chip");
         b.type = "button";
@@ -766,40 +884,9 @@
         b.appendChild(el("span", null, text));
         b.addEventListener("click", function () {
           if (fertigChip) return;
-          if (erster[i] === undefined) {
-            erster[i] = (text === String(k.richtig));
-            /* An die Statistik der Eltern (Denny, 25.09.2026, "gruppiert nach
-               Blatt"): eine Aufgabe je Karte, gezaehlt der ERSTE Tipp, sofort -
-               auch wenn Paul die Runde danach abbricht. Merkmal ist der
-               Blatttitel, nicht die Karte: 16 Karten je Blatt wuerden "Woran es
-               hakt" fluten. Ohne lernstand.js (Messung) passiert nichts. */
-            try {
-              if (window.lernstand && window.lernstand.antwort)
-                window.lernstand.antwort(erster[i],
-                  String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig,
-                  lernpunkt(k));
-            } catch (e) {}
-          }
+          zaehlen(text, text === String(k.richtig));
           if (text === String(k.richtig)) {
-            fertigChip = true;
-            b.className = "lwf-chip gut";
-            [].forEach.call(chips.children, function (c) {
-              c.disabled = true;
-              if (c !== b) c.style.opacity = .32;
-            });
-            sagt.className = "lwf-lob";
-            sagt.textContent = "Richtig gelesen. Die Karte kommt ins Regal.";
-            merkZeigen();
-            var w = el("button", "lwf-knopf", "Karte ins Regal legen");
-            w.type = "button";
-            w.addEventListener("click", function () {
-              w.disabled = true;
-              karte.classList.add("ab");
-              gefunden++;
-              insRegal(k);
-              setTimeout(function () { i++; zeichne(); }, 450);
-            });
-            karte.appendChild(w);
+            richtigFertig(b);
           } else {
             /* Danebengetippt kostet nichts - der Knopf tritt zurueck, die
                Karte bleibt. "Kein Druck ueber Verlustangst" (04.09.2026). */
@@ -815,22 +902,92 @@
         chips.appendChild(b);
       });
 
+      /* Selbst schreiben (fundtippen "neu", nur Paul, Quiz-Karten): Schalter wie im Lernquiz. Ist er an,
+         kommt zuerst ein Eingabefeld; ein Fehlversuch zeigt die Antworten zum Antippen. Verbucht wird
+         genau wie ein Tipp (zaehlen) - dieselbe Wiedervorlage. */
+      if (tippNeu && k.quiz && global.LWToleranz && tippTauglich(k)) {
+        var an = selbstLesen();
+        var sb = el("button", "lwf-selbst");
+        sb.type = "button";
+        sb.setAttribute("aria-pressed", an ? "true" : "false");
+        sb.appendChild(el("span", null, "\u270F\uFE0F Selbst schreiben"));
+        sb.appendChild(el("b", null, an ? "an" : "aus"));
+        sb.addEventListener("click", function () {
+          selbstSchreiben(!an);
+          if (erster[i] === undefined && !fertigChip) zeichne();
+          else { an = !an; sb.setAttribute("aria-pressed", an ? "true" : "false"); sb.lastChild.textContent = an ? "an" : "aus"; }
+        });
+        karte.appendChild(sb);
+        if (an && erster[i] === undefined) {
+          var reihe = el("div", "lwf-eingabe");
+          var feld = el("input", "lwf-feld");
+          feld.type = "text"; feld.autocomplete = "off"; feld.spellcheck = false;
+          feld.setAttribute("autocapitalize", "off");
+          feld.setAttribute("inputmode", istZahl(k.richtig) ? "numeric" : "text");
+          feld.setAttribute("aria-label", "Deine Antwort");
+          var knopf = el("button", "lwf-pruefen", "Prüfen");
+          knopf.type = "button";
+          reihe.appendChild(feld); reihe.appendChild(knopf);
+          karte.appendChild(reihe);
+          karte.appendChild(sagt);
+          var tippen = function () {
+            if (fertigChip || erster[i] !== undefined) return;
+            var text = String(feld.value || "").trim();
+            if (!text) { sagt.className = "lwf-tipp"; sagt.textContent = "Schreib zuerst deine Antwort hinein."; feld.focus(); return; }
+            var e = tippWerten(k, text);
+            zaehlen(text.slice(0, 40), e.stimmt);
+            feld.disabled = true; knopf.disabled = true;
+            if (e.stimmt) {
+              feld.className = "lwf-feld gut";
+              richtigFertig(null, "Richtig geschrieben. Die Karte kommt ins Regal.");
+              if (e.fast) global.LWToleranz.zeigen(sagt, text, String(k.richtig), { wo: "So schreibt man es:" });
+              return;
+            }
+            sagt.className = "lwf-tipp";
+            sagt.textContent = "Noch nicht. Tipp unten die richtige Antwort an.";
+            merkZeigen();
+            karte.insertBefore(chips, sagt);
+          };
+          knopf.addEventListener("click", tippen);
+          feld.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); tippen(); } });
+          halter.appendChild(karte);
+          return;
+        }
+      }
+
       karte.appendChild(chips);
       karte.appendChild(sagt);
       halter.appendChild(karte);
     }
 
     zeichne();
-    var ids = {};
-    karten.forEach(function (k) { if (blattVon(k) && !k.mathe && !k.lesen) ids[blattVon(k)] = 1; });
-    Object.keys(ids).forEach(function (id) {
-      blattHolen(kind, id, function (b) {
-        bilder[id] = b;
-        /* Nur neu zeichnen, wenn die GERADE offene Karte davon profitiert -
-           sonst springt die Karte unter dem Finger. */
-        if (b && i < karten.length && blattVon(karten[i]) === id) zeichne();
+    function allesHolen() {     // bisheriger Weg: alle Blaetter beim Start, als JSON
+      var ids = {};
+      karten.forEach(function (k) { if (blattVon(k) && !k.mathe && !k.lesen) ids[blattVon(k)] = 1; });
+      Object.keys(ids).forEach(function (id) {
+        blattHolen(kind, id, function (b) {
+          bilder[id] = b;
+          /* Nur neu zeichnen, wenn die GERADE offene Karte davon profitiert -
+             sonst springt die Karte unter dem Finger. */
+          if (b && i < karten.length && blattVon(karten[i]) === id) zeichne();
+        });
       });
-    });
+    }
+    if (kind !== "paul") allesHolen();
+    else {
+      /* Kam die Schalter-Antwort erst jetzt: die offene Karte umstellen, solange sie unberuehrt ist. */
+      var offenUnberuehrt = function () { return i < karten.length && erster[i] === undefined && !karten[i].mathe && !karten[i].lesen; };
+      if (!bildNeu) schalterDann("bildlast", function (w) {
+        if (w !== "neu") { allesHolen(); return; }
+        bildNeu = true;
+        if (offenUnberuehrt() && blattVon(karten[i])) zeichne(); else vorladen();
+      });
+      if (!tippNeu) schalterDann("fundtippen", function (w) {
+        if (w !== "neu") return;
+        tippNeu = true;
+        if (offenUnberuehrt() && karten[i].quiz) zeichne();
+      });
+    }
     return true;
   }
 

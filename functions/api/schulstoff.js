@@ -24,6 +24,7 @@ import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { tippOk, nebendetail } from "./quiz.js";
 import { fehlerJeFach } from "./_schwaechen.js";
 import { korrekturenFuerBrowser } from "./_korrektur.js";
+import { bildAntwort } from "./_bildantwort.js";
 import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
 import { volllesen, brauchtVolllesen, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
@@ -1536,6 +1537,8 @@ export async function onRequestGet(context) {
     const [id, nr] = String(bild).split(":");
     const daten = await stoffBild(env, id, nr);
     if (!daten) return json(404, { ok: false, fehler: "Das Bild finde ich nicht." });
+    /* Als echtes Bild mit Abdruck in der Adresse (Auftrag 193, 02.11.2026, _bildantwort.js). Ohne format=jpeg wie vorher. */
+    if (p.get("format") === "jpeg") return bildAntwort(request, daten);
     // Als data-URL zurück, damit die Seite es direkt in ein <img> hängen kann.
     return json(200, { ok: true, bild: daten });
   }

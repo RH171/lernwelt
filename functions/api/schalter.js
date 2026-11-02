@@ -17,7 +17,9 @@
  * Prüfprotokoll: befunde/2026-10-30-heute-dran-pruefprotokoll.md, Abschnitt „Nacharbeit 30.10.2026“.
  */
 /* "lineal" (02.11.2026, Auftrag 192): Lineal und Zurück in Pauls Rechenfläche (quiz/rechenflaeche.js), "alt" = ohne. */
-const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"] };
+/* "bildlast" und "fundtippen" (02.11.2026, Auftrag 193): Fundkarten-Fotos als Bild mit Abdruck, nur offene und nächste
+   Karte / „Selbst schreiben“ auf Quiz-Karten (fundkarten.js). "alt" = Fotos wie vorher alle als JSON / ohne Schalter. */
+const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"] };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },
