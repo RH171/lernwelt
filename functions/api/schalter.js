@@ -16,7 +16,8 @@
  *   npx wrangler kv key delete "schalter:heute-dran" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote   # zurück auf neu
  * Prüfprotokoll: befunde/2026-10-30-heute-dran-pruefprotokoll.md, Abschnitt „Nacharbeit 30.10.2026“.
  */
-const ERLAUBT = { "heute-dran": ["neu", "alt"] };
+/* "lineal" (02.11.2026, Auftrag 192): Lineal und Zurück in Pauls Rechenfläche (quiz/rechenflaeche.js), "alt" = ohne. */
+const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"] };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },

@@ -16,6 +16,10 @@
  * sich die Datei Nummer und Fragetext und zeichnet bei einer anderen Frage neu).
  *
  * Nur Paul: Die Datei ist nur in Pauls Seiten eingebunden, und sie prüft zusätzlich den Pfad.
+ *
+ * Lineal (02.11.2026, Auftrag 192): Paul wollte gerade Linien für Tabellen. Das Schmierblatt bekommt
+ * "📏 Lineal" und "↶ Zurück" (lineal: true). Beide bleiben versteckt, bis der Rückweg-Schalter
+ * GET /api/schalter?name=lineal "neu" meldet (einmal je Seite). "alt" oder kein Netz = wie bisher.
  */
 (function () {
   "use strict";
@@ -36,6 +40,11 @@
     ".rf .sb-radierer,.rf .sb-leeren{min-height:48px;padding:8px 16px;border-radius:999px;border:2px solid var(--line,#c9cfdb);",
     "  background:var(--card,#fff);color:var(--ink,#172033);font:700 15px system-ui,sans-serif;cursor:pointer}",
     ".rf .sb-leeren{margin-left:auto;color:var(--muted,#5b6270)}",
+    ".rf .sb-lineal,.rf .sb-zurueck{min-height:48px;padding:8px 16px;border-radius:999px;border:2px solid var(--line,#c9cfdb);",
+    "  background:var(--card,#fff);color:var(--ink,#172033);font:700 15px system-ui,sans-serif;cursor:pointer}",
+    ".rf .sb-lineal.an{border-color:var(--ink,#172033);box-shadow:0 0 0 2px var(--ink,#172033) inset}",
+    ".rf .sb-zurueck:disabled{opacity:.45;cursor:default}",
+    ".rf .sb-lineal[hidden],.rf .sb-zurueck[hidden]{display:none}",
     /* Papier immer hell wie im Heft - die Stiftfarben bleiben so in hell und dunkel lesbar. */
     ".rf .sb-flaeche{display:block;width:100%;height:280px;border-radius:14px;border:2px solid var(--line,#c9cfdb);touch-action:none;",
     "  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;",
@@ -74,7 +83,7 @@
     var h = document.createElement("div");
     h.className = "rf" + (klasse ? " " + klasse : "");
     window.Schmierblatt.malen(h, {
-      knopf: "✏️ Rechnen", werkzeug: true,
+      knopf: "✏️ Rechnen", werkzeug: true, lineal: true,
       auf: function () {
         /* Die Frage bleibt sichtbar: Ragt die Fläche unten aus dem Bild oder ist die Frage
            oben hinausgerollt, kommt die Frage an den oberen Rand - die Fläche steht darunter. */
@@ -87,7 +96,24 @@
         }
       }
     });
+    huellen.push(h);
+    if (linealFrei) h.sbLineal && h.sbLineal(true);
     return h;
+  }
+
+  /* Rückweg-Schalter "lineal": einmal fragen, dann alle jetzigen und künftigen Flächen freischalten. */
+  var huellen = [], linealFrei = false;
+  function linealFragen() {
+    try {
+      fetch("/api/schalter?name=lineal", { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || d.wert !== "neu") return;
+          linealFrei = true;
+          huellen.forEach(function (x) { if (x.sbLineal) x.sbLineal(true); });
+        })
+        .catch(function () {});
+    } catch (e) {}
   }
 
   /* Fundkarten: jede Karte ist ein neues .lwf-karte mit .lwf-frage. */
@@ -127,6 +153,7 @@
 
   function start() {
     if (!window.Schmierblatt) return;
+    linealFragen();
     /* Rechenspiel: eigene Seite, Knopf unten rechts, einmal je Seite. */
     if (/^\/paul\/klasse\d+-mathe-/.test(location.pathname)) {
       if (!document.getElementById("rf-spiel")) {
