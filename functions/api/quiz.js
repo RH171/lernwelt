@@ -125,6 +125,20 @@ const VORBAU_JE_LAUF = 2;
    beim naechsten Schreiben die AELTESTEN Fragen abgeschnitten. Gemessen
    19.10.2026: 768 Fragen = 294 KB; 3000 = ~1,2 MB, ein KV-Wert darf 25 MiB. */
 const VORRAT_MAX = 3000;
+/* Restrunde (02.11.2026, Auftrag 189, nur Paul). Ist die Tagesmenge eines Fachs nach einer
+   Runde noch nicht erreicht, sagen Startseite und Lernquiz "noch N bis geschafft" und bieten
+   genau diese Karten an (paul/heute-dran.js, quiz/such.js). Rueckweg ohne neuen Bau: KV-Wert
+   schalter:restrunde = "alt", dann fehlt schritt4.rest und alles bleibt wie vor dem 02.11.2026.
+     npx wrangler kv key put "schalter:restrunde" "alt" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote
+     npx wrangler kv key delete "schalter:restrunde" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote */
+async function restrundeAn(env) {
+  try {
+    const roh = env && env.PAUL_KV ? await env.PAUL_KV.get("schalter:restrunde") : null;
+    if (roh != null && String(roh).trim().replace(/^["']|["']$/g, "").trim().toLowerCase() === "alt") return false;
+  } catch (e) { /* Standard */ }
+  return true;
+}
+
 // Mehr als so viele Kennungen werden nicht aufgehoben - sonst waechst der
 // Eintrag endlos und jeder Schreibvorgang wird teurer.
 /* 1000 seit 19.10.2026 (vorher 400): Die Fragerichtungen lesen hieraus, welche
@@ -235,8 +249,8 @@ export async function onRequestGet(context) {
                        ...(kind === "paul" ? { heuteBeantwortet: heuteBeantwortet(pk, Date.now()) } : {}),
                        /* Schritt 4 (29.10.2026, nur Paul): Grenze alt/neu, nahe Proben, Pause und
                           Tagesmenge je Fach, dazu die Konstanten - die Tagesrunde rechnet damit. */
-                       ...(kind === "paul" && SCHRITT4.an ? { schritt4: await schritt4Lage(env, kind, pk, bn, Date.now(),
-                         bereinigt) } : {}),
+                       ...(kind === "paul" && SCHRITT4.an ? { schritt4: { ...(await schritt4Lage(env, kind, pk, bn, Date.now(),
+                         bereinigt)), ...((await restrundeAn(env)) ? { rest: true } : {}) } } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 

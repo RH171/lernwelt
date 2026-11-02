@@ -17,6 +17,9 @@
  *
  * Kein Druck (Bauregeln, Beschluss 24.09.2026): keine Rest- oder Rueckstandszahl, kein
  * „noch X", kein Rot. Die Zahl sagt nur, wie gross die heutige Runde ist.
+ * Ausnahme Restrunde (Denny, 02.11.2026, Auftrag 189, mit schritt4.rest vom Server): Hat Paul
+ * heute im Fach schon geuebt und fehlt bis zur Tagesmenge noch etwas, steht „noch N bis geschafft“
+ * da, und N Karten sind genau die Runde, nach der der Haken kommt (restKette()).
  */
 (function (global) {
   "use strict";
@@ -138,6 +141,61 @@
     return aus;
   }
 
+  /* Lernpunkte im Format von heuteBeantwortet (Server, lernpunkt() in _wiedervorlage.js) fuer gerade
+     beantwortete Karten. Das Lernquiz legt sie zu den Serverdaten, damit es nach einer Runde gleich
+     rechnet wie die Startseite, auch wenn der Speicher die Antworten noch nicht zurueckliefert. */
+  function lernpunkte(karten) {
+    var aus = [];
+    (karten || []).forEach(function (k) {
+      if (!k || k.mathe || k.lesen || !k.blatt) return;
+      if (k.quiz && k.quiz.frageId != null) {
+        var nr = Number(k.quiz.belegNr);
+        aus.push(nr >= 1 ? k.blatt + "#" + Math.floor(nr) : k.blatt + "#f:" + String(k.quiz.frageId || "").slice(0, 24));
+      } else aus.push(k.blatt + "#k:" + (global.LWTag ? global.LWTag.schluessel(k) : ""));
+    });
+    return aus;
+  }
+
+  /* Restrunde (02.11.2026, Auftrag 189): Die Deckel von Schritt 4 halten eine Runde oft unter dem Rest
+     bis zur Tagesmenge (heute 10 statt 15). Damit „noch N bis geschafft“ stimmt, werden die Runden, die
+     nacheinander kaemen, hier schon zusammengelegt: Runde ziehen, als erledigt rechnen, naechste Runde -
+     bis die Menge erreicht ist oder keine Runde mehr kommt. Jede einzelne Runde ist eine normale Runde
+     von Schritt 4 (Deckel und Gewichte unveraendert), zusammen nie mehr als der Rest. */
+  function restKette(fach, daten, ohne, nr, m) {
+    var d = {}, x, alle = null, gezeigt = {}, vorher = -1;
+    for (x in daten) d[x] = daten[x];
+    d.heuteBeantwortet = (daten.heuteBeantwortet || []).slice();
+    for (var i = 0; i < 10; i++) {
+      var h = heuteErledigt(d, fach);   // genau die Zaehlung der Startseite, mit den Karten davor als beantwortet
+      if (h.zahl >= m || h.zahl <= vorher) break;
+      vorher = h.zahl;
+      var o = {};
+      for (x in (ohne || {})) o[x] = ohne[x];
+      for (x in h.keys) o[x] = 1;
+      for (x in gezeigt) o[x] = 1;
+      var s4 = {};
+      for (x in daten.schritt4) s4[x] = daten.schritt4[x];
+      s4.menge = {};
+      for (x in (daten.schritt4.menge || {})) s4.menge[x] = daten.schritt4.menge[x];
+      s4.menge[fach] = m - h.zahl;   // nie 0: runde4 faellt bei 0 auf die volle Tagesmenge zurueck
+      d.schritt4 = s4;
+      var r = runde(fach, d, o, nr);
+      if (!r || !r.karten || !r.karten.length) break;
+      r.karten.forEach(function (k) { gezeigt[id(k)] = 1; });
+      d.heuteBeantwortet = d.heuteBeantwortet.concat(lernpunkte(r.karten));
+      if (!alle) alle = { karten: r.karten.slice(), zaehl: {}, blaetter: r.blaetter || 0 };
+      else { alle.karten = alle.karten.concat(r.karten); alle.blaetter += r.blaetter || 0; }
+      for (x in (r.zaehl || {})) {
+        if (typeof r.zaehl[x] === "number") alle.zaehl[x] = (alle.zaehl[x] || 0) + r.zaehl[x];
+        else if (r.zaehl[x] && typeof r.zaehl[x] === "object") {   // zaehl.stufe: such.js nimmt nur damit die Woerter der Startseite
+          var u = alle.zaehl[x] || (alle.zaehl[x] = {});
+          for (var y in r.zaehl[x]) u[y] = (u[y] || 0) + (Number(r.zaehl[x][y]) || 0);
+        }
+      }
+    }
+    return alle;
+  }
+
   /* Runde fuer ein Fach mit dem, was heute schon erledigt ist: Heutiges kommt nicht noch einmal,
      und es zaehlt gegen die Tagesmenge. Ist die Menge erreicht (oder bleibt nach dem Abzug keine
      Runde), ist das Fach fuer heute geschafft - keine neue volle Runde. */
@@ -145,6 +203,11 @@
     var m = menge(daten, fach), h = heuteErledigt(daten, fach);
     if (!h.zahl || !m || !daten.schritt4) return { runde: runde(fach, daten, ohne || {}, nr), erledigt: 0, menge: m };
     if (h.zahl >= m) return { runde: null, erledigt: h.zahl, menge: m };
+    if (daten.schritt4.rest) {
+      var rk = restKette(fach, daten, ohne, nr, m);
+      if (!rk) return { runde: null, erledigt: h.zahl, menge: m };
+      return { runde: rk, erledigt: 0, rest: m - h.zahl, menge: m, restrunde: true };
+    }
     var o = {}, x;
     for (x in (ohne || {})) o[x] = ohne[x];
     for (x in h.keys) o[x] = 1;
@@ -169,6 +232,7 @@
       var fr = fachRunde(f.k, daten, {}, 0), r = fr.runde;
       var x = { fach: f.k, name: f.n, ic: f.ic, runde: r, ids: ids(r), teile: teile(r), menge: fr.menge || menge(daten, f.k) };
       if (fr.erledigt) x.erledigt = fr.erledigt;
+      if (fr.restrunde) x.restrunde = true;
       aus.push(x);
     });
     return aus;
@@ -282,7 +346,10 @@
       return a;
     }
     a.href = "quiz.html?heute=1&fach=" + encodeURIComponent(x.fach);
-    a.appendChild(el("div", "hd-zahl", zahlWort(n, "Karte", "Karten")));
+    /* Restrunde (02.11.2026, Auftrag 189): heute schon geuebt, bis zur Tagesmenge fehlen genau diese Karten. */
+    var z0 = el("div", "hd-zahl", x.restrunde ? "noch " + n + " bis geschafft" : zahlWort(n, "Karte", "Karten"));
+    if (x.restrunde) z0.setAttribute("data-rest", String(n));
+    a.appendChild(z0);
     var t = x.teile, liste = el("ul", "hd-teile");
     [["einstieg", "zum Einstieg", "zum Einstieg"], ["neu", "neu", "neu"], ["fehler", "nochmal üben", "nochmal üben"],
      ["kontrolle", "Kontrolle", "Kontrollen"], ["wiederholen", "wiederholen", "wiederholen"]].forEach(function (w) {
@@ -298,7 +365,7 @@
       a.appendChild(m);
     }
     a.appendChild(el("span", "hd-los", "Los ›"));
-    a.setAttribute("aria-label", x.name + ": " + n + " Karten für heute");
+    a.setAttribute("aria-label", x.name + ": " + (x.restrunde ? "noch " + n + " bis geschafft" : n + " Karten für heute"));
     return a;
   }
   function zeigen(box, liste) {
@@ -332,7 +399,7 @@
 
   global.LWHeuteDran = {
     FACH_RUNDE: FACH_RUNDE, FAECHER: FAECHER, SCHLUESSEL: SCHLUESSEL, GUELTIG_MS: GUELTIG_MS,
-    zufall: zufall, optionen: optionen, runde: runde, berechnen: berechnen, heuteErledigt: heuteErledigt, fachRunde: fachRunde, heuteStand: heuteStand, teile: teile, ids: ids, id: id,
+    zufall: zufall, optionen: optionen, lernpunkte: lernpunkte, runde: runde, berechnen: berechnen, heuteErledigt: heuteErledigt, fachRunde: fachRunde, heuteStand: heuteStand, teile: teile, ids: ids, id: id,
     hatMaterial: hatMaterial, speichern: speichern, uebernehmen: uebernehmen, holen: holen, zeigen: zeigen, start: start,
     heute: heute
   };

@@ -32,6 +32,18 @@
      jeder Runde geht EIN Schreibvorgang an /api/quiz (fund). */
   var faellig = {}, faelligText = {}, fundStand = {}, quizWackler = [], fundFormen = {}, schritt4 = null, heute = null;
   var heuteBeantwortet = [], heuteGeschafft = 0;   // "Heute dran", nur Paul (30.10.2026)
+  /* Restrunde (02.11.2026, Auftrag 189, nur Paul mit schritt4.rest): was auf dieser Seite heute schon beantwortet
+     wurde. Kommt zu heuteBeantwortet dazu, solange der Speicher es noch nicht zurueckliefert. */
+  var heuteLokal = [], heuteLokalTag = "", heuteEintraege = [];   // Eintraege der letzten Auswahl, fuer den Abschluss
+  function restAn(){ return KIND === "paul" && !!(schritt4 && schritt4.rest) && !!window.LWHeuteDran && !!LWHeuteDran.lernpunkte; }
+  function mitLokal(liste){
+    var tag = LWHeuteDran.heute ? LWHeuteDran.heute() : "";
+    if (heuteLokalTag !== tag) { heuteLokal = []; heuteLokalTag = tag; }
+    var d = {}, aus = (liste || []).slice();
+    aus.forEach(function(x){ d[x] = 1; });
+    heuteLokal.forEach(function(x){ if (!d[x]) { d[x] = 1; aus.push(x); } });
+    return aus;
+  }
   /* Entwurf A (Denny, 28.09.2026): "🔎 Suchen" steht direkt hinter jedem
      Blatt in der Blattwahl des Quiz. Die eigene Such-Karte bleibt nur da,
      wo keine Blattliste steht (mehrere oder alle Faecher). */
@@ -152,7 +164,8 @@
       .then(function(j){ faellig = (j && j.fundFaellig) || {}; faelligText = (j && j.fundText) || {};
                          fundStand = (j && j.fundStand) || {}; quizWackler = (j && j.quizWackler) || [];
                          fundFormen = (j && j.fundFormen) || {}; schritt4 = (j && j.schritt4) || null;
-                         heuteBeantwortet = (j && Array.isArray(j.heuteBeantwortet)) ? j.heuteBeantwortet : []; })
+                         heuteBeantwortet = (j && Array.isArray(j.heuteBeantwortet)) ? j.heuteBeantwortet : [];
+                         if (restAn()) heuteBeantwortet = mitLokal(heuteBeantwortet); })
       .catch(function(){ faellig = {}; faelligText = {}; fundStand = {}; quizWackler = []; schritt4 = null; heuteBeantwortet = []; })
       .then(function(){ return fetch("/api/schulstoff?kind=" + encodeURIComponent(KIND) + "&monate=6", { credentials: "same-origin" }); })
       .then(function(r){ return r.json(); })
@@ -217,6 +230,7 @@
   blattWahl = blattWahl ? decodeURIComponent(blattWahl) : "";
   function heuteAnbieten(eintraege, ohneStart){
     var o = null;
+    heuteEintraege = eintraege || [];
     if (rundeFach) { o = { fach: rundeFach, ohne: schonDran }; for (var x in FACH_RUNDE) o[x] = FACH_RUNDE[x]; }
     /* Mathe-Wiederholung (26.10.2026, Kapitel 142): NUR Paul, nur in der allgemeinen Runde. Hoechstens
        2 Aufgaben, fruehestens alle 3 Tage - das entscheidet LWMathe aus fundStand. matheGespielt haelt
@@ -250,9 +264,12 @@
        (LWHeuteDran.fachRunde). Ist die Menge erreicht, steht "geschafft" da statt einer neuen vollen Runde.
        "Noch 10 Fragen" (rundeNr > 0) bleibt wie vorher. */
     heuteGeschafft = 0;
-    if (!gezeigt && KIND === "paul" && rundeFach && !rundeNr && window.LWHeuteDran && LWHeuteDran.fachRunde) {
+    /* Restrunde (02.11.2026, Auftrag 189): mit schritt4.rest rechnet jede Fach-Runde der Seite wie die Startseite
+       (ohne {}, Saat 0), ausser "Noch 10 Fragen" (mehrGleich) - so steht hier dasselbe wie dort. */
+    var restHier = restAn() && !mehrGleich;
+    if (!gezeigt && KIND === "paul" && rundeFach && (!rundeNr || restHier) && window.LWHeuteDran && LWHeuteDran.fachRunde) {
       var fr = LWHeuteDran.fachRunde(rundeFach, { eintraege: eintraege, fundStand: fundStand, quizWackler: quizWackler,
-        fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: heuteBeantwortet }, schonDran, rundeNr);
+        fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: heuteBeantwortet }, restHier ? {} : schonDran, restHier ? 0 : rundeNr);
       heute = fr.runde; heuteGeschafft = fr.erledigt || 0;
     } else {
       /* Allgemeine Runde (ohne fach=, Auftrag 182, 30.10.2026, nur Paul, nur die erste Runde der Seite): rechnet wie
@@ -408,17 +425,35 @@
     if (f) merkeDran(heute.karten);
     if (f && KIND === "paul" && window.LWHeuteDran) { LWHeuteDran.uebernehmen(f, true); rundeNr++; }
     if (f && window.LWFachzeit) LWFachzeit.fach(f);     // Minuten fuer die Karte auf der Startseite
+    var rest = !!(f && restAn()), karten = heute.karten;
     var ok = LWFund.zeigen($("fundkarten"), {
       karten: heute.karten, kind: KIND, mindestens: 1,
       kicker: f ? fachWort(f) + " für heute" : "Heute lernen", mitBlattTitel: heute.blaetter > 1, gruenJe: gruenJeBlatt(),
       ueberschrift: heute.karten.length + (f ? " Fragen für heute" : " Karten für heute"),
       unter: "Aus deinen Blättern. Schau auf den Ausschnitt und tipp an, was dort steht.",
-      fertigSatz: f ? "Deine " + fachWort(f) + "-Runde für heute ist geschafft. Mehr geht immer – musst du aber nicht." : "Deine Runde für heute ist geschafft.",
+      fertigSatz: rest ? "Runde geschafft, " + karten.length + " von " + karten.length + "!"
+        : f ? "Deine " + fachWort(f) + "-Runde für heute ist geschafft. Mehr geht immer – musst du aber nicht." : "Deine Runde für heute ist geschafft.",
       ergebnis: function(liste){
         if (liste.some(function(e){ return e.blatt === "mathe"; })) matheGespielt = true;
         if (liste.some(function(e){ return e.blatt === "lesen"; })) lesenGespielt = true;
+        if (rest) heuteLokal = mitLokal([]).concat(LWHeuteDran.lernpunkte(karten));
         merken("", liste);
       },
+      /* Restrunde (02.11.2026, Auftrag 189): erst das Lob, dann in einem Satz, was bis zum Haken fehlt, und
+         "Weiter" startet genau diese Karten. Gerechnet wie die Startseite, mit dem eben Beantworteten. */
+      abschluss: rest ? function(a){
+        var fr2 = LWHeuteDran.fachRunde(f, { eintraege: heuteEintraege, fundStand: fundStand, quizWackler: quizWackler,
+          fundFormen: fundFormen, schritt4: schritt4, heuteBeantwortet: mitLokal(heuteBeantwortet) }, {}, 0);
+        var r2 = fr2.runde, n2 = r2 && r2.karten ? r2.karten.length : 0;
+        if (!n2) { a.satz.textContent += " " + fachWort(f) + " ist für heute abgehakt ✅"; a.satz.setAttribute("data-abgehakt", "1"); return; }
+        a.satz.textContent += " Noch " + n2 + (n2 === 1 ? " Karte" : " Karten") + ", dann ist " + fachWort(f) + " für heute abgehakt.";
+        a.satz.setAttribute("data-rest", String(n2));
+        var bw = document.createElement("button");
+        bw.type = "button"; bw.className = "lwf-knopf lwf-weiter"; bw.textContent = "Weiter";
+        bw.addEventListener("click", function(){ heute = r2; heuteStarten(); });
+        a.box.insertBefore(bw, a.mehr || a.fertig);
+        if (a.mehr) a.mehr.classList.add("leise");
+      } : null,
       mehrText: f ? "Noch 10 Fragen" : "", mehr: f ? function(){ mehrGleich = true; laden(); } : null,
       fertigText: "Zurück zur Auswahl", fertig: function(){ zurueck(); laden(); }
     });

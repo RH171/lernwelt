@@ -680,8 +680,9 @@
         var fertig = el("div", "lwf-karte rein");
         fertig.appendChild(el("div", "kicker", "Regal voll"));
         fertig.appendChild(el("h2", null, karten.length + " von " + karten.length));
-        fertig.appendChild(el("p", "u", opt.fertigSatz ||
-          "Alle Karten aus deinem Blatt liegen im Regal. Du hast dein Blatt jetzt einmal ganz durchgesehen."));
+        var satz = el("p", "u", opt.fertigSatz ||
+          "Alle Karten aus deinem Blatt liegen im Regal. Du hast dein Blatt jetzt einmal ganz durchgesehen.");
+        fertig.appendChild(satz);
         if (wackler.length) {
           /* Kein Rot, keine Fehlerzahl - nur die Stichworte und ein Angebot.
              Die Karten kommen ausserdem in zwei Tagen von selbst wieder. */
@@ -705,8 +706,9 @@
           fertig.appendChild(bw);
         }
         /* "Noch 10 Fragen" (19.10.2026, Fach-Runde aus quiz/such.js): freiwillig weiter, nur wenn die Seite es anbietet. */
+        var bm = null;
         if (opt.mehrText && opt.mehr) {
-          var bm = el("button", "lwf-knopf lwf-mehr", opt.mehrText);
+          bm = el("button", "lwf-knopf lwf-mehr", opt.mehrText);
           bm.type = "button";
           bm.addEventListener("click", function () { opt.mehr(); });
           fertig.appendChild(bm);
@@ -725,6 +727,8 @@
           zeichne();
         });
         fertig.appendChild(b2);
+        /* Restrunde (02.11.2026, nur Paul aus quiz/such.js): die Seite darf den Abschluss ergaenzen. Ohne opt.abschluss wie vorher. */
+        if (opt.abschluss) { try { opt.abschluss({ box: fertig, satz: satz, mehr: bm, fertig: b1 }); } catch (e) {} }
         halter.appendChild(fertig);
         h1.style.opacity = 0; h2.style.opacity = 0;
         return;
