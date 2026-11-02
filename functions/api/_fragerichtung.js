@@ -283,11 +283,12 @@ export function wirksamZahl(geschwister, punkte, schluessel) {
   return n;
 }
 
-/* Die Stufe aus der wirksamen Zahl. Zahlen haben keine Stufe 2 (Dennys
-   Vorgabe), und ohne Stufe 2 (z. B. "3a") bleibt es bei 1 bis zweimal richtig. */
+/* Die Stufe aus der wirksamen Zahl. Zahlen haben keine Stufe 2; Stufe 3 wie
+   alle ab zweimal richtig (Beschluss 19.10.2026). Ohne Stufe 2 (z. B. "3a")
+   bleibt es ebenso bei 1 bis zweimal richtig. */
 export function stufeAus(wirksam, zahl, mitLuecken) {
   const w = Number(wirksam) || 0;
-  if (zahl) return w >= 1 ? 3 : 1;
+  if (zahl) return w >= 2 ? 3 : 1;
   if (w <= 0) return 1;
   if (w === 1) return mitLuecken ? 2 : 1;
   return 3;
