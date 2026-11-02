@@ -15448,5 +15448,220 @@ window.LEON_GESCHICHTEN = [
     "seite": 9
    }
   ]
+ },
+ {
+  "id": "w45-fussball-montag",
+  "titel": "Fußball-Montag: zwei Siege",
+  "bild": "⚽",
+  "lang": true,
+  "ereignis": "2026-11-02",
+  "zeigenAb": "2026-11-02",
+  "zeigenBis": "2026-11-04",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Mon|tag, der 2. No|vem|ber.",
+     "Am Mon|tag gibt es gu|te Nach|rich|ten!",
+     "Fürth und der Club ha|ben ge|won|nen.",
+     "Der Club ist der 1. FC Nürn|berg.",
+     "Le|on liest es mit Freu|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🍀",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Am Sonn|tag, dem 1. No|vem|ber, kam Hol|stein Kiel.",
+     "Le|on denkt an das Sta|di|on.",
+     "Lan|ge fiel kein ein|zi|ges Tor.",
+     "Le|on zit|tert ein biss|chen mit."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🎉"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der 87. Mi|nu|te war es so weit.",
+     "Kel|ler schoss das Tor für Fürth!",
+     "Das Spiel en|de|te eins zu null.",
+     "Fürth hat ge|won|nen!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "9️⃣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann schaut Le|on auf die Ta|bel|le.",
+     "Fürth steht auf Platz neun.",
+     "Fürth hat zwölf Punk|te.",
+     "Auf Platz acht steht St. Pau|li.",
+     "St. Pau|li hat auch zwölf Punk|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "🔴",
+      "🏟️"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "Der Club aus Nürn|berg spiel|te beim FC St. Pau|li.",
+     "Das war am Sonn|tag, dem 1. No|vem|ber.",
+     "Schon in der 8. Mi|nu|te fiel ein Tor.",
+     "Smith schoss es für den Club.",
+     "Der Club führ|te eins zu null."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "stadion",
+     "dinge": [
+      "⚽",
+      "🔴"
+     ],
+     "leute": []
+    },
+    "zeilen": [
+     "In der 58. Mi|nu|te glich St. Pau|li aus.",
+     "Cee|say traf zum eins zu eins.",
+     "Doch in der 71. Mi|nu|te traf Hau|gen.",
+     "In der 90. Mi|nu|te traf Korn|wachs Bar|ju|an."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📋",
+      "2️⃣"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Der Club ge|wann drei zu eins.",
+     "Er steht auf Platz zwei.",
+     "Er hat ein|und|zwan|zig Punk|te.",
+     "Ganz o|ben steht Her|tha BSC.",
+     "Her|tha hat acht|und|zwan|zig Punk|te."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "🍀"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Fürth reist nach Dres|den.",
+     "Das Spiel ist am Frei|tag, dem 6. No|vem|ber.",
+     "Der An|pfiff ist um halb sie|ben."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🔴",
+      "📅"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Auch der Club spielt bald.",
+     "Der Geg|ner ist Darm|stadt.",
+     "Das Spiel ist am Sams|tag, 7. No|vem|ber.",
+     "Der An|pfiff ist um 13 Uhr."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wer schoss das Tor für Fürth?",
+    "richtig": "Keller",
+    "falsch": [
+     "Smith",
+     "Haugen"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Auf welchem Platz steht Fürth?",
+    "richtig": "auf Platz neun",
+    "falsch": [
+     "auf Platz zwei",
+     "auf Platz zwölf"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie ging das Spiel des Clubs aus?",
+    "richtig": "drei zu eins",
+    "falsch": [
+     "null zu eins",
+     "eins zu null"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wer steht ganz oben in der Tabelle?",
+    "richtig": "Hertha BSC",
+    "falsch": [
+     "der Club",
+     "Fürth"
+    ],
+    "seite": 7
+   },
+   {
+    "frage": "Wann spielt Fürth in Dresden?",
+    "richtig": "am Freitag",
+    "falsch": [
+     "am Sonntag",
+     "am Dienstag"
+    ],
+    "seite": 8
+   }
+  ]
  }
 ];
