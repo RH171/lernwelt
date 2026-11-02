@@ -48,6 +48,7 @@ import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
+import { zaehlungAn } from "./_zaehlung.js";
 import { tabelleAnwenden, abstempeln } from "./_beleg-ausgabe.js";
 import { BELEG_TABELLE_HELENA } from "./_beleg-tabelle-helena.js";
 import { BELEG_SPERRE_HELENA } from "./_beleg-sperre-helena.js";
@@ -150,9 +151,12 @@ const ANTWORTEN_MAX_PAUL = 200;   // Schritt 4 (29.10.2026): Pauls Runden gehen 
 const ALLE_HOECHSTENS = 100;
 
 /* Lernpunkte mit Antwort am heutigen Berliner Tag (nur Paul, "Heute dran", 30.10.2026). */
-function heuteBeantwortet(pk, jetzt) {
+/* Zaehlung (02.11.2026, mitH): auch Lernpunkte mit h = heute - die Einstiegskarte einer Fach-Runde,
+   bei der Schritt 4 z mit Absicht stehen laesst (punktVerbuchen). Ohne mitH genau wie vorher. */
+function heuteBeantwortet(pk, jetzt, mitH) {
   const heute = berlinTagNr(jetzt);
-  return Object.keys(pk || {}).filter((s) => pk[s] && pk[s].z && berlinTagNr(Number(pk[s].z)) === heute);
+  return Object.keys(pk || {}).filter((s) => pk[s] &&
+    ((pk[s].z && berlinTagNr(Number(pk[s].z)) === heute) || (mitH && Number(pk[s].h) === heute)));
 }
 
 export async function onRequestGet(context) {
@@ -192,6 +196,7 @@ export async function onRequestGet(context) {
   if (url.searchParams.get("nurWartend") === "1") {
     const v = await vorratLesen(env, kind);
     const pk = await punkteLesen(env, kind);
+    const zaehlungPaul = kind === "paul" && SCHRITT4.an && (await zaehlungAn(env));   // Zaehlung (02.11.2026)
     const bn = {};
     try {
       const e = await stoffLesen(env, kind, 4);
@@ -246,11 +251,13 @@ export async function onRequestGet(context) {
                        /* "Heute dran" (30.10.2026, Auftrag 178, nur Paul): Lernpunkte, die Paul HEUTE (Berliner Tag)
                           beantwortet hat. Die Startseite und die Fach-Runde ziehen sie von der Tagesmenge des Fachs ab
                           und nehmen sie nicht noch einmal - sonst stand nach einer fertigen Runde sofort eine neue da. */
-                       ...(kind === "paul" ? { heuteBeantwortet: heuteBeantwortet(pk, Date.now()) } : {}),
+                       ...(kind === "paul" ? { heuteBeantwortet: heuteBeantwortet(pk, Date.now(), zaehlungPaul) } : {}),
                        /* Schritt 4 (29.10.2026, nur Paul): Grenze alt/neu, nahe Proben, Pause und
                           Tagesmenge je Fach, dazu die Konstanten - die Tagesrunde rechnet damit. */
                        ...(kind === "paul" && SCHRITT4.an ? { schritt4: { ...(await schritt4Lage(env, kind, pk, bn, Date.now(),
-                         bereinigt)), ...((await restrundeAn(env)) ? { rest: true } : {}) } } : {}),
+                         bereinigt)), ...((await restrundeAn(env)) ? { rest: true } : {}),
+                         /* Zaehlung (02.11.2026): Startseite zeigt "10 geschafft, noch 5"; fehlt bei schalter:zaehlung = "alt". */
+                         ...(zaehlungPaul ? { zaehlung: true } : {}) } } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
   }
 
@@ -733,10 +740,11 @@ export async function onRequestPost(context) {
     const vorher = await punkteLesen(env, kind);
     const punkte = JSON.parse(JSON.stringify(vorher));
     const nun = Date.now();
+    const zPaul = kind === "paul" && (await zaehlungAn(env));   // Zaehlung (02.11.2026): nur Lesen, kein Schreiben
     for (const a of fund) {
       if (!a || !a.blatt || !a.karte) continue;
       punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun,
-        undefined, kind === "paul" ? { paul: true } : undefined);
+        undefined, kind === "paul" ? { paul: true, ...(zPaul ? { zaehlung: true } : {}) } : undefined);
     }
     const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
     return json(200, { ok: true, gemerkt: geschrieben });
@@ -770,9 +778,10 @@ export async function onRequestPost(context) {
     /* Tippstufen (nur Paul): Stufe und Gross/klein-Merker aus dem Motor
        verschieben nur den Stufenabzug `ab`, nie r (stufenabzug()). */
     const mitStufen = kind === "paul" && stufenAn(await richtungFuer(env, kind), kind);
+    const zPaul = kind === "paul" && (await zaehlungAn(env));   // Zaehlung (02.11.2026): nur Lesen, kein Schreiben
     for (const a of antworten) {
       if (!a || !a.blatt || (!a.belegNr && !a.frageId)) continue;
-      const o = kind === "paul" ? { paul: true } : undefined;
+      const o = kind === "paul" ? { paul: true, ...(zPaul ? { zaehlung: true } : {}) } : undefined;
       if (o && mitStufen) {
         o.stufen = true;
         if (a.gk) o.gk = true;
@@ -785,7 +794,7 @@ export async function onRequestPost(context) {
     if (zusammen) for (const a of fund) {
       if (!a || !a.blatt || !a.karte) continue;
       punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun,
-        undefined, { paul: true });
+        undefined, { paul: true, ...(zPaul ? { zaehlung: true } : {}) });
     }
     const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
     if (zusammen) return json(200, { ok: true, gemerkt: geschrieben });

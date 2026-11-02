@@ -20,6 +20,10 @@
  * Ausnahme Restrunde (Denny, 02.11.2026, Auftrag 189, mit schritt4.rest vom Server): Hat Paul
  * heute im Fach schon geuebt und fehlt bis zur Tagesmenge noch etwas, steht „noch N bis geschafft“
  * da, und N Karten sind genau die Runde, nach der der Haken kommt (restKette()).
+ * Zaehlung (Denny, 02.11.2026, Auftrag 193, mit schritt4.zaehlung vom Server): Paul soll sehen, was er
+ * heute schon geschafft hat - „10 geschafft, noch 5“. Die geschaffte Zahl ist heuteErledigt(fach).zahl,
+ * dieselbe Zaehlung, mit der heuteStand() das Lernquiz rechnet. Ohne das Feld (schalter:zaehlung = "alt"
+ * oder alter Server) bleibt „noch N bis geschafft“.
  */
 (function (global) {
   "use strict";
@@ -206,7 +210,7 @@
     if (daten.schritt4.rest) {
       var rk = restKette(fach, daten, ohne, nr, m);
       if (!rk) return { runde: null, erledigt: h.zahl, menge: m };
-      return { runde: rk, erledigt: 0, rest: m - h.zahl, menge: m, restrunde: true };
+      return { runde: rk, erledigt: 0, rest: m - h.zahl, menge: m, restrunde: true, geschafft: h.zahl };
     }
     var o = {}, x;
     for (x in (ohne || {})) o[x] = ohne[x];
@@ -233,6 +237,7 @@
       var x = { fach: f.k, name: f.n, ic: f.ic, runde: r, ids: ids(r), teile: teile(r), menge: fr.menge || menge(daten, f.k) };
       if (fr.erledigt) x.erledigt = fr.erledigt;
       if (fr.restrunde) x.restrunde = true;
+      if (fr.geschafft && daten.schritt4 && daten.schritt4.zaehlung) x.geschafft = fr.geschafft;   // Zaehlung (02.11.2026)
       aus.push(x);
     });
     return aus;
@@ -347,8 +352,11 @@
     }
     a.href = "quiz.html?heute=1&fach=" + encodeURIComponent(x.fach);
     /* Restrunde (02.11.2026, Auftrag 189): heute schon geuebt, bis zur Tagesmenge fehlen genau diese Karten. */
-    var z0 = el("div", "hd-zahl", x.restrunde ? "noch " + n + " bis geschafft" : zahlWort(n, "Karte", "Karten"));
+    /* Zaehlung (02.11.2026, Auftrag 193): mit x.geschafft steht davor, was heute schon geschafft ist. */
+    var restText = x.geschafft ? x.geschafft + " geschafft, noch " + n : "noch " + n + " bis geschafft";
+    var z0 = el("div", "hd-zahl", x.restrunde ? restText : zahlWort(n, "Karte", "Karten"));
     if (x.restrunde) z0.setAttribute("data-rest", String(n));
+    if (x.restrunde && x.geschafft) z0.setAttribute("data-geschafft", String(x.geschafft));
     a.appendChild(z0);
     var t = x.teile, liste = el("ul", "hd-teile");
     [["einstieg", "zum Einstieg", "zum Einstieg"], ["neu", "neu", "neu"], ["fehler", "nochmal üben", "nochmal üben"],
@@ -365,7 +373,7 @@
       a.appendChild(m);
     }
     a.appendChild(el("span", "hd-los", "Los ›"));
-    a.setAttribute("aria-label", x.name + ": " + (x.restrunde ? "noch " + n + " bis geschafft" : n + " Karten für heute"));
+    a.setAttribute("aria-label", x.name + ": " + (x.restrunde ? restText : n + " Karten für heute"));
     return a;
   }
   function zeigen(box, liste) {

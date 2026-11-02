@@ -186,6 +186,8 @@
   .zr h3 .kw{color:var(--muted); font-weight:600; font-size:12.5px;}
   .zr-zeile{display:flex; justify-content:space-between; gap:10px; padding:3px 0; font-size:13.5px;}
   .zr-zeile span{color:var(--muted);}
+  .zr-fach{margin-top:6px; padding-top:6px; border-top:1px dashed var(--line);}
+  .zeile.faecher{margin-top:-2px; font-size:13px; color:var(--muted);}
   .zr-davor{margin-top:9px; padding-top:8px; border-top:1px solid var(--line);
     color:var(--muted); font-size:12.5px;}
 
@@ -604,6 +606,25 @@
     return '<div class="spur"><div class="mehr">Offen war:</div>' + zeilen + '</div>';
   }
 
+  /* Zaehlung (02.11.2026, Auftrag 193, nur Paul): Aufgaben und Minuten je Fach. Paul: „ich möchte, dass
+     Mama auch sieht, was ich gemacht habe“. Der Server liefert faecher nur fuer Paul und nur bei
+     schalter:zaehlung neu (statistik.js); ohne das Feld bleibt alles wie vorher. Minuten sind die
+     Rundenzeit, nach Aufgaben aufs Fach verteilt - darum "ca.". */
+  function fachMinuten(m){ return m ? "ca. " + m + " min" : "unter 1 min"; }
+  function faecherKurz(liste){
+    if (!liste || !liste.length) return "";
+    return liste.map(function(x){
+      return esc(fachName(x.fach)) + " " + x.aufgaben + " (" + fachMinuten(x.minuten) + ")";
+    }).join(" \u00B7 ");
+  }
+  function faecherBlock(liste){
+    if (!liste || !liste.length) return "";
+    return '<div class="zr-fach" data-faecher="' + liste.length + '">' + liste.map(function(x){
+      return '<div class="zr-zeile" data-fach="' + esc(x.fach) + '"><span>' + esc(fachName(x.fach)) + '</span><b>' +
+             x.aufgaben + ' Aufgaben \u00B7 ' + fachMinuten(x.minuten) + '</b></div>';
+    }).join("") + '</div>';
+  }
+
   function vorschauKarte(kind){
     var name = kind.charAt(0).toUpperCase() + kind.slice(1);
     var d = (DATEN && DATEN[kind]) || {};
@@ -616,13 +637,16 @@
       var quote = tag.aufgaben ? tag.quote + " % richtig" : "ohne Aufgaben";
       zeile = "<b>" + (tag.minuten || 0) + " min</b> gelernt \u00B7 " +
               (tag.aufgaben || 0) + " Aufgaben \u00B7 " + esc(quote);
+      if (tag.faecher && tag.faecher.length)
+        zeile += '</p><p class="zeile faecher">' + faecherKurz(tag.faecher);
       liste = runden.slice(0, 3).map(function(r){
         var t = new Date(r.zeit);
         var uhr = isNaN(t) ? "" : String(t.getHours()).padStart(2,"0") + ":" +
                                   String(t.getMinutes()).padStart(2,"0");
         var erg = r.aufgaben ? (r.richtig + "/" + r.aufgaben) : "\u2013";
         return '<div class="runde"><span class="uhr">' + uhr + '</span>' +
-               '<span class="was">' + esc(r.titel || r.thema || "Runde") + '</span>' +
+               '<span class="was">' + esc((r.titel || r.thema || "Runde") +
+                 (r.faecher && r.faecher.length === 1 && r.faecher[0].fach !== "sonst" ? " \u00B7 " + fachName(r.faecher[0].fach) : "")) + '</span>' +
                '<span class="erg">' + erg + '</span></div>';
       }).join("");
       if (runden.length > 3)
@@ -2079,7 +2103,8 @@
         '<div class="zr-zeile"><span>Lernzeit</span><b>' + minuten(z.minuten) + '</b></div>' +
         (z.minutenPause ? '<div class="zr-zeile"><span>davon Pause</span><b>' + minuten(z.minutenPause) + '</b></div>' : '') +
         (z.minutenBauen ? '<div class="zr-zeile"><span>Werkstatt gebaut</span><b>' + minuten(z.minutenBauen) + '</b></div>' : '') +
-        (z.tageAktiv > 1 ? '<div class="zr-zeile"><span>Tage aktiv</span><b>' + z.tageAktiv + '</b></div>' : '');
+        (z.tageAktiv > 1 ? '<div class="zr-zeile"><span>Tage aktiv</span><b>' + z.tageAktiv + '</b></div>' : '') +
+        faecherBlock(z.faecher);
     }
     return '<div class="zr"><h3>' + titel + '</h3>' + inhalt + vergleich(z) + '</div>';
   }
@@ -2128,7 +2153,7 @@
 
   function fachName(f){
     return ({englisch:"Englisch", franzoesisch:"Französisch", deutsch:"Deutsch",
-             mathe:"Mathe", hsu:"HSU", musik:"Musik", religion:"Religion"})[f] || f;
+             mathe:"Mathe", hsu:"HSU", musik:"Musik", religion:"Religion", sonst:"Sonstiges"})[f] || f;
   }
 
   // Unter einer Minute ist "0 min" irreführend - dann lieber Sekunden.

@@ -17,7 +17,9 @@
  * Prüfprotokoll: befunde/2026-10-30-heute-dran-pruefprotokoll.md, Abschnitt „Nacharbeit 30.10.2026“.
  */
 /* "lineal" (02.11.2026, Auftrag 192): Lineal und Zurück in Pauls Rechenfläche (quiz/rechenflaeche.js), "alt" = ohne. */
-const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"] };
+/* "zaehlung" (02.11.2026, Auftrag 193): Einstiegskarte zaehlt heute mit (p.h), „10 geschafft, noch 5“ auf
+   Pauls Startseite, Faecher im Elternbereich. "alt" = wie vorher. Gelesen in functions/api/_zaehlung.js. */
+const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "zaehlung": ["neu", "alt"] };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },

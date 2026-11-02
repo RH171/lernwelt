@@ -888,6 +888,10 @@ export function punktVerbuchen(punkte, frage, richtig, jetzt, e, opt) {
   if (opt && opt.paul && SCHRITT4.an && richtig && schritt3Punkt(s) && p.v === 3 && p.s && vorher &&
       !istFaellig({ ...p, z: vorher }, jetzt || Date.now(), ein)) {
     p.z = vorher;
+    /* Zaehlung (02.11.2026, nur mit opt.zaehlung aus quiz.js, Schalter schalter:zaehlung):
+       Die Einstiegskarte zaehlt heute fuer die Tagesmenge mit. Eigenes Feld h = Berliner Tag,
+       z und die Wiedervorlage bleiben unveraendert. Aendert sich hoechstens einmal je Karte und Tag. */
+    if (opt.zaehlung) p.h = berlinTagNr(jetzt || Date.now());
     return punkte;
   }
   if (opt && opt.paul && schritt3Punkt(s)) {

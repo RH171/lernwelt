@@ -10,6 +10,7 @@ import { ausweisGueltig, geheimFuer, brauchtAusweis, besuchIstEltern } from "./_
 import { punkteLesen } from "./_wiedervorlage.js";
 import { tabellen, offeneKreise, gefuelltLesen, punktId } from "./_kreise.js";
 import { stoffLesen } from "./_schulstoff.js";
+import { zaehlungAn } from "./_zaehlung.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const RUNDEN = (kind) => "lernstand:" + kind;
@@ -202,12 +203,66 @@ export async function onRequestGet(context) {
       const roh = await env.PAUL_KV.get(RUNDEN(kind));
       liste = roh ? JSON.parse(roh) : [];
     } catch (e) {}
-    raus[kind] = auswerten(liste);
+    /* Zaehlung (02.11.2026, Auftrag 193, nur Paul): Aufgaben und Minuten je Fach. Das Fach kommt nur
+       zur Anzeige aus dem Lernpunkt der Aufgabe (a.p) ueber Blatt -> Fach aus dem Schulstoff - auch
+       rueckwirkend fuer alte Runden. Nichts wird geschrieben. schalter:zaehlung = "alt": wie vorher. */
+    let opt;
+    if (kind === "paul" && (await zaehlungAn(env))) {
+      const blattFach = {};
+      try {
+        const st = await stoffLesen(env, kind, 13);
+        for (const b of (st && st.ok && st.eintraege) || []) if (b && b.id) blattFach[b.id] = String(b.fach || "");
+      } catch (e) {}
+      opt = { fachVon: (a, r) => fachEinerAufgabe(a, r, blattFach) };
+    }
+    raus[kind] = auswerten(liste, opt);
   }
   return json(200, { ok: true, kinder: raus });
 }
 
-function auswerten(liste) {
+/* Fach einer Aufgabe nur zur Anzeige (Zaehlung, 02.11.2026). Lernpunkt "<blatt>#..." -> Fach des Blattes,
+   "mathe#..." (Mathe-Wiederholung) -> mathe, "lesen#..." (Lese-Wiederholung) -> deutsch. Ohne Lernpunkt
+   das Fach der Runde, ausser "quiz" (das Lernquiz mischt Faecher). Sonst "sonst". */
+export function fachEinerAufgabe(a, r, blattFach) {
+  const p = String((a && a.p) || "");
+  const i = p.indexOf("#");
+  if (i > 0) {
+    const vorn = p.slice(0, i);
+    if (vorn === "mathe") return "mathe";
+    if (vorn === "lesen") return "deutsch";
+    const f = blattFach && blattFach[vorn];
+    if (f) return String(f).toLowerCase().split("-")[0];
+  }
+  const rf = String((r && r.fach) || "").toLowerCase();
+  if (rf && rf !== "quiz") return rf.split("-")[0];
+  return "sonst";
+}
+
+/* Je Fach: Aufgaben, richtig, Sekunden. Die Sekunden der Runde werden nach Aufgabenzahl aufgeteilt -
+   a.sekunden ist bei Quiz-Aufgaben 0, nur die Rundenzeit ist gemessen. */
+function faecherDerRunde(r, echte, fachVon) {
+  const raus = {};
+  if (!echte.length) return raus;
+  for (const a of echte) {
+    const f = fachVon(a, r);
+    const x = (raus[f] = raus[f] || { aufgaben: 0, richtig: 0, sekunden: 0 });
+    x.aufgaben++;
+    if (a.stimmt) x.richtig++;
+  }
+  for (const f of Object.keys(raus)) raus[f].sekunden = (r.sekunden || 0) * raus[f].aufgaben / echte.length;
+  return raus;
+}
+function faecherListe(jeFach) {
+  return Object.keys(jeFach || {}).map((f) => ({
+    fach: f,
+    aufgaben: jeFach[f].aufgaben,
+    richtig: jeFach[f].richtig,
+    minuten: Math.round(jeFach[f].sekunden / 60),
+  })).sort((a, b) => (b.aufgaben - a.aufgaben) || (a.fach < b.fach ? -1 : 1));
+}
+
+function auswerten(liste, opt) {
+  const fachVon = opt && opt.fachVon;
   const leer = { runden: 0, aufgaben: 0, richtig: 0, quote: null, minuten: 0,
                  minutenPause: 0, minutenBauen: 0, geraete: [], arten: [],
                  merkmale: [], themen: [], verlauf: [], letzte: [], stolpersteine: [] };
@@ -230,12 +285,19 @@ function auswerten(liste) {
   // von Multiple-Choice auf Eintippen umgestellt. Ohne diese Zahl liest sich
   // das wie "sie wird schlechter", dabei ist es das Gegenteil.
   const jeArt = {};
-  const zaehle = (art, schluessel, r, aufgaben, richtig) => {
+  const zaehle = (art, schluessel, r, aufgaben, richtig, jeF) => {
     const t = jeZeitraum[art];
     t[schluessel] = t[schluessel] ||
       { runden: 0, aufgaben: 0, richtig: 0, sekunden: 0, pause: 0, bauen: 0, tage: {} };
     const e = t[schluessel];
     if (r.zeitart === "bauen") { e.bauen += r.sekunden || 0; return; }
+    if (jeF) {
+      e.faecher = e.faecher || {};
+      for (const f of Object.keys(jeF)) {
+        const x = (e.faecher[f] = e.faecher[f] || { aufgaben: 0, richtig: 0, sekunden: 0 });
+        x.aufgaben += jeF[f].aufgaben; x.richtig += jeF[f].richtig; x.sekunden += jeF[f].sekunden;
+      }
+    }
     e.runden++;
     e.aufgaben += aufgaben;
     e.richtig += richtig;
@@ -270,9 +332,10 @@ function auswerten(liste) {
     }
 
     const echte = (r.aufgaben || []).filter((a) => a.art !== "besuch" && a.art !== "bauen");
-    zaehle("tag", tagSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length);
-    zaehle("woche", woche, r, echte.length, echte.filter((a) => a.stimmt).length);
-    zaehle("jahreszeit", jahreszeitSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length);
+    const jeF = fachVon ? faecherDerRunde(r, echte, fachVon) : null;
+    zaehle("tag", tagSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length, jeF);
+    zaehle("woche", woche, r, echte.length, echte.filter((a) => a.stimmt).length, jeF);
+    zaehle("jahreszeit", jahreszeitSchluessel(r.zeit), r, echte.length, echte.filter((a) => a.stimmt).length, jeF);
 
     const t = r.quelle || r.thema || "unbekannt";
     jeThema[t] = jeThema[t] || { name: t, thema: r.thema || t, aufgaben: 0, richtig: 0, sekunden: 0 };
@@ -365,6 +428,7 @@ function auswerten(liste) {
       minutenPause: Math.round(e.pause / 60),
       minutenBauen: Math.round(e.bauen / 60),
       tageAktiv: Object.keys(e.tage || {}).length,
+      ...(fachVon ? { faecher: faecherListe(e.faecher) } : {}),
     };
   };
 
@@ -437,6 +501,7 @@ function auswerten(liste) {
         aufgaben: echte.length,
         richtig: echte.filter((a) => a.stimmt).length,
         geraet: r.geraet || "",
+        ...(fachVon && r.zeitart !== "bauen" ? { faecher: faecherListe(faecherDerRunde(r, echte, fachVon)) } : {}),
       };
     }),
   };
