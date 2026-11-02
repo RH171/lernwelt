@@ -32,6 +32,13 @@
  *                 "Reichskirche", Helena 18.10.2026) -> "fast". Nur in
  *                 Sachfaechern einschalten; im Vokabeltrainer waere
  *                 "I see a sheep" fuer "sheep" zu grosszuegig.
+ *   opt.grossKlein  (Standard aus; Tippstufen 02.11.2026, nur Pauls Quiz)
+ *                 bei "gut"/"fast" zusaetzlich pruefen, ob der erste Buchstabe
+ *                 eines Wortes gross/klein vom Treffer abweicht. Die Stufe
+ *                 bleibt unveraendert (zaehlt weiter als richtig); dazu kommt
+ *                 grossKlein: "gross" (Nomen schreibt man gross) oder "klein"
+ *                 und gkWort (das betroffene Wort, so wie es richtig ist).
+ *                 Artikel davor zaehlen nicht ("Die Verschmutzung" ist gut).
  *
  * Was bleibt falsch (mit Absicht):
  *   - ein falscher Artikel, wenn beide einen haben ("die Hund", "la garçon")
@@ -284,8 +291,40 @@
     return null;
   }
 
+  /* Gross-/Kleinschreibung des ersten Buchstabens je Wort (Tippstufen,
+     02.11.2026). Verglichen wird von hinten, Artikel bleiben aussen vor.
+     Nur wenn derselbe Buchstabe in anderer Schreibung dasteht - ein ganz
+     anderer Buchstabe ist ein Tippfehler, kein Gross/klein-Fehler. */
+  function grossKleinFehler(gegeben, treffer, sprache) {
+    function worte(s) {
+      var w = String(s == null ? "" : s).trim().split(/\s+/).filter(Boolean);
+      var a = artikelAb(w.join(" ").toLowerCase(), sprache || "de");
+      if (a && a[0] && w.length > 1) w = w.slice(1);
+      return w;
+    }
+    var g = worte(gegeben), t = worte(treffer);
+    var n = Math.min(g.length, t.length);
+    for (var i = 1; i <= n; i++) {
+      var gw = g[g.length - i], tw = t[t.length - i];
+      var gb = gw.charAt(0), tb = tw.charAt(0);
+      if (!gb || !tb || gb === tb) continue;
+      if (gb.toLowerCase() !== tb.toLowerCase()) continue;
+      if (tb.toLowerCase() === tb.toUpperCase()) continue;     // kein Buchstabe
+      return { richtung: tb === tb.toUpperCase() ? "gross" : "klein", wort: tw };
+    }
+    return null;
+  }
+
   function pruefen(gegeben, soll, opt) {
     opt = opt || {};
+    if (opt.grossKlein) {
+      var e0 = pruefen(gegeben, soll, Object.assign({}, opt, { grossKlein: false }));
+      if (e0.stufe === "gut" || e0.stufe === "fast") {
+        var gkf = grossKleinFehler(gegeben, e0.treffer, opt.sprache);
+        if (gkf) { e0.grossKlein = gkf.richtung; e0.gkWort = gkf.wort; }
+      }
+      return e0;
+    }
     if (!schlicht(gegeben, opt.sprache)) return { stufe: "offen", treffer: String(soll == null ? "" : soll), grund: "" };
     var alle = varianten(soll, opt);
     var i, e, fast = null;
@@ -408,8 +447,28 @@
     return box;
   }
 
+  /* Luecken fuer Stufe 2 der Tippstufen (02.11.2026, nur Pauls Quiz).
+     Feste, nachvollziehbare Verteilung (kein Zufall, damit Paul beim
+     zweiten Mal dieselbe Aufgabe sieht und die Messung wiederholbar ist):
+     der ERSTE Buchstabe ist immer eine Luecke (bei Nomen der Grossbuchstabe),
+     dazu jeder vierte ab dem dritten (Stelle 2, 6, 10 ...). Zeichen, die keine
+     Buchstaben sind (Bindestrich), stehen immer da.
+     -> [{ z: "V", offen: true }, { z: "e", offen: false }, ...] oder null */
+  function luecken(wort) {
+    var w = String(wort == null ? "" : wort).trim();
+    if (!w || /\s/.test(w) || w.length < 3 || w.length > 24) return null;
+    if (!/^[A-Za-z\u00C0-\u024F\u00DF-]+$/.test(w)) return null;
+    var raus = [];
+    for (var i = 0; i < w.length; i++) {
+      var z = w.charAt(i);
+      var buchstabe = z.toLowerCase() !== z.toUpperCase() || z === "\u00DF";
+      raus.push({ z: z, offen: buchstabe && (i === 0 || i % 4 === 2) });
+    }
+    return raus;
+  }
+
   var LWToleranz = { pruefen: pruefen, varianten: varianten, unterschied: unterschied,
-    zeigen: zeigen, abstand: abstand };
+    zeigen: zeigen, abstand: abstand, luecken: luecken };
   if (typeof module !== "undefined" && module.exports) module.exports = LWToleranz;
   else wurzel.LWToleranz = LWToleranz;
 })(typeof window !== "undefined" ? window : this);

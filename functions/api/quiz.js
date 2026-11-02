@@ -65,7 +65,23 @@ import { termineLesen, berlinHeute } from "./_probentermine.js";
 import { notenLesen } from "./_noten.js";
 import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen.js";
 import { OPUS_FORMEN } from "./_formen-opus.js";
-import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten } from "./_fragerichtung.js";
+import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn } from "./_fragerichtung.js";
+
+/* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
+   schalter:tippstufen = "alt" schaltet die Leiter ab, dann gilt genau das
+   Tippen vom 19.10.2026 (RICHTUNG.frei). Fehlt der Wert oder scheitert das
+   Lesen, gilt RICHTUNG wie im Code. Umschalten (nur Denny oder Hauptchat mit Ja):
+     npx wrangler kv key put "schalter:tippstufen" "alt" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote
+     npx wrangler kv key delete "schalter:tippstufen" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote */
+async function richtungFuer(env, kind) {
+  if (!stufenAn(RICHTUNG, kind)) return RICHTUNG;
+  try {
+    const roh = env && env.PAUL_KV ? await env.PAUL_KV.get("schalter:tippstufen") : null;
+    if (roh != null && String(roh).trim().replace(/^["']|["']$/g, "").trim().toLowerCase() === "alt")
+      return { ...RICHTUNG, stufen: { ...RICHTUNG.stufen, an: false } };
+  } catch (e) { /* Standard */ }
+  return RICHTUNG;
+}
 
 const KINDER = {
   paul:   { datei: "grundschule-3-4.json", stufe: "4. Klasse Grundschule", alter: 10 },
@@ -468,7 +484,12 @@ export async function onRequestGet(context) {
   /* Kommt eine Tatsache wieder, dann in einer ANDEREN Form als beim letzten
      Mal, und hoechstens 2 je Runde zum Tippen (Dennys Entscheidung
      19.10.2026). Eine Tatsache je Runde. */
-  if (beg) offen = richtungAnwenden(offen, alleDazu, beg, { kind, punkte, schluessel: punktSchluessel });
+  const richtung = await richtungFuer(env, kind);
+  const mitStufen = stufenAn(richtung, kind);
+  /* Einstellungen immer mitgeben: ohne sie nimmt richtungAnwenden RICHTUNG mit
+     stufen.an = true, und der KV-Rueckweg "alt" waere wirkungslos (gemessen
+     02.11.2026, 12:40 Uhr: 8 Felder Unterschied zu lernwelt/ trotz "alt"). */
+  if (beg) offen = richtungAnwenden(offen, alleDazu, beg, { kind, punkte, schluessel: punktSchluessel, einstellungen: richtung });
   /* Paul (Schritt 4): die Reihe ist schon gewichtet gezogen - nicht mischen. Die
      Einstiegskarte steht vorn und bleibt dort (der Tipp-Tausch laesst Platz 1 aus). */
   const ab4 = schritt4Paul && einstiegT && offen.length && tatsacheVon(offen[0]) === einstiegT ? 1 : 0;
@@ -483,9 +504,11 @@ export async function onRequestGet(context) {
   const abJ = schritt4Paul && reihe4 ? ab4 + (reihe4.neuVorn || 0) + reihe4.wieder : ab4;
   if (anzahl && offen.length > anzahl) {
     for (let i = anzahl; i < bisI; i++) {
-      if (offen[i].eingabe !== "frei") continue;
+      /* Tippstufen: die Luecken (Stufe 2) genauso nach vorn holen. Ohne Leiter
+         gibt es kein "luecken" - dann ist es genau die alte Bedingung. */
+      if (offen[i].eingabe !== "frei" && offen[i].eingabe !== "luecken") continue;
       const vorn = [];
-      for (let j = abJ; j < anzahl; j++) if (offen[j].eingabe !== "frei") vorn.push(j);
+      for (let j = abJ; j < anzahl; j++) if (offen[j].eingabe !== "frei" && offen[j].eingabe !== "luecken") vorn.push(j);
       if (!vorn.length) break;
       const j = vorn[Math.floor(Math.random() * vorn.length)];
       [offen[i], offen[j]] = [offen[j], offen[i]];
@@ -517,6 +540,7 @@ export async function onRequestGet(context) {
      dem Schirm wird (Zahl, Punkt oder nichts), entscheidet `anzeige.wartend`
      in _wiedervorlage.js, nicht der Motor. */
   return json(200, { ok: true, fragen: raus, nachgebaut, nachschub, vorrat: offen.length,
+                     ...(mitStufen && beg ? { tippstufen: true } : {}),
                      wiedervorlage: fuerDieSeite(),
                      wartend: wartendJeBlatt(vorrat.fragen, punkte, jetzt),
                      ...(wiederholt ? { wiederholt } : {}),
@@ -729,10 +753,20 @@ export async function onRequestPost(context) {
     const vorher = await punkteLesen(env, kind);
     const punkte = JSON.parse(JSON.stringify(vorher));
     const nun = Date.now();
+    /* Tippstufen (nur Paul): Stufe und Gross/klein-Merker aus dem Motor
+       verschieben nur den Stufenabzug `ab`, nie r (stufenabzug()). */
+    const mitStufen = kind === "paul" && stufenAn(await richtungFuer(env, kind), kind);
     for (const a of antworten) {
       if (!a || !a.blatt || (!a.belegNr && !a.frageId)) continue;
+      const o = kind === "paul" ? { paul: true } : undefined;
+      if (o && mitStufen) {
+        o.stufen = true;
+        if (a.gk) o.gk = true;
+        if (Number(a.stufe) >= 1 && Number(a.stufe) <= 3) o.stufe = Number(a.stufe);
+        if (a.sz) o.zahl = true;
+      }
       punktVerbuchen(punkte, { blatt: a.blatt, belegNr: a.belegNr, id: a.frageId }, !!a.stimmt, nun,
-        undefined, kind === "paul" ? { paul: true } : undefined);
+        undefined, o);
     }
     if (zusammen) for (const a of fund) {
       if (!a || !a.blatt || !a.karte) continue;

@@ -50,6 +50,26 @@ export const RICHTUNG = {
     worte: 1,
     zeichen: { paul: 20, helena: 24, leon: 12 },
   },
+
+  /* Tippstufen (Pauls Wunsch, Denny 02.11.2026, nur Paul). Je Tatsache eine
+     Leiter: Stufe 1 Ankreuzen, Stufe 2 Buchstaben in Luecken, Stufe 3 das
+     ganze Wort frei mit Gross-/Kleinschreibung. Die Stufe kommt aus dem
+     Lernpunkt: wirksam = r - ab (ab = Stufenabzug, _wiedervorlage.js).
+       wirksam <= 0 -> 1 · = 1 -> 2 · >= 2 -> 3 (Zahl: >= 1 -> 3, keine Stufe 2)
+     false (oder KV schalter:tippstufen = "alt", quiz.js) = genau wie vorher:
+     dann gilt nur `frei` oben. */
+  stufen: {
+    an: true,
+    kinder: ["paul"],
+    /* Stufe 2 hoechstens so oft je Runde. 3 statt 2 wie bei Stufe 3: Die
+       Luecken sind leichter als das freie Wort (die meisten Buchstaben
+       stehen da), aber jede kostet mehr Zeit als ein Klick. Bei 10 Fragen
+       bleiben so mindestens 5 zum Ankreuzen. */
+    lueckenJeRunde: 3,
+    /* Schalter "Selbst schreiben": Antworten mit 1 bis 3 Woertern, ohne Grenze. */
+    selbstWorte: 3,
+    selbstZeichen: 40,
+  },
 };
 
 export const FORMEN = ["standard", "umgekehrt", "luecke", "zuordnung"];
@@ -163,6 +183,153 @@ export function tippbar(f, kind, e) {
   return true;
 }
 
+/* ---------------------------------------------------------------- *
+ *  TIPPSTUFEN (02.11.2026, nur Paul)                                *
+ * ---------------------------------------------------------------- */
+const ARTIKEL_DE = ["der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "eines"];
+const PHRASE_DIESER = /\b(dieser|diese|dieses|diesen|diesem)\b/i;
+const PHRASE_MIT_ANTWORTEN = /richtig geschrieben|welche antwort|welche aussage|welcher satz|stimmt\b/i;
+
+export function stufenAn(e, kind) {
+  const st = (e || RICHTUNG).stufen;
+  return !!(st && st.an && Array.isArray(st.kinder) && st.kinder.includes(kind));
+}
+
+/* "die Verschmutzung" -> { artikel: "die", wort: "Verschmutzung" }; ein Wort
+   ohne Artikel -> { artikel: "", wort }; mehr Woerter -> null. */
+export function kernWort(antwort) {
+  const w = String(antwort == null ? "" : antwort).trim().split(/\s+/).filter(Boolean);
+  if (w.length === 1) return { artikel: "", wort: w[0] };
+  if (w.length === 2 && ARTIKEL_DE.includes(w[0].toLowerCase())) return { artikel: w[0], wort: w[1] };
+  return null;
+}
+
+export function istZahlAntwort(antwort) {
+  return /^[-\u2212]?\d+([.,]\d+)*$/.test(String(antwort == null ? "" : antwort).trim());
+}
+
+function phrasenFrei(f) {
+  const frage = String((f && f.frage) || "");
+  return !PHRASE_DIESER.test(frage) && !PHRASE_MIT_ANTWORTEN.test(frage);
+}
+
+/* Stufe 2 geht nur bei einem Wort (Artikel davor zaehlt nicht), aus
+   Buchstaben, 3 bis 24 Zeichen, keine Zahl. Dieselbe Grenze wie
+   LWToleranz.luecken() im Browser. */
+export function lueckbar(f) {
+  if (!f || f.frei === false || !phrasenFrei(f)) return false;
+  const r = richtigeAntwort(f);
+  if (!r || istZahlAntwort(r)) return false;
+  const k = kernWort(r);
+  if (!k) return false;
+  return k.wort.length >= 3 && k.wort.length <= 24 && /^[A-Za-z\u00C0-\u024F\u00DF-]+$/.test(k.wort);
+}
+
+/* Stufe 3 nach der Leiter: ein Wort (Artikel davor erlaubt) oder eine Zahl,
+   hoechstens `frei.zeichen[kind]` Zeichen im Wort. */
+export function tippbarStufe(f, kind, e) {
+  const ein = (e || RICHTUNG).frei;
+  if (!f || f.frei === false || !phrasenFrei(f)) return false;
+  const r = richtigeAntwort(f);
+  if (!r) return false;
+  const k = kernWort(r);
+  if (!k) return false;
+  const max = (ein.zeichen && ein.zeichen[kind]) || 20;
+  return k.wort.length <= max;
+}
+
+/* Schalter "Selbst schreiben": 1 bis 3 Woerter. */
+export function selbstTauglich(f, e) {
+  const st = (e || RICHTUNG).stufen || {};
+  if (!f || f.frei === false || !phrasenFrei(f)) return false;
+  const r = richtigeAntwort(f);
+  if (!r) return false;
+  const n = r.split(/\s+/).filter(Boolean).length;
+  return n >= 1 && n <= (st.selbstWorte || 3) && r.length <= (st.selbstZeichen || 40);
+}
+
+/* Ist Rechtschreibung selbst der Lernstoff? (Dennys Ergaenzung 02.11.2026:
+   streng nur dort, sonst bleibt Gross/klein egal; im Zweifel mild.)
+   Gemessen an quiz-vorrat:paul (2.550 Fragen, kein Wortart-Feld): Fach
+   Deutsch, die Antwort ist ein Wort (Artikel davor erlaubt), und Merkmal ODER
+   Fragetext nennen Wortart, Wortbildung oder Rechtschreibung. Ausdruecklich
+   NICHT: Buchstaben/Laute ("sch", "eu"), Heftfuehrung, Zeitformen, Komma,
+   Mengen - dort ist die Schreibung des Wortes nicht der Stoff. */
+const STOFF_MERKMAL = /nomen|rechtschreib|gross|klein|lernw|nachsilbe|vorsilbe|wortbau|woerter aufbau|wortstamm|wortfamil|dehnung|auslaut|doppelkonsonant|\bkeit|\bheit|\bung\b|\bnis\b|wortart|adjektiv|\bverb|steiger|einzahl|mehrzahl|zusammen|schreib|mitlaut|\btz\b|\bie\b|ableiten|seit oder/i;
+const STOFF_FRAGE = /\b(Nomen|Namenw\w*|Adjektiv\w*|Verb\w*|Wortart|Lernw\w*|Nachsilbe|Vorsilbe|Mehrzahl|Einzahl|Vergleichsstufe)\b|schreibt man|Schreibweise|Schreibung/i;
+const NICHT_STOFF_MERKMAL = /buchstab|doppellaut|komma|heftf|zeitform|liter|\bcm\b|\bm in\b|alphabet|lese|brief|woerterbuch/i;
+export function rechtschreibStoff(f) {
+  if (!f || !/^deutsch/.test(String(f.fach || ""))) return false;
+  const r = richtigeAntwort(f);
+  const k = kernWort(r);
+  if (!k || !/^[A-Za-z\u00C0-\u024F\u00DF-]+$/.test(k.wort)) return false;
+  const m = String(f.merkmal || "");
+  if (NICHT_STOFF_MERKMAL.test(m)) return false;
+  return STOFF_MERKMAL.test(m) || STOFF_FRAGE.test(String(f.frage || ""));
+}
+
+/* Wirksame Richtig-Zahl einer Tatsache: Summe von max(0, r - ab) ueber die
+   Lernpunkte aller ihrer Formen (wie richtigZahl, mit Stufenabzug). */
+export function wirksamZahl(geschwister, punkte, schluessel) {
+  let n = 0;
+  const gesehen = new Set();
+  for (const g of geschwister || []) {
+    const s = schluessel(g);
+    if (!s || gesehen.has(s)) continue;
+    gesehen.add(s);
+    const p = punkte && punkte[s];
+    if (p) n += Math.max(0, (Number(p.r) || 0) - (Number(p.ab) || 0));
+  }
+  return n;
+}
+
+/* Die Stufe aus der wirksamen Zahl. Zahlen haben keine Stufe 2 (Dennys
+   Vorgabe), und ohne Stufe 2 (z. B. "3a") bleibt es bei 1 bis zweimal richtig. */
+export function stufeAus(wirksam, zahl, mitLuecken) {
+  const w = Number(wirksam) || 0;
+  if (zahl) return w >= 1 ? 3 : 1;
+  if (w <= 0) return 1;
+  if (w === 1) return mitLuecken ? 2 : 1;
+  return 3;
+}
+
+/* Wohin ein Fehler fuehrt: auf die wirksame Zahl der Stufe darunter.
+   Stufe 3 -> 1 (Stufe 2), bei Zahlen -> 0 (Stufe 1); Stufe 2 und 1 -> 0. */
+export function wirksamNachFehler(stufe, zahl) {
+  return Number(stufe) === 3 && !zahl ? 1 : 0;
+}
+
+/* Die Felder, die eine Frage in der Leiter bekommt. `z` zaehlt je Runde
+   ({ frei, luecken }) und wird hier weitergezaehlt. */
+function stufeFelder(wahl, liste, o, ein, z) {
+  const extra = {};
+  if (selbstTauglich(wahl, ein)) extra.selbstOk = true;
+  if (rechtschreibStoff(wahl)) extra.gkStreng = true;
+  const r = richtigeAntwort(wahl);
+  const zahl = istZahlAntwort(r);
+  const lk = lueckbar(wahl);
+  const w = o.punkte && o.schluessel ? wirksamZahl(liste, o.punkte, o.schluessel) : 0;
+  const s = stufeAus(w, zahl, lk);
+  if (zahl) extra.stufeZahl = true;
+  const k = kernWort(r);
+  if (s === 3 && ein.frei && ein.frei.an && z.frei < ein.frei.jeRunde && tippbarStufe(wahl, o.kind, ein)) {
+    extra.eingabe = "frei";
+    extra.stufe = 3;
+    z.frei++;
+  } else if (s >= 2 && lk && ein.frei && ein.frei.an && z.luecken < (ein.stufen.lueckenJeRunde || 0)) {
+    /* frei.an:false heisst "kein Tippen" - auch keine Luecken. */
+    /* Stufe 3 verdient, aber die Rundengrenze ist erreicht: dann wenigstens
+       die Luecken - leichter als verdient, nie schwerer. */
+    extra.eingabe = "luecken";
+    extra.stufe = 2;
+    extra.tippKern = { artikel: k.artikel, wort: k.wort };
+    z.luecken++;
+  } else {
+    extra.stufe = 1;
+  }
+  return extra;
+}
+
 /* DIE AUSWAHL je Runde.
  *
  *   offen     die Fragen, die die Wiedervorlage ausgesucht hat (je Tatsache
@@ -183,12 +350,17 @@ export function richtungAnwenden(offen, alle, beg, opt) {
   const genutzt = new Set();
   const raus = [];
   let frei = 0;
+  const st = stufenAn(ein, o.kind);
+  const zaehler = { frei: 0, luecken: 0 };
   for (const f of offen || []) {
     const t = tatsacheVon(f);
     if (genutzt.has(t)) continue;
     genutzt.add(t);
     const b = beg && beg.get(t);
-    if (!b) { raus.push(f); continue; }
+    if (!b) {
+      raus.push(st ? { ...f, ...stufeFelder(f, geschwister.get(t) || [f], o, ein, zaehler) } : f);
+      continue;
+    }
     const liste = geschwister.get(t) || [f];
     // Eine andere Form als beim letzten Mal - und nie die zuletzt gestellte Frage.
     const andere = liste.filter((g) => formVon(g) !== b.letzteForm && String(g.id) !== b.letzteId);
@@ -199,6 +371,10 @@ export function richtungAnwenden(offen, alle, beg, opt) {
         (FORMEN.indexOf(formVon(x)) - FORMEN.indexOf(formVon(y))))[0];
     }
     const extra = { begegnung: b.n + 1 };
+    if (st) {
+      raus.push({ ...wahl, ...extra, ...stufeFelder(wahl, liste, o, ein, zaehler) });
+      continue;
+    }
     if (ein.frei && ein.frei.an && frei < ein.frei.jeRunde && tippbar(wahl, o.kind, ein) &&
         o.punkte && o.schluessel &&
         richtigZahl(liste, o.punkte, o.schluessel) >= ein.frei.abRichtig) {

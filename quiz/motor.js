@@ -1099,6 +1099,7 @@ function artKurz(art) {
          beantwortet hat, geht vor dem Leeren noch an den Server. */
       if (KIND === "paul") melden();
       fragen = j.fragen; nr = 0; richtigGesamt = 0; antwortenLog = []; gemeldetBis = 0; rundeEinheit = !!einheit;
+      selbstSchalterZeigen(!!j.tippstufen);
       if (j.nachschub) vorbauen();      // fuer die naechste Runde, im Hintergrund
       /* Erst anschauen, dann abfragen - wenn es etwas anzuschauen gibt. */
       if (merkkartenZeigen()) return;
@@ -1173,6 +1174,51 @@ function artKurz(art) {
      als Hilfe. Gezaehlt wird der erste Versuch. Ohne toleranz.js (alte Seite)
      wird einfach angekreuzt. */
   var freiAktiv = false, freiGegeben = "", freiErgebnis = null;
+  /* ---------- Tippstufen (02.11.2026, Kapitel 156, nur Paul) ----------
+     Pauls Wunsch: die Antwort selbst eintippen, mit Gross-/Kleinschreibung.
+     Der Server setzt je Tatsache die Stufe (_fragerichtung.js): eingabe
+     "luecken" = Stufe 2 (Buchstaben in Luecken), "frei" = Stufe 3. Dazu
+     selbstOk (taugt fuer den Schalter "Selbst schreiben", 1-3 Woerter) und
+     gkStreng (Rechtschreibung ist hier der Stoff: Gross/klein zaehlt, aber
+     nur als "noch nicht ganz" ohne Aufstieg - nie als Fehler). Ohne diese
+     Felder (Leon, Helena, Rueckweg-Schalter) laeuft alles wie vorher. */
+  var SELBST_SPEICHER = "paul-quiz-selbst";
+  var selbstAn = KIND === "paul" && lese(SELBST_SPEICHER, false) === true;
+  var freiArt = "", freiSelbst = false;
+  function eingabeVon(f) {
+    if (!f) return "";
+    if (KIND === "paul" && selbstAn && f.selbstOk) return "frei";
+    return f.eingabe === "frei" || (KIND === "paul" && f.eingabe === "luecken" && f.tippKern) ? f.eingabe : "";
+  }
+  function selbstSchalterZeigen(ja) {
+    if (KIND !== "paul") return;
+    var b = $("q-selbst");
+    if (!ja) { if (b) b.classList.add("verborgen"); return; }
+    if (!b) {
+      b = document.createElement("button");
+      b.type = "button";
+      b.id = "q-selbst";
+      b.className = "qselbst";
+      var kopf = document.querySelector("#sicht-spiel .kopfzeile");
+      if (!kopf) return;
+      kopf.insertAdjacentElement("beforebegin", b);
+      b.addEventListener("click", function () {
+        selbstAn = !selbstAn;
+        schreibe(SELBST_SPEICHER, selbstAn);
+        selbstSchalterMalen();
+        /* Die offene Frage gleich umstellen, solange noch nichts beantwortet ist. */
+        if (wahlOffen && versuch === 0 && fragen[nr]) freiMalen(fragen[nr]);
+      });
+    }
+    b.classList.remove("verborgen");
+    selbstSchalterMalen();
+  }
+  function selbstSchalterMalen() {
+    var b = $("q-selbst");
+    if (!b) return;
+    b.setAttribute("aria-pressed", selbstAn ? "true" : "false");
+    b.innerHTML = '<span class="qselbst-text">\u270F\uFE0F Selbst schreiben</span><span class="qselbst-an">' + (selbstAn ? "an" : "aus") + "</span>";
+  }
   function freiSprache(f) {
     var k = String(f.fach || "");
     return /^englisch/.test(k) ? "en" : /^franz/.test(k) ? "fr" : "de";
@@ -1182,14 +1228,21 @@ function artKurz(art) {
     if (Array.isArray(f.auchRichtig)) f.auchRichtig.forEach(function (i) { if (a[i] != null) r.push(a[i]); });
     return r;
   }
-  window.QUIZ_FREI_PRUEFEN = function (f, text) {      // auch fuer die Messung
+  window.QUIZ_FREI_PRUEFEN = function (f, text, art) {      // auch fuer die Messung
     var T = window.LWToleranz;
     if (!T) return null;
     var soll = freiSoll(f), sp = freiSprache(f), best = null;
     var verboten = (f.antworten || []).filter(function (x) { return soll.indexOf(x) < 0; });
+    /* Tippstufen (nur Paul): Gross/klein nur bei Rechtschreib-Karten (gkStreng),
+       Luecken ohne Tippfehler-Toleranz - dort ist der Buchstabe die Aufgabe. */
+    var paulStufen = KIND === "paul" && (f.gkStreng || art === "luecken");
+    if (art === "luecken") soll = soll.slice(0, 1);
     for (var i = 0; i < soll.length; i++) {
-      var e = T.pruefen(text, soll[i], { sprache: sp, verboten: verboten, trennen: "keine",
-        artikelEgal: sp !== "fr", zusatzWorte: sp === "de" && !/^deutsch/.test(String(f.fach || "")) });
+      var o = { sprache: sp, verboten: verboten, trennen: "keine",
+        artikelEgal: sp !== "fr", zusatzWorte: sp === "de" && !/^deutsch/.test(String(f.fach || "")) };
+      if (paulStufen && f.gkStreng) o.grossKlein = true;
+      if (paulStufen && art === "luecken") { o.tippfehler = false; o.zusatzWorte = false; }
+      var e = T.pruefen(text, soll[i], o);
       if (!best || e.stufe === "gut" || (e.stufe === "fast" && best.stufe !== "gut")) best = e;
       if (e.stufe === "gut") break;
     }
@@ -1203,9 +1256,12 @@ function artKurz(art) {
       h.className = "qfrei verborgen";
       $("q-antworten").insertAdjacentElement("beforebegin", h);
     }
-    freiAktiv = !!(f && f.eingabe === "frei" && window.LWToleranz);
+    freiArt = eingabeVon(f);
+    freiSelbst = !!(f && KIND === "paul" && selbstAn && f.selbstOk);
+    freiAktiv = !!(f && freiArt && window.LWToleranz && (freiArt !== "luecken" || window.LWToleranz.luecken));
     freiGegeben = ""; freiErgebnis = null;
     if (!freiAktiv) { h.innerHTML = ""; h.classList.add("verborgen"); $("q-antworten").classList.remove("verborgen"); return; }
+    if (freiArt === "luecken") return lueckenMalen(f, h);
     h.innerHTML = '<label class="qfrei-kopf" for="q-frei-feld">\u270F\uFE0F Das kannst du schon \u2013 schreib die Antwort selbst</label>' +
       '<div class="qfrei-reihe"><input id="q-frei-feld" class="qfrei-feld" type="text" autocomplete="off" autocorrect="off" ' +
       'autocapitalize="off" spellcheck="false" enterkeyhint="done" maxlength="60">' +
@@ -1216,14 +1272,57 @@ function artKurz(art) {
     los.addEventListener("click", function () { freiPruefen(f, feld.value); });
     feld.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); freiPruefen(f, feld.value); } });
   }
+  /* Stufe 2: das Wort mit Luecken, je Luecke ein Feld fuer einen Buchstaben.
+     Der Artikel steht fest davor. Weiter springt es von selbst, die
+     Ruecktaste in einem leeren Feld geht eine Luecke zurueck. */
+  function lueckenMalen(f, h) {
+    var k = f.tippKern, teile = window.LWToleranz.luecken(k.wort);
+    if (!teile) { freiAktiv = false; h.innerHTML = ""; h.classList.add("verborgen"); $("q-antworten").classList.remove("verborgen"); return; }
+    var html = '<div class="qfrei-kopf" id="q-frei-kopf">\u270F\uFE0F Setz die fehlenden Buchstaben ein</div>' +
+      '<div class="qluecken" role="group" aria-labelledby="q-frei-kopf">' +
+      (k.artikel ? '<span class="qluecken-artikel">' + esc(k.artikel) + "</span>" : "") + '<span class="qluecken-wort">';
+    var n = 0;
+    teile.forEach(function (t) {
+      if (t.offen) html += '<input class="qluecke" type="text" inputmode="text" maxlength="1" autocomplete="off" autocorrect="off" ' +
+        'autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-label="Buchstabe ' + (++n) + '">';
+      else html += '<span class="qluecke-fest">' + esc(t.z) + "</span>";
+    });
+    html += '</span></div><div class="qfrei-reihe"><button type="button" class="qfrei-los">Pr\u00fcfen</button></div>' +
+      '<div class="qfrei-hinweis" aria-live="polite"></div>';
+    h.innerHTML = html;
+    h.classList.remove("verborgen");
+    $("q-antworten").classList.add("verborgen");
+    var felder = Array.prototype.slice.call(h.querySelectorAll(".qluecke"));
+    function wort() {
+      var i = 0;
+      return teile.map(function (t) { return t.offen ? (felder[i++].value || "") : t.z; }).join("");
+    }
+    function los() {
+      if (felder.some(function (x) { return !x.value; })) {
+        h.querySelector(".qfrei-hinweis").textContent = "F\u00fcll zuerst alle L\u00fccken aus.";
+        return;
+      }
+      freiPruefen(f, (k.artikel ? k.artikel + " " : "") + wort());
+    }
+    felder.forEach(function (x, i) {
+      x.addEventListener("input", function () {
+        if (x.value.length > 1) x.value = x.value.slice(-1);
+        if (x.value && felder[i + 1]) felder[i + 1].focus();
+      });
+      x.addEventListener("keydown", function (e) {
+        if (e.key === "Backspace" && !x.value && felder[i - 1]) { e.preventDefault(); felder[i - 1].value = ""; felder[i - 1].focus(); }
+        if (e.key === "Enter") { e.preventDefault(); los(); }
+      });
+    });
+    h.querySelector(".qfrei-los").addEventListener("click", los);
+  }
   function freiPruefen(f, text) {
     if (!wahlOffen || !freiAktiv || versuch > 0) return;
     var h = $("q-frei"), hinweis = h.querySelector(".qfrei-hinweis");
-    var e = window.QUIZ_FREI_PRUEFEN(f, text);
+    var e = window.QUIZ_FREI_PRUEFEN(f, text, freiArt);
     if (!e || e.stufe === "offen") { hinweis.textContent = "Schreib zuerst deine Antwort hinein."; return; }
     freiGegeben = String(text).trim(); freiErgebnis = e;
-    h.querySelector(".qfrei-feld").disabled = true;
-    h.querySelector(".qfrei-los").disabled = true;
+    Array.prototype.forEach.call(h.querySelectorAll(".qfrei-feld, .qluecke, .qfrei-los"), function (x) { x.disabled = true; });
     versuch = 1;
     if (e.stufe === "gut" || e.stufe === "fast") return abschliessen(true, null, freiGegeben);
     ersterFalsch = freiGegeben;
@@ -1490,7 +1589,13 @@ function artKurz(art) {
 
     var e = $("q-erklaerung");
     var getippt = !knopf && freiErgebnis && versuch === 1;
-    var kopf = stimmt
+    /* Tippstufen: Gross/klein daneben auf einer Rechtschreib-Karte zaehlt als
+       richtig, heisst aber "noch nicht ganz" (kein Aufstieg, kein Fehler). */
+    var gkHin = !!(stimmt && getippt && KIND === "paul" && f.gkStreng && freiErgebnis.grossKlein);
+    var kopf = gkHin
+      ? "Noch nicht ganz \u2013 " + (freiErgebnis.grossKlein === "gross" ? "Nomen schreibt man gro\u00df."
+          : "\u201E" + (freiErgebnis.gkWort || "") + "\u201C schreibt man klein.")
+      : stimmt
       ? (getippt && freiErgebnis.stufe === "fast"
           ? (freiErgebnis.grund === "zusatz" ? "Richtig \u2013 k\u00fcrzer reicht auch." : "Richtig \u2013 achte auf die Schreibweise.")
           : versuch === 1 ? "Richtig." : "Jetzt stimmt es.")
@@ -1510,7 +1615,7 @@ function artKurz(art) {
     if (aufAuch) aufAuch.addEventListener("click", function () {
       belegZeigen(f, f.beleg.auch.blatt, f.beleg.auch.titel);
     });
-    if (getippt && freiErgebnis.stufe === "fast" && window.LWToleranz) {
+    if (getippt && (freiErgebnis.stufe === "fast" || gkHin) && window.LWToleranz) {
       var platz = document.createElement("div");
       e.insertBefore(platz, e.children[1] || null);
       window.LWToleranz.zeigen(platz, gegeben, f.antworten[f.richtig || 0],
@@ -1531,7 +1636,14 @@ function artKurz(art) {
        dafuer nicht, es wird je Bau-Lauf neu erfunden. */
     antwortenLog.push({ frageId: f.id, merkmal: f.merkmal, fach: f.fach, stimmt: stimmtEcht,
                         blatt: f.blatt || "", belegNr: f.belegNr || 0, trick: trickGenutzt || undefined,
-                        form: f.form || undefined, frei: f.eingabe === "frei" ? 1 : undefined });
+                        form: f.form || undefined,
+                        frei: (KIND === "paul" ? freiAktiv && freiArt === "frei" : f.eingabe === "frei") ? 1 : undefined,
+                        /* Tippstufen (nur Paul): welche Stufe gezeigt war (nicht beim
+                           Schalter "Selbst schreiben"), Gross/klein-Merker, Zahl-Karte. */
+                        stufe: KIND === "paul" && f.stufe && !freiSelbst ? (freiAktiv ? (freiArt === "frei" ? 3 : 2) : 1) : undefined,
+                        gk: gkHin ? 1 : undefined,
+                        sz: KIND === "paul" && f.stufeZahl ? 1 : undefined,
+                        selbst: KIND === "paul" && freiSelbst && freiAktiv ? 1 : undefined });
     // Der Lernstand ist die Quelle für die Wiederholung - hier entsteht sie.
     if (window.lernstand && window.lernstand.antwort)
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",

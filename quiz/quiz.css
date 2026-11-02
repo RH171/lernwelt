@@ -311,3 +311,20 @@ html[data-theme="dark"] .qstand-leg .ls{color:#6ee7a8} html[data-theme="dark"] .
 .qfrei-los:disabled{opacity:.5;cursor:default}
 .qfrei-hinweis{font-size:15px;line-height:1.45;color:var(--ink)}
 .qfrei-hinweis:empty{display:none}
+
+/* Tippstufen (02.11.2026, nur Paul, Kapitel 156): Schalter "Selbst schreiben"
+ * oben in der Fragekarte und die Luecken der Stufe 2. Alles >= 44 px. */
+.qselbst{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;
+  margin:0 0 10px;padding:6px 14px;border:2px solid var(--line);border-radius:14px;background:var(--card);
+  color:var(--ink);font:700 16px/1.2 var(--rund);cursor:pointer}
+.qselbst-an{min-width:52px;padding:6px 10px;border-radius:999px;background:var(--line);color:var(--ink);text-align:center}
+.qselbst[aria-pressed="true"]{border-color:var(--akzent)}
+.qselbst[aria-pressed="true"] .qselbst-an{background:var(--akzent);color:var(--akzent-auf,#fff)}
+.qluecken{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:800 24px/1 var(--rund);color:var(--ink)}
+.qluecken-artikel{margin-right:4px}
+.qluecken-wort{display:inline-flex;flex-wrap:wrap;align-items:center;gap:3px}
+.qluecke{width:44px;height:52px;padding:0;text-align:center;border:2px solid var(--akzent);border-radius:10px;
+  background:var(--card);color:var(--ink);font:800 24px/1 var(--rund)}
+.qluecke:focus{outline:3px solid var(--akzent);outline-offset:1px}
+.qluecke:disabled{opacity:.75}
+.qluecke-fest{display:inline-block;min-width:18px;text-align:center}

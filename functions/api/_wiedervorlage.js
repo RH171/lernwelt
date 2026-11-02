@@ -901,6 +901,7 @@ export function punktVerbuchen(punkte, frage, richtig, jetzt, e, opt) {
       delete p.t1; delete p.s;
     }
   }
+  const rVorher = Number(p.r) || 0;
   if (richtig) {
     p.r = Math.min((Number(p.r) || 0) + 1, ein.sitzt);
     /* fz = wann er zuletzt danebenlag (29.09.2026, Kreise fuellen). Damit
@@ -915,8 +916,35 @@ export function punktVerbuchen(punkte, frage, richtig, jetzt, e, opt) {
     p.f = 1;
     delete p.fz;
   }
+  if (opt && opt.paul && opt.stufen) stufenabzug(p, rVorher, richtig, opt);
   punkte[s] = p;
   return punkte;
+}
+
+/* Tippstufen (02.11.2026, nur Paul, nur mit opt.stufen aus quiz.js).
+ * ab = Stufenabzug. Die Stufe einer Tatsache kommt aus r - ab
+ * (_fragerichtung.js stufeAus); r selbst - und damit Wertung, Wiedervorlage,
+ * Schritt 3/4 - bleibt genau wie vorher.
+ *   richtig + Gross/klein-Fehler auf einer Rechtschreib-Karte (opt.gk):
+ *       ab steigt um so viel, wie r gestiegen ist -> kein Aufstieg, kein Fehler.
+ *   richtig ohne gk, r am Deckel: ab - 1 (sonst bliebe ein alter Abzug ewig).
+ *   falsch auf Stufe 2/3 (opt.stufe): ab so, dass r - ab auf die Stufe
+ *       darunter faellt (wirksamNachFehler) -> genau eine Stufe zurueck,
+ *       auch wenn r vorher am Deckel stand.
+ *   immer: 0 <= ab <= r; ab = 0 wird geloescht.
+ * Ohne Tippfrage (Ankreuzen, Such-Spiel) kommt nur die letzte Zeile zum Zug. */
+export function stufenabzug(p, rVorher, richtig, opt) {
+  let ab = Number(p.ab) || 0;
+  const r = Number(p.r) || 0;
+  if (richtig && opt.gk) ab += Math.max(0, r - rVorher);
+  else if (richtig && r === rVorher && ab > 0) ab -= 1;
+  else if (!richtig && Number(opt.stufe) >= 2) {
+    const ziel = Number(opt.stufe) === 3 && !opt.zahl ? 1 : 0;
+    ab = Math.max(ab, r - ziel);
+  }
+  ab = Math.max(0, Math.min(ab, r));
+  if (ab) p.ab = ab; else delete p.ab;
+  return p;
 }
 
 /* Deckel: die aeltesten fliegen zuerst. Sie sind ohnehin laengst faellig und
