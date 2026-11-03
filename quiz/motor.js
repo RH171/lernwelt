@@ -1125,6 +1125,9 @@ function artKurz(art) {
      GEZAEHLT WIRD NUR DER ERSTE VERSUCH - sonst waere die Elternauswertung
      geschoenkt. Dieselbe Regel wie beim Hinweis in Helenas Holiday Report. */
   var versuch = 0, ersterFalsch = "";
+  /* Antwort-Kennung (03.11.2026, nur Paul): wie der ERSTE Versuch gegeben wurde - "k" angekreuzt,
+     "l" Luecke gefuellt, "s" selbst geschrieben, "" = nicht sicher (dann bleibt das Feld leer). */
+  var ersteWeise = "";
 
   function frageMalen() {
     var f = fragen[nr];
@@ -1139,7 +1142,7 @@ function artKurz(art) {
     trickfeld(f);
     $("q-erklaerung").classList.add("verborgen");
     $("q-weiter").classList.add("verborgen");
-    versuch = 0; ersterFalsch = "";
+    versuch = 0; ersterFalsch = ""; ersteWeise = "";
     hilfeVerbergen();
 
     // Die richtige Antwort steht an Stelle 0 - hier wird gemischt, damit sie
@@ -1324,6 +1327,7 @@ function artKurz(art) {
     freiGegeben = String(text).trim(); freiErgebnis = e;
     Array.prototype.forEach.call(h.querySelectorAll(".qfrei-feld, .qluecke, .qfrei-los"), function (x) { x.disabled = true; });
     versuch = 1;
+    ersteWeise = freiArt === "luecken" ? "l" : freiArt === "frei" ? "s" : "";
     if (e.stufe === "gut" || e.stufe === "fast") return abschliessen(true, null, freiGegeben);
     ersterFalsch = freiGegeben;
     $("q-antworten").classList.remove("verborgen");
@@ -1546,6 +1550,7 @@ function artKurz(art) {
     var stimmt = originalIndex === (f.richtig || 0) ||
       (Array.isArray(f.auchRichtig) && f.auchRichtig.indexOf(originalIndex) >= 0);
     versuch++;
+    if (versuch === 1) ersteWeise = !freiAktiv && freiErgebnis === null ? "k" : "";
 
     /* Daneben, und es gibt noch Hilfe? Dann ist es KEIN Fehler, sondern ein
        Zwischenschritt: Der Knopf ruettelt, die naechste Stufe geht auf, und
@@ -1573,6 +1578,17 @@ function artKurz(art) {
 
   /* Das Ende einer Frage - nach einem Klick oder nach dem Tippen.
      `gegeben` ist der Text der gewaehlten bzw. getippten Antwort. */
+  /* Antwort-Kennung (03.11.2026, nur Paul, nur Blatt-Antworten): Fragen-ID, Frageart, Antwortweise
+     fuer lernstand.antwort. Eine Frage ohne Form gilt im ganzen System als "standard" (formVon in
+     functions/api/_fragerichtung.js), darum "n". */
+  function kennungVon(f) {
+    try {
+      if (KIND !== "paul" || !f || !f.blatt) return undefined;
+      var fa = { standard: "n", umgekehrt: "u", luecke: "l", zuordnung: "z" }[f.form || "standard"] || "";
+      return { q: f.id ? String(f.id).slice(0, 40) : "", fa: fa, aw: ersteWeise };
+    } catch (e) { return undefined; }
+  }
+
   function abschliessen(stimmt, knopf, gegeben) {
     var f = fragen[nr];
     wahlOffen = false;
@@ -1649,7 +1665,8 @@ function artKurz(art) {
       window.lernstand.antwort(stimmtEcht, f.merkmal || "quiz",
         stimmtEcht ? "" : (ersterFalsch || gegeben), f.antworten[f.richtig || 0],
         !f.blatt ? "" : Number(f.belegNr) >= 1 ? f.blatt + "#" + Math.floor(Number(f.belegNr))
-                       : f.id ? f.blatt + "#f:" + String(f.id).slice(0, 24) : "");
+                       : f.id ? f.blatt + "#f:" + String(f.id).slice(0, 24) : "",
+        undefined, undefined, kennungVon(f));
     fortschrittMalen();
   }
 

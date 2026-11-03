@@ -67,7 +67,7 @@ import { termineLesen, berlinHeute } from "./_probentermine.js";
 import { notenLesen } from "./_noten.js";
 import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen.js";
 import { OPUS_FORMEN } from "./_formen-opus.js";
-import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn } from "./_fragerichtung.js";
+import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
 /* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
    schalter:tippstufen = "alt" schaltet die Leiter ab, dann gilt genau das
@@ -828,6 +828,18 @@ export async function onRequestPost(context) {
    (Dennys Beschluss 28.09.2026: sie kommen mit in "Heute lernen").
    Je Lernpunkt eine Frage, als Karte fuer /fundkarten.js: eine richtige und
    ZWEI falsche Antworten, wie jede Fundkarte. Am laengsten her zuerst. */
+/* Antwort-Kennung (03.11.2026, nur Paul - nur er gibt alleFormen mit): welche Frage die Karte
+   WIRKLICH zeigt (bei "andere" eine andere als frageId). Echte Vorratsfrage: ID und Frageart
+   (ohne Form gilt "standard", formVon). Fundkarte als Zweitform ("karte:"): Frageart "n", keine
+   Fragen-ID (der Lernpunkt nennt das Blatt). Opus-Form ("opus:"): beides unbekannt, also leer. */
+const FORM_KURZ = { standard: "n", umgekehrt: "u", luecke: "l", zuordnung: "z" };
+function zeigeKennung(g) {
+  const id = String((g && g.id) || "");
+  if (/^opus:/.test(id)) return {};
+  if (/^karte:/.test(id)) return { fa: "n" };
+  return { ...(id ? { q: id.slice(0, 40) } : {}), fa: FORM_KURZ[formVon(g)] };
+}
+
 export function quizWacklerListe(fragen, punkte, jetzt, max, nur, alleFormen) {
   if (!WV.an) return [];
   const nun = jetzt || Date.now();
@@ -868,7 +880,7 @@ export function quizWacklerListe(fragen, punkte, jetzt, max, nur, alleFormen) {
       falsch: a.filter((x, i) => i !== ri).slice(0, 2),
       ...(g.merke ? { merke: String(g.merke) } : g.tipp ? { merke: String(g.tipp) } : {}),
       tage: p.z ? Math.floor((nun - p.z) / 86400000) : 0,
-      ...(alleFormen ? { form: g === f ? "gleich" : "andere" } : {}),
+      ...(alleFormen ? { form: g === f ? "gleich" : "andere", zeige: zeigeKennung(g) } : {}),
     });
   }
   raus.sort((x, y) => y.tage - x.tage);

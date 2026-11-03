@@ -187,10 +187,13 @@
       if (!q || !q.frage || !q.richtig || !q.falsch || q.falsch.length !== 2) return;
       if (!(q.blatt in titel)) return;          // ausgeblendetes Blatt (oder anderes Fach): nicht abfragen
       if (q.frageId != null && ohne["q:" + q.frageId]) return;
-      topf.wackler.push({ frage: q.frage, richtig: q.richtig, falsch: q.falsch,
+      var w = { frage: q.frage, richtig: q.richtig, falsch: q.falsch,
         merke: q.merke || "", stichwort: "Aus dem Quiz", blatt: q.blatt,
         blattTitel: titel[q.blatt], fach: fachVon[q.blatt], sorte: "wackler",
-        quiz: { belegNr: q.belegNr, frageId: q.frageId }, _tage: q.tage || 0, _r: 0 });
+        quiz: { belegNr: q.belegNr, frageId: q.frageId }, _tage: q.tage || 0, _r: 0 };
+      /* Antwort-Kennung (03.11.2026, nur Paul): welche Frage die Karte zeigt (fundkarten.js) */
+      if (q.zeige && typeof q.zeige === "object") w.zeige = q.zeige;
+      topf.wackler.push(w);
     });
     // Am laengsten her zuerst; bei "sicher" das Unsicherste (wenig r) zuerst.
     topf.wackler.sort(function (a, b) { return b._tage - a._tage; });

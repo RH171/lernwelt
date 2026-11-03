@@ -1047,7 +1047,12 @@
     // frage (seit 18.10.2026, freiwillig): der Fragetext, bis 160 Zeichen - ohne
     // ihn war bei Helenas Fehlwertungen nicht mehr zu klaeren, was gefragt war.
     // gegeben/richtig seit demselben Tag bis 80 statt 30 Zeichen.
-    antwort: function (stimmt, merkmal, gegeben, richtig, punkt, sekunden, frage) {
+    // kennung (03.11.2026, Antwort-Kennung, nur Paul, freiwillig): { q: Fragen-ID, fa: Frageart
+    // n|u|l|z, aw: Antwortweise k|l|s } - nur was das Spiel SICHER weiss, sonst weglassen. Dazu die
+    // Antwortzeit (Uhr des Geraets; der Server rechnet sie beim Empfang auf seine Uhr um). Gespeichert
+    // wird es nur, wenn der Schalter schalter:antwortkennung = "neu" steht (functions/api/_antwortkennung.js).
+    // Scheitert hier etwas, bleibt die Antwort genau wie vorher.
+    antwort: function (stimmt, merkmal, gegeben, richtig, punkt, sekunden, frage, kennung) {
       try {
         aufgaben.push({
           merkmal: String(merkmal || "").slice(0, 40).toLowerCase(),
@@ -1061,6 +1066,15 @@
           frage: frage ? String(frage).slice(0, 160) : ""
         });
       } catch (e) {}
+      if (KIND === "paul" && kennung && typeof kennung === "object") {
+        try {
+          var a = aufgaben[aufgaben.length - 1], k = {};
+          if (typeof kennung.q === "string" && /^[A-Za-z0-9:_.\-]{1,40}$/.test(kennung.q)) k.q = kennung.q;
+          if (/^[nulz]$/.test(String(kennung.fa || ""))) k.fa = kennung.fa;
+          if (/^[kls]$/.test(String(kennung.aw || ""))) k.aw = kennung.aw;
+          if (a && (k.q || k.fa || k.aw)) { for (var z in k) a[z] = k[z]; a.ta = Date.now(); }
+        } catch (e) {}
+      }
     }
   };
 
@@ -1088,6 +1102,9 @@
                                                 gegeben: "", richtig: "" }],
       nurBesuch: aufgaben.length === 0
     };
+    /* Antwort-Kennung (03.11.2026): Sendezeit des Geraets, damit der Server die Antwortzeiten (ta)
+       auf seine Uhr umrechnen kann. Nur, wenn eine Antwort ta traegt. */
+    try { for (var ai = 0; ai < aufgaben.length; ai++) if (aufgaben[ai].ta) { runde.gesendet = Date.now(); break; } } catch (e) {}
     var text = JSON.stringify({ kind: KIND, runde: runde });
     try {
       // sendBeacon überlebt das Schließen des Tabs - fetch oft nicht.

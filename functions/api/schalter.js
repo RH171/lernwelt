@@ -29,7 +29,9 @@
 const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"],
                   "rechentippen": ["neu", "alt"], "auswahlschutz": ["neu", "alt"],
                   "elternzugang": ["alt", "neu"], "eltern-verwalter": ["an", "aus"], "eltern-maschinenwert": ["alt", "neu"],
-                  "widerspruch": ["alt", "neu"] };
+                  "widerspruch": ["alt", "neu"], "antwortkennung": ["alt", "neu"] };
+/* "antwortkennung" (03.11.2026, Auftrag 203, nur Paul): bei "neu" speichert /api/statistik je Blatt-Antwort
+   Fragen-ID, Frageart, Antwortweise und Zeit (functions/api/_antwortkennung.js). Standard "alt" = wie vorher. */
 /* "elternzugang" und "eltern-verwalter" (03.11.2026, Auftrag 195): Passwort-Zugaenge je Person im Elternbereich
    (functions/api/_elternzugang.js). Anders als alle anderen Schalter ist hier der STANDARD "alt" bzw. "an":
    ohne Speicherwert bleibt der Elternbereich wie vorher. Diese Antwort ist nur Auskunft; der Server liest
@@ -41,7 +43,7 @@ const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildl
    Themas (functions/api/_widerspruch.js); Karten mit echtem inhaltlichem Widerspruch werden angehalten und kommen
    nicht ins Quiz, gesammelt fuer Denny. Standard "alt" = keine Pruefung, bis Denny Ja sagt. Der Server liest den
    Wert selbst (widerspruchAn in _widerspruch.js). */
-const STANDARD = { "elternzugang": "alt", "eltern-verwalter": "an", "eltern-maschinenwert": "alt", "widerspruch": "alt" };
+const STANDARD = { "elternzugang": "alt", "eltern-verwalter": "an", "eltern-maschinenwert": "alt", "widerspruch": "alt", "antwortkennung": "alt" };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },

@@ -11,6 +11,7 @@ import { punkteLesen } from "./_wiedervorlage.js";
 import { tabellen, offeneKreise, gefuelltLesen, punktId } from "./_kreise.js";
 import { stoffLesen } from "./_schulstoff.js";
 import { zaehlungAn } from "./_zaehlung.js";
+import { antwortkennungAn, hatKennung, kennungAnhaengen } from "./_antwortkennung.js";
 
 const KINDER = ["paul", "leon", "helena"];
 const RUNDEN = (kind) => "lernstand:" + kind;
@@ -52,6 +53,11 @@ export async function onRequestPost(context) {
 
   const runde = saeubern(daten.runde, kind === "paul" ? 120 : 40);
   if (!runde) return json(400, { ok: false, fehler: "Die Runde war unvollständig." });
+  /* Antwort-Kennung (03.11.2026, nur Paul): Fragen-ID, Frageart, Antwortweise, Zeit je Antwort -
+     nur mit schalter:antwortkennung = "neu". Scheitert etwas, wird die Runde wie bisher gespeichert. */
+  if (kind === "paul") {
+    try { if (hatKennung(daten.runde) && (await antwortkennungAn(env))) kennungAnhaengen(runde, daten.runde); } catch (e) {}
+  }
 
   let liste = [];
   try {

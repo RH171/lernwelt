@@ -279,6 +279,20 @@
     return s ? blatt + "#k:" + s : "";
   }
   var aktuellesBlatt = "";
+  /* Antwort-Kennung (03.11.2026, nur Paul; lernstand.js nimmt sie nur bei Paul an): Fragen-ID, Frageart,
+     Antwortweise je Blatt-Antwort. Nur Sicheres: Blattkarte = Frageart "n" (eine Zweitform aus Schritt 3a
+     ist keine der vier Fragearten, also leer); Quiz-Karte nur mit der Angabe des Servers (k.zeige), sonst
+     leer. Mathe und Lesen sind keine Blatt-Antworten. weise: "k" angetippt, "s" selbst geschrieben. */
+  function kennungVon(k, weise) {
+    try {
+      if (!k || k.mathe || k.lesen || !lernpunkt(k)) return undefined;
+      var o = { aw: weise === "k" || weise === "s" ? weise : "" };
+      if (k.quiz) {
+        if (k.zeige && typeof k.zeige === "object") { o.q = String(k.zeige.q || ""); o.fa = String(k.zeige.fa || ""); }
+      } else if (k.form !== "andere") o.fa = "n";
+      return o;
+    } catch (e) { return undefined; }
+  }
   function el(tag, klasse, text) {
     var n = document.createElement(tag);
     if (klasse) n.className = klasse;
@@ -876,7 +890,7 @@
       var chips = el("div", "lwf-chips");
       var fertigChip = false;
 
-      function zaehlen(text, stimmt) {
+      function zaehlen(text, stimmt, weise) {
         if (erster[i] !== undefined) return;
         erster[i] = stimmt;
         /* An die Statistik der Eltern (Denny, 25.09.2026, "gruppiert nach
@@ -888,7 +902,7 @@
           if (window.lernstand && window.lernstand.antwort)
             window.lernstand.antwort(erster[i],
               String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig,
-              lernpunkt(k));
+              lernpunkt(k), undefined, undefined, kennungVon(k, weise));
         } catch (e) {}
       }
       function richtigFertig(b, lob) {
@@ -920,7 +934,7 @@
         b.appendChild(el("span", null, text));
         b.addEventListener("click", function () {
           if (fertigChip) return;
-          zaehlen(text, text === String(k.richtig));
+          zaehlen(text, text === String(k.richtig), "k");
           if (text === String(k.richtig)) {
             richtigFertig(b);
           } else {
@@ -971,7 +985,7 @@
             var text = String(feld.value || "").trim();
             if (!text) { sagt.className = "lwf-tipp"; sagt.textContent = "Schreib zuerst deine Antwort hinein."; feld.focus(); return; }
             var e = tippWerten(k, text);
-            zaehlen(text.slice(0, 40), e.stimmt);
+            zaehlen(text.slice(0, 40), e.stimmt, "s");
             feld.disabled = true; knopf.disabled = true;
             if (e.stimmt) {
               feld.className = "lwf-feld gut";
