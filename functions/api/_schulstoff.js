@@ -769,7 +769,8 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
     if (zeilen.length) liste[treffer].inhalt = zeilen;
     if (gutSorte) liste[treffer].sorte = gutSorte;
     /* Angehaltene Karten bleiben angehalten, auch wenn das Blatt neu eingelesen wird (Kapitel 163). */
-    if (Array.isArray(karten) && karten.length) liste[treffer].karten = haltUebernehmen(karten, liste[treffer].karten).slice(0, KARTEN_MAX);
+    const kartenVorher = liste[treffer].karten;
+    if (Array.isArray(karten) && karten.length) liste[treffer].karten = haltUebernehmen(karten, kartenVorher).slice(0, KARTEN_MAX);
     if (halten) { delete liste[treffer].inhaltAlt; delete liste[treffer].kartenAlt; }
     if (nr) liste[treffer].nachgerechnet = nr;
     if (vl) liste[treffer].volllesen = vl;
@@ -778,6 +779,10 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
     let halt = null;
     try { halt = korrekturenErneuern(liste[treffer]); } catch (e) { halt = null; }
     if (halt && (halt.zeilen || halt.doppel || halt.karten)) liste[treffer] = halt.eintrag;
+    /* Nach dem Korrekturhalt noch einmal: eine berichtigte, angehaltene Karte passt erst jetzt wieder zum Schluessel
+       (Pruefrunde 2, 03.11.2026). */
+    if (Array.isArray(karten) && karten.length && Array.isArray(liste[treffer].karten))
+      liste[treffer].karten = haltUebernehmen(liste[treffer].karten, kartenVorher);
     try { await env.PAUL_KV.put(LISTE(kind, monat), JSON.stringify(liste)); }
     catch (e) { return { ok: false }; }
     return { ok: true, zeilen: zeilen.length, sorte: gutSorte,
