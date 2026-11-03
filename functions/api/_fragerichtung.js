@@ -69,6 +69,13 @@ export const RICHTUNG = {
     /* Schalter "Selbst schreiben": Antworten mit 1 bis 3 Woertern, ohne Grenze. */
     selbstWorte: 3,
     selbstZeichen: 40,
+    /* Auswahlschutz (03.11.2026, Pauls Meldung 07:56 MEZ, nur Paul): Fragen, die
+       nur MIT den Antworten eindeutig sind ("Welches Wort ist richtig
+       geschrieben?", "Welche Aufgabe hat das Ergebnis 511?"), kommen nie als
+       Luecken oder freies Schreiben - auch nicht mit "Selbst schreiben an".
+       Ausnahme: die Antwort steht schon in der Frage. false (oder KV
+       schalter:auswahlschutz = "alt", quiz.js) = wie am 02.11.2026. */
+    auswahlschutz: true,
   },
 };
 
@@ -208,16 +215,44 @@ export function istZahlAntwort(antwort) {
   return /^[-\u2212]?\d+([.,]\d+)*$/.test(String(antwort == null ? "" : antwort).trim());
 }
 
-function phrasenFrei(f) {
+/* AUSWAHLFRAGEN (03.11.2026, nur Paul ueber stufen.auswahlschutz). Dieselbe Regel
+   steht in /fundkarten.js (auswahlFrage) - pruefe-auswahlschutz.mjs haelt beide an
+   allen Karten aus quiz-vorrat:paul gegeneinander. Gezaehlt 03.11.2026: 430 von
+   2.598 Karten, 23 weitere bleiben tippbar, weil die Antwort in der Frage steht. */
+export const AUSWAHL_MUSTER = [
+  /richtig geschrieben|falsch geschrieben|schreibweise|richtige schreibung/i,
+  /\bwelche[rsnm]?\s+(wort|w(?:ö|oe)rter|lernwort|lernw(?:ö|oe)rter|begriff|begriffe|ausdruck|satz|s(?:ä|ae)tze|nomen|namenwort|namenw(?:ö|oe)rter|verb|verben|tunwort|adjektiv|adjektive|wiewort|aussage|antwort|(?:ü|ue)berschrift|erkl(?:ä|ae)rung|beschreibung|rechnung|l(?:ö|oe)sung|schreibung)\s+(ist|sind|passt|passen|geh(?:ö|oe)rt|geh(?:ö|oe)ren|steht|stehen|beschreibt|bedeutet|reimt|stimmt|stimmen)\b/i,
+  /\bwelche[rsnm]?\s+(mal|plus|minus|geteilt|rechen)?aufgaben?\s+(hat|haben|ergibt|ergeben|geh(?:ö|oe)rt|passt|stimmt|ist)\b/i,
+  /\bwelche[rsnm]?\s+(ist|sind)\s+(richtig|falsch)\b/i,
+  /\b(passt|geh(?:ö|oe)rt)\s+nicht\b|\bnicht dazu\b|nicht in die reihe/i,
+  /^\s*wie schreibt man (das|dieses) wort richtig\s*\??\s*$/i,
+  /\b(w(?:ä|ae)hle|kreuze|markiere)\b/i,
+  /\bwelche[rsnm]?\s+(dieser|davon|der folgenden)\b/i,
+];
+const normWorte = (x) => String(x == null ? "" : x).toLowerCase().replace(/[^a-z0-9äöüß]+/g, " ").trim();
+export function antwortInFrage(frage, kontext, richtig) {
+  const text = " " + normWorte(frage) + " " + normWorte(kontext) + " ";
+  const worte = normWorte(richtig).split(" ").filter((w) => w && !ARTIKEL_DE.includes(w));
+  return worte.length > 0 && worte.every((w) => text.indexOf(" " + w + " ") >= 0);
+}
+export function istAuswahlFrage(f) {
   const frage = String((f && f.frage) || "");
-  return !PHRASE_DIESER.test(frage) && !PHRASE_MIT_ANTWORTEN.test(frage);
+  if (!AUSWAHL_MUSTER.some((re) => re.test(frage))) return false;
+  return !antwortInFrage(frage, f && f.kontext, richtigeAntwort(f));
+}
+
+function phrasenFrei(f, e) {
+  const frage = String((f && f.frage) || "");
+  if (PHRASE_DIESER.test(frage) || PHRASE_MIT_ANTWORTEN.test(frage)) return false;
+  const st = (e || RICHTUNG).stufen || {};
+  return !(st.auswahlschutz && istAuswahlFrage(f));
 }
 
 /* Stufe 2 geht nur bei einem Wort (Artikel davor zaehlt nicht), aus
    Buchstaben, 3 bis 24 Zeichen, keine Zahl. Dieselbe Grenze wie
    LWToleranz.luecken() im Browser. */
-export function lueckbar(f) {
-  if (!f || f.frei === false || !phrasenFrei(f)) return false;
+export function lueckbar(f, e) {
+  if (!f || f.frei === false || !phrasenFrei(f, e)) return false;
   const r = richtigeAntwort(f);
   if (!r || istZahlAntwort(r)) return false;
   const k = kernWort(r);
@@ -229,7 +264,7 @@ export function lueckbar(f) {
    hoechstens `frei.zeichen[kind]` Zeichen im Wort. */
 export function tippbarStufe(f, kind, e) {
   const ein = (e || RICHTUNG).frei;
-  if (!f || f.frei === false || !phrasenFrei(f)) return false;
+  if (!f || f.frei === false || !phrasenFrei(f, e)) return false;
   const r = richtigeAntwort(f);
   if (!r) return false;
   const k = kernWort(r);
@@ -241,7 +276,7 @@ export function tippbarStufe(f, kind, e) {
 /* Schalter "Selbst schreiben": 1 bis 3 Woerter. */
 export function selbstTauglich(f, e) {
   const st = (e || RICHTUNG).stufen || {};
-  if (!f || f.frei === false || !phrasenFrei(f)) return false;
+  if (!f || f.frei === false || !phrasenFrei(f, e)) return false;
   const r = richtigeAntwort(f);
   if (!r) return false;
   const n = r.split(/\s+/).filter(Boolean).length;
@@ -308,7 +343,7 @@ function stufeFelder(wahl, liste, o, ein, z) {
   if (rechtschreibStoff(wahl)) extra.gkStreng = true;
   const r = richtigeAntwort(wahl);
   const zahl = istZahlAntwort(r);
-  const lk = lueckbar(wahl);
+  const lk = lueckbar(wahl, ein);
   const w = o.punkte && o.schluessel ? wirksamZahl(liste, o.punkte, o.schluessel) : 0;
   const s = stufeAus(w, zahl, lk);
   if (zahl) extra.stufeZahl = true;

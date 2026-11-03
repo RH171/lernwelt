@@ -74,13 +74,25 @@ import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJe
    Lesen, gilt RICHTUNG wie im Code. Umschalten (nur Denny oder Hauptchat mit Ja):
      npx wrangler kv key put "schalter:tippstufen" "alt" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote
      npx wrangler kv key delete "schalter:tippstufen" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote */
+/* Auswahlschutz (03.11.2026, nur Paul): KV schalter:auswahlschutz = "alt" laesst
+   Auswahlfragen ("Welches Wort ist richtig geschrieben?") wieder in Luecken und
+   freies Schreiben - genau wie am 02.11.2026. Fehlt der Wert oder scheitert das
+   Lesen, gilt der Schutz (RICHTUNG.stufen.auswahlschutz). Nur mit Dennys Ja:
+     npx wrangler kv key put "schalter:auswahlschutz" "alt" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote
+     npx wrangler kv key delete "schalter:auswahlschutz" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote */
+const istAlt = (roh) => roh != null && String(roh).trim().replace(/^["']|["']$/g, "").trim().toLowerCase() === "alt";
 async function richtungFuer(env, kind) {
   if (!stufenAn(RICHTUNG, kind)) return RICHTUNG;
   try {
     const roh = env && env.PAUL_KV ? await env.PAUL_KV.get("schalter:tippstufen") : null;
-    if (roh != null && String(roh).trim().replace(/^["']|["']$/g, "").trim().toLowerCase() === "alt")
+    if (istAlt(roh))
       return { ...RICHTUNG, stufen: { ...RICHTUNG.stufen, an: false } };
   } catch (e) { /* Standard */ }
+  try {
+    const roh = env && env.PAUL_KV ? await env.PAUL_KV.get("schalter:auswahlschutz") : null;
+    if (istAlt(roh))
+      return { ...RICHTUNG, stufen: { ...RICHTUNG.stufen, auswahlschutz: false } };
+  } catch (e) { /* Standard: Schutz an */ }
   return RICHTUNG;
 }
 

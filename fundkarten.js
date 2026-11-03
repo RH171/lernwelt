@@ -356,8 +356,44 @@
   function istZahl(t) { return /^[-\u2212]?\d+([.,]\d+)*$/.test(String(t).trim()); }
   function tippTauglich(k) {
     var r = String((k && k.richtig) || "").trim();
+    if (!auswahlAlt && auswahlFrage(k)) return false;   // Auswahlschutz (03.11.2026)
     return !!r && r.length <= 40 && r.split(/\s+/).length <= 3 && !/[.!?;:]$/.test(r);
   }
+
+  /* Auswahlschutz (03.11.2026, Pauls Meldung 07:56 MEZ, nur Paul): „Welches Wort ist richtig geschrieben?“
+     ist nur MIT den Antworten eindeutig - mit „Selbst schreiben an“ sah Paul ein leeres Feld und keine
+     Auswahl. Solche Fragen bekommen den Schalter nicht, die Antworten bleiben zum Antippen. Ausnahme: die
+     Antwort steht schon in der Frage. Dieselbe Regel wie istAuswahlFrage() in functions/api/_fragerichtung.js
+     (pruefe-auswahlschutz.mjs vergleicht beide an allen Karten). Rueckweg: /api/schalter?name=auswahlschutz
+     = "alt" schaltet den Schutz ab der naechsten Karte aus. Ohne Antwort oder Netz bleibt der Schutz an. */
+  var AUSWAHL_MUSTER = [
+    /richtig geschrieben|falsch geschrieben|schreibweise|richtige schreibung/i,
+    /\bwelche[rsnm]?\s+(wort|w(?:ö|oe)rter|lernwort|lernw(?:ö|oe)rter|begriff|begriffe|ausdruck|satz|s(?:ä|ae)tze|nomen|namenwort|namenw(?:ö|oe)rter|verb|verben|tunwort|adjektiv|adjektive|wiewort|aussage|antwort|(?:ü|ue)berschrift|erkl(?:ä|ae)rung|beschreibung|rechnung|l(?:ö|oe)sung|schreibung)\s+(ist|sind|passt|passen|geh(?:ö|oe)rt|geh(?:ö|oe)ren|steht|stehen|beschreibt|bedeutet|reimt|stimmt|stimmen)\b/i,
+    /\bwelche[rsnm]?\s+(mal|plus|minus|geteilt|rechen)?aufgaben?\s+(hat|haben|ergibt|ergeben|geh(?:ö|oe)rt|passt|stimmt|ist)\b/i,
+    /\bwelche[rsnm]?\s+(ist|sind)\s+(richtig|falsch)\b/i,
+    /\b(passt|geh(?:ö|oe)rt)\s+nicht\b|\bnicht dazu\b|nicht in die reihe/i,
+    /^\s*wie schreibt man (das|dieses) wort richtig\s*\??\s*$/i,
+    /\b(w(?:ä|ae)hle|kreuze|markiere)\b/i,
+    /\bwelche[rsnm]?\s+(dieser|davon|der folgenden)\b/i
+  ];
+  var ARTIKEL = ["der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer", "eines"];
+  function normWorte(x) { return String(x == null ? "" : x).toLowerCase().replace(/[^a-z0-9äöüß]+/g, " ").trim(); }
+  function auswahlFrage(k) {
+    var frage = String((k && k.frage) || "");
+    if (!AUSWAHL_MUSTER.some(function (re) { return re.test(frage); })) return false;
+    var text = " " + normWorte(frage) + " " + normWorte(k && k.kontext) + " ";
+    var worte = normWorte(k && k.richtig).split(" ").filter(function (w) { return w && ARTIKEL.indexOf(w) < 0; });
+    return !(worte.length > 0 && worte.every(function (w) { return text.indexOf(" " + w + " ") >= 0; }));
+  }
+  var auswahlAlt = false;
+  try {
+    if (/^\/paul\//.test(global.location.pathname))
+      fetch("/api/schalter?name=auswahlschutz", { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { auswahlAlt = !!(d && d.wert === "alt"); })
+        .catch(function () {});
+  } catch (e) {}
+  global.LWAuswahl = { frage: auswahlFrage };
   function tippWerten(k, text) {
     var T = global.LWToleranz, r = String(k.richtig);
     if (istZahl(r)) {
