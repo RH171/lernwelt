@@ -21,7 +21,12 @@
    Karte / „Selbst schreiben“ auf Quiz-Karten (fundkarten.js). "alt" = Fotos wie vorher alle als JSON / ohne Schalter. */
 /* "zaehlung" (02.11.2026, Auftrag 193): Einstiegskarte zaehlt heute mit (p.h), „10 geschafft, noch 5“ auf
    Pauls Startseite, Faecher im Elternbereich. "alt" = wie vorher. Gelesen in functions/api/_zaehlung.js. */
-const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"] };
+/* "rechentippen" (03.11.2026, Pauls Meldung 07:56 MEZ): Umschalter „Zeichnen | Tippen“ in Pauls Rechenfläche
+   (quiz/rechenflaeche.js, rechenweg/schmierblatt.js). "alt" = ohne Umschalter, nur Zeichnen wie vorher. */
+/* "auswahlschutz" (03.11.2026): Auswahlfragen („Welches Wort ist richtig geschrieben?“) bleiben in Pauls Fundkarten
+   immer zum Antippen (fundkarten.js). Der Lernquiz-Teil liest denselben KV-Wert in functions/api/quiz.js.
+   "alt" = wie am 02.11.2026. */
+const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"], "rechentippen": ["neu", "alt"], "auswahlschutz": ["neu", "alt"] };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },

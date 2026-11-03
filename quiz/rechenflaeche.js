@@ -20,6 +20,11 @@
  * Lineal (02.11.2026, Auftrag 192): Paul wollte gerade Linien für Tabellen. Das Schmierblatt bekommt
  * "📏 Lineal" und "↶ Zurück" (lineal: true). Beide bleiben versteckt, bis der Rückweg-Schalter
  * GET /api/schalter?name=lineal "neu" meldet (einmal je Seite). "alt" oder kein Netz = wie bisher.
+ *
+ * Zeichnen | Tippen (03.11.2026, Auftrag 196): Paul rechnet am Mac mit der Maus. Das Schmierblatt
+ * bekommt den Umschalter "✏️ Zeichnen | ⌨️ Tippen" (tippen: true), sichtbar erst, wenn
+ * GET /api/schalter?name=rechentippen "neu" meldet. "alt" oder kein Netz = ohne Umschalter, wie bisher.
+ * An einem reinen Maus-Gerät steht dann Tippen vorn, an iPad und Stift Zeichnen (schmierblatt.js).
  */
 (function () {
   "use strict";
@@ -45,6 +50,24 @@
     ".rf .sb-lineal.an{border-color:var(--ink,#172033);box-shadow:0 0 0 2px var(--ink,#172033) inset}",
     ".rf .sb-zurueck:disabled{opacity:.45;cursor:default}",
     ".rf .sb-lineal[hidden],.rf .sb-zurueck[hidden]{display:none}",
+    /* Zeichnen | Tippen */
+    ".rf .sb-modus{display:inline-flex;gap:0;margin-bottom:8px;border:2px solid var(--line,#c9cfdb);border-radius:999px;overflow:hidden}",
+    ".rf .sb-modus button{min-height:48px;min-width:120px;padding:8px 16px;border:0;background:var(--card,#fff);color:var(--ink,#172033);",
+    "  font:700 15px system-ui,sans-serif;cursor:pointer}",
+    ".rf .sb-modus button.an{background:var(--ink,#172033);color:var(--card,#fff)}",
+    ".rf .sb-modus[hidden],.rf .sb-tippen[hidden],.rf .sb-leiste[hidden],.rf .sb-flaeche[hidden]{display:none}",
+    ".rf .sb-tippleiste{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}",
+    ".rf .sb-zeichen{min-width:48px;min-height:48px;border-radius:12px;border:2px solid var(--line,#c9cfdb);background:var(--card,#fff);",
+    "  color:var(--ink,#172033);font:700 22px ui-monospace,Menlo,Consolas,monospace;cursor:pointer}",
+    ".rf .sb-text-leeren{min-height:48px;padding:8px 16px;margin-left:auto;border-radius:999px;border:2px solid var(--line,#c9cfdb);",
+    "  background:var(--card,#fff);color:var(--muted,#5b6270);font:700 14px system-ui,sans-serif;cursor:pointer}",
+    /* Papier hell wie im Heft, Schrift groß und gleich breit: Ziffern stehen sauber untereinander. */
+    ".rf .sb-text{display:block;box-sizing:border-box;width:100%;height:280px;padding:10px 14px;border-radius:14px;",
+    "  border:2px solid var(--line,#c9cfdb);background:#fffef8;color:#1f2937;resize:vertical;white-space:pre;overflow:auto;",
+    "  font:600 28px/1.35 ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;letter-spacing:.06em;tab-size:4}",
+    ".rf .sb-text:focus{outline:3px solid #1d4ed8;outline-offset:2px}",
+    ".rf .sb-text::placeholder{color:#9aa3b2}",
+    "@media (max-height:720px){.rf .sb-text{height:230px}}",
     /* Papier immer hell wie im Heft - die Stiftfarben bleiben so in hell und dunkel lesbar. */
     ".rf .sb-flaeche{display:block;width:100%;height:280px;border-radius:14px;border:2px solid var(--line,#c9cfdb);touch-action:none;",
     "  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;",
@@ -56,7 +79,7 @@
     ".rf-spiel .sb-auf{box-shadow:0 4px 14px rgba(0,0,0,.18);border-style:solid}",
     ".rf-spiel:not(.sb-zu){left:12px;padding:10px;border-radius:18px;background:var(--card,#fff);",
     "  border:1px solid var(--line,#c9cfdb);box-shadow:0 -6px 24px rgba(0,0,0,.22)}",
-    ".rf-spiel:not(.sb-zu) .sb-flaeche{height:min(38vh,300px)}"
+    ".rf-spiel:not(.sb-zu) .sb-flaeche,.rf-spiel:not(.sb-zu) .sb-text{height:min(38vh,300px)}"
   ].join("\n");
 
   function stil() {
@@ -83,12 +106,12 @@
     var h = document.createElement("div");
     h.className = "rf" + (klasse ? " " + klasse : "");
     window.Schmierblatt.malen(h, {
-      knopf: "✏️ Rechnen", werkzeug: true, lineal: true,
+      knopf: "✏️ Rechnen", werkzeug: true, lineal: true, tippen: true,
       auf: function () {
         /* Die Frage bleibt sichtbar: Ragt die Fläche unten aus dem Bild oder ist die Frage
            oben hinausgerollt, kommt die Frage an den oberen Rand - die Fläche steht darunter. */
         if (!frage) return;
-        var c = h.querySelector("canvas"), fr = frage.getBoundingClientRect();
+        var c = h.querySelector(h.classList.contains("sb-tippt") ? ".sb-text" : "canvas"), fr = frage.getBoundingClientRect();
         var cr = c ? c.getBoundingClientRect() : null;
         if (fr.top < 0 || (cr && cr.bottom > window.innerHeight)) {
           try { frage.scrollIntoView({ block: "start" }); } catch (e) { frage.scrollIntoView(true); }
@@ -98,11 +121,12 @@
     });
     huellen.push(h);
     if (linealFrei) h.sbLineal && h.sbLineal(true);
+    if (tippenFrei) h.sbTippen && h.sbTippen(true);
     return h;
   }
 
   /* Rückweg-Schalter "lineal": einmal fragen, dann alle jetzigen und künftigen Flächen freischalten. */
-  var huellen = [], linealFrei = false;
+  var huellen = [], linealFrei = false, tippenFrei = false;
   function linealFragen() {
     try {
       fetch("/api/schalter?name=lineal", { credentials: "same-origin", cache: "no-store" })
@@ -111,6 +135,20 @@
           if (!d || d.wert !== "neu") return;
           linealFrei = true;
           huellen.forEach(function (x) { if (x.sbLineal) x.sbLineal(true); });
+        })
+        .catch(function () {});
+    } catch (e) {}
+  }
+
+  /* Rückweg-Schalter "rechentippen": genauso, aber für den Umschalter Zeichnen | Tippen. */
+  function tippenFragen() {
+    try {
+      fetch("/api/schalter?name=rechentippen", { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || d.wert !== "neu") return;
+          tippenFrei = true;
+          huellen.forEach(function (x) { if (x.sbTippen) x.sbTippen(true); });
         })
         .catch(function () {});
     } catch (e) {}
@@ -154,6 +192,7 @@
   function start() {
     if (!window.Schmierblatt) return;
     linealFragen();
+    tippenFragen();
     /* Rechenspiel: eigene Seite, Knopf unten rechts, einmal je Seite. */
     if (/^\/paul\/klasse\d+-mathe-/.test(location.pathname)) {
       if (!document.getElementById("rf-spiel")) {

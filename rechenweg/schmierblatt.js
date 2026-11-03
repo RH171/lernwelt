@@ -20,12 +20,43 @@
  *     Abweichung wird die Linie waagerecht oder senkrecht. Farbe wie gewählt; der Stift bleibt frei.
  *   "↶ Zurück": nimmt den letzten Strich zurück (Stift, Lineal, Radierer, "Alles löschen").
  * huelle.sbLineal(true) zeigt die Knöpfe (rechenflaeche.js nach dem Schalter "lineal").
+ *
+ * Zeichnen | Tippen (03.11.2026, nur Paul, nur mit werkzeug und tippen: true): Paul spielt am Mac
+ * mit der Maus: „… wenn ich da schriftlich rechnen könnte … Sonst müsste ich das jetzt mit meiner
+ * Maus in der Tabelle machen.“ Ein Umschalter „✏️ Zeichnen | ⌨️ Tippen“ kommt über die Leiste,
+ * zuerst versteckt. Tippen = großes Textfeld in Festbreitenschrift, damit Zahlen untereinander
+ * stehen wie im Heft. Erlaubt: Ziffern, Leerzeichen, Zeilen, + - − · × : ÷ = , . (* wird ·, / wird :).
+ * Standard: Tippen nur an einem reinen Maus-Gerät (kein Touch: maxTouchPoints 0 UND any-pointer
+ * nicht coarse), sonst Zeichnen. Pauls Wahl wird je Gerät gemerkt (localStorage, nur nach einem
+ * Klick auf den Umschalter). Der Text wird nirgends gespeichert und zählt nirgends.
+ * huelle.sbTippen(true) zeigt den Umschalter (rechenflaeche.js nach dem Schalter "rechentippen").
  */
 (function () {
   "use strict";
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
   var FARBEN = [["Schwarz", "#1f2937"], ["Blau", "#1d4ed8"], ["Grün", "#047857"]];
+
+  /* Zeichnen oder Tippen: Pauls letzte Wahl auf diesem Gerät, sonst nach dem Gerät.
+     ⚠️ pointer:coarse allein taugt nicht (Kapitel 003): Das iPad meldet sich als Mac, und ein
+     Testbrowser in iPad-Breite meldet ohne Touch-Nachbildung "fine". Verlässlich ist
+     maxTouchPoints (iPad 5, Mac 0); any-pointer: coarse fängt Geräte mit Maus UND Touchschirm. */
+  var MODUS = "lw-rechenflaeche-modus-paul";
+  function modusGemerkt() {
+    try { var m = window.localStorage.getItem(MODUS); return m === "tippen" || m === "zeichnen" ? m : null; } catch (e) { return null; }
+  }
+  function modusMerken(m) { try { window.localStorage.setItem(MODUS, m); } catch (e) {} }
+  function nurMaus() {
+    var touch = 0, grob = false;
+    try { touch = Number(navigator.maxTouchPoints) || 0; } catch (e) {}
+    try { grob = !!(window.matchMedia && window.matchMedia("(any-pointer: coarse)").matches); } catch (e) {}
+    return touch === 0 && !grob;
+  }
+  function modusStandard() { return modusGemerkt() || (nurMaus() ? "tippen" : "zeichnen"); }
+  /* Was im Textfeld stehen darf. */
+  function textSaeubern(t) {
+    return String(t).replace(/\*/g, "\u00B7").replace(/\//g, ":").replace(/[^0-9 \n+\-\u2212\u00B7\u00D7:\u00F7=.,]/g, "");
+  }
 
   function malen(huelle, opts) {
     if (!huelle) return;
@@ -42,6 +73,7 @@
     var leeren = el("button", "sb-leeren", wz ? "Alles löschen" : "Leeren");
     leeren.type = "button";
     var farbe = null, radiert = false, leiste = null, lineal = false, linKnopf = null, zurueck = null;
+    var modusLeiste = null, tippTeil = null, textFeld = null, modus = "zeichnen";
     if (wz) {
       leiste = el("div", "sb-leiste");
       FARBEN.forEach(function (f, n) {
@@ -84,8 +116,68 @@
           linKnopf.classList.toggle("an", la); linKnopf.setAttribute("aria-pressed", la ? "true" : "false");
         }
       });
+      if (opts.tippen) {
+        /* Zeichnen | Tippen: zuerst versteckt (huelle.sbTippen). */
+        modusLeiste = el("div", "sb-modus");
+        modusLeiste.setAttribute("role", "group");
+        modusLeiste.setAttribute("aria-label", "Zeichnen oder Tippen");
+        modusLeiste.hidden = true;
+        [["zeichnen", "✏️ Zeichnen"], ["tippen", "⌨️ Tippen"]].forEach(function (m) {
+          var b = el("button", "sb-modus-" + m[0], m[1]);
+          b.type = "button"; b.dataset.modus = m[0]; b.setAttribute("aria-pressed", "false");
+          modusLeiste.appendChild(b);
+        });
+        koerper.appendChild(modusLeiste);
+        tippTeil = el("div", "sb-tippen");
+        tippTeil.hidden = true;
+        var tl = el("div", "sb-tippleiste");
+        ["+", "\u2212", "\u00B7", ":", "="].forEach(function (z) {
+          var b = el("button", "sb-zeichen", z);
+          b.type = "button"; b.dataset.zeichen = z; b.setAttribute("aria-label", "Zeichen " + z + " einfügen");
+          tl.appendChild(b);
+        });
+        var tLeeren = el("button", "sb-text-leeren", "Alles löschen");
+        tLeeren.type = "button";
+        tl.appendChild(tLeeren);
+        textFeld = el("textarea", "sb-text");
+        textFeld.setAttribute("aria-label", "Rechenfeld zum Tippen: Zahlen untereinander schreiben");
+        textFeld.setAttribute("spellcheck", "false"); textFeld.spellcheck = false;
+        textFeld.setAttribute("autocomplete", "off");
+        textFeld.setAttribute("autocorrect", "off");
+        textFeld.setAttribute("autocapitalize", "off");
+        textFeld.setAttribute("inputmode", "text");
+        textFeld.setAttribute("wrap", "off");
+        textFeld.placeholder = "  347\n+ 285\n-----\n  632";
+        tippTeil.appendChild(tl);
+        tippTeil.appendChild(textFeld);
+        /* Tasten bleiben im Feld: Rechenkästchen und Rechenspiele hören am Dokument auf Ziffern. */
+        ["keydown", "keyup", "keypress", "beforeinput"].forEach(function (art) {
+          textFeld.addEventListener(art, function (e) { e.stopPropagation(); });
+        });
+        textFeld.addEventListener("input", function (e) {
+          e.stopPropagation();
+          var v = textFeld.value, sauber = textSaeubern(v);
+          if (sauber === v) return;
+          var pos = textFeld.selectionStart || 0;
+          var vorn = textSaeubern(v.slice(0, pos)).length;
+          textFeld.value = sauber;
+          try { textFeld.setSelectionRange(vorn, vorn); } catch (x) {}
+        });
+        tl.addEventListener("click", function (ev) {
+          var b = ev.target.closest ? ev.target.closest("button") : null;
+          if (!b) return;
+          if (b === tLeeren) { textFeld.value = ""; textFeld.focus(); return; }
+          var z = b.dataset.zeichen; if (!z) return;
+          var a = textFeld.selectionStart, en = textFeld.selectionEnd, v = textFeld.value;
+          if (typeof a !== "number") { a = en = v.length; }
+          textFeld.value = v.slice(0, a) + z + v.slice(en);
+          textFeld.focus();
+          try { textFeld.setSelectionRange(a + z.length, a + z.length); } catch (x) {}
+        });
+      }
       koerper.appendChild(leiste);
       koerper.appendChild(flaeche);
+      if (tippTeil) koerper.appendChild(tippTeil);
     } else {
       koerper.appendChild(flaeche);
       koerper.appendChild(leeren);
@@ -203,11 +295,42 @@
       linKnopf.hidden = zurueck.hidden = !zeigen;
       if (!zeigen) { lineal = false; linKnopf.classList.remove("an"); linKnopf.setAttribute("aria-pressed", "false"); verlauf = []; zurueck.disabled = true; }
     };
+    function modusSetzen(m) {
+      modus = m === "tippen" && tippTeil && modusLeiste && !modusLeiste.hidden ? "tippen" : "zeichnen";
+      var tippt = modus === "tippen";
+      if (tippTeil) tippTeil.hidden = !tippt;
+      if (leiste) leiste.hidden = tippt;
+      flaeche.hidden = tippt;
+      huelle.classList.toggle("sb-tippt", tippt);
+      if (modusLeiste) [].forEach.call(modusLeiste.querySelectorAll("button"), function (b) {
+        var an = b.dataset.modus === modus;
+        b.classList.toggle("an", an); b.setAttribute("aria-pressed", an ? "true" : "false");
+      });
+      /* Zurück zum Zeichnen: die Fläche war versteckt, also ohne Größe - jetzt nachmessen. */
+      if (!tippt && !huelle.classList.contains("sb-zu")) { zieht = false; aktiv = null; groesse(); stil(); }
+    }
+    if (modusLeiste) modusLeiste.addEventListener("click", function (ev) {
+      var b = ev.target.closest ? ev.target.closest("button") : null;
+      if (!b || !b.dataset.modus) return;
+      modusMerken(b.dataset.modus);
+      modusSetzen(b.dataset.modus);
+      if (modus === "tippen") textFeld.focus();
+    });
+    huelle.sbTippen = function (zeigen) {
+      if (!modusLeiste) return;
+      modusLeiste.hidden = !zeigen;
+      modusSetzen(zeigen ? modusStandard() : "zeichnen");
+    };
+    huelle.sbModus = function () { return modus; };
     knopf.addEventListener("click", function () {
       var zu = !huelle.classList.contains("sb-zu");
       huelle.classList.toggle("sb-zu", zu);
       knopf.setAttribute("aria-expanded", zu ? "false" : "true");
-      if (!zu) { groesse(); stil(); if (opts.auf) opts.auf(huelle); }
+      if (!zu) {
+        if (modus === "zeichnen") { groesse(); stil(); }
+        if (opts.auf) opts.auf(huelle);
+        if (modus === "tippen" && textFeld) try { textFeld.focus({ preventScroll: true }); } catch (e) {}
+      }
     });
   }
   window.Schmierblatt = { malen: malen };
