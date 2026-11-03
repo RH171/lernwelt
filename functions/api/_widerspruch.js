@@ -50,8 +50,9 @@ export async function fristZaehlen(env, stand, jetzt) {
   try {
     if (!env || !env.PAUL_KV || !stand || !(stand.versuche > 0)) return false;
     const tag = tagMEZ(jetzt), key = ZAEHLER_PREFIX + tag;
-    let z = {};
-    try { z = JSON.parse((await env.PAUL_KV.get(key)) || "{}") || {}; } catch (e) { z = {}; }
+    /* Lesefehler: nicht schreiben, sonst setzte ein put den Tageszaehler und den Deckel zurueck. */
+    let z;
+    try { z = JSON.parse((await env.PAUL_KV.get(key)) || "{}") || {}; } catch (e) { return false; }
     const n = Number(z.schreibungen) || 0;
     if (n >= ZAEHLER_MAX_SCHREIBEN) return false;
     const zahl = (v) => Number(v) || 0;
