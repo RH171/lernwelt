@@ -38,6 +38,9 @@ const MAX_RUNDEN = 100000;
 const SCHALTER = {
   "elternzugang":     { werte: ["alt", "neu"], standard: "alt" },
   "eltern-verwalter": { werte: ["an", "aus"],  standard: "an" },
+  /* 03.11.2026: alter Eltern-Code und Hauptschluessel oeffnen den Elternbereich nicht mehr,
+     nur noch der Maschinenwert ELTERN_MASCHINE der Werkzeuge (siehe elternMaschineAktiv in _riegel.js). */
+  "eltern-maschinenwert": { werte: ["alt", "neu"], standard: "alt" },
 };
 
 export async function schalterLesen(env, name) {

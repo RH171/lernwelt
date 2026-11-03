@@ -3,7 +3,8 @@
 // MASTER_CODE (Regel im Skill rh171web, 21.09.2026).
 import { gleich, ausweisBauen, ausweisKopfzeile, ausweisGueltig, geheimFuer,
          zuVieleFehlversuche, fehlversuchZaehlen, fehlversucheLoeschen,
-         besuchKennung, besuchKopfzeile, besuchLoeschenKopfzeile } from "./_riegel.js";
+         besuchKennung, besuchKopfzeile, besuchLoeschenKopfzeile,
+         elternMaschine, elternMaschineAktiv, istElternGeheim } from "./_riegel.js";
 
 // Welches Kind meldet sich an? Steht als ?kind=leon in der Adresse bzw. im Auftrag.
 function kindAus(request, auftrag) {
@@ -49,8 +50,30 @@ export async function onRequestPost(context) {
   // Bereich ohne hinterlegten Code mit einem leeren Feld hinein - genau das
   // Gegenteil dessen, was der Kommentar in geheimFuer() verspricht
   // (nachgerechnet am 21.09.2026 beim Einbau des Hauptschlüssels).
-  const eigener = code !== "" && gleich(code, geheim);
-  const haupt = code !== "" && !!env.MASTER_CODE && gleich(code, env.MASTER_CODE);
+  let eigener = code !== "" && gleich(code, geheim);
+  let haupt = code !== "" && !!env.MASTER_CODE && gleich(code, env.MASTER_CODE);
+  let signierGeheim = geheim;
+
+  /* Maschinenwert fuer den Elternbereich (03.11.2026, siehe elternMaschine in
+     _riegel.js). Gilt nur fuer kind=eltern - die Kinderbereiche laufen oben
+     unveraendert durch.
+     - Schalter "neu" (und elternzugang "neu"): Nur ELTERN_MASCHINE oeffnet.
+       Eltern-Code und Hauptschluessel bleiben draussen; der Ausweis wird mit
+       ELTERN_MASCHINE unterschrieben, alte Ausweise gelten damit nicht mehr.
+     - Sonst (Standard): wie bisher, und ELTERN_MASCHINE wird ZUSAETZLICH
+       angenommen. So koennen die Werkzeuge vor dem Umschalten auf den
+       Maschinenwert umziehen, und der Rueckweg sperrt sie nicht aus. */
+  const maschine = istElternGeheim(env, geheim) ? elternMaschine(env) : null;
+  if (maschine) {
+    const mitMaschine = code !== "" && gleich(code, maschine);
+    if (await elternMaschineAktiv(env)) {
+      eigener = mitMaschine;
+      haupt = false;
+      signierGeheim = maschine;
+    } else if (mitMaschine) {
+      eigener = true;
+    }
+  }
 
   if (!eigener && !haupt) {
     const n = await fehlversuchZaehlen(request, env);
@@ -58,7 +81,7 @@ export async function onRequestPost(context) {
   }
 
   await fehlversucheLoeschen(request, env);
-  const ausweis = await ausweisBauen(geheim);
+  const ausweis = await ausweisBauen(signierGeheim);
 
   /* Wer mit dem Hauptschluessel hereinkommt, hinterlaesst eine Spur - sonst
      zaehlt sein Besuch als Anwesenheit des Kindes (Denny, 21.09.2026: "Das

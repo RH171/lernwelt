@@ -19,7 +19,7 @@
    Fotos und Texte ohne Anmeldung im Netz gestanden, während dieselben Inhalte
    bei Paul und Leon hinter dem Riegel liegen. Ihre Vokabeltrainer verlangen
    damit ebenfalls den Code; das war der Preis und ist so entschieden. */
-import { personenAusweisGilt } from "./_elternzugang.js";
+import { personenAusweisGilt, schalterLesen } from "./_elternzugang.js";
 
 export const GESCHUETZT = ["paul", "leon", "helena", "eltern"];
 
@@ -66,6 +66,58 @@ export function geheimFuer(env, kind) {
   return (name && env[name]) || env.PAUL_CODE;
 }
 
+/* ===========================================================================
+   Maschinenwert fuer den Elternbereich (03.11.2026)
+
+   Denny: "Stelle den alten Eltern-Code und mein Hauptpasswort fuer den
+   Elternbereich auf einen Maschinenwert um, damit sie nicht mehr alle drei
+   Kinder oeffnen." Menschen melden sich seit dem 03.11.2026 mit ihrem
+   Passwort je Person an (schalter:elternzugang). Der Weg ueber
+   /api/code-pruefen?kind=eltern bleibt nur fuer die Werkzeuge auf Dennys Mac
+   (werkstatt.sh, Waechter, Pinnwand-Ernter ...) und nimmt dann nur noch den
+   Maschinenwert ELTERN_MASCHINE an (Pages-Secret, Schluesselbund-Dienst
+   "lernwelt-eltern").
+
+   Wirksam ist das NUR, wenn alles drei zutrifft:
+     - ELTERN_MASCHINE ist gesetzt, mindestens 24 Zeichen und keinem anderen
+       Code gleich (ELTERN_CODE, MASTER_CODE, PAUL/LEON/HELENA_CODE),
+     - schalter:eltern-maschinenwert = "neu",
+     - schalter:elternzugang = "neu" (sonst kaeme kein Mensch mehr hinein).
+   Fehlt eines davon, gilt alles wie vorher. Rueckweg: KV-Schluessel
+   schalter:eltern-maschinenwert loeschen.
+
+   ELTERN_CODE bleibt der Schluessel, an dem der Server den Elternbereich
+   erkennt (geheimFuer) und mit dem die Personen-Ausweise unterschrieben sind.
+   Er ist nur keine Anmeldung mehr: Alte Ausweise aus dem Eltern-Code sind mit
+   ELTERN_CODE unterschrieben und gelten bei "neu" nicht mehr; neue Ausweise
+   der Werkzeuge werden mit ELTERN_MASCHINE unterschrieben.
+   Kinderbereiche (eigener Code oder Hauptschluessel) bleiben unberuehrt.
+   =========================================================================== */
+export const MASCHINE_MINDESTLAENGE = 24;
+
+export function elternMaschine(env) {
+  const m = env && typeof env.ELTERN_MASCHINE === "string" ? env.ELTERN_MASCHINE : "";
+  if (m.length < MASCHINE_MINDESTLAENGE) return null;
+  for (const n of ["ELTERN_CODE", "MASTER_CODE", "PAUL_CODE", "LEON_CODE", "HELENA_CODE"]) {
+    if (env[n] && env[n] === m) return null;              // falsch eingerichtet: lieber wie vorher
+  }
+  return m;
+}
+
+/* Ist dieses Geheimnis das des Elternbereichs - und nur seins? Teilt ein Kind
+   seinen Code mit ELTERN_CODE, wird nichts umgestellt (sonst traefe es das Kind). */
+export function istElternGeheim(env, geheim) {
+  if (!env || !env.ELTERN_CODE || !geheim || geheim !== env.ELTERN_CODE) return false;
+  for (const n of ["PAUL_CODE", "LEON_CODE", "HELENA_CODE"]) if (env[n] && env[n] === env.ELTERN_CODE) return false;
+  return true;
+}
+
+export async function elternMaschineAktiv(env) {
+  if (!elternMaschine(env)) return false;
+  if ((await schalterLesen(env, "eltern-maschinenwert")) !== "neu") return false;
+  return (await schalterLesen(env, "elternzugang")) === "neu";
+}
+
 export async function ausweisBauen(geheim) {
   const bis = Date.now() + TAGE * 86400000;
   return `${bis}.${await signieren(String(bis), geheim)}`;
@@ -83,7 +135,19 @@ export async function ausweisGueltig(request, geheim, env) {
   const [bis, sig] = decodeURIComponent(treffer[1]).split(".");
   if (!bis || !sig) return false;
   if (Number(bis) < Date.now()) return false;
-  if (!gleich(sig, await signieren(String(Number(bis)), geheim))) return false;
+  const maschine = istElternGeheim(env, geheim) ? elternMaschine(env) : null;
+  if (!maschine) {
+    if (!gleich(sig, await signieren(String(Number(bis)), geheim))) return false;
+  } else {
+    /* Elternbereich mit eingerichtetem Maschinenwert: Erst rechnen, dann den
+       Schalter lesen - ein Ausweis, der zu keinem der beiden passt (etwa der
+       eines Kindes), kostet so keinen Speicherzugriff. */
+    const passtCode = gleich(sig, await signieren(String(Number(bis)), geheim));
+    const passtMaschine = gleich(sig, await signieren(String(Number(bis)), maschine));
+    if (!passtCode && !passtMaschine) return false;
+    const neu = await elternMaschineAktiv(env);
+    if (neu ? !passtMaschine : !passtCode) return false;
+  }
 
   // "Alle abmelden": Wurde dieser Ausweis vor dem Stichtag ausgestellt,
   // gilt er nicht mehr - auf allen Geräten gleichzeitig.
