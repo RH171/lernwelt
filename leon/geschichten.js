@@ -15663,5 +15663,656 @@ window.LEON_GESCHICHTEN = [
     "seite": 8
    }
   ]
+ },
+ {
+  "id": "b6-in-der-buecherei",
+  "titel": "In der Bücherei",
+  "bild": "📚",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "📚",
+      "🙂"
+     ],
+     "leute": [
+      "Leon",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Heu|te geht Le|ons Klas|se in die Schul|bü|che|rei.",
+     "„Je|des Kind darf ein Buch aus|lei|hen“, sagt Herr Ce|lis.",
+     "Le|on hat schon ei|ne I|dee.",
+     "Er will ein Buch ü|ber Tor|war|te.",
+     "Dar|auf freut er sich schon den gan|zen Mor|gen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "buecherei",
+     "dinge": [
+      "📚",
+      "🔍"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "In der Bü|che|rei ste|hen vie|le Re|ga|le.",
+     "Es gibt Bü|cher ü|ber Tie|re, Au|tos und Ster|ne.",
+     "Le|on sucht und sucht und sucht.",
+     "A|ber er fin|det kein ein|zi|ges Fuß|ball|buch.",
+     "„Wo sind nur die Fuß|ball|bü|cher?“, fragt er lei|se."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "buecherei",
+     "dinge": [
+      "📚",
+      "😃"
+     ],
+     "leute": [
+      "Leon",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Herr Ce|lis zeigt auf das un|ters|te Brett.",
+     "Ganz un|ten steht ein di|ckes grü|nes Buch.",
+     "Vor|ne ist ein Tor|wart mit Hand|schu|hen.",
+     "Der Tor|wart fliegt quer durch das gan|ze Bild.",
+     "„Das neh|me ich!“, ruft Le|on glück|lich."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "📖",
+      "🍎"
+     ],
+     "leute": [
+      "Leon",
+      "Leo"
+     ]
+    },
+    "zeilen": [
+     "In der Pau|se setzt sich Le|on auf ei|ne Bank.",
+     "Ne|ben ihm sitzt der klei|ne Le|o.",
+     "Er ist ganz neu in der ers|ten Klas|se.",
+     "Er kennt hier noch kaum je|man|den.",
+     "Er schaut neu|gie|rig auf Le|ons Buch."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "📖",
+      "🔤"
+     ],
+     "leute": [
+      "Leon",
+      "Leo"
+     ]
+    },
+    "zeilen": [
+     "„Kannst du schon le|sen?“, fragt Le|on.",
+     "Le|o schüt|telt den Kopf.",
+     "„Ich ken|ne nur ein paar Buch|sta|ben“, sagt er lei|se.",
+     "„Dann le|se ich dir vor“, sagt Le|on.",
+     "Le|o rutscht ganz nah an Le|on he|ran."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "📖",
+      "👏"
+     ],
+     "leute": [
+      "Leon",
+      "Leo"
+     ]
+    },
+    "zeilen": [
+     "Le|on liest ganz lang|sam und ge|nau vor.",
+     "„Ein Tor|wart braucht gu|te Hand|schu|he.“",
+     "„Er muss mu|tig sein und gut auf|pas|sen.“",
+     "Bei ei|nem ganz lan|gen Wort stockt Le|on kurz.",
+     "Dann klatscht er die Sil|ben und schafft es."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "⚽",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Leo"
+     ]
+    },
+    "zeilen": [
+     "„Bist du auch ein Tor|wart?“, fragt Le|o.",
+     "„Ja, das bin ich“, sagt Le|on stolz.",
+     "„Mein Freund The|o ist auch ein Tor|wart.“",
+     "Da wer|den Le|os Au|gen ganz groß.",
+     "„Das will ich auch mal ma|chen!“, ruft er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "pausenhof",
+     "dinge": [
+      "🔔",
+      "📖"
+     ],
+     "leute": [
+      "Leon",
+      "Leo"
+     ]
+    },
+    "zeilen": [
+     "Da klin|gelt laut die Schul|glo|cke.",
+     "Die Pau|se ist lei|der schon vor|bei.",
+     "„Liest du mir mor|gen wei|ter vor?“, fragt Le|o.",
+     "„Klar, gleich in der ers|ten Pau|se!“, sagt Le|on.",
+     "Froh läuft Le|o zu|rück in sei|ne Klas|se."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Worüber will Leon ein Buch?",
+    "richtig": "über Torwarte",
+    "falsch": [
+     "über Tiere",
+     "über Sterne"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Welche Farbe hat das Buch?",
+    "richtig": "grün",
+    "falsch": [
+     "blau",
+     "rot"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "In welche Klasse geht der kleine Leo?",
+    "richtig": "in die erste Klasse",
+    "falsch": [
+     "in die zweite Klasse",
+     "in die vierte Klasse"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Was macht Leon bei einem langen Wort?",
+    "richtig": "Er klatscht die Silben.",
+    "falsch": [
+     "Er fragt Herrn Celis.",
+     "Er macht das Buch zu."
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Wann liest Leon wieder vor?",
+    "richtig": "morgen in der ersten Pause",
+    "falsch": [
+     "heute nach der Schule",
+     "morgen im Klassenzimmer"
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "c6-das-picknick-im-park",
+  "titel": "Das Picknick im Park",
+  "bild": "🧺",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🧺",
+      "☀️"
+     ],
+     "leute": [
+      "Papa",
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Heu|te ist ein son|ni|ger Sonn|tag im Sep|tem|ber.",
+     "Pa|pa packt ei|nen gro|ßen Korb.",
+     "Im Korb sind Bro|te, Trau|ben und Ap|fel|saft.",
+     "Le|on und Paul tra|gen die De|cke.",
+     "Sie ge|hen zu|sam|men in den gro|ßen Park."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🧺",
+      "👋"
+     ],
+     "leute": [
+      "Elisabeth",
+      "Helena",
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Im Park war|ten schon E|li|sa|beth und He|le|na.",
+     "„Hal|lo, ihr bei|den!“, ruft He|le|na und winkt.",
+     "Sie brei|ten die De|cke auf der Wie|se aus.",
+     "Die Blät|ter an den Bäu|men sind schon bunt.",
+     "Al|le set|zen sich und fan|gen an zu es|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🥪",
+      "🍇"
+     ],
+     "leute": [
+      "Papa",
+      "Elisabeth",
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on isst ein gro|ßes Kä|se|brot mit Gur|ke.",
+     "E|li|sa|beth reicht ihm die Trau|ben.",
+     "„Die sind a|ber süß!“, sagt Le|on.",
+     "Pa|pa gießt al|len Saft ein.",
+     "Paul hat schon zwei gan|ze Bro|te ge|ges|sen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "⚽",
+      "💡"
+     ],
+     "leute": [
+      "Paul",
+      "Leon",
+      "Helena"
+     ]
+    },
+    "zeilen": [
+     "Nach dem Es|sen holt Paul den Ball.",
+     "„Wir ma|chen ein Elf|me|ter|schie|ßen!“, ruft er.",
+     "Pa|pa legt zwei Ja|cken als Tor ins Gras.",
+     "Le|on stellt sich so|fort ins Tor.",
+     "He|le|na und Paul dür|fen schie|ßen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "⚽",
+      "🧤"
+     ],
+     "leute": [
+      "Helena",
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "He|le|na zählt auf Eng|lisch bis drei.",
+     "Dann läuft sie an und schießt mit Schwung.",
+     "Der Ball rollt in die lin|ke E|cke.",
+     "Le|on wirft sich hin und hält ihn fest!",
+     "„Du bist ja schnell!“, staunt He|le|na."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Paul",
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Jetzt ist Paul mit dem Schie|ßen dran.",
+     "Er schießt ganz hoch in die rech|te E|cke.",
+     "Le|on springt hoch in die Luft.",
+     "Der Ball fliegt knapp ü|ber sei|ne Fin|ger.",
+     "„Tor!“, ruft Paul und hüpft vor Freu|de."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "👏",
+      "⚽"
+     ],
+     "leute": [
+      "Papa",
+      "Elisabeth",
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on holt den Ball aus dem Gras.",
+     "„Was für ein Sprung!“, ruft Pa|pa.",
+     "E|li|sa|beth klatscht in die Hän|de.",
+     "Le|on lacht und stellt sich wie|der ins Tor.",
+     "„Noch ein|mal, bit|te!“, ruft er fröh|lich."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "park",
+     "dinge": [
+      "🍂",
+      "🧺"
+     ],
+     "leute": [
+      "Papa",
+      "Leon",
+      "Paul"
+     ]
+    },
+    "zeilen": [
+     "Sie spie|len noch lan|ge auf der Wie|se.",
+     "Le|on hält noch ganz vie|le Bäl|le.",
+     "Dann wird es lang|sam kühl.",
+     "Al|le pa|cken die De|cke und den Korb ein.",
+     "„Das war ein schö|ner Tag!“, sagt Le|on mü|de."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Was ist im Korb?",
+    "richtig": "Brote, Trauben und Apfelsaft",
+    "falsch": [
+     "Kuchen, Äpfel und Wasser",
+     "Brezeln, Bananen und Milch"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Wie sind die Blätter an den Bäumen?",
+    "richtig": "schon bunt",
+    "falsch": [
+     "noch ganz grün",
+     "alle schon weg"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was ist das Tor beim Elfmeterschießen?",
+    "richtig": "zwei Jacken im Gras",
+    "falsch": [
+     "zwei Bäume im Park",
+     "der Korb und die Decke"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "In welcher Sprache zählt Helena bis drei?",
+    "richtig": "auf Englisch",
+    "falsch": [
+     "auf Französisch",
+     "auf Spanisch"
+    ],
+    "seite": 5
+   },
+   {
+    "frage": "Wohin schießt Paul den Ball?",
+    "richtig": "hoch in die rechte Ecke",
+    "falsch": [
+     "flach in die linke Ecke",
+     "genau in Leons Hände"
+    ],
+    "seite": 6
+   }
+  ]
+ },
+ {
+  "id": "a7-herr-celis-bringt-etwas-mit",
+  "titel": "Herr Celis bringt etwas mit",
+  "bild": "🌰",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🏫",
+      "❓"
+     ],
+     "leute": [
+      "Leon",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Es ist Diens|tag|mor|gen in der Klas|se.",
+     "Herr Ce|lis kommt mit ei|ner gro|ßen Tü|te her|ein.",
+     "Die Tü|te ist ganz dick und schwer.",
+     "„Ich ha|be euch et|was mit|ge|bracht“, sagt er.",
+     "„Es ist ei|ne Ü|ber|ra|schung für die gan|ze Klas|se.“"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "❓",
+      "🤔"
+     ],
+     "leute": [
+      "Leon",
+      "Theo",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Al|le Kin|der wer|den ganz neu|gie|rig.",
+     "Le|on flüs|tert lei|se mit sei|nem Freund The|o.",
+     "„Sind da Bäl|le drin?“, fragt Le|on.",
+     "„O|der viel|leicht Sü|ßig|kei|ten?“, fragt The|o.",
+     "Herr Ce|lis lä|chelt nur und sagt nichts."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌰",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Theo",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Dann schüt|tet er die Tü|te auf den Tisch.",
+     "Es pol|tert und rollt in al|le Rich|tun|gen.",
+     "Ganz vie|le brau|ne Kas|ta|ni|en lie|gen da!",
+     "Sie sind glatt und glän|zen schön.",
+     "„Die ha|be ich im Park ge|sam|melt“, sagt Herr Ce|lis."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌰",
+      "✋"
+     ],
+     "leute": [
+      "Leon",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "„Heu|te bas|teln wir Fi|gu|ren“, sagt Herr Ce|lis.",
+     "In je|der Kas|ta|nie ist schon ein klei|nes Loch.",
+     "Da|zu gibt es Zahn|sto|cher für Ar|me und Bei|ne.",
+     "„Steckt sie vor|sich|tig hi|nein“, sagt er.",
+     "Je|des Kind holt sich drei Kas|ta|ni|en."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌰",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Theo"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat so|fort ei|ne I|dee.",
+     "Er baut ei|nen klei|nen Tor|wart.",
+     "Der Tor|wart be|kommt be|son|ders lan|ge Ar|me.",
+     "Da|mit kann er je|den Ball hal|ten.",
+     "The|o baut na|tür|lich auch ei|nen Tor|wart."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌰",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Theo"
+     ]
+    },
+    "zeilen": [
+     "Da|nach bas|telt The|o noch ei|nen Ball.",
+     "Da|für nimmt er die kleins|te Kas|ta|nie.",
+     "Le|on malt sei|nem Tor|wart mit Filz|stift ein grü|nes Hemd.",
+     "„Grün wie die Klee|blät|ter!“, sagt Le|on.",
+     "The|o fin|det das Hemd rich|tig schön."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌰",
+      "🪟"
+     ],
+     "leute": [
+      "Leon",
+      "Theo",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Bald ist die gan|ze Klas|se fer|tig.",
+     "Da gibt es Hun|de, Männ|chen und so|gar ei|ne Gi|raf|fe.",
+     "Herr Ce|lis stellt al|le Fi|gu|ren auf die Fens|ter|bank.",
+     "Er schaut sich je|de Fi|gur ge|nau an.",
+     "„Ihr habt euch toll an|ge|strengt“, sagt er."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "klasse",
+     "dinge": [
+      "🌰",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Theo",
+      "Herr Celis"
+     ]
+    },
+    "zeilen": [
+     "Le|ons Tor|wart steht ne|ben The|os Tor|wart.",
+     "Da|zwi|schen liegt der klei|ne Kas|ta|ni|en|ball.",
+     "„Zwei Tor|war|te, ein Ball!“, ruft The|o.",
+     "Le|on und The|o la|chen zu|sam|men.",
+     "Mor|gen sam|melt Le|on mit Pa|pa im Park Kas|ta|ni|en."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Womit kommt Herr Celis herein?",
+    "richtig": "mit einer großen Tüte",
+    "falsch": [
+     "mit einem Korb",
+     "mit einem Ball"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Woran denkt Theo bei der Tüte?",
+    "richtig": "an Süßigkeiten",
+    "falsch": [
+     "an Bälle",
+     "an Kastanien"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Wo hat Herr Celis die Kastanien gesammelt?",
+    "richtig": "im Park",
+    "falsch": [
+     "im Garten",
+     "auf dem Pausenhof"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Welche Farbe hat das Hemd von Leons Torwart?",
+    "richtig": "grün",
+    "falsch": [
+     "rot",
+     "braun"
+    ],
+    "seite": 6
+   },
+   {
+    "frage": "Wohin stellt Herr Celis die Figuren?",
+    "richtig": "auf die Fensterbank",
+    "falsch": [
+     "auf den Tisch",
+     "in den Schrank"
+    ],
+    "seite": 7
+   }
+  ]
  }
 ];
