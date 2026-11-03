@@ -67,6 +67,7 @@ import { termineLesen, berlinHeute } from "./_probentermine.js";
 import { notenLesen } from "./_noten.js";
 import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen.js";
 import { OPUS_FORMEN } from "./_formen-opus.js";
+import { antwortkennungAn } from "./_antwortkennung.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
 /* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
@@ -249,6 +250,9 @@ export async function onRequestGet(context) {
        "wartet" eine Tatsache doppelt, die Paul eben in anderer Form hatte. */
     const proTatsache = RICHTUNG.an
       ? vertreter(v.fragen, begegnungen(await gestellteLesen(env, kind), nachKennung(v.fragen))) : v.fragen;
+    /* Antwort-Kennung (03.11.2026): zeige je Quiz-Wackler nur bei schalter:antwortkennung = "neu";
+       bei "alt" bleibt die Antwort byte-gleich wie vorher. Wirft nie. */
+    const mitZeige = kind === "paul" && (await antwortkennungAn(env));
     const fund = fundFaelligJeBlatt(pk, Date.now());
     const fundText = {};
     for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
@@ -259,7 +263,7 @@ export async function onRequestGet(context) {
                        /* Schritt 3a (nur Paul): ein Quizfehler kommt in einer ANDEREN Form
                           derselben Tatsache wieder; dazu die belegten Zweitformen der Fundkarten. */
                        quizWackler: quizWacklerListe(proTatsache, pk, Date.now(), 0, null,
-                         kind === "paul" ? v.fragen.concat(karteAlsQuizForm(v.fragen, bn), opusAlsQuizForm(v.fragen, OPUS_FORMEN)) : null),
+                         kind === "paul" ? v.fragen.concat(karteAlsQuizForm(v.fragen, bn), opusAlsQuizForm(v.fragen, OPUS_FORMEN)) : null, mitZeige),
                        ...(kind === "paul" ? { fundFormen: fundFormenFuer(v.fragen, bn, pk, OPUS_FORMEN) } : {}),
                        /* "Heute dran" (30.10.2026, Auftrag 178, nur Paul): Lernpunkte, die Paul HEUTE (Berliner Tag)
                           beantwortet hat. Die Startseite und die Fach-Runde ziehen sie von der Tagesmenge des Fachs ab
@@ -828,7 +832,7 @@ export async function onRequestPost(context) {
    (Dennys Beschluss 28.09.2026: sie kommen mit in "Heute lernen").
    Je Lernpunkt eine Frage, als Karte fuer /fundkarten.js: eine richtige und
    ZWEI falsche Antworten, wie jede Fundkarte. Am laengsten her zuerst. */
-/* Antwort-Kennung (03.11.2026, nur Paul - nur er gibt alleFormen mit): welche Frage die Karte
+/* Antwort-Kennung (03.11.2026, nur Paul - nur er gibt alleFormen mit, nur mit mitZeige = Schalter "neu"): welche Frage die Karte
    WIRKLICH zeigt (bei "andere" eine andere als frageId). Echte Vorratsfrage: ID und Frageart
    (ohne Form gilt "standard", formVon). Fundkarte als Zweitform ("karte:"): Frageart "n", keine
    Fragen-ID (der Lernpunkt nennt das Blatt). Opus-Form ("opus:"): beides unbekannt, also leer. */
@@ -840,7 +844,7 @@ function zeigeKennung(g) {
   return { ...(id ? { q: id.slice(0, 40) } : {}), fa: FORM_KURZ[formVon(g)] };
 }
 
-export function quizWacklerListe(fragen, punkte, jetzt, max, nur, alleFormen) {
+export function quizWacklerListe(fragen, punkte, jetzt, max, nur, alleFormen, mitZeige) {
   if (!WV.an) return [];
   const nun = jetzt || Date.now();
   const raus = [], gesehen = new Set();
@@ -880,7 +884,8 @@ export function quizWacklerListe(fragen, punkte, jetzt, max, nur, alleFormen) {
       falsch: a.filter((x, i) => i !== ri).slice(0, 2),
       ...(g.merke ? { merke: String(g.merke) } : g.tipp ? { merke: String(g.tipp) } : {}),
       tage: p.z ? Math.floor((nun - p.z) / 86400000) : 0,
-      ...(alleFormen ? { form: g === f ? "gleich" : "andere", zeige: zeigeKennung(g) } : {}),
+      ...(alleFormen ? { form: g === f ? "gleich" : "andere" } : {}),
+      ...(alleFormen && mitZeige ? { zeige: zeigeKennung(g) } : {}),
     });
   }
   raus.sort((x, y) => y.tage - x.tage);
