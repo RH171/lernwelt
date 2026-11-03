@@ -29,7 +29,7 @@ import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
 import { volllesen, brauchtVolllesen, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
 import { kreiseLesen, kreiseSchreiben } from "./_fehlerkreis.js";
-import { blattPruefen as widerspruchPruefen, ohneAngehaltene } from "./_widerspruch.js";
+import { blattPruefen as widerspruchPruefen, ohneAngehaltene, widerspruchAn } from "./_widerspruch.js";
 
 /* Nachrechnen beim Durchlesen (14.10.2026): läuft NEBEN dem Lesen, gewartet wird
    höchstens bis NACHRECHNEN_GRENZE nach dem Start - sonst holt es die Seite nach
@@ -619,6 +619,7 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
          desselben Fachs und Themas. Nur bei schalter:widerspruch = "neu"; laeuft neben Nachrechnen und
          Volllesen und bekommt dieselbe Frist. Ohne Ergebnis in der Frist wird nichts angehalten. */
       const wsLauf = karten.length ? (async () => {
+        if (!(await widerspruchAn(env))) return null;   // Schalter zuerst: bei "alt" kein Lesen, kein Warten
         const b = await stoffLesen(env, kind, 4).catch(() => null);
         return widerspruchPruefen(env, { id: eintrag.id, fach: eintrag.fach, thema: gelesen.thema || eintrag.thema },
           karten, b && b.ok ? b.eintraege : [], { alt: eintrag.kartenAlt, grenze: Math.max(5000, NACHRECHNEN_GRENZE - (Date.now() - nrStart) - 2000) });
@@ -1716,7 +1717,7 @@ async function nachtragen(context) {
         /* Widerspruchspruefung auch beim Nachtrag (03.11.2026, nur bei schalter:widerspruch = "neu"). */
         if ((gelesen.karten || []).length) {
           const rw = await widerspruchPruefen(env, { id: x.id, fach: x.fach, thema: gelesen.thema || x.thema },
-            gelesen.karten, e.eintraege, { alt: x.karten }).catch(() => null);
+            gelesen.karten, e.eintraege, { alt: x.karten, grenze: 20000 }).catch(() => null);
           if (rw && rw.angehalten && Array.isArray(rw.karten)) gelesen.karten = rw.karten;
         }
         await inhaltSetzen(env, kind, x.id, gelesen.inhalt, gelesen.karten, gelesen.sorte);

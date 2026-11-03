@@ -45,7 +45,7 @@ import { schwaechenHolen } from "./_schwaechen.js";
 import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, medienFuer } from "./_lehrervorlagen.js";
 import { frageGegenKorrektur } from "./_korrektur.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
-import { vorratPruefen, ohneAngehaltene } from "./_widerspruch.js";
+import { vorratPruefen, ohneAngehaltene, widerspruchAn } from "./_widerspruch.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
@@ -318,7 +318,7 @@ export async function onRequestGet(context) {
     let neu = [];
     try { neu = await nachschubBauen(env, kind, vorbauFaecher, jetztDran); } catch (e) {}
     /* Widerspruchspruefung (03.11.2026): nur bei schalter:widerspruch = "neu"; wirft nie. */
-    if (neu.length) {
+    if (neu.length && (await widerspruchAn(env))) {
       const es = await stoffLesen(env, kind, 4).catch(() => ({ ok: false }));
       if (es.ok) neu = await vorratPruefen(env, kind, neu, es.eintraege, v0.fragen);
     }
@@ -496,7 +496,8 @@ export async function onRequestGet(context) {
     try {
       let neu = await nachschubBauen(env, kind, gewuenschteFaecher, gewuenschteBlaetter);
       /* Widerspruchspruefung (03.11.2026): nur bei schalter:widerspruch = "neu"; wirft nie. */
-      if (neu.length) neu = await vorratPruefen(env, kind, neu, Object.values(blattNach), vorrat.fragen);
+      /* Im Abruf des Kindes nur kurz warten (Pruefrunde 1): hoechstens 8 s, sonst ungeprueft wie bisher. */
+      if (neu.length) neu = await vorratPruefen(env, kind, neu, Object.values(blattNach), vorrat.fragen, { grenze: 8000 });
       if (neu.length) {
         /* Frisch gelesen, nicht der gefilterte Stand: Was die Pruefung vor der
            Ausgabe ausblendet oder kuerzt, bleibt im Speicher unveraendert

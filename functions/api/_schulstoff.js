@@ -26,7 +26,7 @@
  */
 import { korrekturenErneuern } from "./_korrekturhalt.js";
 import { kartenAusblenden } from "./_karten-ausblenden.js";
-import { eintraegeOhneAngehaltene } from "./_widerspruch.js";
+import { eintraegeOhneAngehaltene, haltUebernehmen } from "./_widerspruch.js";
 import { belegeLesen, belegeAnhaengen } from "./_belege.js";
 
 export const KINDER = ["paul", "leon", "helena"];
@@ -768,7 +768,8 @@ export async function inhaltSetzen(env, kind, id, inhalt, karten, sorte, halten,
     if (treffer < 0) continue;
     if (zeilen.length) liste[treffer].inhalt = zeilen;
     if (gutSorte) liste[treffer].sorte = gutSorte;
-    if (Array.isArray(karten) && karten.length) liste[treffer].karten = karten.slice(0, KARTEN_MAX);
+    /* Angehaltene Karten bleiben angehalten, auch wenn das Blatt neu eingelesen wird (Kapitel 163). */
+    if (Array.isArray(karten) && karten.length) liste[treffer].karten = haltUebernehmen(karten, liste[treffer].karten).slice(0, KARTEN_MAX);
     if (halten) { delete liste[treffer].inhaltAlt; delete liste[treffer].kartenAlt; }
     if (nr) liste[treffer].nachgerechnet = nr;
     if (vl) liste[treffer].volllesen = vl;

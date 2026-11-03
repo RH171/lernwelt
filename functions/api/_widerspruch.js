@@ -34,6 +34,15 @@ export async function widerspruchAn(env) {
 export const norm = (s) => String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim();
 export const schluessel = (k) => norm(k && (k.frage || k.text)) + "|" + norm(k && k.richtig);
 export const angehalten = (k) => !!(k && k.halt && k.halt.art === "widerspruch");
+/* Markierung bleibt beim Neuschreiben (Pruefrunde 1, 03.11.2026): eine neue Karte mit gleichem Schluessel
+   wie eine schon angehaltene alte Karte uebernimmt deren halt, auch bei Schalter "alt". */
+export function haltUebernehmen(neu, alt) {
+  if (!Array.isArray(neu) || !Array.isArray(alt)) return neu;
+  const h = new Map();
+  for (const k of alt) if (angehalten(k)) h.set(schluessel(k), k.halt);
+  if (!h.size) return neu;
+  return neu.map((k) => (k && !angehalten(k) && h.has(schluessel(k)) ? Object.assign({}, k, { halt: h.get(schluessel(k)) }) : k));
+}
 export const ohneAngehaltene = (karten) => (Array.isArray(karten) ? karten.filter((k) => !angehalten(k)) : karten);
 
 /* Fuer stoffLesen: angehaltene Karten fallen beim Lesen weg, der Speicher bleibt unberuehrt. */
