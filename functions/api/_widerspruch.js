@@ -15,6 +15,11 @@
  *     befunde/widerspruch-neu/<datum>.md), nicht Karte fuer Karte.
  *   - Schalter schalter:widerspruch, Standard "alt" = keine Pruefung, keine neue Markierung.
  *     Schon gesetzte Markierungen bleiben auch bei "alt" wirksam (Freigeben = Feld halt entfernen).
+ *   - Zaehlung der kurzen Frist (03.11.2026, Dennys Vorgabe 4): Laeuft im Quiz-Abruf des Kindes die
+ *     8-Sekunden-Frist ab, kommt die Frage wie bisher ungeprueft durch. Mitgezaehlt wird je Tag (MEZ) im
+ *     Schluessel zaehler:widerspruch:<JJJJ-MM-TT>: versuche, abgelaufen, fehler. Nur der kurze Weg
+ *     (grenze <= KURZE_FRIST), nur bei Schalter "neu", hoechstens ZAEHLER_MAX_SCHREIBEN Schreibvorgaenge
+ *     je Tag, Ablauf nach 90 Tagen. Die Liste fuer Denny (werkzeuge/widerspruch.mjs liste) nennt die Zahlen.
  *
  * Diese Datei wird auch vom lokalen Werkzeug (werkzeuge/widerspruch.mjs) fuer den Bestandslauf benutzt,
  * damit Server und Lauf denselben Auftrag an Opus schicken. Wirft nie.
@@ -29,6 +34,34 @@ export async function widerspruchAn(env) {
     if (roh == null) return false;
     return String(roh).trim().replace(/^["']|["']$/g, "").trim().toLowerCase() === "neu";
   } catch (e) { return false; }          // Lesefehler: sichere Seite = aus
+}
+
+/* Zaehlung der kurzen Frist (03.11.2026, Dennys Vorgabe 4: "Laeuft die 8-Sekunden-Frist ab, wird die Karte
+   wie bisher gezeigt, und du zaehlst mit, wie oft das passiert."). KV-Budget: ein get und ein put je
+   Quiz-Abruf, der ueberhaupt pruefen musste (nur wenn das Kind gar keine offene Frage mehr hatte),
+   gedeckelt auf ZAEHLER_MAX_SCHREIBEN je Tag (Limit des Kontos: 1000 je Tag). Zwei gleichzeitige
+   Abrufe koennen sich einen Zaehlschritt ueberschreiben; die Zahl ist dann eher zu klein, nie zu gross. */
+export const KURZE_FRIST = 10000;        // Wege mit grenze bis 10 s gelten als Abruf des Kindes (quiz.js: 8000)
+export const ZAEHLER_PREFIX = "zaehler:widerspruch:";
+export const ZAEHLER_MAX_SCHREIBEN = 100;
+export const tagMEZ = (d) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(d || new Date());
+export const istFristAblauf = (fehler) => /abort|timeout/i.test(String(fehler || ""));
+export async function fristZaehlen(env, stand, jetzt) {
+  try {
+    if (!env || !env.PAUL_KV || !stand || !(stand.versuche > 0)) return false;
+    const tag = tagMEZ(jetzt), key = ZAEHLER_PREFIX + tag;
+    /* Lesefehler: nicht schreiben, sonst setzte ein put den Tageszaehler und den Deckel zurueck. */
+    let z;
+    try { z = JSON.parse((await env.PAUL_KV.get(key)) || "{}") || {}; } catch (e) { return false; }
+    const n = Number(z.schreibungen) || 0;
+    if (n >= ZAEHLER_MAX_SCHREIBEN) return false;
+    const zahl = (v) => Number(v) || 0;
+    await env.PAUL_KV.put(key, JSON.stringify({
+      tag, versuche: zahl(z.versuche) + zahl(stand.versuche), abgelaufen: zahl(z.abgelaufen) + zahl(stand.abgelaufen),
+      fehler: zahl(z.fehler) + zahl(stand.fehler), schreibungen: n + 1, zuletzt: (jetzt || new Date()).toISOString(),
+    }), { expirationTtl: 90 * 86400 });
+    return true;
+  } catch (e) { return false; }
 }
 
 export const norm = (s) => String(s == null ? "" : s).toLowerCase().replace(/\s+/g, " ").trim();
@@ -204,6 +237,7 @@ export async function vorratPruefen(env, kind, neu, eintraege, vorratFragen, opt
     const jeBlatt = {};
     neu.forEach((f, i) => { if (f && f.blatt && blattNach[f.blatt]) (jeBlatt[f.blatt] = jeBlatt[f.blatt] || []).push({ karte: f, nr: i }); });
     const aus = neu.slice();
+    const stand = { versuche: 0, abgelaufen: 0, fehler: 0 };
     await Promise.all(Object.keys(jeBlatt).map(async (id) => {
       const blatt = blattNach[id];
       const bestand = bestandFuer(eintraege, blatt);
@@ -216,10 +250,13 @@ export async function vorratPruefen(env, kind, neu, eintraege, vorratFragen, opt
       }
       if (!bestand.length) return;
       const r = await pruefen(env.ANTHROPIC_API_KEY, jeBlatt[id], bestand, { fetch: o.fetch, grenze: o.grenze, rahmen: { fach: blatt.fach, thema: blatt.thema } });
-      if (!r.ok) return;
+      stand.versuche++;
+      if (!r.ok) { if (istFristAblauf(r.fehler)) stand.abgelaufen++; else stand.fehler++; return; }
       const m = markieren(aus, r.treffer, bestand, o.am, jeBlatt[id]);
       m.karten.forEach((k, i) => { if (angehalten(k)) aus[i] = k; });
     }));
+    /* Nur der kurze Weg (Quiz-Abruf des Kindes) wird gezaehlt; der Vorbau im Hintergrund nicht. */
+    if (o.grenze && o.grenze <= KURZE_FRIST) await fristZaehlen(env, stand, o.jetzt);
     return aus;
   } catch (e) { return neu; }
 }
