@@ -19,6 +19,8 @@
    Fotos und Texte ohne Anmeldung im Netz gestanden, während dieselben Inhalte
    bei Paul und Leon hinter dem Riegel liegen. Ihre Vokabeltrainer verlangen
    damit ebenfalls den Code; das war der Preis und ist so entschieden. */
+import { personenAusweisGilt } from "./_elternzugang.js";
+
 export const GESCHUETZT = ["paul", "leon", "helena", "eltern"];
 
 export function brauchtAusweis(env, kind) {
@@ -74,6 +76,10 @@ export async function ausweisGueltig(request, geheim, env) {
   const roh = request.headers.get("cookie") || "";
   const treffer = roh.match(new RegExp("(?:^|;\\s*)" + COOKIE + "=([^;]+)"));
   if (!treffer) return false;
+  /* Personen-Ausweis des Elternbereichs (Auftrag 195, 03.11.2026): eigenes Format "p1.…",
+     gilt nur fuer den Eltern-Geheimschluessel und nur bei schalter:elternzugang = "neu".
+     Jedes andere Cookie laeuft unveraendert den alten Weg - ohne zusaetzlichen Speicherzugriff. */
+  if (String(treffer[1]).startsWith("p1.")) return personenAusweisGilt(request, geheim, env);
   const [bis, sig] = decodeURIComponent(treffer[1]).split(".");
   if (!bis || !sig) return false;
   if (Number(bis) < Date.now()) return false;
@@ -254,6 +260,48 @@ const BEREICHE = {
             farbe: "#a78bfa", rgb: "167,139,250" },
 };
 
+/* Nur auf der Anmeldeseite des Elternbereichs (Auftrag 195, 03.11.2026): Steht
+   schalter:elternzugang auf "neu", wird aus dem Zahlenfeld ein Passwortfeld und die Anmeldung
+   geht an /api/eltern-anmelden. Bei "alt" (Standard) bleibt alles wie vorher: dasselbe Feld,
+   derselbe Weg ueber /api/code-pruefen. Die Kinderseiten bekommen diesen Teil nicht. */
+const ELTERN_ZUSATZ = `  var neu = false;
+  fetch("/api/schalter?name=elternzugang", {credentials:"same-origin"})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j || j.wert !== "neu") return;
+      neu = true;
+      feld.setAttribute("inputmode", "text"); feld.setAttribute("maxlength", "80");
+      feld.setAttribute("autocomplete", "current-password"); feld.setAttribute("aria-label", "Passwort");
+      feld.style.letterSpacing = "normal"; feld.style.fontSize = "20px"; feld.style.maxWidth = "320px";
+      var satz = document.querySelector(".karte p");
+      if (satz) satz.textContent = "Mit deinem Passwort siehst du, wie es deinen Kindern beim Lernen geht.";
+    })
+    .catch(function(){});
+  function elternAnmelden(){
+    if (!neu) return anmelden();
+    var pw = feld.value.trim();
+    if (!pw){ fehler.textContent = "Bitte gib dein Passwort ein."; return; }
+    knopf.disabled = true; fehler.textContent = "";
+    fetch("/api/eltern-anmelden", {
+      method:"POST", credentials:"same-origin",
+      headers:{"content-type":"application/json"},
+      body: JSON.stringify({passwort: pw})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(a){
+      knopf.disabled = false;
+      if (a && a.ok){ location.reload(); return; }
+      if (a && a.alt){ neu = false; return anmelden(); }
+      feld.value = ""; feld.focus();
+      fehler.textContent = (a && a.fehler) ? a.fehler : "Das hat nicht geklappt.";
+    })
+    .catch(function(){
+      knopf.disabled = false;
+      fehler.textContent = "Ich konnte den Server nicht erreichen.";
+    });
+  }
+`;
+
 // Die Seite, die statt des Bereichs erscheint, solange niemand angemeldet ist.
 export function anmeldeSeite(kind) {
   const wer = String(kind || "paul").toLowerCase();
@@ -341,8 +389,8 @@ export function anmeldeSeite(kind) {
       fehler.textContent = "Ich konnte den Server nicht erreichen.";
     });
   }
-  knopf.addEventListener("click", anmelden);
-  feld.addEventListener("keydown", function(e){ if (e.key === "Enter") anmelden(); });
+${wer === "eltern" ? ELTERN_ZUSATZ : ""}  knopf.addEventListener("click", ${wer === "eltern" ? "elternAnmelden" : "anmelden"});
+  feld.addEventListener("keydown", function(e){ if (e.key === "Enter") ${wer === "eltern" ? "elternAnmelden" : "anmelden"}(); });
 })();
 <\/script>
 </body>

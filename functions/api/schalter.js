@@ -21,7 +21,13 @@
    Karte / „Selbst schreiben“ auf Quiz-Karten (fundkarten.js). "alt" = Fotos wie vorher alle als JSON / ohne Schalter. */
 /* "zaehlung" (02.11.2026, Auftrag 193): Einstiegskarte zaehlt heute mit (p.h), „10 geschafft, noch 5“ auf
    Pauls Startseite, Faecher im Elternbereich. "alt" = wie vorher. Gelesen in functions/api/_zaehlung.js. */
-const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"] };
+const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"],
+                  "elternzugang": ["alt", "neu"], "eltern-verwalter": ["an", "aus"] };
+/* "elternzugang" und "eltern-verwalter" (03.11.2026, Auftrag 195): Passwort-Zugaenge je Person im Elternbereich
+   (functions/api/_elternzugang.js). Anders als alle anderen Schalter ist hier der STANDARD "alt" bzw. "an":
+   ohne Speicherwert bleibt der Elternbereich wie vorher. Diese Antwort ist nur Auskunft; der Server liest
+   den Wert selbst (schalterLesen in _elternzugang.js). */
+const STANDARD = { "elternzugang": "alt", "eltern-verwalter": "an" };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },
@@ -32,13 +38,14 @@ export async function onRequestGet(context) {
   let name = "";
   try { name = String(new URL(request.url).searchParams.get("name") || "").toLowerCase(); } catch (e) {}
   if (!Object.prototype.hasOwnProperty.call(ERLAUBT, name)) return json(400, { ok: false, fehler: "Unbekannter Schalter." });
-  let wert = "neu", quelle = "standard";
+  const standard = STANDARD[name] || "neu";
+  let wert = standard, quelle = "standard";
   try {
     const roh = env && env.PAUL_KV ? await env.PAUL_KV.get("schalter:" + name) : null;
     if (roh != null) {
       const w = String(roh).trim().replace(/^["']|["']$/g, "").trim().toLowerCase();
       if (ERLAUBT[name].includes(w)) { wert = w; quelle = "kv"; } else quelle = "unbekannt";
     }
-  } catch (e) { wert = "neu"; quelle = "fehler"; }
+  } catch (e) { wert = standard; quelle = "fehler"; }
   return json(200, { ok: true, name, wert, quelle });
 }

@@ -20,6 +20,7 @@
   header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px}
   h1{font-family:var(--rund);font-size:26px;margin:0;letter-spacing:-.01em}
   .stand{color:var(--muted);font-size:13.5px}
+  .abmelden{font:inherit;font-size:13.5px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line, #d0d5e2);background:transparent;color:inherit;cursor:pointer}
   /* Die Reiter teilen sich die Zeile. Vorher waren es drei schmale Knoepfe am
      linken Rand - Denny am 21.09.2026: "ein bisschen groesser, sodass man sie
      gut anklicken kann." */
@@ -299,6 +300,7 @@
     <header>
       <h1>Lernstand</h1>
       <span class="stand" id="stand"></span>
+      <span class="stand verborgen" id="zugang"></span>
     </header>
     <!-- Reihenfolge: erst die drei Reiter, dann "Wer war heute da?". Die Karte
          zeigt ALLE drei Kinder und haengt nicht am gewaehlten Reiter - sie
@@ -328,6 +330,25 @@
   function esc(t){ var d=document.createElement("div"); d.textContent=(t==null?"":String(t)); return d.innerHTML; }
 
   var DATEN = null, KIND = null, GEHOLT_UM = null;
+  /* Personen-Zugaenge (Auftrag 195, 03.11.2026): ICH kommt aus /api/eltern-ich. Die Grenze zieht
+     der Server; hier steht nur, welche Kinder die Seite ueberhaupt anfragt. Ohne Personen-Zugang
+     (alter Code, schalter:elternzugang = "alt") sind es wie bisher alle drei. */
+  var ICH = null, ZUGANG_NEU = false;
+  function alleKinder(){
+    return ["paul","leon","helena"].filter(function(k){ return !ICH || !ICH.kinder || ICH.kinder.indexOf(k) >= 0; });
+  }
+  function zugangMalen(){
+    var el = $("zugang"); if (!el) return;
+    if (!ICH || ICH.art !== "person"){ el.classList.add("verborgen"); el.innerHTML = ""; return; }
+    var name = ICH.rolle.charAt(0).toUpperCase() + ICH.rolle.slice(1);
+    var bis = ICH.rolle === "verwalter" && ICH.bis ? " \u00B7 bis " + new Date(ICH.bis).toLocaleString("de-DE", {weekday:"short", day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"}) + " Uhr" : "";
+    el.innerHTML = "Angemeldet als " + name + bis + ' \u00B7 <button type="button" id="abmelden" class="abmelden">Abmelden</button>';
+    el.classList.remove("verborgen");
+    $("abmelden").addEventListener("click", function(){
+      fetch("/api/abmelden", {method:"POST", credentials:"same-origin"})
+        .catch(function(){}).then(function(){ location.reload(); });
+    });
+  }
   var FARBEN = {paul:"var(--paul)", leon:"var(--leon)", helena:"var(--helena)"};
 
   function stufe(q){ return q >= 85 ? "gut" : q >= 65 ? "mittel" : "schlecht"; }
@@ -338,6 +359,13 @@
   }
 
   function laden(){
+    fetch("/api/eltern-ich", {credentials:"same-origin"})
+      .then(function(r){ return r.json(); })
+      .then(function(j){ ICH = j && j.ok ? j : null; ZUGANG_NEU = !!(j && j.schalter === "neu"); anmeldeFeld(); })
+      .catch(function(){ ICH = null; })
+      .then(datenLaden);
+  }
+  function datenLaden(){
     fetch("/api/statistik", {credentials:"same-origin"})
       .then(function(r){ return r.json().then(function(j){ return {status:r.status, j:j}; }); })
       .then(function(a){
@@ -346,6 +374,7 @@
         DATEN = a.j.kinder || {};
         GEHOLT_UM = new Date();
         zeige("daten");
+        zugangMalen();
         meldungenLaden();
         anwesenheitLaden();
         notenLaden();
@@ -358,7 +387,17 @@
       .catch(function(){ zeige("anmelden"); });
   }
 
+  function anmeldeFeld(){
+    if (!ZUGANG_NEU) return;
+    var f = $("code");
+    f.setAttribute("inputmode", "text"); f.setAttribute("maxlength", "80");
+    f.setAttribute("autocomplete", "current-password"); f.setAttribute("aria-label", "Passwort");
+    f.style.letterSpacing = "normal";
+    var p = document.querySelector("#sicht-anmelden .stand");
+    if (p) p.textContent = "Mit deinem Passwort siehst du, wie es deinen Kindern beim Lernen geht.";
+  }
   function anmelden(){
+    if (ZUGANG_NEU) return passwortAnmelden();
     var code = $("code").value.trim();
     if (!code){ $("codefehler").textContent = "Bitte den Code eingeben."; return; }
     $("anmelden").disabled = true; $("codefehler").textContent = "";
@@ -370,6 +409,24 @@
     .then(function(j){
       $("anmelden").disabled = false;
       if (j && j.ok){ $("code").value=""; laden(); return; }
+      $("code").value=""; $("code").focus();
+      $("codefehler").textContent = (j && j.fehler) || "Das hat nicht geklappt.";
+    })
+    .catch(function(){ $("anmelden").disabled=false; $("codefehler").textContent="Server nicht erreichbar."; });
+  }
+  function passwortAnmelden(){
+    var pw = $("code").value.trim();
+    if (!pw){ $("codefehler").textContent = "Bitte dein Passwort eingeben."; return; }
+    $("anmelden").disabled = true; $("codefehler").textContent = "";
+    fetch("/api/eltern-anmelden", {
+      method:"POST", credentials:"same-origin", headers:{"content-type":"application/json"},
+      body: JSON.stringify({passwort: pw})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      $("anmelden").disabled = false;
+      if (j && j.ok){ $("code").value=""; laden(); return; }
+      if (j && j.alt){ ZUGANG_NEU = false; return anmelden(); }
       $("code").value=""; $("code").focus();
       $("codefehler").textContent = (j && j.fehler) || "Das hat nicht geklappt.";
     })
@@ -687,7 +744,7 @@
   var STOFF_KAPUTT = [];   // Kinder, deren Heft gerade nicht lesbar ist
 
   function stoffLaden(){
-    var kinder = ["paul","leon","helena"];
+    var kinder = alleKinder();
     return Promise.all(kinder.map(function(k){
       return fetch("/api/schulstoff?kind=" + k + "&monate=2", {credentials:"same-origin"})
         .then(function(r){ return r.json(); })
@@ -727,7 +784,7 @@
     var KURZ = {mathe:"Mathe", deutsch:"Deutsch", hsu:"HSU", englisch:"Englisch",
                 rel:"Religion/Ethik", musik:"Musik", anderes:"Anderes", "":"Ohne Fach"};
     var tage = stoffTage();
-    var welche = KIND ? [KIND] : ["paul","leon","helena"];
+    var welche = KIND ? [KIND] : alleKinder();
 
     var karten = [];
     welche.forEach(function(k){
@@ -799,7 +856,7 @@
     if (!DATEN){ kasten.innerHTML = ""; return; }
     // Ist ein Kind gewaehlt, steht nur dessen Vorschau da - darunter folgt
     // ohnehin sein eigenes Anwesenheitsband ("War Paul da?").
-    var welche = KIND ? [KIND] : ["paul","leon","helena"];
+    var welche = KIND ? [KIND] : alleKinder();
     /* Wofuer die Zahlen stehen (Denny, 30.09.2026, mit einem Bild der drei
        Kacheln: "Ich kann an der Kachel nicht sehen, auf welchen Zeitraum sich
        das bezieht."). Es ist der heutige Tag in deutscher Zeit, ab 0 Uhr. */
