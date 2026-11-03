@@ -28,7 +28,8 @@
    "alt" = wie am 02.11.2026. */
 const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"],
                   "rechentippen": ["neu", "alt"], "auswahlschutz": ["neu", "alt"],
-                  "elternzugang": ["alt", "neu"], "eltern-verwalter": ["an", "aus"], "eltern-maschinenwert": ["alt", "neu"] };
+                  "elternzugang": ["alt", "neu"], "eltern-verwalter": ["an", "aus"], "eltern-maschinenwert": ["alt", "neu"],
+                  "widerspruch": ["alt", "neu"] };
 /* "elternzugang" und "eltern-verwalter" (03.11.2026, Auftrag 195): Passwort-Zugaenge je Person im Elternbereich
    (functions/api/_elternzugang.js). Anders als alle anderen Schalter ist hier der STANDARD "alt" bzw. "an":
    ohne Speicherwert bleibt der Elternbereich wie vorher. Diese Antwort ist nur Auskunft; der Server liest
@@ -36,7 +37,11 @@ const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildl
 /* "eltern-maschinenwert" (03.11.2026): bei "neu" nimmt /api/code-pruefen?kind=eltern nur noch den Maschinenwert
    ELTERN_MASCHINE der Werkzeuge an; alter Eltern-Code und Hauptschluessel oeffnen den Elternbereich nicht mehr.
    Standard "alt". Wirksam nur, wenn auch elternzugang = "neu" und ELTERN_MASCHINE gesetzt ist (_riegel.js). */
-const STANDARD = { "elternzugang": "alt", "eltern-verwalter": "an", "eltern-maschinenwert": "alt" };
+/* "widerspruch" (03.11.2026): bei "neu" prueft Opus neu gelesene Fundkarten gegen den Bestand desselben Fachs und
+   Themas (functions/api/_widerspruch.js); Karten mit echtem inhaltlichem Widerspruch werden angehalten und kommen
+   nicht ins Quiz, gesammelt fuer Denny. Standard "alt" = keine Pruefung, bis Denny Ja sagt. Der Server liest den
+   Wert selbst (widerspruchAn in _widerspruch.js). */
+const STANDARD = { "elternzugang": "alt", "eltern-verwalter": "an", "eltern-maschinenwert": "alt", "widerspruch": "alt" };
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },

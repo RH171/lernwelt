@@ -29,6 +29,7 @@ import { nachrechnen, brauchtNachrechnen } from "./_nachrechnen.js";
 import { volllesen, brauchtVolllesen, vokabelnImFach, fachGelesen as vlFach } from "./_volllesen.js";
 import { KINDER_MIT_PRUEFREITER } from "./_pruefreiter.js";
 import { kreiseLesen, kreiseSchreiben } from "./_fehlerkreis.js";
+import { blattPruefen as widerspruchPruefen, ohneAngehaltene } from "./_widerspruch.js";
 
 /* Nachrechnen beim Durchlesen (14.10.2026): läuft NEBEN dem Lesen, gewartet wird
    höchstens bis NACHRECHNEN_GRENZE nach dem Start - sonst holt es die Seite nach
@@ -614,12 +615,21 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
         const z = lesungenZusammen(eintrag.inhaltAlt, gelesen.inhalt, eintrag.kartenAlt, karten);
         zeilenNeu = z.zeilen; karten = z.karten;
       }
+      /* Widerspruchspruefung (03.11.2026, _widerspruch.js, Kapitel 163): neue Karten gegen den Bestand
+         desselben Fachs und Themas. Nur bei schalter:widerspruch = "neu"; laeuft neben Nachrechnen und
+         Volllesen und bekommt dieselbe Frist. Ohne Ergebnis in der Frist wird nichts angehalten. */
+      const wsLauf = karten.length ? (async () => {
+        const b = await stoffLesen(env, kind, 4).catch(() => null);
+        return widerspruchPruefen(env, { id: eintrag.id, fach: eintrag.fach, thema: gelesen.thema || eintrag.thema },
+          karten, b && b.ok ? b.eintraege : [], { alt: eintrag.kartenAlt, grenze: Math.max(5000, NACHRECHNEN_GRENZE - (Date.now() - nrStart) - 2000) });
+      })().catch(() => null) : null;
       let nachgerechnet = null, vollGelesen = null;
       const warten = (lauf) => {
         const rest = Math.max(0, NACHRECHNEN_GRENZE - (Date.now() - nrStart));
         return lauf ? Promise.race([lauf, new Promise((ok) => setTimeout(() => ok(null), rest))]) : Promise.resolve(null);
       };
-      const [rn, rv] = await Promise.all([warten(nrLauf), warten(vlLauf)]);
+      const [rn, rv, rw] = await Promise.all([warten(nrLauf), warten(vlLauf), warten(wsLauf)]);
+      if (rw && rw.angehalten && Array.isArray(rw.karten)) karten = rw.karten;
       if (rn && rn.ok) nachgerechnet = rn.nachgerechnet;
       if (rv && rv.ok) vollGelesen = rv.volllesen;
       /* Fach aus dem Volllesen (16.10.2026, anleitung/054): Hat das Durchlesen kein Fach
@@ -644,7 +654,8 @@ async function blattAuswerten(env, kind, eintrag, seiten, heute) {
       catch (e2) {}
     }
   }
-  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten, kartenWarum, genauer, fachFrage, datumFehlt, nichtsGelesen };
+  /* Angehaltene Karten (Widerspruch) gehen nicht an den Bildschirm des Kindes, ohne Hinweis. */
+  return { titel, vomBlattGelesen, weichtAb, nachgefragt, karten: ohneAngehaltene(karten), kartenWarum, genauer, fachFrage, datumFehlt, nichtsGelesen };
 }
 /* ⚠️ Haiku hat hier bis zum 24.09.2026 gestanden - und HANDSCHRIFT NICHT
  * GELESEN. Denny mit einem Bild von Pauls Tausenderbuch-Blatt: "Bei der
@@ -1702,6 +1713,12 @@ async function nachtragen(context) {
       /* Die Fundkarten wandern auch beim Nachtrag mit - sonst haetten alte
          Blaetter nie welche, und zwei Wege wuerden auseinanderlaufen. */
       if ((gelesen.inhalt && gelesen.inhalt.length) || (gelesen.karten || []).length) {
+        /* Widerspruchspruefung auch beim Nachtrag (03.11.2026, nur bei schalter:widerspruch = "neu"). */
+        if ((gelesen.karten || []).length) {
+          const rw = await widerspruchPruefen(env, { id: x.id, fach: x.fach, thema: gelesen.thema || x.thema },
+            gelesen.karten, e.eintraege, { alt: x.karten }).catch(() => null);
+          if (rw && rw.angehalten && Array.isArray(rw.karten)) gelesen.karten = rw.karten;
+        }
         await inhaltSetzen(env, kind, x.id, gelesen.inhalt, gelesen.karten, gelesen.sorte);
       }
       if (datumNeu) await datumSetzen(env, kind, x.id, datumNeu, x.datum);

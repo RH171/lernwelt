@@ -45,6 +45,7 @@ import { schwaechenHolen } from "./_schwaechen.js";
 import { vorlagenLesen, vorlageFuerBlatt, frageGegenVorlage, belegAusVorlage, medienFuer } from "./_lehrervorlagen.js";
 import { frageGegenKorrektur } from "./_korrektur.js";
 import { stoffLesen, schuljahrStart, FAECHER } from "./_schulstoff.js";
+import { vorratPruefen, ohneAngehaltene } from "./_widerspruch.js";
 import { stehtAufBlatt } from "./spiel-bauen.js";
 import { frageTexteBelegen, frageWoerterGrund, quellenFuer, vorlageZeilen } from "./_belegpruefung.js";
 import { klaerungSperre } from "./_klaerung.js";
@@ -316,6 +317,11 @@ export async function onRequestGet(context) {
     const jetztDran = fehlen.slice(0, VORBAU_JE_LAUF);
     let neu = [];
     try { neu = await nachschubBauen(env, kind, vorbauFaecher, jetztDran); } catch (e) {}
+    /* Widerspruchspruefung (03.11.2026): nur bei schalter:widerspruch = "neu"; wirft nie. */
+    if (neu.length) {
+      const es = await stoffLesen(env, kind, 4).catch(() => ({ ok: false }));
+      if (es.ok) neu = await vorratPruefen(env, kind, neu, es.eintraege, v0.fragen);
+    }
     {
       // Frisch lesen und zusammenfuehren: Zwei Vorbauten gleichzeitig duerfen
       // sich nicht gegenseitig ueberschreiben.
@@ -488,7 +494,9 @@ export async function onRequestGet(context) {
   const nachschub = offen.length < Math.max(NACHFUELLEN_AB, anzahl || NACHFUELLEN_AB);
   if (!offen.length) {
     try {
-      const neu = await nachschubBauen(env, kind, gewuenschteFaecher, gewuenschteBlaetter);
+      let neu = await nachschubBauen(env, kind, gewuenschteFaecher, gewuenschteBlaetter);
+      /* Widerspruchspruefung (03.11.2026): nur bei schalter:widerspruch = "neu"; wirft nie. */
+      if (neu.length) neu = await vorratPruefen(env, kind, neu, Object.values(blattNach), vorrat.fragen);
       if (neu.length) {
         /* Frisch gelesen, nicht der gefilterte Stand: Was die Pruefung vor der
            Ausgabe ausblendet oder kuerzt, bleibt im Speicher unveraendert
@@ -503,7 +511,7 @@ export async function onRequestGet(context) {
         nachgebaut = true;
         /* Frisch Gebautes war noch nie dran - hier genuegt der einfache Filter,
            die Faelligkeit oben hat mit neuen Fragen nichts zu tun. */
-        offen = offen.concat(neu.filter(passt));
+        offen = offen.concat(ohneAngehaltene(neu).filter(passt));
       }
     } catch (e) { /* Vorrat reicht vielleicht trotzdem */ }
   }
@@ -1160,7 +1168,12 @@ export function ausgabeFuerPaul(fragen, blattNach) {
    Deutsch nur mit Fotofreigabe (_beleg-foto-leon.js); siehe _beleg-leon.js leonAusgabe. Im Speicher
    bleibt bei allen dreien alles. */
 export const MIT_AUSGABE = new Set(["paul", "helena", "leon"]);
+/* Widerspruchspruefung (03.11.2026, _widerspruch.js): angehaltene Fragen fallen bei der Ausgabe weg,
+   bei allen drei Kindern; der Speicher behaelt sie. */
 export function ausgabeFuer(kind, fragen, blattNach) {
+  return ohneAngehaltene(ausgabeFuerOhneHalt(kind, fragen, blattNach));
+}
+function ausgabeFuerOhneHalt(kind, fragen, blattNach) {
   if (kind === "paul") return ausgabeFuerPaul(fragen, blattNach);
   if (kind === "helena") return tabelleAnwenden(fragen, blattNach, BELEG_TABELLE_HELENA).filter((f) => !BELEG_SPERRE_HELENA[f.id]);
   if (kind === "leon") return leonAusgabe(fragen, blattNach, BELEG_TABELLE_LEON, FOTO_LEON);
