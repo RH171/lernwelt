@@ -47,7 +47,7 @@ export const AKTUELL = {
      (laufende Richtig-Folge ueber tage Kalendertage). Nur Anzeige und Simulation, steuert nichts. */
   blattSitzt: { anteil: 0.7, tage: 2 },
   /* Regel D, nur Mechanik: hoechstens so viele knifflige Karten aus abgeschlossenen Blaettern je
-     Runde, ohne Mindestzeit. "Knifflig" = frueher schon einmal falsch (fz oder f) - Vorschlag. */
+     Runde, ohne Mindestzeit. "Knifflig" = frueher schon einmal falsch (fz oder f) - ⚠️ Annahme (Einstellwert, Denny bestaetigt 04.11.2026 noch nicht). */
   kniffligJeTag: 3,
 };
 
@@ -104,15 +104,33 @@ export async function abschlussLesen(env, kind) {
   return { v: 1, abschluesse: [], fehler: true };
 }
 
-/* Geschlossene Blatt-ids je Fach: { fach: Set }. */
+/* Geschlossene Blaetter je Fach (Regel F, Nachbesserung 04.11.2026):
+   { fach: Set der bestaetigten ids, mit Eigenschaft schnitte: [{ datum, thema }] }.
+   Ein Abschluss speichert Fach, Schnitt-Schuldatum (schnitt = Schuldatum des letzten Probenblatts)
+   und die Kennungen der bestaetigten Liste. Geschlossen ist ein Blatt, wenn es in der Liste steht
+   ODER sein Schuldatum VOR dem Schnitt liegt (auch spaeter hochgeladen). Gleiches Schuldatum wie der
+   Schnitt, aber nicht in der Liste = offen. Mit Thema gilt die Datumsregel nur fuer Blaetter dieses
+   Themas. Alte Abschluesse ohne schnitt wirken nur ueber die Kennungen. */
 export function geschlossenJeFach(abschluss) {
   const raus = {};
   for (const a of (abschluss && abschluss.abschluesse) || []) {
     const f = fachNorm(a.fach);
-    raus[f] = raus[f] || new Set();
+    if (!raus[f]) { raus[f] = new Set(); raus[f].schnitte = []; }
     for (const id of a.ids) raus[f].add(String(id));
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(a.schnitt || ""))) raus[f].schnitte.push({ datum: String(a.schnitt), thema: String(a.thema || "").trim().toLowerCase() });
   }
   return raus;
+}
+
+const passtThema = (blatt, t) => !t || (String(blatt.thema || "") + " " + String(blatt.titel || "")).toLowerCase().includes(t);
+
+/* Ist das Blatt durch einen Abschluss seines Fachs geschlossen? zuF = geschlossenJeFach(...)[fach]. */
+export function istGeschlossen(blatt, zuF) {
+  if (!blatt || !zuF) return false;
+  if (zuF.has(String(blatt.id))) return true;
+  const sd = schuldatum(blatt).datum;
+  if (!sd) return false;
+  return (zuF.schnitte || []).some((x) => sd < x.datum && passtThema(blatt, x.thema));
 }
 
 /* Regel A: offen oder abgeschlossen?
@@ -123,7 +141,7 @@ export function geschlossenJeFach(abschluss) {
 export function offenesBlatt(blatt, geschlossen, grenze) {
   if (!blatt || blatt.sichtbar === false) return false;
   const f = fachNorm(blatt.fach);
-  if (geschlossen && geschlossen[f]) return !geschlossen[f].has(String(blatt.id));
+  if (geschlossen && geschlossen[f]) return !istGeschlossen(blatt, geschlossen[f]);
   const g = grenze && grenze[f];
   if (!g) return true;
   const sd = schuldatum(blatt).datum;
@@ -338,8 +356,8 @@ export function abschlussVorschau(blaetter, fach, letztes, thema, schonZu) {
   const t = String(thema || "").trim().toLowerCase();
   const zu = schonZu || new Set();
   const liste = ord.slice(0, i + 1)
-    .filter((x) => !t || (String(x.b.thema || "") + " " + String(x.b.titel || "")).toLowerCase().includes(t))
-    .filter((x) => !zu.has(String(x.b.id)))
+    .filter((x) => passtThema(x.b, t))
+    .filter((x) => !(zu.has ? istGeschlossen(x.b, zu) : false))
     .map((x) => ({ id: String(x.b.id), titel: String(x.b.titel || x.b.thema || "(ohne Titel)"), thema: String(x.b.thema || ""),
                    datum: x.sd.datum, von: x.sd.von, angelegt: String(x.b.angelegt || ""), ...(x.sd.unsicher ? { unsicher: true } : {}) }));
   /* Gleiche Titel unterscheidbar: laufende Nummer dahinter. */
@@ -347,5 +365,5 @@ export function abschlussVorschau(blaetter, fach, letztes, thema, schonZu) {
   for (const e of liste) zahl[e.titel] = (zahl[e.titel] || 0) + 1;
   const n = {};
   for (const e of liste) if (zahl[e.titel] > 1) { n[e.titel] = (n[e.titel] || 0) + 1; e.gleicherTitel = n[e.titel] + " von " + zahl[e.titel]; }
-  return { ok: true, liste };
+  return { ok: true, liste, schnitt: ord[i].sd.datum };
 }

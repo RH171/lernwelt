@@ -122,7 +122,7 @@
     hol(API + "?kind=paul&fach=" + encodeURIComponent(fach) + "&letztes=" + encodeURIComponent(letztes) + (thema ? "&thema=" + encodeURIComponent(thema) : ""))
       .then(function(a){
         if (!a.j || !a.j.ok){ $("vorschau").innerHTML = '<p class="fehler">' + esc(a.j && a.j.fehler) + '</p>'; return; }
-        vorschau = { fach: fach, letztes: letztes, thema: thema, liste: a.j.liste };
+        vorschau = { fach: fach, letztes: letztes, thema: thema, liste: a.j.liste, schnitt: a.j.schnitt };
         zeichneVorschau();
       });
   }
@@ -131,6 +131,7 @@
     var l = vorschau.liste;
     var h = '<h3>Diese ' + l.length + ' Blätter würden geschlossen</h3>';
     if (!l.length){ $("vorschau").innerHTML = h + '<p class="unter">Keine offenen Blätter bis zu diesem Blatt.</p>'; return; }
+    if (vorschau.schnitt) h += '<p class="unter">Danach gilt auch jedes Blatt mit Schuldatum vor dem ' + esc(dt(vorschau.schnitt)) + ' als abgeschlossen, auch wenn es erst später hochgeladen wird. Blätter vom ' + esc(dt(vorschau.schnitt)) + ', die hier nicht stehen, bleiben offen.</p>';
     h += '<div class="rollen"><table><tr><th>Blatt</th><th>Schuldatum</th><th>Thema</th><th>Kennung</th></tr>' +
       l.map(function(b){ return '<tr><td>' + titel(b) + '</td><td>' + datumZelle(b) + '</td><td>' + esc(b.thema) + '</td><td class="klein">' + esc(b.id) + '</td></tr>'; }).join("") +
       '</table></div><div class="reihe"><button class="knopf haupt" id="speichern">Abschluss speichern</button></div><p id="meldung"></p>';
@@ -165,9 +166,9 @@
   function abschluesse(){
     var l = daten.abschluesse || [];
     if (!l.length) return '<p class="unter">Noch keiner. Bis dahin gilt: offen ist, was seit der letzten Probe des Fachs datiert ist.</p>';
-    return '<div class="rollen"><table><tr><th>Fach</th><th>Probe</th><th>Blätter</th><th>Thema</th><th></th></tr>' +
+    return '<div class="rollen"><table><tr><th>Fach</th><th>Probe</th><th>Schnitt</th><th>Blätter</th><th>Thema</th><th></th></tr>' +
       l.slice().reverse().map(function(a){
-        return '<tr><td>' + esc(FACH[a.fach] || a.fach) + '</td><td>' + esc(dt(a.probe)) + '</td><td>' + a.ids.length + '</td><td>' + esc(a.thema || "–") +
+        return '<tr><td>' + esc(FACH[a.fach] || a.fach) + '</td><td>' + esc(dt(a.probe)) + '</td><td>' + esc(a.schnitt ? "vor " + dt(a.schnitt) : "–") + '</td><td>' + a.ids.length + '</td><td>' + esc(a.thema || "–") +
           '</td><td><button class="knopf" data-weg="' + esc(a.gesetzt) + '">Zurücknehmen</button></td></tr>';
       }).join("") + '</table></div>';
   }

@@ -7,7 +7,8 @@
  *   -> { ok, liste }   Vorschau: diese Blaetter wuerden geschlossen (noch nichts gespeichert)
  * POST { kind:"paul", fach, probe:"JJJJ-MM-TT", letztes, thema?, bestaetigt:[ids] }
  *   -> rechnet die Vorschau neu; weicht sie von "bestaetigt" ab: 409 mit der neuen Liste.
- *      Sonst wird ein Abschluss an aktuell-abschluss:paul angehaengt.
+ *      Sonst wird { fach, probe, letztes, schnitt (Schuldatum des letzten Blatts), thema?, ids, gesetzt }
+ *      an aktuell-abschluss:paul angehaengt. Geschlossen: in ids ODER Schuldatum vor schnitt.
  * POST { kind:"paul", aktion:"zuruecknehmen", gesetzt:"<Zeitstempel des Abschlusses>" }
  *   -> nimmt genau diesen Abschluss wieder heraus.
  *
@@ -20,7 +21,7 @@ import { stoffLesen } from "./_schulstoff.js";
 import { termineLesen, berlinHeute } from "./_probentermine.js";
 import { notenLesen } from "./_noten.js";
 import { probenLage, fachNorm } from "./_wiedervorlage.js";
-import { ABSCHLUSS, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, schuldatum, abschlussVorschau } from "./_aktuell.js";
+import { ABSCHLUSS, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, istGeschlossen, schuldatum, abschlussVorschau } from "./_aktuell.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },
@@ -66,7 +67,7 @@ export async function onRequestGet(context) {
     (faecher[f] = faecher[f] || []).push({
       id: String(b.id), titel: String(b.titel || b.thema || "(ohne Titel)"), thema: String(b.thema || ""),
       datum: sd.datum, von: sd.von, ...(sd.unsicher ? { unsicher: true } : {}), angelegt: String(b.angelegt || ""),
-      geschlossen: !!(l.zu[f] && l.zu[f].has(String(b.id))), offen: offenesBlatt(b, l.zu, l.grenze),
+      geschlossen: istGeschlossen(b, l.zu[f]), offen: offenesBlatt(b, l.zu, l.grenze),
     });
   }
   for (const f of Object.keys(faecher)) {
@@ -111,7 +112,8 @@ export async function onRequestPost(context) {
   const gleich = ids.length === best.length && ids.every((x) => best.includes(x));
   if (!ids.length) return json(400, { ok: false, fehler: "Es gibt keine offenen Blätter zum Abschließen." });
   if (!gleich) return json(409, { ok: false, fehler: "Die Liste hat sich geändert. Bitte die neue Vorschau prüfen.", liste: v.liste });
-  const neu = { fach, probe, letztes: String(d.letztes), ...(thema ? { thema } : {}), ids, gesetzt: Date.now() };
+  if (!v.schnitt) return json(400, { ok: false, fehler: "Das letzte Blatt hat kein Schuldatum. Bitte ein Blatt mit Datum wählen." });
+  const neu = { fach, probe, letztes: String(d.letztes), schnitt: v.schnitt, ...(thema ? { thema } : {}), ids, gesetzt: Date.now() };
   alle.push(neu);
   try { await env.PAUL_KV.put(ABSCHLUSS(kind), JSON.stringify({ v: 1, abschluesse: alle })); }
   catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." }); }
