@@ -25,7 +25,7 @@
  *      "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz Begruendung),
  *      "probenzeitraum" (Probenzeitraum, nicht abgefragt: abgeschlossen ohne Abfrage, Regel 3 von Auftrag 208).
  *   Auftrag 208 (04.11.2026): bestaetigte Proben aus _aktuell-vorschlag.js gelten als Grundstand (basis, nie im KV,
- *      AKTUELL.vorschlagBasis); Grundlagen-Blaetter wiegen im Altbestand E mehr (AKTUELL.grundlageGewicht).
+ *      AKTUELL.vorschlagBasis); Grundlagen-Blaetter bekommen im Altbestand E einen hoeheren Anteil (AKTUELL.grundlageGewicht, Nachbesserung 3b).
  */
 import { berlinTagNr, istSicher4, fachNorm } from "./_wiedervorlage.js";
 import { VORSCHLAG, GRUNDLAGE } from "./_aktuell-vorschlag.js";
@@ -63,10 +63,14 @@ export const AKTUELL = {
      Runde, ohne Mindestzeit. "Knifflig" = frueher schon einmal falsch (fz oder f) - ⚠️ Annahme (Einstellwert, Denny bestaetigt 04.11.2026 noch nicht). */
   kniffligJeTag: 3,
   /* Regel 5 (Auftrag 208, 04.11.2026): Grundlagen-Blaetter (Feld "grundlage" in proben-stufen.json, GRUNDLAGE in
-     _aktuell-vorschlag.js) bekommen nach dem Abschluss einen hoeheren Anteil im Altbestand (Regel E): die Zeit seit der
-     letzten Antwort zaehlt mal grundlageGewicht. "Zuletzt falsch zuerst" bleibt das erste Merkmal, nie gefragt bleibt vorn,
-     und E steht weiter hinter allen offenen unsicheren Karten - also kein Vorrang vor offenen Blaettern.
-     1 = aus (wie vorher). 2 = Vorschlag: eine Grundlage, die vor 3 Tagen dran war, steht vor einem Thema von vor 5 Tagen. */
+     _aktuell-vorschlag.js) bekommen nach dem Abschluss einen hoeheren Anteil im Altbestand (Regel E).
+     Seit Nachbesserung 3b (04.11.2026) als ANTEIL, an zwei Stellen, beide nur im Pfad schalter:aktuell = neu:
+       1. Auswahl: quiz.js gibt quizReihe4 grundlageFaktor = grundlageGewicht; Altbestand-Karten OHNE Grundlage wiegen
+          dort 1/Faktor (Grundlagen und offene Blaetter unveraendert).
+       2. Reihenfolge im freien Ueben (freiAktuell): Grundlagen und andere Altbestand-Karten im Verhaeltnis g : 1 gemischt,
+          bei den Kniffligen (D, vor dem Abschneiden) und in E getrennt fuer "zuletzt falsch" und den Rest.
+     "Zuletzt falsch zuerst" bleibt das erste Merkmal, E steht weiter hinter allen offenen unsicheren Karten -
+     kein Vorrang vor offenen Blaettern. 1 = aus (wie vor Auftrag 208). 2 = Vorschlag (⚠️ Annahme, Claudes Wahl). */
   grundlageGewicht: 2,
   /* Auftrag 208: Proben mit "bestaetigt" in der Vorschlagsdatei (Mathe 19.10.2026, Denny im Chat 04.11.2026) gelten als
      Grundstand, ohne KV-Schreiben. Jeder Abschluss von der Elternseite gilt vorrangig (juengste Stufe je Kennung).
@@ -382,9 +386,9 @@ export function bedarfJeFach(wSchluessel, wZahl, blattNach, punkte, faelligFn, z
 export function freiAktuell(frei, k, jetzt) {
   const K = k || AKTUELL;
   const z = (c) => (c.p && Number(c.p.z)) || 0;
-  /* Regel 5: Alter bei Grundlagen mal grundlageGewicht; nie gefragt (z 0) bleibt vorn. Ohne jetzt: Alter = -z (wie vorher). */
+  /* Regel 6: nie gefragt (z 0) vorn, sonst die am laengsten nicht gefragte zuerst. */
   const g = Math.max(1, Number(K.grundlageGewicht) || 1);
-  const alter = (c) => (!z(c) ? Infinity : jetzt ? (jetzt - z(c)) * (c.grundlage ? g : 1) : -z(c));
+  const alter = (c) => (!z(c) ? Infinity : jetzt ? jetzt - z(c) : -z(c));
   const stabil = (l, cmp) => l.map((c, i) => ({ c, i })).sort((a, b) => cmp(a.c, b.c) || (a.i - b.i)).map((y) => y.c);
   const offenUnsicher = [], offenSitzt = [], alt = [], rest = [];
   for (const c of frei || []) {
@@ -394,12 +398,26 @@ export function freiAktuell(frei, k, jetzt) {
   }
   const a1 = stabil(offenUnsicher, (x, y) => unsicherRang(x.p, K) - unsicherRang(y.p, K));
   const knifflig = (c) => !!(c.p && c.p.z && (c.p.fz || c.p.f || c.p.fn));
-  const d = stabil(alt.filter(knifflig), (x, y) => z(x) - z(y)).slice(0, Math.max(0, Number(K.kniffligJeTag) || 0));
+  /* Regel 5 (Nachbesserung 3b, 04.11.2026): ANTEIL statt Reihenfolge. Nur mit jetzt (quiz.js im neu-Pfad) und
+     grundlageGewicht > 1 werden im Altbestand Grundlagen und andere Karten im Verhaeltnis g : 1 gemischt
+     (je Art bleibt die Ordnung): bei den Kniffligen (D) vor dem Abschneiden auf kniffligJeTag, in E getrennt
+     fuer "zuletzt falsch" und den Rest. Offene unsichere Karten (a1) stehen weiter vor allem - kein Vorrang. */
+  const mischt = !!jetzt && g > 1;
+  const mischen = (l) => {
+    if (!mischt) return l;
+    const G = l.filter((c) => c.grundlage), O = l.filter((c) => !c.grundlage), aus = [];
+    let i = 0, j = 0;
+    while (i < G.length && j < O.length) aus.push(i < g * (j + 1) ? G[i++] : O[j++]);
+    return aus.concat(G.slice(i), O.slice(j));
+  };
+  const d = mischen(stabil(alt.filter(knifflig), (x, y) => z(x) - z(y))).slice(0, Math.max(0, Number(K.kniffligJeTag) || 0));
   const dSet = new Set(d);
   const vgl = (x, y) => { const ax = alter(x), ay = alter(y); return ax === ay ? 0 : ax > ay ? -1 : 1; };
-  const e = stabil(alt.filter((c) => !dSet.has(c)), (x, y) => ((y.p && y.p.f ? 1 : 0) - (x.p && x.p.f ? 1 : 0)) || vgl(x, y));
+  const e0 = stabil(alt.filter((c) => !dSet.has(c)), (x, y) => ((y.p && y.p.f ? 1 : 0) - (x.p && x.p.f ? 1 : 0)) || vgl(x, y));
+  const istF = (c) => !!(c.p && c.p.f);
+  const e = mischt ? mischen(e0.filter(istF)).concat(mischen(e0.filter((c) => !istF(c)))) : e0;
   return { liste: a1.concat(d, e, offenSitzt, rest), zaehl: { offenUnsicher: a1.length, knifflig: d.length, alt: e.length, offenSitzt: offenSitzt.length, rest: rest.length,
-    grundlage: e.filter((c) => c.grundlage).length } };
+    grundlage: e.filter((c) => c.grundlage).length, grundlageKnifflig: d.filter((c) => c.grundlage).length } };
 }
 
 /* Regel F (Nachbesserung 2): Vorschau fuer einen Abschluss - die GANZE Liste der sichtbaren Blaetter

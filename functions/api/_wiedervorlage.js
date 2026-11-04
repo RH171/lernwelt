@@ -473,7 +473,14 @@ export function quizReihe4(kand, menge, zufall, k) {
   const z = zufall || Math.random;
   const aus = K.ausserhalbFaktor != null ? K.ausserhalbFaktor : 1;
   const imW = (c) => c.imW !== false;
-  const w = (c) => gewicht4(c.stufe, c.probeNah, K) * (imW(c) ? 1 : aus);
+  /* Regel 5 (Auftrag 208, Nachbesserung 3b, 04.11.2026): nur wenn quiz.js im Pfad schalter:aktuell = neu
+     K.grundlageFaktor setzt. Dann wiegen Karten des Altbestands (c.alt), die KEINE Grundlage sind, 1/Faktor -
+     Grundlagen behalten ihr Gewicht, offene Blaetter auch. So steigt der Anteil der Grundlagen im Altbestand,
+     ohne dass eine Grundlage gegenueber einem offenen Blatt gewinnt. Ohne grundlageFaktor: Gewicht wie vorher. */
+  const gf = Number(K.grundlageFaktor) || 0;
+  const w = gf > 1
+    ? (c) => gewicht4(c.stufe, c.probeNah, K) * (imW(c) ? 1 : aus) * (c.alt && !c.grundlage ? 1 / gf : 1)
+    : (c) => gewicht4(c.stufe, c.probeNah, K) * (imW(c) ? 1 : aus);
   const mengeVon = (f) => (menge && menge[f] != null ? menge[f] : K.tagesmenge[0]);
   const zaehl = { einstieg: 0, neuVorn: 0, wieder: 0, frei: 0, auffuellen: 0, neu: 0, altRichtig: 0, ausserhalb: 0 };
   const rest = (kand || []).slice();

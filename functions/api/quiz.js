@@ -471,6 +471,7 @@ export async function onRequestGet(context) {
         : wiederholung4(vorratBereinigen(vorrat.fragen, blattNach), blattNach, punkte, undefined, lage.ausnahmeIds);
       const faelligSet = new Set(faellig), frischSet = new Set(frisch);
       const ak = akt && lage.aktuell ? lage : null;
+      const gl = ak ? grundlageIds(kind) : null; /* Regel 5 (Auftrag 208): Grundlagen im Altbestand */
       const kand = frisch.concat(schonMal).map((f) => {
         const p = punkte[punktSchluessel(f)];
         const fach = fachNorm(f.fach || (blattNach[f.blatt] && blattNach[f.blatt].fach));
@@ -482,20 +483,23 @@ export async function onRequestGet(context) {
         }
         return { f, fach, faellig: faelligSet.has(f), probeNah: !!lage.nah[fach],
                  imW: wh.inW.has(tatsacheVon(f)), nie: frischSet.has(f), ab: p ? wiederAb(p) : 0,
-                 stufe: stufe4(p, ak ? false : blattNeu4(blattNach[f.blatt] || { fach }, lage.grenze)), ...(ak ? { p } : {}) };
+                 stufe: stufe4(p, ak ? false : blattNeu4(blattNach[f.blatt] || { fach }, lage.grenze)),
+                 ...(ak ? { p, alt: true, grundlage: gl.has(String(f.blatt)) } : {}) };
       });
       /* Regel B, taeglich je offenes Blatt: die unsicherste bzw. am laengsten nicht gefragte Karte in W. */
       if (ak) for (const id of ak.taeglichSet) {
         const c = taeglichWaehlen(kand.filter((x) => x.offen && String(x.f.blatt) === id && x.imW && !x.nie));
         if (c) c.faellig = true;
       }
-      const r4 = quizReihe4(kand, lage.menge);
+      /* Regel 5, Nachbesserung 3b: nur im neu-Pfad bekommt quizReihe4 den Grundlagen-Faktor (Auswahl, nicht nur Reihenfolge). */
+      const r4 = ak && AKTUELL.grundlageGewicht > 1
+        ? quizReihe4(kand, lage.menge, undefined, { ...SCHRITT4, grundlageFaktor: AKTUELL.grundlageGewicht })
+        : quizReihe4(kand, lage.menge);
       if (ak) {
         /* Regeln D und E: das freie Ueben hinter dem geschuetzten Kopf neu ordnen (Auffuellen bleibt hinten). */
         const nach = new Map(kand.map((c) => [c.f, c]));
         const kopf = (r4.einstieg ? 1 : 0) + (r4.zaehl.neuVorn || 0) + r4.zaehl.wieder;
         const ende = r4.fragen.length - (r4.zaehl.auffuellen || 0);
-        const gl = grundlageIds(kind); /* Regel 5 (Auftrag 208): Grundlagen wiegen im Altbestand mehr */
         const frei = r4.fragen.slice(kopf, ende).map((f) => {
           const c = nach.get(f) || {};
           const blatt = f && f.blatt ? String(f.blatt) : "";

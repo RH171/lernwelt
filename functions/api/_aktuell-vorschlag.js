@@ -29,32 +29,32 @@ export const VORSCHLAG = {
       "blattId": "nrjtwbfa45",
       "stufe": "probenzeitraum",
       "begruendung": "Regel 3: Schuldatum 16.09.2026 vor dem spätesten Probenblatt (16.10.2026, „Teilen durch 5 mit Rest“), also im Stoffzeitraum der Probe; nicht abgefragt, abgeschlossen. Inhalt: Plus/minus passt zu Aufgabe 1, Nachbarzehner und Wiederholung Klasse 3 kamen nicht vor.",
-      "grundlage": "Plus/minus aus Klasse 3: Grundrechnen, auf dem alles aufbaut",
       "regel": 3
      },
      {
       "blattId": "fgovwr046g",
       "stufe": "probenzeitraum",
       "begruendung": "Regel 3: Schuldatum 17.09.2026 vor dem spätesten Probenblatt (16.10.2026, „Teilen durch 5 mit Rest“), also im Stoffzeitraum der Probe; nicht abgefragt, abgeschlossen. Inhalt: Tausenderbuch kam in der Probe nicht vor.",
+      "grundlage": "Tausenderbuch: Orientierung im Zahlenraum, Grundlage für jede größere Zahl",
       "regel": 3
      },
      {
       "blattId": "5jvk2111qb",
       "stufe": "abgefragt",
       "begruendung": "Kopfrechnen plus/minus bis 1000 wie Probe Aufgabe 1.",
-      "grundlage": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe"
+      "grundlage": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und Sachaufgaben"
      },
      {
       "blattId": "v7elr11soo",
       "stufe": "probenzeitraum",
       "begruendung": "Regel 3: Schuldatum 17.09.2026 vor dem spätesten Probenblatt (16.10.2026, „Teilen durch 5 mit Rest“), also im Stoffzeitraum der Probe; nicht abgefragt, abgeschlossen. Inhalt: Nachbarzahlen kamen in der Probe nicht vor.",
+      "grundlage": "Nachbarzahlen bis 1000: Stellenwert und Zahlenraum, Grundlage für den Zahlenraum bis 2000 und weiter",
       "regel": 3
      },
      {
       "blattId": "rcvx6u313j",
       "stufe": "abgefragt",
-      "begruendung": "Rechenstrategien plus/minus bis 1000 wie Probe Aufgabe 1 (z. B. 578−99).",
-      "grundlage": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe"
+      "begruendung": "Rechenstrategien plus/minus bis 1000 wie Probe Aufgabe 1 (z. B. 578−99)."
      },
      {
       "blattId": "nktw7c3l6m",
@@ -65,68 +65,60 @@ export const VORSCHLAG = {
      {
       "blattId": "i4urom4pfm",
       "stufe": "abgefragt",
-      "begruendung": "Subtrahieren im Zahlenraum 1000 wie Probe Aufgabe 1.",
-      "grundlage": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe"
+      "begruendung": "Subtrahieren im Zahlenraum 1000 wie Probe Aufgabe 1."
      },
      {
       "blattId": "ifmos6hgvs",
       "stufe": "abgefragt",
-      "begruendung": "Plus/minus bis 1000 wie Probe Aufgabe 1.",
-      "grundlage": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe"
+      "begruendung": "Plus/minus bis 1000 wie Probe Aufgabe 1."
      },
      {
       "blattId": "cyxsbwrvxd",
       "stufe": "abgefragt",
       "begruendung": "⚠️ gleicher Titel. Schriftliche Addition wie Probe Aufgaben 2, 4, 5.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "grundlage": "schriftliche Addition: Verfahren, das bis Klasse 4 und darüber gebraucht wird"
      },
      {
       "blattId": "tqasatsswh",
       "stufe": "abgefragt",
       "begruendung": "⚠️ gleicher Titel. Schriftliche Subtraktion wie Probe Aufgaben 3–5.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "grundlage": "schriftliche Subtraktion: Verfahren, das bis Klasse 4 und darüber gebraucht wird"
      },
      {
       "blattId": "dcfw5dtv8a",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Schriftliche Addition wie Probe Aufgaben 2, 4, 5; Datum von Paul.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "begruendung": "⚠️ gleicher Titel. Schriftliche Addition wie Probe Aufgaben 2, 4, 5; Datum von Paul."
      },
      {
       "blattId": "qh8lcou6bl",
       "stufe": "abgefragt",
-      "begruendung": "Schriftliche Subtraktion wie Probe Aufgaben 3–5; Datum von Paul.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "begruendung": "Schriftliche Subtraktion wie Probe Aufgaben 3–5; Datum von Paul."
      },
      {
       "blattId": "di9sd8l5es",
       "stufe": "abgefragt",
-      "begruendung": "Schriftliche Addition bis 1000 wie Probe Aufgaben 2, 4.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "begruendung": "Schriftliche Addition bis 1000 wie Probe Aufgaben 2, 4."
      },
      {
       "blattId": "4df7oalf79",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Schriftliche Subtraktion mit Fehlersuche und Rechenwörtern wie Probe Aufgaben 3–6.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "begruendung": "⚠️ gleicher Titel. Schriftliche Subtraktion mit Fehlersuche und Rechenwörtern wie Probe Aufgaben 3–6."
      },
      {
       "blattId": "m173ogkoeu",
       "stufe": "abgefragt",
-      "begruendung": "Schriftliche Addition wie Probe Aufgabe 2.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "begruendung": "Schriftliche Addition wie Probe Aufgabe 2."
      },
      {
       "blattId": "m7ogskl5u2",
       "stufe": "abgefragt",
-      "begruendung": "Schriftlich plus/minus mit Lückenziffern wie die Klecksaufgaben der Probe (Aufgaben 2, 3).",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "begruendung": "Schriftlich plus/minus mit Lückenziffern wie die Klecksaufgaben der Probe (Aufgaben 2, 3)."
      },
      {
       "blattId": "n7bp2tbja8",
       "stufe": "abgefragt",
       "begruendung": "Schriftlich plus/minus wie Probe Aufgaben 2–5.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht"
+      "grundlage": "schriftlich plus und minus gemischt: Verfahren sicher auswählen"
      },
      {
       "blattId": "ntaaffc81s",
@@ -142,129 +134,116 @@ export const VORSCHLAG = {
       "blattId": "hssm0vl8d1",
       "stufe": "probenzeitraum",
       "begruendung": "Regel 3: Schuldatum 01.10.2026 vor dem spätesten Probenblatt (16.10.2026, „Teilen durch 5 mit Rest“), also im Stoffzeitraum der Probe; nicht abgefragt, abgeschlossen. Inhalt: Kleines Einmaleins ist nur Grundlage, in der Probe nicht direkt gefragt.",
-      "grundlage": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich",
+      "grundlage": "Einmaleins: wird in Mal, Geteilt, Teilern und jeder Sachaufgabe weiterbenutzt",
       "regel": 3
      },
      {
       "blattId": "bpkri6jv2s",
       "stufe": "abgefragt",
       "begruendung": "Einmaleins mit Punkt vor Strich, Probe Aufgabe 11, Grundlage für 9 und 12.",
-      "grundlage": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; mit Punkt vor Strich"
+      "grundlage": "Einmaleins kreuz und quer: Abruf aller Reihen, den jeder spätere Mal-Stoff voraussetzt"
      },
      {
       "blattId": "e8x5rl20iy",
       "stufe": "abgefragt",
       "begruendung": "Teiler finden wie Probe Aufgabe 10 (Vielfache kamen nicht vor).",
-      "grundlage": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache"
+      "grundlage": "Vielfache und Teiler: kommen bei Brüchen und Kürzen wieder"
      },
      {
       "blattId": "2oyye63jo7",
       "stufe": "probenzeitraum",
       "begruendung": "Regel 3: Schuldatum 06.10.2026 vor dem spätesten Probenblatt (16.10.2026, „Teilen durch 5 mit Rest“), also im Stoffzeitraum der Probe; nicht abgefragt, abgeschlossen. Inhalt: Einfache Geteilt-Aufgaben sind nur Grundlage für Aufgaben 9 und 13.",
-      "grundlage": "Geteilt: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben",
+      "grundlage": "Geteilt-Aufgaben: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben",
       "regel": 3
      },
      {
       "blattId": "rd4hwi3rcd",
       "stufe": "abgefragt",
-      "begruendung": "Teiler finden wie Probe Aufgabe 10.",
-      "grundlage": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache"
+      "begruendung": "Teiler finden wie Probe Aufgabe 10."
      },
      {
       "blattId": "ff5apf4k2r",
       "stufe": "abgefragt",
-      "begruendung": "Teiler von 19 und 20 stehen wörtlich darauf (Probe Aufgabe 10); Produkt, Quotient, Primzahl kamen in der Probe nicht vor.",
-      "grundlage": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache"
+      "begruendung": "Teiler von 19 und 20 stehen wörtlich darauf (Probe Aufgabe 10); Produkt, Quotient, Primzahl kamen in der Probe nicht vor."
      },
      {
       "blattId": "44hlbc6vvm",
       "stufe": "abgefragt",
       "begruendung": "Mischblatt mit Punkt vor Strich und Kopfrechnen, Probe Aufgaben 1 und 11.",
-      "grundlage": "Punkt vor Strich: Rechenregel, gilt in jeder späteren Aufgabe; dazu Kopfrechnen"
+      "grundlage": "Punkt vor Strich: Rechenregel, gilt in jeder späteren Aufgabe"
      },
      {
       "blattId": "wulbdn4urh",
       "stufe": "abgefragt",
-      "begruendung": "Teiler finden wie Probe Aufgabe 10.",
-      "grundlage": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache"
+      "begruendung": "Teiler finden wie Probe Aufgabe 10."
      },
      {
       "blattId": "j9sfyiuyte",
       "stufe": "abgefragt",
-      "begruendung": "Mal mit Zehnerzahlen wie Probe Aufgabe 12 (bisher fälschlich „Kopfrechnen A1, 6, 8“).",
-      "grundlage": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen (28.10.)"
+      "begruendung": "Mal mit Zehnerzahlen wie Probe Aufgabe 12 (bisher fälschlich „Kopfrechnen A1, 6, 8“)."
      },
      {
       "blattId": "jbuxcyx3ym",
       "stufe": "abgefragt",
       "begruendung": "Mal mit Zehnerzahlen wie Probe Aufgabe 12 (bisher fälschlich „Kopfrechnen A1, 6, 8“).",
-      "grundlage": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen (28.10.)"
+      "grundlage": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen"
      },
      {
       "blattId": "ycle04vm7v",
       "stufe": "abgefragt",
-      "begruendung": "Durch Zehnerzahlen teilen wie Probe Aufgabe 9 (bisher fälschlich „Kopfrechnen A1, 6, 8“).",
-      "grundlage": "Geteilt: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben; durch Zehner"
+      "begruendung": "Durch Zehnerzahlen teilen wie Probe Aufgabe 9 (bisher fälschlich „Kopfrechnen A1, 6, 8“)."
      },
      {
       "blattId": "k72y352si1",
       "stufe": "abgefragt",
-      "begruendung": "Einmaleins mit Zehnerzahlen wie Rechentabellen Probe Aufgabe 12.",
-      "grundlage": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; mit Zehnerzahlen"
+      "begruendung": "Einmaleins mit Zehnerzahlen wie Rechentabellen Probe Aufgabe 12."
      },
      {
       "blattId": "jez39ew3h7",
       "stufe": "abgefragt",
-      "begruendung": "Teilen mit Rest wie Probe Aufgabe 13 (bisher fälschlich „Teiler finden A10“).",
-      "grundlage": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder"
+      "begruendung": "Teilen mit Rest wie Probe Aufgabe 13 (bisher fälschlich „Teiler finden A10“)."
      },
      {
       "blattId": "q6glf3xv13",
       "stufe": "abgefragt",
       "begruendung": "⚠️ gleicher Titel. Teilen mit Rest wie Probe Aufgabe 13.",
-      "grundlage": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder"
+      "grundlage": "Teilen mit Rest: Grundverfahren, steckt in jedem späteren Geteilt-Stoff"
      },
      {
       "blattId": "y3hm4vzkrj",
       "stufe": "abgefragt",
-      "begruendung": "Durch Zehnerzahlen dividieren wie Probe Aufgabe 9 (bisher „Aufgabe 13“).",
-      "grundlage": "Geteilt: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben; durch Zehner"
+      "begruendung": "Durch Zehnerzahlen dividieren wie Probe Aufgabe 9 (bisher „Aufgabe 13“)."
      },
      {
       "blattId": "1x9txoyt4f",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Teilen mit Rest wie Probe Aufgabe 13; bisher nur wegen Upload am 16.10. offen.",
-      "grundlage": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder"
+      "begruendung": "⚠️ gleicher Titel. Teilen mit Rest wie Probe Aufgabe 13; bisher nur wegen Upload am 16.10. offen."
      },
      {
       "blattId": "2ialalqizs",
       "stufe": "abgefragt",
       "begruendung": "⚠️ gleicher Titel. Teilen mit Rest auch mit Zehnern (wie 570:60) und Punkt vor Strich, Probe Aufgaben 9, 11, 13.",
-      "grundlage": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; Mal und Geteilt gemischt"
+      "grundlage": "Mal und Geteilt gemischt: Umkehraufgabe, Kern jedes späteren Teilens"
      },
      {
       "blattId": "8o6ufnxur4",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Wie 2ialalqizs, Probe Aufgaben 9, 11, 13; bisher nur wegen Upload am 16.10. offen.",
-      "grundlage": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; Mal und Geteilt gemischt"
+      "begruendung": "⚠️ gleicher Titel. Wie 2ialalqizs, Probe Aufgaben 9, 11, 13; bisher nur wegen Upload am 16.10. offen."
      },
      {
       "blattId": "oewbd88522",
       "stufe": "abgefragt",
-      "begruendung": "Teiler finden wie Probe Aufgabe 10; bisher nur wegen Upload am 16.10. offen.",
-      "grundlage": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache"
+      "begruendung": "Teiler finden wie Probe Aufgabe 10; bisher nur wegen Upload am 16.10. offen."
      },
      {
       "blattId": "5tkzva9rss",
       "stufe": "abgefragt",
-      "begruendung": "Teilen mit Rest wie Probe Aufgabe 13; bisher nur wegen Upload am 16.10. offen.",
-      "grundlage": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder"
+      "begruendung": "Teilen mit Rest wie Probe Aufgabe 13; bisher nur wegen Upload am 16.10. offen."
      },
      {
       "blattId": "r7ung8g7u6",
       "stufe": "unsicher",
-      "begruendung": "Zahlen in Malaufgaben zerlegen ist nah an Teilern, aber nicht direkt gefragt; war bisher „letztes Probenblatt“.",
-      "grundlage": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; Zahlen in Malaufgaben zerlegen"
+      "begruendung": "Zahlen in Malaufgaben zerlegen ist nah an Teilern, aber nicht direkt gefragt; war bisher „letztes Probenblatt“."
      },
      {
       "blattId": "he331mspzq",
@@ -295,14 +274,12 @@ export const VORSCHLAG = {
       "blattId": "5490uqtsk6",
       "stufe": "unsicher",
       "begruendung": "Stoff (schriftlich plus/minus) war in der Probe, das Blatt selbst ist eine Wiederholung vom 27.10., nach der Probe.",
-      "grundlage": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
       "widerspruch": "Inhalt (schriftlich plus/minus) steht in der Probe, Schuldatum 27.10. liegt aber 8 Tage nach dem Probentag (Datum von Paul). Bleibt offen, bis Denny entscheidet."
      },
      {
       "blattId": "8tv8tshw4c",
       "stufe": "nicht abgefragt",
-      "begruendung": "Malnehmen mit Hunderterzahlen bis 6300, neuer Stoff nach der Probe.",
-      "grundlage": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen"
+      "begruendung": "Malnehmen mit Hunderterzahlen bis 6300, neuer Stoff nach der Probe."
      },
      {
       "blattId": "9m35z4kkqe",
@@ -342,7 +319,7 @@ export const VORSCHLAG = {
       "blattId": "swtceu8y8u",
       "stufe": "abgefragt",
       "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Wortarten zuordnen.",
-      "grundlage": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen"
+      "grundlage": "Wortarten sortieren: Grundlage für Großschreibung und jedes Sprachuntersuchen"
      },
      {
       "blattId": "2k3x9m9sf2",
@@ -357,14 +334,13 @@ export const VORSCHLAG = {
      {
       "blattId": "7kr2qvai1y",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Wortarten in Tabelle, gleicher Inhalt wie 071dl0l1dy (doppelt hochgeladen).",
-      "grundlage": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen"
+      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Wortarten in Tabelle, gleicher Inhalt wie 071dl0l1dy (doppelt hochgeladen)."
      },
      {
       "blattId": "eabd73ausa",
       "stufe": "abgefragt",
       "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Merkeintrag Nomen, Verben, Adjektive.",
-      "grundlage": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen"
+      "grundlage": "Nomen, Verben, Adjektive: Wortarten, auf denen jede Grammatik aufbaut"
      },
      {
       "blattId": "h00oz7bbtv",
@@ -374,8 +350,7 @@ export const VORSCHLAG = {
      {
       "blattId": "9xjm4kc9i0",
       "stufe": "unsicher",
-      "begruendung": "Reines Abschreiben; ob die RS-Probe einen Abschreibteil hatte, zeigt erst das Probenfoto.",
-      "grundlage": "Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text"
+      "begruendung": "Reines Abschreiben; ob die RS-Probe einen Abschreibteil hatte, zeigt erst das Probenfoto."
      },
      {
       "blattId": "ngd66acqiv",
@@ -391,8 +366,7 @@ export const VORSCHLAG = {
      {
       "blattId": "071dl0l1dy",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Wortarten in Tabelle, gleicher Inhalt wie 7kr2qvai1y (doppelt hochgeladen).",
-      "grundlage": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen"
+      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Wortarten in Tabelle, gleicher Inhalt wie 7kr2qvai1y (doppelt hochgeladen)."
      },
      {
       "blattId": "75rjuqomzx",
@@ -403,18 +377,18 @@ export const VORSCHLAG = {
       "blattId": "v2m1r2vb3w",
       "stufe": "abgefragt",
       "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen erkennen, gleicher Inhalt wie ys7cxgd8ue (doppelt hochgeladen).",
-      "grundlage": "Nomen großschreiben: Rechtschreib-Grundregel, gilt in jedem Text"
+      "grundlage": "Nomen erkennen und großschreiben: Grundregel in jedem Text"
      },
      {
       "blattId": "kh4j6hvqdq",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen erkennen, andere Seite mit Lehrerinnen-Korrektur.",
-      "grundlage": "Nomen großschreiben: Rechtschreib-Grundregel, gilt in jedem Text"
+      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen erkennen, andere Seite mit Lehrerinnen-Korrektur."
      },
      {
       "blattId": "r4vzt5uf6x",
       "stufe": "abgefragt",
-      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: konkrete und abstrakte Nomen."
+      "begruendung": "⚠️ gleicher Titel. Sprachuntersuchen vor dem angekündigten Termin 23.10.: konkrete und abstrakte Nomen.",
+      "grundlage": "konkrete und abstrakte Nomen: auch Unsichtbares wird großgeschrieben"
      },
      {
       "blattId": "l4vp56uu1r",
@@ -424,7 +398,8 @@ export const VORSCHLAG = {
      {
       "blattId": "m5rpf5zmj7",
       "stufe": "abgefragt",
-      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: zusammengesetzte Nomen."
+      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: zusammengesetzte Nomen.",
+      "grundlage": "zusammengesetzte Nomen: Wortbildung, nötig für Rechtschreibung langer Wörter"
      },
      {
       "blattId": "66j7pn0a3v",
@@ -435,25 +410,23 @@ export const VORSCHLAG = {
       "blattId": "q3dxgcd55k",
       "stufe": "abgefragt",
       "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nachsilben von Nomen.",
-      "grundlage": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung"
+      "grundlage": "Nachsilben von Nomen: Signal für Großschreibung"
      },
      {
       "blattId": "be828lmi70",
       "stufe": "abgefragt",
-      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen mit -heit.",
-      "grundlage": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung"
+      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen mit -heit."
      },
      {
       "blattId": "x0g2ecn2i2",
       "stufe": "abgefragt",
-      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen mit -keit.",
-      "grundlage": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung"
+      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen mit -keit."
      },
      {
       "blattId": "royylnna86",
       "stufe": "abgefragt",
       "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Nomen mit -ung.",
-      "grundlage": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung"
+      "grundlage": "Nomen mit -ung: Großschreib-Signal, das in jedem Text vorkommt"
      },
      {
       "blattId": "w3us2aftse",
@@ -488,7 +461,8 @@ export const VORSCHLAG = {
      {
       "blattId": "f1k7iaw0ea",
       "stufe": "abgefragt",
-      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Adjektive mit Nachsilben."
+      "begruendung": "Sprachuntersuchen vor dem angekündigten Termin 23.10.: Adjektive mit Nachsilben.",
+      "grundlage": "Adjektive mit Nachsilben (-ig, -lich): Rechtschreibsignal für die Endung"
      },
      {
       "blattId": "ftdljy0zdb",
@@ -524,13 +498,13 @@ export const VORSCHLAG = {
       "blattId": "d7es6jt51h",
       "stufe": "abgefragt",
       "begruendung": "Trennungsregeln und Groß/klein vom 14.10., RS-Teil; bisher nur wegen Upload offen.",
-      "grundlage": "Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text"
+      "grundlage": "Abschreiben und Trennen: Technik für jeden Text"
      },
      {
       "blattId": "k19oqr39eh",
       "stufe": "abgefragt",
       "begruendung": "Merkeintrag Worttrennung vom 14.10., RS-Teil; bisher nur wegen Upload am 28.10. offen.",
-      "grundlage": "Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text"
+      "grundlage": "Regeln zur Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text"
      },
      {
       "blattId": "tt9xymh4xv",
@@ -540,7 +514,8 @@ export const VORSCHLAG = {
      {
       "blattId": "674qdumpbh",
       "stufe": "abgefragt",
-      "begruendung": "Vergleichsstufen vom 15.10., Thema vor dem Termin; bisher nur wegen Upload offen."
+      "begruendung": "Vergleichsstufen vom 15.10., Thema vor dem Termin; bisher nur wegen Upload offen.",
+      "grundlage": "Vergleichsstufen: Adjektivformen, die in jedem Aufsatz gebraucht werden"
      },
      {
       "blattId": "a0r1dt4r0l",
@@ -556,7 +531,7 @@ export const VORSCHLAG = {
       "blattId": "94qwj6n68m",
       "stufe": "abgefragt",
       "begruendung": "Wörterbuch-Regeln vom 16.10., RS-Teil; bisher nur wegen Upload offen.",
-      "grundlage": "Nachschlagen im Wörterbuch: Grundtechnik für jede Rechtschreibprüfung"
+      "grundlage": "Wörterbuch-Tipps: Grundtechnik für jede Rechtschreibprüfung"
      },
      {
       "blattId": "y1jaxopdto",
@@ -566,13 +541,13 @@ export const VORSCHLAG = {
      {
       "blattId": "ukgsfgpoxu",
       "stufe": "abgefragt",
-      "begruendung": "Lernwörterdiktat vom 16.10., typischer RS-Stoff."
+      "begruendung": "Lernwörterdiktat vom 16.10., typischer RS-Stoff.",
+      "grundlage": "Lernwörterdiktat: Grundwortschatz der Rechtschreibung"
      },
      {
       "blattId": "pwu0qywws4",
       "stufe": "unsicher",
-      "begruendung": "Wörterbuch-Übung vom 19.10. (Datum von Paul), nur 4 Tage vor dem unbestätigten Termin.",
-      "grundlage": "Nachschlagen im Wörterbuch: Grundtechnik für jede Rechtschreibprüfung"
+      "begruendung": "Wörterbuch-Übung vom 19.10. (Datum von Paul), nur 4 Tage vor dem unbestätigten Termin."
      },
      {
       "blattId": "8fdw8467d2",
@@ -706,61 +681,34 @@ export const VORSCHLAG = {
 };
 export const GRUNDLAGE = {
  "paul": {
-  "nrjtwbfa45": "Plus/minus aus Klasse 3: Grundrechnen, auf dem alles aufbaut",
-  "5jvk2111qb": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe",
-  "rcvx6u313j": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe",
-  "i4urom4pfm": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe",
-  "ifmos6hgvs": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und jede Sachaufgabe",
-  "cyxsbwrvxd": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "tqasatsswh": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "dcfw5dtv8a": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "qh8lcou6bl": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "di9sd8l5es": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "4df7oalf79": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "m173ogkoeu": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "m7ogskl5u2": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "n7bp2tbja8": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "hssm0vl8d1": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich",
-  "bpkri6jv2s": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; mit Punkt vor Strich",
-  "e8x5rl20iy": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache",
-  "2oyye63jo7": "Geteilt: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben",
-  "rd4hwi3rcd": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache",
-  "ff5apf4k2r": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache",
-  "44hlbc6vvm": "Punkt vor Strich: Rechenregel, gilt in jeder späteren Aufgabe; dazu Kopfrechnen",
-  "wulbdn4urh": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache",
-  "j9sfyiuyte": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen (28.10.)",
-  "jbuxcyx3ym": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen (28.10.)",
-  "ycle04vm7v": "Geteilt: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben; durch Zehner",
-  "k72y352si1": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; mit Zehnerzahlen",
-  "jez39ew3h7": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder",
-  "q6glf3xv13": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder",
-  "y3hm4vzkrj": "Geteilt: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben; durch Zehner",
-  "1x9txoyt4f": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder",
-  "2ialalqizs": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; Mal und Geteilt gemischt",
-  "8o6ufnxur4": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; Mal und Geteilt gemischt",
-  "oewbd88522": "Teiler finden: Einmaleins rückwärts, Grundlage für Brüche und Vielfache",
-  "5tkzva9rss": "Teilen mit Rest: Grundverfahren beim Teilen, kommt in jedem späteren Geteilt-Stoff wieder",
-  "r7ung8g7u6": "Einmaleins: Grundlage für Mal, Geteilt, Teiler und Punkt vor Strich; Zahlen in Malaufgaben zerlegen",
-  "5490uqtsk6": "schriftliches Verfahren (plus/minus): wird bis Klasse 4 und darüber hinaus gebraucht",
-  "8tv8tshw4c": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen",
-  "swtceu8y8u": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen",
-  "7kr2qvai1y": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen",
-  "eabd73ausa": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen",
-  "9xjm4kc9i0": "Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text",
+  "fgovwr046g": "Tausenderbuch: Orientierung im Zahlenraum, Grundlage für jede größere Zahl",
+  "5jvk2111qb": "Kopfrechnen plus/minus bis 1000: Grundlage für Überschlag und Sachaufgaben",
+  "v7elr11soo": "Nachbarzahlen bis 1000: Stellenwert und Zahlenraum, Grundlage für den Zahlenraum bis 2000 und weiter",
+  "cyxsbwrvxd": "schriftliche Addition: Verfahren, das bis Klasse 4 und darüber gebraucht wird",
+  "tqasatsswh": "schriftliche Subtraktion: Verfahren, das bis Klasse 4 und darüber gebraucht wird",
+  "n7bp2tbja8": "schriftlich plus und minus gemischt: Verfahren sicher auswählen",
+  "hssm0vl8d1": "Einmaleins: wird in Mal, Geteilt, Teilern und jeder Sachaufgabe weiterbenutzt",
+  "bpkri6jv2s": "Einmaleins kreuz und quer: Abruf aller Reihen, den jeder spätere Mal-Stoff voraussetzt",
+  "e8x5rl20iy": "Vielfache und Teiler: kommen bei Brüchen und Kürzen wieder",
+  "2oyye63jo7": "Geteilt-Aufgaben: Umkehrung des Einmaleins, Grundlage für Teilen mit Rest und Sachaufgaben",
+  "44hlbc6vvm": "Punkt vor Strich: Rechenregel, gilt in jeder späteren Aufgabe",
+  "jbuxcyx3ym": "Mal mit Zehnerzahlen: Stellenwert-Trick, Grundlage für Mal mit Hunderterzahlen",
+  "q6glf3xv13": "Teilen mit Rest: Grundverfahren, steckt in jedem späteren Geteilt-Stoff",
+  "2ialalqizs": "Mal und Geteilt gemischt: Umkehraufgabe, Kern jedes späteren Teilens",
+  "swtceu8y8u": "Wortarten sortieren: Grundlage für Großschreibung und jedes Sprachuntersuchen",
+  "eabd73ausa": "Nomen, Verben, Adjektive: Wortarten, auf denen jede Grammatik aufbaut",
   "ys7cxgd8ue": "Nomen großschreiben: Rechtschreib-Grundregel, gilt in jedem Text",
-  "071dl0l1dy": "Wortarten erkennen (Nomen, Verb, Adjektiv): Grundlage für Großschreibung und jedes Sprachuntersuchen",
-  "v2m1r2vb3w": "Nomen großschreiben: Rechtschreib-Grundregel, gilt in jedem Text",
-  "kh4j6hvqdq": "Nomen großschreiben: Rechtschreib-Grundregel, gilt in jedem Text",
-  "q3dxgcd55k": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung",
-  "be828lmi70": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung",
-  "x0g2ecn2i2": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung",
-  "royylnna86": "Nachsilben -heit/-keit/-ung: Signal für Großschreibung, Grundregel der Rechtschreibung",
-  "d7es6jt51h": "Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text",
-  "k19oqr39eh": "Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text",
-  "94qwj6n68m": "Nachschlagen im Wörterbuch: Grundtechnik für jede Rechtschreibprüfung",
-  "pwu0qywws4": "Nachschlagen im Wörterbuch: Grundtechnik für jede Rechtschreibprüfung",
-  "qwdaux3rk7": "sich vorstellen (name, age, I like): Grundsätze, die jedes spätere Thema braucht",
-  "msi2ofg3dj": "Fragen und Antworten im Dialog: Grundmuster für jedes Gespräch",
-  "8vowj6nu41": "Grundwortschatz Schule und Begrüßung"
+  "v2m1r2vb3w": "Nomen erkennen und großschreiben: Grundregel in jedem Text",
+  "r4vzt5uf6x": "konkrete und abstrakte Nomen: auch Unsichtbares wird großgeschrieben",
+  "m5rpf5zmj7": "zusammengesetzte Nomen: Wortbildung, nötig für Rechtschreibung langer Wörter",
+  "q3dxgcd55k": "Nachsilben von Nomen: Signal für Großschreibung",
+  "royylnna86": "Nomen mit -ung: Großschreib-Signal, das in jedem Text vorkommt",
+  "f1k7iaw0ea": "Adjektive mit Nachsilben (-ig, -lich): Rechtschreibsignal für die Endung",
+  "d7es6jt51h": "Abschreiben und Trennen: Technik für jeden Text",
+  "k19oqr39eh": "Regeln zur Worttrennung: Rechtschreib-Grundregel, gilt in jedem Text",
+  "674qdumpbh": "Vergleichsstufen: Adjektivformen, die in jedem Aufsatz gebraucht werden",
+  "94qwj6n68m": "Wörterbuch-Tipps: Grundtechnik für jede Rechtschreibprüfung",
+  "ukgsfgpoxu": "Lernwörterdiktat: Grundwortschatz der Rechtschreibung",
+  "8vowj6nu41": "Grundwortschatz Schule und Begrüßung: Wörter, die in jedem späteren Thema wieder vorkommen"
  }
 };
