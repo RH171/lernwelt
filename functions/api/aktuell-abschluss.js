@@ -1,27 +1,28 @@
-/* Abschluss offener Blaetter im Elternbereich (Schalter "aktuell", Regel F, 04.11.2026, nur Paul)
+/* Abschluss offener Blaetter im Elternbereich (Schalter "aktuell", Regel F, nur Paul)
+ * Nachbesserung 2 (Dennys Beschluss 04.11.2026, 12:55 Uhr): Abschluss nur nach Inhalt, nie nach Datum.
+ * Je Blatt eine Stufe: "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz
+ * Begruendung). Nur "abgefragt" schliesst. Das Datum ist nur noch Vorschlag in der Vorschau.
  *
  * GET  /api/aktuell-abschluss?kind=paul
- *   -> { ok, schalter: "neu"|"alt", faecher: { fach: [Blatt] }, abschluesse, grenze }
- *      Blatt = { id, titel, thema, datum, von, unsicher?, angelegt, offen, geschlossen, gleicherTitel? }
- * GET  /api/aktuell-abschluss?kind=paul&fach=deutsch&letztes=<id>[&thema=<wort>]
- *   -> { ok, liste }   Vorschau: diese Blaetter wuerden geschlossen (noch nichts gespeichert)
- * POST { kind:"paul", fach, probe:"JJJJ-MM-TT", letztes, thema?, bestaetigt:[ids] }
- *   -> rechnet die Vorschau neu; weicht sie von "bestaetigt" ab: 409 mit der neuen Liste.
- *      Sonst wird { fach, probe, letztes, schnitt (Schuldatum des letzten Blatts), thema?, ids, gesetzt }
- *      an aktuell-abschluss:paul angehaengt. Geschlossen: in ids ODER Schuldatum vor schnitt.
- * POST { kind:"paul", aktion:"zuruecknehmen", gesetzt:"<Zeitstempel des Abschlusses>" }
- *   -> nimmt genau diesen Abschluss wieder heraus.
+ *   -> { ok, schalter, faecher: { fach: [Blatt] }, abschluesse, proben: [Probe aus der Vorschlagsdatei] }
+ *      Blatt = { id, titel, thema, datum, von, unsicher?, angelegt, offen, geschlossen, markiert, gleicherTitel? }
+ * GET  /api/aktuell-abschluss?kind=paul&probe=<schluessel>   (Probe aus der Vorschlagsdatei)
+ * GET  /api/aktuell-abschluss?kind=paul&fach=<fach>&probeDatum=JJJJ-MM-TT  (Probe ohne Vorschlag)
+ *   -> { ok, liste }   die GANZE Liste des Fachs mit vorgeschlagener Stufe und Begruendung (nichts gespeichert)
+ * POST { kind:"paul", fach, probe?, probeDatum, stufen: { blattId: Stufe }, begruendungen?: { blattId: Satz } }
+ *   -> jedes sichtbare Blatt des Fachs braucht eine Stufe (Denny bestaetigt die ganze Liste), sonst 409 mit
+ *      der aktuellen Liste; "unsicher" braucht einen Satz Begruendung (400). Gespeichert werden die Kennungen
+ *      mit Stufe: { fach, probe, probeDatum, stufen, begruendungen, gesetzt } an aktuell-abschluss:paul.
+ * POST { kind:"paul", aktion:"zuruecknehmen", gesetzt } -> nimmt genau diesen Abschluss heraus.
  *
- * Nur mit Elternausweis (wie probenvergleich.js), nur Paul. Das ist die EINZIGE Stelle, die den
- * Abschluss-Schluessel schreibt. Wirkt auf die Kinderseiten nur bei schalter:aktuell = "neu";
- * vorher kann Denny Abschluesse schon setzen, ohne dass sich fuer Paul etwas aendert.
+ * Nur mit Elternausweis, nur Paul. EINZIGE Stelle, die den Abschluss-Schluessel schreibt. Wirkt auf die
+ * Kinderseiten nur bei schalter:aktuell = "neu". Ist der gespeicherte Stand nicht lesbar: 503, nichts geschrieben.
  */
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen } from "./_schulstoff.js";
-import { termineLesen, berlinHeute } from "./_probentermine.js";
-import { notenLesen } from "./_noten.js";
-import { probenLage, fachNorm } from "./_wiedervorlage.js";
-import { ABSCHLUSS, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, istGeschlossen, schuldatum, abschlussVorschau } from "./_aktuell.js";
+import { fachNorm } from "./_wiedervorlage.js";
+import { ABSCHLUSS, STUFEN, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, istGeschlossen, schuldatum, abschlussVorschau } from "./_aktuell.js";
+import { VORSCHLAG } from "./_aktuell-vorschlag.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },
@@ -38,10 +39,16 @@ async function lage(env, kind) {
   const e = await stoffLesen(env, kind, 4);
   if (!e.ok) return { ok: false, fehler: e.fehler || "Der Speicher ist gerade nicht da." };
   const blaetter = e.eintraege.filter((b) => b && b.id);
-  const heute = berlinHeute(new Date());
-  const { grenze } = probenLage((await termineLesen(env, kind)) || [], (await notenLesen(env, kind)) || [], heute);
   const abschluss = await abschlussLesen(env, kind);
-  return { ok: true, blaetter, grenze, abschluss, zu: geschlossenJeFach(abschluss) };
+  return { ok: true, blaetter, abschluss, zu: geschlossenJeFach(abschluss) };
+}
+
+/* Proben aus der Vorschlagsdatei (nur Paul). schluessel = fach + ":" + probeDatum (oder probe). */
+function probenListe(kind) {
+  return ((VORSCHLAG && VORSCHLAG[kind] && VORSCHLAG[kind].proben) || []).map((p) => ({
+    schluessel: fachNorm(p.fach) + ":" + (p.probeDatum || p.probe), fach: fachNorm(p.fach), probe: String(p.probe || ""),
+    probeDatum: String(p.probeDatum || ""), vorlaeufig: !!p.vorlaeufig, hinweis: String(p.hinweis || ""), blaetter: p.blaetter || [],
+  }));
 }
 
 export async function onRequestGet(context) {
@@ -52,11 +59,17 @@ export async function onRequestGet(context) {
   if (kind !== "paul") return json(400, { ok: false, fehler: "Nur für Paul." });
   const l = await lage(env, kind);
   if (!l.ok) return json(503, l);
-  const fach = fachNorm(u.searchParams.get("fach") || "");
-  const letztes = String(u.searchParams.get("letztes") || "");
-  if (fach && letztes) {
-    const v = abschlussVorschau(l.blaetter, fach, letztes, u.searchParams.get("thema") || "", l.zu[fach]);
-    return json(v.ok ? 200 : 400, v);
+  const proben = probenListe(kind);
+  const pSchl = String(u.searchParams.get("probe") || "");
+  const fachQ = fachNorm(u.searchParams.get("fach") || "");
+  if (pSchl || fachQ) {
+    const pr = pSchl ? proben.find((p) => p.schluessel === pSchl) : null;
+    if (pSchl && !pr) return json(400, { ok: false, fehler: "Diese Probe steht nicht in der Vorschlagsdatei.", liste: [] });
+    const fach = pr ? pr.fach : fachQ;
+    const pd = pr ? pr.probeDatum : String(u.searchParams.get("probeDatum") || "");
+    const v = abschlussVorschau(l.blaetter, fach, pd, pr ? pr.blaetter : [], l.zu[fach]);
+    return json(v.ok ? 200 : 400, { ...v, fach, probe: pr ? pr.probe : "", probeDatum: pd,
+      ...(pr && pr.vorlaeufig ? { vorlaeufig: true, hinweis: pr.hinweis } : {}) });
   }
   const faecher = {};
   for (const b of l.blaetter) {
@@ -67,7 +80,8 @@ export async function onRequestGet(context) {
     (faecher[f] = faecher[f] || []).push({
       id: String(b.id), titel: String(b.titel || b.thema || "(ohne Titel)"), thema: String(b.thema || ""),
       datum: sd.datum, von: sd.von, ...(sd.unsicher ? { unsicher: true } : {}), angelegt: String(b.angelegt || ""),
-      geschlossen: istGeschlossen(b, l.zu[f]), offen: offenesBlatt(b, l.zu, l.grenze),
+      geschlossen: istGeschlossen(b, l.zu[f]), offen: offenesBlatt(b, l.zu),
+      markiert: !!(l.zu[f] && l.zu[f].markiert && l.zu[f].markiert.has(String(b.id))),
     });
   }
   for (const f of Object.keys(faecher)) {
@@ -76,7 +90,8 @@ export async function onRequestGet(context) {
     for (const e of faecher[f]) zahl[e.titel] = (zahl[e.titel] || 0) + 1;
     for (const e of faecher[f]) if (zahl[e.titel] > 1) { n[e.titel] = (n[e.titel] || 0) + 1; e.gleicherTitel = n[e.titel] + " von " + zahl[e.titel]; }
   }
-  return json(200, { ok: true, schalter: (await aktuellAn(env)) ? "neu" : "alt", faecher, abschluesse: l.abschluss.abschluesse, grenze: l.grenze,
+  return json(200, { ok: true, schalter: (await aktuellAn(env)) ? "neu" : "alt", faecher, abschluesse: l.abschluss.abschluesse,
+                     proben: proben.map((p) => ({ schluessel: p.schluessel, fach: p.fach, probe: p.probe, probeDatum: p.probeDatum, vorlaeufig: p.vorlaeufig, hinweis: p.hinweis })),
                      ...(l.abschluss.fehler ? { warnung: "Die gespeicherten Abschlüsse sind gerade nicht lesbar. Speichern ist gesperrt, bis sie wieder da sind." } : {}) });
 }
 
@@ -95,27 +110,41 @@ export async function onRequestPost(context) {
   if (d.aktion === "zuruecknehmen") {
     const rest = alle.filter((a) => String(a.gesetzt) !== String(d.gesetzt || ""));
     if (rest.length === alle.length) return json(404, { ok: false, fehler: "Diesen Abschluss gibt es nicht." });
-    try { await env.PAUL_KV.put(ABSCHLUSS(kind), JSON.stringify({ v: 1, abschluesse: rest })); }
+    try { await env.PAUL_KV.put(ABSCHLUSS(kind), JSON.stringify({ v: 2, abschluesse: rest })); }
     catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." }); }
     return json(200, { ok: true, abschluesse: rest });
   }
 
   const fach = fachNorm(d.fach || "");
-  const probe = String(d.probe || "");
+  const probeDatum = String(d.probeDatum || "");
+  const probe = String(d.probe || "").trim().slice(0, 120);
   if (!fach) return json(400, { ok: false, fehler: "Bitte ein Fach wählen." });
-  if (!DATUM.test(probe)) return json(400, { ok: false, fehler: "Bitte das Probendatum eintragen." });
-  const thema = String(d.thema || "").trim().slice(0, 80);
-  const v = abschlussVorschau(l.blaetter, fach, String(d.letztes || ""), thema, l.zu[fach]);
+  if (!DATUM.test(probeDatum)) return json(400, { ok: false, fehler: "Bitte das Probendatum eintragen." });
+  const pr = probenListe(kind).find((p) => p.fach === fach && p.probeDatum === probeDatum);
+  const v = abschlussVorschau(l.blaetter, fach, probeDatum, pr ? pr.blaetter : [], l.zu[fach]);
   if (!v.ok) return json(400, v);
+  if (!v.liste.length) return json(400, { ok: false, fehler: "In diesem Fach gibt es keine Blätter." });
+  const st = d.stufen && typeof d.stufen === "object" ? d.stufen : {};
+  const bg = d.begruendungen && typeof d.begruendungen === "object" ? d.begruendungen : {};
   const ids = v.liste.map((x) => x.id);
-  const best = Array.isArray(d.bestaetigt) ? d.bestaetigt.map(String) : [];
-  const gleich = ids.length === best.length && ids.every((x) => best.includes(x));
-  if (!ids.length) return json(400, { ok: false, fehler: "Es gibt keine offenen Blätter zum Abschließen." });
-  if (!gleich) return json(409, { ok: false, fehler: "Die Liste hat sich geändert. Bitte die neue Vorschau prüfen.", liste: v.liste });
-  if (!v.schnitt) return json(400, { ok: false, fehler: "Das letzte Blatt hat kein Schuldatum. Bitte ein Blatt mit Datum wählen." });
-  const neu = { fach, probe, letztes: String(d.letztes), schnitt: v.schnitt, ...(thema ? { thema } : {}), ids, gesetzt: Date.now() };
+  /* Ganze Liste: genau die Blaetter der Vorschau, jedes mit gueltiger Stufe. */
+  const fehlt = ids.filter((id) => !STUFEN.includes(st[id]));
+  const fremd = Object.keys(st).filter((id) => !ids.includes(id));
+  if (fehlt.length || fremd.length)
+    return json(409, { ok: false, fehler: "Die Liste hat sich geändert oder ist nicht vollständig. Bitte die neue Liste prüfen.", liste: v.liste });
+  const stufen = {}, begruendungen = {};
+  for (const id of ids) {
+    stufen[id] = st[id];
+    const satz = String(bg[id] || "").trim().slice(0, 300);
+    if (st[id] === "unsicher" && !satz) {
+      const b = v.liste.find((x) => x.id === id);
+      return json(400, { ok: false, fehler: "Bei „unsicher“ fehlt die Begründung: " + (b ? b.titel : id) + "." });
+    }
+    if (satz && st[id] !== "abgefragt") begruendungen[id] = satz;
+  }
+  const neu = { fach, probe, probeDatum, stufen, begruendungen, gesetzt: Date.now() };
   alle.push(neu);
-  try { await env.PAUL_KV.put(ABSCHLUSS(kind), JSON.stringify({ v: 1, abschluesse: alle })); }
+  try { await env.PAUL_KV.put(ABSCHLUSS(kind), JSON.stringify({ v: 2, abschluesse: alle })); }
   catch (e) { return json(503, { ok: false, fehler: "Der Speicher nimmt gerade nichts an. Bitte später nochmal." }); }
   return json(200, { ok: true, abschluss: neu, abschluesse: alle });
 }

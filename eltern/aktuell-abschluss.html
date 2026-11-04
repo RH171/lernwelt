@@ -7,9 +7,11 @@
 <title>Blätter abschließen</title>
 <!--
   Schalter "aktuell", Regel F (04.11.2026, Kapitel 164 im Entwurf, nur Paul).
-  Nach einer Probe schliesst Denny die Blaetter ab, die zur Probe gehoerten. Offene Blaetter uebt Paul
-  dichter (Leiter 1/3/1/2/3/5 Tage). Diese Seite enthaelt keine Daten; sie liest und schreibt nur ueber
-  /api/aktuell-abschluss (Elternausweis). Geschrieben wird erst nach "Abschluss speichern" in der Vorschau.
+  Nachbesserung 2 (Beschluss 04.11.2026, 12:55 Uhr): Nach einer Probe stuft Denny JEDES Blatt des Fachs ein:
+  "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz Begruendung). Nur
+  "abgefragt" schliesst, kein Datum. Vorschlaege kommen aus functions/api/_aktuell-vorschlag.js. Diese Seite
+  enthaelt keine Daten; sie liest und schreibt nur ueber /api/aktuell-abschluss (Elternausweis). Geschrieben
+  wird erst nach "Ganze Liste bestaetigen".
 -->
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <style>
@@ -40,6 +42,8 @@
   .m-offen{background:#e7f6ee;color:var(--gut)}
   .m-zu{background:#eef0f4;color:var(--muted)}
   .m-unsicher{background:#fff4e5;color:var(--mittel)}
+  .stufe select{min-width:150px}
+  .begr input{min-width:220px}
   .hinweis{border-left:4px solid var(--mittel);padding:8px 12px;background:#fffaf0;border-radius:8px;margin:10px 0}
   .fehler{color:var(--schlecht);font-weight:600}
   .reihe{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -82,70 +86,95 @@
     });
   }
 
+  var STUFEN = ["abgefragt", "nicht abgefragt", "unsicher"];
+  var QUELLE = { vorschlag: "Vorschlag geprüft", datum: "nur nach Datum" };
+
   function zeichnen(){
     var f = Object.keys(daten.faecher).sort();
     var h = "";
     if (daten.warnung) h += '<div class="hinweis">⚠️ ' + esc(daten.warnung) + '</div>';
     if (daten.schalter !== "neu")
       h += '<div class="hinweis">Der Schalter „aktuell“ ist noch aus. Abschlüsse lassen sich schon setzen, wirken für Paul aber erst nach dem Einschalten.</div>';
-    h += '<div class="karte"><h2>Neuer Abschluss</h2>' +
-      '<p class="unter">Fach, Probendatum und das letzte Blatt der Probe wählen. Danach zeigt die Seite, welche Blätter geschlossen würden. Gespeichert wird erst nach deiner Bestätigung. Neuere Blätter bleiben offen, auch wenn sie am selben Tag hochgeladen wurden.</p>' +
-      '<div class="feld"><label for="fach">Fach</label><select id="fach">' +
+    var pr = daten.proben || [];
+    h += '<div class="karte"><h2>Probe einstufen</h2>' +
+      '<p class="unter">Probe wählen. Danach steht jedes Blatt des Fachs da, mit einer vorgeschlagenen Stufe. Nur „abgefragt“ schließt ein Blatt ab; „nicht abgefragt“ und „unsicher“ bleiben offen. Das Datum ist nur ein Vorschlag. Gespeichert wird erst, wenn du die ganze Liste bestätigst.</p>' +
+      '<div class="feld"><label for="probe">Probe</label><select id="probe">' +
+      pr.map(function(p){ return '<option value="' + esc(p.schluessel) + '">' + esc(FACH[p.fach] || p.fach) + " · " + esc(p.probe) + " · " + esc(p.probeDatum ? dt(p.probeDatum) : "Datum offen") + (p.vorlaeufig ? " · vorläufig" : "") + '</option>'; }).join("") +
+      '<option value="">Andere Probe …</option></select></div>' +
+      '<div id="andere" style="display:none"><div class="feld"><label for="fach">Fach</label><select id="fach">' +
       f.map(function(x){ return '<option value="' + esc(x) + '">' + esc(FACH[x] || x) + '</option>'; }).join("") + '</select></div>' +
-      '<div class="feld"><label for="probe">Probendatum</label><input type="date" id="probe"></div>' +
-      '<div class="feld"><label for="letztes">Letztes Blatt der Probe</label><select id="letztes"></select></div>' +
-      '<div class="feld"><label for="thema">Nur Blätter mit diesem Thema (wahlweise)</label><input type="text" id="thema" maxlength="80" placeholder="z. B. Fürth"></div>' +
-      '<div class="reihe"><button class="knopf" id="zeigen">Vorschau zeigen</button></div>' +
+      '<div class="feld"><label for="pname">Probe</label><input type="text" id="pname" maxlength="120" placeholder="z. B. 2. Probe Mathematik"></div>' +
+      '<div class="feld"><label for="pdatum">Probendatum</label><input type="date" id="pdatum"></div></div>' +
+      '<div class="reihe"><button class="knopf" id="zeigen">Liste zeigen</button></div>' +
       '<div id="vorschau"></div></div>';
     h += '<div class="karte"><h2>Gesetzte Abschlüsse</h2>' + abschluesse() + '</div>';
     h += '<div class="karte"><h2>Alle Blätter</h2><p class="unter">Neueste zuerst. „offen“ übt Paul dichter.</p>' + alleBlaetter(f) + '</div>';
     $("inhalt").innerHTML = h;
-    $("fach").addEventListener("change", fuellLetztes);
+    $("probe").addEventListener("change", function(){ $("andere").style.display = $("probe").value ? "none" : "block"; $("vorschau").innerHTML = ""; vorschau = null; });
+    $("andere").style.display = $("probe").value ? "none" : "block";
     $("zeigen").addEventListener("click", zeigeVorschau);
-    fuellLetztes();
     Array.prototype.forEach.call(document.querySelectorAll("[data-weg]"), function(k){
       k.addEventListener("click", function(){ zuruecknehmen(k.getAttribute("data-weg")); });
     });
   }
 
-  function fuellLetztes(){
-    var l = daten.faecher[$("fach").value] || [];
-    $("letztes").innerHTML = l.filter(function(b){ return !b.geschlossen; }).map(function(b){
-      return '<option value="' + esc(b.id) + '">' + esc(dt(b.datum)) + " · " + esc(b.titel) + (b.gleicherTitel ? " (" + esc(b.gleicherTitel) + ")" : "") + " · " + esc(b.id) + '</option>';
-    }).join("");
-    $("vorschau").innerHTML = ""; vorschau = null;
+  function zeigeVorschau(){
+    var schl = $("probe").value, url;
+    if (schl) url = API + "?kind=paul&probe=" + encodeURIComponent(schl);
+    else {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test($("pdatum").value)){ $("vorschau").innerHTML = '<p class="fehler">Bitte das Probendatum eintragen.</p>'; return; }
+      url = API + "?kind=paul&fach=" + encodeURIComponent($("fach").value) + "&probeDatum=" + encodeURIComponent($("pdatum").value);
+    }
+    hol(url).then(function(a){
+      if (!a.j || !a.j.ok){ $("vorschau").innerHTML = '<p class="fehler">' + esc(a.j && a.j.fehler) + '</p>'; return; }
+      vorschau = { fach: a.j.fach, probe: schl ? a.j.probe : $("pname").value.trim(), probeDatum: a.j.probeDatum,
+                   vorlaeufig: !!a.j.vorlaeufig, hinweis: a.j.hinweis || "", liste: a.j.liste };
+      zeichneVorschau();
+    });
   }
 
-  function zeigeVorschau(){
-    var fach = $("fach").value, letztes = $("letztes").value, thema = $("thema").value.trim();
-    if (!letztes){ $("vorschau").innerHTML = '<p class="fehler">Bitte das letzte Blatt wählen.</p>'; return; }
-    hol(API + "?kind=paul&fach=" + encodeURIComponent(fach) + "&letztes=" + encodeURIComponent(letztes) + (thema ? "&thema=" + encodeURIComponent(thema) : ""))
-      .then(function(a){
-        if (!a.j || !a.j.ok){ $("vorschau").innerHTML = '<p class="fehler">' + esc(a.j && a.j.fehler) + '</p>'; return; }
-        vorschau = { fach: fach, letztes: letztes, thema: thema, liste: a.j.liste, schnitt: a.j.schnitt };
-        zeichneVorschau();
-      });
+  function zaehlStufen(){
+    var z = { "abgefragt": 0, "nicht abgefragt": 0, "unsicher": 0 };
+    vorschau.liste.forEach(function(b){ z[b.stufe] = (z[b.stufe] || 0) + 1; });
+    return z["abgefragt"] + " abgefragt · " + z["nicht abgefragt"] + " nicht abgefragt · " + z["unsicher"] + " unsicher";
   }
 
   function zeichneVorschau(){
     var l = vorschau.liste;
-    var h = '<h3>Diese ' + l.length + ' Blätter würden geschlossen</h3>';
-    if (!l.length){ $("vorschau").innerHTML = h + '<p class="unter">Keine offenen Blätter bis zu diesem Blatt.</p>'; return; }
-    if (vorschau.schnitt) h += '<p class="unter">Danach gilt auch jedes Blatt mit Schuldatum vor dem ' + esc(dt(vorschau.schnitt)) + ' als abgeschlossen, auch wenn es erst später hochgeladen wird. Blätter vom ' + esc(dt(vorschau.schnitt)) + ', die hier nicht stehen, bleiben offen.</p>';
-    h += '<div class="rollen"><table><tr><th>Blatt</th><th>Schuldatum</th><th>Thema</th><th>Kennung</th></tr>' +
-      l.map(function(b){ return '<tr><td>' + titel(b) + '</td><td>' + datumZelle(b) + '</td><td>' + esc(b.thema) + '</td><td class="klein">' + esc(b.id) + '</td></tr>'; }).join("") +
-      '</table></div><div class="reihe"><button class="knopf haupt" id="speichern">Abschluss speichern</button></div><p id="meldung"></p>';
+    var h = '<h3>' + esc(FACH[vorschau.fach] || vorschau.fach) + ': ' + l.length + ' Blätter</h3>';
+    if (vorschau.vorlaeufig) h += '<div class="hinweis">⚠️ Vorläufig: ' + esc(vorschau.hinweis || "Das Probenfoto fehlt noch. Die Stufen sind nur aus Titel und Thema geschätzt.") + '</div>';
+    h += '<p class="unter" id="zaehl">' + esc(zaehlStufen()) + '</p>';
+    h += '<div class="rollen"><table><tr><th>Blatt</th><th>Schuldatum</th><th>Stufe</th><th>Begründung</th></tr>' +
+      l.map(function(b, i){
+        return '<tr><td>' + titel(b) + (b.bisher ? '<br><span class="klein">bisher: ' + esc(b.bisher) + '</span>' : "") + '<br><span class="klein">' + esc(b.id) + '</span></td><td>' + datumZelle(b) +
+          '</td><td class="stufe"><select data-i="' + i + '">' + STUFEN.map(function(s){ return '<option' + (s === b.stufe ? " selected" : "") + '>' + esc(s) + '</option>'; }).join("") +
+          '</select><br><span class="klein">' + esc(QUELLE[b.quelle] || "") + '</span></td><td class="begr"><input type="text" maxlength="300" data-b="' + i + '" value="' + esc(b.begruendung) + '"></td></tr>';
+      }).join("") +
+      '</table></div><div class="reihe"><button class="knopf haupt" id="speichern">Ganze Liste bestätigen</button></div><p id="meldung"></p>';
     $("vorschau").innerHTML = h;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-i]"), function(s){
+      s.addEventListener("change", function(){ l[+s.getAttribute("data-i")].stufe = s.value; $("zaehl").textContent = zaehlStufen(); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-b]"), function(t){
+      t.addEventListener("input", function(){ l[+t.getAttribute("data-b")].begruendung = t.value; });
+    });
     $("speichern").addEventListener("click", speichern);
   }
 
   function speichern(){
-    var probe = $("probe").value;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(probe)){ $("meldung").innerHTML = '<span class="fehler">Bitte das Probendatum eintragen.</span>'; return; }
+    var stufen = {}, begr = {}, leer = [];
+    vorschau.liste.forEach(function(b){
+      stufen[b.id] = b.stufe;
+      if (b.begruendung && b.begruendung.trim()) begr[b.id] = b.begruendung.trim();
+      if (b.stufe === "unsicher" && !(b.begruendung || "").trim()) leer.push(b.titel);
+    });
+    if (leer.length){ $("meldung").innerHTML = '<span class="fehler">Bei „unsicher“ fehlt die Begründung: ' + esc(leer.join(", ")) + '</span>'; return; }
+    var frage = "Diese Liste speichern? " + zaehlStufen() + ". Nur „abgefragt“ wird abgeschlossen.";
+    if (vorschau.vorlaeufig) frage = "⚠️ Das Probenfoto fehlt noch, die Stufen sind vorläufig. " + frage;
+    if (!window.confirm(frage)) return;
     $("speichern").disabled = true;
     hol(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
-      kind: "paul", fach: vorschau.fach, probe: probe, letztes: vorschau.letztes, thema: vorschau.thema,
-      bestaetigt: vorschau.liste.map(function(b){ return b.id; }) }) })
+      kind: "paul", fach: vorschau.fach, probe: vorschau.probe, probeDatum: vorschau.probeDatum, stufen: stufen, begruendungen: begr }) })
       .then(function(a){
         if (a.s === 409 && a.j && a.j.liste){ vorschau.liste = a.j.liste; zeichneVorschau();
           $("meldung").innerHTML = '<span class="fehler">' + esc(a.j.fehler) + '</span>'; return; }
@@ -165,10 +194,14 @@
 
   function abschluesse(){
     var l = daten.abschluesse || [];
-    if (!l.length) return '<p class="unter">Noch keiner. Bis dahin gilt: offen ist, was seit der letzten Probe des Fachs datiert ist.</p>';
-    return '<div class="rollen"><table><tr><th>Fach</th><th>Probe</th><th>Schnitt</th><th>Blätter</th><th>Thema</th><th></th></tr>' +
+    if (!l.length) return '<p class="unter">Noch keiner. Bis dahin ist jedes Blatt offen.</p>';
+    return '<div class="rollen"><table><tr><th>Fach</th><th>Probe</th><th>Probendatum</th><th>Stufen</th><th></th></tr>' +
       l.slice().reverse().map(function(a){
-        return '<tr><td>' + esc(FACH[a.fach] || a.fach) + '</td><td>' + esc(dt(a.probe)) + '</td><td>' + esc(a.schnitt ? "vor " + dt(a.schnitt) : "–") + '</td><td>' + a.ids.length + '</td><td>' + esc(a.thema || "–") +
+        var z = { "abgefragt": 0, "nicht abgefragt": 0, "unsicher": 0 };
+        Object.keys(a.stufen || {}).forEach(function(id){ z[a.stufen[id]] = (z[a.stufen[id]] || 0) + 1; });
+        (a.ids || []).forEach(function(){ z["abgefragt"]++; });
+        return '<tr><td>' + esc(FACH[a.fach] || a.fach) + '</td><td>' + esc(a.probe || "–") + '</td><td>' + esc(dt(a.probeDatum || a.probe)) + '</td><td>' +
+          z["abgefragt"] + ' abgefragt<br>' + z["nicht abgefragt"] + ' nicht abgefragt<br>' + z["unsicher"] + ' unsicher' +
           '</td><td><button class="knopf" data-weg="' + esc(a.gesetzt) + '">Zurücknehmen</button></td></tr>';
       }).join("") + '</table></div>';
   }
@@ -179,7 +212,7 @@
       return '<h3>' + esc(FACH[x] || x) + ' <span class="klein">(' + l.filter(function(b){ return b.offen; }).length + ' offen von ' + l.length + ')</span></h3>' +
         '<div class="rollen"><table><tr><th>Blatt</th><th>Schuldatum</th><th>Stand</th><th>Kennung</th></tr>' +
         l.map(function(b){ return '<tr><td>' + titel(b) + '</td><td>' + datumZelle(b) + '</td><td>' +
-          (b.offen ? '<span class="marke m-offen">offen</span>' : '<span class="marke m-zu">' + (b.geschlossen ? "abgeschlossen" : "älter als die Probe") + '</span>') +
+          (b.offen ? '<span class="marke m-offen">offen' + (b.markiert ? " (eingestuft)" : "") + '</span>' : '<span class="marke m-zu">abgefragt</span>') +
           '</td><td class="klein">' + esc(b.id) + '</td></tr>'; }).join("") + '</table></div>';
     }).join("");
   }

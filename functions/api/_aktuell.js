@@ -11,7 +11,9 @@
  *   aus:         npx wrangler kv key put "schalter:aktuell" "alt" --namespace-id b0c17f5eabaa4a4da3212117a236dae2 --remote
  *
  * Regeln (Dennys Wortlaut in unterlagen/aktuell-2026-11-04/auftrag-207.md):
- *   A  Ein Blatt ist offen, bis Denny es im Elternbereich abschliesst. Keine Tagesgrenze.
+ *   A  Ein Blatt ist offen, bis Denny es im Elternbereich als "abgefragt" bestaetigt. Keine Tagesgrenze,
+ *      kein Datumsschnitt, keine Ersatzregel (Dennys Beschluss 04.11.2026, 12:55 Uhr: "nur bestaetigte
+ *      Stufe abgefragt schliesst"; im Zweifel offen).
  *   B  Offene Blaetter: junge Karten taeglich, bis sie sitzen; dann 3 Tage, dann 1, 2, 3, 5 Tage,
  *      nie 7 oder mehr. Jedes offene Blatt taeglich mindestens eine Karte, die unsicherste
  *      zuerst, sichere im Wechsel. Deckel 3 je Blatt bleibt (wiederholung4), Fehler immer.
@@ -19,7 +21,8 @@
  *      geschafftes Fach 2 Minuten. Minuten -> Fragen ueber Sekunden je Frage.
  *   D  Nur als Mechanik: bis kniffligJeTag "knifflige" Karten aus abgeschlossenen Blaettern.
  *   E  Altbestand in freier Zeit: zuletzt falsch zuerst, dann am laengsten nicht gefragt.
- *   F  Abschluss nur im Elternbereich (aktuell-abschluss.js), eigener KV-Schluessel.
+ *   F  Abschluss nur im Elternbereich (aktuell-abschluss.js), eigener KV-Schluessel. Je Blatt eine Stufe:
+ *      "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz Begruendung).
  */
 import { berlinTagNr, istSicher4, fachNorm } from "./_wiedervorlage.js";
 
@@ -42,10 +45,16 @@ export const AKTUELL = {
      Median ueber die Sitzungsdauer): Mathe 37 s, HSU 16,5 s, Deutsch 12-23 s mit Planungswert 20 s.
      Englisch und alles andere: standard 20 s (⚠️ Annahme, keine eigene Messung). */
   sekundenJeFrage: { mathe: 37, hsu: 16.5, deutsch: 20, standard: 20 },
-  /* Wann ein offenes Blatt "sitzt" (Vorschlag aus der Vorab-Pruefung, Einstellwert): mindestens
-     anteil der Karten in der Wiederholung zuletzt richtig UND an mindestens tage Tagen richtig
-     (laufende Richtig-Folge ueber tage Kalendertage). Nur Anzeige und Simulation, steuert nichts. */
-  blattSitzt: { anteil: 0.7, tage: 2 },
+  /* Wann ein offenes Blatt "gefestigt" ist (Denny 04.11.2026: mindestens 70 % der Karten zuletzt richtig,
+     an mindestens 2 Tagen). Nur Anzeige, steuert nichts. Wort "gefestigt", weil "sitzt" schon belegt ist
+     (Tagesbericht "sitzt gut" = ab 5 Aufgaben in 7 Tagen, "Mein Heft" "sitzt" = beim letzten Mal gewusst).
+     Nach der Messung am 12.11.2026 fragen, ob verschaerft wird (Beschluss 04.11.2026). */
+  blattGefestigt: { anteil: 0.7, tage: 2 },
+  /* VORSCHLAG (nicht bestaetigt, Standard AUS): Vorrang nur fuer offene Blaetter nach der letzten
+     bestaetigten Probe des Fachs plus Blaetter mit Stufe "nicht abgefragt" oder "unsicher". Offene
+     Blaetter davor ohne Stufe bleiben offen (nie abgeschlossen), ueben aber wie der Altbestand (Regel E).
+     Faecher ohne bestaetigte Probe: alles Offene hat Vorrang. false = alle offenen Blaetter haben Vorrang. */
+  vorrangGrenze: false,
   /* Regel D, nur Mechanik: hoechstens so viele knifflige Karten aus abgeschlossenen Blaettern je
      Runde, ohne Mindestzeit. "Knifflig" = frueher schon einmal falsch (fz oder f) - ⚠️ Annahme (Einstellwert, Denny bestaetigt 04.11.2026 noch nicht). */
   kniffligJeTag: 3,
@@ -88,8 +97,11 @@ export function schuldatum(blatt) {
   return { datum: "", von: "" };
 }
 
+export const STUFEN = ["abgefragt", "nicht abgefragt", "unsicher"];
+
 /* Abschluss-Stand lesen. Wirft nie; kaputt oder leer = keine Abschluesse.
-   { v: 1, abschluesse: [{ fach, probe, letztes, thema?, ids: [...], gesetzt }] } */
+   { v: 2, abschluesse: [{ fach, probe, probeDatum, stufen: { blattId: Stufe }, begruendungen: { blattId: Satz }, gesetzt }] }
+   (v1-Eintraege mit ids gab es nur im Bau; sie gelten als "abgefragt" fuer genau diese Kennungen.) */
 export async function abschlussLesen(env, kind) {
   /* fehler: true = Speicher nicht lesbar oder Inhalt kaputt. Lesende Wege rechnen dann ohne Abschluss
      weiter; die Elternseite schreibt in diesem Fall NICHT (sonst waeren alle Abschluesse weg). */
@@ -99,58 +111,67 @@ export async function abschlussLesen(env, kind) {
   if (roh == null || roh === "") return { v: 1, abschluesse: [] };
   try {
     const d = JSON.parse(roh);
-    if (d && Array.isArray(d.abschluesse)) return { v: 1, abschluesse: d.abschluesse.filter((a) => a && a.fach && Array.isArray(a.ids)) };
+    if (d && Array.isArray(d.abschluesse))
+      return { v: 2, abschluesse: d.abschluesse.filter((a) => a && a.fach && (Array.isArray(a.ids) || (a.stufen && typeof a.stufen === "object"))) };
   } catch (e) {}
   return { v: 1, abschluesse: [], fehler: true };
 }
 
-/* Geschlossene Blaetter je Fach (Regel F, Nachbesserung 04.11.2026):
-   { fach: Set der bestaetigten ids, mit Eigenschaft schnitte: [{ datum, thema }] }.
-   Ein Abschluss speichert Fach, Schnitt-Schuldatum (schnitt = Schuldatum des letzten Probenblatts)
-   und die Kennungen der bestaetigten Liste. Geschlossen ist ein Blatt, wenn es in der Liste steht
-   ODER sein Schuldatum VOR dem Schnitt liegt (auch spaeter hochgeladen). Gleiches Schuldatum wie der
-   Schnitt, aber nicht in der Liste = offen. Mit Thema gilt die Datumsregel nur fuer Blaetter dieses
-   Themas. Alte Abschluesse ohne schnitt wirken nur ueber die Kennungen. */
+/* Stufen je Fach (Regel A/F, Nachbesserung 2, 04.11.2026):
+   { fach: Set der Kennungen mit Stufe "abgefragt",
+     .markiert  Set der Kennungen mit "nicht abgefragt" oder "unsicher",
+     .probeDatum juengstes Probendatum eines Abschlusses dieses Fachs mit mindestens einem "abgefragt" }.
+   Abschluesse werden nach "gesetzt" angewandt; die juengste Stufe einer Kennung gilt. */
 export function geschlossenJeFach(abschluss) {
   const raus = {};
-  for (const a of (abschluss && abschluss.abschluesse) || []) {
+  const liste = ((abschluss && abschluss.abschluesse) || []).slice().sort((x, y) => (Number(x.gesetzt) || 0) - (Number(y.gesetzt) || 0));
+  const stufe = {};
+  for (const a of liste) {
     const f = fachNorm(a.fach);
-    if (!raus[f]) { raus[f] = new Set(); raus[f].schnitte = []; }
-    for (const id of a.ids) raus[f].add(String(id));
-    if (/^\d{4}-\d{2}-\d{2}$/.test(String(a.schnitt || ""))) raus[f].schnitte.push({ datum: String(a.schnitt), thema: String(a.thema || "").trim().toLowerCase() });
+    if (!f) continue;
+    if (!stufe[f]) stufe[f] = {};
+    const st = a.stufen && typeof a.stufen === "object" ? a.stufen : {};
+    for (const id of Object.keys(st)) if (STUFEN.includes(st[id])) stufe[f][String(id)] = st[id];
+    if (Array.isArray(a.ids)) for (const id of a.ids) stufe[f][String(id)] = "abgefragt";
+    const abgefragt = Object.values(st).includes("abgefragt") || (Array.isArray(a.ids) && a.ids.length > 0);
+    const pd = String(a.probeDatum || a.probe || "");
+    if (!raus[f]) { raus[f] = new Set(); raus[f].markiert = new Set(); raus[f].probeDatum = ""; }
+    if (abgefragt && /^\d{4}-\d{2}-\d{2}$/.test(pd) && pd > raus[f].probeDatum) raus[f].probeDatum = pd;
+  }
+  for (const f of Object.keys(stufe)) for (const id of Object.keys(stufe[f])) {
+    if (stufe[f][id] === "abgefragt") raus[f].add(id); else raus[f].markiert.add(id);
   }
   return raus;
 }
 
-const passtThema = (blatt, t) => !t || (String(blatt.thema || "") + " " + String(blatt.titel || "")).toLowerCase().includes(t);
-
-/* Ist das Blatt durch einen Abschluss seines Fachs geschlossen? zuF = geschlossenJeFach(...)[fach]. */
+/* Geschlossen = Stufe "abgefragt" bestaetigt. zuF = geschlossenJeFach(...)[fach]. */
 export function istGeschlossen(blatt, zuF) {
-  if (!blatt || !zuF) return false;
-  if (zuF.has(String(blatt.id))) return true;
-  const sd = schuldatum(blatt).datum;
-  if (!sd) return false;
-  return (zuF.schnitte || []).some((x) => sd < x.datum && passtThema(blatt, x.thema));
+  return !!(blatt && zuF && zuF.has(String(blatt.id)));
 }
 
-/* Regel A: offen oder abgeschlossen?
-   - Gibt es fuer das Fach einen Abschluss: offen = nicht darin genannt.
-   - Sonst (Rueckfall bis Denny abschliesst, Vorschlag): offen = Schuldatum ab der juengsten Probe
-     des Fachs (grenze aus probenLage); ohne Probe ist alles offen.
-   Ausgeblendete Blaetter (sichtbar: false) sind nie offen. */
-export function offenesBlatt(blatt, geschlossen, grenze) {
+/* Regel A: offen = sichtbar und nicht als "abgefragt" bestaetigt. Kein Datum schliesst. */
+export function offenesBlatt(blatt, geschlossen) {
   if (!blatt || blatt.sichtbar === false) return false;
-  const f = fachNorm(blatt.fach);
-  if (geschlossen && geschlossen[f]) return !istGeschlossen(blatt, geschlossen[f]);
-  const g = grenze && grenze[f];
-  if (!g) return true;
-  const sd = schuldatum(blatt).datum;
-  return !!sd && sd >= g;
+  return !istGeschlossen(blatt, geschlossen && geschlossen[fachNorm(blatt.fach)]);
 }
 
-export function offeneIds(blattNach, geschlossen, grenze) {
+/* VORSCHLAG Vorrang (AKTUELL.vorrangGrenze): offen UND (Fach ohne bestaetigte Probe ODER Stufe
+   "nicht abgefragt"/"unsicher" ODER Schuldatum am/nach der letzten bestaetigten Probe ODER ohne Datum). */
+export function vorrangBlatt(blatt, geschlossen, k) {
+  if (!offenesBlatt(blatt, geschlossen)) return false;
+  const K = k || AKTUELL;
+  if (!K.vorrangGrenze) return true;
+  const zuF = geschlossen && geschlossen[fachNorm(blatt.fach)];
+  if (!zuF || !zuF.probeDatum) return true;
+  if (zuF.markiert && zuF.markiert.has(String(blatt.id))) return true;
+  const sd = schuldatum(blatt).datum;
+  return !sd || sd >= zuF.probeDatum;
+}
+
+/* Die Blaetter, die dicht wiederholt werden (Regel B): alle offenen, mit Vorschlag nur die mit Vorrang. */
+export function offeneIds(blattNach, geschlossen, k) {
   const s = new Set();
-  for (const id of Object.keys(blattNach || {})) if (offenesBlatt(blattNach[id], geschlossen, grenze)) s.add(id);
+  for (const id of Object.keys(blattNach || {})) if (vorrangBlatt(blattNach[id], geschlossen, k)) s.add(id);
   return s;
 }
 
@@ -212,13 +233,14 @@ export function rangOffen(p, jetzt, k) {
   return faelligAktuell(p, jetzt, k) ? 2 : 3;
 }
 
-/* Wie weit ein offenes Blatt sitzt (Einstellwert blattSitzt): Anteil der W-Karten, die zuletzt
-   richtig sind und deren Richtig-Folge mindestens blattSitzt.tage Kalendertage umfasst.
+/* Wie weit ein offenes Blatt gefestigt ist (Einstellwert blattGefestigt, nur Anzeige): Anteil der W-Karten,
+   die zuletzt richtig sind und deren Richtig-Folge mindestens blattGefestigt.tage Kalendertage umfasst.
    wSchluessel: Lernpunkt-Schluessel des Blattes (mehrere je Tatsache moeglich - gezaehlt je Schluessel
-   mit Punkt; ungespielte zaehlen als nicht sitzend). Rueckgabe { anteil, sitzt }. */
-export function blattSitztAnteil(keys, punkte, k) {
+   mit Punkt; ungespielte zaehlen als nicht gefestigt). Rueckgabe { anteil, gefestigt }. */
+export function blattGefestigtAnteil(keys, punkte, k) {
   const K = k || AKTUELL;
-  const tage = Math.max(1, Number(K.blattSitzt && K.blattSitzt.tage) || 2);
+  const G = K.blattGefestigt || {};
+  const tage = Math.max(1, Number(G.tage) || 2);
   let n = 0, gut = 0;
   for (const s of keys || []) {
     n++;
@@ -226,7 +248,7 @@ export function blattSitztAnteil(keys, punkte, k) {
     if (p && p.z && !p.f && p.t1 && berlinTagNr(Number(p.z)) - berlinTagNr(Number(p.t1)) >= tage - 1) gut++;
   }
   const anteil = n ? gut / n : 0;
-  return { anteil: Math.round(anteil * 100) / 100, sitzt: n > 0 && anteil >= (Number(K.blattSitzt && K.blattSitzt.anteil) || 0.7) };
+  return { anteil: Math.round(anteil * 100) / 100, gefestigt: n > 0 && anteil >= (Number(G.anteil) || 0.7) };
 }
 
 /* Regel B, "jedes offene Blatt taeglich": offene Blaetter, deren Karten in der Wiederholung (W)
@@ -337,33 +359,42 @@ export function freiAktuell(frei, k) {
   return { liste: a1.concat(d, e, offenSitzt, rest), zaehl: { offenUnsicher: a1.length, knifflig: d.length, alt: e.length, offenSitzt: offenSitzt.length, rest: rest.length } };
 }
 
-/* Regel F: Vorschau der Blaetter, die ein Abschluss schliessen wuerde.
-   blaetter: Liste aller Blaetter des Kindes; fach; letztes = id des letzten Blattes der Probe;
-   thema (optional): nur Blaetter, deren Thema oder Titel das Wort enthaelt.
-   Sortiert nach (Schuldatum, angelegt, id); geschlossen wird alles bis einschliesslich "letztes".
-   Neuere Blaetter - auch am selben Tag spaeter hochgeladen - bleiben offen.
-   Rueckgabe { ok, liste: [{ id, titel, thema, datum, von, angelegt, unsicher? }], fehler? } */
-export function abschlussVorschau(blaetter, fach, letztes, thema, schonZu) {
+/* Regel F (Nachbesserung 2): Vorschau fuer einen Abschluss - die GANZE Liste der sichtbaren Blaetter
+   des Fachs, je Blatt Titel, Schuldatum und eine vorgeschlagene Stufe mit Begruendung.
+   vorschlag: Eintraege aus _aktuell-vorschlag.js fuer diese Probe ({ blattId, stufe, begruendung }).
+   Ohne Vorschlag entscheidet nur das Datum, und auch das nie auf "abgefragt" (im Zweifel offen):
+     Schuldatum vor dem Probentag -> "unsicher" ("nur nach Datum"), ab dem Probentag -> "nicht abgefragt",
+     ohne Datum -> "unsicher".
+   schonZu = geschlossenJeFach(...)[fach]: bisherige Stufe steht als "bisher" dabei.
+   Sortiert nach Schuldatum (ohne Datum ans Ende), dann angelegt, dann Kennung.
+   Rueckgabe { ok, liste: [{ id, titel, thema, datum, von, unsicher?, gleicherTitel?, stufe, begruendung, quelle, bisher? }] } */
+export function abschlussVorschau(blaetter, fach, probeDatum, vorschlag, schonZu) {
   const f = fachNorm(fach);
+  if (!f) return { ok: false, fehler: "Bitte ein Fach wählen.", liste: [] };
+  const pd = /^\d{4}-\d{2}-\d{2}$/.test(String(probeDatum || "")) ? String(probeDatum) : "";
+  const vs = {};
+  for (const v of vorschlag || []) if (v && v.blattId && STUFEN.includes(v.stufe)) vs[String(v.blattId)] = v;
   const ord = (blaetter || []).filter((b) => b && b.id && b.sichtbar !== false && fachNorm(b.fach) === f)
     .map((b) => ({ b, sd: schuldatum(b) }))
-    /* Blaetter ohne Schuldatum gelten als neueste (bleiben offen), nicht als aelteste. */
     .sort((x, y) => ((x.sd.datum ? 0 : 1) - (y.sd.datum ? 0 : 1)) ||
       (x.sd.datum < y.sd.datum ? -1 : x.sd.datum > y.sd.datum ? 1 : 0) ||
       String(x.b.angelegt || "").localeCompare(String(y.b.angelegt || "")) || String(x.b.id).localeCompare(String(y.b.id)));
-  const i = ord.findIndex((x) => String(x.b.id) === String(letztes));
-  if (i < 0) return { ok: false, fehler: "Das letzte Blatt gehört nicht zu diesem Fach.", liste: [] };
-  const t = String(thema || "").trim().toLowerCase();
-  const zu = schonZu || new Set();
-  const liste = ord.slice(0, i + 1)
-    .filter((x) => passtThema(x.b, t))
-    .filter((x) => !(zu.has ? istGeschlossen(x.b, zu) : false))
-    .map((x) => ({ id: String(x.b.id), titel: String(x.b.titel || x.b.thema || "(ohne Titel)"), thema: String(x.b.thema || ""),
-                   datum: x.sd.datum, von: x.sd.von, angelegt: String(x.b.angelegt || ""), ...(x.sd.unsicher ? { unsicher: true } : {}) }));
-  /* Gleiche Titel unterscheidbar: laufende Nummer dahinter. */
+  const liste = ord.map((x) => {
+    const id = String(x.b.id);
+    const v = vs[id];
+    let stufe, begruendung, quelle;
+    if (v) { stufe = v.stufe; begruendung = String(v.begruendung || ""); quelle = "vorschlag"; }
+    else if (!x.sd.datum || !pd) { stufe = "unsicher"; begruendung = "Kein Schuldatum oder kein Probendatum, Inhalt nicht geprüft."; quelle = "datum"; }
+    else if (x.sd.datum < pd) { stufe = "unsicher"; begruendung = "Nur nach Datum vor der Probe, Inhalt nicht geprüft."; quelle = "datum"; }
+    else { stufe = "nicht abgefragt"; begruendung = "Schuldatum am oder nach dem Probentag."; quelle = "datum"; }
+    const bisher = schonZu ? (schonZu.has(id) ? "abgefragt" : schonZu.markiert && schonZu.markiert.has(id) ? "offen markiert" : "") : "";
+    return { id, titel: String(x.b.titel || x.b.thema || "(ohne Titel)"), thema: String(x.b.thema || ""),
+             datum: x.sd.datum, von: x.sd.von, angelegt: String(x.b.angelegt || ""), ...(x.sd.unsicher ? { unsicher: true } : {}),
+             stufe, begruendung, quelle, ...(bisher ? { bisher } : {}) };
+  });
   const zahl = {};
   for (const e of liste) zahl[e.titel] = (zahl[e.titel] || 0) + 1;
   const n = {};
   for (const e of liste) if (zahl[e.titel] > 1) { n[e.titel] = (n[e.titel] || 0) + 1; e.gleicherTitel = n[e.titel] + " von " + zahl[e.titel]; }
-  return { ok: true, liste, schnitt: ord[i].sd.datum };
+  return { ok: true, liste };
 }

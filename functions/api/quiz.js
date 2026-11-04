@@ -69,7 +69,7 @@ import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen
 import { OPUS_FORMEN } from "./_formen-opus.js";
 import { antwortkennungAn } from "./_antwortkennung.js";
 import { AKTUELL, aktuellAn, abschlussLesen, geschlossenJeFach, offeneIds, blaetterOhneHeute, faelligAktuell,
-  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattSitztAnteil } from "./_aktuell.js";
+  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil } from "./_aktuell.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
 /* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
@@ -650,7 +650,7 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
   const ausnahmeIds = ausnahmeBlaetter4(blattNach, ausnahme, norm4);
   /* Schalter "aktuell": offene Blaetter schon vor W, damit der Deckel dort durchwechselt (rangOffen). */
   const abschlussA = akt && fragenW ? await abschlussLesen(env, kind) : null;
-  const offenA = abschlussA ? offeneIds(blattNach, geschlossenJeFach(abschlussA), grenze) : null;
+  const offenA = abschlussA ? offeneIds(blattNach, geschlossenJeFach(abschlussA)) : null;
   const wh = fragenW ? wiederholung4(fragenW, blattNach, punkte, undefined, ausnahmeIds,
     offenA ? { offen: offenA, rang: (p) => rangOffen(p, jetzt) } : undefined) : null;
   const fachVon = (s) => {
@@ -671,7 +671,7 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
   /* ausnahmeIds nur fuer den Server - nicht aufzaehlbar, geht nicht ins JSON. */
   Object.defineProperty(raus, "ausnahmeIds", { value: ausnahmeIds, enumerable: false });
   if (akt && wh) {
-    aktuellDazu(raus, abschlussA, blattNach, punkte, wh, grenze, pauseAlle, jetzt);
+    aktuellDazu(raus, abschlussA, blattNach, punkte, wh, pauseAlle, jetzt);
     Object.defineProperty(raus, "whAktuell", { value: wh, enumerable: false });
   }
   return raus;
@@ -682,8 +682,8 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
      aktuell        { offen: [Blatt-ids], minuten, sekunden, platzhalter, bedarf, taeglich: [Blatt-ids] }
    und, nicht aufzaehlbar (nur Server): offenSet, taeglichSet, faelligFn(schluessel, p). Rein bis auf
    den gelesenen Abschluss. Die Rundengroesse der gemischten Runde (mengeRunde) bleibt. */
-export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, grenze, pauseAlle, jetzt) {
-  const offen = offeneIds(blattNach, geschlossenJeFach(abschluss), grenze);
+export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, pauseAlle, jetzt) {
+  const offen = offeneIds(blattNach, geschlossenJeFach(abschluss));
   const taeglich = blaetterOhneHeute(offen, wh.schluessel, punkte, jetzt);
   const faelligFn = (s, p) => (offen.has(blattVonSchluessel(s)) ? faelligAktuell(p, jetzt) : istFaellig(p, jetzt));
   /* Tagesmenge ueber den Tag stabil (Pruefer-Fund 04.11.2026): heute schon beantwortete Karten zaehlen
@@ -696,10 +696,11 @@ export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, grenze, paus
   const bedarf = bedarfJeFach(wh.schluessel, wh.zahl, blattNach, punkte, (s, p) => heuteDa(p) || faelligFn(s, p), zusatz);
   const mz = minutenJeFach(Object.keys(raus.menge), bedarf, pauseAlle >= 1);
   raus.menge = mz.fragen;
-  const sitzt = {};
-  for (const id of offen) sitzt[id] = blattSitztAnteil(wh.schluessel[id], punkte).anteil;
+  /* Nur Anzeige (Denny 04.11.2026): Anteil gefestigter Karten je offenem Blatt, steuert nichts. */
+  const gefestigt = {};
+  for (const id of offen) { const g = blattGefestigtAnteil(wh.schluessel[id], punkte); gefestigt[id] = { anteil: g.anteil, gefestigt: g.gefestigt }; }
   raus.aktuell = { offen: [...offen], minuten: mz.minuten, sekunden: AKTUELL.sekundenJeFrage,
-                   bedarf, taeglich: [...taeglich], sitzt,
+                   bedarf, taeglich: [...taeglich], gefestigt,
                    k: { sitztTage: AKTUELL.sitztTage, stufenTage: AKTUELL.stufenTage, hoechstTage: AKTUELL.hoechstTage } };
   Object.defineProperty(raus, "offenSet", { value: offen, enumerable: false });
   Object.defineProperty(raus, "taeglichSet", { value: taeglich, enumerable: false });
@@ -929,9 +930,8 @@ async function offenFuerPost(env, kind, jetzt) {
     const bn = {};
     const e = await stoffLesen(env, kind, 4);
     if (e.ok) for (const x of e.eintraege) bn[x.id] = x;
-    const heute = berlinHeute(new Date(jetzt));
-    const { grenze } = probenLage((await termineLesen(env, kind)) || [], (await notenLesen(env, kind)) || [], heute);
-    return offeneIds(bn, geschlossenJeFach(await abschlussLesen(env, kind)), grenze);
+    /* Nachbesserung 2 (04.11.2026): offen ist alles ohne bestaetigtes "abgefragt" - kein Datum, keine Probengrenze. */
+    return offeneIds(bn, geschlossenJeFach(await abschlussLesen(env, kind)));
   } catch (e) { return null; }
 }
 
