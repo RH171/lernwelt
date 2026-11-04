@@ -1546,6 +1546,14 @@
       '<a class="knopf-link" href="/eltern/probenvergleich.html?kind=' + KIND + '">Proben ansehen</a></div>';
   }
 
+  /* Schalter "aktuell", Regel F (04.11.2026, nur Paul): Blaetter nach einer Probe abschliessen. Eigene Seite. */
+  function aktuellKarte(){
+    if (KIND !== "paul") return "";
+    return '<div class="karte"><h2>Blätter abschließen</h2>' +
+      '<p class="unter">Nach einer Probe die Blätter abschließen, die dazugehörten. Offene Blätter übt Paul täglich dichter.</p>' +
+      '<a class="knopf-link" href="/eltern/aktuell-abschluss.html?kind=paul">Blätter ansehen</a></div>';
+  }
+
   /* Pauls 1×1-Woche (13.10.2026): Reihen mit Trick, Zahlendreiecke, Tempo-Runde. Eigene Seite. */
   function einmaleinswocheKarte(){
     if (KIND !== "paul") return "";
@@ -2004,12 +2012,12 @@
       // Die Anwesenheit MUSS auch hier stehen. Genau bei einem Kind ohne
       // Runden ist die Frage "war es überhaupt da?" am wichtigsten - stünde die
       // Karte erst weiter unten, wäre sie ausgerechnet dann unsichtbar.
-      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + probenvergleichKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
+      $("inhalt").innerHTML = notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + probenvergleichKarte() + aktuellKarte() + tagesrechnenKarte() + einmaleinswocheKarte() +
         '<div class="karte"><h2>Noch nichts gespielt</h2>' +
         '<p class="unter">Sobald ' + esc(KIND) + ' eine Runde beendet, steht hier die Auswertung.</p></div>';
       return;
     }
-    h += notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + probenvergleichKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
+    h += notenKarte() + probenTermineKarte() + lehrerKarte() + pruefKarte() + zurueckKarte() + schulinfoKarte() + probenvergleichKarte() + aktuellKarte() + tagesrechnenKarte() + einmaleinswocheKarte();
 
     /* Überblick */
     h += '<div class="karte"><h2>Überblick</h2><p class="unter">Alles, was aufgezeichnet ist.</p><div class="zahlen">' +

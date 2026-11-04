@@ -385,8 +385,11 @@ export const KERNZEILE4 = /^(merke|merksatz|regel|merkhefteintrag)\b/i;
              dort sind ALLE Karten in W, der Deckel gilt nicht (Probenausnahme, 29.10.2026)
    Rueckgabe { inW: Set (Tatsachen-Schluessel und Fundkarten-Schluessel),
                schluessel: { blatt: [Lernpunkt-Schluessel der W-Karten] }  - fuer die Seite,
-               zahl: { blatt: { karten, w, geschuetzt, gekappt } } } */
-export function wiederholung4(fragen, blaetter, punkte, k, ausnahme) {
+               zahl: { blatt: { karten, w, geschuetzt, gekappt } } }
+   akt:      (optional, Schalter "aktuell" 04.11.2026) { offen: Set Blatt-ids, rang: (p) => Zahl } -
+             fuer offene Blaetter ordnet rang() den Rest unter dem Deckel (Durchwechseln, rangOffen in
+             _aktuell.js); ohne akt genau wie vorher. */
+export function wiederholung4(fragen, blaetter, punkte, k, ausnahme, akt) {
   const K = k || SCHRITT4;
   const pk = punkte || {};
   const bl = blaetter || {};
@@ -431,7 +434,11 @@ export function wiederholung4(fragen, blaetter, punkte, k, ausnahme) {
   for (const id of Object.keys(je)) {
     const alle = je[id];
     const geschuetzt = vorrang ? alle.filter((c) => fehler(c.p)) : [];
-    const rest = alle.filter((c) => geschuetzt.indexOf(c) < 0).sort(ordnung);
+    const offenAkt = !!(akt && akt.offen && akt.offen.has(id));
+    const rest = alle.filter((c) => geschuetzt.indexOf(c) < 0).sort(offenAkt
+      ? (a, b) => (akt.rang(a.p) - akt.rang(b.p)) ||
+          (gespielt(a) && gespielt(b) ? (Number(a.p.z) - Number(b.p.z)) : 0) || ordnung(a, b)
+      : ordnung);
     /* Probenausnahme: Blatt im Probenstoff einer nahen Probe - alle Karten, kein Deckel. */
     const probe = !!(ausnahme && ausnahme.has && ausnahme.has(id));
     const w = probe ? geschuetzt.concat(rest)
@@ -885,7 +892,11 @@ export function punktVerbuchen(punkte, frage, richtig, jetzt, e, opt) {
   /* Schritt 4 (nur Paul): Eine sichere Karte, die vor ihrer Faelligkeit richtig beantwortet
      wird (Einstiegskarte, oder im freien Ueben gezogen), aendert nichts - der 28-Tage-Takt
      bleibt. Falsch laeuft weiter unten wie Schritt 3: nicht mehr sicher, wieder nach 1 Tag. */
+  /* Schalter "aktuell" (04.11.2026, nur mit opt.offen aus quiz.js): Karten offener Blaetter laufen
+     nach der Leiter 1-5 Tage (_aktuell.js) - dort zaehlt jede Antwort, sonst kaeme eine sichere
+     Karte jeden Tag wieder. Ohne opt.offen (Schalter "alt") genau wie vorher. */
   if (opt && opt.paul && SCHRITT4.an && richtig && schritt3Punkt(s) && p.v === 3 && p.s && vorher &&
+      !(opt.offen && opt.offen.has(s.slice(0, s.indexOf("#")))) &&
       !istFaellig({ ...p, z: vorher }, jetzt || Date.now(), ein)) {
     p.z = vorher;
     /* Zaehlung (02.11.2026, nur mit opt.zaehlung aus quiz.js, Schalter schalter:zaehlung):

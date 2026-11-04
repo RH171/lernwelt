@@ -393,7 +393,8 @@
       var b = c._b || blattVon[c.blatt] || {};
       var st = c.quiz ? null : stand[c.blatt + "#k:" + schluessel(c)];
       c._fach = fachNorm(b.fach);
-      c.stufe = stufe4(st, blattNeu4(b, s4.grenze), !!c.quiz);
+      /* Schalter "aktuell" (04.11.2026, nur Paul): "neu" heisst offenes Blatt (s4.aktuell.offen). Ohne das Feld wie bisher. */
+      c.stufe = stufe4(st, s4.aktuell && s4.aktuell.offen ? s4.aktuell.offen.indexOf(b.id || c.blatt) >= 0 : blattNeu4(b, s4.grenze), !!c.quiz);
       c._faellig = faellig;
       c._w = (Number(K.gewicht[c.stufe]) || 0) * ((s4.nah || {})[c._fach] ? K.probeFaktor : 1);
       return c;

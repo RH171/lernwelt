@@ -158,6 +158,14 @@ const REGELN = {
   "/api/probenvergleich": {
     GET: async ({ url, ich }) => kindMuss(ich.kinder, kindAusAdresse(url)),
   },
+  // Schalter "aktuell", Regel F (04.11.2026): Abschluss offener Blaetter, nur Paul.
+  "/api/aktuell-abschluss": {
+    GET: async ({ url, ich }) => kindMuss(ich.kinder, kindAusAdresse(url)),
+    POST: async ({ request, url, ich }) => {
+      const d = await rumpf(request);
+      return kindMuss(ich.kinder, String((d && d.kind) || kindAusAdresse(url)).toLowerCase());
+    },
+  },
   "/api/lehrervorlagen": {
     GET: async ({ url, ich }) => kindMuss(ich.kinder, kindAusAdresse(url)),
   },

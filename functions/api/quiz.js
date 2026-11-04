@@ -68,6 +68,8 @@ import { notenLesen } from "./_noten.js";
 import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen.js";
 import { OPUS_FORMEN } from "./_formen-opus.js";
 import { antwortkennungAn } from "./_antwortkennung.js";
+import { AKTUELL, aktuellAn, abschlussLesen, geschlossenJeFach, offeneIds, blaetterOhneHeute, faelligAktuell,
+  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattSitztAnteil } from "./_aktuell.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
 /* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
@@ -254,12 +256,16 @@ export async function onRequestGet(context) {
        bei "alt" bleibt die Antwort byte-gleich wie vorher. Wirft nie. */
     const mitZeige = kind === "paul" && (await antwortkennungAn(env));
     const fund = fundFaelligJeBlatt(pk, Date.now());
+    /* Schalter "aktuell" (04.11.2026, nur Paul): nur bei schalter:aktuell = "neu"; sonst lage4 wie bisher. */
+    const aktPaul = kind === "paul" && SCHRITT4.an && (await aktuellAn(env));
+    const lage4 = kind === "paul" && SCHRITT4.an ? await schritt4Lage(env, kind, pk, bn, Date.now(), bereinigt, aktPaul) : null;
     const fundText = {};
     for (const b of Object.keys(fund)) fundText[b] = wartendText(fund[b].length);
     return json(200, { ok: true, wiedervorlage: fuerDieSeite(), fragenZahl: zahl, gekonntZahl,
                        wartend: wartendJeBlatt(proTatsache, pk, Date.now()),
                        fundFaellig: fund, fundText,
-                       fundStand: fundStandJeKarte(pk, Date.now()),
+                       fundStand: lage4 && lage4.aktuell ? fundStandAktuell(fundStandJeKarte(pk, Date.now()), pk, lage4, Date.now())
+                         : fundStandJeKarte(pk, Date.now()),
                        /* Schritt 3a (nur Paul): ein Quizfehler kommt in einer ANDEREN Form
                           derselben Tatsache wieder; dazu die belegten Zweitformen der Fundkarten. */
                        quizWackler: quizWacklerListe(proTatsache, pk, Date.now(), 0, null,
@@ -271,8 +277,7 @@ export async function onRequestGet(context) {
                        ...(kind === "paul" ? { heuteBeantwortet: heuteBeantwortet(pk, Date.now(), zaehlungPaul) } : {}),
                        /* Schritt 4 (29.10.2026, nur Paul): Grenze alt/neu, nahe Proben, Pause und
                           Tagesmenge je Fach, dazu die Konstanten - die Tagesrunde rechnet damit. */
-                       ...(kind === "paul" && SCHRITT4.an ? { schritt4: { ...(await schritt4Lage(env, kind, pk, bn, Date.now(),
-                         bereinigt)), ...((await restrundeAn(env)) ? { rest: true } : {}),
+                       ...(kind === "paul" && SCHRITT4.an ? { schritt4: { ...lage4, ...((await restrundeAn(env)) ? { rest: true } : {}),
                          /* Zaehlung (02.11.2026): Startseite zeigt "10 geschafft, noch 5"; fehlt bei schalter:zaehlung = "alt". */
                          ...(zaehlungPaul ? { zaehlung: true } : {}) } } : {}),
                        ...(kreiseKarten ? { kreiseKarten } : {}) });
@@ -456,19 +461,48 @@ export async function onRequestGet(context) {
       /* Schritt 4 (Denny, 29.10.2026, nur Paul): Statt "neu + 4 faellige, dann mischen"
          eine gewichtete Reihe - Einstiegskarte, Faelliges bis zur Tagesmenge je Fach,
          Rest freies Ueben nach Gewicht (quizReihe4 in _wiedervorlage.js). */
-      const lage = await schritt4Lage(env, kind, punkte, blattNach, jetzt);
+      /* Schalter "aktuell" (04.11.2026): nur bei schalter:aktuell = "neu" - dann rechnet die Lage W selbst. */
+      const akt = await aktuellAn(env);
+      const lage = akt ? await schritt4Lage(env, kind, punkte, blattNach, jetzt, vorratBereinigen(vorrat.fragen, blattNach), true)
+                       : await schritt4Lage(env, kind, punkte, blattNach, jetzt);
       /* Deckel je Blatt (29.10.2026, 21:00 Uhr): W aus demselben Vorrat wie nurWartend. */
       /* Probenausnahme (29.10.2026): Blaetter im Stoff einer nahen Probe ohne Deckel (lage.ausnahmeIds). */
-      const wh = wiederholung4(vorratBereinigen(vorrat.fragen, blattNach), blattNach, punkte, undefined, lage.ausnahmeIds);
+      const wh = akt && lage.whAktuell ? lage.whAktuell
+        : wiederholung4(vorratBereinigen(vorrat.fragen, blattNach), blattNach, punkte, undefined, lage.ausnahmeIds);
       const faelligSet = new Set(faellig), frischSet = new Set(frisch);
+      const ak = akt && lage.aktuell ? lage : null;
       const kand = frisch.concat(schonMal).map((f) => {
         const p = punkte[punktSchluessel(f)];
         const fach = fachNorm(f.fach || (blattNach[f.blatt] && blattNach[f.blatt].fach));
+        if (ak && ak.offenSet.has(String(f.blatt))) {
+          /* Regel B: offenes Blatt - Faelligkeit nach der Leiter, Stufe wie ein neues Blatt. */
+          return { f, fach, faellig: !!(p && faelligAktuell(p, jetzt)), probeNah: !!lage.nah[fach],
+                   imW: wh.inW.has(tatsacheVon(f)), nie: frischSet.has(f),
+                   ab: p && p.z ? Number(p.z) + abstandAktuell(p) * 86400000 : 0, stufe: stufe4(p, true), p, offen: true };
+        }
         return { f, fach, faellig: faelligSet.has(f), probeNah: !!lage.nah[fach],
                  imW: wh.inW.has(tatsacheVon(f)), nie: frischSet.has(f), ab: p ? wiederAb(p) : 0,
-                 stufe: stufe4(p, blattNeu4(blattNach[f.blatt] || { fach }, lage.grenze)) };
+                 stufe: stufe4(p, ak ? false : blattNeu4(blattNach[f.blatt] || { fach }, lage.grenze)), ...(ak ? { p } : {}) };
       });
+      /* Regel B, taeglich je offenes Blatt: die unsicherste bzw. am laengsten nicht gefragte Karte in W. */
+      if (ak) for (const id of ak.taeglichSet) {
+        const c = taeglichWaehlen(kand.filter((x) => x.offen && String(x.f.blatt) === id && x.imW && !x.nie));
+        if (c) c.faellig = true;
+      }
       const r4 = quizReihe4(kand, lage.menge);
+      if (ak) {
+        /* Regeln D und E: das freie Ueben hinter dem geschuetzten Kopf neu ordnen (Auffuellen bleibt hinten). */
+        const nach = new Map(kand.map((c) => [c.f, c]));
+        const kopf = (r4.einstieg ? 1 : 0) + (r4.zaehl.neuVorn || 0) + r4.zaehl.wieder;
+        const ende = r4.fragen.length - (r4.zaehl.auffuellen || 0);
+        const frei = r4.fragen.slice(kopf, ende).map((f) => {
+          const c = nach.get(f) || {};
+          return { f, p: c.p, offen: !!c.offen, blatt: f && f.blatt ? String(f.blatt) : "" };
+        });
+        const fa = freiAktuell(frei);
+        r4.fragen = r4.fragen.slice(0, kopf).concat(fa.liste.map((c) => c.f), r4.fragen.slice(ende));
+        r4.zaehl.aktuell = { ...fa.zaehl, offen: ak.offenSet.size, taeglich: ak.taeglichSet.size };
+      }
       offen = r4.fragen;
       wiederholt = r4.wieder;
       einstiegT = r4.einstieg ? tatsacheVon(r4.einstieg) : null;
@@ -604,7 +638,9 @@ export async function onRequestGet(context) {
    Wiederholung (w); "Heute lernen" nimmt nur diese (Deckel je Blatt, 29.10.2026).
    Probenausnahme (29.10.2026): ausnahme { fach: {datum, von} } und ausnahmeIds (Set, nicht fuer die
    Seite) - die Blaetter im Stoff einer Probe in den naechsten 7 Tagen, dort gilt der Deckel nicht. */
-async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW) {
+/* akt (Schalter "aktuell", 04.11.2026, nur Paul): offene Blaetter (Regel A), Leiter (B) und Minuten je
+   Fach (C) - menge wird zum Fragenbudget, dazu raus.aktuell fuer die Seite. Ohne akt unveraendert. */
+async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
   const heute = berlinHeute(new Date(jetzt));
   const termine = (await termineLesen(env, kind)) || [];
   const noten = (await notenLesen(env, kind)) || [];
@@ -612,7 +648,11 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW) {
   const norm4 = (f) => heftFach(fachNorm(f));
   const ausnahme = probenAusnahme4(termine, noten, heute, berlinStunde(jetzt), SCHRITT4, norm4);
   const ausnahmeIds = ausnahmeBlaetter4(blattNach, ausnahme, norm4);
-  const wh = fragenW ? wiederholung4(fragenW, blattNach, punkte, undefined, ausnahmeIds) : null;
+  /* Schalter "aktuell": offene Blaetter schon vor W, damit der Deckel dort durchwechselt (rangOffen). */
+  const abschlussA = akt && fragenW ? await abschlussLesen(env, kind) : null;
+  const offenA = abschlussA ? offeneIds(blattNach, geschlossenJeFach(abschlussA), grenze) : null;
+  const wh = fragenW ? wiederholung4(fragenW, blattNach, punkte, undefined, ausnahmeIds,
+    offenA ? { offen: offenA, rang: (p) => rangOffen(p, jetzt) } : undefined) : null;
   const fachVon = (s) => {
     if (s.indexOf("mathe#") === 0) return "mathe";
     if (s.indexOf("lesen#") === 0) return "deutsch";
@@ -630,6 +670,57 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW) {
                  ...(wh ? { w: wh.schluessel, wZahl: wh.zahl } : {}) };
   /* ausnahmeIds nur fuer den Server - nicht aufzaehlbar, geht nicht ins JSON. */
   Object.defineProperty(raus, "ausnahmeIds", { value: ausnahmeIds, enumerable: false });
+  if (akt && wh) {
+    aktuellDazu(raus, abschlussA, blattNach, punkte, wh, grenze, pauseAlle, jetzt);
+    Object.defineProperty(raus, "whAktuell", { value: wh, enumerable: false });
+  }
+  return raus;
+}
+
+/* Schalter "aktuell" (Auftrag 207, 04.11.2026, nur Paul): haengt an die Schritt-4-Lage an
+     menge          Fragen je Fach aus den Minuten (Regel C) - ersetzt die Tagesmenge 8/12/15
+     aktuell        { offen: [Blatt-ids], minuten, sekunden, platzhalter, bedarf, taeglich: [Blatt-ids] }
+   und, nicht aufzaehlbar (nur Server): offenSet, taeglichSet, faelligFn(schluessel, p). Rein bis auf
+   den gelesenen Abschluss. Die Rundengroesse der gemischten Runde (mengeRunde) bleibt. */
+export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, grenze, pauseAlle, jetzt) {
+  const offen = offeneIds(blattNach, geschlossenJeFach(abschluss), grenze);
+  const taeglich = blaetterOhneHeute(offen, wh.schluessel, punkte, jetzt);
+  const faelligFn = (s, p) => (offen.has(blattVonSchluessel(s)) ? faelligAktuell(p, jetzt) : istFaellig(p, jetzt));
+  /* Tagesmenge ueber den Tag stabil (Pruefer-Fund 04.11.2026): heute schon beantwortete Karten zaehlen
+     weiter zum Bedarf, ebenso offene Blaetter, die heute schon dran waren. Sonst faellt die Menge nach
+     der ersten Runde auf "geschafft" und heute-dran.js zieht die heutigen Antworten ein zweites Mal ab. */
+  const heuteNr = berlinTagNr(jetzt);
+  const heuteDa = (p) => !!p && ((!!p.z && berlinTagNr(Number(p.z)) === heuteNr) || Number(p.h) === heuteNr);
+  const zusatz = new Set(taeglich);
+  for (const id of offen) if (((wh.schluessel && wh.schluessel[id]) || []).some((s) => heuteDa(punkte[s]))) zusatz.add(id);
+  const bedarf = bedarfJeFach(wh.schluessel, wh.zahl, blattNach, punkte, (s, p) => heuteDa(p) || faelligFn(s, p), zusatz);
+  const mz = minutenJeFach(Object.keys(raus.menge), bedarf, pauseAlle >= 1);
+  raus.menge = mz.fragen;
+  const sitzt = {};
+  for (const id of offen) sitzt[id] = blattSitztAnteil(wh.schluessel[id], punkte).anteil;
+  raus.aktuell = { offen: [...offen], minuten: mz.minuten, sekunden: AKTUELL.sekundenJeFrage,
+                   bedarf, taeglich: [...taeglich], sitzt,
+                   k: { sitztTage: AKTUELL.sitztTage, stufenTage: AKTUELL.stufenTage, hoechstTage: AKTUELL.hoechstTage } };
+  Object.defineProperty(raus, "offenSet", { value: offen, enumerable: false });
+  Object.defineProperty(raus, "taeglichSet", { value: taeglich, enumerable: false });
+  Object.defineProperty(raus, "faelligFn", { value: faelligFn, enumerable: false });
+  return raus;
+}
+
+/* Schalter "aktuell": fundStand der Seite fuer Karten offener Blaetter nach der Leiter; je Blatt aus
+   lage.taeglichSet die unsicherste bzw. am laengsten nicht gefragte Fundkarte in W dazu (Regel B). */
+export function fundStandAktuell(fs, punkte, lage, jetzt) {
+  const raus = {};
+  for (const s of Object.keys(fs)) {
+    raus[s] = fs[s];
+    if (lage.offenSet.has(blattVonSchluessel(s)))
+      raus[s] = { ...fs[s], faellig: punkte[s] && faelligAktuell(punkte[s], jetzt) ? 1 : 0 };
+  }
+  for (const id of lage.taeglichSet) {
+    const c = taeglichWaehlen(((lage.w && lage.w[id]) || []).filter((s) => s.indexOf("#k:") > 0 && raus[s])
+      .map((s) => ({ s, p: punkte[s] })));
+    if (c) raus[c.s] = { ...raus[c.s], faellig: 1 };
+  }
   return raus;
 }
 
@@ -766,10 +857,11 @@ export async function onRequestPost(context) {
     const punkte = JSON.parse(JSON.stringify(vorher));
     const nun = Date.now();
     const zPaul = kind === "paul" && (await zaehlungAn(env));   // Zaehlung (02.11.2026): nur Lesen, kein Schreiben
+    const oPaul = await offenFuerPost(env, kind, nun);          // Schalter "aktuell" (04.11.2026), sonst null
     for (const a of fund) {
       if (!a || !a.blatt || !a.karte) continue;
       punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun,
-        undefined, kind === "paul" ? { paul: true, ...(zPaul ? { zaehlung: true } : {}) } : undefined);
+        undefined, kind === "paul" ? { paul: true, ...(zPaul ? { zaehlung: true } : {}), ...(oPaul ? { offen: oPaul } : {}) } : undefined);
     }
     const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
     return json(200, { ok: true, gemerkt: geschrieben });
@@ -804,9 +896,10 @@ export async function onRequestPost(context) {
        verschieben nur den Stufenabzug `ab`, nie r (stufenabzug()). */
     const mitStufen = kind === "paul" && stufenAn(await richtungFuer(env, kind), kind);
     const zPaul = kind === "paul" && (await zaehlungAn(env));   // Zaehlung (02.11.2026): nur Lesen, kein Schreiben
+    const oPaul = await offenFuerPost(env, kind, nun);          // Schalter "aktuell" (04.11.2026), sonst null
     for (const a of antworten) {
       if (!a || !a.blatt || (!a.belegNr && !a.frageId)) continue;
-      const o = kind === "paul" ? { paul: true, ...(zPaul ? { zaehlung: true } : {}) } : undefined;
+      const o = kind === "paul" ? { paul: true, ...(zPaul ? { zaehlung: true } : {}), ...(oPaul ? { offen: oPaul } : {}) } : undefined;
       if (o && mitStufen) {
         o.stufen = true;
         if (a.gk) o.gk = true;
@@ -819,13 +912,27 @@ export async function onRequestPost(context) {
     if (zusammen) for (const a of fund) {
       if (!a || !a.blatt || !a.karte) continue;
       punktVerbuchen(punkte, { blatt: String(a.blatt).slice(0, 24), fund: a.karte }, !!a.stimmt, nun,
-        undefined, { paul: true, ...(zPaul ? { zaehlung: true } : {}) });
+        undefined, { paul: true, ...(zPaul ? { zaehlung: true } : {}), ...(oPaul ? { offen: oPaul } : {}) });
     }
     const geschrieben = await punkteSchreiben(env, kind, punkte, vorher);
     if (zusammen) return json(200, { ok: true, gemerkt: geschrieben });
   }
 
   return json(200, { ok: true });
+}
+
+/* Schalter "aktuell" (04.11.2026, nur Paul): die offenen Blaetter fuer punktVerbuchen (opt.offen).
+   Nur bei schalter:aktuell = "neu", sonst null ohne weiteres Lesen. Wirft nie (Fehler = null = wie bisher). */
+async function offenFuerPost(env, kind, jetzt) {
+  if (kind !== "paul" || !SCHRITT4.an || !(await aktuellAn(env))) return null;
+  try {
+    const bn = {};
+    const e = await stoffLesen(env, kind, 4);
+    if (e.ok) for (const x of e.eintraege) bn[x.id] = x;
+    const heute = berlinHeute(new Date(jetzt));
+    const { grenze } = probenLage((await termineLesen(env, kind)) || [], (await notenLesen(env, kind)) || [], heute);
+    return offeneIds(bn, geschlossenJeFach(await abschlussLesen(env, kind)), grenze);
+  } catch (e) { return null; }
 }
 
 /* Faellige Quizfragen, bei denen Paul beim letzten Mal danebenlag
