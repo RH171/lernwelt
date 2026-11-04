@@ -12,6 +12,9 @@
   "abgefragt" schliesst, kein Datum. Vorschlaege kommen aus functions/api/_aktuell-vorschlag.js. Diese Seite
   enthaelt keine Daten; sie liest und schreibt nur ueber /api/aktuell-abschluss (Elternausweis). Geschrieben
   wird erst nach "Ganze Liste bestaetigen".
+  Nachbesserung 3 (Auftrag 208, 04.11.2026): vierte Stufe "probenzeitraum" (Probenzeitraum, nicht abgefragt,
+  schliesst), bestaetigte Proben (Mathe 19.10.2026) gelten ohne Speichern und stehen ohne Zuruecknehmen-Knopf
+  unter "Gesetzte Abschluesse"; Grundlagen tragen eine Marke mit Halbsatz.
 -->
 <link rel="stylesheet" href="/beruehrung.css?v=8a84e32c">
 <style>
@@ -42,6 +45,7 @@
   .m-offen{background:#e7f6ee;color:var(--gut)}
   .m-zu{background:#eef0f4;color:var(--muted)}
   .m-unsicher{background:#fff4e5;color:var(--mittel)}
+  .m-grund{background:#eef0ff;color:var(--paul)}
   .stufe select{min-width:150px}
   .begr input{min-width:220px}
   .hinweis{border-left:4px solid var(--mittel);padding:8px 12px;background:#fffaf0;border-radius:8px;margin:10px 0}
@@ -86,7 +90,12 @@
     });
   }
 
-  var STUFEN = ["abgefragt", "nicht abgefragt", "unsicher"];
+  var STUFEN = ["abgefragt", "probenzeitraum", "nicht abgefragt", "unsicher"];
+  var LESBAR = { "abgefragt": "abgefragt", "probenzeitraum": "Probenzeitraum, nicht abgefragt", "nicht abgefragt": "nicht abgefragt", "unsicher": "unsicher" };
+  var SCHLIESST = { "abgefragt": 1, "probenzeitraum": 1 };
+  function zaehlText(z){ return z["abgefragt"] + " abgefragt · " + z["probenzeitraum"] + " Probenzeitraum, nicht abgefragt · " + z["nicht abgefragt"] + " nicht abgefragt · " + z["unsicher"] + " unsicher"; }
+  function leer(){ return { "abgefragt": 0, "probenzeitraum": 0, "nicht abgefragt": 0, "unsicher": 0 }; }
+  function bestText(b){ return b && b.von ? "bestätigt (" + b.von + "), gilt ohne erneutes Speichern" : "bestätigt, gilt ohne erneutes Speichern"; }
   var QUELLE = { vorschlag: "Vorschlag geprüft", datum: "nur nach Datum" };
 
   function zeichnen(){
@@ -97,9 +106,9 @@
       h += '<div class="hinweis">Der Schalter „aktuell“ ist noch aus. Abschlüsse lassen sich schon setzen, wirken für Paul aber erst nach dem Einschalten.</div>';
     var pr = daten.proben || [];
     h += '<div class="karte"><h2>Probe einstufen</h2>' +
-      '<p class="unter">Probe wählen. Danach steht jedes Blatt des Fachs da, mit einer vorgeschlagenen Stufe. Nur „abgefragt“ schließt ein Blatt ab; „nicht abgefragt“ und „unsicher“ bleiben offen. Das Datum ist nur ein Vorschlag. Gespeichert wird erst, wenn du die ganze Liste bestätigst.</p>' +
+      '<p class="unter">Probe wählen. Danach steht jedes Blatt des Fachs da, mit einer vorgeschlagenen Stufe. „abgefragt“ und „Probenzeitraum, nicht abgefragt“ schließen ein Blatt ab; „nicht abgefragt“ und „unsicher“ bleiben offen. Das Datum ist nur ein Vorschlag. Gespeichert wird erst, wenn du die ganze Liste bestätigst.</p>' +
       '<div class="feld"><label for="probe">Probe</label><select id="probe">' +
-      pr.map(function(p){ return '<option value="' + esc(p.schluessel) + '">' + esc(FACH[p.fach] || p.fach) + " · " + esc(p.probe) + " · " + esc(p.probeDatum ? dt(p.probeDatum) : "Datum offen") + (p.vorlaeufig ? " · vorläufig" : "") + '</option>'; }).join("") +
+      pr.map(function(p){ return '<option value="' + esc(p.schluessel) + '">' + esc(FACH[p.fach] || p.fach) + " · " + esc(p.probe) + " · " + esc(p.probeDatum ? dt(p.probeDatum) : "Datum offen") + (p.vorlaeufig ? " · vorläufig" : "") + (p.bestaetigt ? " · bestätigt" : "") + '</option>'; }).join("") +
       '<option value="">Andere Probe …</option></select></div>' +
       '<div id="andere" style="display:none"><div class="feld"><label for="fach">Fach</label><select id="fach">' +
       f.map(function(x){ return '<option value="' + esc(x) + '">' + esc(FACH[x] || x) + '</option>'; }).join("") + '</select></div>' +
@@ -128,26 +137,29 @@
     hol(url).then(function(a){
       if (!a.j || !a.j.ok){ $("vorschau").innerHTML = '<p class="fehler">' + esc(a.j && a.j.fehler) + '</p>'; return; }
       vorschau = { fach: a.j.fach, probe: schl ? a.j.probe : $("pname").value.trim(), probeDatum: a.j.probeDatum,
-                   vorlaeufig: !!a.j.vorlaeufig, hinweis: a.j.hinweis || "", liste: a.j.liste };
+                   vorlaeufig: !!a.j.vorlaeufig, hinweis: a.j.hinweis || "", bestaetigt: a.j.bestaetigt || null, liste: a.j.liste };
       zeichneVorschau();
     });
   }
 
   function zaehlStufen(){
-    var z = { "abgefragt": 0, "nicht abgefragt": 0, "unsicher": 0 };
+    var z = leer();
     vorschau.liste.forEach(function(b){ z[b.stufe] = (z[b.stufe] || 0) + 1; });
-    return z["abgefragt"] + " abgefragt · " + z["nicht abgefragt"] + " nicht abgefragt · " + z["unsicher"] + " unsicher";
+    return zaehlText(z);
   }
 
   function zeichneVorschau(){
     var l = vorschau.liste;
     var h = '<h3>' + esc(FACH[vorschau.fach] || vorschau.fach) + ': ' + l.length + ' Blätter</h3>';
     if (vorschau.vorlaeufig) h += '<div class="hinweis">⚠️ Vorläufig: ' + esc(vorschau.hinweis || "Das Probenfoto fehlt noch. Die Stufen sind nur aus Titel und Thema geschätzt.") + '</div>';
+    if (vorschau.bestaetigt) h += '<div class="hinweis">✅ ' + esc(bestText(vorschau.bestaetigt)) + '. Ändern geht hier trotzdem: eine neu bestätigte Liste gilt dann vorrangig.</div>';
     h += '<p class="unter" id="zaehl">' + esc(zaehlStufen()) + '</p>';
     h += '<div class="rollen"><table><tr><th>Blatt</th><th>Schuldatum</th><th>Stufe</th><th>Begründung</th></tr>' +
       l.map(function(b, i){
-        return '<tr><td>' + titel(b) + (b.bisher ? '<br><span class="klein">bisher: ' + esc(b.bisher) + '</span>' : "") + '<br><span class="klein">' + esc(b.id) + '</span></td><td>' + datumZelle(b) +
-          '</td><td class="stufe"><select data-i="' + i + '">' + STUFEN.map(function(s){ return '<option' + (s === b.stufe ? " selected" : "") + '>' + esc(s) + '</option>'; }).join("") +
+        return '<tr><td>' + titel(b) + (b.grundlage ? '<br><span class="marke m-grund">Grundlage</span> <span class="klein">' + esc(b.grundlage) + '</span>' : "") +
+          (b.widerspruch ? '<br><span class="klein">⚠️ Datum passt nicht zum Inhalt: ' + esc(b.widerspruch) + '</span>' : "") +
+          (b.bisher ? '<br><span class="klein">bisher: ' + esc(b.bisher) + '</span>' : "") + '<br><span class="klein">' + esc(b.id) + '</span></td><td>' + datumZelle(b) +
+          '</td><td class="stufe"><select data-i="' + i + '">' + STUFEN.map(function(s){ return '<option value="' + esc(s) + '"' + (s === b.stufe ? " selected" : "") + '>' + esc(LESBAR[s]) + '</option>'; }).join("") +
           '</select><br><span class="klein">' + esc(QUELLE[b.quelle] || "") + '</span></td><td class="begr"><input type="text" maxlength="300" data-b="' + i + '" value="' + esc(b.begruendung) + '"></td></tr>';
       }).join("") +
       '</table></div><div class="reihe"><button class="knopf haupt" id="speichern">Ganze Liste bestätigen</button></div><p id="meldung"></p>';
@@ -169,7 +181,7 @@
       if (b.stufe === "unsicher" && !(b.begruendung || "").trim()) leer.push(b.titel);
     });
     if (leer.length){ $("meldung").innerHTML = '<span class="fehler">Bei „unsicher“ fehlt die Begründung: ' + esc(leer.join(", ")) + '</span>'; return; }
-    var frage = "Diese Liste speichern? " + zaehlStufen() + ". Nur „abgefragt“ wird abgeschlossen.";
+    var frage = "Diese Liste speichern? " + zaehlStufen() + ". „abgefragt“ und „Probenzeitraum, nicht abgefragt“ werden abgeschlossen.";
     if (vorschau.vorlaeufig) frage = "⚠️ Das Probenfoto fehlt noch, die Stufen sind vorläufig. " + frage;
     if (!window.confirm(frage)) return;
     $("speichern").disabled = true;
@@ -193,17 +205,19 @@
   }
 
   function abschluesse(){
-    var l = daten.abschluesse || [];
-    if (!l.length) return '<p class="unter">Noch keiner. Bis dahin ist jedes Blatt offen.</p>';
+    var l = daten.abschluesse || [], bs = daten.basis || [];
+    if (!l.length && !bs.length) return '<p class="unter">Noch keiner. Bis dahin ist jedes Blatt offen.</p>';
+    function zeile(a, knopf){
+      var z = leer();
+      Object.keys(a.stufen || {}).forEach(function(id){ z[a.stufen[id]] = (z[a.stufen[id]] || 0) + 1; });
+      (a.ids || []).forEach(function(){ z["abgefragt"]++; });
+      return '<tr><td>' + esc(FACH[a.fach] || a.fach) + '</td><td>' + esc(a.probe || "–") + '</td><td>' + esc(dt(a.probeDatum || a.probe)) + '</td><td>' +
+        z["abgefragt"] + ' abgefragt<br>' + z["probenzeitraum"] + ' Probenzeitraum, nicht abgefragt<br>' + z["nicht abgefragt"] + ' nicht abgefragt<br>' + z["unsicher"] + ' unsicher' +
+        '</td><td>' + knopf + '</td></tr>';
+    }
     return '<div class="rollen"><table><tr><th>Fach</th><th>Probe</th><th>Probendatum</th><th>Stufen</th><th></th></tr>' +
-      l.slice().reverse().map(function(a){
-        var z = { "abgefragt": 0, "nicht abgefragt": 0, "unsicher": 0 };
-        Object.keys(a.stufen || {}).forEach(function(id){ z[a.stufen[id]] = (z[a.stufen[id]] || 0) + 1; });
-        (a.ids || []).forEach(function(){ z["abgefragt"]++; });
-        return '<tr><td>' + esc(FACH[a.fach] || a.fach) + '</td><td>' + esc(a.probe || "–") + '</td><td>' + esc(dt(a.probeDatum || a.probe)) + '</td><td>' +
-          z["abgefragt"] + ' abgefragt<br>' + z["nicht abgefragt"] + ' nicht abgefragt<br>' + z["unsicher"] + ' unsicher' +
-          '</td><td><button class="knopf" data-weg="' + esc(a.gesetzt) + '">Zurücknehmen</button></td></tr>';
-      }).join("") + '</table></div>';
+      l.slice().reverse().map(function(a){ return zeile(a, '<button class="knopf" data-weg="' + esc(a.gesetzt) + '">Zurücknehmen</button>'); }).join("") +
+      bs.map(function(a){ return zeile(a, '<span class="klein">' + esc(bestText(a.bestaetigt)) + '</span>'); }).join("") + '</table></div>';
   }
 
   function alleBlaetter(f){
@@ -211,8 +225,8 @@
       var l = daten.faecher[x];
       return '<h3>' + esc(FACH[x] || x) + ' <span class="klein">(' + l.filter(function(b){ return b.offen; }).length + ' offen von ' + l.length + ')</span></h3>' +
         '<div class="rollen"><table><tr><th>Blatt</th><th>Schuldatum</th><th>Stand</th><th>Kennung</th></tr>' +
-        l.map(function(b){ return '<tr><td>' + titel(b) + '</td><td>' + datumZelle(b) + '</td><td>' +
-          (b.offen ? '<span class="marke m-offen">offen' + (b.markiert ? " (eingestuft)" : "") + '</span>' : '<span class="marke m-zu">abgefragt</span>') +
+        l.map(function(b){ return '<tr><td>' + titel(b) + (b.grundlage ? '<br><span class="marke m-grund">Grundlage</span> <span class="klein">' + esc(b.grundlage) + '</span>' : "") + '</td><td>' + datumZelle(b) + '</td><td>' +
+          (b.offen ? '<span class="marke m-offen">offen' + (b.markiert ? " (" + esc(b.stufeLesbar || "eingestuft") + ")" : "") + '</span>' : '<span class="marke m-zu">' + esc(b.stufeLesbar || "abgefragt") + '</span>') +
           '</td><td class="klein">' + esc(b.id) + '</td></tr>'; }).join("") + '</table></div>';
     }).join("");
   }

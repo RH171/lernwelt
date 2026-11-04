@@ -69,7 +69,7 @@ import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen
 import { OPUS_FORMEN } from "./_formen-opus.js";
 import { antwortkennungAn } from "./_antwortkennung.js";
 import { AKTUELL, aktuellAn, abschlussLesen, geschlossenJeFach, offeneIds, blaetterOhneHeute, faelligAktuell,
-  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil } from "./_aktuell.js";
+  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil, grundlageIds } from "./_aktuell.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
 /* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
@@ -495,11 +495,13 @@ export async function onRequestGet(context) {
         const nach = new Map(kand.map((c) => [c.f, c]));
         const kopf = (r4.einstieg ? 1 : 0) + (r4.zaehl.neuVorn || 0) + r4.zaehl.wieder;
         const ende = r4.fragen.length - (r4.zaehl.auffuellen || 0);
+        const gl = grundlageIds(kind); /* Regel 5 (Auftrag 208): Grundlagen wiegen im Altbestand mehr */
         const frei = r4.fragen.slice(kopf, ende).map((f) => {
           const c = nach.get(f) || {};
-          return { f, p: c.p, offen: !!c.offen, blatt: f && f.blatt ? String(f.blatt) : "" };
+          const blatt = f && f.blatt ? String(f.blatt) : "";
+          return { f, p: c.p, offen: !!c.offen, blatt, grundlage: gl.has(blatt) };
         });
-        const fa = freiAktuell(frei);
+        const fa = freiAktuell(frei, undefined, jetzt);
         r4.fragen = r4.fragen.slice(0, kopf).concat(fa.liste.map((c) => c.f), r4.fragen.slice(ende));
         r4.zaehl.aktuell = { ...fa.zaehl, offen: ak.offenSet.size, taeglich: ak.taeglichSet.size };
       }

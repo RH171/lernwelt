@@ -22,9 +22,13 @@
  *   D  Nur als Mechanik: bis kniffligJeTag "knifflige" Karten aus abgeschlossenen Blaettern.
  *   E  Altbestand in freier Zeit: zuletzt falsch zuerst, dann am laengsten nicht gefragt.
  *   F  Abschluss nur im Elternbereich (aktuell-abschluss.js), eigener KV-Schluessel. Je Blatt eine Stufe:
- *      "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz Begruendung).
+ *      "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz Begruendung),
+ *      "probenzeitraum" (Probenzeitraum, nicht abgefragt: abgeschlossen ohne Abfrage, Regel 3 von Auftrag 208).
+ *   Auftrag 208 (04.11.2026): bestaetigte Proben aus _aktuell-vorschlag.js gelten als Grundstand (basis, nie im KV,
+ *      AKTUELL.vorschlagBasis); Grundlagen-Blaetter wiegen im Altbestand E mehr (AKTUELL.grundlageGewicht).
  */
 import { berlinTagNr, istSicher4, fachNorm } from "./_wiedervorlage.js";
+import { VORSCHLAG, GRUNDLAGE } from "./_aktuell-vorschlag.js";
 
 export const AKTUELL = {
   /* Eine Karte "sitzt" (Regel B), sobald die laufende Richtig-Folge zwei Berliner Kalendertage
@@ -58,6 +62,16 @@ export const AKTUELL = {
   /* Regel D, nur Mechanik: hoechstens so viele knifflige Karten aus abgeschlossenen Blaettern je
      Runde, ohne Mindestzeit. "Knifflig" = frueher schon einmal falsch (fz oder f) - ⚠️ Annahme (Einstellwert, Denny bestaetigt 04.11.2026 noch nicht). */
   kniffligJeTag: 3,
+  /* Regel 5 (Auftrag 208, 04.11.2026): Grundlagen-Blaetter (Feld "grundlage" in proben-stufen.json, GRUNDLAGE in
+     _aktuell-vorschlag.js) bekommen nach dem Abschluss einen hoeheren Anteil im Altbestand (Regel E): die Zeit seit der
+     letzten Antwort zaehlt mal grundlageGewicht. "Zuletzt falsch zuerst" bleibt das erste Merkmal, nie gefragt bleibt vorn,
+     und E steht weiter hinter allen offenen unsicheren Karten - also kein Vorrang vor offenen Blaettern.
+     1 = aus (wie vorher). 2 = Vorschlag: eine Grundlage, die vor 3 Tagen dran war, steht vor einem Thema von vor 5 Tagen. */
+  grundlageGewicht: 2,
+  /* Auftrag 208: Proben mit "bestaetigt" in der Vorschlagsdatei (Mathe 19.10.2026, Denny im Chat 04.11.2026) gelten als
+     Grundstand, ohne KV-Schreiben. Jeder Abschluss von der Elternseite gilt vorrangig (juengste Stufe je Kennung).
+     false = nur Abschluesse aus dem Speicher (Stand vor Auftrag 208). */
+  vorschlagBasis: true,
 };
 
 export const ABSCHLUSS = (kind) => "aktuell-abschluss:" + kind;
@@ -97,7 +111,28 @@ export function schuldatum(blatt) {
   return { datum: "", von: "" };
 }
 
-export const STUFEN = ["abgefragt", "nicht abgefragt", "unsicher"];
+/* "probenzeitraum" = Probenzeitraum, nicht abgefragt (Regel 3, Auftrag 208): schliesst wie "abgefragt". */
+export const STUFEN = ["abgefragt", "nicht abgefragt", "unsicher", "probenzeitraum"];
+export const SCHLIESST = new Set(["abgefragt", "probenzeitraum"]);
+export const STUFE_LESBAR = { "abgefragt": "abgefragt", "nicht abgefragt": "nicht abgefragt", "unsicher": "unsicher", "probenzeitraum": "Probenzeitraum, nicht abgefragt" };
+
+/* Bestaetigte Proben aus der Vorschlagsdatei als Abschluss-Eintraege (gesetzt 0: jeder gespeicherte Abschluss gilt danach). */
+export function basisAusVorschlag(kind, k) {
+  const K = k || AKTUELL;
+  if (!K.vorschlagBasis) return [];
+  return ((VORSCHLAG && VORSCHLAG[kind] && VORSCHLAG[kind].proben) || []).filter((p) => p && p.bestaetigt && !p.vorlaeufig).map((p) => ({
+    fach: p.fach, probe: String(p.probe || ""), probeDatum: String(p.probeDatum || ""), gesetzt: 0, basis: true,
+    bestaetigt: p.bestaetigt, stufen: Object.fromEntries((p.blaetter || []).filter((b) => STUFEN.includes(b.stufe)).map((b) => [String(b.blattId), b.stufe])),
+  }));
+}
+
+/* Grundlagen je Kind: Set der Blatt-Kennungen (Regel 5). */
+export function grundlageIds(kind) {
+  return new Set(Object.keys((GRUNDLAGE && GRUNDLAGE[kind]) || {}));
+}
+export function grundlageText(kind, id) {
+  return String(((GRUNDLAGE && GRUNDLAGE[kind]) || {})[String(id)] || "");
+}
 
 /* Abschluss-Stand lesen. Wirft nie; kaputt oder leer = keine Abschluesse.
    { v: 2, abschluesse: [{ fach, probe, probeDatum, stufen: { blattId: Stufe }, begruendungen: { blattId: Satz }, gesetzt }] }
@@ -105,16 +140,18 @@ export const STUFEN = ["abgefragt", "nicht abgefragt", "unsicher"];
 export async function abschlussLesen(env, kind) {
   /* fehler: true = Speicher nicht lesbar oder Inhalt kaputt. Lesende Wege rechnen dann ohne Abschluss
      weiter; die Elternseite schreibt in diesem Fall NICHT (sonst waeren alle Abschluesse weg). */
+  /* basis: bestaetigte Proben aus der Vorschlagsdatei (nie geschrieben, gilt auch bei Lesefehler). */
+  const basis = basisAusVorschlag(kind);
   let roh = null;
   try { roh = env && env.PAUL_KV ? await env.PAUL_KV.get(ABSCHLUSS(kind)) : null; }
-  catch (e) { return { v: 1, abschluesse: [], fehler: true }; }
-  if (roh == null || roh === "") return { v: 1, abschluesse: [] };
+  catch (e) { return { v: 1, abschluesse: [], basis, fehler: true }; }
+  if (roh == null || roh === "") return { v: 1, abschluesse: [], basis };
   try {
     const d = JSON.parse(roh);
     if (d && Array.isArray(d.abschluesse))
-      return { v: 2, abschluesse: d.abschluesse.filter((a) => a && a.fach && (Array.isArray(a.ids) || (a.stufen && typeof a.stufen === "object"))) };
+      return { v: 2, abschluesse: d.abschluesse.filter((a) => a && a.fach && (Array.isArray(a.ids) || (a.stufen && typeof a.stufen === "object"))), basis };
   } catch (e) {}
-  return { v: 1, abschluesse: [], fehler: true };
+  return { v: 1, abschluesse: [], basis, fehler: true };
 }
 
 /* Stufen je Fach (Regel A/F, Nachbesserung 2, 04.11.2026):
@@ -124,7 +161,7 @@ export async function abschlussLesen(env, kind) {
    Abschluesse werden nach "gesetzt" angewandt; die juengste Stufe einer Kennung gilt. */
 export function geschlossenJeFach(abschluss) {
   const raus = {};
-  const liste = ((abschluss && abschluss.abschluesse) || []).slice().sort((x, y) => (Number(x.gesetzt) || 0) - (Number(y.gesetzt) || 0));
+  const liste = ((abschluss && abschluss.basis) || []).concat((abschluss && abschluss.abschluesse) || []).sort((x, y) => (Number(x.gesetzt) || 0) - (Number(y.gesetzt) || 0));
   const stufe = {};
   for (const a of liste) {
     const f = fachNorm(a.fach);
@@ -133,13 +170,14 @@ export function geschlossenJeFach(abschluss) {
     const st = a.stufen && typeof a.stufen === "object" ? a.stufen : {};
     for (const id of Object.keys(st)) if (STUFEN.includes(st[id])) stufe[f][String(id)] = st[id];
     if (Array.isArray(a.ids)) for (const id of a.ids) stufe[f][String(id)] = "abgefragt";
-    const abgefragt = Object.values(st).includes("abgefragt") || (Array.isArray(a.ids) && a.ids.length > 0);
+    const abgefragt = Object.values(st).some((x) => SCHLIESST.has(x)) || (Array.isArray(a.ids) && a.ids.length > 0);
     const pd = String(a.probeDatum || a.probe || "");
-    if (!raus[f]) { raus[f] = new Set(); raus[f].markiert = new Set(); raus[f].probeDatum = ""; }
+    if (!raus[f]) { raus[f] = new Set(); raus[f].markiert = new Set(); raus[f].probeDatum = ""; raus[f].stufe = {}; }
     if (abgefragt && /^\d{4}-\d{2}-\d{2}$/.test(pd) && pd > raus[f].probeDatum) raus[f].probeDatum = pd;
   }
   for (const f of Object.keys(stufe)) for (const id of Object.keys(stufe[f])) {
-    if (stufe[f][id] === "abgefragt") raus[f].add(id); else raus[f].markiert.add(id);
+    raus[f].stufe[id] = stufe[f][id];
+    if (SCHLIESST.has(stufe[f][id])) raus[f].add(id); else raus[f].markiert.add(id);
   }
   return raus;
 }
@@ -341,9 +379,12 @@ export function bedarfJeFach(wSchluessel, wZahl, blattNach, punkte, faelligFn, z
    abgeschlossenen Blaettern (frueher falsch, am laengsten nicht gefragt zuerst) · E abgeschlossene:
    zuletzt falsch zuerst, dann am laengsten nicht gefragt (nie gefragt = am laengsten) ·
    offene, die sitzen · der Rest in alter Reihenfolge. Nichts faellt weg. */
-export function freiAktuell(frei, k) {
+export function freiAktuell(frei, k, jetzt) {
   const K = k || AKTUELL;
   const z = (c) => (c.p && Number(c.p.z)) || 0;
+  /* Regel 5: Alter bei Grundlagen mal grundlageGewicht; nie gefragt (z 0) bleibt vorn. Ohne jetzt: Alter = -z (wie vorher). */
+  const g = Math.max(1, Number(K.grundlageGewicht) || 1);
+  const alter = (c) => (!z(c) ? Infinity : jetzt ? (jetzt - z(c)) * (c.grundlage ? g : 1) : -z(c));
   const stabil = (l, cmp) => l.map((c, i) => ({ c, i })).sort((a, b) => cmp(a.c, b.c) || (a.i - b.i)).map((y) => y.c);
   const offenUnsicher = [], offenSitzt = [], alt = [], rest = [];
   for (const c of frei || []) {
@@ -355,8 +396,10 @@ export function freiAktuell(frei, k) {
   const knifflig = (c) => !!(c.p && c.p.z && (c.p.fz || c.p.f || c.p.fn));
   const d = stabil(alt.filter(knifflig), (x, y) => z(x) - z(y)).slice(0, Math.max(0, Number(K.kniffligJeTag) || 0));
   const dSet = new Set(d);
-  const e = stabil(alt.filter((c) => !dSet.has(c)), (x, y) => ((y.p && y.p.f ? 1 : 0) - (x.p && x.p.f ? 1 : 0)) || (z(x) - z(y)));
-  return { liste: a1.concat(d, e, offenSitzt, rest), zaehl: { offenUnsicher: a1.length, knifflig: d.length, alt: e.length, offenSitzt: offenSitzt.length, rest: rest.length } };
+  const vgl = (x, y) => { const ax = alter(x), ay = alter(y); return ax === ay ? 0 : ax > ay ? -1 : 1; };
+  const e = stabil(alt.filter((c) => !dSet.has(c)), (x, y) => ((y.p && y.p.f ? 1 : 0) - (x.p && x.p.f ? 1 : 0)) || vgl(x, y));
+  return { liste: a1.concat(d, e, offenSitzt, rest), zaehl: { offenUnsicher: a1.length, knifflig: d.length, alt: e.length, offenSitzt: offenSitzt.length, rest: rest.length,
+    grundlage: e.filter((c) => c.grundlage).length } };
 }
 
 /* Regel F (Nachbesserung 2): Vorschau fuer einen Abschluss - die GANZE Liste der sichtbaren Blaetter
@@ -387,10 +430,14 @@ export function abschlussVorschau(blaetter, fach, probeDatum, vorschlag, schonZu
     else if (!x.sd.datum || !pd) { stufe = "unsicher"; begruendung = "Kein Schuldatum oder kein Probendatum, Inhalt nicht geprüft."; quelle = "datum"; }
     else if (x.sd.datum < pd) { stufe = "unsicher"; begruendung = "Nur nach Datum vor der Probe, Inhalt nicht geprüft."; quelle = "datum"; }
     else { stufe = "nicht abgefragt"; begruendung = "Schuldatum am oder nach dem Probentag."; quelle = "datum"; }
-    const bisher = schonZu ? (schonZu.has(id) ? "abgefragt" : schonZu.markiert && schonZu.markiert.has(id) ? "offen markiert" : "") : "";
+    const bisher = schonZu && schonZu.stufe && schonZu.stufe[id] ? STUFE_LESBAR[schonZu.stufe[id]] || schonZu.stufe[id]
+      : schonZu ? (schonZu.has(id) ? "abgefragt" : schonZu.markiert && schonZu.markiert.has(id) ? "offen markiert" : "") : "";
+    const grundlage = v && v.grundlage ? String(v.grundlage) : grundlageText("paul", id);
+    const widerspruch = v && v.widerspruch ? String(v.widerspruch) : "";
     return { id, titel: String(x.b.titel || x.b.thema || "(ohne Titel)"), thema: String(x.b.thema || ""),
              datum: x.sd.datum, von: x.sd.von, angelegt: String(x.b.angelegt || ""), ...(x.sd.unsicher ? { unsicher: true } : {}),
-             stufe, begruendung, quelle, ...(bisher ? { bisher } : {}) };
+             stufe, begruendung, quelle, ...(bisher ? { bisher } : {}), ...(grundlage ? { grundlage } : {}), ...(widerspruch ? { widerspruch } : {}),
+             ...(v && v.regel ? { regel: v.regel } : {}) };
   });
   const zahl = {};
   for (const e of liste) zahl[e.titel] = (zahl[e.titel] || 0) + 1;

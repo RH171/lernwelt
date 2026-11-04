@@ -1,7 +1,10 @@
 /* Abschluss offener Blaetter im Elternbereich (Schalter "aktuell", Regel F, nur Paul)
  * Nachbesserung 2 (Dennys Beschluss 04.11.2026, 12:55 Uhr): Abschluss nur nach Inhalt, nie nach Datum.
  * Je Blatt eine Stufe: "abgefragt" (abgeschlossen), "nicht abgefragt" (offen), "unsicher" (offen, ein Satz
- * Begruendung). Nur "abgefragt" schliesst. Das Datum ist nur noch Vorschlag in der Vorschau.
+ * Begruendung), "probenzeitraum" (Probenzeitraum, nicht abgefragt: abgeschlossen, Auftrag 208). "abgefragt" und
+ * "probenzeitraum" schliessen. Das Datum ist nur noch Vorschlag in der Vorschau.
+ * Auftrag 208: bestaetigte Proben der Vorschlagsdatei (Mathe 19.10.2026) gelten als Grundstand ("basis", gesetzt 0)
+ * ohne Speichern; sie stehen in GET als basis und werden von POST nie geschrieben oder zurueckgenommen.
  *
  * GET  /api/aktuell-abschluss?kind=paul
  *   -> { ok, schalter, faecher: { fach: [Blatt] }, abschluesse, proben: [Probe aus der Vorschlagsdatei] }
@@ -21,7 +24,7 @@
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
 import { stoffLesen } from "./_schulstoff.js";
 import { fachNorm } from "./_wiedervorlage.js";
-import { ABSCHLUSS, STUFEN, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, istGeschlossen, schuldatum, abschlussVorschau } from "./_aktuell.js";
+import { ABSCHLUSS, STUFEN, STUFE_LESBAR, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, istGeschlossen, schuldatum, abschlussVorschau, grundlageText } from "./_aktuell.js";
 import { VORSCHLAG } from "./_aktuell-vorschlag.js";
 
 const json = (status, d) => new Response(JSON.stringify(d), {
@@ -48,6 +51,7 @@ function probenListe(kind) {
   return ((VORSCHLAG && VORSCHLAG[kind] && VORSCHLAG[kind].proben) || []).map((p) => ({
     schluessel: fachNorm(p.fach) + ":" + (p.probeDatum || p.probe), fach: fachNorm(p.fach), probe: String(p.probe || ""),
     probeDatum: String(p.probeDatum || ""), vorlaeufig: !!p.vorlaeufig, hinweis: String(p.hinweis || ""), blaetter: p.blaetter || [],
+    ...(p.bestaetigt ? { bestaetigt: p.bestaetigt } : {}),
   }));
 }
 
@@ -69,7 +73,7 @@ export async function onRequestGet(context) {
     const pd = pr ? pr.probeDatum : String(u.searchParams.get("probeDatum") || "");
     const v = abschlussVorschau(l.blaetter, fach, pd, pr ? pr.blaetter : [], l.zu[fach]);
     return json(v.ok ? 200 : 400, { ...v, fach, probe: pr ? pr.probe : "", probeDatum: pd,
-      ...(pr && pr.vorlaeufig ? { vorlaeufig: true, hinweis: pr.hinweis } : {}) });
+      ...(pr && pr.vorlaeufig ? { vorlaeufig: true, hinweis: pr.hinweis } : {}), ...(pr && pr.bestaetigt ? { bestaetigt: pr.bestaetigt } : {}) });
   }
   const faecher = {};
   for (const b of l.blaetter) {
@@ -82,6 +86,8 @@ export async function onRequestGet(context) {
       datum: sd.datum, von: sd.von, ...(sd.unsicher ? { unsicher: true } : {}), angelegt: String(b.angelegt || ""),
       geschlossen: istGeschlossen(b, l.zu[f]), offen: offenesBlatt(b, l.zu),
       markiert: !!(l.zu[f] && l.zu[f].markiert && l.zu[f].markiert.has(String(b.id))),
+      ...(l.zu[f] && l.zu[f].stufe && l.zu[f].stufe[String(b.id)] ? { stufe: l.zu[f].stufe[String(b.id)], stufeLesbar: STUFE_LESBAR[l.zu[f].stufe[String(b.id)]] } : {}),
+      ...(grundlageText(kind, b.id) ? { grundlage: grundlageText(kind, b.id) } : {}),
     });
   }
   for (const f of Object.keys(faecher)) {
@@ -91,7 +97,9 @@ export async function onRequestGet(context) {
     for (const e of faecher[f]) if (zahl[e.titel] > 1) { n[e.titel] = (n[e.titel] || 0) + 1; e.gleicherTitel = n[e.titel] + " von " + zahl[e.titel]; }
   }
   return json(200, { ok: true, schalter: (await aktuellAn(env)) ? "neu" : "alt", faecher, abschluesse: l.abschluss.abschluesse,
-                     proben: proben.map((p) => ({ schluessel: p.schluessel, fach: p.fach, probe: p.probe, probeDatum: p.probeDatum, vorlaeufig: p.vorlaeufig, hinweis: p.hinweis })),
+                     basis: (l.abschluss.basis || []).map((a) => ({ fach: a.fach, probe: a.probe, probeDatum: a.probeDatum, bestaetigt: a.bestaetigt, stufen: a.stufen })),
+                     proben: proben.map((p) => ({ schluessel: p.schluessel, fach: p.fach, probe: p.probe, probeDatum: p.probeDatum, vorlaeufig: p.vorlaeufig, hinweis: p.hinweis,
+                       ...(p.bestaetigt ? { bestaetigt: p.bestaetigt } : {}) })),
                      ...(l.abschluss.fehler ? { warnung: "Die gespeicherten Abschlüsse sind gerade nicht lesbar. Speichern ist gesperrt, bis sie wieder da sind." } : {}) });
 }
 
