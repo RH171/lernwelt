@@ -135,7 +135,7 @@
       while (zahlen.length < st.zeilen) zahlen.push("");
       zahlen.length = st.zeilen;
       // Kopf: Stellenwerte, rechts die Einer.
-      gitter.appendChild(el("div", "sb-tk sb-tz", ""));
+      gitter.appendChild(el("div", "sb-tk", ""));
       for (var s = n - 1; s >= 0; s--) { var k = el("div", "sb-tk", STELLE[s]); k.title = STELLE_LANG[s]; gitter.appendChild(k); }
       // Zahlenzeilen: ein Eingabefeld über festen Kästchen, die Ziffern rücken von rechts ein.
       zahlen.forEach(function (wert, zi) {
@@ -157,7 +157,7 @@
         f.addEventListener("focus", function () { zeile.classList.add("an"); });
         f.addEventListener("blur", function () { zeile.classList.remove("an"); });
         f.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") { e.preventDefault(); var nx = gitter.querySelectorAll(".sb-tzahl")[zi + 1] || erg[0]; if (nx) nx.focus(); }
+          if (e.key === "Enter") { e.preventDefault(); var nx = gitter.querySelectorAll(".sb-tzahl")[zi + 1] || ergFelder[0]; if (nx) nx.focus(); }
         });
         zeile.appendChild(f);
         gitter.appendChild(zeile);
