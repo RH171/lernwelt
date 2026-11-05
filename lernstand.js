@@ -1075,6 +1075,22 @@
           if (a && (k.q || k.fa || k.aw)) { for (var z in k) a[z] = k[z]; a.ta = Date.now(); }
         } catch (e) {}
       }
+      /* Rechenflaechen-Marke (05.11.2026, Dennys Absicherung 2, nur Paul, nur Mathe): rf = "tafel", wenn die
+         Rechentabelle bei dieser Antwort angeboten war (Schalter rechentafel = neu, Seite mit Rechenflaeche),
+         sonst "alt". rt = 1, wenn Paul seit der letzten Antwort in die Tabelle getippt hat. Mathe heisst:
+         Kennung mit mathe (Lernquiz, Fundkarten) oder ein Rechenspiel /paul/klasse*-mathe-*. Faellt mit der
+         Runde in denselben Schreibvorgang (functions/api/statistik.js), kein eigener Speicherzugriff. */
+      if (KIND === "paul") {
+        try {
+          var am = aufgaben[aufgaben.length - 1];
+          var istMathe = (kennung && typeof kennung === "object" && kennung.mathe) || /^\/paul\/klasse\d+-mathe-/.test(location.pathname);
+          if (am && istMathe) {
+            var RF = window.Rechenflaeche;
+            am.rf = RF && RF.tafelAn && RF.tafelAn() ? "tafel" : "alt";
+            if (RF && RF.tafelGenutzt && RF.tafelGenutzt(true)) am.rt = 1;
+          }
+        } catch (e) {}
+      }
     }
   };
 

@@ -259,7 +259,18 @@
     }).observe(document.body, { childList: true, subtree: true, characterData: true });
   }
 
-  window.Rechenflaeche = { istRechnen: istRechnen };   // nur zum Prüfen von außen, ändert nichts
+  /* Rechenflächen-Marke (05.11.2026, Dennys Absicherung 2): lernstand.js fragt je Mathe-Antwort, ob die
+     Rechentabelle angeboten war (tafelAn) und ob Paul seit der letzten Antwort hineingetippt hat
+     (tafelGenutzt(true) liest und setzt zurück). Lauscht nur, ändert keine Eingabe. */
+  var tafelGetippt = false;
+  document.addEventListener("input", function (e) {
+    try { if (e.target && e.target.closest && e.target.closest(".rf .sb-tafel")) tafelGetippt = true; } catch (x) {}
+  }, true);
+  window.Rechenflaeche = {
+    istRechnen: istRechnen,                            // nur zum Prüfen von außen, ändert nichts
+    tafelAn: function () { return tafelFrei; },
+    tafelGenutzt: function (zuruecksetzen) { var g = tafelGetippt; if (zuruecksetzen) tafelGetippt = false; return g; }
+  };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
 })();

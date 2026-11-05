@@ -51,7 +51,7 @@ export async function onRequestPost(context) {
       return json(200, { ok: true, alsEltern: true, gespeichert: false });
   } catch (e) {}
 
-  const runde = saeubern(daten.runde, kind === "paul" ? 120 : 40);
+  const runde = saeubern(daten.runde, kind === "paul" ? 120 : 40, kind);
   if (!runde) return json(400, { ok: false, fehler: "Die Runde war unvollständig." });
   /* Antwort-Kennung (03.11.2026, nur Paul): Fragen-ID, Frageart, Antwortweise, Zeit je Antwort -
      nur mit schalter:antwortkennung = "neu". Scheitert etwas, wird die Runde wie bisher gespeichert. */
@@ -74,7 +74,7 @@ export async function onRequestPost(context) {
 /* Schritt 4 (29.10.2026, nur Paul): 120 statt 40 Aufgaben je Abschnitt. Mit der
    Leiter bis 100 Fragen schnitt die 40 Antworten ab, die dann in KEINEM Speicher
    mehr standen (gemessen: fuenf Quizlaeufe mit genau 40 Aufgaben seit 01.10.2026). */
-function saeubern(r, maxAufgaben) {
+function saeubern(r, maxAufgaben, kind) {
   if (!r || !Array.isArray(r.aufgaben) || !r.aufgaben.length) return null;
   const zahl = (x, max) => Math.max(0, Math.min(max, Math.round(Number(x) || 0)));
   const text = (x, n) => String(x == null ? "" : x).slice(0, n);
@@ -111,6 +111,12 @@ function saeubern(r, maxAufgaben) {
       /* Der Lernpunkt der Aufgabe (29.09.2026, "Kreise fuellen"): Damit weiss
          "Deine Woche", welcher Kreis spaeter doch noch geschafft wurde. */
       ...(a.p ? { p: text(a.p, 70) } : {}),
+      /* Rechenflaechen-Marke (05.11.2026, Dennys Absicherung 2, nur Paul, nur Mathe): rf = "tafel" | "alt",
+         welche Rechenflaeche bei dieser Antwort angeboten war; rt = 1, wenn in die Rechentabelle getippt
+         wurde. Nur bekannte Werte, sonst fehlt das Feld (alte Seiten unveraendert). Kein Schalter, kein
+         eigener Speicherzugriff: es faellt in denselben Schreibvorgang wie die Runde. */
+      ...(kind === "paul" && (a.rf === "tafel" || a.rf === "alt") ? { rf: a.rf } : {}),
+      ...(kind === "paul" && (a.rf === "tafel" || a.rf === "alt") && a.rt === 1 ? { rt: 1 } : {}),
     })),
   };
 }

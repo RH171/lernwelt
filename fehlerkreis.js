@@ -30,15 +30,16 @@
  * "gut" mehr - kein grüner Ring, kein Schild, kein Haken. Rote/violette Stellen bleiben, die Daten
  * bleiben unverändert (nur Darstellung). LWKreis.gruenAus() sagt es anderen Teilen (Prüf-Reiter, Quiz,
  * Suche). Rückweg: Schalter "ohnegruen" = "alt" zeichnet alles wieder wie vorher (Ereignis "lwk-gruen").
- * Leon und Helena: unverändert.
+ * Leon und Helena (05.11.2026, Dennys Freigabe 15:53 Uhr): gilt dort genauso (/leon/, /helena/), beide hatten
+ * am 05.11.2026 0 Korrekturen, sichtbar ändert sich bei ihnen also heute nichts. Derselbe Schalter "ohnegruen".
  */
 (function () {
   "use strict";
   var ROT = "#dc2626", GRUEN = "#15803d", WERKSTATT = "#7c3aed";
-  var PAUL = /^\/paul\//.test(location.pathname);
-  var gruenWeg = PAUL, alleEbenen = [];
+  var KINDSEITE = /^\/(paul|leon|helena)\//.test(location.pathname);   // seit 05.11.2026 alle drei Kinder (vorher nur /paul/)
+  var gruenWeg = KINDSEITE, alleEbenen = [];
   function gruenAus() { return gruenWeg; }
-  if (PAUL) {
+  if (KINDSEITE) {
     try {
       fetch("/api/schalter?name=ohnegruen", { credentials: "same-origin", cache: "no-store" })
         .then(function (r) { return r.ok ? r.json() : null; })
@@ -193,7 +194,7 @@
       }
     };
     api.setzen(kreise);
-    if (PAUL) alleEbenen.push(api);
+    if (KINDSEITE) alleEbenen.push(api);
     return api;
   }
 
