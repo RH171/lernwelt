@@ -1467,6 +1467,8 @@ function artKurz(art) {
   function belegKasten(f) {
     if (!f.beleg) return "";
     var h = HERKUNFT_KOPF[f.beleg.herkunft] ? f.beleg.herkunft : "heft";
+    /* Ohne Grün bei Paul (05.11.2026, Auftrag 210): kein „berichtigt durch Claude“ - es steht im Heft. */
+    if (h === "verbessert" && window.LWKreis && LWKreis.gruenAus && LWKreis.gruenAus()) h = "heft";
     var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt" || h === "vorlage" || h === "verbessert";
     var a = f.beleg.auch;
     var kopf = h === "eingetragen" && f.beleg.abgehakt
