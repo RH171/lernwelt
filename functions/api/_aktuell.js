@@ -76,6 +76,26 @@ export const AKTUELL = {
      Grundstand, ohne KV-Schreiben. Jeder Abschluss von der Elternseite gilt vorrangig (juengste Stufe je Kennung).
      false = nur Abschluesse aus dem Speicher (Stand vor Auftrag 208). */
   vorschlagBasis: true,
+  /* ---- Auftrag 209 (Nachbesserung 4, 05.11.2026), alles nur im Pfad schalter:aktuell = neu ---- */
+  /* R7: Blaetter, die sich am Geraet nicht ueben lassen (interne Stufe "nichtUebbar", Paul sieht sie nie):
+     Handwerk (probenstoff:false am Blatt - die sechs Lineatur-, Schreibschrift- und Heftregel-Blaetter) und
+     Blaetter ohne eine einzige Frage (weder Quizfrage im bereinigten Vorrat noch gueltige Fundkarte). Nie offen,
+     nie Vorrang. Bekommt ein Blatt spaeter Fragen, ist es von selbst wieder uebbar. */
+  nichtUebbar: true,
+  /* R8/R9: Deckel je Fach in FRAGEN = normalSek / Median der Antwortzeit des Fachs (Pauls echte Antworten,
+     lernstand:paul, nur lesen; bei jedem Abruf neu gerechnet). Unter minAntworten Antworten gilt der feste
+     Ausweichwert (Messung Do 05.11.2026, 10:35 Uhr MEZ, Spiegel; unterlagen/aktuell-2026-11-05/ergebnis.md).
+     Ausfalltag je Fach (Pause des Fachs >= 1 Tag): hoechstens ausfallFaktor x normale Menge, nie ueber
+     ausfallSek (15 Min), nie multipliziert. */
+  fragenDeckel: { normalSek: 600, ausfallSek: 900, ausfallFaktor: 1.5, minAntworten: 30,
+                  ausweich: { mathe: 37.4, hsu: 14.2, deutsch: 11.6, englisch: 7.4, standard: 22.4 } },
+  /* R11: vorlaeufige Proben (ohne Probenfoto, Deutsch und HSU) - "abgefragt (vorlaeufig)" gilt wie abgeschlossen,
+     nur Auffuellen; die Blaetter der letzten fensterTage Tage vor dem angekuendigten Termin bleiben offen. */
+  vorlaeufigSchliesst: true,
+  fensterTage: 5,
+  /* R10: Neues hat immer Vorrang - im neu-Pfad ohne den Neues-Anteil (neuAnteil 0,5, neuJeRunde 9) aus Schritt 4.
+     Der Fragendeckel aus R8/R9 bleibt die Obergrenze, der Deckel 3 Karten je Blatt (wiederholung4) bleibt. */
+  neuFrei: true,
 };
 
 export const ABSCHLUSS = (kind) => "aktuell-abschluss:" + kind;
@@ -462,4 +482,249 @@ export function abschlussVorschau(blaetter, fach, probeDatum, vorschlag, schonZu
   const n = {};
   for (const e of liste) if (zahl[e.titel] > 1) { n[e.titel] = (n[e.titel] || 0) + 1; e.gleicherTitel = n[e.titel] + " von " + zahl[e.titel]; }
   return { ok: true, liste };
+}
+
+/* =====================================================================================================
+   Auftrag 209 (Nachbesserung 4, 05.11.2026, Dennys Wortlaut in unterlagen/aktuell-2026-11-05/auftrag-209.md).
+   Alles rein (ohne Speicher) und nur im Pfad schalter:aktuell = neu aufgerufen (quiz.js aktuellDazu, neu-Pfad).
+   ===================================================================================================== */
+
+const TAG_MS = 86400000;
+const tagPlus = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * TAG_MS).toISOString().slice(0, 10);
+
+/* R11: Fenster "letzte fensterTage Tage vor dem angekuendigten Termin" einer Probe ([von, bis], beide einschliesslich).
+   Steht in der Vorschlagsdatei ein Fenster, gilt es; sonst probeDatum - fensterTage bis probeDatum - 1. */
+export function probenFenster(p, k) {
+  const K = k || AKTUELL;
+  if (p && Array.isArray(p.fenster) && p.fenster.length === 2) return [String(p.fenster[0]), String(p.fenster[1])];
+  const pd = String((p && p.probeDatum) || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(pd)) return null;
+  return [tagPlus(pd, -(Number(K.fensterTage) || 5)), tagPlus(pd, -1)];
+}
+
+/* R11: vorlaeufige Proben (Deutsch, HSU ohne Probenfoto) als Abschluss-Eintraege, gesetzt 0 (jeder Abschluss aus dem
+   Speicher gilt danach, juengste Stufe je Kennung). Nur Stufen, die schliessen, und nur ausserhalb des Fensters vor
+   dem Termin; alles andere bleibt offen ("nicht abgefragt", "unsicher", Fenster). Rueckgabe [Eintraege], jeder mit
+   vorlaeufig: true. Die Probendaten bleiben unbestaetigt; mit dem Probenfoto ordnet aktuell-vorschlag.py neu zu. */
+export function vorlaeufigBasis(kind, blattNach, k) {
+  const K = k || AKTUELL;
+  if (!K.vorlaeufigSchliesst) return [];
+  const raus = [];
+  for (const p of ((VORSCHLAG && VORSCHLAG[kind] && VORSCHLAG[kind].proben) || [])) {
+    if (!p || !p.vorlaeufig || p.bestaetigt) continue;
+    const fe = probenFenster(p, K);
+    const stufen = {};
+    for (const b of p.blaetter || []) {
+      if (!b || !STUFEN.includes(b.stufe)) continue;
+      const bl = blattNach && blattNach[String(b.blattId)];
+      if (!bl) continue;
+      if (!SCHLIESST.has(b.stufe)) { stufen[String(b.blattId)] = b.stufe; continue; }   // "nicht abgefragt"/"unsicher": offen, markiert
+      const sd = schuldatum(bl).datum;
+      if (fe && sd && sd >= fe[0] && sd <= fe[1]) continue;   // letzte Tage vor dem Termin: offen
+      stufen[String(b.blattId)] = "abgefragt";
+    }
+    raus.push({ fach: p.fach, probe: String(p.probe || ""), probeDatum: String(p.probeDatum || ""), gesetzt: 0, basis: true, vorlaeufig: true, stufen });
+  }
+  return raus;
+}
+
+/* Kennungen, die nur ueber eine vorlaeufige Probe geschlossen sind (kein Abschluss aus dem Speicher nennt sie). */
+export function vorlaeufigZu(vBasis, abschluss, geschlossen) {
+  const kv = new Set();
+  for (const a of (abschluss && abschluss.abschluesse) || []) {
+    for (const id of Object.keys((a && a.stufen) || {})) kv.add(String(id));
+    for (const id of (a && a.ids) || []) kv.add(String(id));
+  }
+  const raus = new Set();
+  for (const e of vBasis || []) for (const id of Object.keys(e.stufen || {})) {
+    const zu = geschlossen && geschlossen[fachNorm(e.fach)];
+    if (!kv.has(id) && zu && zu.has(id)) raus.add(id);
+  }
+  return raus;
+}
+
+/* R7: nicht am Geraet uebbar = Handwerk (probenstoff:false) oder ohne eine einzige Frage in W (weder Quizfrage im
+   bereinigten Vorrat noch gueltige Fundkarte; wiederholung4 legt fuer jedes Blatt mit Fragen einen Eintrag an). */
+export function nichtUebbarIds(blattNach, wSchluessel, k) {
+  const K = k || AKTUELL;
+  const raus = new Set();
+  if (!K.nichtUebbar) return raus;
+  for (const id of Object.keys(blattNach || {})) {
+    const b = blattNach[id];
+    if (!b || b.sichtbar === false) continue;
+    if (b.probenstoff === false || !((wSchluessel && wSchluessel[id]) || []).length) raus.add(id);
+  }
+  return raus;
+}
+
+/* R8: Median der Antwortzeit je Fach aus Pauls echten Antworten (lernstand:paul, Liste der Sitzungen).
+   Messweg wie Vorab-Pruefung 04.11.2026 (Abschnitt 3): nur Quiz-Sitzungen ohne nurBesuch, nur Sitzungen mit genau
+   einem Fach (jede Antwort mit Lernpunkt, alle im selben Fach); Zeit je Antwort = aktive Sekunden der Sitzung
+   geteilt durch ihre Antworten. fachVon(p) liefert das Fach eines Lernpunkts ("" = unbekannt).
+   art "mittel" = Mittelwert statt Median (nur fuer den Vergleich in der Pruefung).
+   Rueckgabe { fach: { median, n } }. */
+export function medianJeFach(liste, fachVon, art) {
+  const je = {};
+  for (const s of Array.isArray(liste) ? liste : []) {
+    if (!s || s.spielId !== "quiz" || s.nurBesuch) continue;
+    const a = Array.isArray(s.aufgaben) ? s.aufgaben : [];
+    const sek = Number(s.sekunden) || 0;
+    if (!a.length || sek <= 0) continue;
+    const f = new Set(a.map((x) => (x && x.p ? fachVon(String(x.p)) || "" : "")));
+    if (f.size !== 1 || f.has("")) continue;
+    const fach = [...f][0];
+    const t = sek / a.length;
+    (je[fach] = je[fach] || []).push(...a.map(() => t));
+  }
+  const raus = {};
+  for (const f of Object.keys(je)) {
+    const l = je[f].slice().sort((x, y) => x - y), n = l.length;
+    const m = art === "mittel" ? l.reduce((x, y) => x + y, 0) / n : n % 2 ? l[(n - 1) / 2] : (l[n / 2 - 1] + l[n / 2]) / 2;
+    raus[f] = { median: Math.round(m * 10) / 10, n };
+  }
+  return raus;
+}
+
+/* R8/R9: Deckel je Fach in Fragen. mediane = medianJeFach(...). Rueckgabe { fach: { sek, quelle, n, deckel, ausfallDeckel } },
+   quelle "gemessen" (ab minAntworten Antworten) oder "ausweich" (fester Wert aus fragenDeckel.ausweich). */
+export function deckelJeFach(faecher, mediane, k) {
+  const D = (k || AKTUELL).fragenDeckel;
+  const raus = {};
+  for (const f of faecher) {
+    const m = mediane && mediane[f];
+    const gemessen = !!(m && m.n >= D.minAntworten && m.median > 0);
+    const sek = gemessen ? m.median : Number(D.ausweich[f]) || Number(D.ausweich.standard);
+    raus[f] = { sek, quelle: gemessen ? "gemessen" : "ausweich", n: m ? m.n : 0,
+                deckel: Math.max(1, Math.floor(D.normalSek / sek)), ausfallDeckel: Math.max(1, Math.floor(D.ausfallSek / sek)) };
+  }
+  return raus;
+}
+
+/* R8/R9: Menge je Fach. bedarf = bedarfAktuell(...)[fach].gesamt; pause = Pause je Fach (volle Tage ohne Antwort).
+   Normaltag: min(Bedarf, Deckel). Ausfalltag des Fachs (Pause >= 1): min(Bedarf, floor(1,5 x Normalmenge), Ausfall-Deckel)
+   - nie multipliziert (der Faktor gilt einmal, egal wie lang die Pause war). Nie unter 1 (0 hiesse auf der Seite
+   "volle Tagesmenge"). Rueckgabe { menge, normal, ausfall }. */
+export function mengeJeFach(faecher, bedarf, deckel, pause, k) {
+  const D = (k || AKTUELL).fragenDeckel;
+  const menge = {}, normal = {}, ausfall = {};
+  for (const f of faecher) {
+    const b = Math.max(0, Number(bedarf && bedarf[f]) || 0);
+    const d = deckel[f];
+    const nm = Math.min(b, d.deckel);
+    const af = (Number(pause && pause[f]) || 0) >= 1;
+    normal[f] = Math.max(1, nm);
+    menge[f] = Math.max(1, af ? Math.min(b, Math.floor(nm * D.ausfallFaktor), d.ausfallDeckel) : nm);
+    ausfall[f] = af;
+  }
+  return { menge, normal, ausfall };
+}
+
+/* R10 Gruppe eines offenen Blattes fuer "bei vollem Deckel": 0 juengste Blaetter nach der Probe (oder Fach ohne Probe),
+   1 unsichere vor dem Termin (Stufe "nicht abgefragt"/"unsicher" oder im Fenster vor dem Termin), 2 der Rest. */
+export function gruppeBlatt(blatt, zuF, probe) {
+  const sd = schuldatum(blatt).datum;
+  const pd = probe && probe.probeDatum;
+  if (!pd || (sd && sd >= pd)) return 0;
+  const id = String(blatt.id);
+  if (zuF && zuF.markiert && zuF.markiert.has(id)) return 1;
+  const fe = probe.fenster;
+  if (fe && sd && sd >= fe[0] && sd <= fe[1]) return 1;
+  return 2;
+}
+
+/* Probendatum und Fenster je Fach: juengste Probe der Vorschlagsdatei (bestaetigt oder vorlaeufig), sonst das
+   Probendatum aus den Abschluessen. Rueckgabe { fach: { probeDatum, fenster } }. */
+export function probeJeFach(kind, geschlossen, k) {
+  const raus = {};
+  for (const p of ((VORSCHLAG && VORSCHLAG[kind] && VORSCHLAG[kind].proben) || [])) {
+    const f = fachNorm(p && p.fach), pd = String((p && p.probeDatum) || "");
+    if (!f || !/^\d{4}-\d{2}-\d{2}$/.test(pd)) continue;
+    if (!raus[f] || pd > raus[f].probeDatum) raus[f] = { probeDatum: pd, fenster: probenFenster(p, k) };
+  }
+  for (const f of Object.keys(geschlossen || {})) {
+    const pd = geschlossen[f].probeDatum;
+    if (pd && (!raus[f] || pd > raus[f].probeDatum)) raus[f] = { probeDatum: pd, fenster: probenFenster({ probeDatum: pd }, k) };
+  }
+  return raus;
+}
+
+/* R8/R10: Bedarf je Fach in Fragen, getrennt nach offen (davon neu) und Auffuellen.
+   offen       Karten offener Blaetter in W: nie gespielt (Neues) oder heute dran/faellig nach der Leiter, je Blatt
+               hoechstens so viele, wie das Blatt Karten in W hat; ein offenes Blatt ohne heutige und faellige Karte
+               zaehlt 1 (R10: jedes offene Blatt taeglich mindestens 1 Frage).
+   auffuellen  faellige oder heute beantwortete Karten in W der uebrigen Blaetter (abgeschlossen, vorlaeufig
+               abgeschlossen) - nur zum Auffuellen, ohne Vorrang.
+   istDran(s, p): heute beantwortet oder faellig. Rueckgabe { fach: { offen, neu, auffuellen, gesamt } }. */
+export function bedarfAktuell(wSchluessel, wZahl, blattNach, punkte, offen, istDran) {
+  const raus = {};
+  for (const id of Object.keys(wSchluessel || {})) {
+    const b = blattNach && blattNach[id];
+    if (!b) continue;
+    const f = fachNorm(b.fach);
+    const z = raus[f] || (raus[f] = { offen: 0, neu: 0, auffuellen: 0, gesamt: 0 });
+    const cap = wZahl && wZahl[id] ? Number(wZahl[id].w) || 0 : (wSchluessel[id] || []).length;
+    let neu = 0, dran = 0;
+    for (const s of wSchluessel[id]) {
+      const p = punkte && punkte[s];
+      if (!p || !p.z) neu++; else if (istDran(s, p)) dran++;
+    }
+    if (offen && offen.has(id)) {
+      const n = Math.min(cap, neu + dran);
+      const nNeu = Math.min(neu, n);
+      const ges = Math.max(1, n);
+      z.offen += ges; z.neu += nNeu;
+    } else z.auffuellen += Math.min(cap, dran);
+  }
+  for (const f of Object.keys(raus)) raus[f].gesamt = raus[f].offen + raus[f].auffuellen;
+  return raus;
+}
+
+/* R10: Reihenfolge der Karten eines Fachs. items: [{ key, blatt, p, offen, nie, faellig }] - nur Karten in W.
+   blattInfo(id) -> { gruppe, datum }; heuteBlatt: Set der offenen Blaetter, die heute schon eine Frage hatten.
+     1. Pflicht: je offenes Blatt ohne heutige Frage EINE Karte (nie gespielt: die erste neue; sonst die unsicherste,
+        bei gleichem Rang die am laengsten nicht gefragte). Blaetter reihum: letzter Fragetag zuerst (nie gefragt
+        vorn), dann Gruppe (juengste nach der Probe, unsichere vor dem Termin, Rest), dann das juengste Schuldatum.
+     2. Neues der offenen Blaetter (Gruppe, juengstes Blatt zuerst) - Neues hat immer Vorrang.
+     3. Faellige offener Blaetter: zuletzt falsch zuerst, dann Gruppe, dann die unsicherste, dann die aelteste Antwort.
+     4. Auffuellen: faellige Karten der uebrigen Blaetter, zuletzt falsch zuerst, dann am laengsten nicht gefragt.
+   Rueckgabe { liste: [item mit .teil "pflicht"|"neu"|"offen"|"auffuellen"], pflicht: [Blatt-ids in Reihenfolge] }. */
+export function ordneAktuell(items, blattInfo, heuteBlatt, k) {
+  const z = (c) => (c.p && Number(c.p.z)) || 0;
+  const tagNr = (c) => (z(c) ? berlinTagNr(z(c)) : 0);
+  const stabil = (l, cmp) => l.map((c, i) => ({ c, i })).sort((a, b) => cmp(a.c, b.c) || (a.i - b.i)).map((y) => y.c);
+  const info = (id) => blattInfo(id) || { gruppe: 2, datum: "" };
+  const nachDatum = (a, b) => (info(a).datum < info(b).datum ? 1 : info(a).datum > info(b).datum ? -1 : 0);
+  const jeBlatt = new Map();
+  for (const c of items) if (c.offen) { if (!jeBlatt.has(c.blatt)) jeBlatt.set(c.blatt, []); jeBlatt.get(c.blatt).push(c); }
+  const pflichtC = [];
+  const letzter = {};
+  for (const [id, l] of jeBlatt) {
+    letzter[id] = Math.max(0, ...l.map(tagNr));
+    if (heuteBlatt && heuteBlatt.has(id)) continue;
+    const gespielt = l.filter((c) => z(c));
+    const c = gespielt.length ? taeglichWaehlen(gespielt, k) : l.find((x) => x.nie) || l[0];
+    if (c) pflichtC.push(c);
+  }
+  const pflicht = stabil(pflichtC, (a, b) => (letzter[a.blatt] - letzter[b.blatt]) || (info(a.blatt).gruppe - info(b.blatt).gruppe) || nachDatum(a.blatt, b.blatt));
+  const genommen = new Set(pflicht);
+  const neu = stabil(items.filter((c) => c.offen && c.nie && !genommen.has(c)), (a, b) => (info(a.blatt).gruppe - info(b.blatt).gruppe) || nachDatum(a.blatt, b.blatt));
+  const offenF = stabil(items.filter((c) => c.offen && !c.nie && c.faellig && !genommen.has(c)), (a, b) =>
+    ((b.p && b.p.f ? 1 : 0) - (a.p && a.p.f ? 1 : 0)) || (info(a.blatt).gruppe - info(b.blatt).gruppe) ||
+    (unsicherRang(a.p, k) - unsicherRang(b.p, k)) || (z(a) - z(b)));
+  const auf0 = stabil(items.filter((c) => !c.offen && !c.nie && c.faellig), (a, b) => ((b.p && b.p.f ? 1 : 0) - (a.p && a.p.f ? 1 : 0)) || (z(a) - z(b)));
+  /* Regel 5 (3b) bleibt: im Auffuellen Grundlagen und andere Karten im Verhaeltnis g : 1, getrennt fuer
+     "zuletzt falsch" und den Rest; ohne Grundlagen-Kennung unveraendert. */
+  const g = Math.max(1, Number((k || AKTUELL).grundlageGewicht) || 1);
+  const mischen = (l) => {
+    if (g <= 1 || !l.some((c) => c.grundlage)) return l;
+    const G = l.filter((c) => c.grundlage), O = l.filter((c) => !c.grundlage), aus = [];
+    let i = 0, j = 0;
+    while (i < G.length && j < O.length) aus.push(i < g * (j + 1) ? G[i++] : O[j++]);
+    return aus.concat(G.slice(i), O.slice(j));
+  };
+  const istF = (c) => !!(c.p && c.p.f);
+  const auf = mischen(auf0.filter(istF)).concat(mischen(auf0.filter((c) => !istF(c))));
+  const liste = pflicht.map((c) => ({ ...c, teil: "pflicht" })).concat(neu.map((c) => ({ ...c, teil: "neu" })),
+    offenF.map((c) => ({ ...c, teil: "offen" })), auf.map((c) => ({ ...c, teil: "auffuellen" })));
+  return { liste, pflicht: pflicht.map((c) => c.blatt) };
 }
