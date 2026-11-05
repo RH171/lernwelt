@@ -412,6 +412,32 @@
     var faellige = faelligAlle.filter(inW);
     var neue = topf.neu.map(function (c) { return bewerte(c, false); }).filter(inW);
     var ruhend = topf.sicher.concat(topf.ruht).map(function (c) { return bewerte(c, false); });
+    /* Auftrag 209, Regel 10 (05.11.2026, nur mit schalter:aktuell = neu): In der Fach-Runde kommt die Reihe
+       vom Server (s4.aktuell.reihe) - je offenes Blatt eine Karte, dann Neues, dann Faelliges, dann
+       Auffuellen, hoechstens die Menge des Fachs. Ohne das Feld (Schalter aus) laeuft alles wie bisher. */
+    var reihe = e.fach && s4.aktuell && s4.aktuell.reihe ? s4.aktuell.reihe[fachNorm(e.fach)] : null;
+    if (reihe) {
+      var nachKey = {};
+      faelligAlle.concat(neue, ruhend).forEach(function (c) {
+        var key;
+        if (c.quiz && c.quiz.frageId != null) {
+          var nr = Number(c.quiz.belegNr);
+          key = nr >= 1 ? c.blatt + "#" + Math.floor(nr) : c.blatt + "#f:" + String(c.quiz.frageId || "").slice(0, 24);
+        } else key = c.blatt + "#k:" + schluessel(c);
+        if (!nachKey[key]) nachKey[key] = c;
+      });
+      var plan = [];
+      for (var ri = 0; ri < reihe.length && plan.length < n; ri++) {
+        var pc = nachKey[reihe[ri]];
+        if (pc && plan.indexOf(pc) < 0) plan.push(pc);
+      }
+      /* Keine Karte der Reihe auf der Seite (alter Stand): wie bisher weiter. */
+      if (plan.length) plan.forEach(function (k) {
+        if (vorrang.indexOf(k) >= 0) k.vorrang = istFehlerKarte(k) ? "fehler" : (k.blatt in frisch ? "frisch" : "text");
+        delete k._tage; delete k._r; delete k._b; delete k._fach; delete k._faellig; delete k._w;
+      });
+      if (plan.length) return plan;
+    }
     /* 1. Einstieg: eine sichere, nicht faellige Karte, wechselnd (zufaellig je Runde). */
     var sichere = ruhend.filter(function (c) { return c.stufe === "sicher"; });
     var einstieg = sichere.length ? sichere[Math.floor(zufall() * sichere.length) % sichere.length] : null;
