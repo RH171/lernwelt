@@ -30,6 +30,16 @@
  * nicht coarse), sonst Zeichnen. Pauls Wahl wird je Gerät gemerkt (localStorage, nur nach einem
  * Klick auf den Umschalter). Der Text wird nirgends gespeichert und zählt nirgends.
  * huelle.sbTippen(true) zeigt den Umschalter (rechenflaeche.js nach dem Schalter "rechentippen").
+ *
+ * Rechentabelle im Tippen-Teil (05.11.2026, Auftrag 210, nur Paul): Paul tippte 610 − 322 ins freie
+ * Textfeld und musste jede Stelle mit Leerzeichen selbst ausrichten („dafür 5 Minuten gebraucht“).
+ * Sein Wunsch: „dass das halt sich von selber gerade stellt“. huelle.sbTafel(true, fragetext) legt
+ * vor das Textfeld eine Stellentafel: Kopf T H Z E (so viele Stellen wie die Aufgabe braucht, sonst 4),
+ * Rechenzeichen vorgegeben (aus der Frage, antippen wechselt + / −), je Zahl eine Zeile mit festen
+ * Kästchen - die Ziffern rücken von rechts ein, die Einer stehen immer unter den Einern -, darunter
+ * kleine Übertragskästchen, Strich und Ergebniskästchen, die nach jeder Ziffer eins nach links springen.
+ * Malnehmen und Teilen haben ein anderes Bild: Dort (und auf Wunsch immer) bleibt „📝 Freies Feld“.
+ * Die Tafel prüft nichts, verrät nichts, speichert nichts (kein localStorage, kein Server).
  */
 (function () {
   "use strict";
@@ -58,6 +68,169 @@
     return String(t).replace(/\*/g, "\u00B7").replace(/\//g, ":").replace(/[^0-9 \n+\-\u2212\u00B7\u00D7:\u00F7=.,]/g, "");
   }
 
+  /* ---------- Rechentabelle (Stellentafel) ---------- */
+  var STELLE = ["E", "Z", "H", "T", "ZT", "HT", "M"];
+  var STELLE_LANG = ["Einer", "Zehner", "Hunderter", "Tausender", "Zehntausender", "Hunderttausender", "Millionen"];
+  /* Was steht in der Frage? Nur die erste saubere Rechnung zählt: "610 − 322", "347 + 285 + 19".
+     Ergebnis: { op: "+"|"-"|"mal"|"geteilt"|null, stellen } - die Zahlen selbst trägt Paul ein. */
+  function tafelAus(text) {
+    var t = String(text || "").replace(/[−–—]/g, "-").replace(/(\d)[.   ](?=\d{3}(?!\d))/g, "$1");
+    var m = /(\d+)\s*([+\-·×*:÷])\s*(\d+)((?:\s*\2\s*\d+)*)/.exec(t);
+    if (!m) return { op: null, stellen: 4 };
+    var zeichen = m[2], zahlen = (m[1] + " " + m[3] + " " + (m[4] || "").replace(/[^\d ]/g, " ")).trim().split(/\s+/);
+    var op = zeichen === "+" ? "+" : zeichen === "-" ? "-" : /[:÷]/.test(zeichen) ? "geteilt" : "mal";
+    var laengste = Math.max.apply(null, zahlen.map(function (z) { return String(Number(z)).length; }));
+    var stellen = laengste + (op === "+" && zahlen.length > 1 ? 1 : 0);
+    if (op === "+" && zahlen.length > 1) {
+      var summe = zahlen.reduce(function (s, z) { return s + Number(z); }, 0);
+      stellen = Math.max(laengste, String(summe).length);
+    }
+    return { op: op, stellen: Math.min(7, Math.max(3, stellen)), anzahl: Math.min(4, Math.max(2, zahlen.length)) };
+  }
+  function tafelBauen(ziel, text) {
+    var a = tafelAus(text);
+    var st = { stellen: a.stellen, op: a.op === "-" ? "-" : "+", zeilen: a.op === "+" ? a.anzahl : 2 };
+    var wurzel = el("div", "sb-tafel-innen");
+    ziel.innerHTML = ""; ziel.appendChild(wurzel);
+    var leiste = el("div", "sb-tafelleiste");
+    var zeichenKnopf = el("button", "sb-tafel-op");
+    zeichenKnopf.type = "button";
+    var mehr = el("button", "sb-tafel-zeile", "＋ Zahl"); mehr.type = "button";
+    var weniger = el("button", "sb-tafel-zeile", "− Zahl"); weniger.type = "button";
+    var stelleDazu = el("button", "sb-tafel-stelle", "＋ Stelle"); stelleDazu.type = "button";
+    var tLeeren = el("button", "sb-text-leeren", "Alles löschen"); tLeeren.type = "button";
+    [zeichenKnopf, mehr, weniger, stelleDazu, tLeeren].forEach(function (b) { leiste.appendChild(b); });
+    var gitter = el("div", "sb-tafel");
+    gitter.setAttribute("role", "group");
+    gitter.setAttribute("aria-label", "Rechentabelle: Zahlen untereinander, die Einer stehen rechts");
+    wurzel.appendChild(leiste); wurzel.appendChild(gitter);
+
+    var zahlen = [], ue = [], erg = [];          // zahlen: Text je Zeile; ue/erg: Ziffer je Stelle (0 = Einer)
+    function nur(z) { return String(z || "").replace(/\D/g, ""); }
+    function feld(cls, label, gross) {
+      var f = el("input", cls);
+      f.type = "text"; f.setAttribute("inputmode", "numeric"); f.setAttribute("pattern", "[0-9]*");
+      f.setAttribute("autocomplete", "off"); f.setAttribute("autocorrect", "off"); f.setAttribute("autocapitalize", "off");
+      f.setAttribute("spellcheck", "false"); f.setAttribute("enterkeyhint", "next");
+      f.setAttribute("aria-label", label);
+      if (!gross) f.maxLength = 1;
+      ["keydown", "keyup", "keypress", "beforeinput"].forEach(function (art) {
+        f.addEventListener(art, function (e) { e.stopPropagation(); });
+      });
+      f.addEventListener("focus", function () {
+        try { f.scrollIntoView({ block: "nearest" }); } catch (x) {}
+      });
+      return f;
+    }
+    function bauen() {
+      var n = st.stellen, spalten = n + 1;
+      gitter.innerHTML = "";
+      gitter.style.setProperty("--sb-spalten", String(spalten));
+      gitter.setAttribute("data-stellen", String(n));
+      zeichenKnopf.textContent = "Rechenzeichen: " + (st.op === "-" ? "−" : "+");
+      zeichenKnopf.setAttribute("aria-label", "Rechenzeichen " + (st.op === "-" ? "minus" : "plus") + ", antippen zum Wechseln");
+      mehr.hidden = st.op !== "+" || st.zeilen >= 4;
+      weniger.hidden = st.op !== "+" || st.zeilen <= 2;
+      stelleDazu.hidden = n >= 7;
+      while (zahlen.length < st.zeilen) zahlen.push("");
+      zahlen.length = st.zeilen;
+      // Kopf: Stellenwerte, rechts die Einer.
+      gitter.appendChild(el("div", "sb-tk sb-tz", ""));
+      for (var s = n - 1; s >= 0; s--) { var k = el("div", "sb-tk", STELLE[s]); k.title = STELLE_LANG[s]; gitter.appendChild(k); }
+      // Zahlenzeilen: ein Eingabefeld über festen Kästchen, die Ziffern rücken von rechts ein.
+      zahlen.forEach(function (wert, zi) {
+        gitter.appendChild(el("div", "sb-tz sb-tz-zahl", zi ? (st.op === "-" ? "−" : "+") : ""));
+        var zeile = el("div", "sb-tzeile");
+        zeile.style.gridColumn = "2 / span " + n;
+        var kaesten = [];
+        for (var sp = n - 1; sp >= 0; sp--) { var c = el("div", "sb-tzelle"); c.setAttribute("data-stelle", STELLE[sp]); zeile.appendChild(c); kaesten[sp] = c; }
+        var f = feld("sb-tzahl", (zi + 1) + ". Zahl eintippen, die Einer stehen rechts", true);
+        f.maxLength = n;
+        f.value = wert;
+        function zeigen() {
+          var v = nur(f.value).slice(0, n);
+          if (v !== f.value) f.value = v;
+          zahlen[zi] = v;
+          for (var i = 0; i < n; i++) kaesten[i].textContent = i < v.length ? v.charAt(v.length - 1 - i) : "";
+        }
+        f.addEventListener("input", function (e) { e.stopPropagation(); zeigen(); });
+        f.addEventListener("focus", function () { zeile.classList.add("an"); });
+        f.addEventListener("blur", function () { zeile.classList.remove("an"); });
+        f.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") { e.preventDefault(); var nx = gitter.querySelectorAll(".sb-tzahl")[zi + 1] || erg[0]; if (nx) nx.focus(); }
+        });
+        zeile.appendChild(f);
+        gitter.appendChild(zeile);
+        zeigen();
+      });
+      // Übertrag: kleine Kästchen unter der letzten Zahl, zu den Einern kommt keiner.
+      gitter.appendChild(el("div", "sb-tz sb-tz-ue", ""));
+      var ueFelder = [], ergFelder = [];
+      for (var su = n - 1; su >= 0; su--) {
+        var zelle = el("div", "sb-tue-zelle");
+        if (su > 0) {
+          var u = feld("sb-tue", "Übertrag " + STELLE_LANG[su]);
+          u.value = ue[su] || ""; u.dataset.i = String(su);
+          zelle.appendChild(u); ueFelder[su] = u;
+        }
+        gitter.appendChild(zelle);
+      }
+      gitter.appendChild(el("div", "sb-tstrich"));
+      gitter.appendChild(el("div", "sb-tz", ""));
+      for (var se = n - 1; se >= 0; se--) {
+        var e = feld("sb-terg", "Ergebnis " + STELLE_LANG[se]);
+        e.value = erg[se] || ""; e.dataset.i = String(se);
+        gitter.appendChild(e); ergFelder[se] = e;
+      }
+      // Ergebnis: Ziffer rein -> eins nach links; leer und Rücktaste -> eins nach rechts.
+      ergFelder.forEach(function (f, i) {
+        f.addEventListener("input", function (ev) {
+          ev.stopPropagation();
+          var v = nur(f.value);
+          if (v.length > 1) {                       // mehrere Ziffern auf einmal: von rechts verteilen
+            for (var j = 0; j < v.length && i + j < n; j++) { ergFelder[i + j].value = v.charAt(v.length - 1 - j); erg[i + j] = ergFelder[i + j].value; }
+            var weiter = ergFelder[Math.min(n - 1, i + v.length)]; if (weiter) weiter.focus();
+            return;
+          }
+          f.value = v; erg[i] = v;
+          if (v && i + 1 < n) ergFelder[i + 1].focus();
+        });
+        f.addEventListener("keydown", function (ev) {
+          if (ev.key === "Backspace" && !f.value && i > 0) { ev.preventDefault(); ergFelder[i - 1].value = ""; erg[i - 1] = ""; ergFelder[i - 1].focus(); }
+          else if (ev.key === "ArrowLeft" && i + 1 < n) { ev.preventDefault(); ergFelder[i + 1].focus(); }
+          else if (ev.key === "ArrowRight" && i > 0) { ev.preventDefault(); ergFelder[i - 1].focus(); }
+        });
+      });
+      // Übertrag: Ziffer rein -> weiter ins Ergebnis derselben Spalte (die wird als nächste gerechnet).
+      ueFelder.forEach(function (f, i) {
+        if (!f) return;
+        f.addEventListener("input", function (ev) {
+          ev.stopPropagation();
+          var v = nur(f.value).slice(-1); f.value = v; ue[i] = v;
+          if (v && ergFelder[i]) ergFelder[i].focus();
+        });
+      });
+      ue = ue.slice(0, n); erg = erg.slice(0, n);
+    }
+    leiste.addEventListener("click", function (ev) {
+      var b = ev.target.closest ? ev.target.closest("button") : null;
+      if (!b) return;
+      if (b === zeichenKnopf) { st.op = st.op === "-" ? "+" : "-"; if (st.op === "-") st.zeilen = 2; }
+      else if (b === mehr) st.zeilen = Math.min(4, st.zeilen + 1);
+      else if (b === weniger) st.zeilen = Math.max(2, st.zeilen - 1);
+      else if (b === stelleDazu) st.stellen = Math.min(7, st.stellen + 1);
+      else if (b === tLeeren) { zahlen = []; ue = []; erg = []; }
+      bauen();
+      if (b === tLeeren) { var f0 = gitter.querySelector(".sb-tzahl"); if (f0) f0.focus(); }
+    });
+    bauen();
+    return {
+      erste: function () { return gitter.querySelector(".sb-tzahl"); },
+      art: a.op,
+      stand: function () { return { stellen: st.stellen, op: st.op, zahlen: zahlen.slice(), ue: ue.slice(), erg: erg.slice() }; }
+    };
+  }
+
   function malen(huelle, opts) {
     if (!huelle) return;
     opts = opts || {};
@@ -74,6 +247,7 @@
     leeren.type = "button";
     var farbe = null, radiert = false, leiste = null, lineal = false, linKnopf = null, zurueck = null;
     var modusLeiste = null, tippTeil = null, textFeld = null, modus = "zeichnen";
+    var artLeiste = null, tafelTeil = null, freiTeil = null, tafel = null, art = "frei";
     if (wz) {
       leiste = el("div", "sb-leiste");
       FARBEN.forEach(function (f, n) {
@@ -148,8 +322,24 @@
         textFeld.setAttribute("inputmode", "text");
         textFeld.setAttribute("wrap", "off");
         textFeld.placeholder = "  347\n+ 285\n-----\n  632";
-        tippTeil.appendChild(tl);
-        tippTeil.appendChild(textFeld);
+        /* Rechentabelle | Freies Feld (05.11.2026): zuerst versteckt, huelle.sbTafel zeigt sie. */
+        artLeiste = el("div", "sb-art");
+        artLeiste.setAttribute("role", "group");
+        artLeiste.setAttribute("aria-label", "Rechentabelle oder freies Feld");
+        artLeiste.hidden = true;
+        [["tafel", "🔢 Rechentabelle"], ["frei", "📝 Freies Feld"]].forEach(function (m) {
+          var b = el("button", "sb-art-" + m[0], m[1]);
+          b.type = "button"; b.dataset.art = m[0]; b.setAttribute("aria-pressed", "false");
+          artLeiste.appendChild(b);
+        });
+        tafelTeil = el("div", "sb-tafelteil");
+        tafelTeil.hidden = true;
+        freiTeil = el("div", "sb-frei");
+        freiTeil.appendChild(tl);
+        freiTeil.appendChild(textFeld);
+        tippTeil.appendChild(artLeiste);
+        tippTeil.appendChild(tafelTeil);
+        tippTeil.appendChild(freiTeil);
         /* Tasten bleiben im Feld: Rechenkästchen und Rechenspiele hören am Dokument auf Ziffern. */
         ["keydown", "keyup", "keypress", "beforeinput"].forEach(function (art) {
           textFeld.addEventListener(art, function (e) { e.stopPropagation(); });
@@ -314,7 +504,7 @@
       if (!b || !b.dataset.modus) return;
       modusMerken(b.dataset.modus);
       modusSetzen(b.dataset.modus);
-      if (modus === "tippen") textFeld.focus();
+      if (modus === "tippen") tippFokus();
     });
     huelle.sbTippen = function (zeigen) {
       if (!modusLeiste) return;
@@ -322,6 +512,37 @@
       modusSetzen(zeigen ? modusStandard() : "zeichnen");
     };
     huelle.sbModus = function () { return modus; };
+    function artSetzen(m) {
+      art = m === "tafel" && tafel && artLeiste && !artLeiste.hidden ? "tafel" : "frei";
+      if (tafelTeil) tafelTeil.hidden = art !== "tafel";
+      if (freiTeil) freiTeil.hidden = art === "tafel";
+      huelle.classList.toggle("sb-tafelt", art === "tafel");
+      if (artLeiste) [].forEach.call(artLeiste.querySelectorAll("button"), function (b) {
+        var an = b.dataset.art === art;
+        b.classList.toggle("an", an); b.setAttribute("aria-pressed", an ? "true" : "false");
+      });
+    }
+    function tippFokus() {
+      var z = art === "tafel" && tafel ? tafel.erste() : textFeld;
+      if (z) try { z.focus({ preventScroll: true }); } catch (e) {}
+    }
+    if (artLeiste) artLeiste.addEventListener("click", function (ev) {
+      var b = ev.target.closest ? ev.target.closest("button") : null;
+      if (!b || !b.dataset.art) return;
+      artSetzen(b.dataset.art);
+      tippFokus();
+    });
+    /* Rechentabelle zeigen (rechenflaeche.js nach dem Schalter "rechentafel"). Malnehmen und Teilen
+       haben ein anderes Bild - dort steht das freie Feld vorn, die Tabelle bleibt einen Tipp entfernt. */
+    huelle.sbTafel = function (zeigen, text) {
+      if (!artLeiste) return;
+      if (!zeigen) { artLeiste.hidden = true; tafel = null; if (tafelTeil) tafelTeil.innerHTML = ""; artSetzen("frei"); return; }
+      tafel = tafelBauen(tafelTeil, text);
+      artLeiste.hidden = false;
+      artSetzen(tafel.art === "mal" || tafel.art === "geteilt" ? "frei" : "tafel");
+    };
+    huelle.sbArt = function () { return art; };
+    huelle.sbTafelStand = function () { return tafel ? tafel.stand() : null; };
     knopf.addEventListener("click", function () {
       var zu = !huelle.classList.contains("sb-zu");
       huelle.classList.toggle("sb-zu", zu);
@@ -329,7 +550,7 @@
       if (!zu) {
         if (modus === "zeichnen") { groesse(); stil(); }
         if (opts.auf) opts.auf(huelle);
-        if (modus === "tippen" && textFeld) try { textFeld.focus({ preventScroll: true }); } catch (e) {}
+        if (modus === "tippen") tippFokus();
       }
     });
   }

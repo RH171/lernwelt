@@ -25,6 +25,11 @@
  * bekommt den Umschalter "✏️ Zeichnen | ⌨️ Tippen" (tippen: true), sichtbar erst, wenn
  * GET /api/schalter?name=rechentippen "neu" meldet. "alt" oder kein Netz = ohne Umschalter, wie bisher.
  * An einem reinen Maus-Gerät steht dann Tippen vorn, an iPad und Stift Zeichnen (schmierblatt.js).
+ *
+ * Rechentabelle (05.11.2026, Auftrag 210): Im Tippen-Teil steht vor dem freien Feld eine Stellentafel
+ * (T H Z E, Rechenzeichen aus der Frage, Ziffern rücken von rechts ein, Übertrag, Ergebnis springt nach
+ * links). Sichtbar, sobald GET /api/schalter?name=rechentafel "neu" meldet (Standard). "alt" oder kein
+ * Netz = freies Feld wie am 03.11.2026. Die Frage wird nur gelesen, nichts wird gespeichert.
  */
 (function () {
   "use strict";
@@ -79,7 +84,35 @@
     ".rf-spiel .sb-auf{box-shadow:0 4px 14px rgba(0,0,0,.18);border-style:solid}",
     ".rf-spiel:not(.sb-zu){left:12px;padding:10px;border-radius:18px;background:var(--card,#fff);",
     "  border:1px solid var(--line,#c9cfdb);box-shadow:0 -6px 24px rgba(0,0,0,.22)}",
-    ".rf-spiel:not(.sb-zu) .sb-flaeche,.rf-spiel:not(.sb-zu) .sb-text{height:min(38vh,300px)}"
+    ".rf-spiel:not(.sb-zu) .sb-flaeche,.rf-spiel:not(.sb-zu) .sb-text{height:min(38vh,300px)}",
+    /* Rechentabelle (05.11.2026): feste Kästchen je Stelle, Papier hell wie im Heft. */
+    ".rf .sb-art{display:inline-flex;gap:0;margin:0 0 8px 8px;border:2px solid var(--line,#c9cfdb);border-radius:999px;overflow:hidden;vertical-align:top}",
+    ".rf .sb-art button{min-height:48px;padding:8px 14px;border:0;background:var(--card,#fff);color:var(--ink,#172033);font:700 15px system-ui,sans-serif;cursor:pointer}",
+    ".rf .sb-art button.an{background:var(--ink,#172033);color:var(--card,#fff)}",
+    ".rf .sb-art[hidden],.rf .sb-tafelteil[hidden],.rf .sb-frei[hidden],.rf .sb-tafel-zeile[hidden],.rf .sb-tafel-stelle[hidden]{display:none}",
+    "@media (max-width:520px){.rf .sb-art{margin-left:0}}",
+    ".rf .sb-tafelleiste{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}",
+    ".rf .sb-tafel-op,.rf .sb-tafel-zeile,.rf .sb-tafel-stelle{min-height:48px;padding:8px 14px;border-radius:999px;border:2px solid var(--line,#c9cfdb);",
+    "  background:var(--card,#fff);color:var(--ink,#172033);font:700 15px system-ui,sans-serif;cursor:pointer}",
+    ".rf .sb-tafel-op{font-size:17px}",
+    ".rf .sb-tafel{--sb-z:min(56px,calc((100% - 4px) / var(--sb-spalten)));display:grid;grid-template-columns:repeat(var(--sb-spalten),var(--sb-z));",
+    "  justify-content:center;row-gap:6px;padding:12px 8px;border-radius:14px;border:2px solid var(--line,#c9cfdb);background:#fffef8;color:#1f2937;",
+    "  font:700 30px/1 ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace}",
+    ".rf .sb-tk{text-align:center;font:800 15px/1.6 system-ui,sans-serif;color:#5b6270}",
+    ".rf .sb-tz{display:flex;align-items:center;justify-content:center;min-height:52px;font-size:30px;color:#1f2937}",
+    ".rf .sb-tz-ue{min-height:34px}",
+    ".rf .sb-tzeile{position:relative;display:grid;grid-template-columns:subgrid;min-height:52px;border-radius:8px}",
+    ".rf .sb-tzeile.an{box-shadow:0 0 0 3px #1d4ed8}",
+    ".rf .sb-tzelle{display:flex;align-items:center;justify-content:center;margin:0 2px;border:1px solid #dfe5ee;border-radius:6px;background:#fff}",
+    ".rf .sb-tzahl{position:absolute;inset:0;width:100%;height:100%;box-sizing:border-box;margin:0;padding:0;border:0;background:transparent;",
+    "  color:transparent;caret-color:transparent;font-size:16px;opacity:0;cursor:text}",
+    ".rf .sb-tue-zelle{display:flex;align-items:center;justify-content:center;min-height:34px}",
+    ".rf .sb-tue{box-sizing:border-box;width:30px;height:30px;padding:0;border:1px dashed #9aa3b2;border-radius:6px;background:#fff;",
+    "  color:#b91c1c;text-align:center;font:700 18px/1 ui-monospace,Menlo,monospace}",
+    ".rf .sb-tstrich{grid-column:1 / -1;height:0;border-top:3px solid #1f2937;margin:2px 0}",
+    ".rf .sb-terg{box-sizing:border-box;width:calc(100% - 4px);margin:0 2px;height:52px;padding:0;border:2px solid #9aa3b2;border-radius:8px;background:#fff;",
+    "  color:#1f2937;text-align:center;font:700 30px/1 ui-monospace,'SF Mono',Menlo,Consolas,monospace}",
+    ".rf .sb-tue:focus,.rf .sb-terg:focus{outline:3px solid #1d4ed8;outline-offset:1px;border-color:#1d4ed8}"
   ].join("\n");
 
   function stil() {
@@ -111,7 +144,7 @@
         /* Die Frage bleibt sichtbar: Ragt die Fläche unten aus dem Bild oder ist die Frage
            oben hinausgerollt, kommt die Frage an den oberen Rand - die Fläche steht darunter. */
         if (!frage) return;
-        var c = h.querySelector(h.classList.contains("sb-tippt") ? ".sb-text" : "canvas"), fr = frage.getBoundingClientRect();
+        var c = h.querySelector(h.classList.contains("sb-tippt") ? (h.classList.contains("sb-tafelt") ? ".sb-tafel" : ".sb-text") : "canvas"), fr = frage.getBoundingClientRect();
         var cr = c ? c.getBoundingClientRect() : null;
         if (fr.top < 0 || (cr && cr.bottom > window.innerHeight)) {
           try { frage.scrollIntoView({ block: "start" }); } catch (e) { frage.scrollIntoView(true); }
@@ -122,11 +155,13 @@
     huellen.push(h);
     if (linealFrei) h.sbLineal && h.sbLineal(true);
     if (tippenFrei) h.sbTippen && h.sbTippen(true);
+    h.__frage = frage ? frage.textContent : "";
+    if (tafelFrei) h.sbTafel && h.sbTafel(true, h.__frage);
     return h;
   }
 
   /* Rückweg-Schalter "lineal": einmal fragen, dann alle jetzigen und künftigen Flächen freischalten. */
-  var huellen = [], linealFrei = false, tippenFrei = false;
+  var huellen = [], linealFrei = false, tippenFrei = false, tafelFrei = false;
   function linealFragen() {
     try {
       fetch("/api/schalter?name=lineal", { credentials: "same-origin", cache: "no-store" })
@@ -149,6 +184,20 @@
           if (!d || d.wert !== "neu") return;
           tippenFrei = true;
           huellen.forEach(function (x) { if (x.sbTippen) x.sbTippen(true); });
+        })
+        .catch(function () {});
+    } catch (e) {}
+  }
+
+  /* Rückweg-Schalter "rechentafel" (05.11.2026): Rechentabelle im Tippen-Teil. */
+  function tafelFragen() {
+    try {
+      fetch("/api/schalter?name=rechentafel", { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || d.wert !== "neu") return;
+          tafelFrei = true;
+          huellen.forEach(function (x) { if (x.sbTafel) x.sbTafel(true, x.__frage || ""); });
         })
         .catch(function () {});
     } catch (e) {}
@@ -193,6 +242,7 @@
     if (!window.Schmierblatt) return;
     linealFragen();
     tippenFragen();
+    tafelFragen();
     /* Rechenspiel: eigene Seite, Knopf unten rechts, einmal je Seite. */
     if (/^\/paul\/klasse\d+-mathe-/.test(location.pathname)) {
       if (!document.getElementById("rf-spiel")) {
