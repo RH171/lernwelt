@@ -120,6 +120,14 @@
       f.addEventListener("focus", function () {
         try { f.scrollIntoView({ block: "nearest" }); } catch (x) {}
       });
+      // Einzelne Ziffer: Antippen markiert sie. Sonst setzt Safari den Cursor VOR die Ziffer, die Rücktaste
+      // löscht nichts und maxLength 1 sperrt eine neue Ziffer (WebKit-Prüfung 05.11.2026).
+      if (!gross) {
+        var markieren = function () { try { if (document.activeElement === f) f.setSelectionRange(0, f.value.length); } catch (x) {} };
+        f.addEventListener("focus", function () { setTimeout(markieren, 0); });
+        f.addEventListener("click", markieren);
+        f.addEventListener("pointerup", function () { setTimeout(markieren, 0); });
+      }
       return f;
     }
     function bauen() {
