@@ -69,7 +69,9 @@ import { fundFormenFuer, karteAlsQuizForm, opusAlsQuizForm } from "./_fundformen
 import { OPUS_FORMEN } from "./_formen-opus.js";
 import { antwortkennungAn } from "./_antwortkennung.js";
 import { AKTUELL, aktuellAn, abschlussLesen, geschlossenJeFach, offeneIds, blaetterOhneHeute, faelligAktuell,
-  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil, grundlageIds } from "./_aktuell.js";
+  bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil, grundlageIds,
+  vorlaeufigBasis, vorlaeufigZu, nichtUebbarIds, medianJeFach, deckelJeFach, mengeJeFach, bedarfAktuell, ordneAktuell, gruppeBlatt,
+  probeJeFach, schuldatum as schuldatumA } from "./_aktuell.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
 /* Tippstufen (02.11.2026, nur Paul). Rueckweg ohne neuen Bau: KV-Wert
@@ -508,6 +510,26 @@ export async function onRequestGet(context) {
         const fa = freiAktuell(frei, undefined, jetzt);
         r4.fragen = r4.fragen.slice(0, kopf).concat(fa.liste.map((c) => c.f), r4.fragen.slice(ende));
         r4.zaehl.aktuell = { ...fa.zaehl, offen: ak.offenSet.size, taeglich: ak.taeglichSet.size };
+        /* Auftrag 209, Regel 10: je Fach zuerst die Reihe der Lage (Pflicht je offenes Blatt, Neues, offene
+           Faellige, Auffuellen), hoechstens die Menge des Fachs; der Rest wie oben dahinter. */
+        const reihe = lage.aktuell.reihe;
+        if (reihe) {
+          const nachKey = new Map();
+          for (const f of r4.fragen) { const s = punktSchluessel(f); if (s && !nachKey.has(s)) nachKey.set(s, f); }
+          for (const c of kand) { const s = punktSchluessel(c.f); if (s && !nachKey.has(s)) nachKey.set(s, c.f); }
+          const vorn = [], drin = new Set(), jeF = {};
+          for (const fach of Object.keys(reihe)) {
+            const mg = Number(lage.menge[fach]) || 0;
+            for (const s of reihe[fach]) {
+              if ((jeF[fach] || 0) >= mg) break;
+              const f = nachKey.get(s);
+              if (!f || drin.has(f)) continue;
+              vorn.push(f); drin.add(f); jeF[fach] = (jeF[fach] || 0) + 1;
+            }
+          }
+          r4.fragen = vorn.concat(r4.fragen.filter((f) => !drin.has(f)));
+          r4.zaehl.aktuell.plan = jeF;
+        }
       }
       offen = r4.fragen;
       wiederholt = r4.wieder;
@@ -655,8 +677,14 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
   const ausnahme = probenAusnahme4(termine, noten, heute, berlinStunde(jetzt), SCHRITT4, norm4);
   const ausnahmeIds = ausnahmeBlaetter4(blattNach, ausnahme, norm4);
   /* Schalter "aktuell": offene Blaetter schon vor W, damit der Deckel dort durchwechselt (rangOffen). */
-  const abschlussA = akt && fragenW ? await abschlussLesen(env, kind) : null;
-  const offenA = abschlussA ? offeneIds(blattNach, geschlossenJeFach(abschlussA)) : null;
+  let abschlussA = akt && fragenW ? await abschlussLesen(env, kind) : null;
+  /* Auftrag 209, Regel 11: vorlaeufige Proben (Deutsch, HSU ohne Probenfoto) schliessen "abgefragt" ausserhalb
+     des Fensters vor dem Termin - nur hier (Lage), nie auf der Elternseite (abschlussLesen bleibt). */
+  const vBasis = abschlussA && AKTUELL.vorlaeufigSchliesst ? vorlaeufigBasis(kind, blattNach) : [];
+  if (vBasis.length) abschlussA = { ...abschlussA, basis: (abschlussA.basis || []).concat(vBasis) };
+  let offenA = abschlussA ? offeneIds(blattNach, geschlossenJeFach(abschlussA)) : null;
+  /* Regel 7: Handwerk (probenstoff:false) ist nie offen - schon vor W, damit es dort nicht durchwechselt. */
+  if (offenA && AKTUELL.nichtUebbar) offenA = new Set([...offenA].filter((id) => !(blattNach[id] && blattNach[id].probenstoff === false)));
   const wh = fragenW ? wiederholung4(fragenW, blattNach, punkte, undefined, ausnahmeIds,
     offenA ? { offen: offenA, rang: (p) => rangOffen(p, jetzt) } : undefined) : null;
   const fachVon = (s) => {
@@ -677,7 +705,11 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
   /* ausnahmeIds nur fuer den Server - nicht aufzaehlbar, geht nicht ins JSON. */
   Object.defineProperty(raus, "ausnahmeIds", { value: ausnahmeIds, enumerable: false });
   if (akt && wh) {
-    aktuellDazu(raus, abschlussA, blattNach, punkte, wh, pauseAlle, jetzt);
+    /* Auftrag 209, Regel 8: Pauls echte Antwortzeiten (lernstand, nur gelesen) fuer den Fragendeckel je Fach. */
+    let lernstand = null;
+    if (AKTUELL.fragenDeckel) { try { lernstand = JSON.parse((await env.PAUL_KV.get("lernstand:" + kind)) || "[]"); } catch (e) { lernstand = []; } }
+    aktuellDazu(raus, abschlussA, blattNach, punkte, wh, pauseAlle, jetzt,
+      AKTUELL.fragenDeckel ? { kind, lernstand, fachVon, pause, vBasis } : null);
     Object.defineProperty(raus, "whAktuell", { value: wh, enumerable: false });
   }
   return raus;
@@ -688,8 +720,12 @@ async function schritt4Lage(env, kind, punkte, blattNach, jetzt, fragenW, akt) {
      aktuell        { offen: [Blatt-ids], minuten, sekunden, platzhalter, bedarf, taeglich: [Blatt-ids] }
    und, nicht aufzaehlbar (nur Server): offenSet, taeglichSet, faelligFn(schluessel, p). Rein bis auf
    den gelesenen Abschluss. Die Rundengroesse der gemischten Runde (mengeRunde) bleibt. */
-export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, pauseAlle, jetzt) {
-  const offen = offeneIds(blattNach, geschlossenJeFach(abschluss));
+export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, pauseAlle, jetzt, a209) {
+  const geschlossen = geschlossenJeFach(abschluss);
+  const offen = offeneIds(blattNach, geschlossen);
+  /* Auftrag 209, Regel 7: nicht am Geraet uebbar (Handwerk oder ohne eine Frage in W) ist nie offen. */
+  const nichtU = a209 ? nichtUebbarIds(blattNach, wh.schluessel) : new Set();
+  for (const id of nichtU) offen.delete(id);
   const taeglich = blaetterOhneHeute(offen, wh.schluessel, punkte, jetzt);
   const faelligFn = (s, p) => (offen.has(blattVonSchluessel(s)) ? faelligAktuell(p, jetzt) : istFaellig(p, jetzt));
   /* Tagesmenge ueber den Tag stabil (Pruefer-Fund 04.11.2026): heute schon beantwortete Karten zaehlen
@@ -702,16 +738,76 @@ export function aktuellDazu(raus, abschluss, blattNach, punkte, wh, pauseAlle, j
   const bedarf = bedarfJeFach(wh.schluessel, wh.zahl, blattNach, punkte, (s, p) => heuteDa(p) || faelligFn(s, p), zusatz);
   const mz = minutenJeFach(Object.keys(raus.menge), bedarf, pauseAlle >= 1);
   raus.menge = mz.fragen;
+  const plan = a209 ? plan209(raus, a209, geschlossen, offen, nichtU, blattNach, punkte, wh, faelligFn, heuteDa, jetzt) : null;
   /* Nur Anzeige (Denny 04.11.2026): Anteil gefestigter Karten je offenem Blatt, steuert nichts. */
   const gefestigt = {};
   for (const id of offen) { const g = blattGefestigtAnteil(wh.schluessel[id], punkte); gefestigt[id] = { anteil: g.anteil, gefestigt: g.gefestigt }; }
   raus.aktuell = { offen: [...offen], minuten: mz.minuten, sekunden: AKTUELL.sekundenJeFrage,
                    bedarf, taeglich: [...taeglich], gefestigt,
-                   k: { sitztTage: AKTUELL.sitztTage, stufenTage: AKTUELL.stufenTage, hoechstTage: AKTUELL.hoechstTage } };
+                   k: { sitztTage: AKTUELL.sitztTage, stufenTage: AKTUELL.stufenTage, hoechstTage: AKTUELL.hoechstTage },
+                   ...(plan ? plan.feld : {}) };
+  if (plan) Object.defineProperty(raus, "plan209", { value: plan.server, enumerable: false });
   Object.defineProperty(raus, "offenSet", { value: offen, enumerable: false });
   Object.defineProperty(raus, "taeglichSet", { value: taeglich, enumerable: false });
   Object.defineProperty(raus, "faelligFn", { value: faelligFn, enumerable: false });
   return raus;
+}
+
+/* Auftrag 209 (05.11.2026, nur Paul, nur schalter:aktuell = neu): Regeln 7-11 auf der Lage.
+   Setzt raus.menge je Fach auf den Fragendeckel aus Pauls Antwortzeiten (Regeln 8/9) und liefert
+     feld   fuer die Seite (ersetzt minuten, bedarf, sekunden): minuten = Fragen x Median (nur Anzeige), bedarf { offen, neu,
+            auffuellen }, reihe { fach: [Lernpunkte] } (Regel 10, die ersten menge Karten zuerst), neuFrei
+     server { blattInfo, heuteBlatt, nichtUebbar, vorlaeufigZu, deckel, mediane, normal, ausfall } (nicht im JSON).
+   Keine Stufennamen, keine Fehler, keine Verwaltung in feld: nur Lernpunkte und Zahlen. */
+function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, faelligFn, heuteDa, jetzt) {
+  const faecher = Object.keys(raus.menge);
+  const mediane = medianJeFach(a.lernstand, (p) => a.fachVon(p));
+  const deckel = deckelJeFach(faecher, mediane);
+  const istDran = (s, p) => heuteDa(p) || faelligFn(s, p);
+  const bedarf = bedarfAktuell(wh.schluessel, wh.zahl, blattNach, punkte, offen, istDran);
+  const ges = {}; for (const f of faecher) ges[f] = bedarf[f] ? bedarf[f].gesamt : 0;
+  const m = mengeJeFach(faecher, ges, deckel, a.pause);
+  raus.menge = m.menge;
+  const vZu = vorlaeufigZu(a.vBasis, null, geschlossen);
+  const probe = probeJeFach(a.kind, geschlossen);
+  const info = {};
+  const blattInfo = (id) => {
+    if (info[id]) return info[id];
+    const b = blattNach[id]; if (!b) return null;
+    const f = fachNorm(b.fach);
+    return (info[id] = { gruppe: gruppeBlatt(b, geschlossen[f], probe[f]), datum: schuldatumA(b).datum || "" });
+  };
+  const heuteBlatt = new Set();
+  for (const id of offen) if (((wh.schluessel && wh.schluessel[id]) || []).some((s) => heuteDa(punkte[s]))) heuteBlatt.add(id);
+  /* Reihe je Fach ueber alle Karten in W (Quizfragen und Fundkarten) - die Seite nimmt daraus die Karten,
+     die sie hat, in dieser Reihenfolge. */
+  const jeFach = {};
+  const glA = AKTUELL.grundlageGewicht > 1 ? grundlageIds(a.kind) : null;
+  for (const id of Object.keys(wh.schluessel || {})) {
+    const b = blattNach[id]; if (!b) continue;
+    const f = fachNorm(b.fach);
+    const o = offen.has(id);
+    for (const s of wh.schluessel[id]) {
+      const p = punkte[s];
+      const nie = !p || !p.z;
+      (jeFach[f] = jeFach[f] || []).push({ key: s, blatt: id, p, offen: o, nie, faellig: !nie && istDran(s, p), grundlage: !!(glA && glA.has(id)) });
+    }
+  }
+  const reihe = {}, pflicht = {}, teile = {};
+  for (const f of Object.keys(jeFach)) {
+    const r = ordneAktuell(jeFach[f], blattInfo, heuteBlatt);
+    reihe[f] = r.liste.map((c) => c.key);
+    pflicht[f] = r.pflicht;
+    teile[f] = r.liste.reduce((z, c) => ((z[c.teil] = (z[c.teil] || 0) + 1), z), {});
+  }
+  const minuten = {};
+  for (const f of faecher) minuten[f] = Math.round((m.menge[f] * deckel[f].sek) / 6) / 10;
+  const bedarfFeld = {};
+  for (const f of Object.keys(bedarf)) bedarfFeld[f] = { offen: bedarf[f].offen, neu: bedarf[f].neu, auffuellen: bedarf[f].auffuellen };
+  return {
+    feld: { minuten, bedarf: bedarfFeld, reihe, sekunden: Object.fromEntries(faecher.map((f) => [f, deckel[f].sek])), neuFrei: !!AKTUELL.neuFrei },
+    server: { blattInfo, heuteBlatt, nichtUebbar: nichtU, vorlaeufigZu: vZu, deckel, mediane, normal: m.normal, ausfall: m.ausfall, pflicht, teile },
+  };
 }
 
 /* Schalter "aktuell": fundStand der Seite fuer Karten offener Blaetter nach der Leiter; je Blatt aus
