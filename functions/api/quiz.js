@@ -70,7 +70,8 @@ import { OPUS_FORMEN } from "./_formen-opus.js";
 import { antwortkennungAn } from "./_antwortkennung.js";
 import { AKTUELL, aktuellAn, abschlussLesen, geschlossenJeFach, offeneIds, blaetterOhneHeute, faelligAktuell,
   bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil, grundlageIds,
-  vorlaeufigBasis, vorlaeufigZu, nichtUebbarIds, medianJeFach, deckelJeFach, mengeJeFach, bedarfAktuell, ordneAktuell, gruppeBlatt,
+  vorlaeufigBasis, vorlaeufigZu, nichtUebbarIds, medianJeFach, deckelJeFach, mengeJeFach,
+  artZeitenJeFach, artFaktoren, artSchaetzen, deckelNachArt, bedarfAktuell, ordneAktuell, gruppeBlatt,
   probeJeFach, schuldatum as schuldatumA } from "./_aktuell.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
 
@@ -766,8 +767,6 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
   const istDran = (s, p) => heuteDa(p) || faelligFn(s, p);
   const bedarf = bedarfAktuell(wh.schluessel, wh.zahl, blattNach, punkte, offen, istDran);
   const ges = {}; for (const f of faecher) ges[f] = bedarf[f] ? bedarf[f].gesamt : 0;
-  const m = mengeJeFach(faecher, ges, deckel, a.pause);
-  raus.menge = m.menge;
   const vZu = vorlaeufigZu(a.vBasis, null, geschlossen);
   const probe = probeJeFach(a.kind, geschlossen);
   const info = {};
@@ -800,13 +799,29 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
     pflicht[f] = r.pflicht;
     teile[f] = r.liste.reduce((z, c) => ((z[c.teil] = (z[c.teil] || 0) + 1), z), {});
   }
+  /* Nachbesserung 5: Deckel je Antwortart nur bei deutlichem Unterschied (artFaktoren), sonst bleibt der Fach-Median.
+     Die Absicherung (min 30 bzw. 45 am Ausfalltag unter 200 Antworten) gilt auch hier. */
+  const az = AKTUELL.fragenDeckel.art ? artZeitenJeFach(a.lernstand, (p) => a.fachVon(p)) : {};
+  const af = artFaktoren(faecher, az);
+  for (const f of faecher) {
+    if (!af[f] || !af[f].aktiv) continue;
+    const d = deckel[f], S = AKTUELL.fragenDeckel.absicherung;
+    const arten = artSchaetzen(reihe[f] || [], punkte);
+    const nArt = deckelNachArt(arten, d.sek, af[f].faktor, AKTUELL.fragenDeckel.normalSek);
+    const aArt = deckelNachArt(arten, d.sek, af[f].faktor, AKTUELL.fragenDeckel.ausfallSek);
+    deckel[f] = { ...d, art: true, deckelMedian: nArt, ausfallMedian: aArt,
+                  deckel: d.abgesichert ? Math.min(nArt, S.hoechst) : nArt,
+                  ausfallDeckel: d.abgesichert ? Math.min(aArt, Math.floor(AKTUELL.fragenDeckel.ausfallFaktor * S.hoechst)) : aArt };
+  }
+  const m = mengeJeFach(faecher, ges, deckel, a.pause);
+  raus.menge = m.menge;
   const minuten = {};
   for (const f of faecher) minuten[f] = Math.round((m.menge[f] * deckel[f].sek) / 6) / 10;
   const bedarfFeld = {};
   for (const f of Object.keys(bedarf)) bedarfFeld[f] = { offen: bedarf[f].offen, neu: bedarf[f].neu, auffuellen: bedarf[f].auffuellen };
   return {
     feld: { minuten, bedarf: bedarfFeld, reihe, sekunden: Object.fromEntries(faecher.map((f) => [f, deckel[f].sek])), neuFrei: !!AKTUELL.neuFrei },
-    server: { blattInfo, heuteBlatt, nichtUebbar: nichtU, vorlaeufigZu: vZu, deckel, mediane, normal: m.normal, ausfall: m.ausfall, pflicht, teile },
+    server: { blattInfo, heuteBlatt, nichtUebbar: nichtU, vorlaeufigZu: vZu, deckel, mediane, artZeiten: az, artFaktoren: af, normal: m.normal, ausfall: m.ausfall, pflicht, teile },
   };
 }
 

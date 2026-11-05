@@ -88,7 +88,18 @@ export const AKTUELL = {
      Ausfalltag je Fach (Pause des Fachs >= 1 Tag): hoechstens ausfallFaktor x normale Menge, nie ueber
      ausfallSek (15 Min), nie multipliziert. */
   fragenDeckel: { normalSek: 600, ausfallSek: 900, ausfallFaktor: 1.5, minAntworten: 30,
-                  ausweich: { mathe: 37.4, hsu: 14.2, deutsch: 11.6, englisch: 7.4, standard: 22.4 } },
+                  ausweich: { mathe: 37.4, hsu: 14.2, deutsch: 11.6, englisch: 7.4, standard: 22.4 },
+    /* Nachbesserung 5 (Denny 05.11.2026, 10:45 Uhr MEZ): Absicherung je Fach. Bis ein Fach mindestens
+       minAntworten gemessene Antworten hat (n aus medianJeFach), gilt min(Median-Deckel, hoechst); ab
+       minAntworten automatisch der Median-Deckel. Ausfalltag (R9) bei Absicherung: hoechstens
+       floor(ausfallFaktor x hoechst) = 45 und nie ueber 15 Minuten (⚠️ Vorschlag, Rueckfrage an Denny offen). */
+    absicherung: { minAntworten: 200, hoechst: 30 },
+    /* Nachbesserung 5: Deckel je Antwortart (aw: k angekreuzt, l Luecke, s selbst geschrieben; gespeichert seit
+       04.11.2026). Aktiv je Fach nur, wenn mindestens minJeArt Antworten "k" UND eine Art "l" oder "s" mit
+       mindestens minJeArt Antworten deren Median >= faktor x Median "k" hat. Dann verbraucht jede geplante
+       Frage im 600-s-Budget (900 s am Ausfalltag) Fach-Median x (Median ihrer Art / Median aller Arten);
+       Arten unter minJeArt Antworten rechnen mit dem Fach-Median (Faktor 1). */
+    art: { an: true, minJeArt: 20, faktor: 1.5 } },
   /* R11: vorlaeufige Proben (ohne Probenfoto, Deutsch und HSU) - "abgefragt (vorlaeufig)" gilt wie abgeschlossen,
      nur Auffuellen; die Blaetter der letzten fensterTage Tage vor dem angekuendigten Termin bleiben offen. */
   vorlaeufigSchliesst: true,
@@ -585,19 +596,117 @@ export function medianJeFach(liste, fachVon, art) {
   return raus;
 }
 
-/* R8/R9: Deckel je Fach in Fragen. mediane = medianJeFach(...). Rueckgabe { fach: { sek, quelle, n, deckel, ausfallDeckel } },
-   quelle "gemessen" (ab minAntworten Antworten) oder "ausweich" (fester Wert aus fragenDeckel.ausweich). */
+/* R8/R9: Deckel je Fach in Fragen. mediane = medianJeFach(...). Rueckgabe { fach: { sek, quelle, n, deckel, ausfallDeckel,
+   deckelMedian, ausfallMedian, abgesichert } }, quelle "gemessen" (ab minAntworten Antworten) oder "ausweich" (fester Wert
+   aus fragenDeckel.ausweich). Nachbesserung 5: abgesichert = weniger als absicherung.minAntworten gemessene Antworten
+   (auch bei "ausweich"); dann deckel = min(Median-Deckel, hoechst), ausfallDeckel = min(15-Min-Deckel,
+   floor(ausfallFaktor x hoechst)). Ab minAntworten gilt der Median-Deckel unveraendert. */
 export function deckelJeFach(faecher, mediane, k) {
   const D = (k || AKTUELL).fragenDeckel;
+  const S = D.absicherung;
   const raus = {};
   for (const f of faecher) {
     const m = mediane && mediane[f];
     const gemessen = !!(m && m.n >= D.minAntworten && m.median > 0);
     const sek = gemessen ? m.median : Number(D.ausweich[f]) || Number(D.ausweich.standard);
-    raus[f] = { sek, quelle: gemessen ? "gemessen" : "ausweich", n: m ? m.n : 0,
-                deckel: Math.max(1, Math.floor(D.normalSek / sek)), ausfallDeckel: Math.max(1, Math.floor(D.ausfallSek / sek)) };
+    const n = m ? m.n : 0;
+    const deckelMedian = Math.max(1, Math.floor(D.normalSek / sek)), ausfallMedian = Math.max(1, Math.floor(D.ausfallSek / sek));
+    const abgesichert = !!(S && n < S.minAntworten);
+    raus[f] = { sek, quelle: gemessen ? "gemessen" : "ausweich", n, deckelMedian, ausfallMedian, abgesichert,
+                deckel: abgesichert ? Math.min(deckelMedian, S.hoechst) : deckelMedian,
+                ausfallDeckel: abgesichert ? Math.min(ausfallMedian, Math.floor(D.ausfallFaktor * S.hoechst)) : ausfallMedian };
   }
   return raus;
+}
+
+/* Nachbesserung 5: Antwortzeit je Antwortart (aw) und Fach. Zeit je Antwort = Abstand ihres Zeitstempels t zur
+   vorigen Antwort derselben Quiz-Sitzung (die erste Antwort einer Sitzung hat keinen Abstand und zaehlt nicht;
+   Sitzungen mit gemischten Arten zaehlen mit, darum nicht der Sitzungsweg aus R8). Nur Antworten mit aw und t.
+   Rueckgabe { fach: { k: {median, n}, l: {...}, s: {...}, alle: {median, n}, mitArt } } - mitArt = Antworten mit aw
+   (auch ohne Abstand). Rein, liest nur. */
+export function artZeitenJeFach(liste, fachVon) {
+  const je = {}, mit = {};
+  const med = (l) => { l = l.slice().sort((x, y) => x - y); const n = l.length; return n % 2 ? l[(n - 1) / 2] : (l[n / 2 - 1] + l[n / 2]) / 2; };
+  for (const s of Array.isArray(liste) ? liste : []) {
+    if (!s || s.spielId !== "quiz" || s.nurBesuch) continue;
+    const a = Array.isArray(s.aufgaben) ? s.aufgaben : [];
+    for (let i = 0; i < a.length; i++) {
+      const x = a[i];
+      if (!x || !x.aw || !x.p) continue;
+      const f = fachVon(String(x.p)) || "";
+      if (!f) continue;
+      mit[f] = (mit[f] || 0) + 1;
+      const v = a[i - 1];
+      if (!v || !v.t || !x.t) continue;
+      const d = (Date.parse(x.t) - Date.parse(v.t)) / 1000;
+      if (!(d >= 0)) continue;
+      const j = (je[f] = je[f] || { k: [], l: [], s: [] });
+      if (j[x.aw]) j[x.aw].push(d);
+    }
+  }
+  const raus = {};
+  for (const f of new Set([...Object.keys(je), ...Object.keys(mit)])) {
+    const j = je[f] || { k: [], l: [], s: [] }, o = { mitArt: mit[f] || 0 };
+    const alle = [...j.k, ...j.l, ...j.s];
+    for (const [n, l] of [["k", j.k], ["l", j.l], ["s", j.s], ["alle", alle]]) o[n] = { median: l.length ? Math.round(med(l) * 10) / 10 : null, n: l.length };
+    raus[f] = o;
+  }
+  return raus;
+}
+
+/* Nachbesserung 5: Faktoren je Art. Aktiv nur bei deutlichem Unterschied (siehe fragenDeckel.art). Rueckgabe
+   { fach: { aktiv, faktor: { k, l, s }, grund } }; inaktiv heisst Faktor 1 fuer alle (Fach-Median). */
+export function artFaktoren(faecher, artZeiten, k) {
+  const C = (k || AKTUELL).fragenDeckel.art;
+  const raus = {};
+  for (const f of faecher) {
+    const z = artZeiten && artZeiten[f];
+    const eins = { aktiv: false, faktor: { k: 1, l: 1, s: 1 } };
+    if (!C || !C.an) { raus[f] = { ...eins, grund: "aus" }; continue; }
+    if (!z || !z.k || z.k.n < C.minJeArt || !(z.k.median > 0)) { raus[f] = { ...eins, grund: "Ankreuzen unter " + C.minJeArt }; continue; }
+    const deutlich = ["l", "s"].filter((a) => z[a] && z[a].n >= C.minJeArt && z[a].median >= C.faktor * z.k.median);
+    if (!deutlich.length) {
+      const genug = ["l", "s"].some((a) => z[a] && z[a].n >= C.minJeArt);
+      raus[f] = { ...eins, grund: genug ? "Unterschied unter " + C.faktor + "x" : "Luecke und Tippen unter " + C.minJeArt }; continue;
+    }
+    const basis = z.alle && z.alle.median > 0 ? z.alle.median : z.k.median;
+    const faktor = {};
+    for (const a of ["k", "l", "s"]) faktor[a] = z[a] && z[a].n >= C.minJeArt && z[a].median > 0 ? z[a].median / basis : 1;
+    raus[f] = { aktiv: true, faktor, grund: "deutlich: " + deutlich.join(",") };
+  }
+  return raus;
+}
+
+/* Nachbesserung 5: geschaetzte Antwortart je Karte der Reihe (Tippstufen, Kapitel 156): Fundkarten (#k:), mathe# und
+   lesen# = "k"; Quizkarten nach dem eigenen Lernpunkt w = r - ab: 0 -> k, 1 -> l, >= 2 -> s, mit den Rundengrenzen
+   (hoechstens frei Mal "s", luecken Mal "l", sonst die leichtere Art). ⚠️ Annahme: ohne Geschwister-Formen, Zahlen
+   und den Schalter "Selbst schreiben" - wirkt nur, wenn artFaktoren aktiv ist. */
+export function artSchaetzen(keys, punkte, grenzen) {
+  const g = grenzen || { frei: 2, luecken: 3 };
+  let s = 0, l = 0;
+  return (keys || []).map((key) => {
+    const k = String(key);
+    if (k.indexOf("#k:") > 0 || k.indexOf("mathe#") === 0 || k.indexOf("lesen#") === 0) return "k";
+    const p = punkte && punkte[k];
+    const w = p ? Math.max(0, (Number(p.r) || 0) - (Number(p.ab) || 0)) : 0;
+    if (w >= 2 && s < g.frei) { s++; return "s"; }
+    if (w >= 1 && l < g.luecken) { l++; return "l"; }
+    return "k";
+  });
+}
+
+/* Nachbesserung 5: Deckel in Fragen ueber das Sekunden-Budget. arten = artSchaetzen(Reihe), sek = Fach-Median,
+   faktor = artFaktoren(...)[fach].faktor. Zaehlt die Karten der Reihe, solange die Summe der Kosten das Budget
+   nicht ueberschreitet; reicht die Reihe nicht, rechnen die restlichen Fragen mit dem Fach-Median weiter.
+   Nie unter 1. */
+export function deckelNachArt(arten, sek, faktor, budgetSek) {
+  let summe = 0, n = 0;
+  for (const a of arten || []) {
+    const c = sek * ((faktor && faktor[a]) || 1);
+    if (summe + c > budgetSek + 1e-9) return Math.max(1, n);
+    summe += c; n++;
+  }
+  return Math.max(1, n + Math.floor((budgetSek - summe + 1e-9) / sek));
 }
 
 /* R8/R9: Menge je Fach. bedarf = bedarfAktuell(...)[fach].gesamt; pause = Pause je Fach (volle Tage ohne Antwort).
