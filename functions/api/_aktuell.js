@@ -108,7 +108,8 @@ export const AKTUELL = {
      nur Auffuellen; die Blaetter der letzten fensterTage Tage vor dem angekuendigten Termin bleiben offen. */
   vorlaeufigSchliesst: true,
   fensterTage: 5,
-  /* R10: Neues hat immer Vorrang - im neu-Pfad ohne den Neues-Anteil (neuAnteil 0,5, neuJeRunde 9) aus Schritt 4.
+  /* R10: Neues ohne den Neues-Anteil (neuAnteil 0,5, neuJeRunde 9) aus Schritt 4; die Reihenfolge ist seit Auftrag 212
+     Pflicht, Fehler, Neues, Altes (ordneAktuell).
      Der Fragendeckel aus R8/R9 bleibt die Obergrenze, der Deckel 3 Karten je Blatt (wiederholung4) bleibt. */
   neuFrei: true,
 };
@@ -869,11 +870,11 @@ export function bedarfAktuell(wSchluessel, wZahl, blattNach, punkte, offen, istD
      1. Pflicht: je offenes Blatt ohne heutige Frage EINE Karte (nie gespielt: die erste neue; sonst die unsicherste,
         bei gleichem Rang die am laengsten nicht gefragte). Blaetter reihum: letzter Fragetag zuerst (nie gefragt
         vorn), dann Gruppe (juengste nach der Probe, unsichere vor dem Termin, Rest), dann das juengste Schuldatum.
-     2. Neues der offenen Blaetter (Gruppe, juengstes Blatt zuerst) - Neues hat immer Vorrang.
-     3. Faellige offener Blaetter: zuletzt falsch zuerst, dann Gruppe, dann die unsicherste, dann die aelteste Antwort.
-     4. Auffuellen: faellige Karten der uebrigen Blaetter, zuletzt falsch zuerst, dann am laengsten nicht gefragt.
+     Danach (Reihe 212, Denny 06.11.2026): 2. Fehlerkarten - offene Blaetter vor abgeschlossenen, 3. Neues der offenen
+     Blaetter (Gruppe, juengstes Blatt zuerst), dann Faelliges offener Blaetter, 4. Altes zum Auffuellen.
+     w (optional, 07.11.2026): { rang, ersatz } - Pflichtkarte nur spielbar, mit Ersatzkette (.kette) je Blatt.
    Rueckgabe { liste: [item mit .teil "pflicht"|"fehler"|"fehler-alt"|"neu"|"offen"|"auffuellen" (Reihe 212)], pflicht: [Blatt-ids in Reihenfolge] }. */
-export function ordneAktuell(items, blattInfo, heuteBlatt, k) {
+export function ordneAktuell(items, blattInfo, heuteBlatt, k, w) {
   const z = (c) => (c.p && Number(c.p.z)) || 0;
   const tagNr = (c) => (z(c) ? berlinTagNr(z(c)) : 0);
   const stabil = (l, cmp) => l.map((c, i) => ({ c, i })).sort((a, b) => cmp(a.c, b.c) || (a.i - b.i)).map((y) => y.c);
@@ -887,11 +888,27 @@ export function ordneAktuell(items, blattInfo, heuteBlatt, k) {
     letzter[id] = Math.max(0, ...l.map(tagNr));
     if (heuteBlatt && heuteBlatt.has(id)) continue;
     const gespielt = l.filter((c) => z(c));
-    const c = gespielt.length ? taeglichWaehlen(gespielt, k) : l.find((x) => x.nie) || l[0];
+    let c = gespielt.length ? taeglichWaehlen(gespielt, k) : l.find((x) => x.nie) || l[0];
+    /* Pflicht nur spielbar (Denny, 06.11.2026, 23:00 Uhr): w.rang(c) sagt, wo eine Karte gespielt werden kann
+       (0 Fundkarte in W - Tagesrunde und Quiz, 1 Quizfehler faellig, 2 Fundkarte des Blattes ausserhalb von W
+       aus w.ersatz, 3 sonstige Quizfrage - nur im Quiz). Die Pflicht bekommt eine Kette: je Rang zuerst die
+       bisherige Wahl, dann die uebrigen. Jede Seite nimmt die erste Karte der Kette, die sie hat. */
+    if (c && w && typeof w.rang === "function") {
+      const alle = l.concat((w.ersatz && w.ersatz(id)) || []);
+      const kette = [];
+      for (const r of [0, 1, 2, 3]) {
+        const G = alle.filter((x) => w.rang(x) === r);
+        if (!G.length) continue;
+        const gs = G.filter((x) => z(x));
+        const kopf = G.includes(c) ? c : (gs.length ? taeglichWaehlen(gs, k) : G.find((x) => x.nie) || G[0]);
+        kette.push(kopf, ...G.filter((x) => x !== kopf));
+      }
+      c = { ...kette[0], kette: kette.map((x) => x.key), _orig: kette[0] };
+    }
     if (c) pflichtC.push(c);
   }
   const pflicht = stabil(pflichtC, (a, b) => (letzter[a.blatt] - letzter[b.blatt]) || (info(a.blatt).gruppe - info(b.blatt).gruppe) || nachDatum(a.blatt, b.blatt));
-  const genommen = new Set(pflicht);
+  const genommen = new Set(pflicht.map((c) => c._orig || c));
   const neu = stabil(items.filter((c) => c.offen && c.nie && !genommen.has(c)), (a, b) => (info(a.blatt).gruppe - info(b.blatt).gruppe) || nachDatum(a.blatt, b.blatt));
   const offenF = stabil(items.filter((c) => c.offen && !c.nie && c.faellig && !genommen.has(c)), (a, b) =>
     ((b.p && b.p.f ? 1 : 0) - (a.p && a.p.f ? 1 : 0)) || (info(a.blatt).gruppe - info(b.blatt).gruppe) ||
@@ -911,7 +928,7 @@ export function ordneAktuell(items, blattInfo, heuteBlatt, k) {
   /* Auftrag 212, Dennys Klickantwort 06.11.2026: bei knappem Fach 1. Pflicht (nie verdraengt), 2. Fehlerkarten -
      offene Blaetter vor abgeschlossenen Themen, 3. weiteres Neues (nie gefragt, dann faellig auf offenen Blaettern),
      4. Altes zum Auffuellen. Regel 10 gilt gegenueber Altem und innerhalb der Fehler, nicht gegenueber Pflicht. */
-  const liste = pflicht.map((c) => ({ ...c, teil: "pflicht" })).concat(
+  const liste = pflicht.map((c) => { const { _orig, ...x } = c; return { ...x, teil: "pflicht" }; }).concat(
     offenF.filter(istF).map((c) => ({ ...c, teil: "fehler" })),
     mischen(auf0.filter(istF)).map((c) => ({ ...c, teil: "fehler-alt" })),
     neu.map((c) => ({ ...c, teil: "neu" })),

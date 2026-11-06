@@ -419,7 +419,10 @@
     var reihe = e.fach && s4.aktuell && s4.aktuell.reihe ? s4.aktuell.reihe[fachNorm(e.fach)] : null;
     if (reihe) {
       var nachKey = {};
-      faelligAlle.concat(neue, ruhend).forEach(function (c) {
+      /* Pflicht nur spielbar (07.11.2026): auch neue Fundkarten ausserhalb von W - der Server setzt sie nur als
+         Ersatz in die Kette eines offenen Blattes, das in W keine hier spielbare Karte hat. */
+      var neuAlle = topf.neu.map(function (c) { return neue.indexOf(c) >= 0 ? c : bewerte(c, false); });
+      faelligAlle.concat(neuAlle, ruhend).forEach(function (c) {
         var key;
         if (c.quiz && c.quiz.frageId != null) {
           var nr = Number(c.quiz.belegNr);
@@ -428,7 +431,14 @@
         if (!nachKey[key]) nachKey[key] = c;
       });
       var plan = [];
-      for (var ri = 0; ri < reihe.length && plan.length < n; ri++) {
+      var ketten = (s4.aktuell.kette && s4.aktuell.kette[fachNorm(e.fach)]) || [];
+      for (var ki = 0; ki < ketten.length && plan.length < n; ki++) {
+        for (var kj = 0; kj < ketten[ki].length; kj++) {
+          var kc = nachKey[ketten[ki][kj]];
+          if (kc && plan.indexOf(kc) < 0) { plan.push(kc); break; }
+        }
+      }
+      for (var ri = ketten.length; ri < reihe.length && plan.length < n; ri++) {
         var pc = nachKey[reihe[ri]];
         if (pc && plan.indexOf(pc) < 0) plan.push(pc);
       }

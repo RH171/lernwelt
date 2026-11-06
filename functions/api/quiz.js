@@ -519,9 +519,16 @@ export async function onRequestGet(context) {
           for (const f of r4.fragen) { const s = punktSchluessel(f); if (s && !nachKey.has(s)) nachKey.set(s, f); }
           for (const c of kand) { const s = punktSchluessel(c.f); if (s && !nachKey.has(s)) nachKey.set(s, c.f); }
           const vorn = [], drin = new Set(), jeF = {};
+          const ketten = lage.aktuell.kette || {};
           for (const fach of Object.keys(reihe)) {
             const mg = Number(lage.menge[fach]) || 0;
-            for (const s of reihe[fach]) {
+            /* Pflicht nur spielbar (07.11.2026): je offenes Blatt die erste Karte seiner Kette, die es hier gibt. */
+            const kf = ketten[fach] || [];
+            for (const kt of kf) {
+              if ((jeF[fach] || 0) >= mg) break;
+              for (const s of kt) { const f = nachKey.get(s); if (f && !drin.has(f)) { vorn.push(f); drin.add(f); jeF[fach] = (jeF[fach] || 0) + 1; break; } }
+            }
+            for (const s of reihe[fach].slice(kf.length)) {
               if ((jeF[fach] || 0) >= mg) break;
               const f = nachKey.get(s);
               if (!f || drin.has(f)) continue;
@@ -776,8 +783,25 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
     const f = fachNorm(b.fach);
     return (info[id] = { gruppe: gruppeBlatt(b, geschlossen[f], probe[f]), datum: schuldatumA(b).datum || "" });
   };
+  /* Pflicht nur spielbar (Denny, 06.11.2026, 23:00 Uhr): Fundkarten offener Blaetter ausserhalb von W als Ersatz,
+     falls in W keine Karte steht, die die Tagesrunde spielen kann (sie spielt nur Fundkarten und faellige Quizfehler). */
+  const wSet = new Set(); for (const id of Object.keys(wh.schluessel || {})) for (const s of wh.schluessel[id]) wSet.add(s);
+  const ersatzJe = {};
+  for (const id of offen) {
+    const b = blattNach[id], l = [], ges = new Set();
+    if (b && b.sichtbar !== false && b.probenstoff !== false && Array.isArray(b.karten)) for (const kk of b.karten) {
+      if (!kk || !kk.frage || !kk.richtig || !Array.isArray(kk.falsch) || kk.falsch.length !== 2) continue;
+      const s = punktSchluessel({ blatt: id, fund: kk.richtig });
+      if (!s || wSet.has(s) || ges.has(s)) continue;
+      ges.add(s);
+      const p = punkte[s], nie = !p || !p.z;
+      l.push({ key: s, blatt: id, p, offen: true, nie, faellig: !nie && istDran(s, p), ersatz: true });
+    }
+    ersatzJe[id] = l;
+  }
+  const rang = (c) => (c.ersatz ? 2 : String(c.key).includes("#k:") ? 0 : c.p && c.p.f && c.faellig ? 1 : 3);
   const heuteBlatt = new Set();
-  for (const id of offen) if (((wh.schluessel && wh.schluessel[id]) || []).some((s) => heuteDa(punkte[s]))) heuteBlatt.add(id);
+  for (const id of offen) if (((wh.schluessel && wh.schluessel[id]) || []).concat(ersatzJe[id].map((c) => c.key)).some((s) => heuteDa(punkte[s]))) heuteBlatt.add(id);
   /* Reihe je Fach ueber alle Karten in W (Quizfragen und Fundkarten) - die Seite nimmt daraus die Karten,
      die sie hat, in dieser Reihenfolge. */
   const jeFach = {};
@@ -792,10 +816,11 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
       (jeFach[f] = jeFach[f] || []).push({ key: s, blatt: id, p, offen: o, nie, faellig: !nie && istDran(s, p), grundlage: !!(glA && glA.has(id)) });
     }
   }
-  const reihe = {}, pflicht = {}, teile = {}, eck = {};
+  const reihe = {}, pflicht = {}, teile = {}, eck = {}, kette = {};
   for (const f of Object.keys(jeFach)) {
-    const r = ordneAktuell(jeFach[f], blattInfo, heuteBlatt);
+    const r = ordneAktuell(jeFach[f], blattInfo, heuteBlatt, undefined, { rang, ersatz: (id) => ersatzJe[id] || [] });
     reihe[f] = r.liste.map((c) => c.key);
+    kette[f] = r.liste.filter((c) => c.teil === "pflicht").map((c) => c.kette || [c.key]);
     pflicht[f] = r.pflicht;
     teile[f] = r.liste.reduce((z, c) => ((z[c.teil] = (z[c.teil] || 0) + 1), z), {});
     /* Auftrag 212: Kennzahlen fuer das Tagesbudget */
@@ -826,7 +851,7 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
   const bedarfFeld = {};
   for (const f of Object.keys(bedarf)) bedarfFeld[f] = { offen: bedarf[f].offen, neu: bedarf[f].neu, auffuellen: bedarf[f].auffuellen };
   return {
-    feld: { minuten, bedarf: bedarfFeld, reihe, sekunden: Object.fromEntries(faecher.map((f) => [f, deckel[f].sek])), neuFrei: !!AKTUELL.neuFrei },
+    feld: { minuten, bedarf: bedarfFeld, reihe, kette, sekunden: Object.fromEntries(faecher.map((f) => [f, deckel[f].sek])), neuFrei: !!AKTUELL.neuFrei },
     server: { blattInfo, heuteBlatt, nichtUebbar: nichtU, vorlaeufigZu: vZu, deckel, mediane, artZeiten: az, artFaktoren: af, normal: m.normal, ausfall: m.ausfall, pflicht, teile, budget: { eck: e212, stufe: m.stufe, sekunden: m.sekunden } },
   };
 }
