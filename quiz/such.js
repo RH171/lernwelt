@@ -147,6 +147,7 @@
   function starten(x){
     var ok = window.LWFund && LWFund.zeigen($("fundkarten"), {
       karten: x.karten, kind: KIND, was: x.titel, blattId: x.id,
+      blattFach: x.fach || "",   // Tafel-Marke (06.11.2026): Fach des Blattes fuer mathe:1
       /* Verbessert durch Claude (14.10.2026): grün über dem Ausschnitt. */
       gruen: gruenVon(x),
       zuerst: faellig[x.id] || null,
@@ -355,7 +356,7 @@
       (b.karten || []).forEach(function(k){
         if (!k || !k.richtig || !k.falsch || k.falsch.length !== 2) return;
         var st = fundStand[b.id + "#k:" + kartenSchluessel(k)];
-        if (st && !st.f) { var c = {}; for (var z in k) c[z] = k[z]; c.blatt = b.id; c.blattTitel = b.titel || ""; sicher.push(c); }
+        if (st && !st.f) { var c = {}; for (var z in k) c[z] = k[z]; c.blatt = b.id; c.blattTitel = b.titel || ""; c.blattFach = b.fach || ""; sicher.push(c); }
       });
     });
     var dran = liste.slice(0, 10), karten = [], si = 0;
