@@ -26,6 +26,26 @@ import { stoffLesen } from "./_schulstoff.js";
 import { fachNorm } from "./_wiedervorlage.js";
 import { ABSCHLUSS, STUFEN, STUFE_LESBAR, aktuellAn, abschlussLesen, geschlossenJeFach, offenesBlatt, istGeschlossen, schuldatum, abschlussVorschau, grundlageText } from "./_aktuell.js";
 import { VORSCHLAG } from "./_aktuell-vorschlag.js";
+import { PROBENFOTO_AN, fotoLesen, probeFuer, schluessel as fotoSchluessel, vorschlagMitFoto, zuordnen as probenfotoZuordnen } from "./_probenfoto.js";
+import { listeLesen as zurueckLesen, bildLesen } from "./_zurueck.js";
+
+/* Auftrag 211 (06.11.2026): Probenfotos der vorlaeufigen Proben. Je Probe das gespeicherte Ergebnis, oder
+   - wenn ein Foto da ist, aber noch nicht gelesen - "fehlt" mit der Kennung des Zurueck-Eintrags. Liest nur. */
+async function probenfotos(env, kind) {
+  if (!PROBENFOTO_AN) return { ergebnisse: {}, fehlt: {} };
+  const st = await fotoLesen(env, kind);
+  const fehlt = {};
+  const liste = await zurueckLesen(env, kind);
+  for (const e of liste || []) {
+    const p = probeFuer(kind, e);
+    if (!p) continue;
+    const k = fotoSchluessel(p);
+    if (st.ergebnisse[k] && st.ergebnisse[k].zurueckId === String(e.id)) continue;
+    if (st.ergebnisse[k] && String(st.ergebnisse[k].hochgeladen || "") >= String(e.angelegt || "")) continue;
+    if (!fehlt[k] || String(e.angelegt || "") > String(fehlt[k].angelegt || "")) fehlt[k] = { zurueckId: String(e.id), angelegt: String(e.angelegt || "") };
+  }
+  return { ergebnisse: st.ergebnisse, fehlt, ...(st.ok ? {} : { fehler: true }) };
+}
 
 const json = (status, d) => new Response(JSON.stringify(d), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" },
@@ -71,8 +91,10 @@ export async function onRequestGet(context) {
     if (pSchl && !pr) return json(400, { ok: false, fehler: "Diese Probe steht nicht in der Vorschlagsdatei.", liste: [] });
     const fach = pr ? pr.fach : fachQ;
     const pd = pr ? pr.probeDatum : String(u.searchParams.get("probeDatum") || "");
-    const v = abschlussVorschau(l.blaetter, fach, pd, pr ? pr.blaetter : [], l.zu[fach]);
-    return json(v.ok ? 200 : 400, { ...v, fach, probe: pr ? pr.probe : "", probeDatum: pd,
+    const foto = pr && PROBENFOTO_AN ? (await fotoLesen(env, kind)).ergebnisse[pr.schluessel] || null : null;
+    const v = abschlussVorschau(l.blaetter, fach, pd, pr ? vorschlagMitFoto(pr.blaetter, foto) : [], l.zu[fach]);
+    if (foto && v.ok) { const ids = new Set(foto.blaetter.map((b) => b.id)); for (const e of v.liste) if (ids.has(e.id)) e.quelle = "probenfoto"; }
+    return json(v.ok ? 200 : 400, { ...v, fach, probe: pr ? pr.probe : "", probeDatum: pd, ...(foto ? { probenfoto: foto } : {}),
       ...(pr && pr.vorlaeufig ? { vorlaeufig: true, hinweis: pr.hinweis } : {}), ...(pr && pr.bestaetigt ? { bestaetigt: pr.bestaetigt } : {}) });
   }
   const faecher = {};
@@ -100,6 +122,7 @@ export async function onRequestGet(context) {
                      basis: (l.abschluss.basis || []).map((a) => ({ fach: a.fach, probe: a.probe, probeDatum: a.probeDatum, bestaetigt: a.bestaetigt, stufen: a.stufen })),
                      proben: proben.map((p) => ({ schluessel: p.schluessel, fach: p.fach, probe: p.probe, probeDatum: p.probeDatum, vorlaeufig: p.vorlaeufig, hinweis: p.hinweis,
                        ...(p.bestaetigt ? { bestaetigt: p.bestaetigt } : {}) })),
+                     probenfotos: await probenfotos(env, kind),
                      ...(l.abschluss.fehler ? { warnung: "Die gespeicherten Abschlüsse sind gerade nicht lesbar. Speichern ist gesperrt, bis sie wieder da sind." } : {}) });
 }
 
@@ -114,6 +137,17 @@ export async function onRequestPost(context) {
   if (!l.ok) return json(503, l);
   if (l.abschluss.fehler) return json(503, { ok: false, fehler: "Die gespeicherten Abschlüsse sind gerade nicht lesbar. Bitte später nochmal, es wurde nichts geändert." });
   const alle = l.abschluss.abschluesse.slice();
+
+  /* Auftrag 211: ein Probenfoto nachlesen, das beim Hochladen nicht fertig wurde (die Seite ruft das von selbst).
+     Schreibt nur aktuell-probenfoto:paul, nie einen Abschluss. */
+  if (d.aktion === "probenfoto") {
+    if (!PROBENFOTO_AN) return json(400, { ok: false, fehler: "Probenfotos werden gerade nicht gelesen." });
+    const liste = await zurueckLesen(env, kind);
+    const e = (liste || []).find((x) => String(x.id) === String(d.zurueckId || ""));
+    if (!e || !probeFuer(kind, e)) return json(404, { ok: false, fehler: "Dieses Probenfoto gibt es nicht." });
+    const r = await probenfotoZuordnen(env, kind, e, { blaetter: l.blaetter, bildLesen });
+    return json(r.ok ? 200 : 502, r.ok ? { ok: true, ergebnis: r.ergebnis } : { ok: false, fehler: "Das Probenfoto ließ sich gerade nicht lesen (" + r.grund + ")." });
+  }
 
   if (d.aktion === "zuruecknehmen") {
     const rest = alle.filter((a) => String(a.gesetzt) !== String(d.gesetzt || ""));

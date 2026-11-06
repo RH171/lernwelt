@@ -22,8 +22,9 @@
  * Arbeit. Der Eltern-Code kommt ueberall hinein. Eine NOTE entsteht hier
  * nicht; das tut nur /api/noten mit Elternausweis.
  */
+import { PROBENFOTO_AN, probeFuer, zuordnen as probenfotoZuordnen } from "./_probenfoto.js";
 import { ausweisGueltig, geheimFuer } from "./_riegel.js";
-import { FAECHER, FAECHER_JE_KIND } from "./_schulstoff.js";
+import { FAECHER, FAECHER_JE_KIND, stoffLesen } from "./_schulstoff.js";
 import {
   KINDER, MAX_SEITEN, MIT_NOTE,
   eintragPruefen, listeLesen, ablegen, bildLesen, wegnehmen, uebernommen, eintragAendern,
@@ -225,6 +226,15 @@ export async function onRequestPost(context) {
 
   const r = await ablegen(env, kind, e, seiten);
   if (!r.ok) return json(503, r);
+  /* Auftrag 211 (06.11.2026, nur Paul): Foto einer vorlaeufigen Probe (Deutsch, HSU) -> Datum lesen und die
+     Blaetter der 5 Tage davor zuordnen, nach dem Antworten (waitUntil). Paul merkt nichts davon; das Ergebnis
+     ist nur ein Vorschlag auf der Elternseite. Reisst die 30-s-Grenze, holt die Elternseite es beim Oeffnen nach. */
+  if (PROBENFOTO_AN && kind === "paul" && context.waitUntil && probeFuer(kind, r.eintrag)) {
+    context.waitUntil((async () => {
+      const st = await stoffLesen(env, kind, 4);
+      if (st && st.ok) await probenfotoZuordnen(env, kind, r.eintrag, { blaetter: st.eintraege, bildLesen });
+    })().catch(() => {}));
+  }
   return json(200, { ok: true, eintrag: r.eintrag, liste: r.liste, passtZu: passt });
 }
 

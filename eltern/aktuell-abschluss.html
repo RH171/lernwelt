@@ -96,7 +96,37 @@
   function zaehlText(z){ return z["abgefragt"] + " abgefragt · " + z["probenzeitraum"] + " Probenzeitraum, nicht abgefragt · " + z["nicht abgefragt"] + " nicht abgefragt · " + z["unsicher"] + " unsicher"; }
   function leer(){ return { "abgefragt": 0, "probenzeitraum": 0, "nicht abgefragt": 0, "unsicher": 0 }; }
   function bestText(b){ return b && b.von ? "bestätigt (" + b.von + "), gilt ohne erneutes Speichern" : "bestätigt, gilt ohne erneutes Speichern"; }
-  var QUELLE = { vorschlag: "Vorschlag geprüft", datum: "nur nach Datum" };
+  var QUELLE = { vorschlag: "Vorschlag geprüft", datum: "nur nach Datum", probenfoto: "Probenfoto" };
+
+  /* Auftrag 211: Probenfoto da -> Abweichungen zur vorläufigen Annahme zeigen, ohne dass jemand fragt.
+     Fehlt die Zuordnung noch (Hochladen war zu kurz), holt die Seite sie einmal selbst nach. */
+  var nachgeholt = {};
+  function probenfotoKarte(){
+    var pf = daten.probenfotos || {}, erg = pf.ergebnisse || {}, fehlt = pf.fehlt || {};
+    var h = "";
+    Object.keys(fehlt).forEach(function(k){
+      if (nachgeholt[k]) { h += '<div class="hinweis">Das Probenfoto (' + esc(k) + ') ließ sich gerade nicht lesen. Es wird beim nächsten Öffnen noch einmal versucht.</div>'; return; }
+      nachgeholt[k] = 1;
+      h += '<div class="hinweis">Neues Probenfoto da (' + esc(k) + '). Es wird gerade gelesen …</div>';
+      hol(API + "?kind=paul", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "paul", aktion: "probenfoto", zurueckId: fehlt[k].zurueckId }) })
+        .then(function(){ laden(); });
+    });
+    Object.keys(erg).sort().forEach(function(k){
+      var e = erg[k];
+      h += '<div class="karte"><h2>Probenfoto da: ' + esc(FACH[e.fach] || e.fach) + ' · ' + esc(e.probe) + '</h2>' +
+        '<p class="unter">Gelesen am ' + esc(dt(String(e.am || "").slice(0, 10))) + '. Probendatum hinterlegt ' + esc(dt(e.probeDatumHinterlegt)) +
+        (e.datumQuelle === "probe" ? ', auf der Probe ' + esc(dt(e.probeDatum)) : ', auf der Probe kein lesbares Datum, es gilt das hinterlegte') +
+        '. Angesehen: die Blätter der 5 Tage davor. ' + (e.abweichungen ? '<b>' + esc(e.abweichungen) + ' Abweichung(en) zur vorläufigen Annahme.</b>' : 'Keine Abweichung zur vorläufigen Annahme.') +
+        ' Abgeschlossen wird nichts, bis du die Liste oben bestätigst.</p>';
+      if (e.blaetter && e.blaetter.length) {
+        h += '<div class="tabelle"><table><tr><th>Blatt</th><th>Schuldatum</th><th>bisher</th><th>Vorschlag</th><th>Beleg</th></tr>' +
+          e.blaetter.map(function(b){ return '<tr' + (b.abweichung ? ' style="font-weight:700"' : '') + '><td>' + esc(b.titel) + '</td><td>' + esc(dt(b.datum)) + '</td><td>' + esc(LESBAR[b.vorher] || b.vorher) + '</td><td>' + esc(LESBAR[b.stufe] || b.stufe) + (b.abweichung ? ' ⚠️' : '') + '</td><td class="begr">' + esc(b.begruendung) + '</td></tr>'; }).join("") +
+          '</table></div>';
+      } else h += '<p class="unter">In den 5 Tagen vor der Probe liegt kein Blatt dieses Fachs.</p>';
+      h += '</div>';
+    });
+    return h;
+  }
 
   function zeichnen(){
     var f = Object.keys(daten.faecher).sort();
@@ -104,6 +134,7 @@
     if (daten.warnung) h += '<div class="hinweis">⚠️ ' + esc(daten.warnung) + '</div>';
     if (daten.schalter !== "neu")
       h += '<div class="hinweis">Der Schalter „aktuell“ ist noch aus. Abschlüsse lassen sich schon setzen, wirken für Paul aber erst nach dem Einschalten.</div>';
+    h += probenfotoKarte();
     var pr = daten.proben || [];
     h += '<div class="karte"><h2>Probe einstufen</h2>' +
       '<p class="unter">Probe wählen. Danach steht jedes Blatt des Fachs da, mit einer vorgeschlagenen Stufe. „abgefragt“ und „Probenzeitraum, nicht abgefragt“ schließen ein Blatt ab; „nicht abgefragt“ und „unsicher“ bleiben offen. Das Datum ist nur ein Vorschlag. Gespeichert wird erst, wenn du die ganze Liste bestätigst.</p>' +
