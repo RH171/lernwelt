@@ -769,16 +769,33 @@ export function budgetJeFach(faecher, e, deckel, pause, k) {
     }
   };
   const x = (f) => (e && e[f]) || {};
-  stufe((f) => Math.max(0, Number(x(f).fehler) || 0), 0);
+  /* Dennys Klickantwort 06.11.2026: Pflicht wird nie verdraengt - darum zuerst Pflicht, dann Fehlerkarten
+     (st bleibt [fehler, pflicht, rest]). */
   stufe((f) => Math.max(0, Number(x(f).pflicht) || 0), 1);
+  stufe((f) => Math.max(0, Number(x(f).fehler) || 0), 0);
   stufe((f) => cap[f], 2, (f) => Math.max(0, Number(x(f).unsicher) || 0));
   /* Rest in Faechern ohne unsichere Karten: nach Bedarf, gleiche Grenzen */
   stufe((f) => cap[f], 2, (f) => cap[f] - n[f]);
-  const menge = {}, normal = {}, ausfall = {}, sekunden = {};
+  const menge = {}, normal = {}, ausfall = {}, sekunden = {}, extraF = {};
   for (const f of faecher) {
     const af = (Number(pause && pause[f]) || 0) >= 1;
     const b = Math.max(0, Number(x(f).bedarf) || 0);
-    const extra = af ? Math.max(0, Math.min(Math.floor(n[f] * (D.ausfallFaktor - 1)), b - n[f], deckel[f].ausfallDeckel - n[f])) : 0;
+    extraF[f] = af ? Math.max(0, Math.min(Math.floor(n[f] * (D.ausfallFaktor - 1)), b - n[f], deckel[f].ausfallDeckel - n[f])) : 0;
+  }
+  /* Dennys Klickantwort 06.11.2026 (Option 2): harte Gesamtgrenze am Ausfalltag 1,5 x tagSek (30 Min);
+     ueberschiessende Zusatzfragen fallen beim Fach mit den meisten Zusatz-Sekunden zuerst weg. */
+  const GA = (Number(D.ausfallFaktor) || 1.5) * G;
+  /* mit der Mindestfrage je Fach (menge >= 1) rechnen, sonst rutscht ein Fach ohne Bedarf ueber die Grenze */
+  let summe = faecher.reduce((t, f) => t + Math.max(1, n[f] + extraF[f]) * sek(f), 0);
+  while (summe > GA + 1e-9) {
+    let w = null;
+    for (const f of faecher) if (extraF[f] > 0 && (!w || extraF[f] * sek(f) > extraF[w] * sek(w))) w = f;
+    if (!w) break;
+    extraF[w]--; summe -= sek(w);
+  }
+  for (const f of faecher) {
+    const af = (Number(pause && pause[f]) || 0) >= 1;
+    const extra = extraF[f];
     normal[f] = Math.max(1, n[f]);
     menge[f] = Math.max(1, n[f] + extra);
     ausfall[f] = af;
@@ -855,7 +872,7 @@ export function bedarfAktuell(wSchluessel, wZahl, blattNach, punkte, offen, istD
      2. Neues der offenen Blaetter (Gruppe, juengstes Blatt zuerst) - Neues hat immer Vorrang.
      3. Faellige offener Blaetter: zuletzt falsch zuerst, dann Gruppe, dann die unsicherste, dann die aelteste Antwort.
      4. Auffuellen: faellige Karten der uebrigen Blaetter, zuletzt falsch zuerst, dann am laengsten nicht gefragt.
-   Rueckgabe { liste: [item mit .teil "pflicht"|"neu"|"offen"|"auffuellen"], pflicht: [Blatt-ids in Reihenfolge] }. */
+   Rueckgabe { liste: [item mit .teil "pflicht"|"fehler"|"fehler-alt"|"neu"|"offen"|"auffuellen" (Reihe 212)], pflicht: [Blatt-ids in Reihenfolge] }. */
 export function ordneAktuell(items, blattInfo, heuteBlatt, k) {
   const z = (c) => (c.p && Number(c.p.z)) || 0;
   const tagNr = (c) => (z(c) ? berlinTagNr(z(c)) : 0);
@@ -891,8 +908,14 @@ export function ordneAktuell(items, blattInfo, heuteBlatt, k) {
     return aus.concat(G.slice(i), O.slice(j));
   };
   const istF = (c) => !!(c.p && c.p.f);
-  const auf = mischen(auf0.filter(istF)).concat(mischen(auf0.filter((c) => !istF(c))));
-  const liste = pflicht.map((c) => ({ ...c, teil: "pflicht" })).concat(neu.map((c) => ({ ...c, teil: "neu" })),
-    offenF.map((c) => ({ ...c, teil: "offen" })), auf.map((c) => ({ ...c, teil: "auffuellen" })));
+  /* Auftrag 212, Dennys Klickantwort 06.11.2026: bei knappem Fach 1. Pflicht (nie verdraengt), 2. Fehlerkarten -
+     offene Blaetter vor abgeschlossenen Themen, 3. weiteres Neues (nie gefragt, dann faellig auf offenen Blaettern),
+     4. Altes zum Auffuellen. Regel 10 gilt gegenueber Altem und innerhalb der Fehler, nicht gegenueber Pflicht. */
+  const liste = pflicht.map((c) => ({ ...c, teil: "pflicht" })).concat(
+    offenF.filter(istF).map((c) => ({ ...c, teil: "fehler" })),
+    mischen(auf0.filter(istF)).map((c) => ({ ...c, teil: "fehler-alt" })),
+    neu.map((c) => ({ ...c, teil: "neu" })),
+    offenF.filter((c) => !istF(c)).map((c) => ({ ...c, teil: "offen" })),
+    mischen(auf0.filter((c) => !istF(c))).map((c) => ({ ...c, teil: "auffuellen" })));
   return { liste, pflicht: pflicht.map((c) => c.blatt) };
 }
