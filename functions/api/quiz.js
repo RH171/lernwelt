@@ -70,7 +70,7 @@ import { OPUS_FORMEN } from "./_formen-opus.js";
 import { antwortkennungAn } from "./_antwortkennung.js";
 import { AKTUELL, aktuellAn, abschlussLesen, geschlossenJeFach, offeneIds, blaetterOhneHeute, faelligAktuell,
   bedarfJeFach, minutenJeFach, blattVonSchluessel, taeglichWaehlen, abstandAktuell, freiAktuell, rangOffen, blattGefestigtAnteil, grundlageIds,
-  vorlaeufigBasis, vorlaeufigZu, nichtUebbarIds, medianJeFach, deckelJeFach, mengeJeFach,
+  vorlaeufigBasis, vorlaeufigZu, nichtUebbarIds, medianJeFach, deckelJeFach, mengeJeFach, budgetJeFach, unsicherRang,
   artZeitenJeFach, artFaktoren, artSchaetzen, deckelNachArt, bedarfAktuell, ordneAktuell, gruppeBlatt,
   probeJeFach, schuldatum as schuldatumA } from "./_aktuell.js";
 import { RICHTUNG, tatsacheVon, begegnungen, vertreter, richtungAnwenden, eineJeTatsache, FORMEN, formSchwach, laengeVerraten, stufenAn, formVon } from "./_fragerichtung.js";
@@ -792,12 +792,15 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
       (jeFach[f] = jeFach[f] || []).push({ key: s, blatt: id, p, offen: o, nie, faellig: !nie && istDran(s, p), grundlage: !!(glA && glA.has(id)) });
     }
   }
-  const reihe = {}, pflicht = {}, teile = {};
+  const reihe = {}, pflicht = {}, teile = {}, eck = {};
   for (const f of Object.keys(jeFach)) {
     const r = ordneAktuell(jeFach[f], blattInfo, heuteBlatt);
     reihe[f] = r.liste.map((c) => c.key);
     pflicht[f] = r.pflicht;
     teile[f] = r.liste.reduce((z, c) => ((z[c.teil] = (z[c.teil] || 0) + 1), z), {});
+    /* Auftrag 212: Kennzahlen fuer das Tagesbudget */
+    eck[f] = { fehler: r.liste.filter((c) => c.p && c.p.f).length, pflicht: r.pflicht.length,
+               unsicher: r.liste.filter((c) => unsicherRang(c.p) <= 2).length };
   }
   /* Nachbesserung 5: Deckel je Antwortart nur bei deutlichem Unterschied (artFaktoren), sonst bleibt der Fach-Median.
      Die Absicherung (min 30 bzw. 45 am Ausfalltag unter 200 Antworten) gilt auch hier. */
@@ -813,7 +816,10 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
                   deckel: d.abgesichert ? Math.min(nArt, S.hoechst) : nArt,
                   ausfallDeckel: d.abgesichert ? Math.min(aArt, Math.floor(AKTUELL.fragenDeckel.ausfallFaktor * S.hoechst)) : aArt };
   }
-  const m = mengeJeFach(faecher, ges, deckel, a.pause);
+  /* Auftrag 212: gemeinsames Tagesbudget (20 Min, je Fach 10 Min) statt R8/R9 je Fach (mengeJeFach bleibt fuer Tests) */
+  const e212 = {};
+  for (const f of faecher) e212[f] = { bedarf: ges[f], ...(eck[f] || { fehler: 0, pflicht: 0, unsicher: 0 }) };
+  const m = budgetJeFach(faecher, e212, deckel, a.pause);
   raus.menge = m.menge;
   const minuten = {};
   for (const f of faecher) minuten[f] = Math.round((m.menge[f] * deckel[f].sek) / 6) / 10;
@@ -821,7 +827,7 @@ function plan209(raus, a, geschlossen, offen, nichtU, blattNach, punkte, wh, fae
   for (const f of Object.keys(bedarf)) bedarfFeld[f] = { offen: bedarf[f].offen, neu: bedarf[f].neu, auffuellen: bedarf[f].auffuellen };
   return {
     feld: { minuten, bedarf: bedarfFeld, reihe, sekunden: Object.fromEntries(faecher.map((f) => [f, deckel[f].sek])), neuFrei: !!AKTUELL.neuFrei },
-    server: { blattInfo, heuteBlatt, nichtUebbar: nichtU, vorlaeufigZu: vZu, deckel, mediane, artZeiten: az, artFaktoren: af, normal: m.normal, ausfall: m.ausfall, pflicht, teile },
+    server: { blattInfo, heuteBlatt, nichtUebbar: nichtU, vorlaeufigZu: vZu, deckel, mediane, artZeiten: az, artFaktoren: af, normal: m.normal, ausfall: m.ausfall, pflicht, teile, budget: { eck: e212, stufe: m.stufe, sekunden: m.sekunden } },
   };
 }
 

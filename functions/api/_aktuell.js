@@ -87,7 +87,11 @@ export const AKTUELL = {
      Ausweichwert (Messung Do 05.11.2026, 10:35 Uhr MEZ, Spiegel; unterlagen/aktuell-2026-11-05/ergebnis.md).
      Ausfalltag je Fach (Pause des Fachs >= 1 Tag): hoechstens ausfallFaktor x normale Menge, nie ueber
      ausfallSek (15 Min), nie multipliziert. */
-  fragenDeckel: { normalSek: 600, ausfallSek: 900, ausfallFaktor: 1.5, minAntworten: 30,
+  fragenDeckel: { normalSek: 600, ausfallSek: 900, ausfallFaktor: 1.5,
+    /* Auftrag 212 (Denny 06.11.2026): 20 Minuten am Tag fuer alle Faecher zusammen (tagSek), je Fach hoechstens
+       normalSek. Am Ausfalltag eines Fachs hoechstens das 1,5-Fache seiner Normalmenge (ausfallSek je Fach),
+       zusammen damit nie ueber 1,5 x tagSek. */
+    tagSek: 1200, minAntworten: 30,
                   ausweich: { mathe: 37.4, hsu: 14.2, deutsch: 11.6, englisch: 7.4, standard: 22.4 },
     /* Nachbesserung 5 (Denny 05.11.2026, 10:45 Uhr MEZ): Absicherung je Fach. Bis ein Fach mindestens
        minAntworten gemessene Antworten hat (n aus medianJeFach), gilt min(Median-Deckel, hoechst); ab
@@ -726,6 +730,61 @@ export function mengeJeFach(faecher, bedarf, deckel, pause, k) {
     ausfall[f] = af;
   }
   return { menge, normal, ausfall };
+}
+
+/* Auftrag 212, ersetzt R8/R9 fuer die Menge: gemeinsames Tagesbudget ueber alle Faecher.
+   e[f] = { bedarf, fehler, pflicht, unsicher } in Fragen (bedarf = bedarfAktuell().gesamt, fehler = Karten der Reihe
+   mit "zuletzt falsch", pflicht = offene Blaetter ohne heutige Frage, unsicher = Karten der Reihe mit unsicherRang <= 2).
+   deckel = deckelJeFach (sek = Median, deckel = Fachgrenze in Fragen inkl. Absicherung 30, ausfallDeckel).
+   Verteilung in drei Stufen, je Stufe reihum eine Frage an das Fach mit dem kleinsten Anteil (vergeben/Ziel),
+   solange Bedarf, Fachgrenze und Tagesbudget (Summe Fragen x Median <= tagSek) es zulassen:
+     1. Fehlerkarten  2. eine Frage je offenem Blatt  3. Rest nach Zahl der unsicheren Karten.
+   Ausfalltag (pause[f] >= 1): dazu hoechstens floor(0,5 x Normalmenge) des Fachs, bis Ausfall-Deckel und Bedarf -
+   der Faktor gilt einmal, nie multipliziert, und nur fuer das Fach mit Pause. Welche Karten kommen, bestimmt die
+   Reihe des Fachs (pflicht, neu, offen, auffuellen - Neues hat Vorrang, Regel 10). Nie unter 1.
+   Rueckgabe { menge, normal, ausfall, sekunden, stufe: { fach: [s1, s2, s3] } }. */
+export function budgetJeFach(faecher, e, deckel, pause, k) {
+  const D = (k || AKTUELL).fragenDeckel;
+  const G = Number(D.tagSek) || 1200;
+  const n = {}, cap = {}, st = {};
+  let used = 0;
+  for (const f of faecher) {
+    const x = (e && e[f]) || {};
+    n[f] = 0; st[f] = [0, 0, 0];
+    cap[f] = Math.max(0, Math.min(Math.max(0, Number(x.bedarf) || 0), deckel[f].deckel));
+  }
+  const sek = (f) => Number(deckel[f].sek) || 20;
+  /* ziel(f): hoechstens so viele Fragen in dieser Stufe; gewicht(f): Anteil, nach dem reihum verteilt wird */
+  const stufe = (ziel, i, gewicht) => {
+    for (;;) {
+      let best = null, bq = Infinity;
+      for (const f of faecher) {
+        const z = ziel(f), w = gewicht ? gewicht(f) : z;
+        if (!(z > 0) || !(w > 0) || st[f][i] >= z || n[f] >= cap[f] || used + sek(f) > G + 1e-9) continue;
+        const q = st[f][i] / w;
+        if (q < bq - 1e-12) { bq = q; best = f; }
+      }
+      if (!best) return;
+      n[best]++; st[best][i]++; used += sek(best);
+    }
+  };
+  const x = (f) => (e && e[f]) || {};
+  stufe((f) => Math.max(0, Number(x(f).fehler) || 0), 0);
+  stufe((f) => Math.max(0, Number(x(f).pflicht) || 0), 1);
+  stufe((f) => cap[f], 2, (f) => Math.max(0, Number(x(f).unsicher) || 0));
+  /* Rest in Faechern ohne unsichere Karten: nach Bedarf, gleiche Grenzen */
+  stufe((f) => cap[f], 2, (f) => cap[f] - n[f]);
+  const menge = {}, normal = {}, ausfall = {}, sekunden = {};
+  for (const f of faecher) {
+    const af = (Number(pause && pause[f]) || 0) >= 1;
+    const b = Math.max(0, Number(x(f).bedarf) || 0);
+    const extra = af ? Math.max(0, Math.min(Math.floor(n[f] * (D.ausfallFaktor - 1)), b - n[f], deckel[f].ausfallDeckel - n[f])) : 0;
+    normal[f] = Math.max(1, n[f]);
+    menge[f] = Math.max(1, n[f] + extra);
+    ausfall[f] = af;
+    sekunden[f] = Math.round(menge[f] * sek(f));
+  }
+  return { menge, normal, ausfall, sekunden, stufe: st };
 }
 
 /* R10 Gruppe eines offenen Blattes fuer "bei vollem Deckel": 0 juengste Blaetter nach der Probe (oder Fach ohne Probe),
