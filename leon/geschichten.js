@@ -16761,5 +16761,478 @@ window.LEON_GESCHICHTEN = [
     "seite": 8
    }
   ]
+ },
+ {
+  "id": "e2-das-tor-aus-blaettern",
+  "titel": "Das Tor aus Blättern",
+  "bild": "🍂",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🍂",
+      "🌬️"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Es ist ein küh|ler Tag im Ok|to|ber.",
+     "Le|on und Xa|ver sind wie|der im Gar|ten.",
+     "Ü|ber|all lie|gen bun|te Blät|ter im Gras.",
+     "Der Wind hat sie vom Baum ge|weht.",
+     "Le|on schiebt sie mit dem Fuß zu|sam|men."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "💡",
+      "🍁"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "„Wir bau|en ein Tor aus Blät|tern!“, ruft Xa|ver.",
+     "Xa|ver geht in die fünf|te Klas|se.",
+     "Er hat oft rich|tig gu|te I|de|en.",
+     "Le|on fin|det den Plan so|fort rich|tig toll.",
+     "Die bei|den ho|len zwei Re|chen aus dem Schup|pen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🍂",
+      "👣"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Sie re|chen die Blät|ter zu zwei Hau|fen.",
+     "Die zwei Hau|fen sind jetzt die Pfos|ten.",
+     "Le|on misst mit gro|ßen Schrit|ten da|zwi|schen.",
+     "„Fünf Schrit|te sind ge|nau gut“, sagt Le|on.",
+     "Xa|ver schiebt den zwei|ten Hau|fen et|was wei|ter."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🧤",
+      "🍁"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Das tro|cke|ne Laub ra|schelt bei je|dem Schritt.",
+     "Es riecht nach Herbst und nas|ser Er|de.",
+     "Le|ons Hän|de wer|den lang|sam ganz kalt.",
+     "Er reibt sie ganz schnell an|ein|an|der.",
+     "Dann zieht er schnell sei|ne Hand|schu|he an."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "⚽",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Jetzt ist das gro|ße Tor end|lich fer|tig.",
+     "Le|on stellt sich ge|nau in die Mit|te.",
+     "„Schieß, ich hal|te al|les!“, ruft er.",
+     "Xa|ver legt den Ball vor|sich|tig ins Gras.",
+     "Dann nimmt er ei|nen kur|zen An|lauf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "⚽",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Der ers|te Schuss fliegt flach nach links.",
+     "Le|on wirft sich in den Blät|ter|hau|fen.",
+     "Bun|te Blät|ter flie|gen hoch in die Luft.",
+     "A|ber der Ball liegt in Le|ons Hän|den.",
+     "„Su|per ge|hal|ten, Le|on!“, ruft Xa|ver laut."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "😅",
+      "⚽"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Beim zwei|ten Schuss ist Le|on zu lang|sam.",
+     "Der Ball rollt ge|nau zwi|schen die Hau|fen.",
+     "„Ein Tor für mich!“, lacht Xa|ver.",
+     "„Das nächs|te Mal hal|te ich“, sagt Le|on.",
+     "Er klopft die Blät|ter von der Ho|se."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "garten",
+     "dinge": [
+      "🌙",
+      "🍂"
+     ],
+     "leute": [
+      "Leon",
+      "Xaver"
+     ]
+    },
+    "zeilen": [
+     "Sie spie|len noch lan|ge im kal|ten Gar|ten.",
+     "Am En|de steht es drei zu drei.",
+     "Von den Pfos|ten ist nicht viel üb|rig.",
+     "Le|on hat so|gar Blät|ter in den Haa|ren.",
+     "„Mor|gen bau|en wir ein neu|es Tor“, sagt Xa|ver."
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "In welchem Monat spielen die beiden?",
+    "richtig": "im Oktober",
+    "falsch": [
+     "im Juli",
+     "im Januar"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Woraus sind die Pfosten?",
+    "richtig": "aus Blättern",
+    "falsch": [
+     "aus Karton",
+     "aus Stöcken"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wie viele Schritte sind zwischen den Pfosten?",
+    "richtig": "fünf Schritte",
+    "falsch": [
+     "drei Schritte",
+     "zehn Schritte"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Was zieht Leon an?",
+    "richtig": "seine Handschuhe",
+    "falsch": [
+     "eine Mütze",
+     "seine Jacke"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wie geht das Spiel aus?",
+    "richtig": "drei zu drei",
+    "falsch": [
+     "eins zu null",
+     "fünf zu zwei"
+    ],
+    "seite": 8
+   }
+  ]
+ },
+ {
+  "id": "w46-torwart-freitag-13",
+  "titel": "Torwarttraining am 13. November",
+  "bild": "🧤",
+  "lang": true,
+  "ereignis": "2026-11-13",
+  "zeigenAb": "2026-11-12",
+  "zeigenBis": "2026-11-13",
+  "seiten": [
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "📅",
+      "🧤"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Frei|tag, der 13. No|vem|ber.",
+     "An die|sem Tag ist Tor|wart|trai|ning.",
+     "Pa|pa und Le|on ge|hen zu|sam|men hin.",
+     "Es ist beim ASC Box|dorf."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🎒",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on packt sei|ne Ta|sche.",
+     "Die Hand|schu|he lie|gen ganz o|ben.",
+     "Dann kom|men die Fuß|ball|schu|he hin|ein.",
+     "Und die Fla|sche mit Was|ser."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⏰",
+      "🏟️"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Um vier Uhr be|ginnt das Trai|ning.",
+     "Le|on freut sich schon dar|auf.",
+     "Da|nach ist Fuß|ball|trai|ning.",
+     "Das be|ginnt um fünf Uhr."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🥅",
+      "🤔"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Tor|wart hü|tet das Tor.",
+     "Er ist der letz|te Spie|ler hin|ten.",
+     "Er sieht das gan|ze Spiel.",
+     "Das ist ei|ne wich|ti|ge Auf|ga|be."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💭",
+      "🤲"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Le|on stellt sich vor: Ein Ball kommt an.",
+     "Er streckt bei|de Ar|me aus.",
+     "Er packt fest zu.",
+     "Der Ball bleibt in den Hän|den."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "💭",
+      "🦘"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Dann fliegt ein Ball zur Sei|te.",
+     "Le|on springt hoch in die Luft.",
+     "Er streckt sich ganz lang.",
+     "Das ist ein tol|ler Sprung!"
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "👀",
+      "🧠"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Ein Tor|wart passt gut auf.",
+     "Er schaut dem Ball nach.",
+     "Er weiß: Der Ball kann über|all hin.",
+     "Dar|um bleibt er wach."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "❓",
+      "👨"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Le|on hat ei|ne Fra|ge an Pa|pa.",
+     "Was ü|ben wir wohl am Frei|tag?",
+     "Pa|pa lä|chelt nur.",
+     "Le|on lässt sich ü|ber|ra|schen."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🤝",
+      "🥅"
+     ],
+     "leute": [
+      "Leon",
+      "Papa"
+     ]
+    },
+    "zeilen": [
+     "Viel|leicht ü|ben sie das Fan|gen.",
+     "Le|on stellt sich das vor.",
+     "Er will gut zu|hö|ren.",
+     "Dann pro|biert er al|les selbst aus."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "⚽",
+      "⏰"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Nach dem Tor|wart|trai|ning kommt noch mehr.",
+     "Um fünf Uhr geht das Fuß|ball|trai|ning los.",
+     "Dann spielt Le|on mit sei|nem Team.",
+     "Das ist ein lan|ger, schö|ner Nach|mit|tag."
+    ]
+   },
+   {
+    "szene": {
+     "ort": "zimmer",
+     "dinge": [
+      "🌙",
+      "🧤"
+     ],
+     "leute": [
+      "Leon"
+     ]
+    },
+    "zeilen": [
+     "Die Hand|schu|he sind schon ein|ge|packt.",
+     "Le|on freut sich auf Frei|tag.",
+     "Es wird be|stimmt schön!"
+    ]
+   }
+  ],
+  "fragen": [
+   {
+    "frage": "Wann beginnt das Torwarttraining?",
+    "richtig": "um vier Uhr",
+    "falsch": [
+     "um acht Uhr",
+     "um zehn Uhr"
+    ],
+    "seite": 3
+   },
+   {
+    "frage": "Wer geht mit Leon zum Torwarttraining?",
+    "richtig": "Papa",
+    "falsch": [
+     "Opa",
+     "Paul"
+    ],
+    "seite": 1
+   },
+   {
+    "frage": "Was liegt in Leons Tasche ganz oben?",
+    "richtig": "die Handschuhe",
+    "falsch": [
+     "die Mützen",
+     "die Schals"
+    ],
+    "seite": 2
+   },
+   {
+    "frage": "Was macht ein Torwart?",
+    "richtig": "Er hütet das Tor",
+    "falsch": [
+     "Er backt Brot",
+     "Er malt Bilder"
+    ],
+    "seite": 4
+   },
+   {
+    "frage": "Wann beginnt danach das Fußballtraining?",
+    "richtig": "um fünf Uhr",
+    "falsch": [
+     "um drei Uhr",
+     "um sieben Uhr"
+    ],
+    "seite": 10
+   }
+  ]
  }
 ];
