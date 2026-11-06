@@ -27,9 +27,12 @@
    immer zum Antippen (fundkarten.js). Der Lernquiz-Teil liest denselben KV-Wert in functions/api/quiz.js.
    "alt" = wie am 02.11.2026. */
 const ERLAUBT = { "heute-dran": ["neu", "alt"], "lineal": ["neu", "alt"], "bildlast": ["neu", "alt"], "fundtippen": ["neu", "alt"], "zaehlung": ["neu", "alt"],
-                  "rechentippen": ["neu", "alt"], "auswahlschutz": ["neu", "alt"],
+                  "rechentippen": ["neu", "alt"], "auswahlschutz": ["neu", "alt"], "rechentafel": ["neu", "alt"], "ohnegruen": ["neu", "alt"],
                   "elternzugang": ["alt", "neu"], "eltern-verwalter": ["an", "aus"], "eltern-maschinenwert": ["alt", "neu"],
                   "widerspruch": ["alt", "neu"], "antwortkennung": ["alt", "neu"] };
+/* "rechentafel" und "ohnegruen" (05.11.2026, Auftrag 210, nur Paul, nur Darstellung): "rechentafel" = Rechentabelle
+   im Tippen-Teil der Rechenfläche (quiz/rechenflaeche.js), "ohnegruen" = keine grünen „verbessert · durch Claude“-Hinweise
+   in Pauls Ansicht (fehlerkreis.js). "alt" = wie am 04.11.2026. */
 /* "antwortkennung" (03.11.2026, Auftrag 203, nur Paul): bei "neu" speichert /api/statistik je Blatt-Antwort
    Fragen-ID, Frageart, Antwortweise und Zeit (functions/api/_antwortkennung.js). Standard "alt" = wie vorher. */
 /* "elternzugang" und "eltern-verwalter" (03.11.2026, Auftrag 195): Passwort-Zugaenge je Person im Elternbereich

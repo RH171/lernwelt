@@ -155,7 +155,14 @@
     var f = [];
     if (e.titel) f.push({ was: "titel", text: e.titel });
     if (e.thema) f.push({ was: "thema", text: e.thema });
-    (e.inhalt || []).forEach(function (z) { if (z) f.push({ was: "text", text: String(z) }); });
+    /* Ohne Grün bei Paul (05.11.2026, Auftrag 210): die Marke „(✓ verbessert · durch Claude)“ fällt im Fundstück weg. */
+    var ohne = !!(window.LWKreis && window.LWKreis.gruenAus && window.LWKreis.gruenAus());
+    (e.inhalt || []).forEach(function (z) {
+      if (!z) return;
+      var t = String(z);
+      if (ohne) t = t.replace(/\s*\(\u2713 verbessert \u00B7 durch Claude\)/g, "");
+      if (t) f.push({ was: "text", text: t });
+    });
     (e.karten || []).forEach(function (k) { if (k && k.merke) f.push({ was: "merke", text: k.merke }); });
     if (e.notiz) f.push({ was: "notiz", text: e.notiz });
     var fn = o.fachName ? o.fachName(e.fach || "") : (e.fach || "");

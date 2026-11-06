@@ -140,11 +140,15 @@
     k.apis.forEach(function (a) { a.setzen(ks); });
     k.stellen.forEach(function (s) { if (s._zeigMalen) s._zeigMalen(); });
     var z = document.querySelectorAll('.lwp-blattkasten[data-blatt="' + id + '"] .lwp-claude');
+    /* Ohne Grün bei Paul (05.11.2026, Auftrag 210): kein „N Stellen verbessert · durch Claude“. */
+    var ohne = !!(window.LWKreis && LWKreis.gruenAus && LWKreis.gruenAus());
     Array.prototype.forEach.call(z, function (el) {
-      el.hidden = !k.gruen.length;
+      el.hidden = ohne || !k.gruen.length;
       el.textContent = "✓ " + (k.gruen.length === 1 ? "1 Stelle" : k.gruen.length + " Stellen") + " verbessert · durch Claude";
     });
   }
+  /* Schalter "ohnegruen" = "alt" (fehlerkreis.js): Zeile wieder zeigen. */
+  window.addEventListener("lwk-gruen", function () { Object.keys(KR).forEach(krMalen); });
   /* Nach "Verbessert ✓" bzw. richtig nachgerechnet: roter Kreis weg, grüner da. */
   function krErledigt(s, gruen) {
     var id = s.blatt && s.blatt.id; if (!id) return;

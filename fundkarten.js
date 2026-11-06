@@ -293,6 +293,18 @@
       return o;
     } catch (e) { return undefined; }
   }
+  /* Rechenflächen-Marke (05.11.2026): Mathe-Karten tragen mathe: 1, damit lernstand.js rf = tafel|alt
+     anhängt. Ändert keine andere Kennung.
+     06.11.2026 (Auftrag 211): Blattkarten tragen kein .fach, das Fach steht am Blatt. Deshalb zählt auch
+     k.blattFach (Tagesrunde, Kreise) und opt.blattFach (Such-Spiel eines Blattes). Bewusst nicht .fach:
+     tippWerten() liest k.fach für die Sprache der Schreibtoleranz, die soll sich nicht ändern. */
+  function matheDazu(o, k, blattFach) {
+    try {
+      var f = String((k && (k.fach || k.blattFach)) || blattFach || "");
+      if (k && (k.mathe || /^mathe/i.test(f))) { o = o || {}; o.mathe = 1; }
+    } catch (e) {}
+    return o;
+  }
   function el(tag, klasse, text) {
     var n = document.createElement(tag);
     if (klasse) n.className = klasse;
@@ -755,7 +767,8 @@
           erster[i] = !!r.stimmt;
           try {
             if (window.lernstand && window.lernstand.antwort)
-              window.lernstand.antwort(erster[i], "Mathe-Wiederholung", String(feld.value).slice(0, 40), k.richtig, lernpunkt(k));
+              window.lernstand.antwort(erster[i], "Mathe-Wiederholung", String(feld.value).slice(0, 40), k.richtig, lernpunkt(k),
+                undefined, undefined, { mathe: 1 });
           } catch (e) {}
         }
         if (r.stimmt) {
@@ -902,7 +915,7 @@
           if (window.lernstand && window.lernstand.antwort)
             window.lernstand.antwort(erster[i],
               String(k.blattTitel || opt.was || "such-spiel").slice(0, 40), text, k.richtig,
-              lernpunkt(k), undefined, undefined, kennungVon(k, weise));
+              lernpunkt(k), undefined, undefined, matheDazu(kennungVon(k, weise), k, opt.blattFach));
         } catch (e) {}
       }
       function richtigFertig(b, lob) {

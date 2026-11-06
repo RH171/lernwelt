@@ -1467,6 +1467,8 @@ function artKurz(art) {
   function belegKasten(f) {
     if (!f.beleg) return "";
     var h = HERKUNFT_KOPF[f.beleg.herkunft] ? f.beleg.herkunft : "heft";
+    /* Ohne Grün bei Paul (05.11.2026, Auftrag 210): kein „berichtigt durch Claude“ - es steht im Heft. */
+    if (h === "verbessert" && window.LWKreis && LWKreis.gruenAus && LWKreis.gruenAus()) h = "heft";
     var zitat = h === "heft" || h === "lehrerin" || h === "lehrerin-angemerkt" || h === "vorlage" || h === "verbessert";
     var a = f.beleg.auch;
     var kopf = h === "eingetragen" && f.beleg.abgehakt
@@ -1589,6 +1591,15 @@ function artKurz(art) {
     } catch (e) { return undefined; }
   }
 
+  /* Rechenflächen-Marke (05.11.2026, nur Paul): Mathe-Fragen tragen mathe: 1, lernstand.js hängt
+     rf = tafel|alt an. Ändert keine andere Kennung. */
+  function matheDazu(o, f) {
+    try {
+      if (KIND === "paul" && f && /^mathe/i.test(String(f.fach || ""))) { o = o || {}; o.mathe = 1; }
+    } catch (e) {}
+    return o;
+  }
+
   function abschliessen(stimmt, knopf, gegeben) {
     var f = fragen[nr];
     wahlOffen = false;
@@ -1666,7 +1677,7 @@ function artKurz(art) {
         stimmtEcht ? "" : (ersterFalsch || gegeben), f.antworten[f.richtig || 0],
         !f.blatt ? "" : Number(f.belegNr) >= 1 ? f.blatt + "#" + Math.floor(Number(f.belegNr))
                        : f.id ? f.blatt + "#f:" + String(f.id).slice(0, 24) : "",
-        undefined, undefined, kennungVon(f));
+        undefined, undefined, matheDazu(kennungVon(f), f));
     fortschrittMalen();
   }
 

@@ -33,7 +33,7 @@ export function tabellen(fragen, eintraege) {
     for (const k of e.karten || []) {
       if (!k || !k.frage || !k.richtig || !Array.isArray(k.falsch) || k.falsch.length !== 2) continue;
       const key = norm(e.titel).slice(0, 40) + "|" + String(k.richtig).slice(0, 30);
-      if (!fund.has(key)) fund.set(key, Object.assign({}, k, { blatt: e.id, blattTitel: e.titel || "" }));
+      if (!fund.has(key)) fund.set(key, Object.assign({}, k, { blatt: e.id, blattTitel: e.titel || "", blattFach: e.fach || "" }));
     }
   }
   for (const f of fragen || []) {

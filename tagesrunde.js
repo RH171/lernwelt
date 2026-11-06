@@ -161,6 +161,7 @@
         var c = {};
         for (var z in k) c[z] = k[z];
         c.blatt = b.id; c.blattTitel = b.titel || ""; c.sorte = sorteVon(st);
+        c.blattFach = b.fach || "";   // Tafel-Marke (06.11.2026): nur fuer mathe:1, nicht .fach (Toleranz bleibt)
         c._tage = st && st.tage != null ? st.tage : 0; c._r = st ? st.r : 0;
         /* opt.formen (29.10.2026, Schritt 3a, nur Paul): belegte Zweitformen aus /api/quiz (fundFormen).
            Ein Wackler kommt nie in der Form, in der er falsch war; was wieder dran ist, wechselt
@@ -541,7 +542,7 @@
         if (karteVon[key]) return;
         var c = {};
         for (var z in k) c[z] = k[z];
-        c.blatt = b.id; c.blattTitel = b.titel || "";
+        c.blatt = b.id; c.blattTitel = b.titel || ""; c.blattFach = b.fach || "";   // Tafel-Marke (06.11.2026)
         karteVon[key] = c;
         var st = stand[key];
         if (st && !st.f) { c.sorte = "sicher"; c._r = st.r || 0; sicher.push(c); }

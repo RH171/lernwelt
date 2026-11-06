@@ -23,10 +23,36 @@
  * Seite des Bildes steht in img[data-seite] (so setzt es /blatt-seiten.js);
  * gezeigt werden nur die Kreise dieser Seite. Ohne Kreise: keine Ebene.
  * Jeder Kreis bleibt innerhalb des Bildes.
+ *
+ * Ohne Grün bei Paul (05.11.2026, Auftrag 210): Das grüne Schild „✓ 490 / ✓ 30 / verbessert · durch
+ * Claude“ lag in Pauls Fundkarte über dem Blattausschnitt. Dennys Regel: Kinder sehen keine Fehler und
+ * keine Korrekturhinweise. Auf Pauls Seiten (/paul/) zeichnet legen() deshalb keine Kreise der Art
+ * "gut" mehr - kein grüner Ring, kein Schild, kein Haken. Rote/violette Stellen bleiben, die Daten
+ * bleiben unverändert (nur Darstellung). LWKreis.gruenAus() sagt es anderen Teilen (Prüf-Reiter, Quiz,
+ * Suche). Rückweg: Schalter "ohnegruen" = "alt" zeichnet alles wieder wie vorher (Ereignis "lwk-gruen").
+ * Leon und Helena (05.11.2026, Dennys Freigabe 15:53 Uhr): gilt dort genauso (/leon/, /helena/), beide hatten
+ * am 05.11.2026 0 Korrekturen, sichtbar ändert sich bei ihnen also heute nichts. Derselbe Schalter "ohnegruen".
  */
 (function () {
   "use strict";
   var ROT = "#dc2626", GRUEN = "#15803d", WERKSTATT = "#7c3aed";
+  var KINDSEITE = /^\/(paul|leon|helena)\//.test(location.pathname);   // seit 05.11.2026 alle drei Kinder (vorher nur /paul/)
+  var gruenWeg = KINDSEITE, alleEbenen = [];
+  function gruenAus() { return gruenWeg; }
+  if (KINDSEITE) {
+    try {
+      fetch("/api/schalter?name=ohnegruen", { credentials: "same-origin", cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || d.wert !== "alt") return;
+          gruenWeg = false;
+          alleEbenen = alleEbenen.filter(function (a) { return a.ebene.isConnected; });
+          alleEbenen.forEach(function (a) { a.malen(); });
+          try { window.dispatchEvent(new Event("lwk-gruen")); } catch (e) {}
+        })
+        .catch(function () {});
+    } catch (e) {}
+  }
 
   function stilEinmal() {
     if (document.getElementById("lwk-stil")) return;
@@ -86,7 +112,7 @@
     function seite() { return num(img.getAttribute("data-seite")); }
     function sichtbar() {
       var s = seite();
-      return liste.filter(function (k) { return num(k.s) === s && num(k.b) > 0 && num(k.h) > 0; });
+      return liste.filter(function (k) { return num(k.s) === s && num(k.b) > 0 && num(k.h) > 0 && !(gruenWeg && k.art === "gut"); });
     }
     function fokusLage(ks) {
       /* Nur bei cover: die Lage so wählen, dass der Kreis mitten im Ausschnitt liegt. */
@@ -168,6 +194,7 @@
       }
     };
     api.setzen(kreise);
+    if (KINDSEITE) alleEbenen.push(api);
     return api;
   }
 
@@ -187,5 +214,5 @@
     return '<span class="lwk-legende"><i aria-hidden="true"></i>Markiert von der Lernwerkstatt</span>';
   }
 
-  window.LWKreis = { legen: legen, ausStellen: ausStellen, legende: legende, WERKSTATT: WERKSTATT };
+  window.LWKreis = { legen: legen, ausStellen: ausStellen, legende: legende, WERKSTATT: WERKSTATT, gruenAus: gruenAus };
 })();
